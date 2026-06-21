@@ -19,10 +19,12 @@ import 'package:flet_lottie/flet_lottie.dart' as ruflet_lottie;
 import 'package:flet_map/flet_map.dart' as ruflet_map;
 import 'package:flet_permission_handler/flet_permission_handler.dart'
     as ruflet_permission_handler;
+import 'package:flet_rive/flet_rive.dart' as ruflet_rive;
 // --FAT_CLIENT_START--
 // --FAT_CLIENT_END--
 import 'package:flet_secure_storage/flet_secure_storage.dart'
     as ruflet_secure_storage;
+import 'package:flet_spinkit/flet_spinkit.dart' as ruflet_spinkit;
 // --FAT_CLIENT_START--
 import 'package:flet_video/flet_video.dart' as ruflet_video;
 // --FAT_CLIENT_END--
@@ -32,6 +34,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 
 import 'connection_probe.dart';
+import 'ruflet_file_picker_service.dart';
 
 const bool isProduction = bool.fromEnvironment('dart.vm.product');
 const int kRufletPort = 8550;
@@ -101,6 +104,7 @@ Future<void> main() async {
   }
 
   final extensions = <FletExtension>[
+    RufletFilePickerExtension(),
     ruflet_ads.Extension(),
     ruflet_audio_recorder.Extension(),
     ruflet_camera.Extension(),
@@ -113,7 +117,9 @@ Future<void> main() async {
     ruflet_lottie.Extension(),
     ruflet_map.Extension(),
     ruflet_permission_handler.Extension(),
+    ruflet_rive.Extension(),
     ruflet_secure_storage.Extension(),
+    ruflet_spinkit.Extension(),
     ruflet_webview.Extension(),
 
     // --FAT_CLIENT_START--
