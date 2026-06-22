@@ -38,8 +38,26 @@ target 'Runner' do
 end
 
 post_install do |installer|
+  # permission_handler_apple compiles each permission's handler only when its
+  # PERMISSION_* macro is defined; without them, requests silently return denied.
+  # Enable the common set when the plugin is in the build (Info.plist usage
+  # strings are added separately by `ruflet build` from services.yaml).
+  permission_macros = installer.pods_project.targets.any? { |t| t.name == 'permission_handler_apple' }
+
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+
+    if permission_macros
+      target.build_configurations.each do |config|
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= ['$(inherited)']
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] += %w[
+          PERMISSION_CAMERA=1
+          PERMISSION_MICROPHONE=1
+          PERMISSION_LOCATION_WHENINUSE=1
+          PERMISSION_SENSORS=1
+        ]
+      end
+    end
   end
 
   # rive_native (rive >= 0.14) ships prebuilt static engine libs and force-loads
