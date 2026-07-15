@@ -39,8 +39,6 @@ dependencies:
   # 67a9763da3bd2611bbb7626c3a1ec5e9d30fc965. No git/Python dependency.
   flet:
     path: flet_packages/flet
-  flet_ads:
-    path: flet_packages/flet_ads
   flet_audio:
     path: flet_packages/flet_audio
   flet_audio_recorder:

@@ -30,6 +30,9 @@ bundle exec ruflet build ios
 `--self` packages the Ruby runtime and application with the native client.
 Without it, the client connects to a separately running Ruflet backend.
 
+Linux WebView builds require WebKitGTK 4.1 development files. On Debian or
+Ubuntu install them with `sudo apt install libwebkit2gtk-4.1-dev`.
+
 ## Conditional extensions and services
 
 The Flutter packages under `flet_packages/` remain local to this template. The
