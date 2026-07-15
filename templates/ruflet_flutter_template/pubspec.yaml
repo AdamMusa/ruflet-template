@@ -73,7 +73,7 @@ dependencies:
     path: flet_packages/flet_video
   flet_webview:
     path: flet_packages/flet_webview
-  ruby_runtime: ^0.0.7
+  ruby_runtime: ^0.0.8
   flutter_native_splash: ^2.4.7
 dev_dependencies:
   flutter_launcher_icons: "^0.14.4"
