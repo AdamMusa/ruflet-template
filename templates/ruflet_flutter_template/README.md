@@ -29,3 +29,30 @@ bundle exec ruflet build ios
 
 `--self` packages the Ruby runtime and application with the native client.
 Without it, the client connects to a separately running Ruflet backend.
+
+## Conditional extensions and services
+
+The Flutter packages under `flet_packages/` remain local to this template. The
+Ruflet CLI uses the developer application's configuration to decide which
+optional packages and registrations are copied into a generated client:
+
+```yaml
+# ruflet.yaml
+extensions:
+  - charts
+  - map
+  - rive
+```
+
+Native capabilities and their permission descriptions are declared separately:
+
+```yaml
+# services.yaml
+services:
+  - microphone:
+      description: Record voice notes.
+  - location:
+      description: Show the current location.
+```
+
+The same selection rules apply to self-contained and server-driven clients.
