@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flet/flet.dart';
-import 'package:flet_ads/flet_ads.dart' as ruflet_ads;
 // --FAT_CLIENT_START--
 import 'package:flet_audio/flet_audio.dart' as ruflet_audio;
 // --FAT_CLIENT_END--
@@ -24,17 +23,19 @@ import 'package:flet_rive/flet_rive.dart' as ruflet_rive;
 // --FAT_CLIENT_END--
 import 'package:flet_secure_storage/flet_secure_storage.dart'
     as ruflet_secure_storage;
+import 'package:flet_spinkit/flet_spinkit.dart' as ruflet_spinkit;
 // --FAT_CLIENT_START--
 import 'package:flet_video/flet_video.dart' as ruflet_video;
 // --FAT_CLIENT_END--
-import 'package:flet_webview/flet_webview.dart' as ruflet_webview;
+import 'package:ruflet_qrcode_scanner/ruflet_qrcode_scanner.dart'
+    as ruflet_qrcode_scanner;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 
 import 'connection_probe.dart';
 import 'ruflet_file_picker_service.dart';
-import 'ruflet_spinkit.dart';
+import 'package:flet_webview/flet_webview.dart' as ruflet_webview;
 
 const bool isProduction = bool.fromEnvironment('dart.vm.product');
 const int kRufletPort = 8550;
@@ -105,8 +106,7 @@ Future<void> main() async {
 
   final extensions = <FletExtension>[
     RufletFilePickerExtension(),
-    RufletSpinKitExtension(),
-    ruflet_ads.Extension(),
+    ruflet_spinkit.Extension(),
     ruflet_audio_recorder.Extension(),
     ruflet_camera.Extension(),
     ruflet_charts.Extension(),
@@ -121,6 +121,7 @@ Future<void> main() async {
     ruflet_rive.Extension(),
     ruflet_secure_storage.Extension(),
     ruflet_webview.Extension(),
+    ruflet_qrcode_scanner.Extension(),
 
     // --FAT_CLIENT_START--
     ruflet_audio.Extension(),

@@ -1,3 +1,0 @@
-# Native capabilities that activate matching extensions and platform permissions.
-# Supported services: camera, microphone, location, motion
-services: []
