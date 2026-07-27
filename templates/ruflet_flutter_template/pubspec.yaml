@@ -32,7 +32,6 @@ dependencies:
     sdk: flutter
   flutter_web_plugins:
     sdk: flutter
-  flutter_spinkit: ^5.2.2
   file_picker: ^10.3.10
 
   # Flet Flutter packages, vendored locally (Dart only) from flet ref
@@ -67,10 +66,14 @@ dependencies:
     path: flet_packages/flet_permission_handler
   flet_secure_storage:
     path: flet_packages/flet_secure_storage
+  flet_spinkit:
+    path: flet_packages/flet_spinkit
   flet_video:
     path: flet_packages/flet_video
   flet_webview:
     path: flet_packages/flet_webview
+  ruflet_qrcode_scanner:
+    path: flet_packages/ruflet_qrcode_scanner
   ruby_runtime: ^0.0.7
   flutter_native_splash: ^2.4.7
 dev_dependencies:
