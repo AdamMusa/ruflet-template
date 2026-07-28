@@ -6,8 +6,7 @@
 
 <p align="center">
   <a href="https://github.com/AdamMusa/ruflet">Ruflet</a> ·
-  <a href="https://github.com/AdamMusa/ruflet_explorer">Ruflet Explorer</a> ·
-  <a href="https://github.com/flet-dev/flet">Flet</a>
+  <a href="https://github.com/AdamMusa/ruflet_explorer">Ruflet Explorer</a>
 </p>
 
 ---
