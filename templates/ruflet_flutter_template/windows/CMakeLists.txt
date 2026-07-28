@@ -43,6 +43,15 @@ function(APPLY_STANDARD_SETTINGS TARGET)
   target_compile_options(${TARGET} PRIVATE /EHsc)
   target_compile_definitions(${TARGET} PRIVATE "_HAS_EXCEPTIONS=0")
   target_compile_definitions(${TARGET} PRIVATE "$<$<CONFIG:Debug>:_DEBUG>")
+  # permission_handler_windows still includes <experimental/coroutine>, which
+  # MSVC 14.51 refuses to compile outright:
+  #
+  #   error C2338: static assertion failed: 'error STL1011: ... deprecated by
+  #   Microsoft and will be REMOVED SOON'
+  #
+  # Keep the Windows build working until the plugin moves to the C++20
+  # <coroutine> header. Remove this once it has.
+  target_compile_definitions(${TARGET} PRIVATE "_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS")
 endfunction()
 
 # Flutter library and tool build rules.
