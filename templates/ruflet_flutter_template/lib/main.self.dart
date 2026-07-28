@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:flet/flet.dart';
 // --FAT_CLIENT_START--
@@ -245,6 +246,31 @@ String? parseBackendUrl(String value) {
   return normalizePageUrlForPlatform(match.group(0)!);
 }
 
+/// RUFLET_* variables the embedded runtime owns. The host process must not be
+/// able to override where the runtime listens or writes.
+const Set<String> _reservedRuntimeEnvironment = {
+  'RUFLET_PORT',
+  'RUFLET_ASSETS_DIR',
+  'RUFLET_RUNTIME_PORT_FILE',
+  'RUFLET_RUNTIME_ERROR_FILE',
+};
+
+/// Forward the host process's RUFLET_* variables into the embedded Ruby VM.
+/// Without this a self-contained app cannot be configured at launch — notably
+/// RUFLET_URL, which tells a preview client which server to open.
+Map<String, String> _forwardedHostEnvironment() {
+  if (kIsWeb) return const {};
+
+  final forwarded = <String, String>{};
+  Platform.environment.forEach((key, value) {
+    if (key.startsWith('RUFLET_') &&
+        !_reservedRuntimeEnvironment.contains(key)) {
+      forwarded[key] = value;
+    }
+  });
+  return forwarded;
+}
+
 class EmbeddedRufletRuntime {
   EmbeddedRufletRuntime._({
     required this.pageUrl,
@@ -270,6 +296,7 @@ class EmbeddedRufletRuntime {
         entrypoint: entrypoint,
         loadPaths: [workDir.path],
         environment: {
+          ..._forwardedHostEnvironment(),
           'RUFLET_PORT': '0',
           'RUFLET_ASSETS_DIR': '${workDir.path}/assets',
           'RUFLET_RUNTIME_PORT_FILE': portPath,
