@@ -100,6 +100,8 @@ flutter_native_splash:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
+  remove_alpha_ios: true
+  background_color_ios: "#FFFFFF"
   image_path: "assets/splash.png"
   background_color: "#FFFFFF"
   theme_color: "#FFFFFF"
