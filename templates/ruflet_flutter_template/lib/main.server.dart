@@ -82,13 +82,24 @@ String normalizePageUrlForPlatform(String rawUrl) {
 String fallbackBackendUrl() =>
     normalizePageUrlForPlatform('http://0.0.0.0:$kRufletPort');
 
-String resolveBackendUrl() {
+/// A preview client is launched against whichever port the server happened to
+/// bind, so the backend cannot be fixed at build time. Prefer the URL the
+/// launcher passed on the command line, then the build-time value.
+///
+/// This file is the web entrypoint too, so it must not import dart:io — the
+/// launcher passes the URL as an argument rather than in the environment.
+String resolveBackendUrl([List<String>? args]) {
+  if (args != null && args.isNotEmpty) {
+    final fromArgs = parseBackendUrl(args.first);
+    if (fromArgs != null) return fromArgs;
+  }
+
   final configured = parseBackendUrl(kConfiguredBackendUrl);
   if (configured != null) return configured;
   return fallbackBackendUrl();
 }
 
-Future<void> main() async {
+Future<void> main([List<String>? args]) async {
   if (isProduction) {
     // ignore: avoid_returning_null_for_void
     debugPrint = (String? message, {int? wrapWidth}) => null;
@@ -133,7 +144,7 @@ Future<void> main() async {
     extension.ensureInitialized();
   }
 
-  final pageUrl = resolveBackendUrl();
+  final pageUrl = resolveBackendUrl(args);
   await waitForBackend(pageUrl);
 
   runApp(TemplateApp(pageUrl: pageUrl, extensions: extensions));
