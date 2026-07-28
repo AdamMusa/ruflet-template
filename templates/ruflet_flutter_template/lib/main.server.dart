@@ -96,6 +96,17 @@ String resolveBackendUrl([List<String>? args]) {
 
   final configured = parseBackendUrl(kConfiguredBackendUrl);
   if (configured != null) return configured;
+
+  // On the web the Ruflet backend serves this client itself, so the origin it
+  // was loaded from is the backend. `ruflet run --web` binds an arbitrary port
+  // and cannot bake a URL in at build time, and the web entrypoint receives no
+  // launch arguments -- without this the client would fall through to the
+  // default port and wait for a server that is not there.
+  if (kIsWeb) {
+    final origin = parseBackendUrl(Uri.base.origin);
+    if (origin != null) return origin;
+  }
+
   return fallbackBackendUrl();
 }
 
