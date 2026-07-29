@@ -28,6 +28,21 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>Camera access is required to scan Ruflet QR connection codes.</string>
+	<!-- A Ruflet backend runs on the developer's machine and is reached over the
+	     local network at a plain http:// address. iOS 14 and later refuse local
+	     network connections without this declaration, and refuse them silently:
+	     the client shows no error, it simply never connects. The Simulator does
+	     not enforce this, so the failure only appears on a real device. -->
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Local network access is required to connect to a Ruflet application running on your computer.</string>
+	<!-- App Transport Security blocks cleartext http by default. Allow it only
+	     for local networking, so connecting to a development server works while
+	     internet traffic still requires https. -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Microphone access is required for audio recording.</string>
 	<key>NSMotionUsageDescription</key>
