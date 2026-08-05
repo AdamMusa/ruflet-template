@@ -40,13 +40,16 @@ class AudioRecorderService extends FletService {
       case "start_recording":
         final config = parseRecordConfig(args["configuration"]);
         if (config != null && await recorder!.hasPermission()) {
-          final out = control.backend.getAssetSource(args["output_path"] ?? "");
-          if (!isWebPlatform() && !out.isFile) {
-            // on non-web/IO platforms, the output path must be a valid file path
+          final outputPath = args["output_path"]?.toString() ?? "";
+          if (!isWebPlatform() && outputPath.isEmpty) {
             return false;
           }
 
-          await recorder!.start(config, path: out.path);
+          // An output file usually does not exist yet. Asset resolution only
+          // recognizes existing files, so resolving a new Documents path as an
+          // asset turns it into a backend URL and makes recording fail. The
+          // record plugin needs the writable device path exactly as provided.
+          await recorder!.start(config, path: outputPath);
           return true;
         }
         return false;
