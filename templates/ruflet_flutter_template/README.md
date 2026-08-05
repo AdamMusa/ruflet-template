@@ -35,9 +35,10 @@ Ubuntu install them with `sudo apt install libwebkit2gtk-4.1-dev`.
 
 ## Conditional extensions and services
 
-The Flutter packages under `flet_packages/` remain local to this template. The
-Ruflet CLI uses the developer application's configuration to decide which
-optional packages and registrations are copied into a generated client:
+The Flutter packages under `flet_packages/` are the local source catalog for
+this template. During a build, the Ruflet CLI keeps the core `flet` package and
+only the optional packages and registrations declared by the developer
+application:
 
 ```yaml
 # ruflet.yaml
@@ -59,3 +60,6 @@ services:
 ```
 
 The same selection rules apply to self-contained and server-driven clients.
+Ruflet also replaces its Android permissions and iOS usage descriptions from
+the current `services:` declarations, rather than retaining template defaults
+or permissions from an earlier build.

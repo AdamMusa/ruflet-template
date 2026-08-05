@@ -36,7 +36,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:ruby_runtime/ruflet_runtime.dart';
 
-import 'ruflet_file_picker_service.dart';
 import 'package:flet_webview/flet_webview.dart' as ruflet_webview;
 
 const bool isProduction = bool.fromEnvironment('dart.vm.product');
@@ -107,7 +106,6 @@ Future<void> main() async {
   }
 
   final extensions = <FletExtension>[
-    RufletFilePickerExtension(),
     ruflet_spinkit.Extension(),
     ruflet_audio_recorder.Extension(),
     ruflet_camera.Extension(),

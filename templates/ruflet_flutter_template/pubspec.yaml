@@ -32,7 +32,6 @@ dependencies:
     sdk: flutter
   flutter_web_plugins:
     sdk: flutter
-  file_picker: ^10.3.10
 
   # Flet Flutter packages, vendored locally (Dart only) from flet ref
   # 67a9763da3bd2611bbb7626c3a1ec5e9d30fc965. No git/Python dependency.
