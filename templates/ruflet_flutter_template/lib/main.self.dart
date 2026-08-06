@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io' show Platform;
 
 import 'package:flet/flet.dart';
 // --FAT_CLIENT_START--
@@ -32,7 +31,6 @@ import 'package:ruflet_qrcode_scanner/ruflet_qrcode_scanner.dart'
     as ruflet_qrcode_scanner;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:ruby_runtime/ruflet_runtime.dart';
 
@@ -42,10 +40,6 @@ const bool isProduction = bool.fromEnvironment('dart.vm.product');
 const String kConfiguredClientUrl = String.fromEnvironment(
   'RUFLET_BACKEND_URL',
   defaultValue: String.fromEnvironment('RUFLET_CLIENT_URL', defaultValue: ''),
-);
-const String kEmbeddedProjectName = String.fromEnvironment(
-  'RUFLET_EMBEDDED_PROJECT',
-  defaultValue: '',
 );
 Tester? tester;
 
@@ -163,7 +157,6 @@ class TemplateApp extends StatefulWidget {
 class _TemplateAppState extends State<TemplateApp> {
   Timer? _serverErrorPoller;
   String? _lastEmbeddedServerError;
-  EmbeddedRufletRuntime? _embeddedRuntime;
   String _pageUrl = '';
   String? _startupError;
 
@@ -176,39 +169,26 @@ class _TemplateAppState extends State<TemplateApp> {
     }
   }
 
-  /// Finds the embedded server without blocking startup.
+  /// Asks the platform where the runtime it started ended up.
   ///
-  /// Platforms that start the runtime themselves answer immediately or very
-  /// soon, because the VM booted alongside the Flutter engine. Where they do
-  /// not, this falls back to the original path: unpack the packaged project and
-  /// ask the runtime to start it.
+  /// The runtime is entirely the platform layer's concern: it locates the
+  /// packaged project, unpacks it if the platform needs that, sets the
+  /// runtime's environment, starts the VM and waits for the port. None of that
+  /// belongs in Flutter, which only needs the address to point FletApp at.
   Future<void> _resolveEmbeddedServer() async {
-    String url;
     try {
+      final url = await RufletRuntime.serverUrl();
+      if (!mounted) return;
       // Used as-is, deliberately. normalizePageUrlForPlatform rewrites
       // 127.0.0.1 to 10.0.2.2 on Android, which is the emulator's alias for the
       // host machine — right for a development server, wrong for an embedded
       // one running on the device itself.
-      url = (await RufletRuntime.serverUrl()).toString();
-    } on PlatformException {
-      // This platform has no runtime of its own; start one from here.
-      final runtime = await EmbeddedRufletRuntime.start();
-      _embeddedRuntime = runtime;
-      if (runtime.error != null) {
-        if (mounted) setState(() => _startupError = runtime.error);
-        return;
-      }
-      url = runtime.pageUrl;
+      setState(() => _pageUrl = url.toString());
+      _watchForServerErrors();
     } catch (error) {
-      if (mounted) {
-        setState(() => _startupError = 'Failed to start embedded Ruflet.\n$error');
-      }
-      return;
+      if (!mounted) return;
+      setState(() => _startupError = 'Failed to start embedded Ruflet.\n$error');
     }
-
-    if (!mounted) return;
-    setState(() => _pageUrl = url);
-    _watchForServerErrors();
   }
 
   void _watchForServerErrors() {
@@ -228,7 +208,7 @@ class _TemplateAppState extends State<TemplateApp> {
   @override
   void dispose() {
     _serverErrorPoller?.cancel();
-    unawaited(_embeddedRuntime?.dispose());
+    unawaited(RufletRuntime.stop());
     super.dispose();
   }
 
@@ -289,223 +269,3 @@ String? parseBackendUrl(String value) {
   return normalizePageUrlForPlatform(match.group(0)!);
 }
 
-/// RUFLET_* variables the embedded runtime owns. The host process must not be
-/// able to override where the runtime listens or writes.
-const Set<String> _reservedRuntimeEnvironment = {
-  'RUFLET_PORT',
-  'RUFLET_ASSETS_DIR',
-  'RUFLET_RUNTIME_PORT_FILE',
-  'RUFLET_RUNTIME_ERROR_FILE',
-};
-
-/// Forward the host process's RUFLET_* variables into the embedded Ruby VM.
-/// Without this a self-contained app cannot be configured at launch — notably
-/// RUFLET_URL, which tells a preview client which server to open.
-Map<String, String> _forwardedHostEnvironment() {
-  if (kIsWeb) return const {};
-
-  final forwarded = <String, String>{};
-  Platform.environment.forEach((key, value) {
-    if (key.startsWith('RUFLET_') &&
-        !_reservedRuntimeEnvironment.contains(key)) {
-      forwarded[key] = value;
-    }
-  });
-  return forwarded;
-}
-
-class EmbeddedRufletRuntime {
-  EmbeddedRufletRuntime._({
-    required this.pageUrl,
-    required this.workDir,
-    this.error,
-  });
-
-  final String pageUrl;
-  final Directory workDir;
-  final String? error;
-
-  static Future<EmbeddedRufletRuntime> start() async {
-    final workDir = await Directory.systemTemp.createTemp('ruflet_template_');
-    final stopPath = '${workDir.path}/server.stop';
-    final portPath = '${workDir.path}/server.port';
-    var pageUrl = '';
-
-    try {
-      final entrypoint = await _prepareProjectFiles(workDir);
-      final errorFile = '${workDir.path}/.runtime.error';
-      final status = await RufletRuntime.start(
-        projectRoot: workDir.path,
-        entrypoint: entrypoint,
-        loadPaths: [workDir.path],
-        environment: {
-          ..._forwardedHostEnvironment(),
-          'RUFLET_PORT': '0',
-          'RUFLET_ASSETS_DIR': '${workDir.path}/assets',
-          'RUFLET_RUNTIME_PORT_FILE': portPath,
-          'RUFLET_RUNTIME_ERROR_FILE': errorFile,
-        },
-        errorFilePath: errorFile,
-        stopSignalPath: stopPath,
-      );
-      if (status.error.isNotEmpty) {
-        throw StateError(status.error);
-      }
-      final port = await _waitForRuntimePort(portPath, errorFile);
-      pageUrl = 'http://127.0.0.1:$port';
-      return EmbeddedRufletRuntime._(pageUrl: pageUrl, workDir: workDir);
-    } catch (error, stackTrace) {
-      return EmbeddedRufletRuntime._(
-        pageUrl: pageUrl,
-        workDir: workDir,
-        error: 'Failed to start embedded Ruflet.\n$error\n$stackTrace',
-      );
-    }
-  }
-
-  Future<void> dispose() async {
-    try {
-      await RufletRuntime.stop();
-    } catch (_) {}
-    try {
-      if (await workDir.exists()) {
-        await workDir.delete(recursive: true);
-      }
-    } catch (_) {}
-  }
-
-  static Future<int> _waitForRuntimePort(
-    String portPath,
-    String errorPath,
-  ) async {
-    final portFile = File(portPath);
-    final errorFile = File(errorPath);
-    final deadline = DateTime.now().add(const Duration(seconds: 15));
-
-    while (DateTime.now().isBefore(deadline)) {
-      if (await portFile.exists()) {
-        final port = int.tryParse((await portFile.readAsString()).trim()) ?? 0;
-        if (port > 0) return port;
-      }
-      if (await errorFile.exists()) {
-        final error = (await errorFile.readAsString()).trim();
-        if (error.isNotEmpty) throw StateError(error);
-      }
-      final status = await RufletRuntime.status();
-      if (status.error.isNotEmpty) throw StateError(status.error);
-      if (!status.running) {
-        throw StateError('Embedded Ruflet server stopped before binding.');
-      }
-      await Future<void>.delayed(const Duration(milliseconds: 25));
-    }
-    throw TimeoutException('Embedded Ruflet server did not publish its port.');
-  }
-
-  static Future<String> _prepareProjectFiles(Directory workDir) async {
-    final manifest = await _loadAssetManifest();
-    final embeddedProjectPrefix = _embeddedProjectPrefix(manifest);
-    final projectAssets = manifest.where((asset) {
-      if (!asset.startsWith(embeddedProjectPrefix)) return false;
-      final relative = asset.substring(embeddedProjectPrefix.length);
-      return !relative.split('/').any((part) => part.startsWith('.'));
-    }).toList();
-
-    if (projectAssets.isEmpty) {
-      throw StateError(
-        'No packaged Ruby project was found under $embeddedProjectPrefix. '
-        '${_describeRufletAssets(manifest)} '
-        'Run `ruflet build --self` so Ruflet can package the real Ruby app.',
-      );
-    }
-
-    for (final asset in projectAssets) {
-      final relative = asset.substring(embeddedProjectPrefix.length);
-      if (relative.isEmpty) continue;
-      final destination = File('${workDir.path}/$relative');
-      await destination.parent.create(recursive: true);
-      final data = await rootBundle.load(asset);
-      await destination.writeAsBytes(
-        data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
-      );
-    }
-
-    for (final name in ['main.rb', 'main.mrb']) {
-      final entrypoint = File('${workDir.path}/$name');
-      if (await entrypoint.exists()) {
-        return entrypoint.path;
-      }
-    }
-    throw StateError(
-      'The packaged Ruflet project does not contain main.rb. '
-      'Run `ruflet build --self` to package the app.',
-    );
-  }
-
-  static String _embeddedProjectPrefix(List<String> manifest) {
-    final name = kEmbeddedProjectName.trim();
-    if (name.isNotEmpty) {
-      return 'assets/$name/';
-    }
-
-    final discovered = manifest
-        .where(
-          (asset) =>
-              asset.startsWith('assets/') &&
-              (asset.endsWith('/main.rb') || asset.endsWith('/main.mrb')),
-        )
-        .map((asset) => asset.substring(0, asset.lastIndexOf('/') + 1))
-        .toSet()
-        .toList();
-
-    // A Ruflet app may contain nested example/plugin applications. They are
-    // part of the top-level payload and must not be treated as competing
-    // embedded projects. Keep only roots that are not descendants of another
-    // discovered root.
-    final roots = discovered
-        .where(
-          (candidate) => !discovered.any(
-            (other) => other != candidate && candidate.startsWith(other),
-          ),
-        )
-        .toList();
-
-    if (roots.length == 1) {
-      return roots.single;
-    }
-    if (roots.length > 1) {
-      throw StateError(
-        'Multiple packaged Ruflet projects found (${roots.join(', ')}). '
-        'Set the RUFLET_EMBEDDED_PROJECT dart define to choose one.',
-      );
-    }
-
-    throw StateError(
-      'Could not find main.rb in the asset bundle. '
-      '${_describeRufletAssets(manifest)} '
-      'Run `ruflet build --self` so Ruflet can package the app, '
-      'or set the RUFLET_EMBEDDED_PROJECT dart define.',
-    );
-  }
-
-  static String _describeRufletAssets(List<String> manifest) {
-    if (manifest.isEmpty) {
-      return 'The asset manifest could not be read or is empty.';
-    }
-    final rufletAssets = manifest
-        .where((asset) => asset.endsWith('.rb') || asset.endsWith('.mrb'))
-        .take(8)
-        .toList();
-    if (rufletAssets.isEmpty) {
-      return 'The bundle contains no Ruby sources.';
-    }
-    return 'Ruby sources present: ${rufletAssets.join(', ')}.';
-  }
-
-  static Future<List<String>> _loadAssetManifest() async {
-    try {
-      final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
-      return manifest.listAssets();
-    } catch (_) {}
-    return const [];
-  }
-}
