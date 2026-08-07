@@ -133,14 +133,17 @@ Future<void> main() async {
     extension.ensureInitialized();
   }
 
-  // The embedded runtime is deliberately not awaited here. Platforms that can
-  // start the VM before the Flutter engine exists have already been booting it
-  // while these extensions initialized, and blocking startup on it would hand
-  // back exactly the time that parallelism buys. TemplateApp resolves the URL
-  // from the widget tree and shows a splash until it arrives.
+  EmbeddedRufletRuntime? embeddedRuntime;
+  var pageUrl = resolveBackendUrl();
+  if (!kIsWeb && kConfiguredClientUrl.trim().isEmpty) {
+    embeddedRuntime = await EmbeddedRufletRuntime.start();
+    pageUrl = embeddedRuntime.pageUrl;
+  }
+
   runApp(
     TemplateApp(
-      pageUrl: resolveBackendUrl(),
+      pageUrl: pageUrl,
+      embeddedRuntime: embeddedRuntime,
       extensions: extensions,
     ),
   );
@@ -151,10 +154,12 @@ class TemplateApp extends StatefulWidget {
     super.key,
     required this.pageUrl,
     required this.extensions,
+    this.embeddedRuntime,
   });
 
   final String pageUrl;
   final List<FletExtension> extensions;
+  final EmbeddedRufletRuntime? embeddedRuntime;
 
   @override
   State<TemplateApp> createState() => _TemplateAppState();
@@ -163,78 +168,37 @@ class TemplateApp extends StatefulWidget {
 class _TemplateAppState extends State<TemplateApp> {
   Timer? _serverErrorPoller;
   String? _lastEmbeddedServerError;
-  EmbeddedRufletRuntime? _embeddedRuntime;
-  String _pageUrl = '';
-  String? _startupError;
 
   @override
   void initState() {
     super.initState();
-    _pageUrl = widget.pageUrl;
-    if (_pageUrl.isEmpty && !kIsWeb) {
-      unawaited(_resolveEmbeddedServer());
+    if (widget.embeddedRuntime != null) {
+      _serverErrorPoller = Timer.periodic(const Duration(seconds: 1), (
+        _,
+      ) async {
+        final status = await RufletRuntime.status();
+        final serverError = status.error;
+        if (!mounted ||
+            serverError.isEmpty ||
+            serverError == _lastEmbeddedServerError) {
+          return;
+        }
+        _lastEmbeddedServerError = serverError;
+        debugPrint('Embedded server error: $serverError');
+      });
     }
-  }
-
-  /// Finds the embedded server without blocking startup.
-  ///
-  /// Platforms that start the runtime themselves answer immediately or very
-  /// soon, because the VM booted alongside the Flutter engine. Where they do
-  /// not, this falls back to the original path: unpack the packaged project and
-  /// ask the runtime to start it.
-  Future<void> _resolveEmbeddedServer() async {
-    String url;
-    try {
-      // Used as-is, deliberately. normalizePageUrlForPlatform rewrites
-      // 127.0.0.1 to 10.0.2.2 on Android, which is the emulator's alias for the
-      // host machine — right for a development server, wrong for an embedded
-      // one running on the device itself.
-      url = (await RufletRuntime.serverUrl()).toString();
-    } on PlatformException {
-      // This platform has no runtime of its own; start one from here.
-      final runtime = await EmbeddedRufletRuntime.start();
-      _embeddedRuntime = runtime;
-      if (runtime.error != null) {
-        if (mounted) setState(() => _startupError = runtime.error);
-        return;
-      }
-      url = runtime.pageUrl;
-    } catch (error) {
-      if (mounted) {
-        setState(() => _startupError = 'Failed to start embedded Ruflet.\n$error');
-      }
-      return;
-    }
-
-    if (!mounted) return;
-    setState(() => _pageUrl = url);
-    _watchForServerErrors();
-  }
-
-  void _watchForServerErrors() {
-    _serverErrorPoller = Timer.periodic(const Duration(seconds: 1), (_) async {
-      final status = await RufletRuntime.status();
-      final serverError = status.error;
-      if (!mounted ||
-          serverError.isEmpty ||
-          serverError == _lastEmbeddedServerError) {
-        return;
-      }
-      _lastEmbeddedServerError = serverError;
-      debugPrint('Embedded server error: $serverError');
-    });
   }
 
   @override
   void dispose() {
     _serverErrorPoller?.cancel();
-    unawaited(_embeddedRuntime?.dispose());
+    unawaited(widget.embeddedRuntime?.dispose());
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final error = _startupError;
+    final error = widget.embeddedRuntime?.error;
     if (error != null) {
       return MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -248,18 +212,9 @@ class _TemplateAppState extends State<TemplateApp> {
       );
     }
 
-    if (_pageUrl.isEmpty) {
-      // FletApp cannot be built without a URL, and the runtime has not reported
-      // one yet. Hold a splash rather than delay startup waiting for it.
-      return const MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: Scaffold(body: Center(child: CircularProgressIndicator())),
-      );
-    }
-
     return FletApp(
       title: 'Ruflet',
-      pageUrl: _pageUrl,
+      pageUrl: widget.pageUrl,
       assetsDir: '',
       errorsHandler: FletAppErrorsHandler(),
       showAppStartupScreen: true,
