@@ -100,10 +100,6 @@ struct ViewControlView: View {
     let spacing = CGFloat(node.double("spacing") ?? 10)
 
     VStack(spacing: 0) {
-      if let appBarID = node.controlID(forKey: "appbar") {
-        ControlView(id: appBarID, axis: .none)
-      }
-
       VStack(alignment: cross.horizontal, spacing: main.usesSpacers ? 0 : spacing) {
         if main == .center || main == .end { Spacer(minLength: 0) }
         ControlList(ids: node.childIDs, axis: .vertical)
@@ -121,6 +117,18 @@ struct ViewControlView: View {
       }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
+    // Flutter's Scaffold owns AppBar placement. In particular, a primary
+    // AppBar is inset below the system status area independently of whatever
+    // platform view the body contains. Keeping the bar as an ordinary VStack
+    // child allowed AVPlayerViewController (and other UIKit controls) to alter
+    // the stack's safe-area proposal when a Studio tab switched to Preview.
+    // `safeAreaInset` is SwiftUI's scaffold-equivalent contract: the bar stays
+    // below the notch and the remaining body is reduced by its exact height.
+    .safeAreaInset(edge: .top, spacing: 0) {
+      if let appBarID = node.controlID(forKey: "appbar") {
+        ControlView(id: appBarID, axis: .none)
+      }
+    }
     .background {
       MaterialPalette.color(
         node.string("bgcolor") ?? store.page?.string("bgcolor") ?? "surface",
