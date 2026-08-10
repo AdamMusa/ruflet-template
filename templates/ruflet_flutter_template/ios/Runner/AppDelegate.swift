@@ -18,31 +18,13 @@ import UIKit
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    let handled = super.application(application, didFinishLaunchingWithOptions: launchOptions)
-
-    if RufletEngineChoice.usesNativeRenderer {
-      presentNativeRenderer()
-    }
-    return handled
+    super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
   }
 
-  /// Replaces Flutter's root with the native renderer.
-  ///
-  /// `FlutterAppDelegate` has already made the window by this point, so taking
-  /// it over is a matter of swapping the root controller rather than building
-  /// a new one — which keeps the launch storyboard, the safe area and the
-  /// status bar behaving exactly as they did.
-  private func presentNativeRenderer() {
-    let window = self.window ?? UIWindow(frame: UIScreen.main.bounds)
-    window.rootViewController = UIHostingController(
-      rootView: RufletAppView(services: RufletEngineChoice.services))
-    self.window = window
-    window.makeKeyAndVisible()
-  }
 }
 
 /// Owns the visible iOS window when UIKit's scene lifecycle is enabled.
@@ -59,15 +41,14 @@ import UIKit
     willConnectTo session: UISceneSession,
     options connectionOptions: UIScene.ConnectionOptions
   ) {
-    super.scene(
-      scene, willConnectTo: session, options: connectionOptions)
+    guard RufletEngineChoice.usesNativeRenderer else {
+      super.scene(
+        scene, willConnectTo: session, options: connectionOptions)
+      return
+    }
+    guard let windowScene = scene as? UIWindowScene else { return }
 
-    guard RufletEngineChoice.usesNativeRenderer,
-      let windowScene = scene as? UIWindowScene
-    else { return }
-
-    let nativeWindow = window ?? UIWindow(windowScene: windowScene)
-    nativeWindow.windowScene = windowScene
+    let nativeWindow = UIWindow(windowScene: windowScene)
     nativeWindow.rootViewController = UIHostingController(
       rootView: RufletAppView(services: RufletEngineChoice.services))
     window = nativeWindow
