@@ -14,6 +14,39 @@ import SwiftUI
 /// ranges. The renderer restores that family and resolves both catalogs to SF
 /// Symbols, preserving the one Ruflet icon API while using native Apple art.
 public enum IconMapping {
+  public enum Family: Equatable, Sendable {
+    case material
+    case cupertino
+  }
+
+  public static let placeholderSymbol = "questionmark.square.dashed"
+
+  /// The same platform-family policy used by Ruflet's icon search. Keeping it
+  /// next to resolution prevents an Apple host from accidentally presenting
+  /// Material names and then resolving them as Cupertino (or vice versa).
+  public static func preferredFamily(forPlatform rawPlatform: String) -> Family {
+    switch rawPlatform.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+    case "ios", "macos": return .cupertino
+    default: return .material
+    }
+  }
+
+  /// Names suitable for a platform icon browser. The generated wire catalogs
+  /// remain the source of truth; this is not a hand-maintained screen list.
+  public static func searchableNames(forPlatform platform: String) -> [String] {
+    switch preferredFamily(forPlatform: platform) {
+    case .material: return MaterialIconNames.material
+    case .cupertino: return MaterialIconNames.cupertino
+    }
+  }
+
+  public static func symbol(forName name: String, family: Family) -> String {
+    switch family {
+    case .material: return symbol(forMaterialName: name)
+    case .cupertino: return symbol(forCupertinoName: name)
+    }
+  }
+
   /// The symbol for an icon prop, or nil when the value is empty.
   public static func symbol(for value: RufletValue?) -> String? {
     guard let value, !value.isNull else { return nil }
@@ -22,9 +55,9 @@ public enum IconMapping {
     {
       switch descriptor.family {
       case .material:
-        return symbol(forMaterialName: descriptor.name)
+        return symbol(forName: descriptor.name, family: .material)
       case .cupertino:
-        return symbol(forCupertinoName: descriptor.name)
+        return symbol(forName: descriptor.name, family: .cupertino)
       }
     }
 
@@ -33,7 +66,7 @@ public enum IconMapping {
     if name.lowercased().hasPrefix("cupertinoicons.") {
       return symbol(forCupertinoName: name)
     }
-    return symbol(forMaterialName: name)
+    return symbol(forName: name, family: .material)
   }
 
   public static func materialName(for value: RufletValue) -> String? {
@@ -59,7 +92,7 @@ public enum IconMapping {
     }
 
     RufletLog.debug("No SF Symbol for Material icon `\(rawName)`")
-    return "questionmark.square.dashed"
+    return placeholderSymbol
   }
 
   /// Resolves Flutter's Cupertino icon catalog to SF Symbols. Cupertino icon
@@ -77,7 +110,7 @@ public enum IconMapping {
 
     // Shared semantic names can still use the curated Material-to-SF mapping.
     let materialSymbol = symbol(forMaterialName: name)
-    if materialSymbol != "questionmark.square.dashed", isAvailable(materialSymbol) {
+    if materialSymbol != placeholderSymbol, isAvailable(materialSymbol) {
       return materialSymbol
     }
 
@@ -90,7 +123,7 @@ public enum IconMapping {
     }
 
     RufletLog.debug("No SF Symbol for Cupertino icon `\(rawName)`")
-    return "questionmark.square.dashed"
+    return placeholderSymbol
   }
 
   private static func canonical(_ name: String) -> String {
@@ -164,6 +197,12 @@ public enum IconMapping {
     ]
 
     return semanticSymbols.first(where: { name.contains($0.0) })?.1 ?? "app"
+  }
+
+  /// Internal test hook for corpus regressions. Mapping to a non-placeholder
+  /// string is insufficient if that SF Symbol does not exist on the runtime.
+  static func nativeSymbolExists(_ symbol: String) -> Bool {
+    isAvailable(symbol)
   }
 
   private static let cupertinoNames = Set(MaterialIconNames.cupertino.map(canonical))
@@ -301,7 +340,7 @@ public enum IconMapping {
     "volume_up": "speaker.wave.2.fill", "volume_down": "speaker.wave.1.fill",
     "volume_off": "speaker.slash.fill", "volume_mute": "speaker.fill",
     "mic": "mic.fill", "mic_off": "mic.slash.fill", "headphones": "headphones",
-    "music_note": "music.note", "library_music": "music.note.list",
+    "audiotrack": "music.note", "music_note": "music.note", "library_music": "music.note.list",
     "camera": "camera.fill", "camera_alt": "camera.fill",
     "photo_camera": "camera.fill", "photo": "photo", "image": "photo",
     "photo_library": "photo.on.rectangle", "collections": "square.stack",
