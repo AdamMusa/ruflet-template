@@ -13,7 +13,7 @@ struct AppBarControlView: View {
 
   var body: some View {
     Group {
-      if node.bool("center_title") == true {
+      if FletThemeDefaults.appBarCentersTitle(node) {
         centeredBar
       } else {
         leadingBar

@@ -48,5 +48,5 @@ let package = Package(
 
     .testTarget(
       name: "RufletEngineTests",
-      dependencies: ["RufletEngine", "RufletProtocol"])
+      dependencies: ["RufletEngine", "RufletProtocol", "RufletUI"])
   ])

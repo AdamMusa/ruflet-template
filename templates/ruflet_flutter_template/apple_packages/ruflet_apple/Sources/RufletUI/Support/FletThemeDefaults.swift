@@ -57,6 +57,18 @@ enum FletThemeDefaults {
     #endif
   }
 
+  /// Mirrors Flutter AppBar._getEffectiveCenterTitle(). Flet leaves
+  /// `center_title` nullable, so omission must reach the platform rule rather
+  /// than being coerced to false by the renderer.
+  static func appBarCentersTitle(_ node: ControlNode) -> Bool {
+    if let explicit = node.props["center_title"]?.boolValue { return explicit }
+    #if os(iOS) || os(macOS)
+      return node.controlIDs(forKey: "actions").count < 2
+    #else
+      return false
+    #endif
+  }
+
   static var minimumInteractiveDimension: CGFloat {
     #if os(iOS)
       return 44
