@@ -10,7 +10,14 @@ import SwiftUI
 public enum LayoutAxis {
   case vertical
   case horizontal
+  /// The parent supplies an exact horizontal constraint, like Flutter's
+  /// `BoxConstraints(minWidth: w, maxWidth: w)`. SwiftUI proposals are loose
+  /// by default, so controls must explicitly consume this width before they
+  /// paint their decoration.
+  case tightHorizontal
   case none
+
+  var requiresTightWidth: Bool { self == .tightHorizontal }
 }
 
 /// Applies the shared property vocabulary around a control's own body.
@@ -24,12 +31,25 @@ struct CommonControlModifiers: ViewModifier {
 
   func body(content: Content) -> some View {
     content
+      .modifier(TightConstraintFrame(axis: axis))
       .modifier(SizeModifier(node: node, axis: axis))
       .modifier(PaddingModifier(node: node))
       .modifier(TransformModifier(node: node))
       .modifier(DecorationModifier(node: node))
       .modifier(ControlAnimationModifier(node: node))
       .modifier(InteractionModifier(node: node))
+  }
+}
+
+private struct TightConstraintFrame: ViewModifier {
+  let axis: LayoutAxis
+
+  func body(content: Content) -> some View {
+    if axis.requiresTightWidth {
+      content.frame(maxWidth: .infinity, alignment: .leading)
+    } else {
+      content
+    }
   }
 }
 
@@ -157,11 +177,15 @@ private struct ExpandingFrame: ViewModifier {
   let loose: Bool
 
   func body(content: Content) -> some View {
-    if expands, axis != .none {
-      content.frame(
-        maxWidth: axis == .horizontal ? .infinity : nil,
-        maxHeight: axis == .vertical ? .infinity : nil,
-        alignment: loose ? .topLeading : .center)
+    if expands {
+      switch axis {
+      case .horizontal:
+        content.frame(maxWidth: .infinity, alignment: loose ? .leading : .center)
+      case .vertical:
+        content.frame(maxHeight: .infinity, alignment: loose ? .top : .center)
+      case .tightHorizontal, .none:
+        content
+      }
     } else {
       content
     }

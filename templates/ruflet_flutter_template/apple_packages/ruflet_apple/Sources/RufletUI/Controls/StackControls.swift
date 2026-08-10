@@ -214,7 +214,7 @@ struct ResponsiveRowControlView: View {
         verticalAlignment: node.string("vertical_alignment") ?? "start"
       ) {
         ForEach(node.childIDs, id: \.self) { id in
-          ControlView(id: id, axis: .none)
+          ControlView(id: id, axis: ResponsiveGridMath.childLayoutAxis)
             // Flet wraps every child in a ConstrainedBox whose minWidth and
             // maxWidth are identical. The flexible frame is SwiftUI's
             // equivalent: it consumes the exact width proposed by the grid.
@@ -238,6 +238,8 @@ struct ResponsiveRowControlView: View {
 }
 
 enum ResponsiveGridMath {
+  static let childLayoutAxis: LayoutAxis = .tightHorizontal
+
   static let defaultBreakpoints: [String: Double] = [
     "xs": 0, "sm": 576, "md": 768, "lg": 992, "xl": 1200, "xxl": 1400,
   ]

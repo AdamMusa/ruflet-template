@@ -173,7 +173,11 @@ struct ContainerControlView: View {
 
     content
       .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets())
-      .frame(maxWidth: alignment != nil ? .infinity : nil,
+      // A ResponsiveRow supplies Flutter-tight horizontal constraints. Apply
+      // them before painting the Container so its background, border and hit
+      // target fill the grid cell instead of stopping at the text's intrinsic
+      // width.
+      .frame(maxWidth: alignment != nil || axis.requiresTightWidth ? .infinity : nil,
              maxHeight: alignment != nil ? .infinity : nil,
              alignment: alignment ?? .center)
       .background(background(radius: radius))

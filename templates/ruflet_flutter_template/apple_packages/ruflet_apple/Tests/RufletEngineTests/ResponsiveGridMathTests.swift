@@ -18,6 +18,9 @@ final class ResponsiveGridMathTests: XCTestCase {
   }
 
   func testPhoneSpansProduceOneFullWidthCellPerLine() {
+    XCTAssertEqual(ResponsiveGridMath.childLayoutAxis, .tightHorizontal)
+    XCTAssertTrue(ResponsiveGridMath.childLayoutAxis.requiresTightWidth)
+
     let spans = Array(repeating: 12.0, count: 6)
     XCTAssertEqual(
       ResponsiveGridMath.lines(spans: spans, columns: 12),
