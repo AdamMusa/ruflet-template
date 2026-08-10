@@ -174,22 +174,134 @@ private struct PositionedChild: View {
   let node: ControlNode
   let alignment: Alignment
 
+  @ViewBuilder
   var body: some View {
     let left = node.double("left")
     let top = node.double("top")
     let right = node.double("right")
     let bottom = node.double("bottom")
 
-    ControlView(id: node.id, axis: .none)
-      .frame(
-        maxWidth: .infinity, maxHeight: .infinity,
-        alignment: Alignment(
-          horizontal: left != nil ? .leading : (right != nil ? .trailing : alignment.horizontal),
-          vertical: top != nil ? .top : (bottom != nil ? .bottom : alignment.vertical)))
-      .offset(
-        x: left.map { CGFloat($0) } ?? -(right.map { CGFloat($0) } ?? 0),
-        y: top.map { CGFloat($0) } ?? -(bottom.map { CGFloat($0) } ?? 0))
+    if #available(iOS 16.0, macOS 13.0, *) {
+      FletPositionedLayout(
+        left: left.map { CGFloat($0) }, top: top.map { CGFloat($0) },
+        right: right.map { CGFloat($0) }, bottom: bottom.map { CGFloat($0) },
+        alignment: alignment
+      ) {
+        ControlView(id: node.id, axis: .none)
+      }
       .animation(ControlProps.animation(node.props["animate_position"]), value: node)
+    } else {
+      // Layout protocol is unavailable on iOS 15. Preserve the previous
+      // placement fallback there; all supported macOS versions and modern
+      // iOS hosts use the exact Flet constraint implementation above.
+      ControlView(id: node.id, axis: .none)
+        .frame(
+          maxWidth: .infinity, maxHeight: .infinity,
+          alignment: Alignment(
+            horizontal: left != nil ? .leading : (right != nil ? .trailing : alignment.horizontal),
+            vertical: top != nil ? .top : (bottom != nil ? .bottom : alignment.vertical)))
+        .offset(
+          x: left.map { CGFloat($0) } ?? -(right.map { CGFloat($0) } ?? 0),
+          y: top.map { CGFloat($0) } ?? -(bottom.map { CGFloat($0) } ?? 0))
+        .animation(ControlProps.animation(node.props["animate_position"]), value: node)
+    }
+  }
+}
+
+/// Flutter's `Positioned` turns opposing insets into tight constraints. For
+/// example, a child with `left: 20, right: 30` in a 300-point Stack is exactly
+/// 250 points wide. An aligned SwiftUI frame does not provide that constraint;
+/// this Layout does, before the child measures and paints its decoration.
+@available(iOS 16.0, macOS 13.0, *)
+private struct FletPositionedLayout: Layout {
+  let left: CGFloat?
+  let top: CGFloat?
+  let right: CGFloat?
+  let bottom: CGFloat?
+  let alignment: Alignment
+
+  func sizeThatFits(
+    proposal: ProposedViewSize, subviews: Subviews, cache: inout Void
+  ) -> CGSize {
+    guard let child = subviews.first else { return .zero }
+    let intrinsic = child.sizeThatFits(.unspecified)
+    return PositionedConstraintMath.containerSize(
+      proposal: proposal, intrinsic: intrinsic,
+      left: left, top: top, right: right, bottom: bottom)
+  }
+
+  func placeSubviews(
+    in bounds: CGRect, proposal: ProposedViewSize,
+    subviews: Subviews, cache: inout Void
+  ) {
+    guard let child = subviews.first else { return }
+    let intrinsic = child.sizeThatFits(.unspecified)
+    let childSize = PositionedConstraintMath.childSize(
+      container: bounds.size, intrinsic: intrinsic,
+      left: left, top: top, right: right, bottom: bottom)
+    let origin = PositionedConstraintMath.origin(
+      container: bounds.size, child: childSize,
+      left: left, top: top, right: right, bottom: bottom,
+      alignment: alignment)
+    child.place(
+      at: CGPoint(x: bounds.minX + origin.x, y: bounds.minY + origin.y),
+      anchor: .topLeading,
+      proposal: ProposedViewSize(width: childSize.width, height: childSize.height))
+  }
+}
+
+enum PositionedConstraintMath {
+  static func containerSize(
+    proposal: ProposedViewSize, intrinsic: CGSize,
+    left: CGFloat?, top: CGFloat?, right: CGFloat?, bottom: CGFloat?
+  ) -> CGSize {
+    CGSize(
+      width: finite(proposal.width) ?? intrinsic.width + (left ?? 0) + (right ?? 0),
+      height: finite(proposal.height) ?? intrinsic.height + (top ?? 0) + (bottom ?? 0))
+  }
+
+  static func childSize(
+    container: CGSize, intrinsic: CGSize,
+    left: CGFloat?, top: CGFloat?, right: CGFloat?, bottom: CGFloat?
+  ) -> CGSize {
+    CGSize(
+      width: left != nil && right != nil
+        ? max(container.width - (left ?? 0) - (right ?? 0), 0) : intrinsic.width,
+      height: top != nil && bottom != nil
+        ? max(container.height - (top ?? 0) - (bottom ?? 0), 0) : intrinsic.height)
+  }
+
+  static func origin(
+    container: CGSize, child: CGSize,
+    left: CGFloat?, top: CGFloat?, right: CGFloat?, bottom: CGFloat?,
+    alignment: Alignment
+  ) -> CGPoint {
+    CGPoint(
+      x: left ?? right.map { container.width - $0 - child.width }
+        ?? alignedOffset(available: container.width - child.width, alignment: alignment.horizontal),
+      y: top ?? bottom.map { container.height - $0 - child.height }
+        ?? alignedOffset(available: container.height - child.height, alignment: alignment.vertical))
+  }
+
+  private static func finite(_ value: CGFloat?) -> CGFloat? {
+    guard let value, value.isFinite else { return nil }
+    return max(value, 0)
+  }
+
+  private static func alignedOffset(
+    available: CGFloat, alignment: HorizontalAlignment
+  ) -> CGFloat {
+    if alignment == .leading { return 0 }
+    if alignment == .trailing { return available }
+    return available / 2
+  }
+
+  private static func alignedOffset(
+    available: CGFloat, alignment: VerticalAlignment
+  ) -> CGFloat {
+    if alignment == .top { return 0 }
+    if alignment == .bottom { return available }
+    return available / 2
   }
 }
 
