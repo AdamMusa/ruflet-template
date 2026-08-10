@@ -44,3 +44,33 @@ import UIKit
     window.makeKeyAndVisible()
   }
 }
+
+/// Owns the visible iOS window when UIKit's scene lifecycle is enabled.
+///
+/// Flutter's current template creates the window in `FlutterSceneDelegate`
+/// after `application(_:didFinishLaunchingWithOptions:)`. Installing SwiftUI
+/// only from `AppDelegate` is therefore temporary: the Flutter scene replaces
+/// it moments later. Make the renderer choice at the lifecycle point that owns
+/// the window so every iOS release—not just older non-scene templates—actually
+/// presents the native engine.
+@objc class RufletSceneDelegate: FlutterSceneDelegate {
+  override func scene(
+    _ scene: UIScene,
+    willConnectTo session: UISceneSession,
+    options connectionOptions: UIScene.ConnectionOptions
+  ) {
+    super.scene(
+      scene, willConnectTo: session, options: connectionOptions)
+
+    guard RufletEngineChoice.usesNativeRenderer,
+      let windowScene = scene as? UIWindowScene
+    else { return }
+
+    let nativeWindow = window ?? UIWindow(windowScene: windowScene)
+    nativeWindow.windowScene = windowScene
+    nativeWindow.rootViewController = UIHostingController(
+      rootView: RufletAppView(services: RufletEngineChoice.services))
+    window = nativeWindow
+    nativeWindow.makeKeyAndVisible()
+  }
+}
