@@ -289,6 +289,7 @@ private struct FletPositionedLayout: Layout {
 }
 
 enum PositionedConstraintMath {
+  @available(iOS 16.0, macOS 13.0, *)
   static func containerSize(
     proposal: ProposedViewSize, intrinsic: CGSize,
     left: CGFloat?, top: CGFloat?, right: CGFloat?, bottom: CGFloat?
