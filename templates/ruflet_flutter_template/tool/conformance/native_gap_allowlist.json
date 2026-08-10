@@ -1,0 +1,26 @@
+{
+  "allowlist_version": 1,
+  "aliases": {
+    "AdaptiveAlertDialog": "AlertDialog",
+    "AdaptiveButton": "Button",
+    "AdaptiveCheckbox": "Checkbox",
+    "AdaptiveRadio": "Radio",
+    "AdaptiveSlider": "Slider",
+    "AdaptiveSwitch": "Switch",
+    "AdaptiveTextField": "TextField"
+  },
+  "ignored_packages": {
+    "flet_ads": "Advertising controls are not exposed by the Ruflet DSL.",
+    "flet_color_pickers": "Color-picker extension controls are not exposed by the Ruflet DSL.",
+    "flet_datatable2": "DataTable2 is not exposed by the Ruflet DSL; Ruflet exposes the core DataTable.",
+    "flet_spinkit": "Ruflet consolidates Flet's per-animation extension types into the RufletSpinKit wire control."
+  },
+  "declared_baseline": {
+    "classification": "initial_api_parity_backlog",
+    "gap_set_sha256": "7a9a46ff6c5d2d99ea46a957921801ce85a2443aae2756aeab4b7f3d5a68a9b9",
+    "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review."
+  },
+  "type_gaps": {},
+  "event_gaps": {},
+  "method_gaps": {}
+}
