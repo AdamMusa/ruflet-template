@@ -178,10 +178,12 @@ struct CanvasControlView: View {
   }
 }
 
-/// The chart family, drawn from the same series data Flet's charts take.
+/// The chart family, drawn from the same control trees Flet's chart widgets take.
 ///
-/// Line, bar and scatter charts share one plotting routine because they differ
-/// only in how a data point is marked; pie charts get their own.
+/// The chart controls do not share a wire shape: lines contain data series,
+/// bars contain groups and rods, scatter charts contain spots, and pies contain
+/// sections. Keep that distinction here so valid Flet data never disappears
+/// merely because another chart family happens to call its children "points".
 struct ChartControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
@@ -196,8 +198,12 @@ struct ChartControlView: View {
         drawRadar(in: &context, plot: plot)
       case "CandlestickChart":
         drawCandlesticks(in: &context, plot: plot)
+      case "BarChart":
+        drawBars(in: &context, plot: plot)
+      case "ScatterChart":
+        drawScatter(in: &context, plot: plot)
       default:
-        drawSeries(in: &context, plot: plot)
+        drawLines(in: &context, plot: plot)
       }
     }
     .frame(minHeight: 120)
@@ -208,13 +214,27 @@ struct ChartControlView: View {
     let y: Double
   }
 
-  private var series: [(color: Color, points: [Point])] {
+  private struct LineSeries {
+    let color: Color
+    let points: [Point]
+    let strokeWidth: CGFloat
+    let curved: Bool
+    let roundedStrokeCap: Bool
+  }
+
+  private var lineSeries: [LineSeries] {
     let ids = node.controlIDs(forKey: "data_series") + node.childIDs
-    return ids.compactMap { id -> (Color, [Point])? in
+    return orderedUnique(ids).compactMap { id -> LineSeries? in
       guard let group = store.node(id) else { return nil }
-      return (MaterialPalette.color(group.string("color") ?? "primary", default: .primary), points(in: group))
+      let values = points(in: group)
+      guard !values.isEmpty else { return nil }
+      return LineSeries(
+        color: MaterialPalette.color(group.string("color") ?? "primary", default: .primary),
+        points: values,
+        strokeWidth: CGFloat(group.double("stroke_width") ?? 2),
+        curved: group.bool("curved") ?? false,
+        roundedStrokeCap: group.bool("rounded_stroke_cap") ?? false)
     }
-    .filter { !$0.1.isEmpty }
   }
 
   /// A series' points are controls, not inline maps: the store turns every
@@ -238,14 +258,20 @@ struct ChartControlView: View {
     return []
   }
 
-  private func drawSeries(in context: inout GraphicsContext, plot: CGRect) {
-    let all = series
+  private func drawLines(in context: inout GraphicsContext, plot: CGRect) {
+    let all = lineSeries
     let xs = all.flatMap { $0.points.map(\.x) }
     let ys = all.flatMap { $0.points.map(\.y) }
-    guard let minX = xs.min(), let maxX = xs.max(),
-      let minY = ys.min(), let maxY = ys.max()
+    guard let dataMinX = xs.min(), let dataMaxX = xs.max(),
+      let dataMinY = ys.min(), let dataMaxY = ys.max()
     else { return }
 
+    // Explicit chart bounds win, exactly as they do in Flet/fl_chart. Falling
+    // back to the data extent keeps hand-built control trees useful.
+    let minX = node.double("min_x") ?? dataMinX
+    let maxX = node.double("max_x") ?? dataMaxX
+    let minY = node.double("min_y") ?? dataMinY
+    let maxY = node.double("max_y") ?? dataMaxY
     let spanX = max(maxX - minX, .ulpOfOne)
     let spanY = max(maxY - minY, .ulpOfOne)
 
@@ -256,31 +282,161 @@ struct ChartControlView: View {
     }
 
     for entry in all {
-      switch node.type {
-      case "BarChart":
-        let barWidth = plot.width / CGFloat(max(entry.points.count, 1)) * 0.6
-        for point in entry.points {
-          let origin = project(point)
-          let rect = CGRect(
-            x: origin.x - barWidth / 2, y: origin.y,
-            width: barWidth, height: plot.maxY - origin.y)
-          context.fill(Path(rect), with: .color(entry.color))
+      let projected = entry.points.map(project)
+      guard let first = projected.first else { continue }
+      var path = Path()
+      path.move(to: first)
+
+      if entry.curved, projected.count > 2 {
+        for index in 0..<(projected.count - 1) {
+          let previous = projected[max(index - 1, 0)]
+          let current = projected[index]
+          let next = projected[index + 1]
+          let following = projected[min(index + 2, projected.count - 1)]
+          let control1 = CGPoint(
+            x: current.x + (next.x - previous.x) / 6,
+            y: current.y + (next.y - previous.y) / 6)
+          let control2 = CGPoint(
+            x: next.x - (following.x - current.x) / 6,
+            y: next.y - (following.y - current.y) / 6)
+          path.addCurve(to: next, control1: control1, control2: control2)
         }
-      case "ScatterChart":
-        for point in entry.points {
-          let origin = project(point)
-          context.fill(
-            Path(ellipseIn: CGRect(x: origin.x - 3, y: origin.y - 3, width: 6, height: 6)),
-            with: .color(entry.color))
-        }
-      default:
-        var path = Path()
-        for (index, point) in entry.points.enumerated() {
-          let projected = project(point)
-          index == 0 ? path.move(to: projected) : path.addLine(to: projected)
-        }
-        context.stroke(path, with: .color(entry.color), lineWidth: 2)
+      } else {
+        for point in projected.dropFirst() { path.addLine(to: point) }
       }
+
+      context.stroke(
+        path,
+        with: .color(entry.color),
+        style: StrokeStyle(
+          lineWidth: entry.strokeWidth,
+          lineCap: entry.roundedStrokeCap ? .round : .butt,
+          lineJoin: .round))
+    }
+  }
+
+  private struct BarRod {
+    let fromY: Double
+    let toY: Double
+    let width: CGFloat
+    let color: Color
+    let radius: CGFloat
+  }
+
+  private struct BarGroup {
+    let x: Double
+    let rods: [BarRod]
+  }
+
+  private var barGroups: [BarGroup] {
+    let ids = orderedUnique(node.controlIDs(forKey: "groups") + node.childIDs)
+    return ids.compactMap { id in
+      guard let group = store.node(id) else { return nil }
+      let rodIDs = orderedUnique(group.controlIDs(forKey: "rods") + group.childIDs)
+      let rods = rodIDs.compactMap { rodID -> BarRod? in
+        guard let rod = store.node(rodID), rod.double("to_y") != nil else { return nil }
+        return BarRod(
+          fromY: rod.double("from_y") ?? 0,
+          toY: rod.double("to_y") ?? 0,
+          width: CGFloat(rod.double("width") ?? 6),
+          color: MaterialPalette.color(rod.string("color") ?? "primary", default: .primary),
+          radius: ControlProps.cornerRadius(rod.props["border_radius"]) ?? 0)
+      }
+      guard !rods.isEmpty else { return nil }
+      return BarGroup(x: group.double("x") ?? Double(ids.firstIndex(of: id) ?? 0), rods: rods)
+    }
+  }
+
+  private func drawBars(in context: inout GraphicsContext, plot: CGRect) {
+    let groups = barGroups
+    guard !groups.isEmpty else { return }
+
+    let chart = CGRect(
+      x: plot.minX + 38, y: plot.minY + 4,
+      width: max(plot.width - 42, 1), height: max(plot.height - 32, 1))
+    let dataMinY = groups.flatMap(\.rods).map { min($0.fromY, $0.toY) }.min() ?? 0
+    let dataMaxY = groups.flatMap(\.rods).map { max($0.fromY, $0.toY) }.max() ?? 1
+    let minY = node.double("min_y") ?? min(0, dataMinY)
+    let maxY = node.double("max_y") ?? dataMaxY
+    let spanY = max(maxY - minY, .ulpOfOne)
+    let minX = node.double("min_x") ?? groups.map(\.x).min() ?? 0
+    let maxX = node.double("max_x") ?? groups.map(\.x).max() ?? 1
+    let xSpan = max(maxX - minX, 1)
+
+    func y(_ value: Double) -> CGFloat {
+      chart.maxY - CGFloat((value - minY) / spanY) * chart.height
+    }
+
+    // Flet supplies grid-line styling separately from the series. Draw the
+    // same unobtrusive horizontal guides even when labels are platform-native.
+    for fraction in [0.0, 0.5, 1.0] {
+      let lineY = chart.maxY - chart.height * CGFloat(fraction)
+      var grid = Path()
+      grid.move(to: CGPoint(x: chart.minX, y: lineY))
+      grid.addLine(to: CGPoint(x: chart.maxX, y: lineY))
+      context.stroke(
+        grid, with: .color(.secondary.opacity(0.18)),
+        style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
+      let value = minY + spanY * fraction
+      context.draw(
+        Text(value.formatted(.number.precision(.fractionLength(0)))).font(.caption2),
+        at: CGPoint(x: chart.minX - 6, y: lineY), anchor: .trailing)
+    }
+
+    let evenlySpaced = node.double("min_x") == nil && node.double("max_x") == nil
+    for (groupIndex, group) in groups.enumerated() {
+      let centreX: CGFloat
+      if evenlySpaced {
+        centreX = chart.minX + chart.width * (CGFloat(groupIndex) + 0.5) / CGFloat(groups.count)
+      } else {
+        centreX = chart.minX + CGFloat((group.x - minX) / xSpan) * chart.width
+      }
+      let totalWidth = group.rods.reduce(CGFloat.zero) { $0 + $1.width }
+      var rodX = centreX - totalWidth / 2
+      for rod in group.rods {
+        let top = min(y(rod.fromY), y(rod.toY))
+        let rect = CGRect(
+          x: rodX, y: top,
+          width: rod.width, height: max(abs(y(rod.fromY) - y(rod.toY)), 1))
+        context.fill(Path(roundedRect: rect, cornerRadius: rod.radius), with: .color(rod.color))
+        rodX += rod.width
+      }
+      if let label = bottomAxisLabel(for: group.x) {
+        context.draw(
+          Text(label).font(.caption2),
+          at: CGPoint(x: centreX, y: chart.maxY + 8), anchor: .top)
+      }
+    }
+
+    if let title = axisTitle(forKey: "left_axis") {
+      var rotated = context
+      rotated.translateBy(x: plot.minX + 6, y: chart.midY)
+      rotated.rotate(by: .degrees(-90))
+      rotated.draw(Text(title).font(.caption2), at: .zero, anchor: .center)
+    }
+  }
+
+  private func drawScatter(in context: inout GraphicsContext, plot: CGRect) {
+    let spots = orderedUnique(node.controlIDs(forKey: "spots") + node.childIDs)
+      .compactMap { store.node($0) }
+      .filter { $0.double("x") != nil && $0.double("y") != nil }
+    guard !spots.isEmpty else { return }
+    let minX = node.double("min_x") ?? spots.compactMap { $0.double("x") }.min() ?? 0
+    let maxX = node.double("max_x") ?? spots.compactMap { $0.double("x") }.max() ?? 1
+    let minY = node.double("min_y") ?? spots.compactMap { $0.double("y") }.min() ?? 0
+    let maxY = node.double("max_y") ?? spots.compactMap { $0.double("y") }.max() ?? 1
+    let spanX = max(maxX - minX, .ulpOfOne)
+    let spanY = max(maxY - minY, .ulpOfOne)
+    for spot in spots {
+      let radius = CGFloat(spot.double("radius") ?? 4)
+      let point = CGPoint(
+        x: plot.minX + CGFloat(((spot.double("x") ?? 0) - minX) / spanX) * plot.width,
+        y: plot.maxY - CGFloat(((spot.double("y") ?? 0) - minY) / spanY) * plot.height)
+      context.fill(
+        Path(ellipseIn: CGRect(
+          x: point.x - radius, y: point.y - radius,
+          width: radius * 2, height: radius * 2)),
+        with: .color(MaterialPalette.color(spot.string("color") ?? "primary", default: .primary)))
     }
   }
 
@@ -371,26 +527,92 @@ struct ChartControlView: View {
   }
 
   private func drawPie(in context: inout GraphicsContext, plot: CGRect) {
-    let sections = (node.controlIDs(forKey: "sections") + node.childIDs)
+    let sections = orderedUnique(node.controlIDs(forKey: "sections") + node.childIDs)
       .compactMap { store.node($0) }
+      .filter { ($0.double("value") ?? 0) > 0 }
     let total = sections.reduce(0.0) { $0 + ($1.double("value") ?? 0) }
     guard total > 0 else { return }
 
     let centre = CGPoint(x: plot.midX, y: plot.midY)
-    let radius = min(plot.width, plot.height) / 2
+    let availableRadius = min(plot.width, plot.height) / 2
+    let requestedRadius = sections.compactMap { $0.double("radius") }.max().map { CGFloat($0) }
+    let radius = min(requestedRadius ?? availableRadius, availableRadius)
+    let centreRadius = min(CGFloat(node.double("center_space_radius") ?? 0), radius)
     var start = Angle.degrees(-90)
 
     for section in sections {
       let sweep = Angle.degrees((section.double("value") ?? 0) / total * 360)
       var path = Path()
-      path.move(to: centre)
-      path.addArc(
-        center: centre, radius: radius,
-        startAngle: start, endAngle: start + sweep, clockwise: false)
+      if centreRadius > 0 {
+        let outerStart = CGPoint(
+          x: centre.x + cos(start.radians) * radius,
+          y: centre.y + sin(start.radians) * radius)
+        let innerEndAngle = start + sweep
+        let innerEnd = CGPoint(
+          x: centre.x + cos(innerEndAngle.radians) * centreRadius,
+          y: centre.y + sin(innerEndAngle.radians) * centreRadius)
+        path.move(to: outerStart)
+        path.addArc(
+          center: centre, radius: radius,
+          startAngle: start, endAngle: innerEndAngle, clockwise: false)
+        path.addLine(to: innerEnd)
+        path.addArc(
+          center: centre, radius: centreRadius,
+          startAngle: innerEndAngle, endAngle: start, clockwise: true)
+        path.closeSubpath()
+      } else {
+        path.move(to: centre)
+        path.addArc(
+          center: centre, radius: radius,
+          startAngle: start, endAngle: start + sweep, clockwise: false)
+      }
       context.fill(
         path, with: .color(MaterialPalette.color(section.string("color") ?? "primary", default: .primary)))
+
+      if let title = section.string("title"), !title.isEmpty {
+        let middle = Angle.radians(start.radians + sweep.radians / 2)
+        let labelRadius = centreRadius + (radius - centreRadius) * 0.58
+        let label = CGPoint(
+          x: centre.x + cos(middle.radians) * labelRadius,
+          y: centre.y + sin(middle.radians) * labelRadius)
+        context.draw(Text(title).font(.caption), at: label, anchor: .center)
+      }
       start = start + sweep
     }
+  }
+
+  private func orderedUnique(_ ids: [Int]) -> [Int] {
+    var seen = Set<Int>()
+    return ids.filter { seen.insert($0).inserted }
+  }
+
+  private func axisTitle(forKey key: String) -> String? {
+    guard let axisID = node.controlID(forKey: key), let axis = store.node(axisID),
+      let titleID = axis.controlID(forKey: "title")
+    else { return nil }
+    return controlText(titleID)
+  }
+
+  private func bottomAxisLabel(for value: Double) -> String? {
+    guard let axisID = node.controlID(forKey: "bottom_axis"), let axis = store.node(axisID)
+    else { return nil }
+    for labelID in axis.controlIDs(forKey: "labels") {
+      guard let label = store.node(labelID), abs((label.double("value") ?? .infinity) - value) < 0.0001,
+        let contentID = label.controlID(forKey: "label")
+      else { continue }
+      return controlText(contentID)
+    }
+    return nil
+  }
+
+  private func controlText(_ id: Int, depth: Int = 0) -> String? {
+    guard depth < 6, let value = store.node(id) else { return nil }
+    if let text = value.string("value") ?? value.string("text"), !text.isEmpty { return text }
+    let nested = value.controlIDs(forKey: "content") + value.childIDs
+    for childID in orderedUnique(nested) {
+      if let text = controlText(childID, depth: depth + 1) { return text }
+    }
+    return nil
   }
 }
 
