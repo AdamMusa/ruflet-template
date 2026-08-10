@@ -34,7 +34,7 @@ private struct PageChrome: ViewModifier {
       .preferredColorScheme(colorScheme)
       .overlay(overlayLayer)
       .modifier(WindowTitle(title: node.string("title")))
-      .environment(\.layoutDirection, (node.bool("rtl") ?? false) ? .rightToLeft : .leftToRight)
+      .environment(\.layoutDirection, node.fletBool("rtl") ? .rightToLeft : .leftToRight)
   }
 
   /// `theme_mode` is `"light"`, `"dark"` or `"system"`; only the first two
@@ -95,9 +95,9 @@ struct ViewControlView: View {
   @EnvironmentObject private var store: ControlStore
 
   var body: some View {
-    let main = ControlProps.MainAxisAlignment(node.string("vertical_alignment"))
-    let cross = ControlProps.CrossAxisAlignment(node.string("horizontal_alignment"))
-    let spacing = CGFloat(node.double("spacing") ?? 10)
+    let main = ControlProps.MainAxisAlignment(node.fletString("vertical_alignment"))
+    let cross = ControlProps.CrossAxisAlignment(node.fletString("horizontal_alignment"))
+    let spacing = CGFloat(node.fletDouble("spacing"))
 
     VStack(spacing: 0) {
       VStack(alignment: cross.horizontal, spacing: main.usesSpacers ? 0 : spacing) {
@@ -132,8 +132,9 @@ struct ViewControlView: View {
     .background {
       MaterialPalette.color(
         node.string("bgcolor") ?? store.page?.string("bgcolor") ?? "surface",
-        default: .clear)
-        .ignoresSafeArea(edges: .bottom)
+        default: .clear
+      )
+      .ignoresSafeArea(edges: .bottom)
     }
     .overlay(floatingActionButton, alignment: fabAlignment)
     .modifier(DrawerPresenter(node: node))
@@ -177,14 +178,17 @@ struct ContainerControlView: View {
       // them before painting the Container so its background, border and hit
       // target fill the grid cell instead of stopping at the text's intrinsic
       // width.
-      .modifier(ContainerAlignmentModifier(
-        alignment: alignment,
-        requiresTightWidth: axis.requiresTightWidth))
+      .modifier(
+        ContainerAlignmentModifier(
+          alignment: alignment,
+          requiresTightWidth: axis.requiresTightWidth)
+      )
       .background(background(radius: radius))
       .overlay(borderStroke(border: border, radius: radius))
       .clipShape(RoundedRectangle(cornerRadius: radius))
       .contentShape(RoundedRectangle(cornerRadius: radius))
       .modifier(TapReporter(node: node, events: events))
+      .allowsHitTesting(!node.fletBool("ignore_interactions"))
   }
 
   @ViewBuilder
@@ -290,7 +294,8 @@ private struct LegacyContinuousAlignment<Content: View>: View {
         .background(
           GeometryReader { childProxy in
             Color.clear.preference(key: AlignedChildSizeKey.self, value: childProxy.size)
-          })
+          }
+        )
         .onPreferenceChange(AlignedChildSizeKey.self) { childSize = $0 }
         .offset(x: origin.x, y: origin.y)
     }
@@ -378,10 +383,12 @@ struct DividerControlView: View {
       .fill(color)
       .frame(
         width: isVertical ? thickness : nil,
-        height: isVertical ? nil : thickness)
+        height: isVertical ? nil : thickness
+      )
       .frame(
         width: isVertical ? extent : nil,
-        height: isVertical ? nil : extent)
+        height: isVertical ? nil : extent
+      )
       .padding(.leading, CGFloat(node.double("leading_indent") ?? 0))
       .padding(.trailing, CGFloat(node.double("trailing_indent") ?? 0))
   }

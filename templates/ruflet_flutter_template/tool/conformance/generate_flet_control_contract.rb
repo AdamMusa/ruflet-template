@@ -138,6 +138,23 @@ module FletControlContract
       parsed = primitive(expression)
       defaults[property] = parsed if parsed
     end
+
+    # Flet sometimes stores a nullable wire value in a local before applying
+    # the Flutter parser default (Column is the canonical example). Preserve
+    # that data flow in the contract instead of forcing native renderers to
+    # rediscover the default independently.
+    string_locals = source.scan(
+      /(?:var|final)\s+(\w+)\s*=\s*(?:control|widget\.control)\.getString\(\s*["']([^"']+)["']\s*\)\s*;/m
+    ).to_h
+    source.scan(
+      /parse\w+\(\s*(\w+)\s*,\s*([A-Z]\w*(?:<[^>]+>)?\.\w+)\s*\)/m
+    ).each do |local, expression|
+      property = string_locals[local]
+      next unless property
+
+      parsed = primitive(expression)
+      defaults[property] = parsed if parsed
+    end
     defaults.sort.to_h
   end
 

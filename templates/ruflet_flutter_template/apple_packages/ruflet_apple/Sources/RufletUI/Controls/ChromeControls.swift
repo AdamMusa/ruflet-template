@@ -43,6 +43,7 @@ struct AppBarControlView: View {
 
       actions
     }
+    .opacity(node.fletDouble("toolbar_opacity"))
   }
 
   private var centeredBar: some View {
@@ -59,6 +60,7 @@ struct AppBarControlView: View {
         actions
       }
     }
+    .opacity(node.fletDouble("toolbar_opacity"))
   }
 
   private var actions: some View {
@@ -100,8 +102,11 @@ struct BottomAppBarControlView: View {
         ControlList(ids: node.childIDs, axis: .horizontal)
       }
     }
-    .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets(
-      top: 8, leading: 12, bottom: 8, trailing: 12))
+    .padding(
+      ControlProps.edgeInsets(node.props["padding"])
+        ?? EdgeInsets(
+          top: 8, leading: 12, bottom: 8, trailing: 12)
+    )
     .frame(maxWidth: .infinity)
     .background(MaterialPalette.color(node.string("bgcolor") ?? "surfacecontainer"))
     .overlay(alignment: .top) { Divider() }
@@ -189,7 +194,8 @@ struct NavigationRailControlView: View {
           .background(
             index == selected
               ? MaterialPalette.color("secondarycontainer", default: .clear) : .clear,
-            in: RoundedRectangle(cornerRadius: 12))
+            in: RoundedRectangle(cornerRadius: 12)
+          )
           .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -258,14 +264,16 @@ struct NavigationDrawerControlView: View {
       .background(
         index == selected
           ? MaterialPalette.color("secondarycontainer", default: .clear) : .clear,
-        in: Capsule())
+        in: Capsule()
+      )
       .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
     .foregroundColor(
       index == selected
         ? MaterialPalette.color("onsecondarycontainer", default: .primary)
-        : MaterialPalette.color("onsurface", default: .primary))
+        : MaterialPalette.color("onsurface", default: .primary)
+    )
     .padding(.horizontal, 8)
   }
 

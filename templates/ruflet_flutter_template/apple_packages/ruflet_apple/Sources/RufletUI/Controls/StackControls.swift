@@ -13,18 +13,19 @@ struct RowControlView: View {
   @EnvironmentObject private var store: ControlStore
 
   var body: some View {
-    let main = ControlProps.MainAxisAlignment(node.string("alignment"))
+    let main = ControlProps.MainAxisAlignment(node.fletString("alignment"))
     // Flutter/Flet Row defaults to a centred cross axis. Using `.start` here
     // top-aligned every icon/text pair whose Ruby omitted the property.
     let cross = ControlProps.CrossAxisAlignment(
-      node.string("vertical_alignment"), default: .center)
-    let spacing = CGFloat(node.double("spacing") ?? 10)
+      node.fletString("vertical_alignment"), default: .center)
+    let spacing = CGFloat(node.fletDouble("spacing"))
     let children = node.childIDs
-    let tight = node.bool("tight") ?? false
+    let tight = node.fletBool("tight")
 
     Group {
       if node.bool("wrap") == true {
-        WrappingStack(ids: children, spacing: spacing, runSpacing: CGFloat(node.double("run_spacing") ?? spacing))
+        WrappingStack(
+          ids: children, spacing: spacing, runSpacing: CGFloat(node.fletDouble("run_spacing")))
       } else if hasFlexChildren, #available(iOS 16.0, macOS 13.0, *) {
         FletFlexLayout(
           axis: .horizontal, spacing: spacing, mainAlignment: main,
@@ -61,10 +62,10 @@ struct ColumnControlView: View {
 
   @ViewBuilder
   var body: some View {
-    let main = ControlProps.MainAxisAlignment(node.string("alignment"))
-    let cross = ControlProps.CrossAxisAlignment(node.string("horizontal_alignment"))
-    let spacing = CGFloat(node.double("spacing") ?? 10)
-    let tight = node.bool("tight") ?? false
+    let main = ControlProps.MainAxisAlignment(node.fletString("alignment"))
+    let cross = ControlProps.CrossAxisAlignment(node.fletString("horizontal_alignment"))
+    let spacing = CGFloat(node.fletDouble("spacing"))
+    let tight = node.fletBool("tight")
 
     Group {
       if hasFlexChildren, #available(iOS 16.0, macOS 13.0, *) {
@@ -237,10 +238,12 @@ private struct PositionedChild: View {
           maxWidth: .infinity, maxHeight: .infinity,
           alignment: Alignment(
             horizontal: left != nil ? .leading : (right != nil ? .trailing : alignment.horizontal),
-            vertical: top != nil ? .top : (bottom != nil ? .bottom : alignment.vertical)))
+            vertical: top != nil ? .top : (bottom != nil ? .bottom : alignment.vertical))
+        )
         .offset(
           x: left.map { CGFloat($0) } ?? -(right.map { CGFloat($0) } ?? 0),
-          y: top.map { CGFloat($0) } ?? -(bottom.map { CGFloat($0) } ?? 0))
+          y: top.map { CGFloat($0) } ?? -(bottom.map { CGFloat($0) } ?? 0)
+        )
         .animation(ControlProps.animation(node.props["animate_position"]), value: node)
     }
   }
@@ -481,7 +484,8 @@ private struct ResponsiveGridLayout: Layout {
   ) -> CGSize {
     let width = finiteWidth(proposal.width, subviews: subviews)
     let metrics = resolved(width: width, subviews: subviews)
-    let height = metrics.lines.reduce(0) { $0 + $1.height }
+    let height =
+      metrics.lines.reduce(0) { $0 + $1.height }
       + metrics.runSpacing * CGFloat(max(metrics.lines.count - 1, 0))
     return CGSize(width: width, height: height)
   }
@@ -518,16 +522,21 @@ private struct ResponsiveGridLayout: Layout {
   private func resolved(width: CGFloat, subviews: Subviews)
     -> (lines: [Line], spacing: CGFloat, runSpacing: CGFloat)
   {
-    let columnCount = max(ResponsiveGridMath.value(
-      columns, default: 12, width: width, breakpoints: breakpoints), 1)
-    let gap = CGFloat(ResponsiveGridMath.value(
-      spacing, default: 10, width: width, breakpoints: breakpoints))
-    let runGap = CGFloat(ResponsiveGridMath.value(
-      runSpacing, default: 10, width: width, breakpoints: breakpoints))
+    let columnCount = max(
+      ResponsiveGridMath.value(
+        columns, default: 12, width: width, breakpoints: breakpoints), 1)
+    let gap = CGFloat(
+      ResponsiveGridMath.value(
+        spacing, default: 10, width: width, breakpoints: breakpoints))
+    let runGap = CGFloat(
+      ResponsiveGridMath.value(
+        runSpacing, default: 10, width: width, breakpoints: breakpoints))
     let resolvedSpans = subviews.indices.map { index in
-      min(max(ResponsiveGridMath.value(
-        index < spans.count ? spans[index] : nil,
-        default: 12, width: width, breakpoints: breakpoints), 0), columnCount)
+      min(
+        max(
+          ResponsiveGridMath.value(
+            index < spans.count ? spans[index] : nil,
+            default: 12, width: width, breakpoints: breakpoints), 0), columnCount)
     }
     let lineIndices = ResponsiveGridMath.lines(spans: resolvedSpans, columns: columnCount)
     let lines = lineIndices.map { indices -> Line in

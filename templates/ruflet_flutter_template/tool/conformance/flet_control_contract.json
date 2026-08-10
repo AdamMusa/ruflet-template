@@ -957,6 +957,14 @@
       "classification": "widget",
       "design_family": null,
       "primitive_defaults": {
+        "alignment": {
+          "type": "enum",
+          "value": "start"
+        },
+        "horizontal_alignment": {
+          "type": "enum",
+          "value": "start"
+        },
         "intrinsic_width": {
           "type": "bool",
           "value": false

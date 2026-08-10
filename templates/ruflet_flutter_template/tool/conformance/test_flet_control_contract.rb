@@ -57,6 +57,13 @@ class FletControlContractTest < Minitest::Test
     assert_equal 1.0, rive.dig("primitive_defaults", "speed_multiplier", "value")
   end
 
+  def test_defaults_applied_through_local_variables_are_extracted
+    column = @controls.fetch("Column")
+
+    assert_equal "start", column.dig("primitive_defaults", "alignment", "value")
+    assert_equal "start", column.dig("primitive_defaults", "horizontal_alignment", "value")
+  end
+
   private
 
   def assert_control(type, package:, classification:, renderer:)

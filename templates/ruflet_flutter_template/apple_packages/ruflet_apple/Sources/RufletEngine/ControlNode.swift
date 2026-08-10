@@ -78,6 +78,29 @@ public struct ControlNode: Equatable {
   public func map(_ key: String) -> [String: RufletValue]? { props[key]?.mapValue }
   public func array(_ key: String) -> [RufletValue]? { props[key]?.arrayValue }
 
+  /// Reads a property whose absence is defined by the generated Flet
+  /// contract. Foundational layout controls use these accessors so a lost
+  /// upstream default fails at generation/test time instead of being replaced
+  /// by a view-local literal.
+  public func fletString(_ key: String) -> String {
+    guard let result = string(key) else { return missingFletDefault(key, expected: "String") }
+    return result
+  }
+
+  public func fletBool(_ key: String) -> Bool {
+    guard let result = bool(key) else { return missingFletDefault(key, expected: "Bool") }
+    return result
+  }
+
+  public func fletDouble(_ key: String) -> Double {
+    guard let result = double(key) else { return missingFletDefault(key, expected: "Double") }
+    return result
+  }
+
+  private func missingFletDefault<T>(_ key: String, expected: String) -> T {
+    preconditionFailure("Flet contract has no \(expected) default for \(type).\(key)")
+  }
+
   /// Whether Ruby attached a handler for `name`.
   ///
   /// `Ruflet::Control#extract_handlers` replaces the block with `true` under
