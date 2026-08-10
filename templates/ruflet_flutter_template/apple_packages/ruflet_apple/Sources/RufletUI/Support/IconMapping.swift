@@ -67,7 +67,9 @@ public enum IconMapping {
   /// covers the full catalog while the small semantic table handles names
   /// where Flutter and Apple use different vocabulary.
   public static func symbol(forCupertinoName rawName: String) -> String {
-    let name = canonical(rawName).replacingOccurrences(of: "cupertinoicons_", with: "")
+    let unqualified = rawName.replacingOccurrences(
+      of: "cupertinoicons.", with: "", options: [.caseInsensitive, .anchored])
+    let name = canonical(unqualified)
     if let mapped = cupertinoTable[name], isAvailable(mapped) { return mapped }
 
     let candidates = cupertinoCandidates(for: name)
@@ -77,6 +79,14 @@ public enum IconMapping {
     let materialSymbol = symbol(forMaterialName: name)
     if materialSymbol != "questionmark.square.dashed", isAvailable(materialSymbol) {
       return materialSymbol
+    }
+
+    // Flutter's Cupertino catalog can contain symbols introduced after the
+    // application's minimum Apple OS. Preserve a native, semantic image in
+    // that case instead of dropping the icon. Arbitrary extension names do not
+    // take this path and remain an explicit placeholder.
+    if cupertinoNames.contains(name) {
+      return semanticCupertinoFallback(for: name)
     }
 
     RufletLog.debug("No SF Symbol for Cupertino icon `\(rawName)`")
@@ -117,6 +127,46 @@ public enum IconMapping {
       return true
     #endif
   }
+
+  private static func semanticCupertinoFallback(for name: String) -> String {
+    let semanticSymbols: [(String, String)] = [
+      ("airplane", "airplane"), ("alarm", "alarm"),
+      ("antenna", "antenna.radiowaves.left.and.right"),
+      ("arrow", "arrow.right"), ("back", "chevron.left"), ("forward", "chevron.right"),
+      ("battery", "battery.100"), ("bell", "bell"), ("bluetooth", "wave.3.right"),
+      ("book", "book"), ("bookmark", "bookmark"), ("briefcase", "briefcase"),
+      ("bus", "bus"), ("calendar", "calendar"), ("camera", "camera"), ("car", "car"),
+      ("cart", "cart"), ("chart", "chart.bar"), ("chat", "bubble.left"),
+      ("check", "checkmark"), ("chevron", "chevron.right"), ("circle", "circle"),
+      ("clock", "clock"), ("cloud", "cloud"), ("compass", "safari"),
+      ("creditcard", "creditcard"), ("delete", "trash"), ("doc", "doc"),
+      ("download", "arrow.down.circle"), ("drop", "drop"), ("envelope", "envelope"),
+      ("exclamation", "exclamationmark.triangle"), ("eye", "eye"), ("face", "face.smiling"),
+      ("film", "film"), ("flag", "flag"), ("flame", "flame"), ("folder", "folder"),
+      ("game", "gamecontroller"), ("gear", "gearshape"), ("globe", "globe"),
+      ("hammer", "hammer"), ("hand", "hand.raised"), ("heart", "heart"),
+      ("home", "house"), ("house", "house"), ("info", "info.circle"),
+      ("keyboard", "keyboard"), ("leaf", "leaf"), ("lightbulb", "lightbulb"),
+      ("link", "link"), ("list", "list.bullet"), ("location", "mappin"),
+      ("lock", "lock"), ("mail", "envelope"), ("map", "map"), ("mic", "mic"),
+      ("minus", "minus"), ("moon", "moon"), ("music", "music.note"),
+      ("paint", "paintbrush"), ("paperplane", "paperplane"), ("pause", "pause"),
+      ("pencil", "pencil"), ("person", "person"), ("phone", "phone"),
+      ("photo", "photo"), ("play", "play"), ("plus", "plus"), ("printer", "printer"),
+      ("question", "questionmark.circle"), ("rectangle", "rectangle"),
+      ("scissors", "scissors"), ("search", "magnifyingglass"), ("settings", "gearshape"),
+      ("share", "square.and.arrow.up"), ("shield", "shield"), ("snow", "snowflake"),
+      ("speaker", "speaker.wave.2"), ("square", "square"), ("star", "star"),
+      ("stop", "stop"), ("sun", "sun.max"), ("tag", "tag"), ("text", "textformat"),
+      ("timer", "timer"), ("train", "tram"), ("trash", "trash"),
+      ("upload", "arrow.up.circle"), ("video", "video"), ("wave", "waveform"),
+      ("wifi", "wifi"), ("wind", "wind"), ("wrench", "wrench"), ("xmark", "xmark"),
+    ]
+
+    return semanticSymbols.first(where: { name.contains($0.0) })?.1 ?? "app"
+  }
+
+  private static let cupertinoNames = Set(MaterialIconNames.cupertino.map(canonical))
 
   /// Cupertino names whose SF Symbol spelling is not a mechanical dotted
   /// conversion. This is platform vocabulary, not per-screen presentation.

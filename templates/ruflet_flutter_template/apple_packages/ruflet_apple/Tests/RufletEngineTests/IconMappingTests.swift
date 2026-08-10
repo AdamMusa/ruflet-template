@@ -23,4 +23,15 @@ final class IconMappingTests: XCTestCase {
       IconMapping.symbol(forCupertinoName: "AN_ICON_THAT_CANNOT_EXIST"),
       "questionmark.square.dashed")
   }
+
+  func testCupertinoCatalogHasBroadNativeCoverage() {
+    let mapped = MaterialIconNames.cupertino.filter {
+      IconMapping.symbol(forCupertinoName: $0) != "questionmark.square.dashed"
+    }
+
+    XCTAssertEqual(
+      mapped.count,
+      MaterialIconNames.cupertino.count,
+      "Only \(mapped.count) of \(MaterialIconNames.cupertino.count) Cupertino icons mapped")
+  }
 }
