@@ -6,6 +6,16 @@
 import Foundation
 
 enum MaterialIconNames {
+  enum Family: Equatable {
+    case material
+    case cupertino
+  }
+
+  struct Descriptor: Equatable {
+    let family: Family
+    let name: String
+  }
+
   static let firstCodepoint = 65536
   static let cupertinoFirstCodepoint = 131072
 
@@ -16,13 +26,21 @@ enum MaterialIconNames {
   static let cupertino: [String] = cupertinoTable.split(separator: "\n").map(String.init)
 
   static func name(forCodepoint codepoint: Int) -> String? {
+    descriptor(forCodepoint: codepoint)?.name
+  }
+
+  /// Restores both the icon name and its source font family. Material and
+  /// Cupertino deliberately use separate Ruflet codepoint ranges; keeping the
+  /// family here prevents equal names such as `home`, `search`, and `settings`
+  /// from being rendered through the wrong platform catalog.
+  static func descriptor(forCodepoint codepoint: Int) -> Descriptor? {
     let materialIndex = codepoint - firstCodepoint
     if materialIndex >= 0, materialIndex < material.count {
-      return material[materialIndex]
+      return Descriptor(family: .material, name: material[materialIndex])
     }
     let cupertinoIndex = codepoint - cupertinoFirstCodepoint
     if cupertinoIndex >= 0, cupertinoIndex < cupertino.count {
-      return cupertino[cupertinoIndex]
+      return Descriptor(family: .cupertino, name: cupertino[cupertinoIndex])
     }
     return nil
   }

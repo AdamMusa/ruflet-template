@@ -2,25 +2,46 @@ import RufletEngine
 import RufletProtocol
 import SwiftUI
 
+#if canImport(UIKit)
+  import UIKit
+#elseif canImport(AppKit)
+  import AppKit
+#endif
+
 /// Resolves a Ruflet icon value to an SF Symbol.
 ///
-/// Icons arrive as integers, not names: `Ruflet::Control#normalize_icon_prop`
-/// runs every icon prop through `MaterialIconLookup.codepoint_for`, which
-/// returns the icon's index in the gem's `icons.json`. `MaterialIconNames`
-/// turns that back into the Material name, and the table below maps the name
-/// onto the closest SF Symbol so the result looks native rather than like a
-/// Material app wearing an Apple shell.
+/// Icons arrive as integers in distinct Material and Cupertino codepoint
+/// ranges. The renderer restores that family and resolves both catalogs to SF
+/// Symbols, preserving the one Ruflet icon API while using native Apple art.
 public enum IconMapping {
   /// The symbol for an icon prop, or nil when the value is empty.
   public static func symbol(for value: RufletValue?) -> String? {
     guard let value, !value.isNull else { return nil }
-    guard let name = materialName(for: value) else { return nil }
+    if let codepoint = value.intValue,
+      let descriptor = MaterialIconNames.descriptor(forCodepoint: codepoint)
+    {
+      switch descriptor.family {
+      case .material:
+        return symbol(forMaterialName: descriptor.name)
+      case .cupertino:
+        return symbol(forCupertinoName: descriptor.name)
+      }
+    }
+
+    // Custom hosts may send a name instead of the standard integer protocol.
+    guard let name = value.stringValue else { return nil }
+    if name.lowercased().hasPrefix("cupertinoicons.") {
+      return symbol(forCupertinoName: name)
+    }
     return symbol(forMaterialName: name)
   }
 
   public static func materialName(for value: RufletValue) -> String? {
-    if let codepoint = value.intValue, let name = MaterialIconNames.name(forCodepoint: codepoint) {
-      return name
+    if let codepoint = value.intValue,
+      let descriptor = MaterialIconNames.descriptor(forCodepoint: codepoint),
+      descriptor.family == .material
+    {
+      return descriptor.name
     }
     // A host that registered its own control may pass a name straight through.
     return value.stringValue
@@ -41,6 +62,27 @@ public enum IconMapping {
     return "questionmark.square.dashed"
   }
 
+  /// Resolves Flutter's Cupertino icon catalog to SF Symbols. Cupertino icon
+  /// names are largely derived from SF Symbols, so the general conversion
+  /// covers the full catalog while the small semantic table handles names
+  /// where Flutter and Apple use different vocabulary.
+  public static func symbol(forCupertinoName rawName: String) -> String {
+    let name = canonical(rawName).replacingOccurrences(of: "cupertinoicons_", with: "")
+    if let mapped = cupertinoTable[name], isAvailable(mapped) { return mapped }
+
+    let candidates = cupertinoCandidates(for: name)
+    if let symbol = candidates.first(where: isAvailable) { return symbol }
+
+    // Shared semantic names can still use the curated Material-to-SF mapping.
+    let materialSymbol = symbol(forMaterialName: name)
+    if materialSymbol != "questionmark.square.dashed", isAvailable(materialSymbol) {
+      return materialSymbol
+    }
+
+    RufletLog.debug("No SF Symbol for Cupertino icon `\(rawName)`")
+    return "questionmark.square.dashed"
+  }
+
   private static func canonical(_ name: String) -> String {
     name
       .lowercased()
@@ -48,6 +90,69 @@ public enum IconMapping {
       .replacingOccurrences(of: "-", with: "_")
       .replacingOccurrences(of: "icons.", with: "")
   }
+
+  private static func cupertinoCandidates(for name: String) -> [String] {
+    let dotted = name.replacingOccurrences(of: "_", with: ".")
+    let native =
+      dotted
+      .replacingOccurrences(of: ".circled", with: ".circle")
+      .replacingOccurrences(of: ".solid", with: ".fill")
+
+    var candidates = [native]
+    if native.hasSuffix(".fill") {
+      candidates.append(String(native.dropLast(".fill".count)))
+    }
+    if native.hasSuffix(".circle") {
+      candidates.append(String(native.dropLast(".circle".count)))
+    }
+    return candidates
+  }
+
+  private static func isAvailable(_ symbol: String) -> Bool {
+    #if canImport(UIKit)
+      return UIImage(systemName: symbol) != nil
+    #elseif canImport(AppKit)
+      return NSImage(systemSymbolName: symbol, accessibilityDescription: nil) != nil
+    #else
+      return true
+    #endif
+  }
+
+  /// Cupertino names whose SF Symbol spelling is not a mechanical dotted
+  /// conversion. This is platform vocabulary, not per-screen presentation.
+  private static let cupertinoTable: [String: String] = [
+    "add": "plus", "add_circled": "plus.circle", "add_circled_solid": "plus.circle.fill",
+    "clear": "xmark", "clear_circled": "xmark.circle", "clear_circled_solid": "xmark.circle.fill",
+    "delete": "trash", "delete_solid": "trash.fill",
+    "remove": "minus", "minus_circle": "minus.circle", "minus_circle_fill": "minus.circle.fill",
+    "check_mark": "checkmark", "check_mark_circled": "checkmark.circle",
+    "check_mark_circled_solid": "checkmark.circle.fill",
+    "back": "chevron.left", "forward": "chevron.right",
+    "left_chevron": "chevron.left", "right_chevron": "chevron.right",
+    "up_chevron": "chevron.up", "down_chevron": "chevron.down",
+    "home": "house", "home_fill": "house.fill",
+    "search": "magnifyingglass", "search_circle": "magnifyingglass.circle",
+    "search_circle_fill": "magnifyingglass.circle.fill",
+    "settings": "gearshape", "settings_solid": "gearshape.fill",
+    "person": "person", "person_fill": "person.fill",
+    "person_circle": "person.crop.circle", "person_circle_fill": "person.crop.circle.fill",
+    "folder": "folder", "folder_fill": "folder.fill", "folder_open": "folder.fill",
+    "play_arrow": "play.fill", "play_arrow_solid": "play.fill",
+    "play_circle": "play.circle", "play_circle_fill": "play.circle.fill",
+    "pause": "pause.fill", "stop": "stop.fill",
+    "photo_camera": "camera.fill", "photo": "photo", "photo_fill": "photo.fill",
+    "square_arrow_up": "square.and.arrow.up", "square_arrow_down": "square.and.arrow.down",
+    "square_arrow_left": "arrow.left.square", "square_arrow_right": "arrow.right.square",
+    "doc": "doc", "doc_fill": "doc.fill", "doc_text": "doc.text", "doc_text_fill": "doc.text.fill",
+    "chart_bar": "chart.bar", "chart_bar_fill": "chart.bar.fill",
+    "chart_pie": "chart.pie", "chart_pie_fill": "chart.pie.fill",
+    "ellipsis": "ellipsis", "ellipsis_circle": "ellipsis.circle",
+    "info": "info.circle", "info_circle": "info.circle", "info_circle_fill": "info.circle.fill",
+    "question": "questionmark", "question_circle": "questionmark.circle",
+    "question_circle_fill": "questionmark.circle.fill",
+    "exclamationmark_triangle": "exclamationmark.triangle",
+    "exclamationmark_triangle_fill": "exclamationmark.triangle.fill",
+  ]
 
   /// Material name to SF Symbol. Covers the icons Ruflet applications actually
   /// reach for; anything else falls back to a visible placeholder rather than
@@ -79,12 +184,14 @@ public enum IconMapping {
     // Actions
     "search": "magnifyingglass", "settings": "gearshape", "tune": "slider.horizontal.3",
     "filter_list": "line.3.horizontal.decrease", "filter_alt": "line.3.horizontal.decrease.circle",
-    "sort": "arrow.up.arrow.down", "refresh": "arrow.clockwise", "sync": "arrow.triangle.2.circlepath",
+    "sort": "arrow.up.arrow.down", "refresh": "arrow.clockwise",
+    "sync": "arrow.triangle.2.circlepath",
     "edit": "pencil", "create": "pencil", "mode_edit": "pencil", "edit_note": "square.and.pencil",
     "delete": "trash", "delete_forever": "trash.fill", "delete_outline": "trash",
     "save": "square.and.arrow.down", "save_alt": "square.and.arrow.down",
     "download": "arrow.down.circle", "file_download": "arrow.down.circle",
-    "upload": "arrow.up.circle", "file_upload": "arrow.up.circle", "upload_file": "doc.badge.arrow.up",
+    "upload": "arrow.up.circle", "file_upload": "arrow.up.circle",
+    "upload_file": "doc.badge.arrow.up",
     "share": "square.and.arrow.up", "ios_share": "square.and.arrow.up",
     "content_copy": "doc.on.doc", "content_paste": "doc.on.clipboard",
     "content_cut": "scissors", "undo": "arrow.uturn.backward", "redo": "arrow.uturn.forward",
@@ -167,7 +274,8 @@ public enum IconMapping {
 
     // Charts
     "bar_chart": "chart.bar.fill", "show_chart": "chart.line.uptrend.xyaxis",
-    "pie_chart": "chart.pie.fill", "donut_large": "chart.pie", "insights": "chart.line.uptrend.xyaxis",
+    "pie_chart": "chart.pie.fill", "donut_large": "chart.pie",
+    "insights": "chart.line.uptrend.xyaxis",
     "trending_up": "arrow.up.right", "trending_down": "arrow.down.right",
     "trending_flat": "arrow.right", "analytics": "chart.bar.xaxis",
     "timeline": "chart.xyaxis.line", "leaderboard": "chart.bar.fill",
@@ -224,7 +332,8 @@ public enum IconMapping {
     "local_fire_department": "flame.fill", "restaurant": "fork.knife",
     "local_cafe": "cup.and.saucer.fill", "fitness_center": "dumbbell.fill",
     "sports_esports": "gamecontroller.fill", "emoji_events": "trophy.fill",
-    "auto_awesome": "sparkles", "animation": "circle.hexagongrid", "rocket_launch": "paperplane.fill",
+    "auto_awesome": "sparkles", "animation": "circle.hexagongrid",
+    "rocket_launch": "paperplane.fill",
     "psychology": "brain", "gavel": "hammer",
     "qr_code": "qrcode", "qr_code_scanner": "qrcode.viewfinder",
     "hub": "point.3.connected.trianglepath.dotted",
@@ -236,7 +345,7 @@ public enum IconMapping {
     "pending": "ellipsis.circle", "cached": "arrow.triangle.2.circlepath",
     "swap_horiz": "arrow.left.arrow.right", "swap_vert": "arrow.up.arrow.down",
     "open_in_full": "arrow.up.left.and.arrow.down.right",
-    "close_fullscreen": "arrow.down.right.and.arrow.up.left"
+    "close_fullscreen": "arrow.down.right.and.arrow.up.left",
   ]
 }
 
