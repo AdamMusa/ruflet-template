@@ -116,20 +116,20 @@ public enum ControlProps {
 
   /// Flet's two-dimensional `Alignment`, either a named constant or an
   /// `{x:, y:}` pair in the -1…1 coordinate space Flutter uses.
-  public static func alignment(_ value: RufletValue?) -> Alignment? {
+  public static func continuousAlignment(_ value: RufletValue?) -> FletAlignment? {
     guard let value else { return nil }
 
     if let name = value.stringValue {
       switch name.lowercased().replacingOccurrences(of: "_", with: "") {
-      case "topleft", "topstart": return .topLeading
-      case "topcenter", "top": return .top
-      case "topright", "topend": return .topTrailing
-      case "centerleft", "centerstart": return .leading
+      case "topleft", "topstart": return .topLeft
+      case "topcenter", "top": return .topCenter
+      case "topright", "topend": return .topRight
+      case "centerleft", "centerstart": return .centerLeft
       case "center": return .center
-      case "centerright", "centerend": return .trailing
-      case "bottomleft", "bottomstart": return .bottomLeading
-      case "bottomcenter", "bottom": return .bottom
-      case "bottomright", "bottomend": return .bottomTrailing
+      case "centerright", "centerend": return .centerRight
+      case "bottomleft", "bottomstart": return .bottomLeft
+      case "bottomcenter", "bottom": return .bottomCenter
+      case "bottomright", "bottomend": return .bottomRight
       default: return nil
       }
     }
@@ -138,13 +138,23 @@ public enum ControlProps {
       let x = map["x"]?.doubleValue,
       let y = map["y"]?.doubleValue
     else { return nil }
+    return FletAlignment(x: x, y: y)
+  }
+
+  /// Compatibility for controls whose internal layout still uses SwiftUI's
+  /// discrete guides. Container uses `continuousAlignment` and therefore does
+  /// not pass through this lossy adapter.
+  public static func alignment(_ value: RufletValue?) -> Alignment? {
+    guard let alignment = continuousAlignment(value) else { return nil }
     return Alignment(
-      horizontal: HorizontalAlignment(unit: x),
-      vertical: VerticalAlignment(unit: y))
+      horizontal: HorizontalAlignment(unit: alignment.x),
+      vertical: VerticalAlignment(unit: alignment.y))
   }
 
   // MARK: - Geometry
 
+  /// Flet applies `offset` with Flutter's `FractionalTranslation`: `(1, 0)`
+  /// moves a control by its own width, not by one logical pixel.
   public static func offset(_ value: RufletValue?) -> CGSize? {
     guard let map = value?.mapValue else { return nil }
     return CGSize(width: map["x"]?.doubleValue ?? 0, height: map["y"]?.doubleValue ?? 0)
@@ -194,8 +204,54 @@ public enum ControlProps {
   }
 }
 
+/// Flutter's continuous `Alignment(x, y)` coordinate space. Values are not
+/// clamped: Flutter permits alignments outside -1...1 as well.
+public struct FletAlignment: Equatable, Sendable {
+  public let x: Double
+  public let y: Double
+
+  public init(x: Double, y: Double) {
+    self.x = x
+    self.y = y
+  }
+
+  public static let topLeft = FletAlignment(x: -1, y: -1)
+  public static let topCenter = FletAlignment(x: 0, y: -1)
+  public static let topRight = FletAlignment(x: 1, y: -1)
+  public static let centerLeft = FletAlignment(x: -1, y: 0)
+  public static let center = FletAlignment(x: 0, y: 0)
+  public static let centerRight = FletAlignment(x: 1, y: 0)
+  public static let bottomLeft = FletAlignment(x: -1, y: 1)
+  public static let bottomCenter = FletAlignment(x: 0, y: 1)
+  public static let bottomRight = FletAlignment(x: 1, y: 1)
+}
+
+/// Pure geometry shared by the SwiftUI layouts and parity tests.
+enum FletGeometry {
+  static func fractionalTranslation(fraction: CGSize, childSize: CGSize) -> CGSize {
+    CGSize(
+      width: fraction.width * childSize.width,
+      height: fraction.height * childSize.height)
+  }
+
+  static func alignedOrigin(
+    alignment: FletAlignment,
+    containerSize: CGSize,
+    childSize: CGSize
+  ) -> CGPoint {
+    CGPoint(
+      x: (containerSize.width - childSize.width) * CGFloat((alignment.x + 1) / 2),
+      y: (containerSize.height - childSize.height) * CGFloat((alignment.y + 1) / 2))
+  }
+
+  static func unitPoint(alignment: FletAlignment) -> CGPoint {
+    CGPoint(
+      x: CGFloat((alignment.x + 1) / 2),
+      y: CGFloat((alignment.y + 1) / 2))
+  }
+}
+
 extension HorizontalAlignment {
-  /// Maps Flutter's -1…1 alignment axis onto the three SwiftUI guides.
   fileprivate init(unit: Double) {
     switch unit {
     case ..<(-0.34): self = .leading

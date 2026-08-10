@@ -25,6 +25,15 @@ struct RowControlView: View {
     Group {
       if node.bool("wrap") == true {
         WrappingStack(ids: children, spacing: spacing, runSpacing: CGFloat(node.double("run_spacing") ?? spacing))
+      } else if hasFlexChildren, #available(iOS 16.0, macOS 13.0, *) {
+        FletFlexLayout(
+          axis: .horizontal, spacing: spacing, mainAlignment: main,
+          crossAlignment: cross, tight: tight
+        ) {
+          ForEach(children, id: \.self) { id in
+            FletFlexChild(id: id, axis: .horizontal)
+          }
+        }
       } else {
         HStack(alignment: cross.vertical, spacing: main.usesSpacers && !tight ? 0 : spacing) {
           DistributedChildren(
@@ -35,26 +44,55 @@ struct RowControlView: View {
     }
     .modifier(ScrollableStack(node: node, axis: .horizontal))
   }
+
+  private var hasFlexChildren: Bool {
+    node.childIDs.contains { id in
+      guard let child = store.node(id) else { return false }
+      return FletFlexMath.flex(child.props["expand"]) > 0
+    }
+  }
 }
 
 /// `Column` — a vertical stack. `alignment` is the vertical axis here and
 /// `horizontal_alignment` the cross axis.
 struct ColumnControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
 
+  @ViewBuilder
   var body: some View {
     let main = ControlProps.MainAxisAlignment(node.string("alignment"))
     let cross = ControlProps.CrossAxisAlignment(node.string("horizontal_alignment"))
     let spacing = CGFloat(node.double("spacing") ?? 10)
     let tight = node.bool("tight") ?? false
 
-    VStack(alignment: cross.horizontal, spacing: main.usesSpacers && !tight ? 0 : spacing) {
-      DistributedChildren(
-        ids: node.childIDs, alignment: main, axis: .vertical,
-        spacing: spacing, tight: tight)
+    Group {
+      if hasFlexChildren, #available(iOS 16.0, macOS 13.0, *) {
+        FletFlexLayout(
+          axis: .vertical, spacing: spacing, mainAlignment: main,
+          crossAlignment: cross, tight: tight
+        ) {
+          ForEach(node.childIDs, id: \.self) { id in
+            FletFlexChild(id: id, axis: .vertical)
+          }
+        }
+      } else {
+        VStack(alignment: cross.horizontal, spacing: main.usesSpacers && !tight ? 0 : spacing) {
+          DistributedChildren(
+            ids: node.childIDs, alignment: main, axis: .vertical,
+            spacing: spacing, tight: tight)
+        }
+      }
     }
     .modifier(CrossStretch(alignment: cross, axis: .vertical))
     .modifier(ScrollableStack(node: node, axis: .vertical))
+  }
+
+  private var hasFlexChildren: Bool {
+    node.childIDs.contains { id in
+      guard let child = store.node(id) else { return false }
+      return FletFlexMath.flex(child.props["expand"]) > 0
+    }
   }
 }
 

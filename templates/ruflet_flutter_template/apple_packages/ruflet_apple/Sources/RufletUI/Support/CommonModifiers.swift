@@ -15,9 +15,11 @@ public enum LayoutAxis {
   /// by default, so controls must explicitly consume this width before they
   /// paint their decoration.
   case tightHorizontal
+  case tightVertical
   case none
 
   var requiresTightWidth: Bool { self == .tightHorizontal }
+  var requiresTightHeight: Bool { self == .tightVertical }
 }
 
 /// Applies the shared property vocabulary around a control's own body.
@@ -47,6 +49,8 @@ private struct TightConstraintFrame: ViewModifier {
   func body(content: Content) -> some View {
     if axis.requiresTightWidth {
       content.frame(maxWidth: .infinity, alignment: .leading)
+    } else if axis.requiresTightHeight {
+      content.frame(maxHeight: .infinity, alignment: .top)
     } else {
       content
     }
@@ -183,7 +187,7 @@ private struct ExpandingFrame: ViewModifier {
         content.frame(maxWidth: .infinity, alignment: loose ? .leading : .center)
       case .vertical:
         content.frame(maxHeight: .infinity, alignment: loose ? .top : .center)
-      case .tightHorizontal, .none:
+      case .tightHorizontal, .tightVertical, .none:
         content
       }
     } else {
@@ -230,9 +234,37 @@ private struct TransformModifier: ViewModifier {
       content
       .rotationEffect(ControlProps.rotation(node.props["rotate"]) ?? .zero)
       .scaleEffect(x: scale?.width ?? 1, y: scale?.height ?? 1)
-      .offset(x: offset?.width ?? 0, y: offset?.height ?? 0)
+      .modifier(FractionalTranslationModifier(fraction: offset))
       .opacity(node.double("opacity") ?? 1)
   }
+}
+
+/// SwiftUI's `offset` is absolute points, while Flet delegates to Flutter's
+/// `FractionalTranslation`. Measure without changing the child's proposed or
+/// reported size, then translate by that intrinsic size. This also preserves
+/// Flet's paint-only behavior: siblings are laid out as if no offset existed.
+private struct FractionalTranslationModifier: ViewModifier {
+  let fraction: CGSize?
+  @State private var childSize: CGSize = .zero
+
+  func body(content: Content) -> some View {
+    guard let fraction else { return AnyView(content) }
+    let translation = FletGeometry.fractionalTranslation(
+      fraction: fraction, childSize: childSize)
+    return AnyView(
+      content
+        .background(
+          GeometryReader { proxy in
+            Color.clear.preference(key: FractionalChildSizeKey.self, value: proxy.size)
+          })
+        .onPreferenceChange(FractionalChildSizeKey.self) { childSize = $0 }
+        .offset(x: translation.width, y: translation.height))
+  }
+}
+
+private struct FractionalChildSizeKey: PreferenceKey {
+  static let defaultValue: CGSize = .zero
+  static func reduce(value: inout CGSize, nextValue: () -> CGSize) { value = nextValue() }
 }
 
 // MARK: - Decoration

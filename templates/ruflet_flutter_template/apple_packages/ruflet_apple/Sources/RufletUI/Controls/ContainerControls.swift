@@ -169,7 +169,7 @@ struct ContainerControlView: View {
   var body: some View {
     let radius = ControlProps.cornerRadius(node.props["border_radius"]) ?? 0
     let border = ControlProps.border(node.props["border"])
-    let alignment = ControlProps.alignment(node.props["alignment"])
+    let alignment = ControlProps.continuousAlignment(node.props["alignment"])
 
     content
       .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets())
@@ -177,9 +177,9 @@ struct ContainerControlView: View {
       // them before painting the Container so its background, border and hit
       // target fill the grid cell instead of stopping at the text's intrinsic
       // width.
-      .frame(maxWidth: alignment != nil || axis.requiresTightWidth ? .infinity : nil,
-             maxHeight: alignment != nil ? .infinity : nil,
-             alignment: alignment ?? .center)
+      .modifier(ContainerAlignmentModifier(
+        alignment: alignment,
+        requiresTightWidth: axis.requiresTightWidth))
       .background(background(radius: radius))
       .overlay(borderStroke(border: border, radius: radius))
       .clipShape(RoundedRectangle(cornerRadius: radius))
@@ -215,6 +215,91 @@ struct ContainerControlView: View {
         .strokeBorder(border.color, lineWidth: border.width)
     }
   }
+}
+
+/// Flet passes its continuous Flutter `Alignment(x, y)` straight to `Align`.
+/// SwiftUI's frame API only exposes nine discrete alignment guides, so a
+/// custom layout performs Flutter's exact free-space calculation instead of
+/// rounding values such as `{x: 0.25, y: -0.6}` to center/top.
+private struct ContainerAlignmentModifier: ViewModifier {
+  let alignment: FletAlignment?
+  let requiresTightWidth: Bool
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if let alignment {
+      if #available(iOS 16.0, macOS 13.0, *) {
+        ContinuousAlignmentLayout(alignment: alignment) { content }
+      } else {
+        LegacyContinuousAlignment(alignment: alignment) { content }
+      }
+    } else if requiresTightWidth {
+      content.frame(maxWidth: .infinity, alignment: .center)
+    } else {
+      content
+    }
+  }
+}
+
+@available(iOS 16.0, macOS 13.0, *)
+private struct ContinuousAlignmentLayout: Layout {
+  let alignment: FletAlignment
+
+  func sizeThatFits(
+    proposal: ProposedViewSize, subviews: Subviews, cache: inout Void
+  ) -> CGSize {
+    guard let child = subviews.first else { return .zero }
+    let childSize = child.sizeThatFits(proposal)
+    return CGSize(
+      width: finite(proposal.width) ?? childSize.width,
+      height: finite(proposal.height) ?? childSize.height)
+  }
+
+  func placeSubviews(
+    in bounds: CGRect, proposal: ProposedViewSize,
+    subviews: Subviews, cache: inout Void
+  ) {
+    guard let child = subviews.first else { return }
+    let childSize = child.sizeThatFits(proposal)
+    let origin = FletGeometry.alignedOrigin(
+      alignment: alignment, containerSize: bounds.size, childSize: childSize)
+    child.place(
+      at: CGPoint(x: bounds.minX + origin.x, y: bounds.minY + origin.y),
+      anchor: .topLeading,
+      proposal: ProposedViewSize(width: childSize.width, height: childSize.height))
+  }
+
+  private func finite(_ value: CGFloat?) -> CGFloat? {
+    guard let value, value.isFinite else { return nil }
+    return max(value, 0)
+  }
+}
+
+/// iOS 15 compatibility. GeometryReader supplies the bounded Align size while
+/// the preference measures the child without changing its layout footprint.
+private struct LegacyContinuousAlignment<Content: View>: View {
+  let alignment: FletAlignment
+  @ViewBuilder let content: () -> Content
+  @State private var childSize: CGSize = .zero
+
+  var body: some View {
+    GeometryReader { proxy in
+      let origin = FletGeometry.alignedOrigin(
+        alignment: alignment, containerSize: proxy.size, childSize: childSize)
+      content()
+        .background(
+          GeometryReader { childProxy in
+            Color.clear.preference(key: AlignedChildSizeKey.self, value: childProxy.size)
+          })
+        .onPreferenceChange(AlignedChildSizeKey.self) { childSize = $0 }
+        .offset(x: origin.x, y: origin.y)
+    }
+  }
+}
+
+private struct AlignedChildSizeKey: PreferenceKey {
+  static let defaultValue: CGSize = .zero
+  static func reduce(value: inout CGSize, nextValue: () -> CGSize) { value = nextValue() }
 }
 
 /// `Card` — a raised surface around a single child.
@@ -401,27 +486,13 @@ enum GradientProps {
       .compactMap { MaterialPalette.color($0.stringValue) }
     guard colors.count >= 2 else { return nil }
 
-    let begin = ControlProps.alignment(map["begin"]) ?? .top
-    let end = ControlProps.alignment(map["end"]) ?? .bottom
+    let begin = FletGeometry.unitPoint(
+      alignment: ControlProps.continuousAlignment(map["begin"]) ?? .topCenter)
+    let end = FletGeometry.unitPoint(
+      alignment: ControlProps.continuousAlignment(map["end"]) ?? .bottomCenter)
     return LinearGradient(
       colors: colors,
-      startPoint: UnitPoint(alignment: begin),
-      endPoint: UnitPoint(alignment: end))
-  }
-}
-
-extension UnitPoint {
-  fileprivate init(alignment: Alignment) {
-    switch alignment {
-    case .topLeading: self = .topLeading
-    case .top: self = .top
-    case .topTrailing: self = .topTrailing
-    case .leading: self = .leading
-    case .trailing: self = .trailing
-    case .bottomLeading: self = .bottomLeading
-    case .bottom: self = .bottom
-    case .bottomTrailing: self = .bottomTrailing
-    default: self = .center
-    }
+      startPoint: UnitPoint(x: begin.x, y: begin.y),
+      endPoint: UnitPoint(x: end.x, y: end.y))
   }
 }
