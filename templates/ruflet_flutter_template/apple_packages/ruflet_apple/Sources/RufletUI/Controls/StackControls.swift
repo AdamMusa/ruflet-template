@@ -200,95 +200,211 @@ private struct PositionedChild: View {
 struct ResponsiveRowControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
-  @State private var availableWidth: CGFloat = 0
 
+  @ViewBuilder
   var body: some View {
-    let spacing = CGFloat(node.double("spacing") ?? 10)
-    let runSpacing = CGFloat(node.double("run_spacing") ?? 10)
-    let width = max(availableWidth, 1)
-    let breakpoint = Self.breakpoint(for: width)
-    let rows = Self.rows(ids: node.childIDs, store: store, breakpoint: breakpoint)
-
-    VStack(alignment: .leading, spacing: runSpacing) {
-      ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
-        HStack(alignment: .top, spacing: spacing) {
-          ForEach(row, id: \.id) { entry in
-            ControlView(id: entry.id, axis: .none)
-              .frame(width: Self.width(
-                columns: entry.columns, total: width,
-                spacing: spacing, siblings: row.count))
-          }
+    if #available(iOS 16.0, macOS 13.0, tvOS 16.0, *) {
+      ResponsiveGridLayout(
+        spans: node.childIDs.map { store.node($0)?.props["col"] },
+        columns: node.props["columns"],
+        spacing: node.props["spacing"],
+        runSpacing: node.props["run_spacing"],
+        breakpoints: ResponsiveGridMath.breakpoints(node.props["breakpoints"]),
+        alignment: node.string("alignment") ?? "start",
+        verticalAlignment: node.string("vertical_alignment") ?? "start"
+      ) {
+        ForEach(node.childIDs, id: \.self) { id in
+          ControlView(id: id, axis: .none)
         }
       }
-    }
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .background {
-      GeometryReader { geometry in
-        Color.clear.preference(
-          key: ResponsiveRowWidthPreference.self,
-          value: geometry.size.width)
+      // Flutter's LayoutBuilder always receives its parent's finite maximum
+      // width. Claiming that proposal here prevents an intrinsic-width parent
+      // Column from collapsing the whole 12-column grid to a narrow strip.
+      .frame(maxWidth: .infinity, alignment: .leading)
+    } else {
+      VStack(alignment: .leading, spacing: 10) {
+        ForEach(node.childIDs, id: \.self) { id in
+          ControlView(id: id, axis: .none)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
       }
+      .frame(maxWidth: .infinity, alignment: .leading)
     }
-    .onPreferenceChange(ResponsiveRowWidthPreference.self) { availableWidth = $0 }
-  }
-
-  struct Entry: Identifiable {
-    let id: Int
-    let columns: Double
-  }
-
-  /// Flet's breakpoint names, smallest first.
-  static func breakpoint(for width: CGFloat) -> [String] {
-    switch width {
-    case ..<576: return ["xs"]
-    case ..<768: return ["sm", "xs"]
-    case ..<992: return ["md", "sm", "xs"]
-    case ..<1200: return ["lg", "md", "sm", "xs"]
-    default: return ["xl", "lg", "md", "sm", "xs"]
-    }
-  }
-
-  static func rows(ids: [Int], store: ControlStore, breakpoint: [String]) -> [[Entry]] {
-    var rows: [[Entry]] = []
-    var current: [Entry] = []
-    var used = 0.0
-
-    for id in ids {
-      let columns = columnSpan(store.node(id), breakpoint: breakpoint)
-      if used + columns > 12, !current.isEmpty {
-        rows.append(current)
-        current = []
-        used = 0
-      }
-      current.append(Entry(id: id, columns: columns))
-      used += columns
-    }
-    if !current.isEmpty { rows.append(current) }
-    return rows
-  }
-
-  private static func columnSpan(_ node: ControlNode?, breakpoint: [String]) -> Double {
-    guard let value = node?.props["col"] else { return 12 }
-    if let uniform = value.doubleValue { return uniform }
-    guard let map = value.mapValue else { return 12 }
-    for name in breakpoint {
-      if let span = map[name]?.doubleValue { return span }
-    }
-    return 12
-  }
-
-  private static func width(
-    columns: Double, total: CGFloat, spacing: CGFloat, siblings: Int
-  ) -> CGFloat {
-    let gaps = spacing * CGFloat(max(siblings - 1, 0))
-    return max((total - gaps) * CGFloat(columns / 12), 0)
   }
 }
 
-private struct ResponsiveRowWidthPreference: PreferenceKey {
-  static var defaultValue: CGFloat = 0
-  static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-    value = nextValue()
+enum ResponsiveGridMath {
+  static let defaultBreakpoints: [String: Double] = [
+    "xs": 0, "sm": 576, "md": 768, "lg": 992, "xl": 1200, "xxl": 1400,
+  ]
+
+  static func breakpoints(_ value: RufletValue?) -> [String: Double] {
+    guard let map = value?.mapValue else { return defaultBreakpoints }
+    let parsed = map.reduce(into: [String: Double]()) { result, entry in
+      if let number = entry.value.doubleValue { result[entry.key] = number }
+    }
+    return parsed.isEmpty ? defaultBreakpoints : parsed
+  }
+
+  /// Exact equivalent of Flet's `getBreakpointNumber`: start with the unnamed
+  /// value (or the supplied default), then choose the matching breakpoint with
+  /// the greatest threshold.
+  static func value(
+    _ source: RufletValue?, default defaultValue: Double,
+    width: CGFloat, breakpoints: [String: Double]
+  ) -> Double {
+    if let scalar = source?.doubleValue { return scalar }
+    guard let map = source?.mapValue else { return defaultValue }
+    var selected = map[""]?.doubleValue ?? defaultValue
+    var highest = -Double.infinity
+    for (name, candidate) in map {
+      guard !name.isEmpty, let threshold = breakpoints[name],
+        CGFloat(threshold) <= width, threshold >= highest,
+        let number = candidate.doubleValue
+      else { continue }
+      highest = threshold
+      selected = number
+    }
+    return selected
+  }
+
+  static func lines(spans: [Double], columns: Double) -> [[Int]] {
+    var result: [[Int]] = []
+    var current: [Int] = []
+    var used = 0.0
+    for index in spans.indices {
+      let span = min(max(spans[index], 0), columns)
+      if used + span > columns, !current.isEmpty {
+        result.append(current)
+        current = []
+        used = 0
+      }
+      current.append(index)
+      used += span
+    }
+    if !current.isEmpty { result.append(current) }
+    return result
+  }
+
+  /// Flet computes one grid-column width, then adds internal gaps for a child
+  /// spanning multiple columns. This is intentionally not based on sibling
+  /// count; partial final rows keep the same widths as full rows.
+  static func itemWidth(
+    span: Double, columns: Double, total: CGFloat, spacing: CGFloat
+  ) -> CGFloat {
+    guard columns > 0 else { return 0 }
+    let columnWidth = (total - spacing * CGFloat(columns - 1)) / CGFloat(columns)
+    return max(columnWidth * CGFloat(span) + spacing * CGFloat(span - 1), 0)
+  }
+}
+
+@available(iOS 16.0, macOS 13.0, tvOS 16.0, *)
+private struct ResponsiveGridLayout: Layout {
+  let spans: [RufletValue?]
+  let columns: RufletValue?
+  let spacing: RufletValue?
+  let runSpacing: RufletValue?
+  let breakpoints: [String: Double]
+  let alignment: String
+  let verticalAlignment: String
+
+  struct Line {
+    let indices: [Int]
+    let sizes: [CGSize]
+    let width: CGFloat
+    let height: CGFloat
+  }
+
+  func sizeThatFits(
+    proposal: ProposedViewSize, subviews: Subviews, cache: inout Void
+  ) -> CGSize {
+    let width = finiteWidth(proposal.width, subviews: subviews)
+    let metrics = resolved(width: width, subviews: subviews)
+    let height = metrics.lines.reduce(0) { $0 + $1.height }
+      + metrics.runSpacing * CGFloat(max(metrics.lines.count - 1, 0))
+    return CGSize(width: width, height: height)
+  }
+
+  func placeSubviews(
+    in bounds: CGRect, proposal: ProposedViewSize,
+    subviews: Subviews, cache: inout Void
+  ) {
+    let metrics = resolved(width: bounds.width, subviews: subviews)
+    var y = bounds.minY
+    for line in metrics.lines {
+      let distribution = horizontalDistribution(
+        lineWidth: line.width, available: bounds.width,
+        count: line.indices.count, baseSpacing: metrics.spacing)
+      var x = bounds.minX + distribution.offset
+      for position in line.indices.indices {
+        let index = line.indices[position]
+        let size = line.sizes[position]
+        let verticalOffset: CGFloat
+        switch verticalAlignment.lowercased() {
+        case "center": verticalOffset = (line.height - size.height) / 2
+        case "end": verticalOffset = line.height - size.height
+        default: verticalOffset = 0
+        }
+        subviews[index].place(
+          at: CGPoint(x: x, y: y + verticalOffset), anchor: .topLeading,
+          proposal: ProposedViewSize(width: size.width, height: size.height))
+        x += size.width + distribution.spacing
+      }
+      y += line.height + metrics.runSpacing
+    }
+  }
+
+  private func resolved(width: CGFloat, subviews: Subviews)
+    -> (lines: [Line], spacing: CGFloat, runSpacing: CGFloat)
+  {
+    let columnCount = max(ResponsiveGridMath.value(
+      columns, default: 12, width: width, breakpoints: breakpoints), 1)
+    let gap = CGFloat(ResponsiveGridMath.value(
+      spacing, default: 10, width: width, breakpoints: breakpoints))
+    let runGap = CGFloat(ResponsiveGridMath.value(
+      runSpacing, default: 10, width: width, breakpoints: breakpoints))
+    let resolvedSpans = subviews.indices.map { index in
+      min(max(ResponsiveGridMath.value(
+        index < spans.count ? spans[index] : nil,
+        default: 12, width: width, breakpoints: breakpoints), 0), columnCount)
+    }
+    let lineIndices = ResponsiveGridMath.lines(spans: resolvedSpans, columns: columnCount)
+    let lines = lineIndices.map { indices -> Line in
+      let sizes = indices.map { index -> CGSize in
+        let itemWidth = ResponsiveGridMath.itemWidth(
+          span: resolvedSpans[index], columns: columnCount, total: width, spacing: gap)
+        return subviews[index].sizeThatFits(ProposedViewSize(width: itemWidth, height: nil))
+      }
+      return Line(
+        indices: indices, sizes: sizes,
+        width: sizes.reduce(0) { $0 + $1.width } + gap * CGFloat(max(sizes.count - 1, 0)),
+        height: sizes.map(\.height).max() ?? 0)
+    }
+    return (lines, gap, runGap)
+  }
+
+  private func finiteWidth(_ proposal: CGFloat?, subviews: Subviews) -> CGFloat {
+    if let proposal, proposal.isFinite { return max(proposal, 0) }
+    return subviews.map { $0.sizeThatFits(.unspecified).width }.max() ?? 0
+  }
+
+  private func horizontalDistribution(
+    lineWidth: CGFloat, available: CGFloat, count: Int, baseSpacing: CGFloat
+  ) -> (offset: CGFloat, spacing: CGFloat) {
+    let remainder = max(available - lineWidth, 0)
+    switch alignment.lowercased() {
+    case "center": return (remainder / 2, baseSpacing)
+    case "end": return (remainder, baseSpacing)
+    case "spacebetween" where count > 1:
+      return (0, baseSpacing + remainder / CGFloat(count - 1))
+    case "spacearound" where count > 0:
+      let extra = remainder / CGFloat(count)
+      return (extra / 2, baseSpacing + extra)
+    case "spaceevenly" where count > 0:
+      let extra = remainder / CGFloat(count + 1)
+      return (extra, baseSpacing + extra)
+    default: return (0, baseSpacing)
+    }
   }
 }
 
