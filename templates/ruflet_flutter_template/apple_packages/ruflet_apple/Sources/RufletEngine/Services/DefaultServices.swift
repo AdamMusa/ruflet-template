@@ -1,0 +1,52 @@
+import Foundation
+import RufletProtocol
+
+extension ServiceRegistry {
+  /// Registers every service that touches no privacy-gated framework.
+  ///
+  /// The names are the wire types from `Ruflet::UI::Services::RufletServices`.
+  /// The rest — the CoreMotion sensors, CoreLocation and AVFoundation capture —
+  /// live in `RufletMotion`, `RufletLocation` and `RufletMedia`, because
+  /// linking those frameworks is what makes iOS demand a usage string and what
+  /// App Store review flags. An app links the ones it uses.
+  ///
+  /// A service Ruby can reach but nothing implements replies "no such method",
+  /// naming the bundle that provides it — which is a far better failure than a
+  /// call that hangs.
+  public func registerDefaults() {
+    register(PageService.self) { PageService() }
+
+    register(ClipboardService.self) { ClipboardService() }
+    register(SharedPreferencesService.self) { SharedPreferencesService() }
+    register(SecureStorageService.self) { SecureStorageService() }
+    register(StoragePathsService.self) { StoragePathsService() }
+    register(UrlLauncherService.self) { UrlLauncherService() }
+    register(HapticFeedbackService.self) { HapticFeedbackService() }
+    register(WakelockService.self) { WakelockService() }
+    register(SemanticsAnnouncementService.self) { SemanticsAnnouncementService() }
+
+    register(BatteryService.self) { BatteryService() }
+    register(ConnectivityService.self) { ConnectivityService() }
+    register(PermissionHandlerService.self) { PermissionHandlerService() }
+    register(ScreenBrightnessService.self) { ScreenBrightnessService() }
+
+    register(FilePickerService.self) { FilePickerService() }
+    register(ShareService.self) { ShareService() }
+  }
+
+  /// Which module provides a wire type the engine cannot answer, so the error
+  /// tells an integrator what to link rather than only that it failed.
+  public static func bundleProviding(_ wireType: String) -> String? {
+    switch wireType.lowercased() {
+    case "accelerometer", "useraccelerometer", "gyroscope", "magnetometer", "barometer",
+      "shakedetector":
+      return "RufletMotion"
+    case "geolocator":
+      return "RufletLocation"
+    case "audio", "audiorecorder", "camera", "flashlight":
+      return "RufletMedia"
+    default:
+      return nil
+    }
+  }
+}
