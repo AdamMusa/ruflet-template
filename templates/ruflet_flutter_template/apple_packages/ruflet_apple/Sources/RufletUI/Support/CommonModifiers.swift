@@ -95,26 +95,59 @@ private struct FixedSize: ViewModifier {
   }
 }
 
-/// Flutter resolves an explicit width *inside* the constraints supplied by the
-/// parent: `width: 560` becomes 390 on a 390-point phone. SwiftUI's
-/// `idealWidth` is allowed to escape that proposal, which was making complete
-/// screens wider than the device. `ViewThatFits` first tries the requested
-/// width and otherwise uses the parent's available width.
+/// Flutter resolves `SizedBox(width:)` inside the constraints supplied by its
+/// parent: `width: 560` becomes 390 on a 390-point phone, while `width: 320`
+/// remains exactly 320. A custom Layout gives SwiftUI those same tight width
+/// constraints; `ViewThatFits` is not equivalent because it can choose a
+/// child's smaller intrinsic width.
 private struct ParentConstrainedWidth: ViewModifier {
   let requested: CGFloat
 
   @ViewBuilder
   func body(content: Content) -> some View {
     if #available(iOS 16.0, macOS 13.0, *) {
-      ViewThatFits(in: .horizontal) {
-        content.frame(width: requested)
-        content.frame(maxWidth: .infinity)
-      }
+      ParentConstrainedWidthLayout(requested: requested) { content }
     } else {
       // The iOS 15 fallback still accepts the parent's finite proposal and
       // treats the Ruby width as a ceiling.
       content.frame(maxWidth: requested)
     }
+  }
+}
+
+@available(iOS 16.0, macOS 13.0, *)
+private struct ParentConstrainedWidthLayout: Layout {
+  let requested: CGFloat
+
+  func sizeThatFits(
+    proposal: ProposedViewSize, subviews: Subviews, cache: inout Void
+  ) -> CGSize {
+    guard let child = subviews.first else { return .zero }
+    let width = resolvedWidth(proposal.width)
+    let measured = child.sizeThatFits(
+      ProposedViewSize(width: width, height: proposal.height))
+    return CGSize(width: width, height: measured.height)
+  }
+
+  func placeSubviews(
+    in bounds: CGRect, proposal: ProposedViewSize,
+    subviews: Subviews, cache: inout Void
+  ) {
+    guard let child = subviews.first else { return }
+    child.place(
+      at: bounds.origin, anchor: .topLeading,
+      proposal: ProposedViewSize(width: bounds.width, height: bounds.height))
+  }
+
+  private func resolvedWidth(_ proposed: CGFloat?) -> CGFloat {
+    FletConstraintMath.width(requested: requested, proposed: proposed)
+  }
+}
+
+enum FletConstraintMath {
+  static func width(requested: CGFloat, proposed: CGFloat?) -> CGFloat {
+    guard let proposed, proposed.isFinite else { return max(requested, 0) }
+    return min(max(requested, 0), max(proposed, 0))
   }
 }
 

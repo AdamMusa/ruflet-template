@@ -300,6 +300,10 @@ enum ResponsiveGridMath {
     let columnWidth = (total - spacing * CGFloat(columns - 1)) / CGFloat(columns)
     return max(columnWidth * CGFloat(span) + spacing * CGFloat(span - 1), 0)
   }
+
+  static func constrainedItemSize(width: CGFloat, measured: CGSize) -> CGSize {
+    CGSize(width: width, height: measured.height)
+  }
 }
 
 @available(iOS 16.0, macOS 13.0, tvOS 16.0, *)
@@ -377,7 +381,14 @@ private struct ResponsiveGridLayout: Layout {
       let sizes = indices.map { index -> CGSize in
         let itemWidth = ResponsiveGridMath.itemWidth(
           span: resolvedSpans[index], columns: columnCount, total: width, spacing: gap)
-        return subviews[index].sizeThatFits(ProposedViewSize(width: itemWidth, height: nil))
+        let measured = subviews[index].sizeThatFits(
+          ProposedViewSize(width: itemWidth, height: nil))
+        // Flet uses ConstrainedBox(minWidth == maxWidth == childWidth).
+        // A SwiftUI child may report its smaller intrinsic width even after
+        // receiving a finite proposal, so preserve only its measured height
+        // and make the grid's computed width authoritative.
+        return ResponsiveGridMath.constrainedItemSize(
+          width: itemWidth, measured: measured)
       }
       return Line(
         indices: indices, sizes: sizes,

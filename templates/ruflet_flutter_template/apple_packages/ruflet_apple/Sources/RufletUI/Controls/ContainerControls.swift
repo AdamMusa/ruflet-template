@@ -247,8 +247,9 @@ struct SafeAreaControlView: View {
         ControlList(ids: node.childIDs, axis: .vertical)
       }
     }
-    // SwiftUI already applies the safe area; the control exists so a Flet
-    // layout that opts out (`top: false`) can extend past it.
+    .padding(ControlProps.edgeInsets(node.props["minimum_padding"]) ?? EdgeInsets())
+    // SwiftUI already applies the active safe area. Match Flet's property
+    // names so a control can explicitly opt an edge out of that protection.
     .modifier(SafeAreaEdges(node: node))
   }
 }
@@ -258,10 +259,10 @@ private struct SafeAreaEdges: ViewModifier {
 
   func body(content: Content) -> some View {
     var ignored: Edge.Set = []
-    if node.bool("top") == false { ignored.insert(.top) }
-    if node.bool("bottom") == false { ignored.insert(.bottom) }
-    if node.bool("left") == false { ignored.insert(.leading) }
-    if node.bool("right") == false { ignored.insert(.trailing) }
+    if node.bool("avoid_intrusions_top") == false { ignored.insert(.top) }
+    if node.bool("avoid_intrusions_bottom") == false { ignored.insert(.bottom) }
+    if node.bool("avoid_intrusions_left") == false { ignored.insert(.leading) }
+    if node.bool("avoid_intrusions_right") == false { ignored.insert(.trailing) }
     return content.edgesIgnoringSafeArea(ignored)
   }
 }

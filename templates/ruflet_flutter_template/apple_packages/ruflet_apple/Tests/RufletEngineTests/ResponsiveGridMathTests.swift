@@ -25,6 +25,17 @@ final class ResponsiveGridMathTests: XCTestCase {
     XCTAssertEqual(
       ResponsiveGridMath.itemWidth(span: 12, columns: 12, total: 350, spacing: 12),
       350, accuracy: 0.001)
+
+    let constrained = ResponsiveGridMath.constrainedItemSize(
+      width: 350, measured: CGSize(width: 124, height: 48))
+    XCTAssertEqual(constrained.width, 350)
+    XCTAssertEqual(constrained.height, 48)
+  }
+
+  func testExplicitWidthMatchesFletTightParentConstraints() {
+    XCTAssertEqual(FletConstraintMath.width(requested: 320, proposed: 390), 320)
+    XCTAssertEqual(FletConstraintMath.width(requested: 560, proposed: 390), 390)
+    XCTAssertEqual(FletConstraintMath.width(requested: 320, proposed: nil), 320)
   }
 
   func testTabletAndDesktopSpansShareRows() {
