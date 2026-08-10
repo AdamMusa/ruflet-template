@@ -21,6 +21,11 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		F6EC9A513828690912E05F6D /* RufletEngineChoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B0B9FF9288DD7CB7DE1C5C /* RufletEngineChoice.swift */; };
+		A0264B45B9710F667105E4C8 /* RufletApple in Frameworks */ = {isa = PBXBuildFile; productRef = 5ED77199B3D9F2297851A757 /* RufletApple */; };
+		BC05365026C7F21FF1831F30 /* RufletMotion in Frameworks */ = {isa = PBXBuildFile; productRef = B4A410B5E2D8C74FB9A2BECE /* RufletMotion */; };
+		E7686D4DC76E1A107F8AC728 /* RufletLocation in Frameworks */ = {isa = PBXBuildFile; productRef = 4D84F2D1784DCDB8693CFDB8 /* RufletLocation */; };
+		9D6172021F848F00D462C6A5 /* RufletMedia in Frameworks */ = {isa = PBXBuildFile; productRef = C5752FDF12498EB3CC359F81 /* RufletMedia */; };
 		331C80D8294CF71000263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C80D7294CF71000263BE5 /* RunnerTests.swift */; };
 		335BBD1B22A9A15E00E9071D /* GeneratedPluginRegistrant.swift in Sources */ = {isa = PBXBuildFile; fileRef = 335BBD1A22A9A15E00E9071D /* GeneratedPluginRegistrant.swift */; };
 		33CC10F12044A3C60003C045 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC10F02044A3C60003C045 /* AppDelegate.swift */; };
@@ -62,6 +67,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		39B0B9FF9288DD7CB7DE1C5C /* RufletEngineChoice.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RufletEngineChoice.swift; sourceTree = "<group>"; };
 		1D2B9C364204E1951CA59974 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		331C80D5294CF71000263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		331C80D7294CF71000263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
@@ -103,6 +109,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A0264B45B9710F667105E4C8 /* RufletApple in Frameworks */,
+				BC05365026C7F21FF1831F30 /* RufletMotion in Frameworks */,
+				E7686D4DC76E1A107F8AC728 /* RufletLocation in Frameworks */,
+				9D6172021F848F00D462C6A5 /* RufletMedia in Frameworks */,
 				96E29D3861208ABD13A39F6C /* Pods_Runner.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -175,6 +185,7 @@
 		33FAB671232836740065AC1E /* Runner */ = {
 			isa = PBXGroup;
 			children = (
+				39B0B9FF9288DD7CB7DE1C5C /* RufletEngineChoice.swift */,
 				33CC10F02044A3C60003C045 /* AppDelegate.swift */,
 				33CC11122044BFA00003C045 /* MainFlutterWindow.swift */,
 				33E51913231747F40026EE4D /* DebugProfile.entitlements */,
@@ -248,6 +259,12 @@
 				33CC11202044C79F0003C045 /* PBXTargetDependency */,
 			);
 			name = Runner;
+			packageProductDependencies = (
+				5ED77199B3D9F2297851A757 /* RufletApple */,
+				B4A410B5E2D8C74FB9A2BECE /* RufletMotion */,
+				4D84F2D1784DCDB8693CFDB8 /* RufletLocation */,
+				C5752FDF12498EB3CC359F81 /* RufletMedia */,
+			);
 			productName = Runner;
 			productReference = 33CC10ED2044A3C60003C045 /* ruflet_client.app */;
 			productType = "com.apple.product-type.application";
@@ -290,6 +307,9 @@
 			knownRegions = (
 				en,
 				Base,
+			);
+			packageReferences = (
+				C894E0AD59020B5CC84739B7 /* XCLocalSwiftPackageReference "../apple_packages/ruflet_apple" */,
 			);
 			mainGroup = 33CC10E42044A3C60003C045;
 			productRefGroup = 33CC10EE2044A3C60003C045 /* Products */;
@@ -437,6 +457,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F6EC9A513828690912E05F6D /* RufletEngineChoice.swift in Sources */,
 				33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */,
 				33CC10F12044A3C60003C045 /* AppDelegate.swift in Sources */,
 				335BBD1B22A9A15E00E9071D /* GeneratedPluginRegistrant.swift in Sources */,
@@ -557,7 +578,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -639,7 +660,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
@@ -689,7 +710,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MACOSX_DEPLOYMENT_TARGET = 12.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -796,6 +817,20 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		5ED77199B3D9F2297851A757 /* RufletApple */ = {isa = XCSwiftPackageProductDependency; productName = RufletApple; };
+		B4A410B5E2D8C74FB9A2BECE /* RufletMotion */ = {isa = XCSwiftPackageProductDependency; productName = RufletMotion; };
+		4D84F2D1784DCDB8693CFDB8 /* RufletLocation */ = {isa = XCSwiftPackageProductDependency; productName = RufletLocation; };
+		C5752FDF12498EB3CC359F81 /* RufletMedia */ = {isa = XCSwiftPackageProductDependency; productName = RufletMedia; };
+/* End XCSwiftPackageProductDependency section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		C894E0AD59020B5CC84739B7 /* XCLocalSwiftPackageReference "../apple_packages/ruflet_apple" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../apple_packages/ruflet_apple;
+		};
+/* End XCLocalSwiftPackageReference section */
 	};
 	rootObject = 33CC10E52044A3C60003C045 /* Project object */;
 }

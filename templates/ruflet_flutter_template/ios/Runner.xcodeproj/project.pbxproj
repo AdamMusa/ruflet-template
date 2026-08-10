@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B00402366001780E8B8AC8B5 /* RufletEngineChoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 946ABA4325A78178AA867C6D /* RufletEngineChoice.swift */; };
+		44F4DB6B0712855D937231EA /* RufletApple in Frameworks */ = {isa = PBXBuildFile; productRef = 4F8D99F90856715AE34B1507 /* RufletApple */; };
+		50C03F09D0309821643DCCFB /* RufletMotion in Frameworks */ = {isa = PBXBuildFile; productRef = B7FD70EA8A684276048E134D /* RufletMotion */; };
+		CCF27F387E5B119F5D7B1320 /* RufletLocation in Frameworks */ = {isa = PBXBuildFile; productRef = 68D42CD72FB89073AD6D8DBA /* RufletLocation */; };
+		8F0626CDBE86182CBBF3BEDA /* RufletMedia in Frameworks */ = {isa = PBXBuildFile; productRef = CF3215D90008FFE9B83EB811 /* RufletMedia */; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		39A0F577EFBDD1C31A59D518 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 07B65955A2E5FDE39C925560 /* Pods_Runner.framework */; };
@@ -42,6 +47,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		946ABA4325A78178AA867C6D /* RufletEngineChoice.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = RufletEngineChoice.swift; sourceTree = "<group>"; };
 		0614943E7C52CCE44B47D34E /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
 		07B65955A2E5FDE39C925560 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
@@ -80,6 +86,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				44F4DB6B0712855D937231EA /* RufletApple in Frameworks */,
+				50C03F09D0309821643DCCFB /* RufletMotion in Frameworks */,
+				CCF27F387E5B119F5D7B1320 /* RufletLocation in Frameworks */,
+				8F0626CDBE86182CBBF3BEDA /* RufletMedia in Frameworks */,
 				39A0F577EFBDD1C31A59D518 /* Pods_Runner.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -152,6 +162,7 @@
 		97C146F01CF9000F007C117D /* Runner */ = {
 			isa = PBXGroup;
 			children = (
+				946ABA4325A78178AA867C6D /* RufletEngineChoice.swift */,
 				97C146FA1CF9000F007C117D /* Main.storyboard */,
 				97C146FD1CF9000F007C117D /* Assets.xcassets */,
 				97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */,
@@ -205,6 +216,12 @@
 			dependencies = (
 			);
 			name = Runner;
+			packageProductDependencies = (
+				4F8D99F90856715AE34B1507 /* RufletApple */,
+				B7FD70EA8A684276048E134D /* RufletMotion */,
+				68D42CD72FB89073AD6D8DBA /* RufletLocation */,
+				CF3215D90008FFE9B83EB811 /* RufletMedia */,
+			);
 			productName = Runner;
 			productReference = 97C146EE1CF9000F007C117D /* Runner.app */;
 			productType = "com.apple.product-type.application";
@@ -236,6 +253,9 @@
 			knownRegions = (
 				en,
 				Base,
+			);
+			packageReferences = (
+				7D0FDF9208807CF771B3DE36 /* XCLocalSwiftPackageReference "../apple_packages/ruflet_apple" */,
 			);
 			mainGroup = 97C146E51CF9000F007C117D;
 			productRefGroup = 97C146EF1CF9000F007C117D /* Products */;
@@ -394,6 +414,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B00402366001780E8B8AC8B5 /* RufletEngineChoice.swift in Sources */,
 				74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 			);
@@ -472,7 +493,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = iphoneos;
@@ -604,7 +625,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -655,7 +676,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = iphoneos;
@@ -749,6 +770,20 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		4F8D99F90856715AE34B1507 /* RufletApple */ = {isa = XCSwiftPackageProductDependency; productName = RufletApple; };
+		B7FD70EA8A684276048E134D /* RufletMotion */ = {isa = XCSwiftPackageProductDependency; productName = RufletMotion; };
+		68D42CD72FB89073AD6D8DBA /* RufletLocation */ = {isa = XCSwiftPackageProductDependency; productName = RufletLocation; };
+		CF3215D90008FFE9B83EB811 /* RufletMedia */ = {isa = XCSwiftPackageProductDependency; productName = RufletMedia; };
+/* End XCSwiftPackageProductDependency section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		7D0FDF9208807CF771B3DE36 /* XCLocalSwiftPackageReference "../apple_packages/ruflet_apple" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../apple_packages/ruflet_apple;
+		};
+/* End XCLocalSwiftPackageReference section */
 	};
 	rootObject = 97C146E61CF9000F007C117D /* Project object */;
 }
