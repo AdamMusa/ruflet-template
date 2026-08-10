@@ -215,6 +215,10 @@ struct ResponsiveRowControlView: View {
       ) {
         ForEach(node.childIDs, id: \.self) { id in
           ControlView(id: id, axis: .none)
+            // Flet wraps every child in a ConstrainedBox whose minWidth and
+            // maxWidth are identical. The flexible frame is SwiftUI's
+            // equivalent: it consumes the exact width proposed by the grid.
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
       }
       // Flutter's LayoutBuilder always receives its parent's finite maximum
