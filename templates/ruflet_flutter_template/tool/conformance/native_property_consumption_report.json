@@ -15,10 +15,10 @@
       "consumed": 1613,
       "parent_consumed": 3167,
       "service": 155,
-      "unclassified": 388,
-      "unsupported": 7
+      "unclassified": 381,
+      "unsupported": 14
     },
-    "unclassified": 388
+    "unclassified": 381
   },
   "unclassified": [
     {
@@ -835,41 +835,6 @@
       "family": "visual",
       "wire_type": "FilledTonalIconButton",
       "property": "visual_density"
-    },
-    {
-      "family": "visual",
-      "wire_type": "FletApp",
-      "property": "app_error_message"
-    },
-    {
-      "family": "visual",
-      "wire_type": "FletApp",
-      "property": "app_startup_screen_message"
-    },
-    {
-      "family": "visual",
-      "wire_type": "FletApp",
-      "property": "args"
-    },
-    {
-      "family": "visual",
-      "wire_type": "FletApp",
-      "property": "force_pyodide"
-    },
-    {
-      "family": "visual",
-      "wire_type": "FletApp",
-      "property": "reconnect_interval_ms"
-    },
-    {
-      "family": "visual",
-      "wire_type": "FletApp",
-      "property": "reconnect_timeout_ms"
-    },
-    {
-      "family": "visual",
-      "wire_type": "FletApp",
-      "property": "show_app_startup_screen"
     },
     {
       "family": "visual",
@@ -35090,16 +35055,28 @@
           ]
         },
         "app_error_message": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "unsupported",
+          "evidence": [
+            {
+              "reason": "Configures the nested session's error screen. FletApp is declared .unsupported in ControlRegistry and renders through PassthroughControlView: embedding a second Ruflet session inside a running one is out of scope for this engine, so there is no nested app to message."
+            }
+          ]
         },
         "app_startup_screen_message": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "unsupported",
+          "evidence": [
+            {
+              "reason": "Configures the nested session's startup screen, which this engine never shows because FletApp is declared .unsupported in ControlRegistry and does not start a second session."
+            }
+          ]
         },
         "args": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "unsupported",
+          "evidence": [
+            {
+              "reason": "Command-line arguments handed to the nested application. FletApp is declared .unsupported in ControlRegistry; no second session is launched to receive them."
+            }
+          ]
         },
         "aspect_ratio": {
           "classification": "parent_consumed",
@@ -35182,8 +35159,12 @@
           ]
         },
         "force_pyodide": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "unsupported",
+          "evidence": [
+            {
+              "reason": "Forces the nested app onto Flet's Pyodide (in-browser Python) transport. A native Apple client has no Pyodide runtime, and Flet's own flet_app_control.dart does not read this property either."
+            }
+          ]
         },
         "height": {
           "classification": "parent_consumed",
@@ -35307,12 +35288,20 @@
           ]
         },
         "reconnect_interval_ms": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "unsupported",
+          "evidence": [
+            {
+              "reason": "Retry pacing for the nested session's own backend connection. FletApp is declared .unsupported in ControlRegistry, so no nested connection exists to pace."
+            }
+          ]
         },
         "reconnect_timeout_ms": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "unsupported",
+          "evidence": [
+            {
+              "reason": "Retry ceiling for the nested session's own backend connection. FletApp is declared .unsupported in ControlRegistry, so no nested connection exists to time out."
+            }
+          ]
         },
         "right": {
           "classification": "parent_consumed",
@@ -35355,8 +35344,12 @@
           ]
         },
         "show_app_startup_screen": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "unsupported",
+          "evidence": [
+            {
+              "reason": "Toggles the nested session's startup screen, which this engine never shows because FletApp is declared .unsupported in ControlRegistry and does not start a second session."
+            }
+          ]
         },
         "size_change_interval": {
           "classification": "parent_consumed",

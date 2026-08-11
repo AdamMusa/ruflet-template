@@ -15,6 +15,29 @@
         "reason": "Flet's own audio_recorder renderer emits state_change and nothing else; the recorder never performs an upload, so on_upload has no consumer upstream either."
       }
     },
+    "FletApp": {
+      "app_error_message": {
+        "reason": "Configures the nested session's error screen. FletApp is declared .unsupported in ControlRegistry and renders through PassthroughControlView: embedding a second Ruflet session inside a running one is out of scope for this engine, so there is no nested app to message."
+      },
+      "app_startup_screen_message": {
+        "reason": "Configures the nested session's startup screen, which this engine never shows because FletApp is declared .unsupported in ControlRegistry and does not start a second session."
+      },
+      "args": {
+        "reason": "Command-line arguments handed to the nested application. FletApp is declared .unsupported in ControlRegistry; no second session is launched to receive them."
+      },
+      "force_pyodide": {
+        "reason": "Forces the nested app onto Flet's Pyodide (in-browser Python) transport. A native Apple client has no Pyodide runtime, and Flet's own flet_app_control.dart does not read this property either."
+      },
+      "reconnect_interval_ms": {
+        "reason": "Retry pacing for the nested session's own backend connection. FletApp is declared .unsupported in ControlRegistry, so no nested connection exists to pace."
+      },
+      "reconnect_timeout_ms": {
+        "reason": "Retry ceiling for the nested session's own backend connection. FletApp is declared .unsupported in ControlRegistry, so no nested connection exists to time out."
+      },
+      "show_app_startup_screen": {
+        "reason": "Toggles the nested session's startup screen, which this engine never shows because FletApp is declared .unsupported in ControlRegistry and does not start a second session."
+      }
+    },
     "FilePicker": {
       "on_result": {
         "reason": "Flet's file_picker service reports progress through the upload event and returns picked files as the method-call result rather than pushing a result event; flet_packages/flet/lib/src/services/file_picker.dart triggers only \"upload\"."
