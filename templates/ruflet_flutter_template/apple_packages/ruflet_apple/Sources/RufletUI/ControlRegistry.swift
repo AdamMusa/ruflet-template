@@ -219,7 +219,8 @@ public enum ControlRegistry {
     add(["TextField", "CupertinoTextField"], .visible, "Native text field", .nativeView,
         events: ["blur", "change", "focus", "submit"], methods: ["blur", "focus"])
     add(["CodeEditor"], .visible, "CodeEditorControlView", .nativeView,
-        events: ["blur", "change", "focus"], methods: ["blur", "focus"])
+        events: ["blur", "change", "focus", "selection_change"],
+        methods: ["blur", "focus", "fold_at", "fold_comment_at_line_zero", "fold_imports"])
     add(["SearchBar"], .visible, "SearchBarControlView", .nativeView,
         events: ["change", "submit", "tap"], methods: ["close_view", "focus", "open_view"])
     add(["Dropdown", "DropdownM2"], .visible, "DropdownControlView", .nativeView,

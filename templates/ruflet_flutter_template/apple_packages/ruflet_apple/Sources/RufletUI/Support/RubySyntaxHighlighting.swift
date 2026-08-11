@@ -8,6 +8,7 @@ import SwiftUI
   struct HighlightedCodeTextView: UIViewRepresentable {
     @Binding var text: String
     @Binding var focused: Bool
+    @Binding var selection: NSRange
     let editable: Bool
     let dark: Bool
     let fontSize: CGFloat
@@ -35,6 +36,12 @@ import SwiftUI
       update(view, coordinator: context.coordinator)
       if focused, !view.isFirstResponder, editable { view.becomeFirstResponder() }
       if !focused, view.isFirstResponder { view.resignFirstResponder() }
+      let resolvedSelection = clamped(selection, length: text.utf16.count)
+      if !context.coordinator.applying, view.selectedRange != resolvedSelection {
+        context.coordinator.applying = true
+        view.selectedRange = resolvedSelection
+        context.coordinator.applying = false
+      }
     }
 
     private func update(_ view: UITextView, coordinator: Coordinator) {
@@ -62,6 +69,10 @@ import SwiftUI
 
       func textViewDidBeginEditing(_ textView: UITextView) { parent.focused = true }
       func textViewDidEndEditing(_ textView: UITextView) { parent.focused = false }
+      func textViewDidChangeSelection(_ textView: UITextView) {
+        guard !applying else { return }
+        parent.selection = textView.selectedRange
+      }
 
       func applyHighlight(to view: UITextView, text: String, dark: Bool, fontSize: CGFloat) {
         applying = true
@@ -83,6 +94,7 @@ import SwiftUI
   struct HighlightedCodeTextView: NSViewRepresentable {
     @Binding var text: String
     @Binding var focused: Bool
+    @Binding var selection: NSRange
     let editable: Bool
     let dark: Bool
     let fontSize: CGFloat
@@ -119,6 +131,14 @@ import SwiftUI
       update(view, coordinator: context.coordinator)
       if focused, editable, view.window?.firstResponder !== view { view.window?.makeFirstResponder(view) }
       if !focused, view.window?.firstResponder === view { view.window?.makeFirstResponder(nil) }
+      let resolvedSelection = clamped(selection, length: text.utf16.count)
+      if !context.coordinator.applying,
+        view.selectedRange() != resolvedSelection
+      {
+        context.coordinator.applying = true
+        view.setSelectedRange(resolvedSelection)
+        context.coordinator.applying = false
+      }
     }
 
     private func update(_ view: NSTextView, coordinator: Coordinator) {
@@ -146,6 +166,10 @@ import SwiftUI
 
       func textDidBeginEditing(_ notification: Notification) { parent.focused = true }
       func textDidEndEditing(_ notification: Notification) { parent.focused = false }
+      func textViewDidChangeSelection(_ notification: Notification) {
+        guard !applying, let view = notification.object as? NSTextView else { return }
+        parent.selection = view.selectedRange()
+      }
 
       func applyHighlight(to view: NSTextView, text: String, dark: Bool, fontSize: CGFloat) {
         applying = true
@@ -262,4 +286,9 @@ enum RubySyntaxHighlighter {
     case .number: return (0.72, 0.35, 0.12)
     }
   }
+}
+
+private func clamped(_ range: NSRange, length: Int) -> NSRange {
+  let location = min(max(range.location, 0), length)
+  return NSRange(location: location, length: min(max(range.length, 0), length - location))
 }

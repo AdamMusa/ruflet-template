@@ -10,11 +10,11 @@
     "flet_types": 212,
     "native_declarations": 210,
     "missing_types": 42,
-    "missing_events": 157,
-    "missing_methods": 99,
+    "missing_events": 156,
+    "missing_methods": 96,
     "undeclared_gaps": 0,
     "declared_baseline_matches": true,
-    "unresolved_gap_set_sha256": "f6c32d66f62be4cb354cf2c027abb592a48be03e36349613ca35095ebf5d998f"
+    "unresolved_gap_set_sha256": "8571038405ba71cf861a0094857f52307bc8fb913d428aa47d636a0aa0d05c94"
   },
   "missing_types": [
     {
@@ -423,14 +423,6 @@
       "wire_type": "CircleAvatar",
       "native_type": "CircleAvatar",
       "event": "image_error",
-      "allowed": true,
-      "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review.",
-      "gap_classification": "initial_api_parity_backlog"
-    },
-    {
-      "wire_type": "CodeEditor",
-      "native_type": "CodeEditor",
-      "event": "selection_change",
       "allowed": true,
       "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review.",
       "gap_classification": "initial_api_parity_backlog"
@@ -1897,30 +1889,6 @@
       "wire_type": "Canvas",
       "native_type": "Canvas",
       "method": "get_capture",
-      "allowed": true,
-      "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review.",
-      "gap_classification": "initial_api_parity_backlog"
-    },
-    {
-      "wire_type": "CodeEditor",
-      "native_type": "CodeEditor",
-      "method": "fold_at",
-      "allowed": true,
-      "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review.",
-      "gap_classification": "initial_api_parity_backlog"
-    },
-    {
-      "wire_type": "CodeEditor",
-      "native_type": "CodeEditor",
-      "method": "fold_comment_at_line_zero",
-      "allowed": true,
-      "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review.",
-      "gap_classification": "initial_api_parity_backlog"
-    },
-    {
-      "wire_type": "CodeEditor",
-      "native_type": "CodeEditor",
-      "method": "fold_imports",
       "allowed": true,
       "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review.",
       "gap_classification": "initial_api_parity_backlog"

@@ -338,20 +338,27 @@ struct CodeEditorControlView: View {
   @Environment(\.rufletEvents) private var events
   @FocusState private var focused: Bool
   @State private var nativeFocused = false
+  @State private var selection = NSRange(location: 0, length: 0)
+  @State private var folds: [CodeFoldRegion] = []
 
   var body: some View {
     #if canImport(UIKit) || canImport(AppKit)
       HighlightedCodeTextView(
-        text: value,
+        text: editorValue,
         focused: $nativeFocused,
-        editable: node.bool("read_only") != true,
+        selection: $selection,
+        editable: node.bool("read_only") != true && folds.isEmpty,
         dark: isDark,
         fontSize: CGFloat(node.double("text_size") ?? 14))
       .onChange(of: nativeFocused) { isFocused in
         events.fire(node, isFocused ? "focus" : "blur")
       }
+      .onChange(of: selection) { range in
+        reportSelection(range)
+      }
       .modifier(CodeEditorChrome(node: node, dark: isDark))
       .onAppear {
+        selection = explicitSelection
         if node.bool("autofocus") == true, node.bool("read_only") != true {
           nativeFocused = true
         }
@@ -363,6 +370,15 @@ struct CodeEditorControlView: View {
           completion(.success(.null))
         case "blur":
           nativeFocused = false
+          completion(.success(.null))
+        case "fold_at":
+          toggleFold(at: call.argument("line_number")?.intValue ?? 0)
+          completion(.success(.null))
+        case "fold_comment_at_line_zero":
+          folds = CodeFoldProjection.leadingCommentRegion(in: source).map { [$0] } ?? []
+          completion(.success(.null))
+        case "fold_imports":
+          folds = CodeFoldProjection.importRegions(in: source)
           completion(.success(.null))
         default:
           completion(.failure(rufletUnsupported("CodeEditor", call)))
@@ -419,6 +435,58 @@ struct CodeEditorControlView: View {
       set: { events.commit(node, value: .string($0)) })
   }
 
+  private var source: String { node.string("value") ?? "" }
+
+  private var editorValue: Binding<String> {
+    Binding(
+      get: { CodeFoldProjection.project(source, folding: folds) },
+      set: { newValue in
+        guard folds.isEmpty else { return }
+        events.commit(node, value: .string(newValue))
+      })
+  }
+
+  private var explicitSelection: NSRange {
+    guard let map = node.map("selection"),
+      let base = map["base_offset"]?.intValue,
+      let extent = map["extent_offset"]?.intValue
+    else { return NSRange(location: 0, length: 0) }
+    let start = max(0, min(base, extent))
+    let end = min(source.utf16.count, max(base, extent))
+    return NSRange(location: min(start, end), length: max(0, end - start))
+  }
+
+  private func reportSelection(_ range: NSRange) {
+    guard folds.isEmpty else { return }
+    let length = source.utf16.count
+    let location = min(max(range.location, 0), length)
+    let selectedLength = min(max(range.length, 0), length - location)
+    let resolved = NSRange(location: location, length: selectedLength)
+    let selectionValue: RufletValue = .map([
+      "base_offset": .int(Int64(resolved.location)),
+      "extent_offset": .int(Int64(NSMaxRange(resolved))),
+      "affinity": .string("downstream"),
+      "directional": .bool(false),
+    ])
+    events.setLocal(node.id, "selection", selectionValue)
+    events.update(node.id, ["selection": selectionValue])
+    let selected = (source as NSString).substring(with: resolved)
+    events.fire(node, "selection_change", data: .map([
+      "selected_text": .string(selected),
+      "selection": selectionValue,
+    ]))
+  }
+
+  private func toggleFold(at line: Int) {
+    if let index = folds.firstIndex(where: { $0.startLine == line }) {
+      folds.remove(at: index)
+      return
+    }
+    if let region = CodeFoldProjection.blockRegion(in: source, startingAt: line) {
+      folds.append(region)
+    }
+  }
+
   private var editorFont: Font {
     .system(size: CGFloat(node.double("text_size") ?? 14), design: .monospaced)
   }
@@ -433,6 +501,89 @@ struct CodeEditorControlView: View {
 
   private var foreground: Color {
     MaterialPalette.color(node.string("color"), default: isDark ? Color(red: 0.67, green: 0.70, blue: 0.75) : .primary)
+  }
+}
+
+struct CodeFoldRegion: Equatable {
+  let startLine: Int
+  let endLine: Int
+}
+
+/// A source-preserving projection for the imperative folding API exposed by
+/// Flet's CodeEditor. While a projection is folded it is read-only; invoking
+/// `fold_at` for the same line expands it without ever replacing the DSL value.
+enum CodeFoldProjection {
+  static func project(_ source: String, folding regions: [CodeFoldRegion]) -> String {
+    guard !regions.isEmpty else { return source }
+    let lines = source.components(separatedBy: "\n")
+    let byStart = Dictionary(uniqueKeysWithValues: regions.map { ($0.startLine, $0) })
+    var output: [String] = []
+    var line = 0
+    while line < lines.count {
+      if let region = byStart[line], region.endLine > line {
+        output.append(lines[line] + "  …")
+        line = min(region.endLine + 1, lines.count)
+      } else {
+        output.append(lines[line])
+        line += 1
+      }
+    }
+    return output.joined(separator: "\n")
+  }
+
+  static func blockRegion(in source: String, startingAt line: Int) -> CodeFoldRegion? {
+    let lines = source.components(separatedBy: "\n")
+    guard lines.indices.contains(line), line + 1 < lines.count else { return nil }
+    let startIndent = indentation(lines[line])
+    var end = line
+    for index in (line + 1)..<lines.count {
+      let trimmed = lines[index].trimmingCharacters(in: .whitespaces)
+      if trimmed.isEmpty { end = index; continue }
+      if indentation(lines[index]) <= startIndent {
+        if trimmed == "end" || trimmed.hasPrefix("}") { end = index }
+        break
+      }
+      end = index
+    }
+    return end > line ? CodeFoldRegion(startLine: line, endLine: end) : nil
+  }
+
+  static func leadingCommentRegion(in source: String) -> CodeFoldRegion? {
+    let lines = source.components(separatedBy: "\n")
+    var end = -1
+    for (index, line) in lines.enumerated() {
+      let value = line.trimmingCharacters(in: .whitespaces)
+      if value.hasPrefix("#") || value.hasPrefix("//") || value.hasPrefix("/*") || value.hasPrefix("*") {
+        end = index
+      } else if !value.isEmpty {
+        break
+      }
+    }
+    return end > 0 ? CodeFoldRegion(startLine: 0, endLine: end) : nil
+  }
+
+  static func importRegions(in source: String) -> [CodeFoldRegion] {
+    let lines = source.components(separatedBy: "\n")
+    let prefixes = ["import ", "from ", "require ", "require(", "use ", "using "]
+    var regions: [CodeFoldRegion] = []
+    var start: Int?
+    for index in 0...lines.count {
+      let isImport = index < lines.count && prefixes.contains {
+        lines[index].trimmingCharacters(in: .whitespaces).hasPrefix($0)
+      }
+      if isImport, start == nil { start = index }
+      if !isImport, let first = start {
+        if index - 1 > first { regions.append(CodeFoldRegion(startLine: first, endLine: index - 1)) }
+        start = nil
+      }
+    }
+    return regions
+  }
+
+  private static func indentation(_ line: String) -> Int {
+    line.prefix { $0 == " " || $0 == "\t" }.reduce(0) { result, character in
+      result + (character == "\t" ? 2 : 1)
+    }
   }
 }
 
