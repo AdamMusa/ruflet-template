@@ -186,7 +186,7 @@ public enum ControlRegistry {
 
     // Display controls.
     add(["Text"], .visible, "TextControlView", .nativeView,
-        events: ["click", "selection_change"])
+        events: ["selection_change", "tap"])
     add(["TextSpan"], .visible, "TextSpanControlView", .nativeView, events: ["click"])
     add(["Icon"], .visible, "IconControlView", .nativeView)
     add(["Image"], .visible, "ImageControlView", .nativeView,
@@ -197,10 +197,11 @@ public enum ControlRegistry {
     add(["Rive"], .visible, "RiveControlView", .nativeView)
     add(["Lottie"], .visible, "LottieControlView", .nativeView,
         events: ["error", "load"])
-    add(["CircleAvatar"], .visible, "CircleAvatarControlView", .nativeView)
+    add(["CircleAvatar"], .visible, "CircleAvatarControlView", .nativeView,
+        events: ["image_error"])
     add(["Badge"], .visible, "BadgeControlView", .nativeView)
     add(["Markdown"], .visible, "MarkdownControlView", .nativeView,
-        events: ["selection_change", "tap_link"])
+        events: ["selection_change", "tap_link", "tap_text"])
 
     // Material buttons and value controls.
     let buttonEvents: Set<String> = ["blur", "click", "focus", "hover", "long_press"]
@@ -208,6 +209,16 @@ public enum ControlRegistry {
          "OutlinedButton", "IconButton", "FilledIconButton", "FilledTonalIconButton",
          "OutlinedIconButton", "FloatingActionButton"], .visible,
         "ButtonControlView", .nativeView, events: buttonEvents)
+    for type in ["IconButton", "FilledIconButton", "FilledTonalIconButton",
+                 "OutlinedIconButton"] {
+      result[type.lowercased()] = ControlDescriptor(
+        wireType: type,
+        classification: .visible,
+        implementation: "ButtonControlView",
+        rendering: .nativeView,
+        supportedEvents: buttonEvents,
+        supportedMethods: ["focus"])
+    }
     add(["Chip"], .visible, "ChipControlView", .nativeView,
         events: ["click", "delete", "select"])
     add(["SegmentedButton"], .visible, "SegmentedButtonControlView", .nativeView,
@@ -217,17 +228,22 @@ public enum ControlRegistry {
     add(["Slider", "RangeSlider"], .visible, "Native slider control", .nativeView,
         events: ["change", "change_end", "change_start"])
     add(["TextField", "CupertinoTextField"], .visible, "Native text field", .nativeView,
-        events: ["blur", "change", "focus", "submit"], methods: ["blur", "focus"])
+        events: ["blur", "change", "click", "focus", "selection_change", "submit", "tap_outside"],
+        methods: ["blur", "focus"])
     add(["CodeEditor"], .visible, "CodeEditorControlView", .nativeView,
         events: ["blur", "change", "focus", "selection_change"],
         methods: ["blur", "focus", "fold_at", "fold_comment_at_line_zero", "fold_imports"])
     add(["SearchBar"], .visible, "SearchBarControlView", .nativeView,
-        events: ["change", "submit", "tap"], methods: ["close_view", "focus", "open_view"])
+        events: ["blur", "change", "focus", "submit", "tap", "tap_outside_bar"],
+        methods: ["close_view", "focus", "open_view"])
     add(["Dropdown", "DropdownM2"], .visible, "DropdownControlView", .nativeView,
-        events: ["change", "focus"])
+        events: ["blur", "focus", "select", "text_change"], methods: ["focus"])
     add(["AutoComplete"], .visible, "AutoCompleteControlView", .nativeView,
         events: ["change", "select"])
-    add(["DatePicker", "TimePicker", "DateRangePicker"], .visible,
+    add(["DatePicker", "TimePicker"], .visible,
+        "DateTimePickerControlView", .nativeView,
+        events: ["change", "dismiss", "entry_mode_change"])
+    add(["DateRangePicker"], .visible,
         "DateTimePickerControlView", .nativeView, events: ["change", "dismiss"])
 
     // Data-only children consumed by the controls above.
@@ -238,21 +254,34 @@ public enum ControlRegistry {
     add(["ListView"], .visible, "ListViewControlView", .nativeView, events: ["scroll"])
     add(["GridView"], .visible, "GridViewControlView", .nativeView, events: ["scroll"])
     add(["ReorderableListView"], .visible, "ReorderableListControlView", .nativeView,
-        events: ["reorder", "scroll"])
+        events: ["reorder", "reorder_end", "reorder_start", "scroll"])
     add(["PageView"], .visible, "PageViewControlView", .nativeView,
-        events: ["change"], methods: ["jump_to_page", "next_page", "previous_page"])
+        events: ["change"],
+        methods: ["go_to_page", "jump_to", "jump_to_page", "next_page", "previous_page"])
     add(["ListTile", "CupertinoListTile"], .visible, "ListTileControlView", .nativeView,
         events: ["click", "long_press"])
     add(["ExpansionTile"], .visible, "ExpansionTileControlView", .nativeView,
         events: ["change"])
     add(["ExpansionPanelList"], .visible, "ExpansionPanelListControlView", .nativeView,
         events: ["change"])
-    add(["Tabs", "TabBar"], .visible, "TabsControlView", .nativeView,
-        events: ["change"], methods: ["move_to"])
-    add(["TabBarView"], .visible, "TabBarViewControlView", .nativeView)
+    add(["Tabs"], .visible, "TabsControlView", .nativeView,
+        events: ["change", "click", "hover"], methods: ["move_to"])
+    add(["TabBar"], .visible, "TabBarControlView", .nativeView,
+        events: ["change", "click", "hover"], methods: ["move_to"])
+    add(["TabBarView"], .visible, "TabBarViewControlView", .nativeView,
+        events: ["change", "click", "hover"], methods: ["move_to"])
     add(["DataTable"], .visible, "DataTableControlView", .nativeView,
-        events: ["select_all", "sort"])
-    add(["ExpansionPanel", "Tab", "DataColumn", "DataRow", "DataCell",
+        events: ["double_tap", "long_press", "select_all", "select_change", "sort",
+                 "tap", "tap_cancel", "tap_down"])
+    add(["ExpansionPanel", "Tab"],
+        .structuralChild, "Parent-owned collection metadata", .metadataOnly)
+    add(["DataColumn"], .structuralChild, "Parent-owned DataColumn", .metadataOnly,
+        events: ["sort"])
+    add(["DataRow"], .structuralChild, "Parent-owned DataRow", .metadataOnly,
+        events: ["long_press", "select_change"])
+    add(["DataCell"], .structuralChild, "Parent-owned DataCell", .metadataOnly,
+        events: ["double_tap", "long_press", "tap", "tap_cancel", "tap_down"])
+    add([
          "NavigationBarDestination", "NavigationRailDestination",
          "NavigationDrawerDestination", "ReorderableDragHandle"],
         .structuralChild, "Parent-owned collection metadata", .metadataOnly)
@@ -267,12 +296,14 @@ public enum ControlRegistry {
     add(["NavigationDrawer"], .visible, "NavigationDrawerControlView", .nativeView,
         events: ["change", "dismiss"])
     add(["PopupMenuButton"], .visible, "PopupMenuControlView", .nativeView,
-        events: ["cancel", "select"])
+        events: ["cancel", "open", "select"])
     add(["MenuBar"], .visible, "MenuBarControlView", .nativeView)
     add(["SubmenuButton"], .visible, "SubmenuButtonControlView", .nativeView)
     add(["MenuItemButton", "PopupMenuItem"], .visible, "MenuItemButtonControlView", .nativeView,
         events: ["click"])
-    add(["ContextMenu", "CupertinoContextMenu"], .visible, "ContextMenuControlView", .nativeView)
+    add(["ContextMenu"], .visible, "ContextMenuControlView", .nativeView,
+        events: ["dismiss", "select"], methods: ["open"])
+    add(["CupertinoContextMenu"], .visible, "ContextMenuControlView", .nativeView)
     add(["SnackBarAction", "CupertinoContextMenuAction", "CupertinoActionSheetAction",
          "CupertinoDialogAction"], .visible, "DialogActionControlView", .nativeView,
         events: ["click"])
@@ -307,10 +338,11 @@ public enum ControlRegistry {
     add(["CupertinoActionSheet"], .visible, "CupertinoActionSheetControlView", .nativeView)
 
     // Drawing, charts and their parent-owned data.
-    add(["Canvas"], .visible, "CanvasControlView", .nativeView, methods: ["get_image"])
+    add(["Canvas"], .visible, "CanvasControlView", .nativeView,
+        events: ["resize"], methods: ["capture", "clear_capture", "get_capture"])
     add(["LineChart", "BarChart", "PieChart", "ScatterChart", "RadarChart",
-         "CandlestickChart"], .visible, "ChartControlView", .nativeView,
-        events: ["chart_event"])
+        "CandlestickChart"], .visible, "ChartControlView", .nativeView,
+        events: ["event"])
     add(["Arc", "Circle", "Color", "Fill", "Line", "Oval", "Path", "Points", "Rect",
          "Shadow", "RadarChartTitle", "RadarDataSet", "RadarDataSetEntry",
          "CandlestickChartSpot", "ScatterChartSpot"], .structuralChild,

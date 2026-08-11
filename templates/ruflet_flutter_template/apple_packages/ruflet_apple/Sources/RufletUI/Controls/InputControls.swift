@@ -253,6 +253,8 @@ struct RangeSliderControlView: View {
 struct TextFieldControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
+  @State private var focused = false
+  @State private var selection = NSRange(location: 0, length: 0)
 
   var body: some View {
     VStack(alignment: .leading, spacing: 4) {
@@ -278,7 +280,19 @@ struct TextFieldControlView: View {
         Text(error).font(.caption2).foregroundColor(.red)
       }
     }
-    .modifier(FocusReporter(node: node, events: events))
+    .onAppear {
+      focused = node.bool("autofocus") == true
+      selection = explicitSelection
+    }
+    .onChange(of: focused) { events.fire(node, $0 ? "focus" : "blur") }
+    .onChange(of: selection) { reportSelection($0) }
+    .rufletCommandHandler(node.id) { call, completion in
+      switch call.name {
+      case "focus": focused = true; completion(.success(.null))
+      case "blur": focused = false; completion(.success(.null))
+      default: completion(.failure(rufletUnsupported(node.type, call)))
+      }
+    }
   }
 
   @ViewBuilder
@@ -287,16 +301,25 @@ struct TextFieldControlView: View {
     // editing. Native TextField's prompt is the closest Apple equivalent and
     // keeps fixed-height fields from clipping a separate label row.
     let prompt = node.string("hint_text") ?? node.string("label") ?? ""
-    if node.bool("password") == true {
-      SecureField(prompt, text: binding)
-        .onSubmit { events.fire(node, "submit", data: .string(binding.wrappedValue)) }
-    } else if node.bool("multiline") == true || (node.int("min_lines") ?? 1) > 1 {
+    if node.bool("multiline") == true || (node.int("min_lines") ?? 1) > 1 {
       TextEditor(text: binding)
         .frame(minHeight: CGFloat((node.int("min_lines") ?? 3) * 20))
     } else {
-      TextField(prompt, text: binding)
-        .onSubmit { events.fire(node, "submit", data: .string(binding.wrappedValue)) }
-        .modifier(KeyboardType(node: node))
+      #if canImport(UIKit) || canImport(AppKit)
+        FletNativeTextInput(
+          text: binding,
+          focused: $focused,
+          selection: $selection,
+          placeholder: prompt,
+          secure: node.bool("password") == true,
+          onTap: { events.fire(node, "click") },
+          onTapOutside: { events.fire(node, "tap_outside") },
+          onSubmit: { events.fire(node, "submit", data: .string($0)) })
+      #else
+        TextField(prompt, text: binding)
+          .onSubmit { events.fire(node, "submit", data: .string(binding.wrappedValue)) }
+          .modifier(KeyboardType(node: node))
+      #endif
     }
   }
 
@@ -325,6 +348,27 @@ struct TextFieldControlView: View {
     Binding(
       get: { node.string("value") ?? "" },
       set: { events.commit(node, value: .string($0)) })
+  }
+
+  private var explicitSelection: NSRange {
+    guard let map = node.map("selection"),
+      let base = map["base_offset"]?.intValue,
+      let extent = map["extent_offset"]?.intValue
+    else { return NSRange(location: 0, length: 0) }
+    let start = max(0, min(base, extent))
+    let end = min((node.string("value") ?? "").utf16.count, max(base, extent))
+    return NSRange(location: start, length: max(0, end - start))
+  }
+
+  private func reportSelection(_ range: NSRange) {
+    let source = node.string("value") ?? ""
+    guard let resolved = FletTextSelection.normalized(range, in: source),
+      let data = FletTextSelection.eventData(resolved, in: source)
+    else { return }
+    let selectionValue = FletTextSelection.wireValue(resolved)
+    events.setLocal(node.id, "selection", selectionValue)
+    events.update(node.id, ["selection": selectionValue])
+    events.fire(node, "selection_change", data: data)
   }
 }
 
@@ -627,19 +671,30 @@ struct SearchBarControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
   @FocusState private var focused: Bool
+  @State private var nativeFocused = false
+  @State private var selection = NSRange(location: 0, length: 0)
 
   var body: some View {
     HStack(spacing: 8) {
       Image(systemName: "magnifyingglass").foregroundColor(.secondary)
-      TextField(
-        node.string("bar_hint_text") ?? node.string("view_hint_text") ?? "",
-        text: Binding(
-          get: { node.string("value") ?? "" },
-          set: { events.commit(node, value: .string($0)) })
-      )
-      .textFieldStyle(.plain)
-      .focused($focused)
-      .onSubmit { events.fire(node, "submit", data: .string(node.string("value") ?? "")) }
+      #if canImport(UIKit) || canImport(AppKit)
+        FletNativeTextInput(
+          text: searchValue,
+          focused: $nativeFocused,
+          selection: $selection,
+          placeholder: node.string("bar_hint_text") ?? node.string("view_hint_text") ?? "",
+          secure: false,
+          onTap: { events.fire(node, "tap") },
+          onTapOutside: { events.fire(node, "tap_outside_bar") },
+          onSubmit: { events.fire(node, "submit", data: .string($0)) })
+      #else
+        TextField(
+          node.string("bar_hint_text") ?? node.string("view_hint_text") ?? "",
+          text: searchValue)
+        .textFieldStyle(.plain)
+        .focused($focused)
+        .onSubmit { events.fire(node, "submit", data: .string(node.string("value") ?? "")) }
+      #endif
 
       if !(node.string("value") ?? "").isEmpty {
         Button {
@@ -653,13 +708,16 @@ struct SearchBarControlView: View {
     .padding(.horizontal, 10)
     .padding(.vertical, 8)
     .background(Capsule().fill(Color.gray.opacity(0.14)))
+    .onChange(of: nativeFocused) { events.fire(node, $0 ? "focus" : "blur") }
     .rufletCommandHandler(node.id) { call, completion in
       switch call.name {
       case "focus", "open_view":
         focused = true
+        nativeFocused = true
         completion(.success(.null))
       case "close_view":
         focused = false
+        nativeFocused = false
         // Flet's close_view also sets the bar's text to the value it carries.
         if let value = call.argument("text")?.stringValue {
           events.setLocal(node.id, "value", .string(value))
@@ -670,6 +728,12 @@ struct SearchBarControlView: View {
       }
     }
   }
+
+  private var searchValue: Binding<String> {
+    Binding(
+      get: { node.string("value") ?? "" },
+      set: { events.commit(node, value: .string($0)) })
+  }
 }
 
 /// `Dropdown` / `DropdownM2` — a native `Picker` over the control's options.
@@ -677,6 +741,8 @@ struct DropdownControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
+  @State private var focused = false
+  @State private var selection = NSRange(location: 0, length: 0)
 
   var body: some View {
     let options = optionNodes
@@ -685,19 +751,74 @@ struct DropdownControlView: View {
       if let label = node.string("label"), !label.isEmpty {
         Text(label).font(.caption).foregroundColor(.secondary)
       }
-      Picker(
-        node.string("hint_text") ?? "",
-        selection: Binding(
-          get: { node.string("value") ?? "" },
-          set: { events.commit(node, value: .string($0)) })
-      ) {
-        ForEach(options, id: \.id) { option in
-          optionLabel(option).tag(option.string("key") ?? option.string("text") ?? "")
+      HStack(spacing: 8) {
+        #if canImport(UIKit) || canImport(AppKit)
+          FletNativeTextInput(
+            text: dropdownText,
+            focused: $focused,
+            selection: $selection,
+            placeholder: node.string("hint_text") ?? "",
+            secure: false,
+            onTap: { events.fire(node, "click") },
+            onTapOutside: {},
+            onSubmit: { _ in })
+        #else
+          TextField(node.string("hint_text") ?? "", text: dropdownText)
+        #endif
+        Menu {
+          ForEach(options, id: \.id) { option in
+            Button {
+              select(option)
+            } label: {
+              optionLabel(option)
+            }
+          }
+        } label: {
+          Image(systemName: "chevron.down")
+            .foregroundColor(.secondary)
         }
       }
-      .pickerStyle(.menu)
-      .modifier(FocusReporter(node: node, events: events))
+      .padding(8)
+      .background(RoundedRectangle(cornerRadius: 8).fill(Color.gray.opacity(0.10)))
     }
+    .onAppear {
+      focused = node.bool("autofocus") == true
+      if node.string("text") == nil, let value = node.string("value") {
+        events.setLocal(node.id, "text", .string(label(for: value)))
+      }
+    }
+    .onChange(of: focused) { events.fire(node, $0 ? "focus" : "blur") }
+    .rufletCommandHandler(node.id) { call, completion in
+      guard call.name == "focus" else {
+        completion(.failure(rufletUnsupported(node.type, call))); return
+      }
+      focused = true
+      completion(.success(.null))
+    }
+  }
+
+  private var dropdownText: Binding<String> {
+    Binding(
+      get: { node.string("text") ?? label(for: node.string("value") ?? "") },
+      set: {
+        events.setLocal(node.id, "text", .string($0))
+        events.update(node.id, ["text": .string($0)])
+        events.fire(node, "text_change", data: .string($0))
+      })
+  }
+
+  private func select(_ option: ControlNode) {
+    let key = option.string("key") ?? option.string("text") ?? ""
+    let text = option.string("text") ?? key
+    events.setLocal(node.id, "value", .string(key))
+    events.setLocal(node.id, "text", .string(text))
+    events.update(node.id, ["value": .string(key), "text": .string(text)])
+    events.fire(node, "select", data: .string(key))
+  }
+
+  private func label(for key: String) -> String {
+    optionNodes.first(where: { ($0.string("key") ?? $0.string("text") ?? "") == key })?
+      .string("text") ?? key
   }
 
   /// Options arrive under `options` on a Dropdown and `controls` on the M2
@@ -788,6 +909,7 @@ struct DateTimePickerControlView: View {
   @State private var selection = Date()
   @State private var rangeStart = Date()
   @State private var rangeEnd = Date()
+  @State private var entryMode = ""
 
   var body: some View {
     picker
@@ -821,14 +943,26 @@ struct DateTimePickerControlView: View {
 
       switch kind {
       case .date:
-        DatePicker("", selection: $selection, in: allowedDates, displayedComponents: [.date])
-          .datePickerStyle(.graphical)
-          .labelsHidden()
+        if entryMode == "input" {
+          DatePicker("", selection: $selection, in: allowedDates, displayedComponents: [.date])
+            .datePickerStyle(.compact)
+            .labelsHidden()
+        } else {
+          DatePicker("", selection: $selection, in: allowedDates, displayedComponents: [.date])
+            .datePickerStyle(.graphical)
+            .labelsHidden()
+        }
       case .time:
         #if os(iOS)
-        DatePicker("", selection: $selection, displayedComponents: [.hourAndMinute])
-          .datePickerStyle(.wheel)
-          .labelsHidden()
+        if entryMode == "input" {
+          DatePicker("", selection: $selection, displayedComponents: [.hourAndMinute])
+            .datePickerStyle(.compact)
+            .labelsHidden()
+        } else {
+          DatePicker("", selection: $selection, displayedComponents: [.hourAndMinute])
+            .datePickerStyle(.wheel)
+            .labelsHidden()
+        }
         #else
         DatePicker("", selection: $selection, displayedComponents: [.hourAndMinute])
           .datePickerStyle(.field)
@@ -850,6 +984,12 @@ struct DateTimePickerControlView: View {
         .datePickerStyle(.compact)
       }
 
+      if kind != .dateRange {
+        Button(entryMode == "input" ? "Calendar" : "Keyboard") { toggleEntryMode() }
+          .buttonStyle(.plain)
+          .accessibilityLabel(entryMode == "input" ? "Switch to picker mode" : "Switch to input mode")
+      }
+
       HStack {
         Button(node.string("cancel_text") ?? "Cancel") { isOpen.wrappedValue = false }
         Spacer()
@@ -862,7 +1002,16 @@ struct DateTimePickerControlView: View {
       selection = parsedValue(node.string("value")) ?? selection
       rangeStart = parsedValue(node.string("start_value")) ?? selection
       rangeEnd = max(parsedValue(node.string("end_value")) ?? rangeStart, rangeStart)
+      entryMode = node.string("entry_mode") ?? (kind == .time ? "dial" : "calendar")
     }
+  }
+
+  private func toggleEntryMode() {
+    let next = entryMode == "input" ? (kind == .time ? "dial" : "calendar") : "input"
+    entryMode = next
+    events.setLocal(node.id, "entry_mode", .string(next))
+    events.update(node.id, ["entry_mode": .string(next)])
+    events.fire(node, "entry_mode_change", data: .map(["entry_mode": .string(next)]))
   }
 
   private func confirm() {
