@@ -99,7 +99,50 @@ module NativeRendererGapAudit
       end
       offset = match.begin(0) + call.length
     end
+
+
+    # Some families start from a shared descriptor and then replace selected
+    # entries with a more precise event/method contract. Treat those explicit
+    # assignments as first-class declarations instead of reporting false gaps.
+    source.scan(/result\[\s*["']([^"']+)["']\s*\]\s*=\s*ControlDescriptor\s*\(/m) do |key|
+      match = Regexp.last_match
+      opening = source.index("(", match.begin(0) + match[0].index("ControlDescriptor"))
+      call = balanced(source, opening)
+      next unless call
+
+      wire_type = call[/\bwireType:\s*["']([^"']+)["']/, 1] || key.first
+      descriptors[wire_type] = descriptor_from_constructor(call, wire_type, set_variables)
+    end
+
+    loop_offset = 0
+    loop_pattern = /for\s+type\s+in\s+(\[[^\]]*\])\s*\{/m
+    while (match = source.match(loop_pattern, loop_offset))
+      body = balanced(source, match.end(0) - 1, open_character: "{", close_character: "}")
+      break unless body
+      if body.include?("result[type.lowercased()]") && (constructor = body.index("ControlDescriptor("))
+        opening = body.index("(", constructor)
+        call = balanced(body, opening)
+        string_array(match[1]).each do |wire_type|
+          descriptors[wire_type] = descriptor_from_constructor(call, wire_type, set_variables)
+        end
+      end
+      loop_offset = match.begin(0) + body.length
+    end
     descriptors
+  end
+
+  def descriptor_from_constructor(call, wire_type, variables)
+    {
+      "wire_type" => wire_type,
+      "declaration" => "control_descriptor",
+      "classification" => call[/\bclassification:\s*\.(\w+)/, 1],
+      "implementation" => call[/\bimplementation:\s*["']([^"']+)["']/, 1],
+      "rendering" => call[/\brendering:\s*\.(\w+)/, 1],
+      "events" => string_array(
+        call[/\bsupportedEvents:\s*(\[[^\]]*\]|\w+)/m, 1], variables).sort,
+      "methods" => string_array(
+        call[/\bsupportedMethods:\s*(\[[^\]]*\]|\w+)/m, 1], variables).sort
+    }
   end
 
   def service_declarations

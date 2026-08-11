@@ -37,6 +37,12 @@ class NativeRendererGapAuditTest < Minitest::Test
     assert_includes camera.fetch("methods"), "request_permission"
   end
 
+  def test_registry_overrides_are_audited_instead_of_losing_behavior()
+    assert_includes @surface.fetch("IconButton").fetch("methods"), "focus"
+    assert_includes @surface.fetch("TileLayer").fetch("events"), "image_error"
+    assert_includes @surface.fetch("SimpleAttribution").fetch("events"), "click"
+  end
+
   def test_default_and_optional_bundle_services_are_discovered
     assert_includes @surface.fetch("Connectivity").fetch("events"), "change"
     assert_includes @surface.fetch("FilePicker").fetch("methods"), "pick_files"
