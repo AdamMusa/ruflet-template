@@ -312,6 +312,11 @@ public enum ControlRegistry {
          "Shadow", "RadarChartTitle", "RadarDataSet", "RadarDataSetEntry",
          "CandlestickChartSpot", "ScatterChartSpot"], .structuralChild,
         "Canvas/chart metadata", .metadataOnly)
+    // Flet chart plugins deliberately serialize their high-volume child
+    // controls with compact wire names. Ruflet exposes both underscored and
+    // compact Ruby constructors, but both forms emit these exact wire types.
+    add(["group", "rod", "stack_item", "axis", "l", "data", "p", "section"],
+        .structuralChild, "Flet compact chart metadata", .metadataOnly)
 
     // Media and optional native bundles.
     add(["WebView"], .visible, "WebViewControlView", .nativeView,

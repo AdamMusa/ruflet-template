@@ -86,7 +86,8 @@ extension ControlRegistry {
     case "RadarChart", "CandlestickChart":
       return AnyView(ChartControlView(node: node))
     case "RadarChartTitle", "RadarDataSet", "RadarDataSetEntry", "CandlestickChartSpot",
-      "ScatterChartSpot":
+      "ScatterChartSpot", "group", "rod", "stack_item", "axis", "l", "data", "p",
+      "section":
       // Series data read by the chart that owns them.
       return AnyView(EmptyView())
     default:
