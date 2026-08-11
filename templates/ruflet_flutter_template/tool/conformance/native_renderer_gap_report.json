@@ -10,11 +10,11 @@
     "flet_types": 212,
     "native_declarations": 210,
     "missing_types": 42,
-    "missing_events": 161,
-    "missing_methods": 102,
+    "missing_events": 157,
+    "missing_methods": 99,
     "undeclared_gaps": 0,
     "declared_baseline_matches": true,
-    "unresolved_gap_set_sha256": "25e5629299d4f66ebb61db8e16d0ec2a39609050f6a220fd14640f7606f1b5c3"
+    "unresolved_gap_set_sha256": "f6c32d66f62be4cb354cf2c027abb592a48be03e36349613ca35095ebf5d998f"
   },
   "missing_types": [
     {
@@ -355,38 +355,6 @@
     }
   ],
   "missing_events": [
-    {
-      "wire_type": "Audio",
-      "native_type": "Audio",
-      "event": "duration_change",
-      "allowed": true,
-      "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review.",
-      "gap_classification": "initial_api_parity_backlog"
-    },
-    {
-      "wire_type": "Audio",
-      "native_type": "Audio",
-      "event": "loaded",
-      "allowed": true,
-      "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review.",
-      "gap_classification": "initial_api_parity_backlog"
-    },
-    {
-      "wire_type": "Audio",
-      "native_type": "Audio",
-      "event": "position_change",
-      "allowed": true,
-      "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review.",
-      "gap_classification": "initial_api_parity_backlog"
-    },
-    {
-      "wire_type": "Audio",
-      "native_type": "Audio",
-      "event": "seek_complete",
-      "allowed": true,
-      "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review.",
-      "gap_classification": "initial_api_parity_backlog"
-    },
     {
       "wire_type": "AudioRecorder",
       "native_type": "AudioRecorder",
@@ -1645,30 +1613,6 @@
     }
   ],
   "missing_methods": [
-    {
-      "wire_type": "Audio",
-      "native_type": "Audio",
-      "method": "play",
-      "allowed": true,
-      "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review.",
-      "gap_classification": "initial_api_parity_backlog"
-    },
-    {
-      "wire_type": "Audio",
-      "native_type": "Audio",
-      "method": "release",
-      "allowed": true,
-      "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review.",
-      "gap_classification": "initial_api_parity_backlog"
-    },
-    {
-      "wire_type": "Audio",
-      "native_type": "Audio",
-      "method": "resume",
-      "allowed": true,
-      "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review.",
-      "gap_classification": "initial_api_parity_backlog"
-    },
     {
       "wire_type": "AudioRecorder",
       "native_type": "AudioRecorder",

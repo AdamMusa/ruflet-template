@@ -339,7 +339,12 @@ public enum ControlRegistry {
          "SimpleAttribution"], .structuralChild, "MapKit layer metadata", .metadataOnly)
     add(["Camera"], .visible, "RufletMedia.CameraControlView",
         .optionalBundle("RufletMedia"), events: ["error", "initialized", "picture_taken"])
-    add(["Audio", "AudioRecorder"], .service, "RufletMedia service", .serviceOnly)
+    add(["Audio"], .service, "RufletMedia AudioService", .serviceOnly,
+        events: ["duration_change", "error", "loaded", "position_change", "seek_complete",
+                 "state_change"],
+        methods: ["get_current_position", "get_duration", "pause", "play", "release",
+                  "resume", "seek"])
+    add(["AudioRecorder"], .service, "RufletMedia AudioRecorderService", .serviceOnly)
 
     return result
   }()

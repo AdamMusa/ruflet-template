@@ -45,6 +45,16 @@ class NativeRendererGapAuditTest < Minitest::Test
     assert_equal "named_service", @surface.fetch("Gyroscope").fetch("declaration")
   end
 
+  def test_audio_declares_the_flet_push_and_method_contract
+    audio = @surface.fetch("Audio")
+    %w[duration_change loaded position_change seek_complete state_change].each do |event|
+      assert_includes audio.fetch("events"), event
+    end
+    %w[get_current_position get_duration pause play release resume seek].each do |method|
+      assert_includes audio.fetch("methods"), method
+    end
+  end
+
   def test_report_keeps_declared_gaps_actionable
     lottie = @report.fetch("missing_types").find { |gap| gap.fetch("wire_type") == "Lottie" }
     assert_nil lottie

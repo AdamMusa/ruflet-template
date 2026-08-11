@@ -20,11 +20,14 @@ public final class AudioService: RufletService {
   #if canImport(AVFoundation)
     private var player: AVPlayer?
     private var observer: Any?
+    private var timeObserver: Any?
+    private var itemStatusObserver: NSKeyValueObservation?
   #endif
   /// Held rather than captured: the notification closure is `@Sendable`, and
   /// the context is not.
   private var context: RufletServiceContext?
   private var controlID: Int?
+  private var control: ControlNode?
 
   public init() {}
 
@@ -38,22 +41,32 @@ public final class AudioService: RufletService {
       switch call.name {
       case "play", "resume":
         ensurePlayer(node: node, context: context)
+        if call.name == "play", let milliseconds = call.argument("position")?.doubleValue {
+          player?.seek(to: CMTime(seconds: milliseconds / 1000, preferredTimescale: 600))
+        }
         player?.play()
+        emit("state_change", .map(["state": .string("playing")]))
         completion(.success(.null))
 
       case "pause":
         player?.pause()
+        emit("state_change", .map(["state": .string("paused")]))
         completion(.success(.null))
 
       case "release", "stop":
         player?.pause()
         player?.seek(to: .zero)
-        if call.name == "release" { player = nil }
+        emit("state_change", .map(["state": .string("stopped")]))
+        if call.name == "release" { releasePlayer() }
         completion(.success(.null))
 
       case "seek":
         let milliseconds = call.argument("position")?.doubleValue ?? 0
-        player?.seek(to: CMTime(seconds: milliseconds / 1000, preferredTimescale: 600))
+        player?.seek(
+          to: CMTime(seconds: milliseconds / 1000, preferredTimescale: 600)
+        ) { [weak self] _ in
+          Task { @MainActor in self?.emit("seek_complete", .null) }
+        }
         completion(.success(.null))
 
       case "get_duration":
@@ -106,6 +119,38 @@ public final class AudioService: RufletService {
 
       self.context = context
       controlID = node.id
+      control = node
+      itemStatusObserver = player.currentItem?.observe(\.status, options: [.initial, .new]) {
+        [weak self] item, _ in
+        Task { @MainActor in
+          guard let self else { return }
+          switch item.status {
+          case .readyToPlay:
+            self.emit("loaded", .null)
+            if item.duration.seconds.isFinite {
+              self.emit(
+                "duration_change",
+                .map(["duration": .int(Int64(item.duration.seconds * 1000))]))
+            }
+          case .failed:
+            self.emit(
+              "error",
+              .string(item.error?.localizedDescription ?? "The audio could not be loaded"))
+          default:
+            break
+          }
+        }
+      }
+      timeObserver = player.addPeriodicTimeObserver(
+        forInterval: CMTime(seconds: 1, preferredTimescale: 600), queue: .main
+      ) { [weak self] time in
+        Task { @MainActor in
+          guard time.seconds.isFinite else { return }
+          self?.emit(
+            "position_change",
+            .map(["position": .int(Int64(time.seconds.rounded() * 1000))]))
+        }
+      }
       observer = NotificationCenter.default.addObserver(
         forName: .AVPlayerItemDidPlayToEndTime,
         object: player.currentItem,
@@ -117,13 +162,34 @@ public final class AudioService: RufletService {
   #endif
 
   private func reportCompletion() {
-    guard let context, let controlID else { return }
-    context.emitEvent(controlID, "state_change", .string("completed"))
+    emit("state_change", .map(["state": .string("completed")]))
+    guard control?.string("release_mode")?.lowercased() == "loop" else { return }
+    player?.seek(to: .zero)
+    player?.play()
   }
+
+  private func emit(_ name: String, _ data: RufletValue) {
+    guard let context, let controlID, let control, control.handlesEvent(name) else { return }
+    context.emitEvent(controlID, name, data)
+  }
+
+  #if canImport(AVFoundation)
+    private func releasePlayer() {
+      if let observer { NotificationCenter.default.removeObserver(observer) }
+      observer = nil
+      if let timeObserver, let player { player.removeTimeObserver(timeObserver) }
+      timeObserver = nil
+      itemStatusObserver?.invalidate()
+      itemStatusObserver = nil
+      player = nil
+    }
+  #endif
 
   deinit {
     #if canImport(AVFoundation)
       if let observer { NotificationCenter.default.removeObserver(observer) }
+      if let timeObserver, let player { player.removeTimeObserver(timeObserver) }
+      itemStatusObserver?.invalidate()
     #endif
   }
 }
