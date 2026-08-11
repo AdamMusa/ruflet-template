@@ -17,7 +17,7 @@ public enum ControlProps {
   /// interpolation; the renderer only translates duration and curve.
   public static func animation(_ value: RufletValue?) -> Animation? {
     guard let value else { return nil }
-    let duration = (value.doubleValue ?? value["duration"]?.doubleValue).map { $0 / 1000 }
+    let duration = animationDurationSeconds(value)
     guard let duration else { return nil }
     let curve = value["curve"]?.stringValue?.lowercased() ?? "easeinout"
     switch curve.replacingOccurrences(of: "_", with: "") {
@@ -28,6 +28,16 @@ public enum ControlProps {
     case "bounceout", "elasticout": return .spring(response: duration, dampingFraction: 0.62)
     default: return .easeInOut(duration: duration)
     }
+  }
+
+  /// Duration used by both SwiftUI interpolation and Flet's `animation_end`
+  /// protocol callback. Keeping one parser prevents the visual animation and
+  /// completion event from drifting apart.
+  public static func animationDurationSeconds(_ value: RufletValue?) -> Double? {
+    guard let milliseconds = value?.doubleValue ?? value?["duration"]?.doubleValue else {
+      return nil
+    }
+    return max(milliseconds, 0) / 1000
   }
 
   // MARK: - Padding and margin

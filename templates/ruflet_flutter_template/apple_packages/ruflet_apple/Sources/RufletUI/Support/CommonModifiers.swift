@@ -232,7 +232,12 @@ private struct FletOpacityModifier: ViewModifier {
     let opacity = node.double("opacity") ?? 1
     let result = content.opacity(opacity)
     if let animation = ControlProps.animation(node.props["animate_opacity"]) {
-      result.animation(animation, value: opacity)
+      result
+        .animation(animation, value: opacity)
+        .modifier(
+          FletAnimationEndReporter(
+            node: node, animation: node.props["animate_opacity"], value: opacity,
+            property: "opacity"))
     } else {
       result
     }
@@ -246,7 +251,12 @@ private struct FletRotationModifier: ViewModifier {
     let rotation = ControlProps.rotation(node.props["rotate"]) ?? .zero
     let result = content.rotationEffect(rotation)
     if let animation = ControlProps.animation(node.props["animate_rotation"]) {
-      result.animation(animation, value: rotation.radians)
+      result
+        .animation(animation, value: rotation.radians)
+        .modifier(
+          FletAnimationEndReporter(
+            node: node, animation: node.props["animate_rotation"],
+            value: rotation.radians, property: "rotation"))
     } else {
       result
     }
@@ -260,7 +270,12 @@ private struct FletScaleModifier: ViewModifier {
     let scale = ControlProps.scale(node.props["scale"]) ?? CGSize(width: 1, height: 1)
     let result = content.scaleEffect(x: scale.width, y: scale.height)
     if let animation = ControlProps.animation(node.props["animate_scale"]) {
-      result.animation(animation, value: scale)
+      result
+        .animation(animation, value: scale)
+        .modifier(
+          FletAnimationEndReporter(
+            node: node, animation: node.props["animate_scale"], value: scale,
+            property: "scale"))
     } else {
       result
     }
@@ -274,7 +289,12 @@ private struct FletOffsetModifier: ViewModifier {
     let offset = ControlProps.offset(node.props["offset"])
     let result = content.modifier(FractionalTranslationModifier(fraction: offset))
     if let animation = ControlProps.animation(node.props["animate_offset"]) {
-      result.animation(animation, value: offset ?? .zero)
+      result
+        .animation(animation, value: offset ?? .zero)
+        .modifier(
+          FletAnimationEndReporter(
+            node: node, animation: node.props["animate_offset"], value: offset ?? .zero,
+            property: "offset"))
     } else {
       result
     }
@@ -291,7 +311,13 @@ private struct FletMarginModifier: ViewModifier {
     let margin = ControlProps.edgeInsets(node.props["margin"])
     let result = content.padding(margin ?? EdgeInsets())
     if let animation = ControlProps.animation(node.props["animate_margin"]) {
-      return AnyView(result.animation(animation, value: margin ?? EdgeInsets()))
+      return AnyView(
+        result
+          .animation(animation, value: margin ?? EdgeInsets())
+          .modifier(
+            FletAnimationEndReporter(
+              node: node, animation: node.props["animate_margin"],
+              value: margin ?? EdgeInsets(), property: "margin")))
     }
     return AnyView(result)
   }
@@ -333,12 +359,42 @@ private struct FletAlignmentModifier: ViewModifier {
     if let alignment = ControlProps.continuousAlignment(node.props["align"]) {
       if #available(iOS 16.0, macOS 13.0, *) {
         FletAlignLayout(alignment: alignment) { content }
+          .animation(ControlProps.animation(node.props["animate_align"]), value: alignment)
+          .modifier(
+            FletAnimationEndReporter(
+              node: node, animation: node.props["animate_align"], value: alignment,
+              property: "align"))
       } else {
         content.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: ControlProps.alignment(node.props["align"]) ?? .center)
       }
     } else {
       content
     }
+  }
+}
+
+private struct FletAnimationEndReporter<Value: Equatable>: ViewModifier {
+  let node: ControlNode
+  let animation: RufletValue?
+  let value: Value
+  let property: String
+  @Environment(\.rufletEvents) private var events
+  @State private var pendingToken = UUID()
+
+  func body(content: Content) -> some View {
+    guard node.handlesEvent("animation_end"),
+      let duration = ControlProps.animationDurationSeconds(animation)
+    else { return AnyView(content) }
+
+    return AnyView(
+      content.onChange(of: value) { _ in
+        let token = UUID()
+        pendingToken = token
+        DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
+          guard pendingToken == token else { return }
+          events.fire(node, "animation_end", data: .string(property))
+        }
+      })
   }
 }
 

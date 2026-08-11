@@ -32,6 +32,13 @@ final class FletBaseControlPipelineTests: XCTestCase {
     XCTAssertEqual(FletBaseControlDefaults.sizeChangeIntervalMilliseconds, 10)
   }
 
+  func testAnimationDurationUsesTheSameMillisecondsAsFlet() {
+    XCTAssertEqual(ControlProps.animationDurationSeconds(.int(250)), 0.25)
+    XCTAssertEqual(
+      ControlProps.animationDurationSeconds(.map(["duration": .double(400)])), 0.4)
+    XCTAssertNil(ControlProps.animationDurationSeconds(nil))
+  }
+
   func testNativePipelineDoesNotForceLTRWhenRtlIsAbsent() throws {
     let sourceURL = URL(fileURLWithPath: #filePath)
       .deletingLastPathComponent()
