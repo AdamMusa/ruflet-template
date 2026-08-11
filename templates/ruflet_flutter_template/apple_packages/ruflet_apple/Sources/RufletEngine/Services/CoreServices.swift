@@ -150,11 +150,21 @@ public final class PageService: RufletStreamingService {
     guard let targetID, let context else { return }
     let locales = Locale.preferredLanguages.map { identifier -> RufletValue in
       let locale = Locale(identifier: identifier)
-      return .map([
-        "language_code": .string(locale.language.languageCode?.identifier ?? identifier),
-        "country_code": locale.region.map { .string($0.identifier) } ?? .null,
-        "script_code": locale.language.script.map { .string($0.identifier) } ?? .null
-      ])
+      // Locale.language and Locale.region arrived in iOS 16, and this package
+      // ships to iOS 15, so the older accessors carry the earlier releases.
+      if #available(iOS 16.0, macOS 13.0, *) {
+        return .map([
+          "language_code": .string(locale.language.languageCode?.identifier ?? identifier),
+          "country_code": locale.region.map { .string($0.identifier) } ?? .null,
+          "script_code": locale.language.script.map { .string($0.identifier) } ?? .null
+        ])
+      } else {
+        return .map([
+          "language_code": .string(locale.languageCode ?? identifier),
+          "country_code": locale.regionCode.map { RufletValue.string($0) } ?? .null,
+          "script_code": locale.scriptCode.map { RufletValue.string($0) } ?? .null
+        ])
+      }
     }
     context.emitEvent(targetID, "locale_change", .map(["locales": .array(locales)]))
   }

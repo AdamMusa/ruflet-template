@@ -359,7 +359,10 @@ struct ChartControlView: View {
       }
     }
     .gesture(
-      SpatialTapGesture().onEnded { event in
+      // SpatialTapGesture is iOS 16, and this package ships to iOS 15. A drag
+      // with no minimum distance reports the same location on release, which
+      // is how the gesture detector reads tap positions here too.
+      DragGesture(minimumDistance: 0).onEnded { event in
         guard node.rufletBool("interactive") || node.type == "PieChart" else { return }
         events.fire(node, "event", data: chartEvent(at: event.location))
       })

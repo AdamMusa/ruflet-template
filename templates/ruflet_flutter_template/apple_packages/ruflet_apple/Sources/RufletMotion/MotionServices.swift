@@ -58,7 +58,11 @@ public final class MotionSensorService: RufletService {
       }
       switch call.name {
       case "start", "resume":
-        start(node: node, context: context)
+        // An explicit start reuses the configuration the control was set up
+        // with; `configure` would decline to act on an unchanged one.
+        let resolved = configuration ?? resolvedConfiguration(node: node)
+        configuration = resolved
+        start(node: node, context: context, configuration: resolved)
         completion(.success(.null))
       case "stop", "pause":
         stop()
@@ -84,8 +88,8 @@ public final class MotionSensorService: RufletService {
   }
 
   #if canImport(CoreMotion) && os(iOS)
-    private func configure(node: ControlNode, context: RufletServiceContext) {
-      let next = Configuration(
+    private func resolvedConfiguration(node: ControlNode) -> Configuration {
+      Configuration(
         enabled: node.bool("enabled") ?? true,
         intervalMilliseconds: max(0, node.double("interval") ?? node.double("sampling_rate") ?? 200),
         reportsReading: node.handlesEvent("reading"),
@@ -93,6 +97,10 @@ public final class MotionSensorService: RufletService {
         reportsError: node.handlesEvent("error"),
         cancelOnError: node.bool("cancel_on_error") ?? true
       )
+    }
+
+    private func configure(node: ControlNode, context: RufletServiceContext) {
+      let next = resolvedConfiguration(node: node)
       guard next != configuration else { return }
       stop()
       configuration = next

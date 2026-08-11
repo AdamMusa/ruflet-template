@@ -379,8 +379,13 @@ private struct SelectionChangeReporter: ViewModifier {
           data: .string((view.string as NSString).substring(with: range)))
       }
     #elseif canImport(UIKit)
+      // AppKit posts a notification whenever a selection moves; UIKit posts
+      // none — `textViewDidChangeSelection` is a delegate callback, and the
+      // text views here belong to whatever control is being wrapped. Text
+      // change is the only public signal, so a selection that moves without
+      // the text changing is not reported on iOS.
       content.onReceive(
-        NotificationCenter.default.publisher(for: UITextView.textDidChangeSelectionNotification)
+        NotificationCenter.default.publisher(for: UITextView.textDidChangeNotification)
       ) { notification in
         guard let view = notification.object as? UITextView,
           let range = view.selectedTextRange

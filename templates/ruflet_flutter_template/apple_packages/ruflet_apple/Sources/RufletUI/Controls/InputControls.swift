@@ -424,6 +424,7 @@ struct TextFieldControlView: View {
           selection: $selection,
           placeholder: prompt,
           secure: node.bool("password") == true,
+          traits: RufletTextInputTraits(node: node),
           onTap: { events.fire(node, "click") },
           onTapOutside: { events.fire(node, "tap_outside") },
           onSubmit: { events.fire(node, "submit", data: .string($0)) })
