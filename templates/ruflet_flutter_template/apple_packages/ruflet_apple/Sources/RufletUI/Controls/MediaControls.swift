@@ -878,6 +878,12 @@ struct ChartControlView: View {
 
   /// `CandlestickChart` — a wick from low to high with an open/close body,
   /// filled green when the close is above the open and red when below.
+  /// A spot Flet marked selected is drawn with a heavier wick, which is how
+  /// fl_chart emphasises one.
+  private func candleLineWidth(_ spot: ControlNode) -> CGFloat {
+    spot.bool("selected") == true ? 2 : 1
+  }
+
   private func drawCandlesticks(in context: inout GraphicsContext, plot: CGRect) {
     let spots = (node.controlIDs(forKey: "spots") + node.childIDs)
       .compactMap { store.node($0) }

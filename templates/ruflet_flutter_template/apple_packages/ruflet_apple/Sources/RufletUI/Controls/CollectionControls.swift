@@ -303,6 +303,22 @@ private struct CollectionAutoScroll: ViewModifier {
   }
 }
 
+/// A page narrower than its viewport leaves its neighbours visible at the
+/// edges, which is what Flutter's viewportFraction does.
+private struct ViewportFraction: ViewModifier {
+  let value: Double?
+
+  func body(content: Content) -> some View {
+    guard let value, value > 0, value < 1 else { return AnyView(content) }
+    return AnyView(
+      GeometryReader { proxy in
+        content
+          .frame(width: proxy.size.width * CGFloat(value))
+          .frame(maxWidth: .infinity)
+      })
+  }
+}
+
 /// `PageView` — a horizontally paged carousel.
 struct PageViewControlView: View {
   let node: ControlNode
@@ -918,6 +934,9 @@ struct TabBarViewControlView: View {
     let children = node.childIDs
     if children.indices.contains(selected) {
       ControlView(id: children[selected], axis: .vertical)
+        // `viewport_fraction` is how much of the width one page occupies;
+        // anything under one leaves its neighbours peeking in.
+        .modifier(ViewportFraction(value: node.double("viewport_fraction")))
     }
     EmptyView().rufletCommandHandler(node.id, handler: handleCommand)
   }

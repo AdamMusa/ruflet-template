@@ -757,6 +757,19 @@ struct KeyboardListenerControlView: View {
   }
 }
 
+/// Cupertino draws a sheet's default action heavier than the rest.
+private struct DefaultActionEmphasis: ViewModifier {
+  let emphasised: Bool
+
+  func body(content: Content) -> some View {
+    if emphasised {
+      content.font(.body.weight(.semibold))
+    } else {
+      content
+    }
+  }
+}
+
 /// The one-line actions Flet attaches to dialogs, sheets and snack bars.
 struct DialogActionControlView: View {
   let node: ControlNode
@@ -776,6 +789,10 @@ struct DialogActionControlView: View {
       node.bool("destructive") == true
         ? MaterialPalette.color("error", default: .red)
         : MaterialPalette.color(node.string("color") ?? "primary", default: .primary))
+    // Cupertino emphasises the default action in a sheet. `fontWeight` on a
+    // view is iOS 16, and this package ships to iOS 15, so the weight goes on
+    // the font itself.
+    .modifier(DefaultActionEmphasis(emphasised: node.bool("default") == true))
     .disabled(node.bool("disabled") ?? false)
   }
 }

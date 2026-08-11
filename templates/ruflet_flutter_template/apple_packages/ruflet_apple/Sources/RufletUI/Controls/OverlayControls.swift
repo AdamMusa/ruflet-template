@@ -579,6 +579,15 @@ struct SubmenuButtonControlView: View {
   @Environment(\.rufletEvents) private var events
   @State private var presented = false
 
+  /// `alignment_offset` shifts the submenu from where it would otherwise
+  /// hang off its parent.
+  private var submenuOffset: CGSize {
+    guard let map = node.map("alignment_offset") else { return .zero }
+    return CGSize(
+      width: CGFloat(map["x"]?.doubleValue ?? 0),
+      height: CGFloat(map["y"]?.doubleValue ?? 0))
+  }
+
   var body: some View {
     Button {
       presented.toggle()
@@ -599,11 +608,16 @@ struct SubmenuButtonControlView: View {
     }
     .buttonStyle(.plain)
     .disabled(node.bool("disabled") ?? false)
-    .popover(isPresented: $presented) {
+    .popover(
+      isPresented: $presented,
+      attachmentAnchor: .rect(.bounds)
+    ) {
       ControlList(ids: controlIDs, axis: .vertical)
         .padding(.vertical, 6)
         .frame(minWidth: 180)
     }
+    .offset(submenuOffset)
+    .modifier(MenuSurfaceStyle(value: node.props["menu_style"]))
     .onChange(of: presented) { open in
       events.fire(node, open ? "open" : "close")
     }
@@ -624,12 +638,27 @@ struct MenuItemButtonControlView: View {
   @Environment(\.dismiss) private var dismiss
   @FocusState private var focused: Bool
 
+  /// `overflow_axis` is the direction a menu item's content runs when it does
+  /// not fit on one line.
+  @ViewBuilder
+  private func menuItemStack<Content: View>(
+    spacing: CGFloat, @ViewBuilder content: () -> Content
+  ) -> some View {
+    if node.string("overflow_axis")?.lowercased() == "vertical" {
+      VStack(alignment: .leading, spacing: spacing) { content() }
+    } else {
+      HStack(spacing: spacing) { content() }
+    }
+  }
+
   var body: some View {
     Button {
       events.fire(node, "click")
       if node.bool("close_on_click") ?? true { dismiss() }
     } label: {
-      HStack(spacing: 8) {
+      // `overflow_axis` is the direction the item's content runs when it does
+      // not fit; Flutter lays a menu item out along it.
+      menuItemStack(spacing: 8) {
         if let leadingID = node.controlID(forKey: "leading") {
           ControlView(id: leadingID, axis: .none)
         }
@@ -643,6 +672,7 @@ struct MenuItemButtonControlView: View {
     }
     .disabled(node.bool("disabled") ?? false)
     .focused($focused)
+    .accessibilityLabel(node.string("semantic_label") ?? "")
     .onAppear {
       if node.bool("autofocus") == true { focused = true }
     }
