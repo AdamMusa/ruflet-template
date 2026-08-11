@@ -214,9 +214,15 @@ module NativePropertyConsumptionAudit
     end
   end
 
+  # An `events.fire(` whose event name sits on a following line is the same
+  # read as the single-line form. Swift formatting wraps these constantly, so
+  # scanning one line at a time reported implemented events as unconsumed.
+  EVENT_CALL_LOOKAHEAD = 3
+
   def property_reads(lines, path:, start_line: 0)
     reads = Hash.new { |hash, key| hash[key] = [] }
-    code_lines(lines).each_with_index do |line, index|
+    scanned = code_lines(lines)
+    scanned.each_with_index do |line, index|
       keys = []
       accessor_pattern = ACCESSORS.join("|")
       line.scan(/\bnode\.(?:#{accessor_pattern})\(\s*(?:forKey:\s*)?"([^"]+)"/) { |match| keys << match[0] }
@@ -225,8 +231,11 @@ module NativePropertyConsumptionAudit
       line.scan(/\bcall\.argument\(\s*"([^"]+)"\s*\)/) { |match| keys << match[0] }
       line.scan(/\bnode\.(?:handlesEvent|sendEvent)\(\s*"([^"]+)"/) { |match| keys << "on_#{match[0]}" }
       line.scan(/\b(?:context\.)?emitEvent\([^\n]*?"([^"]+)"/) { |match| keys << "on_#{match[0]}" }
-      if (event_call = line[/\bevents\.fire\((.*)$/, 1])
-        event_call.scan(/"([^"]+)"/) { |match| keys << "on_#{match[0]}" }
+      window = scanned[index, EVENT_CALL_LOOKAHEAD].join(" ")
+      if (event_call = window[/\bevents\.fire\((.*)$/, 1])
+        # Stop at the closing paren so a following statement's literals on the
+        # same window cannot be attributed to this call.
+        event_call[/\A[^)]*/].scan(/"([^"]+)"/) { |match| keys << "on_#{match[0]}" }
       end
       line.scan(/\bproperty:\s*"([^"]+)"/) { |match| keys << match[0] }
       keys.uniq.each do |key|
@@ -264,7 +273,12 @@ module NativePropertyConsumptionAudit
       seen[type] = true
       type_scopes.fetch(type, []).each do |scope|
         body = code_lines(swift_files.fetch(scope[:path]))[scope[:start]..scope[:finish]].join("\n")
-        body.scan(/\b([A-Z][A-Za-z0-9_]*(?:Modifier|Reporter|Presentation|Style|View))\s*\(/) do |(dependency)|
+        # Concrete controls commonly delegate constructor/default parsing to a
+        # pure helper (for example CollectionDefaults). Following only View
+        # and Modifier constructors made those real reads look unimplemented.
+        # Keep this deliberately suffix-scoped so arbitrary framework types do
+        # not become evidence for a control.
+        body.scan(/\b([A-Z][A-Za-z0-9_]*(?:Defaults|Parity|Configuration|Config|Metrics|Policy|Modifier|Reporter|Presentation|Style|View|Gestures))\s*(?:\(|\.)/) do |(dependency)|
           queue << dependency if type_scopes.key?(dependency)
         end
       end
