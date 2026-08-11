@@ -32,15 +32,40 @@ struct CommonControlModifiers: ViewModifier {
   let axis: LayoutAxis
 
   func body(content: Content) -> some View {
+    // Keep this order identical to Flet's LayoutControl in
+    // flet/lib/src/controls/base_controls.dart. The ordering is observable:
+    // for example opacity is applied before sizing and fractional offset is
+    // applied before alignment and margin.
     content
       .modifier(TightConstraintFrame(axis: axis))
-      .modifier(SizeModifier(node: node, axis: axis))
-      .modifier(PaddingModifier(node: node))
-      .modifier(TransformModifier(node: node))
+      // Padding/background are part of the native control body. They remain
+      // closest to the body while individual renderers are migrated away from
+      // this compatibility layer.
+      .modifier(ControlPaddingModifier(node: node))
       .modifier(DecorationModifier(node: node))
-      .modifier(ControlAnimationModifier(node: node))
-      .modifier(InteractionModifier(node: node))
+      .modifier(ControlStateModifier(node: node))
+      .modifier(FletOpacityModifier(node: node))
+      .modifier(FletTooltipModifier(node: node))
+      .modifier(FletDirectionalityModifier(node: node))
+      .modifier(FletFixedSizeModifier(node: node))
+      .modifier(FletRotationModifier(node: node))
+      .modifier(FletScaleModifier(node: node))
+      .modifier(FletOffsetModifier(node: node))
+      .modifier(FletAspectRatioModifier(node: node))
+      .modifier(FletAlignmentModifier(node: node))
+      .modifier(FletMarginModifier(node: node))
+      // Positioned is implemented by Stack/Overlay because SwiftUI, like
+      // Flutter, needs the parent constraints to resolve left+right/top+bottom.
+      .modifier(FletSizeChangeModifier(node: node))
+      .modifier(FletExpandModifier(node: node, axis: axis))
   }
+}
+
+/// Constructor defaults owned by Flet's shared LayoutControl rather than an
+/// individual widget. Keeping them here prevents a renderer family from
+/// inventing a different fallback.
+enum FletBaseControlDefaults {
+  static let sizeChangeIntervalMilliseconds = 10
 }
 
 private struct TightConstraintFrame: ViewModifier {
@@ -57,46 +82,23 @@ private struct TightConstraintFrame: ViewModifier {
   }
 }
 
-private struct ControlAnimationModifier: ViewModifier {
-  let node: ControlNode
-
-  func body(content: Content) -> some View {
-    let value = node.props["animate"] ?? node.props["animate_size"]
-      ?? node.props["animate_scale"] ?? node.props["animate_opacity"]
-      ?? node.props["animate_rotation"] ?? node.props["animate_offset"]
-      ?? node.props["animate_position"] ?? node.props["animate_align"]
-    if let animation = ControlProps.animation(value) {
-      content.animation(animation, value: node)
-    } else {
-      content
-    }
-  }
-}
-
 // MARK: - Size
 
-private struct SizeModifier: ViewModifier {
+private struct FletFixedSizeModifier: ViewModifier {
   let node: ControlNode
-  let axis: LayoutAxis
 
   func body(content: Content) -> some View {
+    if node.skipsFletProperty("width") || node.skipsFletProperty("height") {
+      return AnyView(content)
+    }
     let width = node.double("width").map { CGFloat($0) }
     let height = node.double("height").map { CGFloat($0) }
-    // `expand` is truthy or a flex integer; either way it means "take the
-    // available main-axis space". `expand_loose` asks for at most that.
-    let expands = (node.props["expand"]?.boolValue ?? false) || (node.int("expand") ?? 0) > 0
-    let loose = node.bool("expand_loose") ?? false
-    let ratio = node.double("aspect_ratio").map { CGFloat($0) }
-
-    // Each of these is applied only when the control asked for it. An
-    // unconditional `.aspectRatio(nil, contentMode: .fit)` is not the no-op it
-    // looks like — it letterboxes the view inside its parent — and an
-    // always-on `.frame` pins an intrinsic size the control never wanted.
-    return
-      content
+    let sized = content
       .modifier(FixedSize(width: width, height: height))
-      .modifier(ExpandingFrame(expands: expands, axis: axis, loose: loose))
-      .modifier(AspectRatio(ratio: ratio))
+    if let animation = ControlProps.animation(node.props["animate_size"]) {
+      return AnyView(sized.animation(animation, value: CGSize(width: width ?? -1, height: height ?? -1)))
+    }
+    return AnyView(sized)
   }
 }
 
@@ -175,13 +177,14 @@ enum FletConstraintMath {
   }
 }
 
-private struct ExpandingFrame: ViewModifier {
-  let expands: Bool
+private struct FletExpandModifier: ViewModifier {
+  let node: ControlNode
   let axis: LayoutAxis
-  let loose: Bool
 
   func body(content: Content) -> some View {
-    if expands {
+    let flex = node.int("expand") ?? (node.bool("expand") == true ? 1 : 0)
+    let loose = node.bool("expand_loose") == true
+    if flex > 0 && node.hostExpanded {
       switch axis {
       case .horizontal:
         content.frame(maxWidth: .infinity, alignment: loose ? .leading : .center)
@@ -196,11 +199,11 @@ private struct ExpandingFrame: ViewModifier {
   }
 }
 
-private struct AspectRatio: ViewModifier {
-  let ratio: CGFloat?
+private struct FletAspectRatioModifier: ViewModifier {
+  let node: ControlNode
 
   func body(content: Content) -> some View {
-    if let ratio {
+    if let ratio = node.double("aspect_ratio").map({ CGFloat($0) }) {
       content.aspectRatio(ratio, contentMode: .fit)
     } else {
       content
@@ -210,32 +213,217 @@ private struct AspectRatio: ViewModifier {
 
 // MARK: - Padding
 
-private struct PaddingModifier: ViewModifier {
+private struct ControlPaddingModifier: ViewModifier {
   let node: ControlNode
 
   func body(content: Content) -> some View {
     let ownsPadding = ["Container", "View", "ListView", "GridView", "AppBar"].contains(node.type)
-    return content
-      .padding(ownsPadding ? EdgeInsets() : (ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets()))
-      .padding(ControlProps.edgeInsets(node.props["margin"]) ?? EdgeInsets())
+    return content.padding(
+      ownsPadding ? EdgeInsets() : (ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets()))
   }
 }
 
 // MARK: - Transform
 
-private struct TransformModifier: ViewModifier {
+private struct FletOpacityModifier: ViewModifier {
   let node: ControlNode
 
   func body(content: Content) -> some View {
-    let scale = ControlProps.scale(node.props["scale"])
-    let offset = ControlProps.offset(node.props["offset"])
+    let opacity = node.double("opacity") ?? 1
+    let result = content.opacity(opacity)
+    if let animation = ControlProps.animation(node.props["animate_opacity"]) {
+      result.animation(animation, value: opacity)
+    } else {
+      result
+    }
+  }
+}
 
-    return
+private struct FletRotationModifier: ViewModifier {
+  let node: ControlNode
+
+  func body(content: Content) -> some View {
+    let rotation = ControlProps.rotation(node.props["rotate"]) ?? .zero
+    let result = content.rotationEffect(rotation)
+    if let animation = ControlProps.animation(node.props["animate_rotation"]) {
+      result.animation(animation, value: rotation.radians)
+    } else {
+      result
+    }
+  }
+}
+
+private struct FletScaleModifier: ViewModifier {
+  let node: ControlNode
+
+  func body(content: Content) -> some View {
+    let scale = ControlProps.scale(node.props["scale"]) ?? CGSize(width: 1, height: 1)
+    let result = content.scaleEffect(x: scale.width, y: scale.height)
+    if let animation = ControlProps.animation(node.props["animate_scale"]) {
+      result.animation(animation, value: scale)
+    } else {
+      result
+    }
+  }
+}
+
+private struct FletOffsetModifier: ViewModifier {
+  let node: ControlNode
+
+  func body(content: Content) -> some View {
+    let offset = ControlProps.offset(node.props["offset"])
+    let result = content.modifier(FractionalTranslationModifier(fraction: offset))
+    if let animation = ControlProps.animation(node.props["animate_offset"]) {
+      result.animation(animation, value: offset ?? .zero)
+    } else {
+      result
+    }
+  }
+}
+
+private struct FletMarginModifier: ViewModifier {
+  let node: ControlNode
+
+  func body(content: Content) -> some View {
+    if node.skipsFletProperty("margin") {
+      return AnyView(content)
+    }
+    let margin = ControlProps.edgeInsets(node.props["margin"])
+    let result = content.padding(margin ?? EdgeInsets())
+    if let animation = ControlProps.animation(node.props["animate_margin"]) {
+      return AnyView(result.animation(animation, value: margin ?? EdgeInsets()))
+    }
+    return AnyView(result)
+  }
+}
+
+private struct FletDirectionalityModifier: ViewModifier {
+  let node: ControlNode
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    // Flet only inserts Directionality for rtl=true. Otherwise the inherited
+    // page/application direction must remain untouched.
+    if node.bool("rtl") == true {
+      content.environment(\.layoutDirection, .rightToLeft)
+    } else {
       content
-      .rotationEffect(ControlProps.rotation(node.props["rotate"]) ?? .zero)
-      .scaleEffect(x: scale?.width ?? 1, y: scale?.height ?? 1)
-      .modifier(FractionalTranslationModifier(fraction: offset))
-      .opacity(node.double("opacity") ?? 1)
+    }
+  }
+}
+
+private struct FletTooltipModifier: ViewModifier {
+  let node: ControlNode
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if !node.skipsFletProperty("tooltip"), let tooltip = node.string("tooltip"), !tooltip.isEmpty {
+      content.help(tooltip)
+    } else {
+      content
+    }
+  }
+}
+
+private struct FletAlignmentModifier: ViewModifier {
+  let node: ControlNode
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if let alignment = ControlProps.continuousAlignment(node.props["align"]) {
+      if #available(iOS 16.0, macOS 13.0, *) {
+        FletAlignLayout(alignment: alignment) { content }
+      } else {
+        content.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: ControlProps.alignment(node.props["align"]) ?? .center)
+      }
+    } else {
+      content
+    }
+  }
+}
+
+@available(iOS 16.0, macOS 13.0, *)
+private struct FletAlignLayout: Layout {
+  let alignment: FletAlignment
+
+  func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout Void) -> CGSize {
+    guard let child = subviews.first else { return .zero }
+    let childSize = child.sizeThatFits(proposal)
+    return CGSize(
+      width: proposal.width.flatMap { $0.isFinite ? max($0, 0) : nil } ?? childSize.width,
+      height: proposal.height.flatMap { $0.isFinite ? max($0, 0) : nil } ?? childSize.height)
+  }
+
+  func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout Void) {
+    guard let child = subviews.first else { return }
+    let childSize = child.sizeThatFits(proposal)
+    let origin = FletGeometry.alignedOrigin(
+      alignment: alignment, containerSize: bounds.size, childSize: childSize)
+    child.place(
+      at: CGPoint(x: bounds.minX + origin.x, y: bounds.minY + origin.y),
+      anchor: .topLeading,
+      proposal: ProposedViewSize(width: childSize.width, height: childSize.height))
+  }
+}
+
+private struct FletSizeChangeModifier: ViewModifier {
+  let node: ControlNode
+  @Environment(\.rufletEvents) private var events
+  @State private var lastSize: CGSize?
+  @State private var lastDispatch = Date.distantPast
+  @State private var pendingToken = UUID()
+
+  func body(content: Content) -> some View {
+    if node.handlesEvent("size_change") {
+      content
+        .background(
+          GeometryReader { proxy in
+            Color.clear.preference(key: FletObservedSizeKey.self, value: proxy.size)
+          })
+        .onPreferenceChange(FletObservedSizeKey.self, perform: report)
+    } else {
+      content
+    }
+  }
+
+  private func report(_ size: CGSize) {
+    guard size != lastSize else { return }
+    let interval = max(
+      node.int("size_change_interval")
+        ?? FletBaseControlDefaults.sizeChangeIntervalMilliseconds,
+      0)
+    let elapsed = Date().timeIntervalSince(lastDispatch) * 1000
+    if lastSize != nil, interval > 0, elapsed < Double(interval) {
+      let token = UUID()
+      pendingToken = token
+      DispatchQueue.main.asyncAfter(deadline: .now() + (Double(interval) - elapsed) / 1000) {
+        guard pendingToken == token else { return }
+        dispatch(size)
+      }
+    } else {
+      dispatch(size)
+    }
+  }
+
+  private func dispatch(_ size: CGSize) {
+    lastSize = size
+    lastDispatch = Date()
+    events.fire(node, "size_change", data: .map([
+      "w": .double(size.width), "h": .double(size.height)
+    ]))
+  }
+}
+
+private struct FletObservedSizeKey: PreferenceKey {
+  static let defaultValue: CGSize = .zero
+  static func reduce(value: inout CGSize, nextValue: () -> CGSize) { value = nextValue() }
+}
+
+private extension ControlNode {
+  func skipsFletProperty(_ property: String) -> Bool {
+    internals["skip_properties"]?.arrayValue?.contains {
+      $0.stringValue == property
+    } == true
   }
 }
 
@@ -287,15 +475,13 @@ private struct DecorationModifier: ViewModifier {
 
 // MARK: - Interaction
 
-private struct InteractionModifier: ViewModifier {
+private struct ControlStateModifier: ViewModifier {
   let node: ControlNode
 
   func body(content: Content) -> some View {
     content
       .disabled(node.bool("disabled") ?? false)
-      .help(node.string("tooltip") ?? "")
       .accessibilityLabel(node.string("semantics_label") ?? "")
-      .environment(\.layoutDirection, (node.bool("rtl") ?? false) ? .rightToLeft : .leftToRight)
   }
 }
 
