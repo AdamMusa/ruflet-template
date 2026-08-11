@@ -46,6 +46,56 @@ final class TextInputTraitsTests: XCTestCase {
     XCTAssertFalse(traits.readOnly)
   }
 
+  private func filter(_ map: [String: RufletValue]) -> RufletTextInputTraits {
+    RufletTextInputTraits(node: node(["input_filter": .map(map)]))
+  }
+
+  func testAllowingKeepsOnlyTheMatchingRuns() {
+    let traits = filter(["regex_string": .string("[0-9]")])
+    XCTAssertEqual(traits.inputFilter?.apply(to: "a1b2c3"), "123")
+    XCTAssertEqual(traits.inputFilter?.apply(to: "abc"), "")
+  }
+
+  func testDenyingDropsTheMatchingRuns() {
+    let traits = filter(["regex_string": .string("[0-9]"), "allow": .bool(false)])
+    XCTAssertEqual(traits.inputFilter?.apply(to: "a1b2c3"), "abc")
+  }
+
+  func testReplacementStringStandsInForRejectedText() {
+    let allow = filter([
+      "regex_string": .string("[0-9]+"), "replacement_string": .string("-"),
+    ])
+    XCTAssertEqual(allow.inputFilter?.apply(to: "ab12cd34"), "-12-34")
+    let deny = filter([
+      "regex_string": .string("[0-9]+"), "allow": .bool(false),
+      "replacement_string": .string("#"),
+    ])
+    XCTAssertEqual(deny.inputFilter?.apply(to: "ab12cd34"), "ab#cd#")
+  }
+
+  func testCaseSensitivityFollowsTheFlag() {
+    let sensitive = filter(["regex_string": .string("[a-z]")])
+    XCTAssertEqual(sensitive.inputFilter?.apply(to: "aBcD"), "ac")
+    let insensitive = filter([
+      "regex_string": .string("[a-z]"), "case_sensitive": .bool(false),
+    ])
+    XCTAssertEqual(insensitive.inputFilter?.apply(to: "aBcD"), "aBcD")
+  }
+
+  func testAnInvalidOrAbsentPatternLeavesNoFilter() {
+    XCTAssertNil(RufletTextInputTraits(node: node([:])).inputFilter)
+    XCTAssertNil(filter(["regex_string": .string("")]).inputFilter)
+    XCTAssertNil(filter(["regex_string": .string("[unterminated")]).inputFilter)
+  }
+
+  func testFilterRunsBeforeTheLengthLimit() {
+    var traits = filter(["regex_string": .string("[0-9]")])
+    traits.maxLength = 2
+    // Flutter orders its formatters the same way: filtering first, so the
+    // limit counts what survived rather than what was typed.
+    XCTAssertEqual(traits.formatted("a1b2c3"), "12")
+  }
+
   func testSmartSubstitutionOnlyTurnsOffOnTheDisabledEnum() {
     XCTAssertFalse(
       RufletTextInputTraits(node: node(["smart_dashes_type": .string("disabled")])).smartDashes)

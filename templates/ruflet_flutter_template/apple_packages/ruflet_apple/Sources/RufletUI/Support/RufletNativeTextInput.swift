@@ -26,6 +26,56 @@ struct RufletTextInputTraits {
   var enableInteractiveSelection = true
   var textColor: Color?
   var fontSize: CGFloat?
+  var canRequestFocus = true
+  var ignorePointers = false
+  var keyboardBrightness: String?
+  var inputFilter: InputFilter?
+
+  /// Flet's `input_filter`, which is a `FilteringTextInputFormatter` built
+  /// from a regular expression.
+  ///
+  /// Allowing keeps the runs that match and rewrites everything between them;
+  /// denying does the opposite. Both substitute `replacement_string`, which is
+  /// empty by default and so simply drops the rejected text.
+  struct InputFilter {
+    let expression: NSRegularExpression
+    let allow: Bool
+    let replacement: String
+
+    init?(_ value: RufletValue?) {
+      guard let map = value?.mapValue,
+        let pattern = map["regex_string"]?.stringValue, !pattern.isEmpty
+      else { return nil }
+      var options: NSRegularExpression.Options = []
+      if map["case_sensitive"]?.boolValue == false { options.insert(.caseInsensitive) }
+      if map["multiline"]?.boolValue == true { options.insert(.anchorsMatchLines) }
+      if map["dot_all"]?.boolValue == true { options.insert(.dotMatchesLineSeparators) }
+      guard let expression = try? NSRegularExpression(pattern: pattern, options: options) else {
+        return nil
+      }
+      self.expression = expression
+      allow = map["allow"]?.boolValue ?? true
+      replacement = map["replacement_string"]?.stringValue ?? ""
+    }
+
+    func apply(to text: String) -> String {
+      let full = NSRange(location: 0, length: (text as NSString).length)
+      guard allow else {
+        return expression.stringByReplacingMatches(
+          in: text, range: full, withTemplate: NSRegularExpression.escapedTemplate(for: replacement))
+      }
+      let source = text as NSString
+      var kept = ""
+      var cursor = 0
+      for match in expression.matches(in: text, range: full) {
+        if match.range.location > cursor { kept += replacement }
+        kept += source.substring(with: match.range)
+        cursor = NSMaxRange(match.range)
+      }
+      if cursor < source.length { kept += replacement }
+      return kept
+    }
+  }
 
   init() {}
 
@@ -49,6 +99,16 @@ struct RufletTextInputTraits {
     enableInteractiveSelection = node.bool("enable_interactive_selection") ?? true
     textColor = MaterialPalette.color(node.string("color"))
     fontSize = node.double("text_size").map { CGFloat($0) }
+    canRequestFocus = node.bool("can_request_focus") ?? true
+    ignorePointers = node.bool("ignore_pointers") ?? false
+    keyboardBrightness = node.string("keyboard_brightness")?.lowercased()
+    inputFilter = InputFilter(node.props["input_filter"])
+  }
+
+  /// The filter and the length limit in the order Flutter applies its
+  /// formatters: the input filter first, then the length limit.
+  func formatted(_ text: String) -> String {
+    limited(inputFilter?.apply(to: text) ?? text)
   }
 
   /// Truncates to `max_length` the way Flutter's `LengthLimitingTextInputFormatter`
@@ -165,6 +225,12 @@ enum RufletTextSelection {
 
     private func apply(_ traits: RufletTextInputTraits, to view: UITextField) {
       view.isEnabled = !traits.readOnly
+      view.isUserInteractionEnabled = !traits.ignorePointers && traits.canRequestFocus
+      switch traits.keyboardBrightness {
+      case "light": view.keyboardAppearance = .light
+      case "dark": view.keyboardAppearance = .dark
+      default: view.keyboardAppearance = .default
+      }
       view.autocorrectionType = traits.autocorrect ? .yes : .no
       view.spellCheckingType = traits.enableSuggestions ? .yes : .no
       view.smartDashesType = traits.smartDashes ? .yes : .no
@@ -248,7 +314,7 @@ enum RufletTextSelection {
       init(parent: RufletNativeTextInput) { self.parent = parent }
 
       @objc func changed(_ sender: UITextField) {
-        let limited = parent.traits.limited(sender.text ?? "")
+        let limited = parent.traits.formatted(sender.text ?? "")
         if sender.text != limited { sender.text = limited }
         parent.text = limited
       }
@@ -350,7 +416,8 @@ enum RufletTextSelection {
     }
 
     private func apply(_ traits: RufletTextInputTraits, to view: NSTextField) {
-      view.isEditable = !traits.readOnly
+      view.isEditable = !traits.readOnly && traits.canRequestFocus
+      view.refusesFirstResponder = !traits.canRequestFocus
       view.isSelectable = traits.enableInteractiveSelection || !traits.readOnly
       view.isAutomaticTextCompletionEnabled = traits.enableSuggestions
       view.alignment = Self.alignment(traits.textAlign)
@@ -388,7 +455,7 @@ enum RufletTextSelection {
 
       func controlTextDidChange(_ notification: Notification) {
         guard let field = notification.object as? NSTextField else { return }
-        let limited = parent.traits.limited(field.stringValue)
+        let limited = parent.traits.formatted(field.stringValue)
         if field.stringValue != limited { field.stringValue = limited }
         parent.text = limited
         if let editor = field.currentEditor() as? NSTextView { parent.selection = editor.selectedRange() }
