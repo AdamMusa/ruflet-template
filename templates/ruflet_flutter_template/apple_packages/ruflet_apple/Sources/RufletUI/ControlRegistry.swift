@@ -152,8 +152,11 @@ public enum ControlRegistry {
         events: ["keyboard_event", "locale_change"])
     add(["View", "BasePage"], .host, "ViewControlView", .hostManaged,
         events: ["scroll"])
-    add(["Overlay", "Dialogs", "ServiceRegistry", "Window"], .host,
+    add(["Overlay", "Dialogs", "ServiceRegistry"], .host,
         "RufletAppView host", .hostManaged)
+    add(["Window"], .host, "WindowService", .hostManaged,
+        methods: ["center", "close", "destroy", "start_dragging", "start_resizing",
+                  "to_front", "wait_until_ready_to_show"])
     add(["AlertDialog", "CupertinoAlertDialog", "BottomSheet", "CupertinoBottomSheet",
          "Banner"], .host, "OverlayPresenter", .hostManaged,
         events: ["dismiss", "visible"])
