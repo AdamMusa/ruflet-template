@@ -30,6 +30,28 @@ struct RufletTextInputTraits {
   var ignorePointers = false
   var keyboardBrightness: String?
   var inputFilter: InputFilter?
+  /// Flutter's `cursorWidth` defaults to 2; the height follows the line when
+  /// it is not given, and the radius squares off.
+  var cursorWidth: CGFloat = 2
+  var cursorHeight: CGFloat?
+  var cursorRadius: CGFloat?
+  var cursorErrorColor: Color?
+  var animateCursorOpacity = true
+  var obscuringCharacter = "•"
+  var hasError = false
+
+  /// The caret colour Flutter resolves: the error colour wins while the field
+  /// is in error, then `cursor_color`, then the platform tint.
+  var resolvedCursorColor: Color? {
+    if hasError, let cursorErrorColor { return cursorErrorColor }
+    return cursorColor ?? selectionColor
+  }
+
+  /// True when Ruby asked for anything the system caret cannot do, in which
+  /// case the field draws its own.
+  var needsCustomCaret: Bool {
+    cursorWidth != 2 || cursorHeight != nil || cursorRadius != nil || !animateCursorOpacity
+  }
 
   /// Flet's `input_filter`, which is a `FilteringTextInputFormatter` built
   /// from a regular expression.
@@ -103,6 +125,14 @@ struct RufletTextInputTraits {
     ignorePointers = node.bool("ignore_pointers") ?? false
     keyboardBrightness = node.string("keyboard_brightness")?.lowercased()
     inputFilter = InputFilter(node.props["input_filter"])
+    cursorWidth = CGFloat(node.double("cursor_width") ?? 2)
+    cursorHeight = node.double("cursor_height").map { CGFloat($0) }
+    cursorRadius = ControlProps.cornerRadius(node.props["cursor_radius"])
+    cursorErrorColor = MaterialPalette.color(node.string("cursor_error_color"))
+    animateCursorOpacity = node.bool("animate_cursor_opacity") ?? true
+    obscuringCharacter = node.string("obscuring_character") ?? "•"
+    hasError = node.controlID(forKey: "error") != nil
+      || !(node.string("error") ?? node.string("error_text") ?? "").isEmpty
   }
 
   /// The filter and the length limit in the order Flutter applies its
@@ -183,6 +213,86 @@ enum RufletTextSelection {
 #if canImport(UIKit)
   import UIKit
 
+  /// A field that owns its caret.
+  ///
+  /// `caretRect(for:)` is the public hook for the caret's geometry, and it is
+  /// enough for `cursor_width` and `cursor_height`. A rounded or non-blinking
+  /// caret is not reachable that way, so when Ruby asks for either the system
+  /// caret is tinted away and an identically placed layer is drawn instead —
+  /// which is what Flutter's EditableText does on every platform.
+  final class RufletTextFieldView: UITextField {
+    var traits = RufletTextInputTraits() {
+      didSet { applyCaretConfiguration() }
+    }
+
+    private let caret = CALayer()
+    private var drawsOwnCaret = false
+
+    override func caretRect(for position: UITextPosition) -> CGRect {
+      var rect = super.caretRect(for: position)
+      rect.size.width = traits.cursorWidth
+      if let height = traits.cursorHeight {
+        // Flutter keeps the caret centred on the line box when it is shorter
+        // than the line.
+        rect.origin.y += (rect.size.height - height) / 2
+        rect.size.height = height
+      }
+      return rect
+    }
+
+    private func applyCaretConfiguration() {
+      drawsOwnCaret = traits.needsCustomCaret
+        && (traits.cursorRadius != nil || !traits.animateCursorOpacity)
+      guard drawsOwnCaret else {
+        caret.removeFromSuperlayer()
+        return
+      }
+      if caret.superlayer == nil { layer.addSublayer(caret) }
+      caret.cornerRadius = traits.cursorRadius ?? 0
+      caret.backgroundColor = UIColor(
+        traits.resolvedCursorColor ?? Color.accentColor).cgColor
+      if traits.animateCursorOpacity {
+        let blink = CABasicAnimation(keyPath: "opacity")
+        blink.fromValue = 1
+        blink.toValue = 0
+        blink.duration = 0.5
+        blink.autoreverses = true
+        blink.repeatCount = .infinity
+        caret.add(blink, forKey: "blink")
+      } else {
+        caret.removeAnimation(forKey: "blink")
+        caret.opacity = 1
+      }
+      positionCaret()
+    }
+
+    override func layoutSubviews() {
+      super.layoutSubviews()
+      positionCaret()
+    }
+
+    func positionCaret() {
+      guard drawsOwnCaret else { return }
+      guard isFirstResponder, let range = selectedTextRange, range.isEmpty else {
+        caret.isHidden = true
+        return
+      }
+      caret.isHidden = false
+      CATransaction.begin()
+      CATransaction.setDisableActions(true)
+      caret.frame = caretRect(for: range.start)
+      CATransaction.commit()
+    }
+
+    /// Tinting the system caret away leaves the selection handles tinted, so
+    /// the colour is only cleared while this field draws its own.
+    override var tintColor: UIColor! {
+      didSet {
+        if drawsOwnCaret, tintColor != .clear { tintColor = .clear }
+      }
+    }
+  }
+
   struct RufletNativeTextInput: UIViewRepresentable {
     @Binding var text: String
     @Binding var focused: Bool
@@ -196,23 +306,37 @@ enum RufletTextSelection {
 
     func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
 
-    func makeUIView(context: Context) -> UITextField {
-      let view = UITextField(frame: .zero)
+    /// UIKit's secure entry always draws a bullet, so a field asking for a
+    /// different `obscuring_character` masks the text itself and keeps the
+    /// real value in the coordinator.
+    private var masksManually: Bool { secure && traits.obscuringCharacter != "•" }
+
+    private func displayed(_ text: String) -> String {
+      masksManually
+        ? String(repeating: traits.obscuringCharacter, count: text.count) : text
+    }
+
+    func makeUIView(context: Context) -> RufletTextFieldView {
+      let view = RufletTextFieldView(frame: .zero)
       view.delegate = context.coordinator
       view.placeholder = placeholder
-      view.isSecureTextEntry = secure
+      view.isSecureTextEntry = secure && !masksManually
       view.addTarget(context.coordinator, action: #selector(Coordinator.changed(_:)), for: .editingChanged)
       view.addTarget(context.coordinator, action: #selector(Coordinator.began(_:)), for: .editingDidBegin)
       view.addTarget(context.coordinator, action: #selector(Coordinator.ended(_:)), for: .editingDidEnd)
+      view.traits = traits
       apply(traits, to: view)
       return view
     }
 
-    func updateUIView(_ view: UITextField, context: Context) {
+    func updateUIView(_ view: RufletTextFieldView, context: Context) {
       context.coordinator.parent = self
-      if view.text != text { view.text = text }
+      context.coordinator.plainText = text
+      let shown = displayed(text)
+      if view.text != shown { view.text = shown }
       view.placeholder = placeholder
-      view.isSecureTextEntry = secure
+      view.isSecureTextEntry = secure && !masksManually
+      view.traits = traits
       apply(traits, to: view)
       if focused, !view.isFirstResponder {
         DispatchQueue.main.async { view.becomeFirstResponder() }
@@ -242,8 +366,8 @@ enum RufletTextSelection {
         view.textContentType = Self.contentType(hint)
       }
       // UITextField paints the caret and the selection handles with its tint,
-      // so a cursor colour wins and a selection colour is the fallback.
-      if let cursor = traits.cursorColor ?? traits.selectionColor {
+      // so the caret colour wins and a selection colour is the fallback.
+      if let cursor = traits.resolvedCursorColor {
         view.tintColor = UIColor(cursor)
       }
       // There is no switch for hiding the caret, but a clear tint hides it
@@ -309,11 +433,15 @@ enum RufletTextSelection {
     final class Coordinator: NSObject, UITextFieldDelegate {
       var parent: RufletNativeTextInput
       var programmaticBlur = false
+      /// The unmasked value, which the field itself never holds while a
+      /// custom `obscuring_character` is in force.
+      var plainText = ""
       private var lastSelection = NSRange(location: NSNotFound, length: 0)
 
       init(parent: RufletNativeTextInput) { self.parent = parent }
 
       @objc func changed(_ sender: UITextField) {
+        guard !parent.masksManually else { return }
         let limited = parent.traits.formatted(sender.text ?? "")
         if sender.text != limited { sender.text = limited }
         parent.text = limited
@@ -325,6 +453,9 @@ enum RufletTextSelection {
         _ textField: UITextField, shouldChangeCharactersIn range: NSRange,
         replacementString string: String
       ) -> Bool {
+        if parent.masksManually {
+          return maskedEdit(textField, range: range, replacement: string)
+        }
         guard let maximum = parent.traits.maxLength else { return true }
         let current = (textField.text ?? "") as NSString
         return current.replacingCharacters(in: range, with: string).utf16.count <= maximum
@@ -350,7 +481,30 @@ enum RufletTextSelection {
         return true
       }
 
-      func textFieldDidChangeSelection(_ textField: UITextField) { reportSelection(textField) }
+      /// The masked field shows one obscuring character per real character, so
+      /// an edit range in the display maps straight onto the plain text. The
+      /// change is applied here and refused, leaving the field showing the
+      /// mask and this coordinator holding the value.
+      private func maskedEdit(
+        _ textField: UITextField, range: NSRange, replacement: String
+      ) -> Bool {
+        let updated = parent.traits.formatted(
+          (plainText as NSString).replacingCharacters(in: range, with: replacement))
+        plainText = updated
+        textField.text = String(
+          repeating: parent.traits.obscuringCharacter, count: updated.count)
+        let caret = min(range.location + replacement.count, updated.count)
+        if let position = textField.position(from: textField.beginningOfDocument, offset: caret) {
+          textField.selectedTextRange = textField.textRange(from: position, to: position)
+        }
+        parent.text = updated
+        return false
+      }
+
+      func textFieldDidChangeSelection(_ textField: UITextField) {
+        reportSelection(textField)
+        (textField as? RufletTextFieldView)?.positionCaret()
+      }
 
       private func reportSelection(_ textField: UITextField) {
         guard let selected = textField.selectedTextRange else { return }
@@ -376,6 +530,56 @@ enum RufletTextSelection {
 #elseif canImport(AppKit)
   import AppKit
 
+  /// AppKit draws the caret from the field editor, which is shared per window,
+  /// so a field that wants its own geometry supplies one. `fieldEditor(for:)`
+  /// on the cell is the documented hook for that.
+  final class RufletFieldEditor: NSTextView {
+    var traits = RufletTextInputTraits()
+
+    override func drawInsertionPoint(in rect: NSRect, color: NSColor, turnedOn flag: Bool) {
+      // `animate_cursor_opacity: false` means a caret that does not blink, so
+      // the off phase is drawn as well as the on phase.
+      guard flag || !traits.animateCursorOpacity else {
+        super.drawInsertionPoint(in: rect, color: color, turnedOn: flag)
+        return
+      }
+      var caret = rect
+      caret.size.width = traits.cursorWidth
+      if let height = traits.cursorHeight {
+        caret.origin.y += (caret.height - height) / 2
+        caret.size.height = height
+      }
+      let radius = traits.cursorRadius ?? 0
+      (traits.resolvedCursorColor.map { NSColor($0) } ?? color).setFill()
+      NSBezierPath(roundedRect: caret, xRadius: radius, yRadius: radius).fill()
+    }
+  }
+
+  final class RufletTextFieldCell: NSTextFieldCell {
+    var traits = RufletTextInputTraits()
+    private lazy var editor = RufletFieldEditor()
+
+    override func fieldEditor(for controlView: NSView) -> NSTextView? {
+      guard traits.needsCustomCaret else { return nil }
+      editor.traits = traits
+      editor.isFieldEditor = true
+      return editor
+    }
+  }
+
+  /// A secure cell keeps the same caret behaviour, so both variants exist.
+  final class RufletSecureTextFieldCell: NSSecureTextFieldCell {
+    var traits = RufletTextInputTraits()
+    private lazy var editor = RufletFieldEditor()
+
+    override func fieldEditor(for controlView: NSView) -> NSTextView? {
+      guard traits.needsCustomCaret else { return nil }
+      editor.traits = traits
+      editor.isFieldEditor = true
+      return editor
+    }
+  }
+
   struct RufletNativeTextInput: NSViewRepresentable {
     @Binding var text: String
     @Binding var focused: Bool
@@ -391,6 +595,19 @@ enum RufletTextSelection {
 
     func makeNSView(context: Context) -> NSTextField {
       let field: NSTextField = secure ? NSSecureTextField() : NSTextField()
+      if secure {
+        let cell = RufletSecureTextFieldCell(textCell: "")
+        cell.traits = traits
+        cell.isEditable = true
+        cell.isSelectable = true
+        field.cell = cell
+      } else {
+        let cell = RufletTextFieldCell(textCell: "")
+        cell.traits = traits
+        cell.isEditable = true
+        cell.isSelectable = true
+        field.cell = cell
+      }
       field.delegate = context.coordinator
       field.isBordered = false
       field.drawsBackground = false
@@ -425,9 +642,12 @@ enum RufletTextSelection {
       if let size = traits.fontSize { view.font = .systemFont(ofSize: size) }
       // AppKit paints the caret and selection from the field editor, which is
       // shared per window, so the colours are set when this field owns it.
+      (view.cell as? RufletTextFieldCell)?.traits = traits
+      (view.cell as? RufletSecureTextFieldCell)?.traits = traits
       if let editor = view.currentEditor() as? NSTextView {
+        (editor as? RufletFieldEditor)?.traits = traits
         editor.insertionPointColor = traits.showCursor
-          ? NSColor(traits.cursorColor ?? Color.accentColor) : .clear
+          ? NSColor(traits.resolvedCursorColor ?? Color.accentColor) : .clear
         if let selection = traits.selectionColor {
           editor.selectedTextAttributes = [.backgroundColor: NSColor(selection)]
         }
