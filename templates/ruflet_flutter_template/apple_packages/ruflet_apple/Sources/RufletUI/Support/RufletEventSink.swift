@@ -75,9 +75,20 @@ private struct RufletEventSinkKey: EnvironmentKey {
   static let defaultValue = RufletEventSink()
 }
 
+private struct RufletServerURLKey: EnvironmentKey {
+  static let defaultValue: URL? = nil
+}
+
 extension EnvironmentValues {
   public var rufletEvents: RufletEventSink {
     get { self[RufletEventSinkKey.self] }
     set { self[RufletEventSinkKey.self] = newValue }
+  }
+
+  /// Endpoint inherited by nested `RufletApp` controls when their own `url`
+  /// is empty, the native equivalent of Flet's relative page URI.
+  public var rufletServerURL: URL? {
+    get { self[RufletServerURLKey.self] }
+    set { self[RufletServerURLKey.self] = newValue }
   }
 }

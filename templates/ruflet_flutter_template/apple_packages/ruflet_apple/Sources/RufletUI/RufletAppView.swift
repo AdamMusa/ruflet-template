@@ -16,11 +16,14 @@ public struct RufletAppView: View {
   public init(
     serverURL: URL,
     services: [any RufletServiceBundle.Type] = [],
-    capabilities: ClientCapabilities = .current()
+    capabilities: ClientCapabilities = .current(),
+    reconnectInterval: Duration = .seconds(1),
+    reconnectTimeout: Duration? = nil
   ) {
     _host = StateObject(
       wrappedValue: RufletHost(
-        source: .server(serverURL), services: services, capabilities: capabilities))
+        source: .server(serverURL), services: services, capabilities: capabilities,
+        reconnectInterval: reconnectInterval, reconnectTimeout: reconnectTimeout))
   }
 
   /// Boots the embedded mruby VM from a project in the app bundle, then
@@ -94,6 +97,7 @@ private struct RufletSessionView: View {
         // Controls with imperative methods (`video.play`, `search_bar.focus`)
         // claim them here while they are mounted.
         .environment(\.rufletCommands, session.commands)
+        .environment(\.rufletServerURL, session.serverURL)
 
       switch session.status {
       case .crashed(let message):
@@ -160,16 +164,22 @@ public final class RufletHost: ObservableObject {
   private let source: Source
   private let services: [any RufletServiceBundle.Type]
   private let capabilities: ClientCapabilities
+  private let reconnectInterval: Duration
+  private let reconnectTimeout: Duration?
   private var started = false
 
   public init(
     source: Source,
     services: [any RufletServiceBundle.Type] = [],
-    capabilities: ClientCapabilities
+    capabilities: ClientCapabilities,
+    reconnectInterval: Duration = .seconds(1),
+    reconnectTimeout: Duration? = nil
   ) {
     self.source = source
     self.services = services
     self.capabilities = capabilities
+    self.reconnectInterval = reconnectInterval
+    self.reconnectTimeout = reconnectTimeout
   }
 
   public func start() async {
@@ -204,7 +214,9 @@ public final class RufletHost: ObservableObject {
   }
 
   private func connect(to url: URL) {
-    let session = RufletSession(serverURL: url, capabilities: capabilities)
+    let session = RufletSession(
+      serverURL: url, capabilities: capabilities,
+      reconnectInterval: reconnectInterval, reconnectTimeout: reconnectTimeout)
     session.services.register(bundles: services)
     phase = .running(session)
     session.start()

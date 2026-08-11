@@ -37,11 +37,8 @@ extension ControlRegistry {
       return AnyView(PageletControlView(node: node))
     case "AnimatedSwitcher":
       return AnyView(AnimatedSwitcherControlView(node: node))
-    case "FletApp":
-      // `ruflet_app` embeds another Ruflet application. Nesting a second
-      // session is out of scope for this engine, so it renders whatever the
-      // host placed inside it rather than a blank rectangle.
-      return AnyView(PassthroughControlView(node: node))
+    case "RufletApp", "FletApp":
+      return AnyView(RufletAppControlView(node: node))
     case "Hero":
       return AnyView(HeroControlView(node: node))
     case "Semantics":

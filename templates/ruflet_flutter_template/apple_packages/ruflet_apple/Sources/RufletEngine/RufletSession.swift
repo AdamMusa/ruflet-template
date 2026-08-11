@@ -25,6 +25,9 @@ public final class RufletSession: ObservableObject {
 
   public let store: ControlStore
   public let services: ServiceRegistry
+  /// The endpoint this session registered with. Embedded `RufletApp` controls
+  /// inherit it when their URL is omitted, matching Flet's relative backend.
+  public let serverURL: URL?
   /// Where mounted controls register their imperative methods.
   public let commands = ControlCommandBus()
 
@@ -37,19 +40,31 @@ public final class RufletSession: ObservableObject {
   private let transport: RufletTransport
   private var reconnectAttempts = 0
   private let maxReconnectAttempts: Int
+  private let reconnectInterval: Duration
+  private let reconnectTimeout: Duration?
+  private var reconnectDelay: Duration
+  private var reconnectStartedAt: ContinuousClock.Instant?
+  private var reconnectTask: Task<Void, Never>?
   private var isStopping = false
 
   public init(
     transport: RufletTransport,
     capabilities: ClientCapabilities = .current(),
     store: ControlStore = ControlStore(),
-    maxReconnectAttempts: Int = 5
+    maxReconnectAttempts: Int = .max,
+    reconnectInterval: Duration = .seconds(1),
+    reconnectTimeout: Duration? = nil,
+    serverURL: URL? = nil
   ) {
     self.transport = transport
     self.capabilities = capabilities
     self.store = store
     self.services = ServiceRegistry()
+    self.serverURL = serverURL
     self.maxReconnectAttempts = maxReconnectAttempts
+    self.reconnectInterval = reconnectInterval
+    self.reconnectDelay = reconnectInterval
+    self.reconnectTimeout = reconnectTimeout
     transport.delegate = self
 
     services.registerDefaults()
@@ -66,9 +81,15 @@ public final class RufletSession: ObservableObject {
   public convenience init(
     serverURL: URL,
     capabilities: ClientCapabilities = .current(),
-    store: ControlStore = ControlStore()
+    store: ControlStore = ControlStore(),
+    maxReconnectAttempts: Int = .max,
+    reconnectInterval: Duration = .seconds(1),
+    reconnectTimeout: Duration? = nil
   ) {
-    self.init(transport: WebSocketTransport(url: serverURL), capabilities: capabilities, store: store)
+    self.init(
+      transport: WebSocketTransport(url: serverURL), capabilities: capabilities, store: store,
+      maxReconnectAttempts: maxReconnectAttempts, reconnectInterval: reconnectInterval,
+      reconnectTimeout: reconnectTimeout, serverURL: serverURL)
   }
 
   // MARK: - Lifecycle
@@ -76,12 +97,16 @@ public final class RufletSession: ObservableObject {
   public func start() {
     guard status == .idle || status == .disconnected else { return }
     isStopping = false
+    reconnectTask?.cancel()
+    reconnectTask = nil
     status = .connecting
     transport.connect()
   }
 
   public func stop() {
     isStopping = true
+    reconnectTask?.cancel()
+    reconnectTask = nil
     transport.disconnect()
     status = .disconnected
   }
@@ -147,6 +172,8 @@ public final class RufletSession: ObservableObject {
     sessionID = payload["session_id"]?.stringValue ?? sessionID
     capabilities.sessionID = sessionID
     reconnectAttempts = 0
+    reconnectStartedAt = nil
+    reconnectDelay = reconnectInterval
     status = .connected
 
     if let error = payload["error"]?.stringValue, !error.isEmpty {
@@ -248,11 +275,27 @@ extension RufletSession: RufletTransportDelegate {
   nonisolated public func transport(_ transport: RufletTransport, didCloseWith error: Error?) {
     Task { @MainActor in
       guard !self.isStopping else { return }
-      if let error {
-        self.status = .failed(error.localizedDescription)
-      } else {
-        self.status = .disconnected
-      }
+      self.status = error.map { .failed($0.localizedDescription) } ?? .disconnected
+      self.scheduleReconnect()
+    }
+  }
+
+  private func scheduleReconnect() {
+    guard reconnectTask == nil, reconnectAttempts < maxReconnectAttempts else { return }
+    let clock = ContinuousClock()
+    let started = reconnectStartedAt ?? clock.now
+    reconnectStartedAt = started
+    if let reconnectTimeout, started.duration(to: clock.now) >= reconnectTimeout { return }
+    reconnectAttempts += 1
+    let delay = reconnectDelay
+    reconnectDelay *= 2
+    reconnectTask = Task { @MainActor [weak self] in
+      guard let self else { return }
+      try? await Task.sleep(for: delay)
+      guard !Task.isCancelled, !self.isStopping else { return }
+      self.reconnectTask = nil
+      self.status = .connecting
+      self.transport.connect()
     }
   }
 }

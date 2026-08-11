@@ -9304,7 +9304,7 @@
       "dsl_name": "ruflet_app",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::RufletAppControl",
-      "wire_type": "FletApp",
+      "wire_type": "RufletApp",
       "keywords": [
         "align",
         "animate_align",
@@ -9355,7 +9355,7 @@
       "dsl_name": "rufletapp",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::RufletAppControl",
-      "wire_type": "FletApp",
+      "wire_type": "RufletApp",
       "keywords": [
         "align",
         "animate_align",

@@ -221,7 +221,8 @@ public enum ControlRegistry {
         events: ["double_tap", "drag_end", "drag_start"])
     add(["AutofillGroup"], .visible, "InertWrapperControlView", .nativeView)
     add(["BrowserContextMenu"], .unsupported, "InertWrapperControlView", .unsupportedFallback)
-    add(["FletApp"], .unsupported, "PassthroughControlView", .unsupportedFallback)
+    add(["RufletApp", "FletApp"], .visible, "RufletAppControlView", .nativeView,
+        events: ["animation_end", "error", "size_change"])
 
     // Display controls.
     add(["Text"], .visible, "TextControlView", .nativeView,

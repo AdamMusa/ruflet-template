@@ -43,6 +43,7 @@ public final class WebSocketTransport: NSObject, RufletTransport {
   public func connect() {
     queue.async { [weak self] in
       guard let self, self.task == nil else { return }
+      self.isClosed = false
       let configuration = URLSessionConfiguration.default
       configuration.timeoutIntervalForRequest = 30
       let session = URLSession(configuration: configuration, delegate: self, delegateQueue: nil)
