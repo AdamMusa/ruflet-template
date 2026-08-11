@@ -44,27 +44,27 @@ struct CommonControlModifiers: ViewModifier {
       .modifier(ControlPaddingModifier(node: node))
       .modifier(DecorationModifier(node: node))
       .modifier(ControlStateModifier(node: node))
-      .modifier(FletOpacityModifier(node: node))
-      .modifier(FletTooltipModifier(node: node))
-      .modifier(FletDirectionalityModifier(node: node))
-      .modifier(FletFixedSizeModifier(node: node))
-      .modifier(FletRotationModifier(node: node))
-      .modifier(FletScaleModifier(node: node))
-      .modifier(FletOffsetModifier(node: node))
-      .modifier(FletAspectRatioModifier(node: node))
-      .modifier(FletAlignmentModifier(node: node))
-      .modifier(FletMarginModifier(node: node))
+      .modifier(RufletOpacityModifier(node: node))
+      .modifier(RufletTooltipModifier(node: node))
+      .modifier(RufletDirectionalityModifier(node: node))
+      .modifier(RufletFixedSizeModifier(node: node))
+      .modifier(RufletRotationModifier(node: node))
+      .modifier(RufletScaleModifier(node: node))
+      .modifier(RufletOffsetModifier(node: node))
+      .modifier(RufletAspectRatioModifier(node: node))
+      .modifier(RufletAlignmentModifier(node: node))
+      .modifier(RufletMarginModifier(node: node))
       // Positioned is implemented by Stack/Overlay because SwiftUI, like
       // Flutter, needs the parent constraints to resolve left+right/top+bottom.
-      .modifier(FletSizeChangeModifier(node: node))
-      .modifier(FletExpandModifier(node: node, axis: axis))
+      .modifier(RufletSizeChangeModifier(node: node))
+      .modifier(RufletExpandModifier(node: node, axis: axis))
   }
 }
 
 /// Constructor defaults owned by Flet's shared LayoutControl rather than an
 /// individual widget. Keeping them here prevents a renderer family from
 /// inventing a different fallback.
-enum FletBaseControlDefaults {
+enum RufletBaseControlDefaults {
   static let sizeChangeIntervalMilliseconds = 10
 }
 
@@ -84,11 +84,11 @@ private struct TightConstraintFrame: ViewModifier {
 
 // MARK: - Size
 
-private struct FletFixedSizeModifier: ViewModifier {
+private struct RufletFixedSizeModifier: ViewModifier {
   let node: ControlNode
 
   func body(content: Content) -> some View {
-    if node.skipsFletProperty("width") || node.skipsFletProperty("height") {
+    if node.skipsRufletProperty("width") || node.skipsRufletProperty("height") {
       return AnyView(content)
     }
     let width = node.double("width").map { CGFloat($0) }
@@ -166,18 +166,18 @@ private struct ParentConstrainedWidthLayout: Layout {
   }
 
   private func resolvedWidth(_ proposed: CGFloat?) -> CGFloat {
-    FletConstraintMath.width(requested: requested, proposed: proposed)
+    RufletConstraintMath.width(requested: requested, proposed: proposed)
   }
 }
 
-enum FletConstraintMath {
+enum RufletConstraintMath {
   static func width(requested: CGFloat, proposed: CGFloat?) -> CGFloat {
     guard let proposed, proposed.isFinite else { return max(requested, 0) }
     return min(max(requested, 0), max(proposed, 0))
   }
 }
 
-private struct FletExpandModifier: ViewModifier {
+private struct RufletExpandModifier: ViewModifier {
   let node: ControlNode
   let axis: LayoutAxis
 
@@ -199,7 +199,7 @@ private struct FletExpandModifier: ViewModifier {
   }
 }
 
-private struct FletAspectRatioModifier: ViewModifier {
+private struct RufletAspectRatioModifier: ViewModifier {
   let node: ControlNode
 
   func body(content: Content) -> some View {
@@ -225,7 +225,7 @@ private struct ControlPaddingModifier: ViewModifier {
 
 // MARK: - Transform
 
-private struct FletOpacityModifier: ViewModifier {
+private struct RufletOpacityModifier: ViewModifier {
   let node: ControlNode
 
   func body(content: Content) -> some View {
@@ -235,7 +235,7 @@ private struct FletOpacityModifier: ViewModifier {
       result
         .animation(animation, value: opacity)
         .modifier(
-          FletAnimationEndReporter(
+          RufletAnimationEndReporter(
             node: node, animation: node.props["animate_opacity"], value: opacity,
             property: "opacity"))
     } else {
@@ -244,7 +244,7 @@ private struct FletOpacityModifier: ViewModifier {
   }
 }
 
-private struct FletRotationModifier: ViewModifier {
+private struct RufletRotationModifier: ViewModifier {
   let node: ControlNode
 
   func body(content: Content) -> some View {
@@ -254,7 +254,7 @@ private struct FletRotationModifier: ViewModifier {
       result
         .animation(animation, value: rotation.radians)
         .modifier(
-          FletAnimationEndReporter(
+          RufletAnimationEndReporter(
             node: node, animation: node.props["animate_rotation"],
             value: rotation.radians, property: "rotation"))
     } else {
@@ -263,7 +263,7 @@ private struct FletRotationModifier: ViewModifier {
   }
 }
 
-private struct FletScaleModifier: ViewModifier {
+private struct RufletScaleModifier: ViewModifier {
   let node: ControlNode
 
   func body(content: Content) -> some View {
@@ -273,7 +273,7 @@ private struct FletScaleModifier: ViewModifier {
       result
         .animation(animation, value: scale)
         .modifier(
-          FletAnimationEndReporter(
+          RufletAnimationEndReporter(
             node: node, animation: node.props["animate_scale"], value: scale,
             property: "scale"))
     } else {
@@ -282,7 +282,7 @@ private struct FletScaleModifier: ViewModifier {
   }
 }
 
-private struct FletOffsetModifier: ViewModifier {
+private struct RufletOffsetModifier: ViewModifier {
   let node: ControlNode
 
   func body(content: Content) -> some View {
@@ -292,7 +292,7 @@ private struct FletOffsetModifier: ViewModifier {
       result
         .animation(animation, value: offset ?? .zero)
         .modifier(
-          FletAnimationEndReporter(
+          RufletAnimationEndReporter(
             node: node, animation: node.props["animate_offset"], value: offset ?? .zero,
             property: "offset"))
     } else {
@@ -301,11 +301,11 @@ private struct FletOffsetModifier: ViewModifier {
   }
 }
 
-private struct FletMarginModifier: ViewModifier {
+private struct RufletMarginModifier: ViewModifier {
   let node: ControlNode
 
   func body(content: Content) -> some View {
-    if node.skipsFletProperty("margin") {
+    if node.skipsRufletProperty("margin") {
       return AnyView(content)
     }
     let margin = ControlProps.edgeInsets(node.props["margin"])
@@ -315,7 +315,7 @@ private struct FletMarginModifier: ViewModifier {
         result
           .animation(animation, value: margin ?? EdgeInsets())
           .modifier(
-            FletAnimationEndReporter(
+            RufletAnimationEndReporter(
               node: node, animation: node.props["animate_margin"],
               value: margin ?? EdgeInsets(), property: "margin")))
     }
@@ -323,7 +323,7 @@ private struct FletMarginModifier: ViewModifier {
   }
 }
 
-private struct FletDirectionalityModifier: ViewModifier {
+private struct RufletDirectionalityModifier: ViewModifier {
   let node: ControlNode
 
   @ViewBuilder
@@ -338,12 +338,12 @@ private struct FletDirectionalityModifier: ViewModifier {
   }
 }
 
-private struct FletTooltipModifier: ViewModifier {
+private struct RufletTooltipModifier: ViewModifier {
   let node: ControlNode
 
   @ViewBuilder
   func body(content: Content) -> some View {
-    if !node.skipsFletProperty("tooltip"), let tooltip = node.string("tooltip"), !tooltip.isEmpty {
+    if !node.skipsRufletProperty("tooltip"), let tooltip = node.string("tooltip"), !tooltip.isEmpty {
       content.help(tooltip)
     } else {
       content
@@ -351,17 +351,17 @@ private struct FletTooltipModifier: ViewModifier {
   }
 }
 
-private struct FletAlignmentModifier: ViewModifier {
+private struct RufletAlignmentModifier: ViewModifier {
   let node: ControlNode
 
   @ViewBuilder
   func body(content: Content) -> some View {
     if let alignment = ControlProps.continuousAlignment(node.props["align"]) {
       if #available(iOS 16.0, macOS 13.0, *) {
-        FletAlignLayout(alignment: alignment) { content }
+        RufletAlignLayout(alignment: alignment) { content }
           .animation(ControlProps.animation(node.props["animate_align"]), value: alignment)
           .modifier(
-            FletAnimationEndReporter(
+            RufletAnimationEndReporter(
               node: node, animation: node.props["animate_align"], value: alignment,
               property: "align"))
       } else {
@@ -373,7 +373,7 @@ private struct FletAlignmentModifier: ViewModifier {
   }
 }
 
-private struct FletAnimationEndReporter<Value: Equatable>: ViewModifier {
+private struct RufletAnimationEndReporter<Value: Equatable>: ViewModifier {
   let node: ControlNode
   let animation: RufletValue?
   let value: Value
@@ -399,8 +399,8 @@ private struct FletAnimationEndReporter<Value: Equatable>: ViewModifier {
 }
 
 @available(iOS 16.0, macOS 13.0, *)
-private struct FletAlignLayout: Layout {
-  let alignment: FletAlignment
+private struct RufletAlignLayout: Layout {
+  let alignment: RufletAlignment
 
   func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout Void) -> CGSize {
     guard let child = subviews.first else { return .zero }
@@ -413,7 +413,7 @@ private struct FletAlignLayout: Layout {
   func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout Void) {
     guard let child = subviews.first else { return }
     let childSize = child.sizeThatFits(proposal)
-    let origin = FletGeometry.alignedOrigin(
+    let origin = RufletGeometry.alignedOrigin(
       alignment: alignment, containerSize: bounds.size, childSize: childSize)
     child.place(
       at: CGPoint(x: bounds.minX + origin.x, y: bounds.minY + origin.y),
@@ -422,7 +422,7 @@ private struct FletAlignLayout: Layout {
   }
 }
 
-private struct FletSizeChangeModifier: ViewModifier {
+private struct RufletSizeChangeModifier: ViewModifier {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
   @State private var lastSize: CGSize?
@@ -434,9 +434,9 @@ private struct FletSizeChangeModifier: ViewModifier {
       content
         .background(
           GeometryReader { proxy in
-            Color.clear.preference(key: FletObservedSizeKey.self, value: proxy.size)
+            Color.clear.preference(key: RufletObservedSizeKey.self, value: proxy.size)
           })
-        .onPreferenceChange(FletObservedSizeKey.self, perform: report)
+        .onPreferenceChange(RufletObservedSizeKey.self, perform: report)
     } else {
       content
     }
@@ -446,7 +446,7 @@ private struct FletSizeChangeModifier: ViewModifier {
     guard size != lastSize else { return }
     let interval = max(
       node.int("size_change_interval")
-        ?? FletBaseControlDefaults.sizeChangeIntervalMilliseconds,
+        ?? RufletBaseControlDefaults.sizeChangeIntervalMilliseconds,
       0)
     let elapsed = Date().timeIntervalSince(lastDispatch) * 1000
     if lastSize != nil, interval > 0, elapsed < Double(interval) {
@@ -470,13 +470,13 @@ private struct FletSizeChangeModifier: ViewModifier {
   }
 }
 
-private struct FletObservedSizeKey: PreferenceKey {
+private struct RufletObservedSizeKey: PreferenceKey {
   static let defaultValue: CGSize = .zero
   static func reduce(value: inout CGSize, nextValue: () -> CGSize) { value = nextValue() }
 }
 
 private extension ControlNode {
-  func skipsFletProperty(_ property: String) -> Bool {
+  func skipsRufletProperty(_ property: String) -> Bool {
     internals["skip_properties"]?.arrayValue?.contains {
       $0.stringValue == property
     } == true
@@ -493,7 +493,7 @@ private struct FractionalTranslationModifier: ViewModifier {
 
   func body(content: Content) -> some View {
     guard let fraction else { return AnyView(content) }
-    let translation = FletGeometry.fractionalTranslation(
+    let translation = RufletGeometry.fractionalTranslation(
       fraction: fraction, childSize: childSize)
     return AnyView(
       content

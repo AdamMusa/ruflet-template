@@ -1,7 +1,7 @@
 import XCTest
 @testable import RufletUI
 
-final class FletBaseControlPipelineTests: XCTestCase {
+final class RufletBaseControlPipelineTests: XCTestCase {
   func testNativeLayoutWrapperOrderMatchesPinnedFletLayoutControl() throws {
     let sourceURL = URL(fileURLWithPath: #filePath)
       .deletingLastPathComponent()
@@ -15,10 +15,10 @@ final class FletBaseControlPipelineTests: XCTestCase {
     let body = String(source[bodyStart.lowerBound..<bodyEnd.lowerBound])
 
     let wrappers = [
-      "FletOpacityModifier", "FletTooltipModifier", "FletDirectionalityModifier",
-      "FletFixedSizeModifier", "FletRotationModifier", "FletScaleModifier",
-      "FletOffsetModifier", "FletAspectRatioModifier", "FletAlignmentModifier",
-      "FletMarginModifier", "FletSizeChangeModifier", "FletExpandModifier",
+      "RufletOpacityModifier", "RufletTooltipModifier", "RufletDirectionalityModifier",
+      "RufletFixedSizeModifier", "RufletRotationModifier", "RufletScaleModifier",
+      "RufletOffsetModifier", "RufletAspectRatioModifier", "RufletAlignmentModifier",
+      "RufletMarginModifier", "RufletSizeChangeModifier", "RufletExpandModifier",
     ]
 
     var cursor = body.startIndex
@@ -29,7 +29,7 @@ final class FletBaseControlPipelineTests: XCTestCase {
   }
 
   func testSizeChangeIntervalMatchesFletLayoutControlDefault() {
-    XCTAssertEqual(FletBaseControlDefaults.sizeChangeIntervalMilliseconds, 10)
+    XCTAssertEqual(RufletBaseControlDefaults.sizeChangeIntervalMilliseconds, 10)
   }
 
   func testAnimationDurationUsesTheSameMillisecondsAsFlet() {

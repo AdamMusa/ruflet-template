@@ -6,7 +6,7 @@
   /// A non-hit-testing AppKit observer for pointer channels SwiftUI does not
   /// expose (secondary/tertiary buttons, wheel deltas, pressure and right-pan).
   /// Returning nil from hitTest keeps the wrapped Ruflet content interactive.
-  struct FletNativePointerMonitor: NSViewRepresentable {
+  struct RufletNativePointerMonitor: NSViewRepresentable {
     let onEvent: (String, RufletValue) -> Void
 
     func makeNSView(context: Context) -> MonitorView {
@@ -53,7 +53,7 @@
         let local = convert(event.locationInWindow, from: nil)
         guard bounds.contains(local) else { return }
         let global = window.convertPoint(toScreen: event.locationInWindow)
-        let tap = FletInteractionParity.tap(kind: "mouse", local: local, global: global)
+        let tap = RufletInteractionParity.tap(kind: "mouse", local: local, global: global)
 
         switch event.type {
         case .rightMouseDown:
@@ -118,13 +118,13 @@
           onEvent(
             "scroll",
             .map([
-              "l": FletInteractionParity.point(local),
-              "g": FletInteractionParity.point(global),
+              "l": RufletInteractionParity.point(local),
+              "g": RufletInteractionParity.point(global),
               "sd": .map(["x": .double(event.scrollingDeltaX), "y": .double(event.scrollingDeltaY)]),
             ]))
         case .pressure:
           let payload: RufletValue = .map([
-            "l": FletInteractionParity.point(local), "g": FletInteractionParity.point(global),
+            "l": RufletInteractionParity.point(local), "g": RufletInteractionParity.point(global),
             "p": .double(Double(event.pressure)),
           ])
           switch event.stage {
@@ -151,8 +151,8 @@
       ) -> RufletValue {
         var values: [String: RufletValue] = [
           "k": .string("mouse"),
-          "l": FletInteractionParity.point(local),
-          "g": FletInteractionParity.point(global),
+          "l": RufletInteractionParity.point(local),
+          "g": RufletInteractionParity.point(global),
           "ts": .double(event.timestamp * 1_000),
           "dev": .int(0),
           "ps": .double(Double(event.pressure)),
@@ -162,7 +162,7 @@
           "rMax": .double(0), "or": .double(0), "tilt": .double(0),
         ]
         if let start {
-          values["ld"] = FletInteractionParity.point(
+          values["ld"] = RufletInteractionParity.point(
             CGPoint(x: local.x - start.x, y: local.y - start.y))
         } else {
           values["ld"] = .null
@@ -174,17 +174,17 @@
         _ event: NSEvent, local: CGPoint, global: CGPoint, start: CGPoint
       ) -> RufletValue {
         .map([
-          "l": FletInteractionParity.point(local), "g": FletInteractionParity.point(global),
-          "ofo": FletInteractionParity.point(
+          "l": RufletInteractionParity.point(local), "g": RufletInteractionParity.point(global),
+          "ofo": RufletInteractionParity.point(
             CGPoint(x: local.x - start.x, y: local.y - start.y)),
-          "lofo": FletInteractionParity.point(
+          "lofo": RufletInteractionParity.point(
             CGPoint(x: local.x - start.x, y: local.y - start.y)),
         ])
       }
 
       private func longPressEnd(local: CGPoint, global: CGPoint) -> RufletValue {
         .map([
-          "l": FletInteractionParity.point(local), "g": FletInteractionParity.point(global),
+          "l": RufletInteractionParity.point(local), "g": RufletInteractionParity.point(global),
           "v": .map(["x": .double(0), "y": .double(0)]),
         ])
       }

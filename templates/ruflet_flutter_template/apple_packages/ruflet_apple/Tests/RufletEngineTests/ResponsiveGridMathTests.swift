@@ -36,9 +36,9 @@ final class ResponsiveGridMathTests: XCTestCase {
   }
 
   func testExplicitWidthMatchesFletTightParentConstraints() {
-    XCTAssertEqual(FletConstraintMath.width(requested: 320, proposed: 390), 320)
-    XCTAssertEqual(FletConstraintMath.width(requested: 560, proposed: 390), 390)
-    XCTAssertEqual(FletConstraintMath.width(requested: 320, proposed: nil), 320)
+    XCTAssertEqual(RufletConstraintMath.width(requested: 320, proposed: 390), 320)
+    XCTAssertEqual(RufletConstraintMath.width(requested: 560, proposed: 390), 390)
+    XCTAssertEqual(RufletConstraintMath.width(requested: 320, proposed: nil), 320)
   }
 
   func testTabletAndDesktopSpansShareRows() {

@@ -277,11 +277,11 @@ struct RangeSliderControlView: View {
   var body: some View {
     let minimum = node.double("min") ?? 0
     let maximum = node.double("max") ?? 1
-    let values = FletThemeDefaults.rangeSliderValues(node)
+    let values = RufletThemeDefaults.rangeSliderValues(node)
     let start = values.start
     let end = values.end
 
-    FletRangeSlider(
+    RufletRangeSlider(
       start: start,
       end: end,
       minimum: minimum,
@@ -306,7 +306,7 @@ struct RangeSliderControlView: View {
   }
 }
 
-private struct FletRangeSlider: View {
+private struct RufletRangeSlider: View {
   let start: Double
   let end: Double
   let minimum: Double
@@ -418,7 +418,7 @@ struct TextFieldControlView: View {
         .frame(minHeight: CGFloat((node.int("min_lines") ?? 3) * 20))
     } else {
       #if canImport(UIKit) || canImport(AppKit)
-        FletNativeTextInput(
+        RufletNativeTextInput(
           text: binding,
           focused: $focused,
           selection: $selection,
@@ -453,7 +453,7 @@ struct TextFieldControlView: View {
     if let explicit = MaterialPalette.color(node.props["bgcolor"]?.stringValue) {
       return explicit
     }
-    return MaterialPalette.color(FletThemeDefaults.backgroundToken(for: node)) ?? .clear
+    return MaterialPalette.color(RufletThemeDefaults.backgroundToken(for: node)) ?? .clear
   }
 
   private var binding: Binding<String> {
@@ -474,10 +474,10 @@ struct TextFieldControlView: View {
 
   private func reportSelection(_ range: NSRange) {
     let source = node.string("value") ?? ""
-    guard let resolved = FletTextSelection.normalized(range, in: source),
-      let data = FletTextSelection.eventData(resolved, in: source)
+    guard let resolved = RufletTextSelection.normalized(range, in: source),
+      let data = RufletTextSelection.eventData(resolved, in: source)
     else { return }
-    let selectionValue = FletTextSelection.wireValue(resolved)
+    let selectionValue = RufletTextSelection.wireValue(resolved)
     events.setLocal(node.id, "selection", selectionValue)
     events.update(node.id, ["selection": selectionValue])
     events.fire(node, "selection_change", data: data)
@@ -790,7 +790,7 @@ struct SearchBarControlView: View {
     HStack(spacing: 8) {
       Image(systemName: "magnifyingglass").foregroundColor(.secondary)
       #if canImport(UIKit) || canImport(AppKit)
-        FletNativeTextInput(
+        RufletNativeTextInput(
           text: searchValue,
           focused: $nativeFocused,
           selection: $selection,
@@ -865,7 +865,7 @@ struct DropdownControlView: View {
       }
       HStack(spacing: 8) {
         #if canImport(UIKit) || canImport(AppKit)
-          FletNativeTextInput(
+          RufletNativeTextInput(
             text: dropdownText,
             focused: $focused,
             selection: $selection,

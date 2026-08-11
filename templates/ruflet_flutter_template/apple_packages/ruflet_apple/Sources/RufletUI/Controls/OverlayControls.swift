@@ -87,7 +87,7 @@ struct DialogPresenter: ViewModifier {
     guard let appBarID = host.controlID(forKey: "appbar"), let appBar = store.node(appBarID) else {
       return 0
     }
-    return FletThemeDefaults.appBarHeight(appBar)
+    return RufletThemeDefaults.appBarHeight(appBar)
   }
 
   @ViewBuilder

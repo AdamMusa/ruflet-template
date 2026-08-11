@@ -8,7 +8,7 @@ import SwiftUI
 /// vendored Flet client. Keeping this outside individual views prevents an
 /// Apple control from quietly inventing a friendlier but incompatible event
 /// shape.
-enum FletInteractionParity {
+enum RufletInteractionParity {
   static func point(_ point: CGPoint) -> RufletValue {
     .map(["x": .double(point.x), "y": .double(point.y)])
   }

@@ -2,7 +2,7 @@ import RufletEngine
 import RufletProtocol
 import SwiftUI
 
-enum FletFlexMath {
+enum RufletFlexMath {
   static func flex(_ value: RufletValue?) -> Double {
     switch value {
     case .bool(true): return 1
@@ -33,7 +33,7 @@ private struct LooseFlexValueKey: LayoutValueKey {
 }
 
 @available(iOS 16.0, macOS 13.0, *)
-struct FletFlexChild: View {
+struct RufletFlexChild: View {
   let id: Int
   let axis: LayoutAxis
   @EnvironmentObject private var store: ControlStore
@@ -41,7 +41,7 @@ struct FletFlexChild: View {
   @ViewBuilder
   var body: some View {
     let node = store.node(id)
-    let flex = FletFlexMath.flex(node?.props["expand"])
+    let flex = RufletFlexMath.flex(node?.props["expand"])
     let loose = node?.bool("expand_loose") ?? false
     let childAxis: LayoutAxis = flex > 0 && !loose
       ? (axis == .horizontal ? .tightHorizontal : .tightVertical)
@@ -58,7 +58,7 @@ struct FletFlexChild: View {
 /// `expand: 1` and `expand: 2` receive equal shares. This layout preserves the
 /// Flet flex factor and its `Expanded` versus `Flexible` (loose) distinction.
 @available(iOS 16.0, macOS 13.0, *)
-struct FletFlexLayout: Layout {
+struct RufletFlexLayout: Layout {
   let axis: LayoutAxis
   let spacing: CGFloat
   let mainAlignment: ControlProps.MainAxisAlignment
@@ -117,7 +117,7 @@ struct FletFlexLayout: Layout {
 
     let finiteMain = proposedMain.flatMap { $0.isFinite ? max($0, 0) : nil }
     let available = max((finiteMain ?? fixedMain) - fixedMain - baseSpacing, 0)
-    let shares = FletFlexMath.allocations(available: available, flexes: flexes)
+    let shares = RufletFlexMath.allocations(available: available, flexes: flexes)
     for index in subviews.indices where flexes[index] > 0 {
       let childProposal = axis == .horizontal
         ? ProposedViewSize(width: shares[index], height: proposedCross)

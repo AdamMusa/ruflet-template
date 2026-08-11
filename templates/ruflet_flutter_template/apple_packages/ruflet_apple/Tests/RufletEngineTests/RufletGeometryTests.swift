@@ -2,9 +2,9 @@ import XCTest
 @testable import RufletUI
 import RufletProtocol
 
-final class FletGeometryTests: XCTestCase {
+final class RufletGeometryTests: XCTestCase {
   func testOffsetIsFractionOfChildSizeRatherThanLogicalPoints() {
-    let translation = FletGeometry.fractionalTranslation(
+    let translation = RufletGeometry.fractionalTranslation(
       fraction: CGSize(width: 0.5, height: -1),
       childSize: CGSize(width: 120, height: 40))
 
@@ -12,15 +12,15 @@ final class FletGeometryTests: XCTestCase {
   }
 
   func testFractionalOffsetOfZeroSizedChildIsZero() {
-    let translation = FletGeometry.fractionalTranslation(
+    let translation = RufletGeometry.fractionalTranslation(
       fraction: CGSize(width: 4, height: -3), childSize: .zero)
 
     XCTAssertEqual(translation, .zero)
   }
 
   func testContinuousAlignmentPreservesIntermediateCoordinates() {
-    let origin = FletGeometry.alignedOrigin(
-      alignment: FletAlignment(x: 0.25, y: -0.6),
+    let origin = RufletGeometry.alignedOrigin(
+      alignment: RufletAlignment(x: 0.25, y: -0.6),
       containerSize: CGSize(width: 200, height: 100),
       childSize: CGSize(width: 40, height: 20))
 
@@ -29,8 +29,8 @@ final class FletGeometryTests: XCTestCase {
   }
 
   func testContinuousAlignmentDoesNotClampCoordinatesOutsideUnitRange() {
-    let origin = FletGeometry.alignedOrigin(
-      alignment: FletAlignment(x: 2, y: -2),
+    let origin = RufletGeometry.alignedOrigin(
+      alignment: RufletAlignment(x: 2, y: -2),
       containerSize: CGSize(width: 200, height: 100),
       childSize: CGSize(width: 40, height: 20))
 
@@ -39,7 +39,7 @@ final class FletGeometryTests: XCTestCase {
   }
 
   func testContinuousAlignmentMapsExactlyToGradientUnitCoordinates() {
-    let point = FletGeometry.unitPoint(alignment: FletAlignment(x: 0.25, y: -0.6))
+    let point = RufletGeometry.unitPoint(alignment: RufletAlignment(x: 0.25, y: -0.6))
 
     XCTAssertEqual(point.x, 0.625, accuracy: 0.001)
     XCTAssertEqual(point.y, 0.2, accuracy: 0.001)
@@ -51,7 +51,7 @@ final class FletGeometryTests: XCTestCase {
       "y": .double(-0.6),
     ]))
 
-    XCTAssertEqual(alignment, FletAlignment(x: 0.25, y: -0.6))
+    XCTAssertEqual(alignment, RufletAlignment(x: 0.25, y: -0.6))
   }
 
   func testAlignmentParserSupportsFletNamedConstants() {
@@ -69,13 +69,13 @@ final class FletGeometryTests: XCTestCase {
 
     XCTAssertEqual(
       radii,
-      FletCornerRadii(topLeft: 4, topRight: 8, bottomLeft: 12, bottomRight: 16))
+      RufletCornerRadii(topLeft: 4, topRight: 8, bottomLeft: 12, bottomRight: 16))
     XCTAssertEqual(ControlProps.cornerRadius(.map(["top_left": .double(4)])), 4)
   }
 
   func testRoundedRectangleNormalizesOversizedAdjacentCorners() {
-    let shape = FletRoundedRectangle(
-      radii: FletCornerRadii(topLeft: 80, topRight: 80, bottomLeft: 0, bottomRight: 0))
+    let shape = RufletRoundedRectangle(
+      radii: RufletCornerRadii(topLeft: 80, topRight: 80, bottomLeft: 0, bottomRight: 0))
     let path = shape.path(in: CGRect(x: 0, y: 0, width: 100, height: 40))
 
     XCTAssertEqual(path.boundingRect, CGRect(x: 0, y: 0, width: 100, height: 40))

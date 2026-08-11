@@ -68,7 +68,7 @@ public struct ControlNode: Equatable {
   /// fallback literals throughout RufletUI.
   public func value(_ key: String) -> RufletValue? {
     if let explicit = props[key], !explicit.isNull { return explicit }
-    return FletControlDefaults.value(for: type, property: key)
+    return RufletControlDefaults.value(for: type, property: key)
   }
 
   public func string(_ key: String) -> String? { value(key)?.stringValue }
@@ -82,12 +82,12 @@ public struct ControlNode: Equatable {
   /// contract. Foundational layout controls use these accessors so a lost
   /// upstream default fails at generation/test time instead of being replaced
   /// by a view-local literal.
-  public func fletString(_ key: String) -> String {
+  public func rufletString(_ key: String) -> String {
     guard let result = string(key) else { return missingFletDefault(key, expected: "String") }
     return result
   }
 
-  public func fletBool(_ key: String) -> Bool {
+  public func rufletBool(_ key: String) -> Bool {
     guard let result = bool(key) else { return missingFletDefault(key, expected: "Bool") }
     return result
   }

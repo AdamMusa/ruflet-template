@@ -360,7 +360,7 @@ struct ChartControlView: View {
     }
     .gesture(
       SpatialTapGesture().onEnded { event in
-        guard node.fletBool("interactive") || node.type == "PieChart" else { return }
+        guard node.rufletBool("interactive") || node.type == "PieChart" else { return }
         events.fire(node, "event", data: chartEvent(at: event.location))
       })
   }

@@ -2,9 +2,9 @@ import Foundation
 import XCTest
 @testable import RufletUI
 
-final class FletInputParityTests: XCTestCase {
+final class RufletInputParityTests: XCTestCase {
   func testSelectionPayloadMatchesFletTextSelectionMap() {
-    let data = FletTextSelection.eventData(NSRange(location: 1, length: 3), in: "Ruflet")
+    let data = RufletTextSelection.eventData(NSRange(location: 1, length: 3), in: "Ruflet")
     guard case .map(let event) = data,
       case .string(let selected) = event["selected_text"],
       case .map(let selection) = event["selection"]
@@ -18,9 +18,9 @@ final class FletInputParityTests: XCTestCase {
 
   func testSelectionClampsToUtf16TextLength() {
     XCTAssertEqual(
-      FletTextSelection.normalized(NSRange(location: 2, length: 50), in: "abc"),
+      RufletTextSelection.normalized(NSRange(location: 2, length: 50), in: "abc"),
       NSRange(location: 2, length: 1))
-    XCTAssertNil(FletTextSelection.normalized(NSRange(location: 4, length: 0), in: "abc"))
+    XCTAssertNil(RufletTextSelection.normalized(NSRange(location: 4, length: 0), in: "abc"))
   }
 
   func testInputDescriptorsExposeFletEventsAndMethods() {

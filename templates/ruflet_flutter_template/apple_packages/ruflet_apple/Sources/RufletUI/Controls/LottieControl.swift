@@ -40,9 +40,9 @@ struct LottieControlView: View {
   }
 
   private func animationView(_ animation: LottieAnimation) -> AnyView {
-    let repeating = node.fletBool("repeat")
-    let reverse = node.fletBool("reverse")
-    let animate = node.fletBool("animate")
+    let repeating = node.rufletBool("repeat")
+    let reverse = node.rufletBool("reverse")
+    let animate = node.rufletBool("animate")
     let loopMode: LottieLoopMode = repeating ? .loop : .playOnce
     let start = reverse ? 1.0 : 0.0
     let end = reverse ? 0.0 : 1.0

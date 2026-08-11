@@ -265,11 +265,11 @@ struct ProgressRingControlView: View {
 
   private var diameter: CGFloat {
     CGFloat(node.double("width") ?? node.double("height")
-      ?? Double(FletThemeDefaults.progressRingDiameter))
+      ?? Double(RufletThemeDefaults.progressRingDiameter))
   }
 
   private var strokeWidth: CGFloat {
-    CGFloat(node.double("stroke_width") ?? Double(FletThemeDefaults.progressStrokeWidth))
+    CGFloat(node.double("stroke_width") ?? Double(RufletThemeDefaults.progressStrokeWidth))
   }
 
   private var strokeStyle: StrokeStyle {
@@ -363,7 +363,7 @@ struct MarkdownControlView: View {
         options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))
     {
       Text(attributed)
-        .modifier(SelectableText(enabled: node.fletBool("selectable")))
+        .modifier(SelectableText(enabled: node.rufletBool("selectable")))
         .environment(\.openURL, markdownURLAction)
         .onTapGesture {
           if node.handlesEvent("tap_text") {
@@ -372,7 +372,7 @@ struct MarkdownControlView: View {
         }
     } else {
       Text(source)
-        .modifier(SelectableText(enabled: node.fletBool("selectable")))
+        .modifier(SelectableText(enabled: node.rufletBool("selectable")))
         .environment(\.openURL, markdownURLAction)
         .onTapGesture {
           if node.handlesEvent("tap_text") {
@@ -385,7 +385,7 @@ struct MarkdownControlView: View {
   private var markdownURLAction: OpenURLAction {
     OpenURLAction { url in
       events.fire(node, "tap_link", data: .string(url.absoluteString))
-      return node.fletBool("auto_follow_links") ? .systemAction : .handled
+      return node.rufletBool("auto_follow_links") ? .systemAction : .handled
     }
   }
 }

@@ -57,7 +57,7 @@ struct FocusReporter: ViewModifier {
   let events: RufletEventSink
 
   func body(content: Content) -> some View {
-    if FletFocusContract.requiresNativeFocus(for: node),
+    if RufletFocusContract.requiresNativeFocus(for: node),
       #available(iOS 15.0, macOS 12.0, *)
     {
       return AnyView(FocusTracking(node: node, events: events) { content })
@@ -71,7 +71,7 @@ struct FocusReporter: ViewModifier {
 /// expose focus/blur events, an autofocus property, or an imperative focus
 /// method; deciding that in each renderer caused methods to be advertised but
 /// never mounted on Apple.
-enum FletFocusContract {
+enum RufletFocusContract {
   static func methods(for node: ControlNode) -> Set<String> {
     ControlRegistry.descriptor(for: node.type)?.supportedMethods
       .intersection(["focus", "blur"]) ?? []
@@ -100,7 +100,7 @@ private struct FocusTracking<Content: View>: View {
         events.fire(node, isFocused ? "focus" : "blur")
       }
       .rufletCommandHandler(node.id) { call, completion in
-        guard FletFocusContract.methods(for: node).contains(call.name) else {
+        guard RufletFocusContract.methods(for: node).contains(call.name) else {
           completion(.failure(rufletUnsupported(node.type, call)))
           return
         }

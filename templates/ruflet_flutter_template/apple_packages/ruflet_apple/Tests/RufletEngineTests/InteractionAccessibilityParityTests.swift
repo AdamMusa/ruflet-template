@@ -6,7 +6,7 @@ import XCTest
 final class InteractionAccessibilityParityTests: XCTestCase {
   func testGesturePayloadsUseVendoredFletCompactKeys() {
     XCTAssertEqual(
-      FletInteractionParity.tap(
+      RufletInteractionParity.tap(
         kind: "touch", local: CGPoint(x: 3, y: 4), global: CGPoint(x: 13, y: 14)),
       .map([
         "k": .string("touch"),
@@ -14,7 +14,7 @@ final class InteractionAccessibilityParityTests: XCTestCase {
         "g": .map(["x": .double(13), "y": .double(14)]),
       ]))
 
-    let update = FletInteractionParity.dragUpdate(
+    let update = RufletInteractionParity.dragUpdate(
       local: CGPoint(x: 8, y: 11), global: CGPoint(x: 18, y: 31),
       previousLocal: CGPoint(x: 5, y: 7), previousGlobal: CGPoint(x: 15, y: 27),
       primaryDelta: 3, timestamp: 100)
@@ -26,19 +26,19 @@ final class InteractionAccessibilityParityTests: XCTestCase {
 
   func testDismissPayloadAndDirectionMatchFlet() {
     XCTAssertEqual(
-      FletInteractionParity.dismissDirection(
+      RufletInteractionParity.dismissDirection(
         translation: CGSize(width: -40, height: 2), allowed: "horizontal"),
       "endToStart")
     XCTAssertEqual(
-      FletInteractionParity.dismissDirection(
+      RufletInteractionParity.dismissDirection(
         translation: CGSize(width: 40, height: 2), allowed: "end_to_start"),
       nil)
     XCTAssertEqual(
-      FletInteractionParity.dismissDirection(
+      RufletInteractionParity.dismissDirection(
         translation: CGSize(width: 2, height: 40), allowed: "vertical"),
       "down")
     XCTAssertEqual(
-      FletInteractionParity.dismissUpdate(
+      RufletInteractionParity.dismissUpdate(
         direction: "up", progress: 0.4, previousReached: false, reached: true),
       .map([
         "direction": .string("up"), "progress": .double(0.4),
@@ -48,7 +48,7 @@ final class InteractionAccessibilityParityTests: XCTestCase {
 
   func testKeyboardPayloadMatchesFletLogicalKeyShape() {
     XCTAssertEqual(
-      FletInteractionParity.key("Escape"),
+      RufletInteractionParity.key("Escape"),
       .map(["key": .string("Escape")]))
   }
 

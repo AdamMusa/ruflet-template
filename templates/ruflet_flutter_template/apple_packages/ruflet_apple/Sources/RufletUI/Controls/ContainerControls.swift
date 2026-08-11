@@ -34,7 +34,7 @@ private struct PageChrome: ViewModifier {
       .preferredColorScheme(colorScheme)
       .overlay(overlayLayer)
       .modifier(WindowTitle(title: node.string("title")))
-      .environment(\.layoutDirection, node.fletBool("rtl") ? .rightToLeft : .leftToRight)
+      .environment(\.layoutDirection, node.rufletBool("rtl") ? .rightToLeft : .leftToRight)
   }
 
   /// `theme_mode` is `"light"`, `"dark"` or `"system"`; only the first two
@@ -95,15 +95,15 @@ struct ViewControlView: View {
   @EnvironmentObject private var store: ControlStore
 
   var body: some View {
-    let main = ControlProps.MainAxisAlignment(node.fletString("vertical_alignment"))
-    let cross = ControlProps.CrossAxisAlignment(node.fletString("horizontal_alignment"))
+    let main = ControlProps.MainAxisAlignment(node.rufletString("vertical_alignment"))
+    let cross = ControlProps.CrossAxisAlignment(node.rufletString("horizontal_alignment"))
     let spacing = CGFloat(node.fletDouble("spacing"))
 
     VStack(spacing: 0) {
       viewBody(main: main, cross: cross, spacing: spacing)
       .padding(
         ControlProps.edgeInsets(node.props["padding"])
-          ?? FletThemeDefaults.viewPadding)
+          ?? RufletThemeDefaults.viewPadding)
       .modifier(ScrollableStack(node: node, axis: .vertical))
 
       // Flet's Scaffold uses navigation_bar ?? bottom_appbar: these are one
@@ -146,7 +146,7 @@ struct ViewControlView: View {
     spacing: CGFloat
   ) -> some View {
     if #available(iOS 16.0, macOS 13.0, *) {
-      FletFlexLayout(
+      RufletFlexLayout(
         axis: .vertical,
         spacing: spacing,
         mainAlignment: main,
@@ -154,7 +154,7 @@ struct ViewControlView: View {
         tight: false
       ) {
         ForEach(node.childIDs, id: \.self) { childID in
-          FletFlexChild(id: childID, axis: .vertical)
+          RufletFlexChild(id: childID, axis: .vertical)
         }
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -200,7 +200,7 @@ struct ContainerControlView: View {
 
   var body: some View {
     let radii = ControlProps.cornerRadii(node.props["border_radius"])
-      ?? FletCornerRadii(uniform: 0)
+      ?? RufletCornerRadii(uniform: 0)
     let border = ControlProps.borderSides(node.props["border"])
     let alignment = ControlProps.continuousAlignment(node.props["alignment"])
 
@@ -217,10 +217,10 @@ struct ContainerControlView: View {
       )
       .background(background(radii: radii))
       .overlay(borderStroke(border: border, radii: radii))
-      .clipShape(FletRoundedRectangle(radii: radii))
-      .contentShape(FletRoundedRectangle(radii: radii))
+      .clipShape(RufletRoundedRectangle(radii: radii))
+      .contentShape(RufletRoundedRectangle(radii: radii))
       .modifier(TapReporter(node: node, events: events))
-      .allowsHitTesting(!node.fletBool("ignore_interactions"))
+      .allowsHitTesting(!node.rufletBool("ignore_interactions"))
   }
 
   @ViewBuilder
@@ -235,26 +235,26 @@ struct ContainerControlView: View {
   }
 
   @ViewBuilder
-  private func background(radii: FletCornerRadii) -> some View {
+  private func background(radii: RufletCornerRadii) -> some View {
     let gradient = GradientProps.linear(node.props["gradient"])
     if let gradient {
-      FletRoundedRectangle(radii: radii).fill(gradient)
+      RufletRoundedRectangle(radii: radii).fill(gradient)
     } else if let color = MaterialPalette.color(node.string("bgcolor")) {
-      FletRoundedRectangle(radii: radii).fill(color)
+      RufletRoundedRectangle(radii: radii).fill(color)
     }
   }
 
   @ViewBuilder
-  private func borderStroke(border: FletBorder?, radii: FletCornerRadii) -> some View {
+  private func borderStroke(border: RufletBorder?, radii: RufletCornerRadii) -> some View {
     if let border {
-      FletBorderOverlay(border: border, radii: radii)
+      RufletBorderOverlay(border: border, radii: radii)
     }
   }
 }
 
-private struct FletBorderOverlay: View {
-  let border: FletBorder
-  let radii: FletCornerRadii
+private struct RufletBorderOverlay: View {
+  let border: RufletBorder
+  let radii: RufletCornerRadii
 
   var body: some View {
     GeometryReader { geometry in
@@ -276,7 +276,7 @@ private struct FletBorderOverlay: View {
             .position(x: left.width / 2, y: geometry.size.height / 2)
         }
       }
-      .clipShape(FletRoundedRectangle(radii: radii))
+      .clipShape(RufletRoundedRectangle(radii: radii))
     }
     .allowsHitTesting(false)
   }
@@ -287,7 +287,7 @@ private struct FletBorderOverlay: View {
 /// custom layout performs Flutter's exact free-space calculation instead of
 /// rounding values such as `{x: 0.25, y: -0.6}` to center/top.
 private struct ContainerAlignmentModifier: ViewModifier {
-  let alignment: FletAlignment?
+  let alignment: RufletAlignment?
   let requiresTightWidth: Bool
 
   @ViewBuilder
@@ -308,7 +308,7 @@ private struct ContainerAlignmentModifier: ViewModifier {
 
 @available(iOS 16.0, macOS 13.0, *)
 private struct ContinuousAlignmentLayout: Layout {
-  let alignment: FletAlignment
+  let alignment: RufletAlignment
 
   func sizeThatFits(
     proposal: ProposedViewSize, subviews: Subviews, cache: inout Void
@@ -326,7 +326,7 @@ private struct ContinuousAlignmentLayout: Layout {
   ) {
     guard let child = subviews.first else { return }
     let childSize = child.sizeThatFits(proposal)
-    let origin = FletGeometry.alignedOrigin(
+    let origin = RufletGeometry.alignedOrigin(
       alignment: alignment, containerSize: bounds.size, childSize: childSize)
     child.place(
       at: CGPoint(x: bounds.minX + origin.x, y: bounds.minY + origin.y),
@@ -343,13 +343,13 @@ private struct ContinuousAlignmentLayout: Layout {
 /// iOS 15 compatibility. GeometryReader supplies the bounded Align size while
 /// the preference measures the child without changing its layout footprint.
 private struct LegacyContinuousAlignment<Content: View>: View {
-  let alignment: FletAlignment
+  let alignment: RufletAlignment
   @ViewBuilder let content: () -> Content
   @State private var childSize: CGSize = .zero
 
   var body: some View {
     GeometryReader { proxy in
-      let origin = FletGeometry.alignedOrigin(
+      let origin = RufletGeometry.alignedOrigin(
         alignment: alignment, containerSize: proxy.size, childSize: childSize)
       content()
         .background(
@@ -554,9 +554,9 @@ enum GradientProps {
       .compactMap { MaterialPalette.color($0.stringValue) }
     guard colors.count >= 2 else { return nil }
 
-    let begin = FletGeometry.unitPoint(
+    let begin = RufletGeometry.unitPoint(
       alignment: ControlProps.continuousAlignment(map["begin"]) ?? .topCenter)
-    let end = FletGeometry.unitPoint(
+    let end = RufletGeometry.unitPoint(
       alignment: ControlProps.continuousAlignment(map["end"]) ?? .bottomCenter)
     return LinearGradient(
       colors: colors,

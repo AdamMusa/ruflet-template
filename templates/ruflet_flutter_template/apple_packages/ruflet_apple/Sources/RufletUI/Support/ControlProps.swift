@@ -126,7 +126,7 @@ public enum ControlProps {
 
   /// Flet's two-dimensional `Alignment`, either a named constant or an
   /// `{x:, y:}` pair in the -1…1 coordinate space Flutter uses.
-  public static func continuousAlignment(_ value: RufletValue?) -> FletAlignment? {
+  public static func continuousAlignment(_ value: RufletValue?) -> RufletAlignment? {
     guard let value else { return nil }
 
     if let name = value.stringValue {
@@ -148,7 +148,7 @@ public enum ControlProps {
       let x = map["x"]?.doubleValue,
       let y = map["y"]?.doubleValue
     else { return nil }
-    return FletAlignment(x: x, y: y)
+    return RufletAlignment(x: x, y: y)
   }
 
   /// Compatibility for controls whose internal layout still uses SwiftUI's
@@ -198,10 +198,10 @@ public enum ControlProps {
 
   /// Preserve Flutter's four independent `BorderRadius` corners. A missing
   /// corner remains square instead of inheriting the largest supplied radius.
-  public static func cornerRadii(_ value: RufletValue?) -> FletCornerRadii? {
+  public static func cornerRadii(_ value: RufletValue?) -> RufletCornerRadii? {
     guard let value else { return nil }
     if let uniform = value.doubleValue {
-      return FletCornerRadii(uniform: CGFloat(uniform))
+      return RufletCornerRadii(uniform: CGFloat(uniform))
     }
     guard let map = value.mapValue else { return nil }
     let topLeft = map["top_left"]?.doubleValue ?? map["top_start"]?.doubleValue ?? 0
@@ -211,7 +211,7 @@ public enum ControlProps {
     guard topLeft != 0 || topRight != 0 || bottomLeft != 0 || bottomRight != 0 else {
       return nil
     }
-    return FletCornerRadii(
+    return RufletCornerRadii(
       topLeft: CGFloat(topLeft), topRight: CGFloat(topRight),
       bottomLeft: CGFloat(bottomLeft), bottomRight: CGFloat(bottomRight))
   }
@@ -227,30 +227,30 @@ public enum ControlProps {
 
   /// Flet permits a different color and width on every border edge. Preserve
   /// all four sides rather than selecting the first non-empty edge.
-  public static func borderSides(_ value: RufletValue?) -> FletBorder? {
+  public static func borderSides(_ value: RufletValue?) -> RufletBorder? {
     guard let map = value?.mapValue else { return nil }
 
-    func side(_ value: RufletValue?) -> FletBorderSide? {
+    func side(_ value: RufletValue?) -> RufletBorderSide? {
       guard let map = value?.mapValue,
             let width = map["width"]?.doubleValue,
             width > 0 else { return nil }
-      return FletBorderSide(
+      return RufletBorderSide(
         color: MaterialPalette.color(map["color"]?.stringValue, default: .black),
         width: CGFloat(width))
     }
 
     if map["width"] != nil {
       let uniform = side(value)
-      return uniform.map { FletBorder(top: $0, right: $0, bottom: $0, left: $0) }
+      return uniform.map { RufletBorder(top: $0, right: $0, bottom: $0, left: $0) }
     }
-    let result = FletBorder(
+    let result = RufletBorder(
       top: side(map["top"]), right: side(map["right"]),
       bottom: side(map["bottom"]), left: side(map["left"]))
     return result.isEmpty ? nil : result
   }
 }
 
-public struct FletBorderSide {
+public struct RufletBorderSide {
   public let color: Color
   public let width: CGFloat
 
@@ -260,15 +260,15 @@ public struct FletBorderSide {
   }
 }
 
-public struct FletBorder {
-  public let top: FletBorderSide?
-  public let right: FletBorderSide?
-  public let bottom: FletBorderSide?
-  public let left: FletBorderSide?
+public struct RufletBorder {
+  public let top: RufletBorderSide?
+  public let right: RufletBorderSide?
+  public let bottom: RufletBorderSide?
+  public let left: RufletBorderSide?
 
   public init(
-    top: FletBorderSide?, right: FletBorderSide?,
-    bottom: FletBorderSide?, left: FletBorderSide?
+    top: RufletBorderSide?, right: RufletBorderSide?,
+    bottom: RufletBorderSide?, left: RufletBorderSide?
   ) {
     self.top = top
     self.right = right
@@ -279,7 +279,7 @@ public struct FletBorder {
   public var isEmpty: Bool { top == nil && right == nil && bottom == nil && left == nil }
 }
 
-public struct FletCornerRadii: Equatable, Sendable {
+public struct RufletCornerRadii: Equatable, Sendable {
   public let topLeft: CGFloat
   public let topRight: CGFloat
   public let bottomLeft: CGFloat
@@ -301,10 +301,10 @@ public struct FletCornerRadii: Equatable, Sendable {
 
 /// Platform-neutral equivalent of Flutter's `RRect.fromRectAndCorners`.
 /// Adjacent radii are proportionally normalized when they exceed an edge.
-public struct FletRoundedRectangle: Shape {
-  public let radii: FletCornerRadii
+public struct RufletRoundedRectangle: Shape {
+  public let radii: RufletCornerRadii
 
-  public init(radii: FletCornerRadii) { self.radii = radii }
+  public init(radii: RufletCornerRadii) { self.radii = radii }
 
   public func path(in rect: CGRect) -> Path {
     let scale = min(
@@ -351,7 +351,7 @@ public struct FletRoundedRectangle: Shape {
 
 /// Flutter's continuous `Alignment(x, y)` coordinate space. Values are not
 /// clamped: Flutter permits alignments outside -1...1 as well.
-public struct FletAlignment: Equatable, Sendable {
+public struct RufletAlignment: Equatable, Sendable {
   public let x: Double
   public let y: Double
 
@@ -360,19 +360,19 @@ public struct FletAlignment: Equatable, Sendable {
     self.y = y
   }
 
-  public static let topLeft = FletAlignment(x: -1, y: -1)
-  public static let topCenter = FletAlignment(x: 0, y: -1)
-  public static let topRight = FletAlignment(x: 1, y: -1)
-  public static let centerLeft = FletAlignment(x: -1, y: 0)
-  public static let center = FletAlignment(x: 0, y: 0)
-  public static let centerRight = FletAlignment(x: 1, y: 0)
-  public static let bottomLeft = FletAlignment(x: -1, y: 1)
-  public static let bottomCenter = FletAlignment(x: 0, y: 1)
-  public static let bottomRight = FletAlignment(x: 1, y: 1)
+  public static let topLeft = RufletAlignment(x: -1, y: -1)
+  public static let topCenter = RufletAlignment(x: 0, y: -1)
+  public static let topRight = RufletAlignment(x: 1, y: -1)
+  public static let centerLeft = RufletAlignment(x: -1, y: 0)
+  public static let center = RufletAlignment(x: 0, y: 0)
+  public static let centerRight = RufletAlignment(x: 1, y: 0)
+  public static let bottomLeft = RufletAlignment(x: -1, y: 1)
+  public static let bottomCenter = RufletAlignment(x: 0, y: 1)
+  public static let bottomRight = RufletAlignment(x: 1, y: 1)
 }
 
 /// Pure geometry shared by the SwiftUI layouts and parity tests.
-enum FletGeometry {
+enum RufletGeometry {
   static func fractionalTranslation(fraction: CGSize, childSize: CGSize) -> CGSize {
     CGSize(
       width: fraction.width * childSize.width,
@@ -380,7 +380,7 @@ enum FletGeometry {
   }
 
   static func alignedOrigin(
-    alignment: FletAlignment,
+    alignment: RufletAlignment,
     containerSize: CGSize,
     childSize: CGSize
   ) -> CGPoint {
@@ -389,7 +389,7 @@ enum FletGeometry {
       y: (containerSize.height - childSize.height) * CGFloat((alignment.y + 1) / 2))
   }
 
-  static func unitPoint(alignment: FletAlignment) -> CGPoint {
+  static func unitPoint(alignment: RufletAlignment) -> CGPoint {
     CGPoint(
       x: CGFloat((alignment.x + 1) / 2),
       y: CGFloat((alignment.y + 1) / 2))

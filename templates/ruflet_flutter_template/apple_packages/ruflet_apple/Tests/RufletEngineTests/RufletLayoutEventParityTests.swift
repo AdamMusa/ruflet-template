@@ -1,7 +1,7 @@
 import XCTest
 @testable import RufletUI
 
-final class FletLayoutEventParityTests: XCTestCase {
+final class RufletLayoutEventParityTests: XCTestCase {
   func testScrollableFlexControlsDeclareFletScrollEvent() {
     XCTAssertEqual(ControlRegistry.descriptor(for: "Row")?.supportedEvents, ["scroll"])
     XCTAssertEqual(ControlRegistry.descriptor(for: "Column")?.supportedEvents, ["scroll"])

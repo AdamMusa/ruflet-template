@@ -4,11 +4,11 @@ import SwiftUI
 /// The presentation defaults that Flet obtains from Flutter's ThemeData and
 /// widget constructors rather than from the wire protocol.
 ///
-/// Keep this separate from `FletControlDefaults`: semantic defaults are
+/// Keep this separate from `RufletControlDefaults`: semantic defaults are
 /// generated from the pinned Flet Dart source, while these values deliberately
 /// choose the native Apple metric or the equivalent Material colour role.
 /// Controls should never invent their own fallback colour or platform size.
-enum FletThemeDefaults {
+enum RufletThemeDefaults {
   /// View's Container uses `EdgeInsets.all(10)` when padding is omitted in
   /// Flet's pinned renderer. This is a widget-constructor default, not a Ruby
   /// DSL value, so it intentionally lives outside generated wire defaults.

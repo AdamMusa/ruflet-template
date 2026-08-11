@@ -420,7 +420,7 @@ private struct WindowDragGesture: ViewModifier {
               dragging = true
               events.fire(
                 node, "drag_start",
-                data: FletInteractionParity.dragStart(
+                data: RufletInteractionParity.dragStart(
                   kind: "mouse", local: value.startLocation,
                   global: value.startLocation,
                   timestamp: Date().timeIntervalSince1970 * 1_000))
@@ -431,7 +431,7 @@ private struct WindowDragGesture: ViewModifier {
             dragging = false
             events.fire(
               node, "drag_end",
-              data: FletInteractionParity.dragEnd(
+              data: RufletInteractionParity.dragEnd(
                 local: value.location, global: value.location,
                 velocity: .zero, primaryVelocity: nil))
           })

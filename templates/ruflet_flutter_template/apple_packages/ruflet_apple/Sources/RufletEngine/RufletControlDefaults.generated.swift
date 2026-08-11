@@ -2,7 +2,7 @@
 // Source: Flet 0.80.5 ref 67a9763da3bd2611bbb7626c3a1ec5e9d30fc965.
 import RufletProtocol
 
-public enum FletControlDefaults {
+public enum RufletControlDefaults {
   private static let aliases: [String: String] = [
     "ElevatedButton": "Button",
   ]

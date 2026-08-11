@@ -3,7 +3,7 @@ import SwiftUI
 #if canImport(AppKit)
   import AppKit
 
-  struct FletNativeKeyboardListener: NSViewRepresentable {
+  struct RufletNativeKeyboardListener: NSViewRepresentable {
     @Binding var focused: Bool
     let includeSemantics: Bool
     let onKeyDown: (String) -> Void
@@ -50,7 +50,7 @@ import SwiftUI
 #elseif canImport(UIKit)
   import UIKit
 
-  struct FletNativeKeyboardListener: UIViewRepresentable {
+  struct RufletNativeKeyboardListener: UIViewRepresentable {
     @Binding var focused: Bool
     let includeSemantics: Bool
     let onKeyDown: (String) -> Void

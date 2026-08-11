@@ -1,7 +1,7 @@
 @testable import RufletUI
 import XCTest
 
-final class FletInteractionContractTests: XCTestCase {
+final class RufletInteractionContractTests: XCTestCase {
   func testContextMenuDeclaresFletBehavior() throws {
     let descriptor = try XCTUnwrap(ControlRegistry.descriptor(for: "ContextMenu"))
     XCTAssertEqual(descriptor.supportedEvents, ["dismiss", "select"])

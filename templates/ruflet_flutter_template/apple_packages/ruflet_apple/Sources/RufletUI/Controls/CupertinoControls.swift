@@ -43,7 +43,7 @@ struct CupertinoButtonControlView: View {
     Button(action: activate) { label }
       // CupertinoButton receives nil for omitted padding, color and bgcolor.
       // These optional modifiers preserve that native constructor behavior.
-      .modifier(OptionalEdgeInsets(insets: FletThemeDefaults.cupertinoButtonPadding(node)))
+      .modifier(OptionalEdgeInsets(insets: RufletThemeDefaults.cupertinoButtonPadding(node)))
       .modifier(OptionalMinimumSize(value: node.props["min_size"]))
       .modifier(OptionalTint(color: MaterialPalette.color(node.string("bgcolor"))))
       .modifier(OptionalForeground(color: MaterialPalette.color(node.string("color"))))
@@ -55,12 +55,12 @@ struct CupertinoButtonControlView: View {
   @ViewBuilder
   private var label: some View {
     let icon = node.props["icon"]
-    HStack(spacing: FletThemeDefaults.materialButtonIconSpacing) {
+    HStack(spacing: RufletThemeDefaults.materialButtonIconSpacing) {
       if icon != nil {
         RufletIcon(
           value: icon,
           size: node.double("icon_size").map { CGFloat($0) }
-            ?? FletThemeDefaults.materialIconButtonSize,
+            ?? RufletThemeDefaults.materialIconButtonSize,
           color: MaterialPalette.color(node.string("icon_color")))
       }
       if let contentID = node.controlID(forKey: "content") {

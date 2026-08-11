@@ -13,26 +13,26 @@ struct RowControlView: View {
   @EnvironmentObject private var store: ControlStore
 
   var body: some View {
-    let main = ControlProps.MainAxisAlignment(node.fletString("alignment"))
+    let main = ControlProps.MainAxisAlignment(node.rufletString("alignment"))
     // Flutter/Flet Row defaults to a centred cross axis. Using `.start` here
     // top-aligned every icon/text pair whose Ruby omitted the property.
     let cross = ControlProps.CrossAxisAlignment(
-      node.fletString("vertical_alignment"), default: .center)
+      node.rufletString("vertical_alignment"), default: .center)
     let spacing = CGFloat(node.fletDouble("spacing"))
     let children = node.childIDs
-    let tight = node.fletBool("tight")
+    let tight = node.rufletBool("tight")
 
     Group {
       if node.bool("wrap") == true {
         WrappingStack(
           ids: children, spacing: spacing, runSpacing: CGFloat(node.fletDouble("run_spacing")))
       } else if hasFlexChildren, #available(iOS 16.0, macOS 13.0, *) {
-        FletFlexLayout(
+        RufletFlexLayout(
           axis: .horizontal, spacing: spacing, mainAlignment: main,
           crossAlignment: cross, tight: tight
         ) {
           ForEach(children, id: \.self) { id in
-            FletFlexChild(id: id, axis: .horizontal)
+            RufletFlexChild(id: id, axis: .horizontal)
           }
         }
       } else {
@@ -49,7 +49,7 @@ struct RowControlView: View {
   private var hasFlexChildren: Bool {
     node.childIDs.contains { id in
       guard let child = store.node(id) else { return false }
-      return FletFlexMath.flex(child.props["expand"]) > 0
+      return RufletFlexMath.flex(child.props["expand"]) > 0
     }
   }
 }
@@ -62,19 +62,19 @@ struct ColumnControlView: View {
 
   @ViewBuilder
   var body: some View {
-    let main = ControlProps.MainAxisAlignment(node.fletString("alignment"))
-    let cross = ControlProps.CrossAxisAlignment(node.fletString("horizontal_alignment"))
+    let main = ControlProps.MainAxisAlignment(node.rufletString("alignment"))
+    let cross = ControlProps.CrossAxisAlignment(node.rufletString("horizontal_alignment"))
     let spacing = CGFloat(node.fletDouble("spacing"))
-    let tight = node.fletBool("tight")
+    let tight = node.rufletBool("tight")
 
     Group {
       if hasFlexChildren, #available(iOS 16.0, macOS 13.0, *) {
-        FletFlexLayout(
+        RufletFlexLayout(
           axis: .vertical, spacing: spacing, mainAlignment: main,
           crossAlignment: cross, tight: tight
         ) {
           ForEach(node.childIDs, id: \.self) { id in
-            FletFlexChild(id: id, axis: .vertical)
+            RufletFlexChild(id: id, axis: .vertical)
           }
         }
       } else {
@@ -92,7 +92,7 @@ struct ColumnControlView: View {
   private var hasFlexChildren: Bool {
     node.childIDs.contains { id in
       guard let child = store.node(id) else { return false }
-      return FletFlexMath.flex(child.props["expand"]) > 0
+      return RufletFlexMath.flex(child.props["expand"]) > 0
     }
   }
 }
@@ -272,7 +272,7 @@ private struct PositionedChild: View {
     let bottom = node.double("bottom")
 
     if #available(iOS 16.0, macOS 13.0, *) {
-      FletPositionedLayout(
+      RufletPositionedLayout(
         left: left.map { CGFloat($0) }, top: top.map { CGFloat($0) },
         right: right.map { CGFloat($0) }, bottom: bottom.map { CGFloat($0) },
         alignment: alignment
@@ -305,7 +305,7 @@ private struct PositionedChild: View {
 /// 250 points wide. An aligned SwiftUI frame does not provide that constraint;
 /// this Layout does, before the child measures and paints its decoration.
 @available(iOS 16.0, macOS 13.0, *)
-private struct FletPositionedLayout: Layout {
+private struct RufletPositionedLayout: Layout {
   let left: CGFloat?
   let top: CGFloat?
   let right: CGFloat?

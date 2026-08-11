@@ -1,7 +1,7 @@
 import SwiftUI
 import RufletProtocol
 
-enum FletTextSelection {
+enum RufletTextSelection {
   static func normalized(_ range: NSRange, in text: String) -> NSRange? {
     guard range.location != NSNotFound, range.location >= 0, range.location <= text.utf16.count else {
       return nil
@@ -32,7 +32,7 @@ enum FletTextSelection {
 #if canImport(UIKit)
   import UIKit
 
-  struct FletNativeTextInput: UIViewRepresentable {
+  struct RufletNativeTextInput: UIViewRepresentable {
     @Binding var text: String
     @Binding var focused: Bool
     @Binding var selection: NSRange
@@ -70,11 +70,11 @@ enum FletTextSelection {
     }
 
     final class Coordinator: NSObject, UITextFieldDelegate {
-      var parent: FletNativeTextInput
+      var parent: RufletNativeTextInput
       var programmaticBlur = false
       private var lastSelection = NSRange(location: NSNotFound, length: 0)
 
-      init(parent: FletNativeTextInput) { self.parent = parent }
+      init(parent: RufletNativeTextInput) { self.parent = parent }
 
       @objc func changed(_ sender: UITextField) { parent.text = sender.text ?? "" }
 
@@ -124,7 +124,7 @@ enum FletTextSelection {
 #elseif canImport(AppKit)
   import AppKit
 
-  struct FletNativeTextInput: NSViewRepresentable {
+  struct RufletNativeTextInput: NSViewRepresentable {
     @Binding var text: String
     @Binding var focused: Bool
     @Binding var selection: NSRange
@@ -161,9 +161,9 @@ enum FletTextSelection {
     }
 
     final class Coordinator: NSObject, NSTextFieldDelegate {
-      var parent: FletNativeTextInput
+      var parent: RufletNativeTextInput
       var programmaticBlur = false
-      init(parent: FletNativeTextInput) { self.parent = parent }
+      init(parent: RufletNativeTextInput) { self.parent = parent }
 
       func controlTextDidBeginEditing(_ notification: Notification) {
         parent.focused = true

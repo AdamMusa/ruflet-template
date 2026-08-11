@@ -2,7 +2,7 @@ import RufletEngine
 import RufletProtocol
 import XCTest
 
-final class FletControlDefaultsTests: XCTestCase {
+final class RufletControlDefaultsTests: XCTestCase {
   func testCanonicalFletEventsResolveRufletCompatibilityAliases() {
     let node = ControlNode(
       id: 1, type: "Video",
@@ -51,26 +51,26 @@ final class FletControlDefaultsTests: XCTestCase {
 
   func testFoundationalControlsResolveThroughGeneratedContract() {
     let page = ControlNode(id: 1, type: "Page")
-    XCTAssertEqual(page.fletString("title"), "")
-    XCTAssertEqual(page.fletBool("rtl"), false)
+    XCTAssertEqual(page.rufletString("title"), "")
+    XCTAssertEqual(page.rufletBool("rtl"), false)
 
     let view = ControlNode(id: 2, type: "View")
-    XCTAssertEqual(view.fletString("vertical_alignment"), "start")
-    XCTAssertEqual(view.fletString("horizontal_alignment"), "start")
+    XCTAssertEqual(view.rufletString("vertical_alignment"), "start")
+    XCTAssertEqual(view.rufletString("horizontal_alignment"), "start")
     XCTAssertEqual(view.fletDouble("spacing"), 10)
 
     let appBar = ControlNode(id: 3, type: "AppBar")
-    XCTAssertEqual(appBar.fletBool("automatically_imply_leading"), true)
+    XCTAssertEqual(appBar.rufletBool("automatically_imply_leading"), true)
     XCTAssertEqual(appBar.fletDouble("toolbar_opacity"), 1)
 
     let column = ControlNode(id: 4, type: "Column")
-    XCTAssertEqual(column.fletString("alignment"), "start")
-    XCTAssertEqual(column.fletString("horizontal_alignment"), "start")
+    XCTAssertEqual(column.rufletString("alignment"), "start")
+    XCTAssertEqual(column.rufletString("horizontal_alignment"), "start")
     XCTAssertEqual(column.fletDouble("spacing"), 10)
 
     let container = ControlNode(id: 5, type: "Container")
-    XCTAssertEqual(container.fletBool("ignore_interactions"), false)
-    XCTAssertEqual(container.fletBool("ink"), false)
+    XCTAssertEqual(container.rufletBool("ignore_interactions"), false)
+    XCTAssertEqual(container.rufletBool("ink"), false)
   }
 
   func testExplicitFoundationalValuesWinOverGeneratedDefaults() {
@@ -82,8 +82,8 @@ final class FletControlDefaultsTests: XCTestCase {
         "spacing": .double(24),
       ])
 
-    XCTAssertEqual(column.fletString("alignment"), "end")
-    XCTAssertEqual(column.fletString("horizontal_alignment"), "stretch")
+    XCTAssertEqual(column.rufletString("alignment"), "end")
+    XCTAssertEqual(column.rufletString("horizontal_alignment"), "stretch")
     XCTAssertEqual(column.fletDouble("spacing"), 24)
   }
 }

@@ -87,18 +87,18 @@ struct ButtonControlView: View {
         RufletIcon(
           value: icon,
           size: node.double("icon_size").map { CGFloat($0) }
-            ?? FletThemeDefaults.materialIconButtonSize,
+            ?? RufletThemeDefaults.materialIconButtonSize,
           color: MaterialPalette.color(node.string("icon_color")))
       } else if let caption = captionText {
         Text(caption)
       }
     } else {
-      HStack(spacing: FletThemeDefaults.materialButtonIconSpacing) {
+      HStack(spacing: RufletThemeDefaults.materialButtonIconSpacing) {
         if icon != nil {
           RufletIcon(
             value: icon,
             size: node.double("icon_size").map { CGFloat($0) }
-              ?? FletThemeDefaults.materialIconButtonSize,
+              ?? RufletThemeDefaults.materialIconButtonSize,
             color: MaterialPalette.color(node.string("icon_color")))
         }
         if let contentID = node.controlID(forKey: "content") {
@@ -126,12 +126,12 @@ private struct NativeButtonPresentation<Content: View>: View {
     case .filled, .filledTonal, .outlined, .text, .elevated:
       content()
         .buttonStyle(
-          FletMaterialButtonStyle(
+          RufletMaterialButtonStyle(
             foreground: foreground,
             background: fill,
             overlay: MaterialPalette.color(for: node, property: "overlay_color"),
             shadow: MaterialPalette.color(for: node, property: "shadow_color"),
-            elevation: node.double("elevation") ?? FletThemeDefaults.materialButtonElevation))
+            elevation: node.double("elevation") ?? RufletThemeDefaults.materialButtonElevation))
     case .floatingAction:
       // Flet passes nil colours to FloatingActionButton, so native/theme
       // defaults must remain in charge unless Ruby supplied one explicitly.
@@ -153,7 +153,7 @@ private struct NativeButtonPresentation<Content: View>: View {
 /// provide interaction behavior; this style only resolves Flet's shared
 /// Material presentation instead of letting each SwiftUI style invent a
 /// different platform fallback.
-private struct FletMaterialButtonStyle: ButtonStyle {
+private struct RufletMaterialButtonStyle: ButtonStyle {
   let foreground: Color?
   let background: Color?
   let overlay: Color?
@@ -162,8 +162,8 @@ private struct FletMaterialButtonStyle: ButtonStyle {
 
   func makeBody(configuration: Configuration) -> some View {
     configuration.label
-      .padding(FletThemeDefaults.materialButtonPadding)
-      .frame(minHeight: FletThemeDefaults.minimumInteractiveDimension)
+      .padding(RufletThemeDefaults.materialButtonPadding)
+      .frame(minHeight: RufletThemeDefaults.minimumInteractiveDimension)
       .foregroundColor(foreground)
       .background(background ?? .clear, in: Capsule())
       .overlay {

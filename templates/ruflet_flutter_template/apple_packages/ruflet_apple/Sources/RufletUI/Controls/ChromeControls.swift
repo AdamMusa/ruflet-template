@@ -14,7 +14,7 @@ struct AppBarControlView: View {
   var body: some View {
     let metrics = ChromeDefaults.appBar(node)
     Group {
-      if FletThemeDefaults.appBarCentersTitle(node) {
+      if RufletThemeDefaults.appBarCentersTitle(node) {
         centeredBar
       } else {
         leadingBar
@@ -302,7 +302,7 @@ enum ChromeDefaults {
 
   static func appBar(_ node: ControlNode) -> AppBarValues {
     AppBarValues(
-      toolbarHeight: FletThemeDefaults.appBarHeight(node),
+      toolbarHeight: RufletThemeDefaults.appBarHeight(node),
       toolbarOpacity: node.double("toolbar_opacity") ?? 1,
       horizontalPadding: 8,
       titleSpacing: CGFloat(node.double("title_spacing") ?? 4),
