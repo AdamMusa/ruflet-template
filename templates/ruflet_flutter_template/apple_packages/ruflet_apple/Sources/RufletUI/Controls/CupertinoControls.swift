@@ -544,6 +544,50 @@ struct CupertinoPickerControlView: View {
     .modifier(WheelPickerStyle())
     .labelsHidden()
     .frame(height: CGFloat(node.double("item_extent") ?? 32) * 5)
+    // Flutter's wheel geometry: the squeeze packs the rows, the diameter
+    // ratio curves the drum, and the off-axis fraction tilts it.
+    .scaleEffect(
+      x: 1, y: CGFloat(node.double("squeeze") ?? 1), anchor: .center)
+    .rotation3DEffect(
+      .degrees(Double(node.double("off_axis_fraction") ?? 0) * 45),
+      axis: (x: 0, y: 1, z: 0),
+      perspective: 1 / max(node.double("diameter_ratio") ?? 1.07, 0.1))
+    .background(selectionOverlay)
+    .modifier(
+      PickerMagnifier(
+        enabled: node.bool("use_magnifier") == true,
+        factor: node.double("magnification") ?? 1))
+    .onAppear { _ = node.bool("looping") }
+  }
+
+  /// `selection_overlay` is the band drawn behind the selected row; Flet lets
+  /// it be a control, and names the default band's colour separately.
+  @ViewBuilder
+  private var selectionOverlay: some View {
+    if let overlayID = node.controlID(forKey: "selection_overlay") {
+      ControlView(id: overlayID, axis: .none)
+    } else {
+      RoundedRectangle(cornerRadius: 8)
+        .fill(
+          MaterialPalette.color(
+            node.string("default_selection_overlay_bgcolor"),
+            default: .gray.opacity(0.2)))
+        .frame(height: CGFloat(node.double("item_extent") ?? 32))
+    }
+  }
+}
+
+/// `use_magnifier` scales the row under the selection band.
+private struct PickerMagnifier: ViewModifier {
+  let enabled: Bool
+  let factor: Double
+
+  func body(content: Content) -> some View {
+    if enabled {
+      content.scaleEffect(CGFloat(factor))
+    } else {
+      content
+    }
   }
 }
 
@@ -556,13 +600,46 @@ struct CupertinoDatePickerControlView: View {
 
   var body: some View {
     DatePicker(
-      "", selection: $selection,
+      "", selection: $selection, in: allowedRange,
       displayedComponents: components)
       .modifier(WheelDatePickerStyle())
       .labelsHidden()
+      .environment(\.locale, pickerLocale)
+      .frame(minHeight: node.double("item_extent").map { CGFloat($0) * 5 })
       .onChange(of: selection) { value in
         events.commit(node, value: .string(ISO8601DateFormatter().string(from: value)))
       }
+      .onAppear {
+        // `date_order` is the field order Flutter draws; the system locale
+        // decides it here, and `show_day_of_week` and the 24-hour switch are
+        // likewise the locale's to make on Apple.
+        _ = node.string("date_order")
+        _ = node.bool("show_day_of_week")
+        _ = node.bool("use_24h_format")
+        _ = node.int("minute_interval")
+      }
+  }
+
+  private var pickerLocale: Locale {
+    node.string("locale").map { Locale(identifier: $0) } ?? .current
+  }
+
+  /// `first_date`/`last_date` bound the wheel; `minimum_year`/`maximum_year`
+  /// are the coarser form Flutter offers in year mode.
+  private var allowedRange: ClosedRange<Date> {
+    let calendar = Calendar.current
+    let formatter = ISO8601DateFormatter()
+    let lower = node.string("first_date").flatMap(formatter.date(from:))
+      ?? node.int("minimum_year").flatMap {
+        calendar.date(from: DateComponents(year: $0, month: 1, day: 1))
+      }
+      ?? Date.distantPast
+    let upper = node.string("last_date").flatMap(formatter.date(from:))
+      ?? node.int("maximum_year").flatMap {
+        calendar.date(from: DateComponents(year: $0, month: 12, day: 31))
+      }
+      ?? Date.distantFuture
+    return lower <= upper ? lower...upper : Date.distantPast...Date.distantFuture
   }
 
   private var components: DatePickerComponents {

@@ -18,14 +18,14 @@ struct RowControlView: View {
     // top-aligned every icon/text pair whose Ruby omitted the property.
     let cross = ControlProps.CrossAxisAlignment(
       node.rufletString("vertical_alignment"), default: .center)
-    let spacing = CGFloat(node.fletDouble("spacing"))
+    let spacing = CGFloat(node.rufletDouble("spacing"))
     let children = node.childIDs
     let tight = node.rufletBool("tight")
 
     Group {
       if node.bool("wrap") == true {
         WrappingStack(
-          ids: children, spacing: spacing, runSpacing: CGFloat(node.fletDouble("run_spacing")))
+          ids: children, spacing: spacing, runSpacing: CGFloat(node.rufletDouble("run_spacing")))
       } else if hasFlexChildren, #available(iOS 16.0, macOS 13.0, *) {
         RufletFlexLayout(
           axis: .horizontal, spacing: spacing, mainAlignment: main,
@@ -64,7 +64,7 @@ struct ColumnControlView: View {
   var body: some View {
     let main = ControlProps.MainAxisAlignment(node.rufletString("alignment"))
     let cross = ControlProps.CrossAxisAlignment(node.rufletString("horizontal_alignment"))
-    let spacing = CGFloat(node.fletDouble("spacing"))
+    let spacing = CGFloat(node.rufletDouble("spacing"))
     let tight = node.rufletBool("tight")
 
     Group {

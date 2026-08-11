@@ -348,7 +348,7 @@ struct ViewControlView: View {
   var body: some View {
     let main = ControlProps.MainAxisAlignment(node.rufletString("vertical_alignment"))
     let cross = ControlProps.CrossAxisAlignment(node.rufletString("horizontal_alignment"))
-    let spacing = CGFloat(node.fletDouble("spacing"))
+    let spacing = CGFloat(node.rufletDouble("spacing"))
 
     VStack(spacing: 0) {
       viewBody(main: main, cross: cross, spacing: spacing)

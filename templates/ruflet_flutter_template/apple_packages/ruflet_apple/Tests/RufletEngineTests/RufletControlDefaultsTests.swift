@@ -57,16 +57,16 @@ final class RufletControlDefaultsTests: XCTestCase {
     let view = ControlNode(id: 2, type: "View")
     XCTAssertEqual(view.rufletString("vertical_alignment"), "start")
     XCTAssertEqual(view.rufletString("horizontal_alignment"), "start")
-    XCTAssertEqual(view.fletDouble("spacing"), 10)
+    XCTAssertEqual(view.rufletDouble("spacing"), 10)
 
     let appBar = ControlNode(id: 3, type: "AppBar")
     XCTAssertEqual(appBar.rufletBool("automatically_imply_leading"), true)
-    XCTAssertEqual(appBar.fletDouble("toolbar_opacity"), 1)
+    XCTAssertEqual(appBar.rufletDouble("toolbar_opacity"), 1)
 
     let column = ControlNode(id: 4, type: "Column")
     XCTAssertEqual(column.rufletString("alignment"), "start")
     XCTAssertEqual(column.rufletString("horizontal_alignment"), "start")
-    XCTAssertEqual(column.fletDouble("spacing"), 10)
+    XCTAssertEqual(column.rufletDouble("spacing"), 10)
 
     let container = ControlNode(id: 5, type: "Container")
     XCTAssertEqual(container.rufletBool("ignore_interactions"), false)
@@ -84,6 +84,6 @@ final class RufletControlDefaultsTests: XCTestCase {
 
     XCTAssertEqual(column.rufletString("alignment"), "end")
     XCTAssertEqual(column.rufletString("horizontal_alignment"), "stretch")
-    XCTAssertEqual(column.fletDouble("spacing"), 24)
+    XCTAssertEqual(column.rufletDouble("spacing"), 24)
   }
 }

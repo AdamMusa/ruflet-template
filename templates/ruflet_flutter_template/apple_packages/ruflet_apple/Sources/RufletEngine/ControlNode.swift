@@ -92,7 +92,7 @@ public struct ControlNode: Equatable {
     return result
   }
 
-  public func fletDouble(_ key: String) -> Double {
+  public func rufletDouble(_ key: String) -> Double {
     guard let result = double(key) else { return missingFletDefault(key, expected: "Double") }
     return result
   }

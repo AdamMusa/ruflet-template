@@ -320,7 +320,7 @@ struct ListTileControlView: View {
 
   var body: some View {
     let metrics = CollectionDefaults.listTile(node)
-    HStack(spacing: metrics.horizontalTitleGap) {
+    HStack(alignment: rowAlignment, spacing: metrics.horizontalTitleGap) {
       if let leadingID = node.controlID(forKey: "leading") {
         ControlView(id: leadingID, axis: .none)
           .frame(minWidth: metrics.minLeadingWidth)
@@ -335,14 +335,17 @@ struct ListTileControlView: View {
         if let titleID = node.controlID(forKey: "title") {
           ControlView(id: titleID, axis: .none)
         } else if let title = node.string("title") {
-          Text(title)
+          Text(title).rufletTextStyle(RufletTextStyle(node: node, styleKey: "title_text_style"))
         }
         if let subtitleID = node.controlID(forKey: "subtitle") {
           ControlView(id: subtitleID, axis: .none)
             .font(.subheadline)
             .foregroundColor(.secondary)
         } else if let subtitle = node.string("subtitle") {
-          Text(subtitle).font(.subheadline).foregroundColor(.secondary)
+          Text(subtitle)
+            .font(.subheadline)
+            .foregroundColor(.secondary)
+            .rufletTextStyle(RufletTextStyle(node: node, styleKey: "subtitle_text_style"))
         }
       }
       .frame(maxWidth: .infinity, alignment: .leading)
@@ -353,6 +356,16 @@ struct ListTileControlView: View {
         RufletIcon(
           value: node.props["trailing"], size: 22,
           color: MaterialPalette.color(node.string("icon_color")))
+      } else if let trailingText = node.string("trailing") {
+        Text(trailingText)
+          .rufletTextStyle(RufletTextStyle(node: node, styleKey: "leading_and_trailing_text_style"))
+      }
+      // `toggle_inputs` lets a tap anywhere on the row drive the switch or
+      // checkbox it carries, rather than only the control itself.
+      if node.bool("toggle_inputs") == true, let toggleID = node.controlID(forKey: "leading") {
+        Color.clear.frame(width: 0).onTapGesture { events.fire(node, "click") }
+          .accessibilityHidden(true)
+          .id(toggleID)
       }
     }
     .padding(metrics.contentPadding)
@@ -367,8 +380,43 @@ struct ListTileControlView: View {
       default: .primary))
     .opacity(node.bool("disabled") == true ? 0.45 : 1)
     .allowsHitTesting(node.bool("disabled") != true)
+    .clipShape(RoundedRectangle(cornerRadius: tileRadius))
+    .modifier(VisualDensityPadding(value: node.props["visual_density"]))
     .contentShape(Rectangle())
+    .modifier(TapFeedback(enabled: node.bool("enable_feedback") != false))
+    .modifier(ListTileSplash(color: MaterialPalette.color(node.string("splash_color"))))
     .modifier(TapReporter(node: node, events: events))
+  }
+
+  /// `title_alignment` places the leading and trailing slots against the title
+  /// block rather than centring them on the row.
+  private var rowAlignment: VerticalAlignment {
+    switch node.string("title_alignment")?.lowercased() {
+    case "top", "titlehigh": return .top
+    case "bottom": return .bottom
+    default: return .center
+    }
+  }
+
+  private var tileRadius: CGFloat {
+    ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? 0
+  }
+}
+
+/// Material fills a pressed tile with its splash colour.
+private struct ListTileSplash: ViewModifier {
+  let color: Color?
+  @State private var pressed = false
+
+  func body(content: Content) -> some View {
+    guard let color else { return AnyView(content) }
+    return AnyView(
+      content
+        .background(pressed ? color : .clear)
+        .simultaneousGesture(
+          DragGesture(minimumDistance: 0)
+            .onChanged { _ in pressed = true }
+            .onEnded { _ in pressed = false }))
   }
 }
 
