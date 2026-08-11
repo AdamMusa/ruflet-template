@@ -18,11 +18,13 @@ extension ServiceRegistry {
     registerNamed("View") { PageService() }
     registerNamed("BasePage") { PageService() }
     registerNamed("Pagelet") { PageService() }
+    markStreaming([PageService.wireType, "View", "BasePage", "Pagelet"])
     register(BrowserContextMenuService.self) { BrowserContextMenuService() }
 
     register(ClipboardService.self) { ClipboardService() }
     register(SharedPreferencesService.self) { SharedPreferencesService() }
     register(SecureStorageService.self) { SecureStorageService() }
+    markStreaming([SecureStorageService.wireType])
     register(StoragePathsService.self) { StoragePathsService() }
     register(UrlLauncherService.self) { UrlLauncherService() }
     register(HapticFeedbackService.self) { HapticFeedbackService() }
@@ -35,6 +37,7 @@ extension ServiceRegistry {
     markStreaming([ConnectivityService.wireType])
     register(PermissionHandlerService.self) { PermissionHandlerService() }
     register(ScreenBrightnessService.self) { ScreenBrightnessService() }
+    markStreaming([ScreenBrightnessService.wireType])
 
     register(FilePickerService.self) { FilePickerService() }
     register(ShareService.self) { ShareService() }

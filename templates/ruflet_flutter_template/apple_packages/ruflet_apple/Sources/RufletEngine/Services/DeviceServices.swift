@@ -257,15 +257,39 @@ public final class PermissionHandlerService: RufletService {
 /// writes; the application-level distinction Flet draws is honoured by keeping
 /// the value this service last set.
 @MainActor
-public final class ScreenBrightnessService: RufletService {
+public final class ScreenBrightnessService: RufletStreamingService {
   public static let wireType = "ScreenBrightness"
 
   private var applicationBrightness: Double?
   private var systemBrightnessAtStart: Double?
   private var animate = true
   private var autoReset = true
+  private var eventNode: ControlNode?
+  private var eventContext: RufletServiceContext?
+  private var brightnessObserver: NSObjectProtocol?
 
   public init() {}
+
+  public func activate(node: ControlNode, context: RufletServiceContext) {
+    eventNode = node
+    eventContext = context
+    #if os(iOS)
+      guard node.handlesEvent("system_screen_brightness_change"), brightnessObserver == nil else {
+        return
+      }
+      brightnessObserver = NotificationCenter.default.addObserver(
+        forName: UIScreen.brightnessDidChangeNotification,
+        object: UIScreen.main,
+        queue: .main
+      ) { [weak self] _ in
+        Task { @MainActor in self?.emitSystemBrightness() }
+      }
+    #endif
+  }
+
+  deinit {
+    if let brightnessObserver { NotificationCenter.default.removeObserver(brightnessObserver) }
+  }
 
   public func invoke(
     _ call: RufletMethodCall,
@@ -291,12 +315,18 @@ public final class ScreenBrightnessService: RufletService {
         }
         applicationBrightness = value
         UIScreen.main.brightness = CGFloat(min(max(value, 0), 1))
+        if call.name == "set_application_screen_brightness" {
+          emitApplicationBrightness(value)
+        } else {
+          emitSystemBrightness(value)
+        }
         completion(.success(.null))
       case "reset_application_screen_brightness":
         if let original = systemBrightnessAtStart {
           UIScreen.main.brightness = CGFloat(original)
         }
         applicationBrightness = nil
+        emitApplicationBrightness(Double(UIScreen.main.brightness))
         completion(.success(.null))
       case "is_animate":
         completion(.success(.bool(animate)))
@@ -317,6 +347,27 @@ public final class ScreenBrightnessService: RufletService {
       completion(
         .failure(
           RufletServiceError.unavailable("Screen brightness is not settable on this platform")))
+    #endif
+  }
+
+  private func emitApplicationBrightness(_ value: Double) {
+    guard let eventNode, eventNode.handlesEvent("application_screen_brightness_change"),
+      let eventContext
+    else { return }
+    eventContext.emitEvent(eventNode.id, "application_screen_brightness_change", .map([
+      "brightness": .double(value)
+    ]))
+  }
+
+  private func emitSystemBrightness(_ value: Double? = nil) {
+    guard let eventNode, eventNode.handlesEvent("system_screen_brightness_change"),
+      let eventContext
+    else { return }
+    #if os(iOS)
+      let brightness = value ?? Double(UIScreen.main.brightness)
+      eventContext.emitEvent(eventNode.id, "system_screen_brightness_change", .map([
+        "brightness": .double(brightness)
+      ]))
     #endif
   }
 }

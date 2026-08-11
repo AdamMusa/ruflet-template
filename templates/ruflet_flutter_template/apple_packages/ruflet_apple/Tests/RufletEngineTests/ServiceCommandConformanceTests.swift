@@ -87,10 +87,57 @@ final class ServiceCommandConformanceTests: XCTestCase {
     XCTAssertEqual(type, "BrowserContextMenu")
     XCTAssertEqual(method, "disable_menu")
 
-    let uploadReply = invoke(FilePickerService(), type: "FilePicker", method: "upload")
-    guard case .failure(let uploadError)? = uploadReply,
-      case .platformUnsupported("FilePicker", "upload", _) = uploadError as? RufletServiceError
-    else { return XCTFail("upload must be explicitly platform unsupported") }
+  }
+
+  @MainActor
+  func testFilePickerUploadExecutesAndReportsCanonicalFailureEvent() {
+    var observed: (Int, String, RufletValue)?
+    let node = ControlNode(
+      id: 9, type: "FilePicker", props: ["on_upload": .bool(true)])
+    let reply = invoke(
+      FilePickerService(), type: "FilePicker", method: "upload",
+      args: .map(["files": .array([
+        .map([
+          "name": .string("missing.txt"),
+          "upload_url": .string("https://example.invalid/upload"),
+          "method": .string("PUT")
+        ])
+      ])]),
+      node: node,
+      context: context { observed = ($0, $1, $2) })
+
+    XCTAssertEqual(try? reply?.get(), .null)
+    XCTAssertEqual(observed?.0, node.id)
+    XCTAssertEqual(observed?.1, "upload")
+    XCTAssertEqual(observed?.2["file_name"]?.stringValue, "missing.txt")
+    XCTAssertNotNil(observed?.2["error"]?.stringValue)
+  }
+
+  @MainActor
+  func testRemainingPushServicesAreActivatedByDefaultRegistry() {
+    let registry = ServiceRegistry()
+    registry.registerDefaults()
+    let store = ControlStore()
+    let nodes = [
+      ControlNode(id: 1, type: "Page", props: ["on_locale_change": .bool(true)]),
+      ControlNode(id: 2, type: "SecureStorage", props: ["on_change": .bool(true)]),
+      ControlNode(
+        id: 3, type: "ScreenBrightness",
+        props: ["on_system_screen_brightness_change": .bool(true)])
+    ]
+    for node in nodes {
+      let properties = node.props.map { ControlPatch.Operation.set(key: $0.key, value: $0.value) }
+      store.apply(
+        ControlPatch(
+          controlID: node.id,
+          operations: [.set(key: RufletControlKey.type, value: .string(node.type))] + properties))
+    }
+
+    registry.activateStreamingServices(in: store, context: context(store: store))
+
+    XCTAssertTrue(registry.service(for: nodes[0]) is PageService)
+    XCTAssertTrue(registry.service(for: nodes[1]) is SecureStorageService)
+    XCTAssertTrue(registry.service(for: nodes[2]) is ScreenBrightnessService)
   }
 
   @MainActor

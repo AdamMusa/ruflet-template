@@ -17,6 +17,9 @@ public final class FilePickerService: NSObject, RufletService {
   public static let wireType = "FilePicker"
 
   private var pending: RufletMethodCompletion?
+  private var selectedURLs: [URL] = []
+  private var eventNode: ControlNode?
+  private var eventContext: RufletServiceContext?
 
   public override init() {
     super.init()
@@ -36,8 +39,7 @@ public final class FilePickerService: NSObject, RufletService {
     case "get_directory_path":
       pickDirectory(call, completion: completion)
     case "upload":
-      completion(.failure(RufletServiceError.platformUnsupported(
-        type: Self.wireType, method: call.name, platform: Self.platformName)))
+      upload(call, node: node, context: context, completion: completion)
     default:
       completion(
         .failure(RufletServiceError.unsupportedMethod(type: "FilePicker", method: call.name)))
@@ -58,9 +60,10 @@ public final class FilePickerService: NSObject, RufletService {
   /// `{name:, path:, size:}` maps.
   private func describe(_ urls: [URL]) -> RufletValue {
     .array(
-      urls.map { url in
+      urls.enumerated().map { index, url in
         let size = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
         return .map([
+          "id": .int(Int64(index)),
           "name": .string(url.lastPathComponent),
           "path": .string(url.path),
           "size": .int(Int64(size))
@@ -79,7 +82,8 @@ public final class FilePickerService: NSObject, RufletService {
 
       panel.begin { response in
         Task { @MainActor in
-          completion(.success(response == .OK ? self.describe(panel.urls) : .null))
+          self.selectedURLs = response == .OK ? panel.urls : []
+          completion(.success(response == .OK ? self.describe(panel.urls) : .array([])))
         }
       }
     }
@@ -170,6 +174,74 @@ public final class FilePickerService: NSObject, RufletService {
       completion(.failure(RufletServiceError.unavailable("No file picker on this platform")))
     }
   #endif
+
+  private func upload(
+    _ call: RufletMethodCall,
+    node: ControlNode?,
+    context: RufletServiceContext,
+    completion: @escaping RufletMethodCompletion
+  ) {
+    let requests = call.argument("files")?.arrayValue ?? []
+    guard !requests.isEmpty else {
+      return completion(.success(.null))
+    }
+    eventNode = node
+    eventContext = context
+
+    for request in requests {
+      let id = request["id"]?.intValue
+      let name = request["name"]?.stringValue
+      let source: URL? = {
+        if let id, selectedURLs.indices.contains(id) { return selectedURLs[id] }
+        return selectedURLs.first { $0.lastPathComponent == name }
+      }()
+      guard let source else {
+        emitUpload(name: name ?? "", progress: nil, error: "Selected file was not found")
+        continue
+      }
+      guard let rawURL = request["upload_url"]?.stringValue,
+        let destination = URL(string: rawURL), destination.scheme != nil
+      else {
+        emitUpload(name: source.lastPathComponent, progress: nil,
+          error: "upload_url must be an absolute URL in the native Apple renderer")
+        continue
+      }
+
+      var urlRequest = URLRequest(url: destination)
+      urlRequest.httpMethod = request["method"]?.stringValue ?? "PUT"
+      emitUpload(name: source.lastPathComponent, progress: 0, error: nil)
+      let accessed = source.startAccessingSecurityScopedResource()
+      URLSession.shared.uploadTask(with: urlRequest, fromFile: source) { [weak self] _, response, error in
+        if accessed { source.stopAccessingSecurityScopedResource() }
+        Task { @MainActor in
+          guard let self else { return }
+          if let error {
+            self.emitUpload(name: source.lastPathComponent, progress: nil,
+              error: error.localizedDescription)
+            return
+          }
+          let status = (response as? HTTPURLResponse)?.statusCode ?? 0
+          if !(200...204).contains(status) {
+            self.emitUpload(name: source.lastPathComponent, progress: nil,
+              error: "Upload endpoint returned code \(status)")
+          } else {
+            self.emitUpload(name: source.lastPathComponent, progress: 1, error: nil)
+            self.selectedURLs.removeAll { $0 == source }
+          }
+        }
+      }.resume()
+    }
+    completion(.success(.null))
+  }
+
+  private func emitUpload(name: String, progress: Double?, error: String?) {
+    guard let eventNode, eventNode.handlesEvent("upload"), let eventContext else { return }
+    eventContext.emitEvent(eventNode.id, "upload", .map([
+      "file_name": .string(name),
+      "progress": progress.map(RufletValue.double) ?? .null,
+      "error": error.map(RufletValue.string) ?? .null
+    ]))
+  }
 }
 
 #if canImport(UIKit)
@@ -180,6 +252,7 @@ public final class FilePickerService: NSObject, RufletService {
       Task { @MainActor in
         let completion = pending
         pending = nil
+        selectedURLs = urls
         completion?(.success(describe(urls)))
       }
     }
@@ -190,7 +263,8 @@ public final class FilePickerService: NSObject, RufletService {
       Task { @MainActor in
         let completion = pending
         pending = nil
-        completion?(.success(.null))
+        selectedURLs = []
+        completion?(.success(.array([])))
       }
     }
   }

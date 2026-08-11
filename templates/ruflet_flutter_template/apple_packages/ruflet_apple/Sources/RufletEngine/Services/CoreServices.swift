@@ -15,10 +15,48 @@ import RufletProtocol
 /// which is what `DrawerPresenter` watches — and replying so the waiting Ruby
 /// thread is released.
 @MainActor
-public final class PageService: RufletService {
+public final class PageService: RufletStreamingService {
   public static let wireType = "Page"
 
+  private var targetID: Int?
+  private var context: RufletServiceContext?
+  private var localeObserver: NSObjectProtocol?
+  #if canImport(AppKit)
+    private var keyboardMonitor: Any?
+  #endif
+
   public init() {}
+
+  public func activate(node: ControlNode, context: RufletServiceContext) {
+    targetID = node.id
+    self.context = context
+
+    if node.handlesEvent("locale_change"), localeObserver == nil {
+      localeObserver = NotificationCenter.default.addObserver(
+        forName: NSLocale.currentLocaleDidChangeNotification,
+        object: nil,
+        queue: .main
+      ) { [weak self] _ in
+        Task { @MainActor in self?.reportLocales() }
+      }
+    }
+
+    #if canImport(AppKit)
+      if node.handlesEvent("keyboard_event"), keyboardMonitor == nil {
+        keyboardMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+          Task { @MainActor in self?.reportKey(event) }
+          return event
+        }
+      }
+    #endif
+  }
+
+  deinit {
+    if let localeObserver { NotificationCenter.default.removeObserver(localeObserver) }
+    #if canImport(AppKit)
+      if let keyboardMonitor { NSEvent.removeMonitor(keyboardMonitor) }
+    #endif
+  }
 
   public func invoke(
     _ call: RufletMethodCall,
@@ -107,6 +145,33 @@ public final class PageService: RufletService {
       return "this Apple platform"
     #endif
   }
+
+  private func reportLocales() {
+    guard let targetID, let context else { return }
+    let locales = Locale.preferredLanguages.map { identifier -> RufletValue in
+      let locale = Locale(identifier: identifier)
+      return .map([
+        "language_code": .string(locale.language.languageCode?.identifier ?? identifier),
+        "country_code": locale.region.map { .string($0.identifier) } ?? .null,
+        "script_code": locale.language.script.map { .string($0.identifier) } ?? .null
+      ])
+    }
+    context.emitEvent(targetID, "locale_change", .map(["locales": .array(locales)]))
+  }
+
+  #if canImport(AppKit)
+    private func reportKey(_ event: NSEvent) {
+      guard let targetID, let context else { return }
+      let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+      context.emitEvent(targetID, "keyboard_event", .map([
+        "key": .string(event.charactersIgnoringModifiers ?? ""),
+        "shift": .bool(flags.contains(.shift)),
+        "ctrl": .bool(flags.contains(.control)),
+        "alt": .bool(flags.contains(.option)),
+        "meta": .bool(flags.contains(.command))
+      ]))
+    }
+  #endif
 
   #if os(iOS)
     private static func orientationMask(_ names: [String]) -> UIInterfaceOrientationMask {
@@ -342,12 +407,40 @@ public final class SharedPreferencesService: RufletService {
 
 /// `SecureStorage` — the Keychain.
 @MainActor
-public final class SecureStorageService: RufletService {
+public final class SecureStorageService: RufletStreamingService {
   public static let wireType = "SecureStorage"
 
   private let service = Bundle.main.bundleIdentifier ?? "com.izeesoft.ruflet"
+  private var targetID: Int?
+  private var context: RufletServiceContext?
+  private var protectedDataObservers: [NSObjectProtocol] = []
 
   public init() {}
+
+  public func activate(node: ControlNode, context: RufletServiceContext) {
+    guard node.handlesEvent("change") else { return }
+    targetID = node.id
+    self.context = context
+    #if canImport(UIKit)
+      guard protectedDataObservers.isEmpty else { return }
+      for notification in [
+        UIApplication.protectedDataDidBecomeAvailableNotification,
+        UIApplication.protectedDataWillBecomeUnavailableNotification
+      ] {
+        protectedDataObservers.append(NotificationCenter.default.addObserver(
+          forName: notification,
+          object: nil,
+          queue: .main
+        ) { [weak self] _ in
+          Task { @MainActor in self?.reportProtectedDataAvailability() }
+        })
+      }
+    #endif
+  }
+
+  deinit {
+    protectedDataObservers.forEach(NotificationCenter.default.removeObserver)
+  }
 
   public func invoke(
     _ call: RufletMethodCall,
@@ -449,6 +542,15 @@ public final class SecureStorageService: RufletService {
       kSecAttrService as String: service,
       kSecAttrAccount as String: key
     ]
+  }
+
+  private func reportProtectedDataAvailability() {
+    guard let targetID, let context else { return }
+    #if canImport(UIKit)
+      context.emitEvent(targetID, "change", .map([
+        "available": .bool(UIApplication.shared.isProtectedDataAvailable)
+      ]))
+    #endif
   }
 }
 
