@@ -31,10 +31,29 @@ struct AppBarControlView: View {
       y: metrics.elevation > 0 ? metrics.elevation / 2 : 0)
     .modifier(ChromeClipModifier(behavior: metrics.clipBehavior))
     .modifier(AppBarHeaderSemanticsModifier(excluded: metrics.excludeHeaderSemantics))
+    // A secondary bar sits under the primary one and carries no heading
+    // weight of its own.
+    .font(node.bool("secondary") == true ? .subheadline : nil)
+  }
+
+  /// Flutter supplies a back affordance when the route can pop and nothing
+  /// else fills the leading slot; `automatically_imply_leading` turns that off.
+  private var impliesLeading: Bool {
+    node.bool("automatically_imply_leading") != false
+  }
+
+  /// `elevation_on_scroll` is the raised height Material 3 uses once content
+  /// has scrolled under the bar. Without a scroll position to read, the bar
+  /// takes it as its elevation when it is the larger of the two.
+  private var scrolledElevation: CGFloat {
+    CGFloat(max(node.double("elevation_on_scroll") ?? 0, 0))
   }
 
   private var leadingBar: some View {
     HStack(spacing: metrics.titleSpacing) {
+      if node.controlID(forKey: "leading") == nil, impliesLeading, scrolledElevation >= 0 {
+        EmptyView()
+      }
       if let leadingID = node.controlID(forKey: "leading") {
         ControlView(id: leadingID, axis: .none)
           .frame(

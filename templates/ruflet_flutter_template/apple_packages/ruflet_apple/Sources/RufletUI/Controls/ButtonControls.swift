@@ -660,13 +660,13 @@ struct SegmentedButtonControlView: View {
     let segments = node.controlIDs(forKey: "segments").compactMap { store.node($0) }
     let selected = selectedValues
 
-    HStack(spacing: 0) {
+    stack(spacing: 0) {
       ForEach(segments, id: \.id) { segment in
         let value = segment.string("value") ?? ""
         Button {
           toggle(value: value, selected: selected)
         } label: {
-          segmentLabel(segment)
+          segmentLabel(segment, chosen: selected.contains(value))
             .frame(maxWidth: .infinity)
             .padding(.vertical, 7)
             .background(
@@ -686,11 +686,34 @@ struct SegmentedButtonControlView: View {
   }
 
   @ViewBuilder
-  private func segmentLabel(_ segment: ControlNode) -> some View {
-    if let labelID = segment.controlID(forKey: "label") {
-      ControlView(id: labelID, axis: .none)
+  private func segmentLabel(_ segment: ControlNode, chosen: Bool) -> some View {
+    HStack(spacing: 6) {
+      // `show_selected_icon` puts a tick — or `selected_icon` — before the
+      // label of a chosen segment, the way Material's does.
+      if chosen, node.bool("show_selected_icon") != false {
+        if node.props["selected_icon"] != nil {
+          RufletIcon(value: node.props["selected_icon"], size: 14, color: nil)
+        } else {
+          Image(systemName: "checkmark").font(.caption)
+        }
+      }
+      if let labelID = segment.controlID(forKey: "label") {
+        ControlView(id: labelID, axis: .none)
+      } else {
+        Text(segment.string("label") ?? segment.string("value") ?? "")
+      }
+    }
+  }
+
+  /// `direction` lays the segments out in a row or a column.
+  @ViewBuilder
+  private func stack<Content: View>(
+    spacing: CGFloat, @ViewBuilder content: () -> Content
+  ) -> some View {
+    if node.string("direction")?.lowercased() == "vertical" {
+      VStack(spacing: spacing) { content() }
     } else {
-      Text(segment.string("label") ?? segment.string("value") ?? "")
+      HStack(spacing: spacing) { content() }
     }
   }
 

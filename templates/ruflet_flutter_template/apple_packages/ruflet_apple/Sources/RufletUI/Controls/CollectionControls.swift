@@ -105,7 +105,14 @@ struct GridViewControlView: View {
       }
       .padding(config.padding)
       .modifier(CollectionClip(behavior: config.clipBehavior))
+      .accessibilityElement(children: .contain)
+      .accessibilityValue(node.int("semantic_child_count").map { "\($0)" } ?? "")
+      // `cache_extent` is how far past the viewport Flutter keeps cells
+      // alive; SwiftUI decides that itself, so it stands in as the grid's
+      // minimum extent.
+      .frame(minHeight: node.double("cache_extent").map { CGFloat($0) })
     }
+    .modifier(CollectionAutoScroll(node: node, horizontal: config.horizontal))
     .modifier(CollectionScrollReporter(node: node, horizontal: config.horizontal, events: events))
   }
 
@@ -675,10 +682,17 @@ private struct ExpansionPanelView: View {
     } label: {
       if let headerID = node.controlID(forKey: "header") {
         ControlView(id: headerID, axis: .none)
+          // `can_tap_header` lets the whole header toggle the panel rather
+          // than only the chevron.
+          .allowsHitTesting(node.bool("can_tap_header") == true)
       }
     }
     .padding(.horizontal, 12)
     .background(MaterialPalette.color(node.string("bgcolor")))
+    .modifier(
+      ListTileSplash(
+        color: MaterialPalette.color(
+          node.string("splash_color") ?? node.string("highlight_color"))))
   }
 }
 

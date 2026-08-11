@@ -718,8 +718,9 @@ struct ChartControlView: View {
     guard !sets.isEmpty else { return }
 
     let entries = sets.map { set in
-      set.controlIDs(forKey: "data_entries")
-        .compactMap { store.node($0)?.double("value") }
+      // Flet spells the list `entries` now and `data_entries` before that.
+      let ids = set.controlIDs(forKey: "entries") + set.controlIDs(forKey: "data_entries")
+      return ids.compactMap { store.node($0)?.double("value") }
     }
     let spokes = entries.map(\.count).max() ?? 0
     guard spokes >= 3 else { return }
@@ -751,9 +752,16 @@ struct ChartControlView: View {
       }
       path.closeSubpath()
 
-      let colour = MaterialPalette.color(sets[index].string("color") ?? "primary", default: .primary)
-      context.fill(path, with: .color(colour.opacity(0.25)))
-      context.stroke(path, with: .color(colour), lineWidth: 2)
+      // A set names its fill and its border separately; `color` is the older
+      // spelling that stood for both.
+      let set = sets[index]
+      let colour = MaterialPalette.color(set.string("color") ?? "primary", default: .primary)
+      let fill = MaterialPalette.color(set.string("fill_color"), default: colour.opacity(0.25))
+      let border = MaterialPalette.color(set.string("border_color"), default: colour)
+      context.fill(path, with: .color(fill))
+      context.stroke(
+        path, with: .color(border),
+        lineWidth: CGFloat(set.double("border_width") ?? 2))
     }
   }
 

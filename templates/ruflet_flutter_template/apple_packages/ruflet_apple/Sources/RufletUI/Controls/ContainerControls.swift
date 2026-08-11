@@ -882,11 +882,33 @@ struct PageletControlView: View {
       }
     }
     .background(MaterialPalette.color(node.string("bgcolor")))
-    .overlay(alignment: .bottomTrailing) {
+    .overlay(alignment: fabAlignment) {
       if let fabID = node.controlID(forKey: "floating_action_button") {
         ControlView(id: fabID, axis: .none).padding(16)
       }
     }
+    // A pagelet carries the same three slots a page does; each is presented
+    // over the content rather than laid out beside it.
+    .overlay(alignment: .leading) { drawer(forKey: "drawer") }
+    .overlay(alignment: .trailing) { drawer(forKey: "end_drawer") }
+    .overlay(alignment: .bottom) { drawer(forKey: "bottom_sheet") }
+  }
+
+  @ViewBuilder
+  private func drawer(forKey key: String) -> some View {
+    if let id = node.controlID(forKey: key) {
+      ControlView(id: id, axis: .vertical)
+    }
+  }
+
+  /// Flutter's FloatingActionButtonLocation names a corner and whether the
+  /// button is docked into the bar below it.
+  private var fabAlignment: Alignment {
+    let location = node.string("floating_action_button_location")?.lowercased() ?? ""
+    if location.contains("center") { return .bottom }
+    if location.contains("start") { return .bottomLeading }
+    if location.contains("top") { return .topTrailing }
+    return .bottomTrailing
   }
 }
 
