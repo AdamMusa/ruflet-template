@@ -238,7 +238,9 @@ struct CupertinoTextFieldControlView: View {
 
   @ViewBuilder
   private var field: some View {
-    let placeholder = node.string("placeholder_text") ?? ""
+    // An adaptive TextField arrives here carrying Material's names, so Flet
+    // falls back to the label when there is no placeholder.
+    let placeholder = node.string("placeholder_text") ?? node.string("label") ?? ""
     let obscure = node.bool("password") == true && !revealed
     if node.bool("multiline") == true || (node.int("min_lines") ?? 1) > 1 {
       TextEditor(text: binding)

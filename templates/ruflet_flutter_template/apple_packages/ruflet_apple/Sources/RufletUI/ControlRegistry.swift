@@ -112,6 +112,7 @@ public enum ControlRegistry {
     if let custom = extensions[node.type.lowercased()] {
       return custom(node, axis)
     }
+    if let adaptive = adaptiveTwin(node) { return adaptive }
     let families: [(ControlNode, LayoutAxis) -> AnyView?] = [
       layout, buttons, inputs, display, collections,
       chrome, overlays, gestures, cupertino, media
@@ -120,6 +121,30 @@ public enum ControlRegistry {
       if let view = family(node, axis) { return view }
     }
     return nil
+  }
+
+  /// `adaptive` — the Material control asks to be its Cupertino twin.
+  ///
+  /// Flet pairs seven families this way, in `adaptive_*.dart`, and each twin
+  /// is chosen when the property is set and the platform is iOS or macOS. Both
+  /// are always true here, so this renderer only has to check the property.
+  ///
+  /// AlertDialog is absent because the Material and Cupertino dialogs already
+  /// share one view.
+  private static func adaptiveTwin(_ node: ControlNode) -> AnyView? {
+    guard node.bool("adaptive") == true else { return nil }
+    switch node.type {
+    case "Switch": return AnyView(CupertinoSwitchControlView(node: node))
+    case "Slider": return AnyView(CupertinoSliderControlView(node: node))
+    case "Checkbox": return AnyView(CupertinoSelectionControlView(node: node, kind: .checkbox))
+    case "Radio": return AnyView(CupertinoSelectionControlView(node: node, kind: .radio))
+    case "TextField": return AnyView(CupertinoTextFieldControlView(node: node))
+    case "AppBar": return AnyView(CupertinoAppBarControlView(node: node))
+    case "Button", "ElevatedButton", "FilledButton", "FilledTonalButton",
+      "OutlinedButton", "TextButton":
+      return AnyView(CupertinoButtonControlView(node: node))
+    default: return nil
+    }
   }
 
   // MARK: - Built-in compatibility contract
