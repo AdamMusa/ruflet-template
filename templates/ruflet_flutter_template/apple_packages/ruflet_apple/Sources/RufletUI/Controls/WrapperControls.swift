@@ -421,7 +421,10 @@ struct ShimmerControlView: View {
   @State private var phase: CGFloat = -1
 
   var body: some View {
-    let base = MaterialPalette.color(node.string("color"), default: .gray.opacity(0.3))
+    // Flet names the resting colour `base_color`; `color` is the older
+    // spelling the same control still accepts.
+    let base = MaterialPalette.color(
+      node.string("base_color") ?? node.string("color"), default: .gray.opacity(0.3))
     let highlight = MaterialPalette.color(
       node.string("highlight_color"), default: .white.opacity(0.6))
 
@@ -439,8 +442,8 @@ struct ShimmerControlView: View {
           .init(color: highlight, location: 0.5),
           .init(color: base.opacity(0), location: 1)
         ],
-        startPoint: .leading, endPoint: .trailing)
-        .offset(x: phase * 240)
+        startPoint: sweep.start, endPoint: sweep.end)
+        .offset(x: sweep.horizontal ? phase * 240 : 0, y: sweep.horizontal ? 0 : phase * 240)
         .blendMode(.plusLighter)
     )
     .mask(
@@ -452,9 +455,27 @@ struct ShimmerControlView: View {
     )
     .onAppear {
       let period = (node.double("period") ?? 1500) / 1000
-      withAnimation(.linear(duration: period).repeatForever(autoreverses: false)) {
+      // `loop` is how many passes to make; Flutter treats zero as endless,
+      // which is also the default.
+      let passes = node.int("loop") ?? 0
+      let animation = Animation.linear(duration: period)
+      withAnimation(
+        passes > 0
+          ? animation.repeatCount(passes, autoreverses: false)
+          : animation.repeatForever(autoreverses: false)
+      ) {
         phase = 1
       }
+    }
+  }
+
+  /// `direction` is the way the highlight travels across the content.
+  private var sweep: (start: UnitPoint, end: UnitPoint, horizontal: Bool) {
+    switch node.string("direction")?.lowercased().replacingOccurrences(of: "_", with: "") {
+    case "righttoleft", "rtl": return (.trailing, .leading, true)
+    case "toptobottom", "ttb": return (.top, .bottom, false)
+    case "bottomtotop", "btt": return (.bottom, .top, false)
+    default: return (.leading, .trailing, true)
     }
   }
 }

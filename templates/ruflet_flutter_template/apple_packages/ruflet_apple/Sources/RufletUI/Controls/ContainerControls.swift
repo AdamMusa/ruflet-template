@@ -58,6 +58,20 @@ private struct ViewPopGuard: ViewModifier {
   }
 }
 
+/// The border an outlined card draws in place of a shadow.
+private struct CardOutline: ViewModifier {
+  let radius: CGFloat
+  let variant: String
+  let onForeground: Bool
+  let color: Color
+
+  func body(content: Content) -> some View {
+    guard variant == "outlined" else { return AnyView(content) }
+    let border = RoundedRectangle(cornerRadius: radius).strokeBorder(color, lineWidth: 1)
+    return AnyView(onForeground ? AnyView(content.overlay(border)) : AnyView(content.background(border)))
+  }
+}
+
 /// `ink` paints Material's touch ripple inside the container's own shape.
 private struct ContainerInk: ViewModifier {
   let node: ControlNode
@@ -727,6 +741,18 @@ struct CardControlView: View {
           color: MaterialPalette.color(
             node.string("shadow_color"), default: .black.opacity(0.2)),
           radius: CGFloat(node.double("elevation") ?? 1)))
+    // An outlined card draws its border instead of a shadow; a filled one
+    // draws neither. `show_border_on_foreground` puts that border over the
+    // content rather than behind it.
+    .modifier(
+      CardOutline(
+        radius: radius,
+        variant: node.string("variant")?.lowercased() ?? "elevated",
+        onForeground: node.bool("show_border_on_foreground") != false,
+        color: MaterialPalette.color(node.string("border_color"), default: .secondary.opacity(0.4))))
+    // Flutter's `semanticContainer` decides whether the card is one element
+    // to a screen reader or a group of them.
+    .accessibilityElement(children: node.bool("semantic_container") == false ? .contain : .combine)
   }
 
   private var cardSurface: Color {
@@ -810,8 +836,15 @@ struct PlaceholderControlView: View {
         path.addLine(to: CGPoint(x: 1, y: 1))
       }
       .stroke(color, lineWidth: 1)
+      // Flutter's Placeholder can hold a child, and falls back to its own
+      // size only where the layout leaves it unconstrained.
+      if let contentID = node.controlID(forKey: "content") {
+        ControlView(id: contentID, axis: .none)
+      }
     }
-    .frame(minWidth: 48, minHeight: 48)
+    .frame(
+      minWidth: node.double("fallback_width").map { CGFloat($0) } ?? 48,
+      minHeight: node.double("fallback_height").map { CGFloat($0) } ?? 48)
   }
 }
 
