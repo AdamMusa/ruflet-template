@@ -191,6 +191,34 @@ public enum ControlProps {
       height: map["scale_y"]?.doubleValue ?? 1)
   }
 
+  /// Flutter's `BlendMode` case names against SwiftUI's. Flutter's Skia set is
+  /// larger than Core Graphics', so a mode with no counterpart composites
+  /// normally rather than picking a different one.
+  public static func blendMode(_ value: String?) -> BlendMode {
+    switch value?.lowercased() {
+    case "multiply": return .multiply
+    case "screen": return .screen
+    case "overlay": return .overlay
+    case "darken": return .darken
+    case "lighten": return .lighten
+    case "colordodge": return .colorDodge
+    case "colorburn": return .colorBurn
+    case "hardlight": return .hardLight
+    case "softlight": return .softLight
+    case "difference": return .difference
+    case "exclusion": return .exclusion
+    case "hue": return .hue
+    case "saturation": return .saturation
+    case "color": return .color
+    case "luminosity": return .luminosity
+    case "plus": return .plusLighter
+    case "srcin": return .sourceAtop
+    case "dstout": return .destinationOut
+    case "dstover": return .destinationOver
+    default: return .normal
+    }
+  }
+
   /// Flutter's `BoxConstraints`, which Flet serialises as the four bounds.
   public struct SizeConstraints: Equatable {
     public var minWidth: CGFloat?

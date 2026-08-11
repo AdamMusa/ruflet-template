@@ -202,24 +202,35 @@ struct CupertinoTextFieldControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
   @State private var focused = false
+  @State private var hovering = false
   @State private var selection = NSRange(location: 0, length: 0)
   @State private var revealed = false
 
+  private var styling: RufletFieldStyling {
+    RufletFieldStyling(node: node, focused: focused, hovering: hovering)
+  }
+
   var body: some View {
-    HStack(spacing: 6) {
-      overlay(forKey: "prefix_icon", mode: node.string("prefix_visibility_mode"))
-      overlay(forKey: "prefix", mode: node.string("prefix_visibility_mode"))
+    HStack(alignment: styling.verticalAlignment, spacing: 6) {
+      overlay(key: "prefix_icon", mode: node.string("prefix_visibility_mode"))
+        .modifier(CupertinoSlotConstraints(value: node.props["prefix_icon_size_constraints"]))
+      overlay(key: "prefix", mode: node.string("prefix_visibility_mode"), styleKey: "prefix_style")
       field
-      overlay(forKey: "suffix", mode: node.string("suffix_visibility_mode"))
-      overlay(forKey: "suffix_icon", mode: node.string("suffix_visibility_mode"))
+      overlay(key: "suffix", mode: node.string("suffix_visibility_mode"), styleKey: "suffix_style")
+      overlay(key: "suffix_icon", mode: node.string("suffix_visibility_mode"))
+        .modifier(CupertinoSlotConstraints(value: node.props["suffix_icon_size_constraints"]))
       revealButton
       clearButton
     }
-    .padding(contentPadding)
-    .background(
-      RoundedRectangle(cornerRadius: cornerRadius)
-        .fill(fieldBackground))
+    .padding(styling.contentPadding)
+    .frame(
+      maxWidth: styling.fitsParent ? .infinity : nil,
+      maxHeight: styling.fitsParent ? .infinity : nil)
+    .background(fieldDecoration)
     .overlay(borderStroke)
+    .modifier(ChromeClipModifier(behavior: styling.clipBehavior))
+    .modifier(CupertinoFieldShadows(value: node.props["shadows"]))
+    .onHover { hovering = $0 }
     .modifier(RufletFormFieldDecoration(node: node))
     .onAppear {
       focused = node.bool("autofocus") == true
@@ -242,9 +253,12 @@ struct CupertinoTextFieldControlView: View {
     // falls back to the label when there is no placeholder.
     let placeholder = node.string("placeholder_text") ?? node.string("label") ?? ""
     let obscure = node.bool("password") == true && !revealed
-    if node.bool("multiline") == true || (node.int("min_lines") ?? 1) > 1 {
+    if styling.isMultiline {
       TextEditor(text: binding)
-        .frame(minHeight: CGFloat((node.int("min_lines") ?? 3) * 20))
+        .rufletTextStyle(styling.textStyle)
+        .lineLimit(styling.maxLines)
+        .frame(minHeight: CGFloat(styling.minLines * 20))
+        .padding(styling.scrollPadding)
     } else {
       #if canImport(UIKit) || canImport(AppKit)
         RufletNativeTextInput(
@@ -253,14 +267,38 @@ struct CupertinoTextFieldControlView: View {
           selection: $selection,
           placeholder: placeholder,
           secure: obscure,
-          traits: RufletTextInputTraits(node: node),
+          traits: styling.traits,
           onTap: { events.fire(node, "click") },
           onTapOutside: { events.fire(node, "tap_outside") },
           onSubmit: { events.fire(node, "submit", data: .string($0)) })
+          .modifier(
+            CupertinoPlaceholder(node: node, showing: binding.wrappedValue.isEmpty))
       #else
         TextField(placeholder, text: binding)
           .onSubmit { events.fire(node, "submit", data: .string(binding.wrappedValue)) }
       #endif
+    }
+  }
+
+  /// Cupertino paints the field's box the way a Container does, so a gradient
+  /// or an image stands in for the fill when Ruby supplies one.
+  @ViewBuilder
+  private var fieldDecoration: some View {
+    let shape = RoundedRectangle(cornerRadius: styling.cornerRadius)
+    if let gradient = GradientProps.linear(node.props["gradient"]) {
+      shape.fill(gradient)
+    } else if let source = node.string("image").flatMap({ URL(string: $0) }),
+      source.scheme != nil
+    {
+      AsyncImage(url: source) { image in
+        image.resizable().scaledToFill()
+      } placeholder: {
+        shape.fill(styling.background(default: .gray.opacity(0.12)))
+      }
+      .clipShape(shape)
+      .blendMode(ControlProps.blendMode(node.string("blend_mode")))
+    } else {
+      shape.fill(styling.background(default: .gray.opacity(0.12)))
     }
   }
 
@@ -277,9 +315,9 @@ struct CupertinoTextFieldControlView: View {
   }
 
   @ViewBuilder
-  private func overlay(forKey key: String, mode: String?) -> some View {
-    if let id = node.controlID(forKey: key), shows(mode, default: true) {
-      ControlView(id: id, axis: .none)
+  private func overlay(key: String, mode: String?, styleKey: String? = nil) -> some View {
+    if shows(mode, default: true) {
+      RufletFormFieldSlot(node: node, key: key, styleKey: styleKey)
     }
   }
 
@@ -317,38 +355,72 @@ struct CupertinoTextFieldControlView: View {
       set: { events.commit(node, value: .string($0)) })
   }
 
-  private var cornerRadius: CGFloat {
-    ControlProps.cornerRadius(node.props["border_radius"]) ?? 8
-  }
-
-  private var contentPadding: EdgeInsets {
-    ControlProps.edgeInsets(node.props["content_padding"])
-      ?? ControlProps.edgeInsets(node.props["padding"])
-      ?? EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
-  }
-
-  private var fieldBackground: Color {
-    let key = focused ? "focused_bgcolor" : "bgcolor"
-    if let explicit = MaterialPalette.color(node.string(key) ?? node.string("bgcolor")) {
-      return explicit
-    }
-    if node.bool("filled") == true {
-      return MaterialPalette.color(node.string("fill_color"), default: .gray.opacity(0.12))
-    }
-    return MaterialPalette.color(node.string("fill_color"), default: .gray.opacity(0.12))
-  }
-
   @ViewBuilder
   private var borderStroke: some View {
-    if node.string("border")?.lowercased() != "none" {
-      RoundedRectangle(cornerRadius: cornerRadius)
+    if styling.drawsBorder {
+      RoundedRectangle(cornerRadius: styling.cornerRadius)
         .strokeBorder(
-          MaterialPalette.color(
-            node.string(focused ? "focused_border_color" : "border_color"),
-            default: .clear),
-          lineWidth: CGFloat(
-            node.double(focused ? "focused_border_width" : "border_width") ?? 1))
+          styling.borderColor(default: .clear), lineWidth: styling.borderWidth)
     }
+  }
+}
+
+/// Cupertino's `placeholder_style` and the hint's line limit and fade, which
+/// neither platform field styles directly, so the text is drawn over an empty
+/// field.
+private struct CupertinoPlaceholder: ViewModifier {
+  let node: ControlNode
+  let showing: Bool
+
+  func body(content: Content) -> some View {
+    guard node.map("placeholder_style") != nil || node.map("hint_style") != nil
+      || node.int("hint_max_lines") != nil
+    else { return AnyView(content) }
+    let text = node.string("placeholder_text") ?? node.string("hint_text") ?? ""
+    let styleKey = node.map("placeholder_style") != nil ? "placeholder_style" : "hint_style"
+    let duration = (node.double("hint_fade_duration") ?? 0) / 1_000
+    return AnyView(
+      content.overlay(alignment: .leading) {
+        Text(text)
+          .lineLimit(node.int("hint_max_lines"))
+          .rufletTextStyle(RufletTextStyle(node: node, styleKey: styleKey))
+          .opacity(showing ? 1 : 0)
+          .animation(.easeInOut(duration: duration), value: showing)
+          .allowsHitTesting(false)
+      })
+  }
+}
+
+private struct CupertinoSlotConstraints: ViewModifier {
+  let value: RufletValue?
+
+  func body(content: Content) -> some View {
+    if let constraints = ControlProps.sizeConstraints(value) {
+      content.frame(
+        minWidth: constraints.minWidth, maxWidth: constraints.maxWidth,
+        minHeight: constraints.minHeight, maxHeight: constraints.maxHeight)
+    } else {
+      content
+    }
+  }
+}
+
+/// `shadows` is Flutter's BoxShadow list; SwiftUI takes them one at a time.
+private struct CupertinoFieldShadows: ViewModifier {
+  let value: RufletValue?
+
+  func body(content: Content) -> some View {
+    var result = AnyView(content)
+    for shadow in value?.arrayValue ?? [] {
+      guard let map = shadow.mapValue else { continue }
+      result = AnyView(
+        result.shadow(
+          color: MaterialPalette.color(map["color"]?.stringValue, default: .black.opacity(0.2)),
+          radius: CGFloat(map["blur_radius"]?.doubleValue ?? 0),
+          x: CGFloat(map["offset"]?.mapValue?["x"]?.doubleValue ?? 0),
+          y: CGFloat(map["offset"]?.mapValue?["y"]?.doubleValue ?? 0)))
+    }
+    return result
   }
 }
 
