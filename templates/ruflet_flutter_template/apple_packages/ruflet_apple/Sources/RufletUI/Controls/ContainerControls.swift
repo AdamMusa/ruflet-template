@@ -383,8 +383,11 @@ struct CardControlView: View {
     .padding(ControlProps.edgeInsets(node.props["margin"]) ?? EdgeInsets())
     .background(
       RoundedRectangle(cornerRadius: radius)
-        .fill(MaterialPalette.color(node.string("color"), default: cardSurface))
-        .shadow(radius: CGFloat(node.double("elevation") ?? 1)))
+        .fill(MaterialPalette.color(node.string("bgcolor"), default: cardSurface))
+        .shadow(
+          color: MaterialPalette.color(
+            node.string("shadow_color"), default: .black.opacity(0.2)),
+          radius: CGFloat(node.double("elevation") ?? 1)))
   }
 
   private var cardSurface: Color {

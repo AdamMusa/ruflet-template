@@ -113,7 +113,10 @@ struct CupertinoSwitchControlView: View {
       if let label = node.string("label") { Text(label) }
     }
     .toggleStyle(.switch)
-    .tint(MaterialPalette.color(node.string("active_color")))
+    // Ruby names the switch's colours after the parts they paint, the way
+    // Flutter's CupertinoSwitch does: the track when on is `active_track_color`,
+    // not the `active_color` the sliders and selection controls use.
+    .tint(MaterialPalette.color(node.string("active_track_color")))
     .background(thumbImageValidation)
   }
 
