@@ -216,13 +216,67 @@ public enum ControlProps {
       bottomLeft: CGFloat(bottomLeft), bottomRight: CGFloat(bottomRight))
   }
 
-  /// Flet's `Border`/`BorderSide`, reduced to the single stroke SwiftUI draws.
+  /// Compatibility for controls which truly expose one stroke.
   public static func border(_ value: RufletValue?) -> (color: Color, width: CGFloat)? {
-    guard let map = value?.mapValue else { return nil }
-    let side = map["top"]?.mapValue ?? map["left"]?.mapValue ?? map
-    guard let width = side["width"]?.doubleValue, width > 0 else { return nil }
-    return (MaterialPalette.color(side["color"]?.stringValue, default: .gray), CGFloat(width))
+    guard let border = borderSides(value) else { return nil }
+    for side in [border.top, border.left, border.right, border.bottom] {
+      if let side { return (side.color, side.width) }
+    }
+    return nil
   }
+
+  /// Flet permits a different color and width on every border edge. Preserve
+  /// all four sides rather than selecting the first non-empty edge.
+  public static func borderSides(_ value: RufletValue?) -> FletBorder? {
+    guard let map = value?.mapValue else { return nil }
+
+    func side(_ value: RufletValue?) -> FletBorderSide? {
+      guard let map = value?.mapValue,
+            let width = map["width"]?.doubleValue,
+            width > 0 else { return nil }
+      return FletBorderSide(
+        color: MaterialPalette.color(map["color"]?.stringValue, default: .black),
+        width: CGFloat(width))
+    }
+
+    if map["width"] != nil {
+      let uniform = side(value)
+      return uniform.map { FletBorder(top: $0, right: $0, bottom: $0, left: $0) }
+    }
+    let result = FletBorder(
+      top: side(map["top"]), right: side(map["right"]),
+      bottom: side(map["bottom"]), left: side(map["left"]))
+    return result.isEmpty ? nil : result
+  }
+}
+
+public struct FletBorderSide {
+  public let color: Color
+  public let width: CGFloat
+
+  public init(color: Color, width: CGFloat) {
+    self.color = color
+    self.width = width
+  }
+}
+
+public struct FletBorder {
+  public let top: FletBorderSide?
+  public let right: FletBorderSide?
+  public let bottom: FletBorderSide?
+  public let left: FletBorderSide?
+
+  public init(
+    top: FletBorderSide?, right: FletBorderSide?,
+    bottom: FletBorderSide?, left: FletBorderSide?
+  ) {
+    self.top = top
+    self.right = right
+    self.bottom = bottom
+    self.left = left
+  }
+
+  public var isEmpty: Bool { top == nil && right == nil && bottom == nil && left == nil }
 }
 
 public struct FletCornerRadii: Equatable, Sendable {

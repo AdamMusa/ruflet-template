@@ -201,7 +201,7 @@ struct ContainerControlView: View {
   var body: some View {
     let radii = ControlProps.cornerRadii(node.props["border_radius"])
       ?? FletCornerRadii(uniform: 0)
-    let border = ControlProps.border(node.props["border"])
+    let border = ControlProps.borderSides(node.props["border"])
     let alignment = ControlProps.continuousAlignment(node.props["alignment"])
 
     content
@@ -245,13 +245,40 @@ struct ContainerControlView: View {
   }
 
   @ViewBuilder
-  private func borderStroke(
-    border: (color: Color, width: CGFloat)?, radii: FletCornerRadii
-  ) -> some View {
+  private func borderStroke(border: FletBorder?, radii: FletCornerRadii) -> some View {
     if let border {
-      FletRoundedRectangle(radii: radii)
-        .stroke(border.color, lineWidth: border.width)
+      FletBorderOverlay(border: border, radii: radii)
     }
+  }
+}
+
+private struct FletBorderOverlay: View {
+  let border: FletBorder
+  let radii: FletCornerRadii
+
+  var body: some View {
+    GeometryReader { geometry in
+      ZStack {
+        if let top = border.top {
+          top.color.frame(width: geometry.size.width, height: top.width)
+            .position(x: geometry.size.width / 2, y: top.width / 2)
+        }
+        if let right = border.right {
+          right.color.frame(width: right.width, height: geometry.size.height)
+            .position(x: geometry.size.width - right.width / 2, y: geometry.size.height / 2)
+        }
+        if let bottom = border.bottom {
+          bottom.color.frame(width: geometry.size.width, height: bottom.width)
+            .position(x: geometry.size.width / 2, y: geometry.size.height - bottom.width / 2)
+        }
+        if let left = border.left {
+          left.color.frame(width: left.width, height: geometry.size.height)
+            .position(x: left.width / 2, y: geometry.size.height / 2)
+        }
+      }
+      .clipShape(FletRoundedRectangle(radii: radii))
+    }
+    .allowsHitTesting(false)
   }
 }
 

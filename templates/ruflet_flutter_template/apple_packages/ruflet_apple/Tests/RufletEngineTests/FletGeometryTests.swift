@@ -80,4 +80,18 @@ final class FletGeometryTests: XCTestCase {
 
     XCTAssertEqual(path.boundingRect, CGRect(x: 0, y: 0, width: 100, height: 40))
   }
+
+  func testIndependentBorderSidesRemainIndependent() {
+    let border = ControlProps.borderSides(.map([
+      "top": .map(["color": .string("red"), "width": .double(2)]),
+      "right": .map(["color": .string("green"), "width": .double(3)]),
+      "bottom": .map(["color": .string("blue"), "width": .double(4)]),
+      "left": .map(["color": .string("yellow"), "width": .double(5)]),
+    ]))
+
+    XCTAssertEqual(border?.top?.width, 2)
+    XCTAssertEqual(border?.right?.width, 3)
+    XCTAssertEqual(border?.bottom?.width, 4)
+    XCTAssertEqual(border?.left?.width, 5)
+  }
 }
