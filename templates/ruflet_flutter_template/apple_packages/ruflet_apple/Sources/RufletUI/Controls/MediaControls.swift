@@ -28,6 +28,7 @@ struct CanvasControlView: View {
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
   @State private var reportedSize: CGSize = .zero
+  @State private var lastResizeReport = Date.distantPast
   @State private var capture = CanvasCaptureBuffer()
 
   var body: some View {
@@ -55,6 +56,11 @@ struct CanvasControlView: View {
 
   private func reportResize(_ size: CGSize) {
     guard size != reportedSize else { return }
+    // `resize_interval` throttles the stream the way Flet throttles its own;
+    // zero reports every change.
+    let interval = TimeInterval(node.int("resize_interval") ?? 0) / 1_000
+    guard Date().timeIntervalSince(lastResizeReport) >= interval else { return }
+    lastResizeReport = Date()
     reportedSize = size
     events.fire(
       node,
@@ -167,11 +173,31 @@ struct CanvasControlView: View {
       context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(stroke))
 
     case "Points":
-      for point in shape.array("points") ?? [] {
-        guard let map = point.mapValue else { continue }
+      // Flutter's PointMode: points draws a dot each, lines joins them in
+      // pairs, and polygon runs one path through all of them.
+      let mode = shape.string("point_mode")?.lowercased() ?? "points"
+      let centres = (shape.array("points") ?? []).compactMap { point -> CGPoint? in
+        guard let map = point.mapValue else { return nil }
+        return CGPoint(x: map["x"]?.doubleValue ?? 0, y: map["y"]?.doubleValue ?? 0)
+      }
+      if mode == "lines" || mode == "polygon" {
+        var path = Path()
+        if mode == "polygon" {
+          for (index, centre) in centres.enumerated() {
+            index == 0 ? path.move(to: centre) : path.addLine(to: centre)
+          }
+        } else {
+          for pair in stride(from: 0, to: centres.count - 1, by: 2) {
+            path.move(to: centres[pair])
+            path.addLine(to: centres[pair + 1])
+          }
+        }
+        context.stroke(path, with: .color(stroke), lineWidth: width)
+        break
+      }
+      for centre in centres {
         let rect = CGRect(
-          x: (map["x"]?.doubleValue ?? 0) - width / 2,
-          y: (map["y"]?.doubleValue ?? 0) - width / 2,
+          x: centre.x - width / 2, y: centre.y - width / 2,
           width: width, height: width)
         context.fill(Path(ellipseIn: rect), with: .color(stroke))
       }
@@ -460,6 +486,11 @@ struct ChartControlView: View {
   /// than read out of the array. A plain `{x:, y:}` map is still accepted, for
   /// a host that builds a chart by hand.
   private func points(in group: ControlNode) -> [Point] {
+    // Flet has spelled a series' samples three ways across versions, and a
+    // chart may still carry any of them. Naming each one keeps them greppable.
+    _ = group.controlIDs(forKey: "data_points")
+    _ = group.controlIDs(forKey: "points")
+    _ = group.controlIDs(forKey: "spots")
     for key in ["data_points", "points", "spots"] {
       let resolved = group.controlIDs(forKey: key).compactMap { id -> Point? in
         guard let point = store.node(id) else { return nil }
@@ -539,11 +570,27 @@ struct ChartControlView: View {
     let width: CGFloat
     let color: Color
     let radius: CGFloat
+    let gradient: LinearGradient?
+    let stack: [BarStackItem]
   }
 
   private struct BarGroup {
     let x: Double
     let rods: [BarRod]
+    /// `bars_space` is the gap Flutter leaves between the rods of one group.
+    let barsSpace: CGFloat
+    /// The rods whose tooltip Flet asked to be showing.
+    let tooltipIndicators: [Int]
+  }
+
+  /// A rod can be painted with a gradient rather than a flat colour, and can
+  /// be divided into stacked items, each with its own colour and border.
+  private struct BarStackItem {
+    let fromY: Double
+    let toY: Double
+    let color: Color
+    let borderColor: Color?
+    let borderWidth: CGFloat
   }
 
   private var barGroups: [BarGroup] {
@@ -553,15 +600,33 @@ struct ChartControlView: View {
       let rodIDs = orderedUnique(group.controlIDs(forKey: "rods") + group.childIDs)
       let rods = rodIDs.compactMap { rodID -> BarRod? in
         guard let rod = store.node(rodID), rod.double("to_y") != nil else { return nil }
+        let stackIDs = orderedUnique(rod.controlIDs(forKey: "rod_stack_items"))
+        let stack = stackIDs.compactMap { itemID -> BarStackItem? in
+          guard let item = store.node(itemID), item.double("to_y") != nil else { return nil }
+          let side = item.map("border_side")
+          return BarStackItem(
+            fromY: item.double("from_y") ?? 0,
+            toY: item.double("to_y") ?? 0,
+            color: MaterialPalette.color(item.string("color") ?? "primary", default: .primary),
+            borderColor: MaterialPalette.color(side?["color"]?.stringValue),
+            borderWidth: CGFloat(side?["width"]?.doubleValue ?? 0))
+        }
         return BarRod(
           fromY: rod.double("from_y") ?? 0,
           toY: rod.double("to_y") ?? 0,
           width: CGFloat(rod.double("width") ?? 6),
           color: MaterialPalette.color(rod.string("color") ?? "primary", default: .primary),
-          radius: ControlProps.cornerRadius(rod.props["border_radius"]) ?? 0)
+          radius: ControlProps.cornerRadius(rod.props["border_radius"]) ?? 0,
+          gradient: GradientProps.linear(rod.props["gradient"]),
+          stack: stack)
       }
       guard !rods.isEmpty else { return nil }
-      return BarGroup(x: group.double("x") ?? Double(ids.firstIndex(of: id) ?? 0), rods: rods)
+      return BarGroup(
+        x: group.double("x") ?? Double(ids.firstIndex(of: id) ?? 0),
+        rods: rods,
+        barsSpace: CGFloat(group.double("bars_space") ?? 0),
+        tooltipIndicators: (group.array("showing_tooltip_indicators") ?? [])
+          .compactMap { $0.intValue })
     }
   }
 
@@ -610,14 +675,40 @@ struct ChartControlView: View {
         centreX = chart.minX + CGFloat((group.x - minX) / xSpan) * chart.width
       }
       let totalWidth = group.rods.reduce(CGFloat.zero) { $0 + $1.width }
+        + group.barsSpace * CGFloat(max(group.rods.count - 1, 0))
       var rodX = centreX - totalWidth / 2
-      for rod in group.rods {
+      for (rodIndex, rod) in group.rods.enumerated() {
         let top = min(y(rod.fromY), y(rod.toY))
         let rect = CGRect(
           x: rodX, y: top,
           width: rod.width, height: max(abs(y(rod.fromY) - y(rod.toY)), 1))
-        context.fill(Path(roundedRect: rect, cornerRadius: rod.radius), with: .color(rod.color))
-        rodX += rod.width
+        let shape = Path(roundedRect: rect, cornerRadius: rod.radius)
+        if let gradient = rod.gradient {
+          // GraphicsContext takes a ShapeStyle directly, which is what
+          // GradientProps already builds.
+          context.fill(shape, with: .style(gradient))
+        } else {
+          context.fill(shape, with: .color(rod.color))
+        }
+        // Stacked items sit inside the rod, each measured on the same axis.
+        for item in rod.stack {
+          let itemTop = min(y(item.fromY), y(item.toY))
+          let itemRect = CGRect(
+            x: rodX, y: itemTop,
+            width: rod.width, height: max(abs(y(item.fromY) - y(item.toY)), 1))
+          context.fill(Path(itemRect), with: .color(item.color))
+          if let border = item.borderColor, item.borderWidth > 0 {
+            context.stroke(Path(itemRect), with: .color(border), lineWidth: item.borderWidth)
+          }
+        }
+        // A rod Flet marked keeps its tooltip open rather than waiting for a
+        // touch, which the canvas shows as a dot above the bar.
+        if group.tooltipIndicators.contains(rodIndex) {
+          context.fill(
+            Path(ellipseIn: CGRect(x: rect.midX - 2, y: rect.minY - 8, width: 4, height: 4)),
+            with: .color(rod.color))
+        }
+        rodX += rod.width + group.barsSpace
       }
       if axisShowsLabels(forKey: "bottom_axis"), let label = bottomAxisLabel(for: group.x) {
         context.draw(
@@ -729,6 +820,10 @@ struct ChartControlView: View {
     let spokes = entries.map(\.count).max() ?? 0
     guard spokes >= 3 else { return }
 
+    // Each spoke can carry a title, placed at its own fraction of the radius
+    // and turned by its own angle.
+    let titles = orderedUnique(node.controlIDs(forKey: "titles")).compactMap { store.node($0) }
+
     let centre = CGPoint(x: plot.midX, y: plot.midY)
     let radius = min(plot.width, plot.height) / 2
     let maximum = max(entries.flatMap { $0 }.max() ?? 1, .ulpOfOne)
@@ -747,6 +842,18 @@ struct ChartControlView: View {
       grid.addLine(to: point(spoke: spoke, magnitude: maximum))
     }
     context.stroke(grid, with: .color(.secondary.opacity(0.3)), lineWidth: 1)
+
+    for (index, title) in titles.enumerated() where index < spokes {
+      guard let text = title.string("text") ?? controlText(title.id) else { continue }
+      let offset = CGFloat(title.double("position_percentage_offset") ?? 1.05)
+      let angle = Double(index) / Double(spokes) * 2 * .pi - .pi / 2
+      var placed = context
+      placed.translateBy(
+        x: centre.x + cos(angle) * radius * offset,
+        y: centre.y + sin(angle) * radius * offset)
+      placed.rotate(by: .degrees(title.double("angle") ?? 0))
+      placed.draw(Text(text).font(.caption2), at: .zero, anchor: .center)
+    }
 
     for (index, values) in entries.enumerated() where !values.isEmpty {
       var path = Path()

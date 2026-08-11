@@ -1622,6 +1622,7 @@ struct DropdownControlView: View {
       #endif
       RufletFormFieldSlot(node: node, key: "selected_suffix", styleKey: "text_style")
       RufletFormFieldSlot(node: node, key: "selected_trailing_icon")
+      RufletFormFieldSlot(node: node, key: "helper_text", styleKey: "helper_style")
       Menu {
         ForEach(matching(options), id: \.id) { option in
           Button {
