@@ -423,11 +423,13 @@ public final class SecureStorageService: RufletStreamingService {
   private let service = Bundle.main.bundleIdentifier ?? "com.izeesoft.ruflet"
   private var targetID: Int?
   private var context: RufletServiceContext?
+  private var control: ControlNode?
   private var protectedDataObservers: [NSObjectProtocol] = []
 
   public init() {}
 
   public func activate(node: ControlNode, context: RufletServiceContext) {
+    control = node
     guard node.handlesEvent("change") else { return }
     targetID = node.id
     self.context = context
@@ -547,11 +549,49 @@ public final class SecureStorageService: RufletStreamingService {
   }
 
   private func query(key: String) -> [String: Any] {
-    [
+    var query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
       kSecAttrService as String: service,
       kSecAttrAccount as String: key
     ]
+    // Flet carries one options map per platform and the engine reads its own.
+    // `android_options`, `web_options` and `windows_options` describe stores
+    // this renderer never reaches, so they are carried and ignored, exactly as
+    // Flutter ignores the ones that are not its platform.
+    if let options = appleOptions {
+      if let group = options["group_id"]?.stringValue ?? options["groupId"]?.stringValue {
+        query[kSecAttrAccessGroup as String] = group
+      }
+      if let account = options["account_name"]?.stringValue {
+        query[kSecAttrService as String] = account
+      }
+      if let accessibility = options["accessibility"]?.stringValue {
+        query[kSecAttrAccessible as String] = Self.accessibility(accessibility)
+      }
+      if options["synchronizable"]?.boolValue == true {
+        query[kSecAttrSynchronizable as String] = kCFBooleanTrue
+      }
+    }
+    return query
+  }
+
+  private var appleOptions: [String: RufletValue]? {
+    #if os(macOS)
+      return control?.map("macos_options") ?? control?.map("ios_options")
+    #else
+      return control?.map("ios_options") ?? control?.map("macos_options")
+    #endif
+  }
+
+  /// Flutter's `KeychainAccessibility` case names.
+  private static func accessibility(_ name: String) -> CFString {
+    switch name.lowercased().replacingOccurrences(of: "_", with: "") {
+    case "passcode": return kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly
+    case "unlockedthisdevice": return kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+    case "firstunlock": return kSecAttrAccessibleAfterFirstUnlock
+    case "firstunlockthisdevice": return kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+    default: return kSecAttrAccessibleWhenUnlocked
+    }
   }
 
   private func reportProtectedDataAvailability() {

@@ -246,15 +246,9 @@ struct CupertinoSelectionControlView: View {
   @Environment(\.rufletEvents) private var events
 
   var body: some View {
-    Button {
-      events.commit(node, value: .bool(!(node.bool("value") ?? false)))
-    } label: {
-      HStack(spacing: 8) {
-        Image(systemName: symbol)
-          .foregroundColor(
-            (node.bool("value") ?? false)
-              ? MaterialPalette.color(node.string("active_color"))
-              : .secondary)
+    Button(action: advance) {
+      HStack(spacing: CGFloat(node.double("spacing") ?? 8)) {
+        mark
         if let label = node.string("label") { Text(label) }
       }
     }
@@ -263,11 +257,71 @@ struct CupertinoSelectionControlView: View {
     .disabled(node.bool("disabled") ?? false)
   }
 
+  /// A Cupertino checkbox is a rounded square when Ruby gave it a shape, and
+  /// its tick and outline are named separately from the fill.
+  @ViewBuilder
+  private var mark: some View {
+    let on = node.bool("value") ?? false
+    let indeterminate = node.bool("tristate") == true && node.props["value"]?.isNull == true
+    ZStack {
+      if kind == .checkbox, let radius = ControlProps.cornerRadius(node.map("shape")?["radius"]) {
+        RoundedRectangle(cornerRadius: radius)
+          .fill(on ? MaterialPalette.color(node.string("active_color"), default: .accentColor) : .clear)
+        RoundedRectangle(cornerRadius: radius)
+          .strokeBorder(outlineColor, lineWidth: outlineWidth)
+        if on || indeterminate {
+          Image(systemName: indeterminate ? "minus" : "checkmark")
+            .font(.system(size: 12, weight: .bold))
+            .foregroundColor(MaterialPalette.color(node.string("check_color"), default: .white))
+        }
+      } else {
+        Image(systemName: symbol)
+          .foregroundColor(
+            on
+              ? MaterialPalette.color(node.string("active_color"))
+              : MaterialPalette.color(node.string("inactive_color"), default: .secondary))
+      }
+    }
+    .frame(width: 20, height: 20)
+  }
+
+  private var outlineColor: Color {
+    MaterialPalette.color(node.map("border_side")?["color"]?.stringValue, default: .secondary)
+  }
+
+  private var outlineWidth: CGFloat {
+    CGFloat(node.map("border_side")?["width"]?.doubleValue ?? 1.5)
+  }
+
+  /// `tristate` cycles false to true to null the way Material's checkbox does.
+  private func advance() {
+    // A toggleable radio can be turned back off; Flutter's plain one cannot.
+    if kind == .radio, node.bool("value") == true, node.bool("toggleable") != true { return }
+    guard kind == .checkbox, node.bool("tristate") == true else {
+      events.commit(node, value: .bool(!(node.bool("value") ?? false)))
+      return
+    }
+    let current = node.props["value"]
+    let next: RufletValue
+    if current == nil || current!.isNull {
+      next = .bool(false)
+    } else if current!.boolValue == false {
+      next = .bool(true)
+    } else {
+      next = .null
+    }
+    events.commit(node, value: next)
+  }
+
+  /// `use_checkmark_style` draws a Cupertino radio as a tick rather than a
+  /// filled dot, which is what iOS uses in a list.
   private var symbol: String {
     let on = node.bool("value") ?? false
     switch kind {
     case .checkbox: return on ? "checkmark.circle.fill" : "circle"
-    case .radio: return on ? "largecircle.fill.circle" : "circle"
+    case .radio:
+      if node.bool("use_checkmark_style") == true { return on ? "checkmark" : "" }
+      return on ? "largecircle.fill.circle" : "circle"
     }
   }
 }
