@@ -300,9 +300,18 @@ struct StackControlView: View {
           PositionedChild(node: child, alignment: alignment)
         } else {
           ControlView(id: childID, axis: .none)
+            // `fit: expand` makes every non-positioned child fill the stack;
+            // `passthrough` leaves the constraints alone.
+            .frame(
+              maxWidth: expandsChildren ? .infinity : nil,
+              maxHeight: expandsChildren ? .infinity : nil)
         }
       }
     }
+  }
+
+  private var expandsChildren: Bool {
+    node.string("fit")?.lowercased() == "expand"
   }
 
   private func isPositioned(_ child: ControlNode) -> Bool {

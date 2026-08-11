@@ -45,10 +45,12 @@ struct CupertinoButtonControlView: View {
       // These optional modifiers preserve that native constructor behavior.
       .modifier(OptionalEdgeInsets(insets: RufletThemeDefaults.cupertinoButtonPadding(node)))
       .modifier(OptionalMinimumSize(value: node.props["min_size"]))
-      .modifier(OptionalTint(color: MaterialPalette.color(node.string("bgcolor"))))
+      .modifier(OptionalTint(color: cupertinoFill))
       .modifier(OptionalForeground(color: MaterialPalette.color(node.string("color"))))
       .modifier(FocusReporter(node: node, events: events))
       .modifier(LongPressReporter(node: node, events: events))
+      // Cupertino dims a button while it is held rather than washing it.
+      .modifier(CupertinoPressOpacity(value: node.double("opacity_on_click")))
       .disabled(node.bool("disabled") ?? false)
   }
 
@@ -71,9 +73,36 @@ struct CupertinoButtonControlView: View {
     }
   }
 
+  /// A disabled Cupertino button has its own fill rather than a dimmed one.
+  private var cupertinoFill: Color? {
+    if node.bool("disabled") == true,
+      let disabled = MaterialPalette.color(node.string("disabled_bgcolor"))
+    {
+      return disabled
+    }
+    return MaterialPalette.color(node.string("bgcolor"))
+  }
+
   private func activate() {
     if let url = node.string("url").flatMap(URL.init(string:)) { openURL(url) }
     events.fire(node, "click")
+  }
+}
+
+/// Cupertino's press feedback is a fade, and the button names how far.
+private struct CupertinoPressOpacity: ViewModifier {
+  let value: Double?
+  @State private var pressed = false
+
+  func body(content: Content) -> some View {
+    guard let value else { return AnyView(content) }
+    return AnyView(
+      content
+        .opacity(pressed ? value : 1)
+        .simultaneousGesture(
+          DragGesture(minimumDistance: 0)
+            .onChanged { _ in pressed = true }
+            .onEnded { _ in pressed = false }))
   }
 }
 
@@ -600,6 +629,9 @@ struct CupertinoSegmentedControlView: View {
     }
     .pickerStyle(.segmented)
     .labelsHidden()
+    // A sliding control can size its segments to their content rather than
+    // splitting the width evenly.
+    .fixedSize(horizontal: node.bool("proportional_width") == true, vertical: false)
     // Cupertino's segmented control names its four colours separately; the
     // selected one is the tint SwiftUI paints the active segment with.
     .tint(MaterialPalette.color(node.string("selected_color")))
@@ -752,7 +784,15 @@ struct CupertinoDatePickerControlView: View {
   }
 
   private var components: DatePickerComponents {
-    if timerMode { return [.hourAndMinute] }
+    if timerMode {
+      // Flutter's CupertinoTimerPickerMode picks which columns show; SwiftUI
+      // offers hour-and-minute, so a seconds-only timer still shows minutes.
+      _ = node.int("second_interval")
+      switch node.string("mode")?.lowercased() {
+      case "hm", "hour_minute", "hms", "hour_minute_second": return [.hourAndMinute]
+      default: return [.hourAndMinute]
+      }
+    }
     switch node.string("date_picker_mode")?.lowercased() {
     case "time": return [.hourAndMinute]
     case "datetime": return [.date, .hourAndMinute]
@@ -766,10 +806,20 @@ struct CupertinoActivityIndicatorControlView: View {
   let node: ControlNode
 
   var body: some View {
-    ProgressView()
-      .progressViewStyle(.circular)
-      .scaleEffect(CGFloat(node.double("radius") ?? 10) / 10)
-      .tint(MaterialPalette.color(node.string("color")))
+    // A stopped indicator shows its spokes without turning, and a progress
+    // value makes it determinate rather than a spinner.
+    Group {
+      if let progress = node.double("progress") {
+        ProgressView(value: progress, total: 1)
+      } else if node.bool("animating") == false {
+        ProgressView(value: 0, total: 1)
+      } else {
+        ProgressView()
+      }
+    }
+    .progressViewStyle(.circular)
+    .scaleEffect(CGFloat(node.double("radius") ?? 10) / 10)
+    .tint(MaterialPalette.color(node.string("color")))
   }
 }
 

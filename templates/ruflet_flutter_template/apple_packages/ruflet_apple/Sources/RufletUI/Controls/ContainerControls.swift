@@ -782,6 +782,10 @@ struct SafeAreaControlView: View {
     // SwiftUI already applies the active safe area. Match Flet's property
     // names so a control can explicitly opt an edge out of that protection.
     .modifier(SafeAreaEdges(node: node))
+    // `maintain_bottom_view_padding` keeps the bottom inset while the
+    // keyboard is up rather than letting it collapse.
+    .modifier(
+      MaintainBottomInset(enabled: node.bool("maintain_bottom_view_padding") == true))
   }
 }
 

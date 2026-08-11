@@ -688,3 +688,32 @@ extension View {
     }
   }
 }
+
+
+/// `maintain_bottom_view_padding` holds the bottom safe-area inset while the
+/// keyboard is up, which is what Flutter's SafeArea flag does.
+struct MaintainBottomInset: ViewModifier {
+  let enabled: Bool
+
+  func body(content: Content) -> some View {
+    if enabled {
+      content.ignoresSafeArea(.keyboard, edges: .bottom)
+    } else {
+      content
+    }
+  }
+}
+
+/// Material's optical-size axis. SF Symbols carry the same idea in the glyph's
+/// point size, so the resolved symbol is scaled against the nominal 24.
+struct IconOpticalSize: ViewModifier {
+  let value: Double?
+
+  func body(content: Content) -> some View {
+    if let value, value > 0 {
+      content.scaleEffect(CGFloat(value) / 24)
+    } else {
+      content
+    }
+  }
+}

@@ -526,6 +526,13 @@ struct HeroControlView: View {
       }
     }
     .matchedGeometryEffect(id: node.string("tag") ?? "hero-\(node.id)", in: namespace)
+    // Flutter can keep a hero flying while the user drives a back gesture;
+    // SwiftUI's matched geometry always does, so the flag only turns it off.
+    .transaction { transaction in
+      if node.bool("transition_on_user_gestures") == false {
+        transaction.disablesAnimations = true
+      }
+    }
   }
 }
 

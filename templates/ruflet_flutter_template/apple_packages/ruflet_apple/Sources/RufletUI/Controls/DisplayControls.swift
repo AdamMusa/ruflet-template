@@ -136,6 +136,9 @@ struct IconControlView: View {
 
     symbol(glyph)
       .modifier(IconFillAxis(filled: glyph.isFilled))
+      // Material's opsz axis; SF Symbols express the same idea as the glyph's
+      // own point size, so it scales the resolved symbol.
+      .modifier(IconOpticalSize(value: node.double("optical_size")))
       .modifier(IconShadows(value: node.props["shadows"]))
       .modifier(IconBlendMode(name: node.string("blend_mode")))
       .modifier(TapReporter(node: node, events: events))
