@@ -100,20 +100,18 @@ struct ViewControlView: View {
     let spacing = CGFloat(node.fletDouble("spacing"))
 
     VStack(spacing: 0) {
-      VStack(alignment: cross.horizontal, spacing: main.usesSpacers ? 0 : spacing) {
-        if main == .center || main == .end { Spacer(minLength: 0) }
-        ControlList(ids: node.childIDs, axis: .vertical)
-        if main == .center || main == .start { Spacer(minLength: 0) }
-      }
-      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-      .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets())
+      viewBody(main: main, cross: cross, spacing: spacing)
+      .padding(
+        ControlProps.edgeInsets(node.props["padding"])
+          ?? FletThemeDefaults.viewPadding)
       .modifier(ScrollableStack(node: node, axis: .vertical))
 
-      if let bottomBarID = node.controlID(forKey: "bottom_appbar") {
-        ControlView(id: bottomBarID, axis: .none)
-      }
+      // Flet's Scaffold uses navigation_bar ?? bottom_appbar: these are one
+      // bottomNavigationBar slot, never two stacked bars.
       if let navBarID = node.controlID(forKey: "navigation_bar") {
         ControlView(id: navBarID, axis: .none)
+      } else if let bottomBarID = node.controlID(forKey: "bottom_appbar") {
+        ControlView(id: bottomBarID, axis: .none)
       }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -139,6 +137,39 @@ struct ViewControlView: View {
     .overlay(floatingActionButton, alignment: fabAlignment)
     .modifier(DrawerPresenter(node: node))
     .modifier(DialogPresenter(host: node))
+  }
+
+  @ViewBuilder
+  private func viewBody(
+    main: ControlProps.MainAxisAlignment,
+    cross: ControlProps.CrossAxisAlignment,
+    spacing: CGFloat
+  ) -> some View {
+    if #available(iOS 16.0, macOS 13.0, *) {
+      FletFlexLayout(
+        axis: .vertical,
+        spacing: spacing,
+        mainAlignment: main,
+        crossAlignment: cross,
+        tight: false
+      ) {
+        ForEach(node.childIDs, id: \.self) { childID in
+          FletFlexChild(id: childID, axis: .vertical)
+        }
+      }
+      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    } else {
+      VStack(alignment: cross.horizontal, spacing: main.usesSpacers ? 0 : spacing) {
+        if main == .center || main == .end || main == .spaceAround || main == .spaceEvenly {
+          Spacer(minLength: 0)
+        }
+        ControlList(ids: node.childIDs, axis: .vertical)
+        if main == .center || main == .start || main == .spaceAround || main == .spaceEvenly {
+          Spacer(minLength: 0)
+        }
+      }
+      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
   }
 
   @ViewBuilder

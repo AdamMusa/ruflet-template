@@ -4,6 +4,17 @@ import RufletEngine
 import RufletProtocol
 
 final class FletThemeDefaultsTests: XCTestCase {
+  func testMaterialAppBarUsesFlutterToolbarHeightOnApple() {
+    XCTAssertEqual(FletThemeDefaults.appBarHeight(ControlNode(id: 1, type: "AppBar")), 56)
+  }
+
+  func testViewUsesFletConstructorPaddingWhenOmitted() {
+    XCTAssertEqual(FletThemeDefaults.viewPadding.top, 10)
+    XCTAssertEqual(FletThemeDefaults.viewPadding.leading, 10)
+    XCTAssertEqual(FletThemeDefaults.viewPadding.bottom, 10)
+    XCTAssertEqual(FletThemeDefaults.viewPadding.trailing, 10)
+  }
+
   func testAppleAppBarCentersOmittedTitleWithFewerThanTwoActions() {
     let noActions = ControlNode(id: 1, type: "AppBar")
     let oneAction = ControlNode(

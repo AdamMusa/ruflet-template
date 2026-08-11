@@ -9,6 +9,11 @@ import SwiftUI
 /// choose the native Apple metric or the equivalent Material colour role.
 /// Controls should never invent their own fallback colour or platform size.
 enum FletThemeDefaults {
+  /// View's Container uses `EdgeInsets.all(10)` when padding is omitted in
+  /// Flet's pinned renderer. This is a widget-constructor default, not a Ruby
+  /// DSL value, so it intentionally lives outside generated wire defaults.
+  static let viewPadding = EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10)
+
   static func colorToken(control: String, property: String) -> String? {
     switch (control, property) {
     case ("AppBar", "bgcolor"):
@@ -44,17 +49,13 @@ enum FletThemeDefaults {
   }
 
   static func appBarHeight(_ node: ControlNode) -> CGFloat {
-    // Use props directly: the generated semantic layer intentionally excludes
-    // Flutter constants such as kToolbarHeight (56), which are not Apple UI
-    // metrics.
+    // Material AppBar's preferred size is kToolbarHeight on every platform.
+    // Explicit CupertinoAppBar/CupertinoNavigationBar controls are rendered by
+    // the Cupertino family and retain native Apple metrics there.
     if let explicit = node.props["toolbar_height"]?.doubleValue {
       return CGFloat(explicit)
     }
-    #if os(iOS)
-      return 44
-    #else
-      return 52
-    #endif
+    return 56
   }
 
   /// Mirrors Flutter AppBar._getEffectiveCenterTitle(). Flet leaves
