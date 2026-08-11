@@ -1,4 +1,5 @@
 @testable import RufletUI
+import RufletProtocol
 import XCTest
 
 final class DisplayPluginParityTests: XCTestCase {
@@ -25,6 +26,17 @@ final class DisplayPluginParityTests: XCTestCase {
       XCTAssertEqual(descriptor?.classification, .visible)
       XCTAssertEqual(descriptor?.rendering, .nativeView)
     }
+  }
+
+  func testCanvasCaptureBufferReturnsFletBinaryAndClearsIt() {
+    var capture = CanvasCaptureBuffer()
+    XCTAssertEqual(capture.wireValue, .null)
+
+    capture.store(Data([0x89, 0x50, 0x4E, 0x47]))
+    XCTAssertEqual(capture.wireValue, .binary([0x89, 0x50, 0x4E, 0x47]))
+
+    capture.clear()
+    XCTAssertEqual(capture.wireValue, .null)
   }
 
   private func events(_ type: String) -> Set<String> {

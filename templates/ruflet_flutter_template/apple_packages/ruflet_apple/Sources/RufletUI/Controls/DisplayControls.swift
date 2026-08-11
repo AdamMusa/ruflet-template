@@ -364,19 +364,28 @@ struct MarkdownControlView: View {
     {
       Text(attributed)
         .modifier(SelectableText(enabled: node.fletBool("selectable")))
+        .environment(\.openURL, markdownURLAction)
         .onTapGesture {
           if node.handlesEvent("tap_text") {
-            events.fire(node, "tap_text", data: .string(source))
+            events.fire(node, "tap_text")
           }
         }
     } else {
       Text(source)
         .modifier(SelectableText(enabled: node.fletBool("selectable")))
+        .environment(\.openURL, markdownURLAction)
         .onTapGesture {
           if node.handlesEvent("tap_text") {
-            events.fire(node, "tap_text", data: .string(source))
+            events.fire(node, "tap_text")
           }
         }
+    }
+  }
+
+  private var markdownURLAction: OpenURLAction {
+    OpenURLAction { url in
+      events.fire(node, "tap_link", data: .string(url.absoluteString))
+      return node.fletBool("auto_follow_links") ? .systemAction : .handled
     }
   }
 }

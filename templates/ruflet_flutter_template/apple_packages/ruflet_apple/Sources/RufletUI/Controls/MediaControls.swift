@@ -2,6 +2,12 @@ import RufletEngine
 import RufletProtocol
 import SwiftUI
 
+#if canImport(UIKit)
+  import UIKit
+#elseif canImport(AppKit)
+  import AppKit
+#endif
+
 #if canImport(WebKit)
   import WebKit
 #endif
@@ -22,6 +28,7 @@ struct CanvasControlView: View {
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
   @State private var reportedSize: CGSize = .zero
+  @State private var capture = CanvasCaptureBuffer()
 
   var body: some View {
     ZStack {
@@ -43,6 +50,7 @@ struct CanvasControlView: View {
       }
     }
     .modifier(TapReporter(node: node, events: events))
+    .rufletCommandHandler(node.id, handler: handleCommand)
   }
 
   private func reportResize(_ size: CGSize) {
@@ -51,7 +59,53 @@ struct CanvasControlView: View {
     events.fire(
       node,
       "resize",
-      data: .map(["width": .double(size.width), "height": .double(size.height)]))
+      data: .map(["w": .double(size.width), "h": .double(size.height)]))
+  }
+
+  private func handleCommand(
+    _ call: RufletMethodCall,
+    completion: @escaping RufletMethodCompletion
+  ) {
+    switch call.name {
+    case "capture":
+      guard reportedSize.width > 0, reportedSize.height > 0 else {
+        completion(.success(.null))
+        return
+      }
+      guard #available(iOS 16.0, macOS 13.0, *) else {
+        completion(.failure(RufletServiceError.unavailable("Canvas capture requires iOS 16 or macOS 13")))
+        return
+      }
+      let renderer = ImageRenderer(content: captureSurface.frame(width: reportedSize.width, height: reportedSize.height))
+      renderer.scale = call.argument("pixel_ratio")?.doubleValue ?? 1
+      #if canImport(UIKit)
+        capture.store(renderer.uiImage?.pngData())
+      #elseif canImport(AppKit)
+        if let image = renderer.nsImage,
+           let tiff = image.tiffRepresentation,
+           let bitmap = NSBitmapImageRep(data: tiff) {
+          capture.store(bitmap.representation(using: .png, properties: [:]))
+        }
+      #endif
+      completion(.success(.null))
+    case "get_capture":
+      completion(.success(capture.wireValue))
+    case "clear_capture":
+      capture.clear()
+      completion(.success(.null))
+    default:
+      completion(.failure(rufletUnsupported(node.type, call)))
+    }
+  }
+
+  private var captureSurface: some View {
+    Canvas { context, size in
+      for shapeID in node.controlIDs(forKey: "shapes") + node.childIDs {
+        guard let shape = store.node(shapeID) else { continue }
+        draw(shape, in: &context, size: size)
+      }
+    }
+    .environmentObject(store)
   }
 
   private func draw(_ shape: ControlNode, in context: inout GraphicsContext, size: CGSize) {
@@ -195,6 +249,19 @@ struct CanvasControlView: View {
   }
 }
 
+/// The persistent image owned by a Flet Canvas between `capture` and
+/// `get_capture`. Kept independent of SwiftUI so command behavior is testable.
+struct CanvasCaptureBuffer: Equatable {
+  private(set) var png: Data?
+
+  mutating func store(_ data: Data?) { png = data }
+  mutating func clear() { png = nil }
+
+  var wireValue: RufletValue {
+    png.map { .binary(Array($0)) } ?? .null
+  }
+}
+
 /// The chart family, drawn from the same control trees Flet's chart widgets take.
 ///
 /// The chart controls do not share a wire shape: lines contain data series,
@@ -205,6 +272,7 @@ struct ChartControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
+  @State private var chartSize: CGSize = .zero
 
   var body: some View {
     Canvas { context, size in
@@ -225,10 +293,76 @@ struct ChartControlView: View {
       }
     }
     .frame(minHeight: 120)
-    .onTapGesture {
-      if node.fletBool("interactive") || node.type == "PieChart" {
-        events.fire(node, "event", data: .map(["type": .string("tap")]))
+    .background {
+      GeometryReader { geometry in
+        Color.clear
+          .onAppear { chartSize = geometry.size }
+          .onChange(of: geometry.size) { chartSize = $0 }
       }
+    }
+    .gesture(
+      SpatialTapGesture().onEnded { event in
+        guard node.fletBool("interactive") || node.type == "PieChart" else { return }
+        events.fire(node, "event", data: chartEvent(at: event.location))
+      })
+  }
+
+  /// Matches the maps produced by the Flet chart plugin's `*EventData.toMap()`.
+  /// Swift Charts does not expose fl_chart's response objects, so hit indices
+  /// are resolved against the same geometry used by this renderer.
+  private func chartEvent(at location: CGPoint) -> RufletValue {
+    let xFraction = max(0, min(location.x / max(chartSize.width, 1), 0.999_999))
+    switch node.type {
+    case "BarChart":
+      let groupIndex = min(Int(xFraction * CGFloat(barGroups.count)), max(barGroups.count - 1, 0))
+      return .map([
+        "type": .string("tapUp"), "group_index": barGroups.isEmpty ? .null : .int(Int64(groupIndex)),
+        "rod_index": barGroups.isEmpty ? .null : .int(0), "stack_item_index": .null,
+      ])
+    case "PieChart":
+      let sections = orderedUnique(node.controlIDs(forKey: "sections") + node.childIDs)
+        .compactMap { store.node($0) }.filter { ($0.double("value") ?? 0) > 0 }
+      let centre = CGPoint(x: chartSize.width / 2, y: chartSize.height / 2)
+      var angle = atan2(location.y - centre.y, location.x - centre.x) + .pi / 2
+      if angle < 0 { angle += 2 * .pi }
+      let total = sections.reduce(0.0) { $0 + ($1.double("value") ?? 0) }
+      var cursor = 0.0
+      var hit: Int?
+      for (index, section) in sections.enumerated() {
+        cursor += ((section.double("value") ?? 0) / max(total, .ulpOfOne)) * 2 * .pi
+        if angle <= cursor { hit = index; break }
+      }
+      return .map([
+        "type": .string("tapUp"), "section_index": hit.map { .int(Int64($0)) } ?? .null,
+        "local_x": .double(location.x), "local_y": .double(location.y),
+      ])
+    case "ScatterChart", "CandlestickChart":
+      let key = "spots"
+      let count = orderedUnique(node.controlIDs(forKey: key) + node.childIDs).count
+      let index = min(Int(xFraction * CGFloat(count)), max(count - 1, 0))
+      return .map([
+        "type": .string("tapUp"), "spot_index": count == 0 ? .null : .int(Int64(index)),
+      ])
+    case "RadarChart":
+      let sets = node.controlIDs(forKey: "data_sets").compactMap { store.node($0) }
+      let values = sets.first?.controlIDs(forKey: "data_entries").compactMap {
+        store.node($0)?.double("value")
+      } ?? []
+      let centre = CGPoint(x: chartSize.width / 2, y: chartSize.height / 2)
+      var angle = atan2(location.y - centre.y, location.x - centre.x) + .pi / 2
+      if angle < 0 { angle += 2 * .pi }
+      let entry = values.isEmpty ? nil : min(Int(angle / (2 * .pi) * Double(values.count)), values.count - 1)
+      return .map([
+        "type": .string("tapUp"), "data_set_index": sets.isEmpty ? .null : .int(0),
+        "entry_index": entry.map { .int(Int64($0)) } ?? .null,
+        "entry_value": entry.map { .double(values[$0]) } ?? .null,
+      ])
+    default:
+      let spots = lineSeries.enumerated().map { barIndex, series -> RufletValue in
+        let index = min(Int(xFraction * CGFloat(series.points.count)), max(series.points.count - 1, 0))
+        return .map(["bar_index": .int(Int64(barIndex)), "spot_index": .int(Int64(index))])
+      }
+      return .map(["type": .string("tapUp"), "spots": .array(spots)])
     }
   }
 
