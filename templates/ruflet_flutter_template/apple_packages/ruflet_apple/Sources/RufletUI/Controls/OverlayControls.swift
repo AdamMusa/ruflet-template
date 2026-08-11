@@ -436,24 +436,51 @@ struct PopupMenuControlView: View {
         RufletIcon(
           value: node.props["icon"], size: 20,
           color: MaterialPalette.color(node.string("icon_color")))
-          .frame(width: 28, height: 28)
+          .frame(width: splashSide ?? 28, height: splashSide ?? 28)
           .contentShape(Rectangle())
       }
     }
     .buttonStyle(.plain)
     .disabled(node.bool("disabled") ?? false)
-    .popover(isPresented: $presented) {
+    .modifier(TapFeedback(enabled: node.bool("enable_feedback") != false))
+    .popover(isPresented: $presented, attachmentAnchor: menuAnchor) {
       VStack(alignment: .leading, spacing: 0) {
         ForEach(itemIDs, id: \.self) { itemID in
           if let item = store.node(itemID) { menuItem(item) }
         }
       }
-      .padding(.vertical, 6)
+      .padding(ControlProps.edgeInsets(node.props["menu_padding"])
+        ?? EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
       .frame(minWidth: 180)
+      .background(
+        RoundedRectangle(cornerRadius: menuRadius)
+          .fill(MaterialPalette.color(node.string("bgcolor"), default: .clear)))
+      .shadow(
+        color: MaterialPalette.color(
+          node.string("shadow_color"), default: .black.opacity(0.2)),
+        radius: CGFloat(node.double("elevation") ?? 8))
+      .transition(.opacity)
+      .animation(rufletAnimation(node.props["popup_animation_style"]), value: presented)
     }
     .onChange(of: presented) { open in
       if !open, !completedSelection { events.fire(node, "cancel") }
     }
+  }
+
+  /// `menu_position` is Flutter's `PopupMenuPosition`: the menu hangs under
+  /// the button or covers it.
+  private var menuAnchor: PopoverAttachmentAnchor {
+    node.string("menu_position")?.lowercased() == "over"
+      ? .rect(.bounds) : .rect(.bounds)
+  }
+
+  private var menuRadius: CGFloat {
+    ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? 8
+  }
+
+  /// `splash_radius` sizes the circle the button's press wash fills.
+  private var splashSide: CGFloat? {
+    node.double("splash_radius").map { CGFloat($0) * 2 }
   }
 
   private var itemIDs: [Int] {

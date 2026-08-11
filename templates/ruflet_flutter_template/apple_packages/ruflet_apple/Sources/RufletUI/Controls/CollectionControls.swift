@@ -237,6 +237,23 @@ private struct AutoScrollToEnd: ViewModifier {
   }
 }
 
+/// `overlay_color` is the wash Material paints over a pressed tab.
+private struct TabOverlayColor: ViewModifier {
+  let color: Color?
+  @State private var pressed = false
+
+  func body(content: Content) -> some View {
+    guard let color else { return AnyView(content) }
+    return AnyView(
+      content
+        .background(pressed ? color : .clear)
+        .simultaneousGesture(
+          DragGesture(minimumDistance: 0)
+            .onChanged { _ in pressed = true }
+            .onEnded { _ in pressed = false }))
+  }
+}
+
 /// `PageView` — a horizontally paged carousel.
 struct PageViewControlView: View {
   let node: ControlNode
@@ -667,7 +684,69 @@ struct TabBarControlView: View {
         .frame(height: metrics.dividerHeight)
     }
     .padding(metrics.padding)
+    .frame(maxWidth: .infinity, alignment: stripAlignment)
+    .overlay(alignment: .bottomLeading) {
+      GeometryReader { proxy in
+        indicator(width: proxy.size.width / CGFloat(max(node.controlIDs(forKey: "tabs").count, 1)))
+          .offset(
+            x: proxy.size.width / CGFloat(max(node.controlIDs(forKey: "tabs").count, 1))
+              * CGFloat(selection?.wrappedValue ?? 0),
+            y: proxy.size.height - 2)
+          .animation(indicatorAnimation, value: selection?.wrappedValue)
+      }
+      .allowsHitTesting(false)
+    }
+    .modifier(
+      TabOverlayColor(color: MaterialPalette.color(node.string("overlay_color"))))
+    .modifier(TapFeedback(enabled: node.bool("enable_feedback") != false))
     .rufletCommandHandler(node.id, handler: handleCommand)
+  }
+
+  /// `tab_alignment` places the strip when it does not fill its width;
+  /// `secondary` is Material's quieter bar, which drops the pill indicator.
+  /// A selected tab takes `label_text_style`, the rest take the unselected
+  /// one; Material keeps them separate rather than dimming a single style.
+  private func labelStyle(selected: Bool) -> RufletTextStyle {
+    guard selected else {
+      return RufletTextStyle(node: node, styleKey: "unselected_label_text_style")
+    }
+    return RufletTextStyle(node: node, styleKey: "label_text_style")
+  }
+
+  /// The indicator under the selected tab. `indicator` is a full BoxDecoration
+  /// when Ruby supplies one; otherwise the colour and weight draw the bar,
+  /// sized to the label or the whole tab.
+  @ViewBuilder
+  private func indicator(width: CGFloat) -> some View {
+    let decoration = node.map("indicator")
+    let color = MaterialPalette.color(
+      decoration?["color"]?.stringValue ?? node.string("indicator_color"),
+      default: .accentColor)
+    let height = CGFloat(node.double("indicator_thickness") ?? 2)
+    if node.bool("secondary") == true {
+      // Material's secondary bar spans the tab rather than hugging the label.
+      Rectangle().fill(color).frame(height: height)
+    } else {
+      RoundedRectangle(
+        cornerRadius: ControlProps.cornerRadius(node.props["splash_border_radius"]) ?? height / 2)
+        .fill(color)
+        .frame(
+          width: node.string("indicator_size")?.lowercased() == "tab" ? width : nil,
+          height: height)
+    }
+  }
+
+  private var indicatorAnimation: Animation? {
+    rufletAnimation(node.props["indicator_animation"])
+  }
+
+  private var stripAlignment: Alignment {
+    switch node.string("tab_alignment")?.lowercased() {
+    case "start", "startoffset": return .leading
+    case "center": return .center
+    case "fill": return .center
+    default: return .leading
+    }
   }
 
   private func strip(_ tabs: [ControlNode]) -> some View {
@@ -683,6 +762,7 @@ struct TabBarControlView: View {
               index == selection?.wrappedValue
                 ? node.string("label_color") : node.string("unselected_label_color"),
               default: index == selection?.wrappedValue ? .accentColor : .secondary))
+            .rufletTextStyle(labelStyle(selected: index == selection?.wrappedValue))
             .padding(metrics.labelPadding)
             .frame(minHeight: CollectionDefaults.tabHeight(tab))
             .overlay(alignment: .bottom) {

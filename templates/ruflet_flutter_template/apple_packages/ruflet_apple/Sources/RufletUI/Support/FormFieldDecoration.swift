@@ -131,3 +131,24 @@ struct RufletFormFieldDecoration: ViewModifier {
       ?? (node.bool("dense") == true ? 4 : 8)
   }
 }
+
+/// `menu_style` is Flutter's `MenuStyle`: the surface a dropdown or popup
+/// menu is drawn on, carried as a map of the same names a Container uses.
+struct MenuSurfaceStyle: ViewModifier {
+  let value: RufletValue?
+
+  func body(content: Content) -> some View {
+    guard let style = value?.mapValue else { return AnyView(content) }
+    let radius = ControlProps.cornerRadius(style["shape"]?.mapValue?["radius"]) ?? 0
+    return AnyView(
+      content
+        .background(
+          RoundedRectangle(cornerRadius: radius)
+            .fill(MaterialPalette.color(style["bgcolor"]?.stringValue, default: .clear)))
+        .padding(ControlProps.edgeInsets(style["padding"]) ?? EdgeInsets())
+        .shadow(
+          color: MaterialPalette.color(
+            style["shadow_color"]?.stringValue, default: .black.opacity(0.2)),
+          radius: CGFloat(style["elevation"]?.doubleValue ?? 0)))
+  }
+}

@@ -1588,7 +1588,7 @@ struct DropdownControlView: View {
           selection: $selection,
           placeholder: node.string("hint_text") ?? "",
           secure: false,
-          traits: RufletTextInputTraits(node: node),
+          traits: dropdownTraits,
           onTap: { events.fire(node, "click") },
           onTapOutside: {},
           onSubmit: { _ in })
@@ -1596,8 +1596,9 @@ struct DropdownControlView: View {
         TextField(node.string("hint_text") ?? "", text: dropdownText)
       #endif
       RufletFormFieldSlot(node: node, key: "selected_suffix", styleKey: "text_style")
+      RufletFormFieldSlot(node: node, key: "selected_trailing_icon")
       Menu {
-        ForEach(options, id: \.id) { option in
+        ForEach(matching(options), id: \.id) { option in
           Button {
             select(option)
           } label: {
@@ -1611,9 +1612,12 @@ struct DropdownControlView: View {
       .frame(maxHeight: node.double("menu_height").map { CGFloat($0) })
     }
     .padding(contentPadding)
+    .padding(ControlProps.edgeInsets(node.props["expanded_insets"]) ?? EdgeInsets())
     .background(RoundedRectangle(cornerRadius: 8).fill(fieldBackground))
     .overlay(borderStroke)
     .frame(width: node.double("menu_width").map { CGFloat($0) })
+    .shadow(radius: CGFloat(node.double("elevation") ?? 0))
+    .modifier(MenuSurfaceStyle(value: node.props["menu_style"]))
     .modifier(RufletFormFieldDecoration(node: node))
     .onAppear {
       focused = node.bool("autofocus") == true
@@ -1648,6 +1652,34 @@ struct DropdownControlView: View {
     if let explicit = ControlProps.edgeInsets(node.props["content_padding"]) { return explicit }
     let inset: CGFloat = node.bool("dense") == true ? 4 : 8
     return EdgeInsets(top: inset, leading: inset, bottom: inset, trailing: inset)
+  }
+
+  /// A Material 3 dropdown can be typed into. `editable` opens the field,
+  /// and the search and filter switches decide what typing does to the list.
+  private var isEditable: Bool { node.bool("editable") == true }
+
+  /// A non-editable dropdown's field is read-only; typing is only accepted
+  /// when Ruby asked for it.
+  private var dropdownTraits: RufletTextInputTraits {
+    var traits = RufletTextInputTraits(node: node)
+    traits.readOnly = !isEditable
+    return traits
+  }
+
+  /// `enable_filter` and `enable_search` both narrow the list as the field is
+  /// typed into; Flutter distinguishes them by whether the match is
+  /// highlighted, which is not a distinction SwiftUI's menu draws.
+  private var filtersOptions: Bool {
+    node.bool("enable_filter") == true || node.bool("enable_search") == true
+  }
+
+  private func matching(_ options: [ControlNode]) -> [ControlNode] {
+    let query = node.string("text") ?? ""
+    guard filtersOptions, !query.isEmpty else { return options }
+    return options.filter { option in
+      let label = option.string("text") ?? option.string("key") ?? ""
+      return label.localizedCaseInsensitiveContains(query)
+    }
   }
 
   private var fieldBackground: Color {
