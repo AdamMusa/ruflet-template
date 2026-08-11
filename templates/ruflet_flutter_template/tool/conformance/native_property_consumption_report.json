@@ -15,9 +15,10 @@
       "consumed": 3186,
       "parent_consumed": 1843,
       "service": 285,
-      "unclassified": 16
+      "unclassified": 14,
+      "unsupported": 2
     },
-    "unclassified": 16
+    "unclassified": 14
   },
   "unclassified": [
     {
@@ -34,11 +35,6 @@
       "family": "service",
       "wire_type": "SecureStorage",
       "property": "windows_options"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "enable_ime_personalized_learning"
     },
     {
       "family": "visual",
@@ -94,11 +90,6 @@
       "family": "visual",
       "wire_type": "Page",
       "property": "on_multi_view_remove"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "enable_ime_personalized_learning"
     }
   ],
   "controls": [
@@ -54395,8 +54386,12 @@
           ]
         },
         "enable_ime_personalized_learning": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "unsupported",
+          "evidence": [
+            {
+              "reason": "Flutter applies this only on Android. Its own TextInputConfiguration documents it as 'This flag only affects Android. On iOS, there is no equivalent flag.', and it maps to IME_FLAG_NO_PERSONALIZED_LEARNING. Ignoring it is what the Flutter engine does on Apple, so ignoring it here is exact parity rather than a gap."
+            }
+          ]
         },
         "enable_interactive_selection": {
           "classification": "consumed",
@@ -155129,8 +155124,12 @@
           ]
         },
         "enable_ime_personalized_learning": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "unsupported",
+          "evidence": [
+            {
+              "reason": "Flutter applies this only on Android. Its own TextInputConfiguration documents it as 'This flag only affects Android. On iOS, there is no equivalent flag.', and it maps to IME_FLAG_NO_PERSONALIZED_LEARNING. Ignoring it is what the Flutter engine does on Apple, so ignoring it here is exact parity rather than a gap."
+            }
+          ]
         },
         "enable_interactive_selection": {
           "classification": "consumed",

@@ -1,5 +1,16 @@
 {
   "parent_consumed": {},
   "service": {},
-  "unsupported": {}
+  "unsupported": {
+    "TextField": {
+      "enable_ime_personalized_learning": {
+        "reason": "Flutter applies this only on Android. Its own TextInputConfiguration documents it as 'This flag only affects Android. On iOS, there is no equivalent flag.', and it maps to IME_FLAG_NO_PERSONALIZED_LEARNING. Ignoring it is what the Flutter engine does on Apple, so ignoring it here is exact parity rather than a gap."
+      }
+    },
+    "CupertinoTextField": {
+      "enable_ime_personalized_learning": {
+        "reason": "Flutter applies this only on Android. Its own TextInputConfiguration documents it as 'This flag only affects Android. On iOS, there is no equivalent flag.', and it maps to IME_FLAG_NO_PERSONALIZED_LEARNING. Ignoring it is what the Flutter engine does on Apple, so ignoring it here is exact parity rather than a gap."
+      }
+    }
+  }
 }
