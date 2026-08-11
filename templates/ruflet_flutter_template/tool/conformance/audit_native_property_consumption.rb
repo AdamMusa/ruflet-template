@@ -246,6 +246,13 @@ module NativePropertyConsumptionAudit
       # only literal is at the call site: NamedSemanticsAction(event: "copy")
       # and events.commit(..., event: "change") both name a real event.
       line.scan(/\bevent:\s*"([^"]+)"/) { |match| keys << "on_#{match[0]}" }
+      # RufletEventSink#commit defaults to writing `value` and reporting
+      # `change`, so the commonest read of either has no literal to find.
+      if (commit = window[/\bevents\.commit\((.*)$/, 1])
+        call = commit[/\A[^)]*/]
+        keys << "on_change" unless call.include?("event:")
+        keys << "value" unless call.include?("key:")
+      end
       keys.uniq.each do |key|
         reads[key] << { "path" => relative(path), "line" => start_line + index + 1 }
       end
