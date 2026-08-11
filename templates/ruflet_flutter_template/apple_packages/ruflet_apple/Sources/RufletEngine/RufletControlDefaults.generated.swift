@@ -333,9 +333,6 @@ public enum RufletControlDefaults {
       "autofocus": .bool(false),
       "enable_feedback": .bool(true),
     ],
-    "FletApp": [
-      "url": .string(""),
-    ],
     "FloatingActionButton": [
       "autofocus": .bool(false),
       "clip_behavior": .string("none"),
@@ -617,6 +614,9 @@ public enum RufletControlDefaults {
       "tight": .bool(false),
       "vertical_alignment": .string("center"),
       "wrap": .bool(false),
+    ],
+    "RufletApp": [
+      "url": .string(""),
     ],
     "RufletSpinKit": [
       "duration": .int(1200),

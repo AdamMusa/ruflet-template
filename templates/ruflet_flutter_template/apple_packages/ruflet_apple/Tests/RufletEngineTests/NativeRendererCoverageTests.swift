@@ -92,7 +92,6 @@ final class NativeRendererCoverageTests: XCTestCase {
   FilledTonalButton
   FilledTonalIconButton
   RufletApp
-  FletApp
   FloatingActionButton
   GestureDetector
   GridView
@@ -245,7 +244,6 @@ final class NativeRendererCoverageTests: XCTestCase {
       "CupertinoBottomSheet": .host,
       "Dialogs": .host,
       "RufletApp": .visible,
-      "FletApp": .visible,
       "Overlay": .host,
       "Page": .host,
       "ServiceRegistry": .host,

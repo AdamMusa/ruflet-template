@@ -34,6 +34,9 @@ end
 defaults = contract.fetch("controls").to_h do |control|
   [control.fetch("wire_type"), control.fetch("primitive_defaults")]
 end
+# Ruflet owns its native application wire name. Preserve the canonical Flet
+# constructor defaults while keeping `FletApp` out of the Apple wire surface.
+defaults["RufletApp"] = defaults.delete("FletApp") if defaults.key?("FletApp")
 defaults["*"] = contract.fetch("global_primitive_defaults")
 
 # These foundational controls are the native layout contract. Abort generation

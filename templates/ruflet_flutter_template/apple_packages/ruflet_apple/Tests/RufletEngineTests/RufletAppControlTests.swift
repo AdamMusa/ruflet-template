@@ -2,13 +2,12 @@
 import XCTest
 
 final class RufletAppControlTests: XCTestCase {
-  func testCanonicalRufletAppHasANativeDescriptorAndLegacyAliasUsesSameRenderer() {
+  func testRufletAppIsTheOnlyNativeApplicationWireName() {
     let canonical = ControlRegistry.descriptor(for: "RufletApp")
-    let legacy = ControlRegistry.descriptor(for: "FletApp")
 
     XCTAssertEqual(canonical?.classification, .visible)
     XCTAssertEqual(canonical?.implementation, "RufletAppControlView")
-    XCTAssertEqual(legacy?.implementation, canonical?.implementation)
+    XCTAssertNil(ControlRegistry.descriptor(for: "FletApp"))
   }
 
   func testNestedAppInheritsParentEndpointWhenURLIsOmitted() {

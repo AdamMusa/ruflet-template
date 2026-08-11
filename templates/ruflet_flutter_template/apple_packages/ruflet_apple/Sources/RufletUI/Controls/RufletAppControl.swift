@@ -2,9 +2,8 @@ import RufletEngine
 import RufletProtocol
 import SwiftUI
 
-/// Ruflet's nested application control. `FletApp` remains an accepted inbound
-/// alias, but Ruflet emits `RufletApp` and the implementation stays Ruflet-
-/// named end to end.
+/// Ruflet's nested application control. Ruflet owns this native wire name; the
+/// vendored Flet control remains the behavioral reference, not an inbound alias.
 struct RufletAppControlView: View {
   let node: ControlNode
   @Environment(\.rufletServerURL) private var parentServerURL

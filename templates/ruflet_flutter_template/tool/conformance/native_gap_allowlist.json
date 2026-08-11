@@ -7,7 +7,8 @@
     "AdaptiveRadio": "Radio",
     "AdaptiveSlider": "Slider",
     "AdaptiveSwitch": "Switch",
-    "AdaptiveTextField": "TextField"
+    "AdaptiveTextField": "TextField",
+    "FletApp": "RufletApp"
   },
   "ignored_packages": {
     "flet_ads": "Advertising controls are not exposed by the Ruflet DSL.",
