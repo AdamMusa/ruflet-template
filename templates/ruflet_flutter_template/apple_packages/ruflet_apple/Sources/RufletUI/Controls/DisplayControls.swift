@@ -11,11 +11,12 @@ struct TextControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
+  @Environment(\.openURL) private var openURL
 
   var body: some View {
     let style = RufletTextStyle.forText(node: node)
 
-    text.rufletStyled(style)
+    renderedText(style: style)
       .multilineTextAlignment(alignment)
       .lineLimit(lineLimit)
       .truncationMode(truncation)
@@ -23,15 +24,8 @@ struct TextControlView: View {
       .fixedSize(horizontal: node.bool("no_wrap") == true, vertical: false)
       .frame(maxWidth: node.double("max_width").map { CGFloat($0) })
       .background(style.backgroundColor)
-      .modifier(
-        InteractiveSelection(enabled: node.bool("enable_interactive_selection") != false))
-      .modifier(SelectableText(enabled: node.bool("selectable") == true))
       .modifier(TextSelectionCursor(node: node))
       .modifier(TapReporter(node: node, events: events))
-      .onChange(of: node.string("value") ?? "") { _ in
-        guard node.handlesEvent("selection_change") else { return }
-        events.fire(node, "selection_change", data: .string(node.string("value") ?? ""))
-      }
   }
 
   /// Flutter's `TextOverflow`. `ellipsis` is also carried as its own boolean,
@@ -45,18 +39,42 @@ struct TextControlView: View {
     }
   }
 
-  /// Spans compose into one run so styling stays inline, matching Flutter's
-  /// `Text.rich`.
-  private var text: Text {
-    let spans = node.controlIDs(forKey: "spans").compactMap { store.node($0) }
-    guard !spans.isEmpty else {
-      return Text(node.string("value") ?? "")
+  @ViewBuilder
+  private func renderedText(style: RufletTextStyle) -> some View {
+    let document = RufletRichTextDocument(
+      value: node.string("value") ?? "",
+      spanIDs: node.controlIDs(forKey: "spans"),
+      resolve: store.node)
+    let attributed = document.attributedString(rootStyle: style)
+    if node.bool("selectable") == true || document.runs.contains(where: \.tracksPointer) {
+      RufletSelectableRichText(
+        node: node, document: document, attributed: attributed, events: events,
+        activate: activateSpan, hover: hoverSpan)
+    } else {
+      Text(attributed)
+        .modifier(
+          InteractiveSelection(enabled: node.bool("enable_interactive_selection") != false))
+        .environment(\.openURL, spanURLAction)
     }
-    var composed = Text(node.string("value") ?? "")
-    for span in spans {
-      composed = composed + Text(span.string("text") ?? "").rufletStyled(RufletTextStyle(node: span))
+  }
+
+  private func activateSpan(_ id: Int) {
+    guard let span = store.node(id), span.bool("disabled") != true else { return }
+    if let raw = span.string("url"), let url = URL(string: raw) { openURL(url) }
+    events.fire(span, "click")
+  }
+
+  private func hoverSpan(_ id: Int, _ entered: Bool) {
+    guard let span = store.node(id), span.bool("disabled") != true else { return }
+    events.fire(span, entered ? "enter" : "exit")
+  }
+
+  private var spanURLAction: OpenURLAction {
+    OpenURLAction { url in
+      guard let id = RufletSpanLink.id(from: url) else { return .systemAction }
+      activateSpan(id)
+      return .handled
     }
-    return composed
   }
 
   private var alignment: TextAlignment {
@@ -1641,9 +1659,40 @@ private struct MarkdownImageView: View {
 /// `TextSpan` — only ever composed into a parent `Text`, never standalone.
 struct TextSpanControlView: View {
   let node: ControlNode
+  @Environment(\.rufletEvents) private var events
+  @Environment(\.openURL) private var openURL
 
   var body: some View {
     Text(node.string("text") ?? "")
       .rufletTextStyle(RufletTextStyle(node: node))
+      .accessibilityLabel(node.string("semantics_label") ?? node.string("text") ?? "")
+      .modifier(
+        SpellOutCharacters(
+          enabled: node.bool("spell_out") == true,
+          label: node.string("semantics_label") ?? node.string("text") ?? ""))
+      .onTapGesture {
+        guard node.bool("disabled") != true else { return }
+        if let raw = node.string("url"), let url = URL(string: raw) { openURL(url) }
+        events.fire(node, "click")
+      }
+      .onHover { entered in
+        guard node.bool("disabled") != true else { return }
+        events.fire(node, entered ? "enter" : "exit")
+      }
+  }
+}
+
+private struct SpellOutCharacters: ViewModifier {
+  let enabled: Bool
+  let label: String
+  func body(content: Content) -> some View {
+    // SwiftUI's speech-spelling attribute is newer than this package's iOS
+    // 15 floor. A space-separated accessibility label produces the same
+    // VoiceOver character-by-character reading on supported Apple releases.
+    if enabled {
+      content.accessibilityLabel(label.map(String.init).joined(separator: " "))
+    } else {
+      content
+    }
   }
 }

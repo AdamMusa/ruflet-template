@@ -227,7 +227,8 @@ public enum ControlRegistry {
     // Display controls.
     add(["Text"], .visible, "TextControlView", .nativeView,
         events: ["selection_change", "tap"])
-    add(["TextSpan"], .visible, "TextSpanControlView", .nativeView, events: ["click"])
+    add(["TextSpan"], .visible, "TextSpanControlView", .nativeView,
+        events: ["click", "enter", "exit"])
     add(["Icon"], .visible, "IconControlView", .nativeView)
     add(["Image"], .visible, "ImageControlView", .nativeView,
         events: ["click", "error", "load"])

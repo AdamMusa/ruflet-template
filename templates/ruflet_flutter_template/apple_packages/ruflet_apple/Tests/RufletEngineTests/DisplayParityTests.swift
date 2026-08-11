@@ -11,6 +11,62 @@ final class DisplayParityTests: XCTestCase {
     ControlNode(id: 1, type: type, props: props)
   }
 
+  // MARK: - Text and TextSpan
+
+  func testTextSpanDocumentFlattensNestedSpansAndKeepsDeepestRanges() {
+    let parent = ControlNode(
+      id: 2, type: "TextSpan",
+      props: ["text": .string("parent "), "spans": .array([.controlRef(3)])])
+    let child = ControlNode(id: 3, type: "TextSpan", props: ["text": .string("child")])
+    let nodes = [2: parent, 3: child]
+
+    let document = RufletRichTextDocument(
+      value: "root ", spanIDs: [2], resolve: { nodes[$0] })
+
+    XCTAssertEqual(document.string, "root parent child")
+    XCTAssertEqual(document.runs.map(\.node.id), [2, 3])
+    XCTAssertEqual(document.runs[0].range, NSRange(location: 5, length: 12))
+    XCTAssertEqual(document.runs[1].range, NSRange(location: 12, length: 5))
+    XCTAssertEqual(document.deepestRun(at: 13)?.node.id, 3)
+  }
+
+  func testTextSpanLinksUsePrivateNativeURLsThatRoundTripTheirControlID() {
+    let url = RufletSpanLink.url(for: 42)
+    XCTAssertEqual(url.scheme, "ruflet-text-span")
+    XCTAssertEqual(RufletSpanLink.id(from: url), 42)
+    XCTAssertNil(RufletSpanLink.id(from: URL(string: "https://example.test")!))
+  }
+
+  func testTextSelectionPayloadMatchesPinnedFletMap() {
+    XCTAssertEqual(
+      RufletRichTextDocument.textSelectionData(
+        rootValue: "root", range: NSRange(location: 2, length: 3), cause: "longPress"),
+      .map([
+        "selected_text": .string("root"),
+        "cause": .string("longPress"),
+        "selection": .map([
+          "base_offset": .int(2), "extent_offset": .int(5),
+          "affinity": .string("downstream"), "directional": .bool(false),
+        ]),
+      ]))
+  }
+
+  func testMarkdownSelectionPayloadIncludesFlutterMarkdownSelectionFlags() {
+    XCTAssertEqual(
+      RufletRichTextDocument.markdownSelectionData(
+        source: "hello world", range: NSRange(location: 6, length: 5), cause: "drag"),
+      .map([
+        "text": .string("world"),
+        "cause": .string("drag"),
+        "selection": .map([
+          "start": .int(6), "end": .int(11), "selection": .string("world"),
+          "base_offset": .int(6), "extent_offset": .int(11),
+          "affinity": .string("downstream"), "directional": .bool(false),
+          "collapsed": .bool(false), "valid": .bool(true), "normalized": .bool(true),
+        ]),
+      ]))
+  }
+
   // MARK: - Image
 
   func testImageResolvesBinaryAndDataURISourcesBeforeURLs() {
