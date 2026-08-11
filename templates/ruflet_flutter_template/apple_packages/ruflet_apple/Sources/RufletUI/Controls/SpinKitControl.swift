@@ -25,8 +25,33 @@ struct SpinKitControlView: View {
   }
 
   @ViewBuilder
+  /// The two halves of SpinKitRotatingCircle's cycle. The first axis eases in
+  /// across 0...0.5 and then stays turned; the second eases out across
+  /// 0.5...1 and is flat until it starts.
+  private func rotatingCircleTurn(_ phase: Double, first: Bool) -> Double {
+    if first {
+      let progress = min(phase / 0.5, 1)
+      // Curves.easeIn is a cubic ease.
+      return 180 * progress * progress * progress
+    }
+    guard phase > 0.5 else { return 0 }
+    let progress = (phase - 0.5) / 0.5
+    let eased = 1 - pow(1 - progress, 3)
+    return 180 * eased
+  }
+
+  @ViewBuilder
   private func glyph(phase: Double) -> some View {
     switch variant {
+    case "rotating_circle":
+      // SpinKitRotatingCircle tumbles a disc: 180 degrees about X over the
+      // first half of the cycle, easing in, then 180 about Y over the second,
+      // easing out. Both hold their turn rather than resetting between.
+      Circle()
+        .fill(color)
+        .frame(width: size, height: size)
+        .rotation3DEffect(.degrees(rotatingCircleTurn(phase, first: true)), axis: (x: 1, y: 0, z: 0))
+        .rotation3DEffect(.degrees(rotatingCircleTurn(phase, first: false)), axis: (x: 0, y: 1, z: 0))
     case "rotating_plain":
       RoundedRectangle(cornerRadius: size * 0.05)
         .fill(color)
