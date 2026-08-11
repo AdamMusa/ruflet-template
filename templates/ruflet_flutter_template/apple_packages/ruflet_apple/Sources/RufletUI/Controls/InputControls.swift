@@ -756,6 +756,19 @@ private struct CodeEditorChrome: ViewModifier {
 }
 
 /// Flet's `KeyboardType`, where the platform has an equivalent.
+/// Flutter lists dropdown options in the order they were given, but SwiftUI
+/// reverses a menu that opens upwards. `menuOrder` pins it, and arrived in
+/// iOS 16 against a package that ships to iOS 15.
+private struct FixedMenuOrder: ViewModifier {
+  func body(content: Content) -> some View {
+    if #available(iOS 16.0, macOS 13.0, *) {
+      content.menuOrder(.fixed)
+    } else {
+      content
+    }
+  }
+}
+
 private struct KeyboardType: ViewModifier {
   let node: ControlNode
 
@@ -857,40 +870,42 @@ struct DropdownControlView: View {
   var body: some View {
     let options = optionNodes
 
-    VStack(alignment: .leading, spacing: 4) {
-      if let label = node.string("label"), !label.isEmpty {
-        Text(label).font(.caption).foregroundColor(.secondary)
-      }
-      HStack(spacing: 8) {
-        #if canImport(UIKit) || canImport(AppKit)
-          RufletNativeTextInput(
-            text: dropdownText,
-            focused: $focused,
-            selection: $selection,
-            placeholder: node.string("hint_text") ?? "",
-            secure: false,
-            onTap: { events.fire(node, "click") },
-            onTapOutside: {},
-            onSubmit: { _ in })
-        #else
-          TextField(node.string("hint_text") ?? "", text: dropdownText)
-        #endif
-        Menu {
-          ForEach(options, id: \.id) { option in
-            Button {
-              select(option)
-            } label: {
-              optionLabel(option)
-            }
+    HStack(spacing: 8) {
+      RufletFormFieldSlot(node: node, key: "leading_icon")
+      #if canImport(UIKit) || canImport(AppKit)
+        RufletNativeTextInput(
+          text: dropdownText,
+          focused: $focused,
+          selection: $selection,
+          placeholder: node.string("hint_text") ?? "",
+          secure: false,
+          traits: RufletTextInputTraits(node: node),
+          onTap: { events.fire(node, "click") },
+          onTapOutside: {},
+          onSubmit: { _ in })
+      #else
+        TextField(node.string("hint_text") ?? "", text: dropdownText)
+      #endif
+      RufletFormFieldSlot(node: node, key: "selected_suffix", styleKey: "text_style")
+      Menu {
+        ForEach(options, id: \.id) { option in
+          Button {
+            select(option)
+          } label: {
+            optionLabel(option)
           }
-        } label: {
-          Image(systemName: "chevron.down")
-            .foregroundColor(.secondary)
         }
+      } label: {
+        trailingIcon
       }
-      .padding(8)
-      .background(RoundedRectangle(cornerRadius: 8).fill(Color.gray.opacity(0.10)))
+      .modifier(FixedMenuOrder())
+      .frame(maxHeight: node.double("menu_height").map { CGFloat($0) })
     }
+    .padding(contentPadding)
+    .background(RoundedRectangle(cornerRadius: 8).fill(fieldBackground))
+    .overlay(borderStroke)
+    .frame(width: node.double("menu_width").map { CGFloat($0) })
+    .modifier(RufletFormFieldDecoration(node: node))
     .onAppear {
       focused = node.bool("autofocus") == true
       if node.string("text") == nil, let value = node.string("value") {
@@ -904,6 +919,41 @@ struct DropdownControlView: View {
       }
       focused = true
       completion(.success(.null))
+    }
+  }
+
+  /// Flet shows `selected_trailing_icon` while the menu is open and
+  /// `trailing_icon` while it is closed; SwiftUI's Menu does not report that
+  /// state, so the selected form stands in once a value exists.
+  @ViewBuilder
+  private var trailingIcon: some View {
+    let key = node.string("value") == nil ? "trailing_icon" : "selected_trailing_icon"
+    if let id = node.controlID(forKey: key) ?? node.controlID(forKey: "trailing_icon") {
+      ControlView(id: id, axis: .none)
+    } else {
+      Image(systemName: "chevron.down").foregroundColor(.secondary)
+    }
+  }
+
+  private var contentPadding: EdgeInsets {
+    if let explicit = ControlProps.edgeInsets(node.props["content_padding"]) { return explicit }
+    let inset: CGFloat = node.bool("dense") == true ? 4 : 8
+    return EdgeInsets(top: inset, leading: inset, bottom: inset, trailing: inset)
+  }
+
+  private var fieldBackground: Color {
+    MaterialPalette.color(node.string("fill_color"), default: .gray.opacity(0.10))
+  }
+
+  @ViewBuilder
+  private var borderStroke: some View {
+    if node.string("border")?.lowercased() != "none" {
+      RoundedRectangle(cornerRadius: 8)
+        .strokeBorder(
+          MaterialPalette.color(
+            node.string(focused ? "focused_border_color" : "border_color"), default: .clear),
+          lineWidth: CGFloat(
+            node.double(focused ? "focused_border_width" : "border_width") ?? 1))
     }
   }
 
@@ -969,19 +1019,76 @@ struct DropdownM2ControlView: View {
       }
     } label: {
       HStack(spacing: 8) {
+        RufletFormFieldSlot(node: node, key: "icon")
+        RufletFormFieldSlot(node: node, key: "prefix_icon")
+        RufletFormFieldSlot(node: node, key: "prefix", styleKey: "prefix_style")
         selectedLabel
         Spacer(minLength: 8)
-        if let iconID = node.controlID(forKey: "select_icon") {
-          ControlView(id: iconID, axis: .none)
-        } else {
-          Image(systemName: "chevron.down")
-        }
+        RufletFormFieldSlot(node: node, key: "suffix", styleKey: "suffix_style")
+        RufletFormFieldSlot(node: node, key: "suffix_icon")
+        selectIcon
       }
       .contentShape(Rectangle())
+      .padding(contentPadding)
+      .background(
+        RoundedRectangle(cornerRadius: cornerRadius).fill(fieldBackground))
+      .overlay(borderStroke)
     }
+    .modifier(FixedMenuOrder())
     .simultaneousGesture(TapGesture().onEnded { events.fire(node, "click") })
     .modifier(FocusReporter(node: node, events: events))
+    .modifier(RufletFormFieldDecoration(node: node))
     .disabled(node.bool("disabled") ?? false)
+  }
+
+  @ViewBuilder
+  private var selectIcon: some View {
+    let disabled = node.bool("disabled") == true
+    if let iconID = node.controlID(forKey: "select_icon") {
+      ControlView(id: iconID, axis: .none)
+    } else {
+      Image(systemName: "chevron.down")
+        .font(.system(size: CGFloat(node.double("select_icon_size") ?? 13)))
+        .foregroundColor(
+          MaterialPalette.color(
+            node.string(disabled ? "select_icon_disabled_color" : "select_icon_enabled_color"),
+            default: disabled ? .secondary : .primary))
+    }
+  }
+
+  private var hintStyle: RufletTextStyle {
+    var style = RufletTextStyle(node: node, styleKey: "hint_style")
+    if style.color == nil { style.color = .secondary }
+    return style
+  }
+
+  private var cornerRadius: CGFloat {
+    ControlProps.cornerRadius(node.props["border_radius"]) ?? 8
+  }
+
+  private var contentPadding: EdgeInsets {
+    if let explicit = ControlProps.edgeInsets(node.props["content_padding"]) { return explicit }
+    if node.bool("collapsed") == true { return EdgeInsets() }
+    let inset: CGFloat = node.bool("dense") == true ? 4 : 8
+    return EdgeInsets(top: inset, leading: inset, bottom: inset, trailing: inset)
+  }
+
+  private var fieldBackground: Color {
+    if let focused = MaterialPalette.color(node.string("focused_bgcolor")) { return focused }
+    if node.bool("filled") == true {
+      return MaterialPalette.color(node.string("fill_color"), default: .gray.opacity(0.12))
+    }
+    return MaterialPalette.color(node.string("fill_color"), default: .clear)
+  }
+
+  @ViewBuilder
+  private var borderStroke: some View {
+    if node.string("border")?.lowercased() != "none" {
+      RoundedRectangle(cornerRadius: cornerRadius)
+        .strokeBorder(
+          MaterialPalette.color(node.string("border_color"), default: .secondary.opacity(0.4)),
+          lineWidth: CGFloat(node.double("border_width") ?? 1))
+    }
   }
 
   private func select(_ option: ControlNode) {
@@ -1006,11 +1113,14 @@ struct DropdownM2ControlView: View {
       })
     {
       optionLabel(option)
-    } else if let hintID = node.controlID(forKey: node.bool("disabled") == true ? "disabled_hint" : "hint") {
+    } else if let hintID = node.controlID(
+      forKey: node.bool("disabled") == true ? "disabled_hint_content" : "hint_content")
+    {
       ControlView(id: hintID, axis: .none)
     } else {
       Text(node.string("hint_text") ?? "")
-        .foregroundColor(.secondary)
+        .lineLimit(node.int("hint_max_lines"))
+        .rufletTextStyle(hintStyle)
     }
   }
 

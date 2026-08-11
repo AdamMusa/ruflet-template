@@ -17,13 +17,25 @@ struct RufletFormFieldSlot: View {
   var fallbackColor: Color?
 
   var body: some View {
-    if let id = node.controlID(forKey: key) {
+    if let id = resolvedControl {
       ControlView(id: id, axis: .none)
-    } else if let text = node.string(key), !text.isEmpty {
+    } else if let text = resolvedText, !text.isEmpty {
       Text(text)
         .lineLimit(maxLines)
         .rufletTextStyle(style)
     }
+  }
+
+  /// Ruby spells these three ways depending on the control's vintage: a bare
+  /// `helper`, a `hint_content` for the control form, and a `helper_text` for
+  /// the string form. Only one ever arrives, so trying each in turn is
+  /// unambiguous.
+  private var resolvedControl: Int? {
+    node.controlID(forKey: key) ?? node.controlID(forKey: "\(key)_content")
+  }
+
+  private var resolvedText: String? {
+    node.string(key) ?? node.string("\(key)_text")
   }
 
   private var style: RufletTextStyle {
@@ -66,16 +78,22 @@ struct RufletFormFieldDecoration: ViewModifier {
   /// nothing else names it.
   private var hasLabel: Bool {
     guard node.bool("collapsed") != true else { return false }
+    // With no hint the label sits inside the field as the placeholder, so
+    // drawing it above as well would say the same thing twice.
     guard node.string("hint_text") != nil else { return false }
-    return node.controlID(forKey: "label") != nil || node.string("label") != nil
+    return has("label")
+  }
+
+  /// True when Ruby supplied the slot in any of its spellings.
+  func has(_ key: String) -> Bool {
+    node.controlID(forKey: key) != nil || node.controlID(forKey: "\(key)_content") != nil
+      || !(node.string(key) ?? node.string("\(key)_text") ?? "").isEmpty
   }
 
   @ViewBuilder
   private var footer: some View {
-    let showsError = node.controlID(forKey: "error") != nil
-      || !(node.string("error") ?? "").isEmpty
-    let showsCounter = node.controlID(forKey: "counter") != nil
-      || !(node.string("counter") ?? "").isEmpty
+    let showsError = has("error")
+    let showsCounter = has("counter")
     if showsError || showsCounter || hasHelper {
       HStack(alignment: .top) {
         if showsError {
@@ -97,9 +115,7 @@ struct RufletFormFieldDecoration: ViewModifier {
     }
   }
 
-  private var hasHelper: Bool {
-    node.controlID(forKey: "helper") != nil || !(node.string("helper") ?? "").isEmpty
-  }
+  private var hasHelper: Bool { has("helper") }
 
   private var constraints: ControlProps.SizeConstraints? {
     ControlProps.sizeConstraints(node.props["size_constraints"])
