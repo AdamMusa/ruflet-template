@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require "json"
+require "set"
 
 module NativePropertyConsumptionAudit
   ROOT = File.expand_path("../..", __dir__)
@@ -141,13 +142,33 @@ module NativePropertyConsumptionAudit
     end
   end
 
+  # The concrete types this package declares. An extension is only followed
+  # when it extends one of these, so `extension View` — a protocol the whole
+  # renderer conforms to — does not become evidence for every control.
+  def declared_types
+    @declared_types ||= swift_files.values.flat_map { |raw_lines|
+      code_lines(raw_lines).flat_map do |line|
+        line.scan(/\b(?:struct|class|actor|enum)\s+([A-Za-z_][A-Za-z0-9_]*)\b/).flatten
+      end
+    }.to_set
+  end
+
   def type_scopes
     @type_scopes ||= begin
       scopes = Hash.new { |hash, key| hash[key] = [] }
       swift_files.each do |path, raw_lines|
         lines = code_lines(raw_lines)
         lines.each_with_index do |line, index|
-          next unless (match = line.match(/\b(?:struct|class|actor|enum)\s+([A-Za-z_][A-Za-z0-9_]*)\b/))
+          name = line[/\b(?:struct|class|actor|enum)\s+([A-Za-z_][A-Za-z0-9_]*)\b/, 1]
+          # An extension's body belongs to the type it extends — a delegate
+          # conformance is where a capture pipeline reports from — but only
+          # when that type is one this package declares. Following
+          # `extension View` would make every control's evidence universal.
+          if name.nil?
+            extended = line[/\bextension\s+([A-Za-z_][A-Za-z0-9_]*)\b/, 1]
+            name = extended if extended && declared_types.include?(extended)
+          end
+          next if name.nil?
 
           depth = 0
           opened = false
@@ -159,7 +180,7 @@ module NativePropertyConsumptionAudit
             finish = index + offset
             break if opened && depth <= 0
           end
-          scopes[match[1]] << { path: path, start: index, finish: finish }
+          scopes[name] << { path: path, start: index, finish: finish }
         end
       end
       scopes
