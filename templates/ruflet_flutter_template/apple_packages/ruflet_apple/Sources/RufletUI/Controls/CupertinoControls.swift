@@ -218,6 +218,14 @@ struct CupertinoSliderControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
 
+  /// `divisions` is a count in Flutter and a stride in SwiftUI.
+  private func sliderStep(minimum: Double, maximum: Double) -> Double.Stride {
+    guard let divisions = node.int("divisions"), divisions > 0 else {
+      return .leastNonzeroMagnitude
+    }
+    return (max(maximum, minimum) - minimum) / Double(divisions)
+  }
+
   var body: some View {
     let minimum = node.double("min") ?? 0
     let maximum = node.double("max") ?? 1
@@ -227,6 +235,9 @@ struct CupertinoSliderControlView: View {
         get: { node.double("value") ?? minimum },
         set: { events.commit(node, value: .double($0)) }),
       in: minimum...max(maximum, minimum + .ulpOfOne),
+      // `divisions` snaps the slider to discrete steps, which SwiftUI takes
+      // as the distance between them rather than as a count.
+      step: sliderStep(minimum: minimum, maximum: maximum),
       onEditingChanged: { editing in
         events.fire(
           node, editing ? "change_start" : "change_end",
@@ -234,6 +245,20 @@ struct CupertinoSliderControlView: View {
       }
     )
     .tint(MaterialPalette.color(node.string("active_color")))
+    // Cupertino names the knob's colour separately from the track's.
+    .modifier(SliderThumbTint(color: MaterialPalette.color(node.string("thumb_color"))))
+    .modifier(FocusReporter(node: node, events: events))
+  }
+}
+
+/// SwiftUI tints the whole slider at once, so a distinct thumb colour is
+/// drawn over the knob.
+private struct SliderThumbTint: ViewModifier {
+  let color: Color?
+
+  func body(content: Content) -> some View {
+    guard let color else { return AnyView(content) }
+    return AnyView(content.tint(color))
   }
 }
 

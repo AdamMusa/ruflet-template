@@ -1345,6 +1345,31 @@ private struct KeyboardType: ViewModifier {
   }
 }
 
+/// `hour_label_text` and `minute_label_text` caption the two fields a Material
+/// time picker shows in its typed-entry mode.
+private struct TimeFieldLabels: ViewModifier {
+  let node: ControlNode
+  let kind: DateTimePickerControlView.Kind
+
+  func body(content: Content) -> some View {
+    guard kind == .time,
+      node.string("hour_label_text") != nil || node.string("minute_label_text") != nil
+    else { return AnyView(content) }
+    return AnyView(
+      VStack(spacing: 4) {
+        content
+        HStack(spacing: 24) {
+          if let hour = node.string("hour_label_text") {
+            Text(hour).font(.caption2).foregroundColor(.secondary)
+          }
+          if let minute = node.string("minute_label_text") {
+            Text(minute).font(.caption2).foregroundColor(.secondary)
+          }
+        }
+      })
+  }
+}
+
 /// The validation strings a Material date picker shows under its field when
 /// what was typed cannot be parsed or falls outside the allowed range.
 private struct PickerValidation: ViewModifier {
@@ -1976,11 +2001,17 @@ struct DateTimePickerControlView: View {
         ?? EdgeInsets(top: 24, leading: 24, bottom: 24, trailing: 24))
       .environment(\.locale, pickerLocale)
       .modifier(PickerValidation(node: node, kind: kind))
+      .modifier(TimeFieldLabels(node: node, kind: kind))
       .onAppear {
         // `adaptive` picks the Cupertino wheel on Apple, which is what the
         // native pickers already are; `modal` and `barrier_color` belong to
         // the presenter that shows this.
         _ = node.bool("adaptive")
+        // A 12- or 24-hour clock is the locale's on Apple; Flutter lets the
+        // control override it, and `orientation` picks the dial's layout,
+        // which the native picker decides from its own size.
+        _ = node.string("hour_format")
+        _ = node.string("orientation")
         _ = node.bool("modal")
         _ = node.string("barrier_color")
         _ = node.string("keyboard_type")
@@ -1998,10 +2029,15 @@ struct DateTimePickerControlView: View {
   /// and the typed-entry modes.
   @ViewBuilder
   var entryModeIcon: some View {
-    RufletIcon(
-      value: entryMode == "input"
-        ? node.props["switch_to_calendar_icon"] : node.props["switch_to_input_icon"],
-      size: 20, color: nil)
+    RufletIcon(value: entryModeIconValue, size: 20, color: nil)
+  }
+
+  /// A time picker swaps to a timer dial rather than a calendar, so it names
+  /// its own icon for the mode switch.
+  private var entryModeIconValue: RufletValue? {
+    guard entryMode == "input" else { return node.props["switch_to_input_icon"] }
+    if kind == .time, let timer = node.props["switch_to_timer_icon"] { return timer }
+    return node.props["switch_to_calendar_icon"]
   }
 
   private func date(from text: String?) -> Date? {

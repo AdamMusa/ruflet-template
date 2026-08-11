@@ -630,12 +630,24 @@ struct ExpansionPanelListControlView: View {
 
   var body: some View {
     VStack(spacing: CGFloat(node.double("spacing") ?? 16)) {
-      ForEach(node.childIDs, id: \.self) { panelID in
+      ForEach(Array(node.childIDs.enumerated()), id: \.element) { index, panelID in
         if let panel = store.node(panelID) {
           ExpansionPanelView(node: panel, list: node)
+            .padding(
+              ControlProps.edgeInsets(node.props["expanded_header_padding"]) ?? EdgeInsets())
+            .shadow(radius: CGFloat(node.double("elevation") ?? 0))
+          if index < node.childIDs.count - 1, let divider = dividerColor {
+            Rectangle().fill(divider).frame(height: 1)
+          }
         }
       }
     }
+    // `expand_icon_color` tints the chevron every panel draws.
+    .foregroundColor(MaterialPalette.color(node.string("expand_icon_color")))
+  }
+
+  private var dividerColor: Color? {
+    MaterialPalette.color(node.string("divider_color"))
   }
 }
 
