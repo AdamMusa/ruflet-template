@@ -12,12 +12,12 @@
     "controls": 196,
     "properties": 5330,
     "classifications": {
-      "consumed": 3184,
+      "consumed": 3186,
       "parent_consumed": 1843,
       "service": 285,
-      "unclassified": 18
+      "unclassified": 16
     },
-    "unclassified": 18
+    "unclassified": 16
   },
   "unclassified": [
     {
@@ -74,16 +74,6 @@
       "family": "visual",
       "wire_type": "FletApp",
       "property": "show_app_startup_screen"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "allowed_devices"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "multi_tap_touches"
     },
     {
       "family": "visual",
@@ -1327,23 +1317,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -1519,7 +1509,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -1725,7 +1715,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -6093,23 +6083,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -6285,7 +6275,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -6505,7 +6495,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -6919,7 +6909,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 609
+              "line": 626
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -7652,23 +7642,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -7844,7 +7834,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -8050,7 +8040,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -8095,11 +8085,11 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 601
+              "line": 618
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 617
+              "line": 634
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -8884,7 +8874,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 791
+              "line": 808
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FieldStyling.swift",
@@ -9054,7 +9044,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -11872,23 +11862,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -12056,7 +12046,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -12262,7 +12252,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -13061,7 +13051,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -13395,7 +13385,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 791
+              "line": 808
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FieldStyling.swift",
@@ -13696,23 +13686,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -13888,7 +13878,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
@@ -14110,7 +14100,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -14735,15 +14725,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 778
+              "line": 795
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 779
+              "line": 796
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 780
+              "line": 797
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -14925,15 +14915,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 117
+              "line": 134
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 118
+              "line": 135
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 119
+              "line": 136
             }
           ]
         },
@@ -14954,7 +14944,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 242
+              "line": 259
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -15910,23 +15900,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -16090,7 +16080,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -16296,7 +16286,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -16521,15 +16511,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 606
+              "line": 623
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 607
+              "line": 624
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 608
+              "line": 625
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
@@ -17373,23 +17363,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -17565,7 +17555,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -17771,7 +17761,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -18536,7 +18526,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -18759,7 +18749,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -19160,7 +19150,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 785
+              "line": 802
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
@@ -20785,7 +20775,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -21169,7 +21159,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 791
+              "line": 808
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FieldStyling.swift",
@@ -21392,7 +21382,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -21773,7 +21763,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 785
+              "line": 802
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
@@ -22200,15 +22190,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 778
+              "line": 795
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 779
+              "line": 796
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 780
+              "line": 797
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -23504,7 +23494,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 791
+              "line": 808
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FieldStyling.swift",
@@ -23809,23 +23799,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -24001,7 +23991,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -24207,7 +24197,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -25347,7 +25337,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -26746,23 +26736,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -26938,7 +26928,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -27157,7 +27147,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -27600,15 +27590,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 778
+              "line": 795
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 779
+              "line": 796
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 780
+              "line": 797
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -27685,15 +27675,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 117
+              "line": 134
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 118
+              "line": 135
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 119
+              "line": 136
             }
           ]
         },
@@ -27714,7 +27704,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 242
+              "line": 259
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -27788,15 +27778,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 172
+              "line": 189
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 173
+              "line": 190
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 174
+              "line": 191
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CollectionControls.swift",
@@ -28557,23 +28547,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -28733,7 +28723,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -28939,7 +28929,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -29197,7 +29187,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 609
+              "line": 626
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -29887,7 +29877,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -30501,7 +30491,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
@@ -30769,23 +30759,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -31047,7 +31037,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 795
+              "line": 812
             }
           ]
         },
@@ -31056,7 +31046,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 789
+              "line": 806
             }
           ]
         },
@@ -31065,7 +31055,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -31411,15 +31401,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 778
+              "line": 795
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 779
+              "line": 796
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 780
+              "line": 797
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -32464,7 +32454,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -32810,7 +32800,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 791
+              "line": 808
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FieldStyling.swift",
@@ -33115,23 +33105,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -33307,7 +33297,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -33513,7 +33503,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -34145,15 +34135,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 778
+              "line": 795
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 779
+              "line": 796
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 780
+              "line": 797
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -34303,7 +34293,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 242
+              "line": 259
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -34805,7 +34795,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -35028,7 +35018,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -35379,7 +35369,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 785
+              "line": 802
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
@@ -37612,7 +37602,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -37958,7 +37948,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 791
+              "line": 808
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FieldStyling.swift",
@@ -38263,23 +38253,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -38455,7 +38445,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -38661,7 +38651,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -39293,15 +39283,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 778
+              "line": 795
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 779
+              "line": 796
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 780
+              "line": 797
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -39451,7 +39441,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 242
+              "line": 259
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -40239,7 +40229,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -40712,15 +40702,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 778
+              "line": 795
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 779
+              "line": 796
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 780
+              "line": 797
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -41671,7 +41661,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -43344,7 +43334,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -44487,7 +44477,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -44664,7 +44654,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -45040,7 +45030,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 785
+              "line": 802
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
@@ -46579,7 +46569,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -47884,7 +47874,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -50205,7 +50195,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -51350,7 +51340,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -51527,7 +51517,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -51869,7 +51859,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 785
+              "line": 802
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
@@ -53516,7 +53506,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -54089,7 +54079,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 791
+              "line": 808
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -54372,7 +54362,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -55235,7 +55225,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 785
+              "line": 802
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CollectionControls.swift",
@@ -56053,15 +56043,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 778
+              "line": 795
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 779
+              "line": 796
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 780
+              "line": 797
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -58098,7 +58088,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -58444,7 +58434,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 791
+              "line": 808
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FieldStyling.swift",
@@ -58749,23 +58739,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -58941,7 +58931,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -59147,7 +59137,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -59779,15 +59769,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 778
+              "line": 795
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 779
+              "line": 796
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 780
+              "line": 797
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -59937,7 +59927,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 242
+              "line": 259
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -60941,7 +60931,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -62401,7 +62391,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 526
+              "line": 543
             }
           ]
         },
@@ -62441,7 +62431,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
@@ -62709,19 +62699,19 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -62897,7 +62887,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -62970,7 +62960,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 587
+              "line": 604
             }
           ]
         },
@@ -63112,7 +63102,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -63149,11 +63139,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 515
+              "line": 532
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 538
+              "line": 555
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -63166,7 +63156,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 580
+              "line": 597
             }
           ]
         },
@@ -63329,11 +63319,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 601
+              "line": 618
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 617
+              "line": 634
             }
           ]
         },
@@ -63372,15 +63362,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 558
+              "line": 575
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 559
+              "line": 576
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 560
+              "line": 577
             }
           ]
         },
@@ -63389,7 +63379,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 609
+              "line": 626
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/InputControls.swift",
@@ -63494,15 +63484,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 606
+              "line": 623
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 607
+              "line": 624
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 608
+              "line": 625
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -63548,11 +63538,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 545
+              "line": 562
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 546
+              "line": 563
             }
           ]
         },
@@ -63570,7 +63560,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 602
+              "line": 619
             }
           ]
         },
@@ -63619,7 +63609,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 524
+              "line": 541
             }
           ]
         },
@@ -63909,7 +63899,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -64375,7 +64365,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 791
+              "line": 808
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FieldStyling.swift",
@@ -64599,7 +64589,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -65209,7 +65199,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 785
+              "line": 802
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CollectionControls.swift",
@@ -65797,7 +65787,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 785
+              "line": 802
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -66634,7 +66624,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -67100,7 +67090,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 791
+              "line": 808
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FieldStyling.swift",
@@ -67346,7 +67336,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -68204,7 +68194,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 785
+              "line": 802
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CollectionControls.swift",
@@ -68949,15 +68939,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 778
+              "line": 795
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 779
+              "line": 796
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 780
+              "line": 797
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -70660,23 +70650,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -70844,7 +70834,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -71046,7 +71036,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -72088,7 +72078,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -73919,7 +73909,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -75338,7 +75328,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -75672,7 +75662,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 791
+              "line": 808
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FieldStyling.swift",
@@ -75973,23 +75963,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -76165,7 +76155,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
@@ -76387,7 +76377,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -77012,15 +77002,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 778
+              "line": 795
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 779
+              "line": 796
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 780
+              "line": 797
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -77202,15 +77192,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 117
+              "line": 134
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 118
+              "line": 135
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 119
+              "line": 136
             }
           ]
         },
@@ -77231,7 +77221,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 242
+              "line": 259
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -77680,7 +77670,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -78046,7 +78036,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -78737,15 +78727,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 778
+              "line": 795
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 779
+              "line": 796
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 780
+              "line": 797
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -78927,15 +78917,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 117
+              "line": 134
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 118
+              "line": 135
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 119
+              "line": 136
             }
           ]
         },
@@ -78956,7 +78946,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 242
+              "line": 259
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -79637,7 +79627,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -79971,7 +79961,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 791
+              "line": 808
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FieldStyling.swift",
@@ -80272,23 +80262,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -80464,7 +80454,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
@@ -80686,7 +80676,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -81311,15 +81301,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 778
+              "line": 795
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 779
+              "line": 796
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 780
+              "line": 797
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -81501,15 +81491,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 117
+              "line": 134
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 118
+              "line": 135
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 119
+              "line": 136
             }
           ]
         },
@@ -81530,7 +81520,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 242
+              "line": 259
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -81979,7 +81969,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -82345,7 +82335,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -83036,15 +83026,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 778
+              "line": 795
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 779
+              "line": 796
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 780
+              "line": 797
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -83226,15 +83216,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 117
+              "line": 134
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 118
+              "line": 135
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 119
+              "line": 136
             }
           ]
         },
@@ -83255,7 +83245,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 242
+              "line": 259
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -84062,7 +84052,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -84681,7 +84671,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -85195,23 +85185,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -85387,7 +85377,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
@@ -85609,7 +85599,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -86234,15 +86224,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 778
+              "line": 795
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 779
+              "line": 796
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 780
+              "line": 797
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -86570,8 +86560,13 @@
           ]
         },
         "allowed_devices": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletMultiTouchRecognizer.swift",
+              "line": 88
+            }
+          ]
         },
         "animate_align": {
           "classification": "parent_consumed",
@@ -86982,23 +86977,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -87174,7 +87169,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -87380,7 +87375,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -87417,7 +87412,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 340
+              "line": 357
             }
           ]
         },
@@ -87506,7 +87501,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 116
+              "line": 133
             }
           ]
         },
@@ -87603,8 +87598,13 @@
           ]
         },
         "multi_tap_touches": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletMultiTouchRecognizer.swift",
+              "line": 87
+            }
+          ]
         },
         "offset": {
           "classification": "consumed",
@@ -87641,19 +87641,19 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 254
+              "line": 271
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 258
+              "line": 275
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 259
+              "line": 276
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 260
+              "line": 277
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
@@ -87698,7 +87698,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 209
+              "line": 226
             }
           ]
         },
@@ -87707,7 +87707,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 175
+              "line": 192
             }
           ]
         },
@@ -87716,15 +87716,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 112
+              "line": 129
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 113
+              "line": 130
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 114
+              "line": 131
             }
           ]
         },
@@ -87733,11 +87733,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 123
+              "line": 140
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 124
+              "line": 141
             }
           ]
         },
@@ -87794,7 +87794,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 301
+              "line": 318
             }
           ]
         },
@@ -87803,11 +87803,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 299
+              "line": 316
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 333
+              "line": 350
             }
           ]
         },
@@ -87816,11 +87816,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 301
+              "line": 318
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 366
+              "line": 383
             }
           ]
         },
@@ -87829,11 +87829,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 300
+              "line": 317
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 338
+              "line": 355
             }
           ]
         },
@@ -87842,11 +87842,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 300
+              "line": 317
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 350
+              "line": 367
             }
           ]
         },
@@ -87855,15 +87855,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 117
+              "line": 134
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 118
+              "line": 135
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 119
+              "line": 136
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CollectionControls.swift",
@@ -87916,7 +87916,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 242
+              "line": 259
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
@@ -87965,7 +87965,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 210
+              "line": 227
             }
           ]
         },
@@ -87974,7 +87974,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 176
+              "line": 193
             }
           ]
         },
@@ -87983,7 +87983,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 219
+              "line": 236
             }
           ]
         },
@@ -87992,11 +87992,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 186
+              "line": 203
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 187
+              "line": 204
             }
           ]
         },
@@ -88005,15 +88005,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 239
+              "line": 256
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 240
+              "line": 257
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 241
+              "line": 258
             }
           ]
         },
@@ -88022,15 +88022,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 216
+              "line": 233
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 217
+              "line": 234
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 218
+              "line": 235
             }
           ]
         },
@@ -88043,15 +88043,31 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 56
+              "line": 65
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 57
+              "line": 73
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 58
+              "line": 74
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
+              "line": 75
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletMultiTouchRecognizer.swift",
+              "line": 103
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletMultiTouchRecognizer.swift",
+              "line": 104
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletMultiTouchRecognizer.swift",
+              "line": 105
             }
           ]
         },
@@ -88064,15 +88080,31 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 60
+              "line": 65
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 61
+              "line": 77
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 62
+              "line": 78
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
+              "line": 79
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletMultiTouchRecognizer.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletMultiTouchRecognizer.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletMultiTouchRecognizer.swift",
+              "line": 100
             }
           ]
         },
@@ -88081,7 +88113,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 299
+              "line": 316
             }
           ]
         },
@@ -88090,70 +88122,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 298
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 330
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 331
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 332
-            }
-          ]
-        },
-        "on_pan_end": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 298
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 363
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 364
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 365
-            }
-          ]
-        },
-        "on_pan_start": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 297
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 335
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 336
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 337
-            }
-          ]
-        },
-        "on_pan_update": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 297
+              "line": 315
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
@@ -88166,6 +88135,69 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
               "line": 349
+            }
+          ]
+        },
+        "on_pan_end": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
+              "line": 315
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
+              "line": 380
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
+              "line": 381
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
+              "line": 382
+            }
+          ]
+        },
+        "on_pan_start": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
+              "line": 314
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
+              "line": 352
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
+              "line": 353
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
+              "line": 354
+            }
+          ]
+        },
+        "on_pan_update": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
+              "line": 314
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
+              "line": 364
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
+              "line": 365
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
+              "line": 366
             }
           ]
         },
@@ -88201,19 +88233,19 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 380
+              "line": 397
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 404
+              "line": 421
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 405
+              "line": 422
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 406
+              "line": 423
             }
           ]
         },
@@ -88222,15 +88254,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 379
+              "line": 396
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 391
+              "line": 408
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 392
+              "line": 409
             }
           ]
         },
@@ -88239,15 +88271,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 379
+              "line": 396
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 397
+              "line": 414
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 398
+              "line": 415
             }
           ]
         },
@@ -88384,19 +88416,19 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 273
+              "line": 290
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 275
+              "line": 292
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 276
+              "line": 293
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 277
+              "line": 294
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletNativePointerMonitor.swift",
@@ -88485,7 +88517,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 213
+              "line": 230
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/InputControls.swift",
@@ -88562,15 +88594,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 206
+              "line": 223
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 207
+              "line": 224
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 208
+              "line": 225
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CollectionControls.swift",
@@ -88591,15 +88623,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 172
+              "line": 189
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 173
+              "line": 190
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 174
+              "line": 191
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CollectionControls.swift",
@@ -88632,15 +88664,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 183
+              "line": 200
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 184
+              "line": 201
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 185
+              "line": 202
             }
           ]
         },
@@ -88649,11 +88681,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 211
+              "line": 228
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 212
+              "line": 229
             }
           ]
         },
@@ -88800,7 +88832,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 304
+              "line": 321
             }
           ]
         },
@@ -88809,11 +88841,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 302
+              "line": 319
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 333
+              "line": 350
             }
           ]
         },
@@ -88822,11 +88854,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 303
+              "line": 320
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 366
+              "line": 383
             }
           ]
         },
@@ -88835,11 +88867,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 302
+              "line": 319
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 338
+              "line": 355
             }
           ]
         },
@@ -88848,11 +88880,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 303
+              "line": 320
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 350
+              "line": 367
             }
           ]
         },
@@ -88937,7 +88969,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 694
+              "line": 711
             }
           ]
         },
@@ -89692,7 +89724,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -90786,23 +90818,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -90978,7 +91010,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -91184,7 +91216,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -92316,7 +92348,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -92682,7 +92714,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -93373,15 +93405,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 778
+              "line": 795
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 779
+              "line": 796
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 780
+              "line": 797
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -93563,15 +93595,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 117
+              "line": 134
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 118
+              "line": 135
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 119
+              "line": 136
             }
           ]
         },
@@ -93592,7 +93624,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 242
+              "line": 259
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -94299,7 +94331,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 662
+              "line": 679
             }
           ]
         },
@@ -94350,11 +94382,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 664
+              "line": 681
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 665
+              "line": 682
             }
           ]
         },
@@ -94363,7 +94395,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
@@ -94631,19 +94663,19 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -94819,7 +94851,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -95025,7 +95057,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -95133,7 +95165,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 690
+              "line": 707
             }
           ]
         },
@@ -95142,7 +95174,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 639
+              "line": 656
             }
           ]
         },
@@ -95234,7 +95266,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 671
+              "line": 688
             }
           ]
         },
@@ -95243,7 +95275,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 670
+              "line": 687
             }
           ]
         },
@@ -95282,7 +95314,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 692
+              "line": 709
             }
           ]
         },
@@ -95291,7 +95323,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 680
+              "line": 697
             }
           ]
         },
@@ -95300,11 +95332,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 674
+              "line": 691
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 683
+              "line": 700
             }
           ]
         },
@@ -95343,7 +95375,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 677
+              "line": 694
             }
           ]
         },
@@ -95392,7 +95424,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 669
+              "line": 686
             }
           ]
         },
@@ -95401,7 +95433,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 672
+              "line": 689
             }
           ]
         },
@@ -95437,7 +95469,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 694
+              "line": 711
             }
           ]
         },
@@ -96048,7 +96080,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -96460,7 +96492,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -97048,15 +97080,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 778
+              "line": 795
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 779
+              "line": 796
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 780
+              "line": 797
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -97101,7 +97133,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 242
+              "line": 259
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -98400,7 +98432,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -99441,7 +99473,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -100601,7 +100633,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
@@ -100959,23 +100991,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -101147,7 +101179,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -101353,7 +101385,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -101885,15 +101917,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 778
+              "line": 795
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 779
+              "line": 796
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 780
+              "line": 797
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -102075,15 +102107,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 117
+              "line": 134
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 118
+              "line": 135
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 119
+              "line": 136
             }
           ]
         },
@@ -103434,7 +103466,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -104792,7 +104824,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -105137,23 +105169,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -105329,7 +105361,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
@@ -105551,7 +105583,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -106119,15 +106151,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 778
+              "line": 795
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 779
+              "line": 796
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 780
+              "line": 797
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -106309,15 +106341,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 117
+              "line": 134
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 118
+              "line": 135
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 119
+              "line": 136
             }
           ]
         },
@@ -106338,7 +106370,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 242
+              "line": 259
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -106787,7 +106819,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -107153,7 +107185,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -107844,15 +107876,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 778
+              "line": 795
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 779
+              "line": 796
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 780
+              "line": 797
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -108034,15 +108066,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 117
+              "line": 134
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 118
+              "line": 135
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 119
+              "line": 136
             }
           ]
         },
@@ -108063,7 +108095,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 242
+              "line": 259
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -109055,7 +109087,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -109467,15 +109499,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 606
+              "line": 623
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 607
+              "line": 624
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 608
+              "line": 625
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -110445,7 +110477,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -112056,23 +112088,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -112248,7 +112280,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -112454,7 +112486,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -113348,7 +113380,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 791
+              "line": 808
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FieldStyling.swift",
@@ -113653,23 +113685,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -113845,7 +113877,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -114051,7 +114083,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -115241,23 +115273,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -115417,7 +115449,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -115623,7 +115655,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -118078,7 +118110,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -118255,7 +118287,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -118623,7 +118655,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 785
+              "line": 802
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
@@ -120957,23 +120989,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -121145,7 +121177,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -121347,7 +121379,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -122429,7 +122461,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -123866,7 +123898,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -124749,23 +124781,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -124941,7 +124973,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -125147,7 +125179,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -126188,7 +126220,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -127674,23 +127706,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -127866,7 +127898,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -128072,7 +128104,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -129046,23 +129078,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -129238,7 +129270,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -129444,7 +129476,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -129777,7 +129809,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -130398,7 +130430,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -131367,7 +131399,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 213
+              "line": 230
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -132509,7 +132541,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -133837,23 +133869,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -134029,7 +134061,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -134253,7 +134285,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -134651,7 +134683,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 785
+              "line": 802
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
@@ -134807,7 +134839,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 609
+              "line": 626
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -134924,19 +134956,19 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 254
+              "line": 271
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 258
+              "line": 275
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 259
+              "line": 276
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 260
+              "line": 277
             }
           ]
         },
@@ -134978,7 +135010,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 242
+              "line": 259
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -135124,7 +135156,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 213
+              "line": 230
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -136324,23 +136356,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -136516,7 +136548,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -136722,7 +136754,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -137558,23 +137590,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -137750,7 +137782,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -137969,7 +138001,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -138612,7 +138644,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -138789,7 +138821,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -139133,7 +139165,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 785
+              "line": 802
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
@@ -141263,23 +141295,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -141455,7 +141487,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -141637,7 +141669,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -141674,11 +141706,11 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 515
+              "line": 532
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 538
+              "line": 555
             }
           ]
         },
@@ -141699,11 +141731,11 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 601
+              "line": 618
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 617
+              "line": 634
             }
           ]
         },
@@ -141946,7 +141978,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 609
+              "line": 626
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -142912,7 +142944,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -143795,23 +143827,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -143979,7 +144011,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -144470,7 +144502,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -145024,15 +145056,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 117
+              "line": 134
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 118
+              "line": 135
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 119
+              "line": 136
             }
           ]
         },
@@ -145499,7 +145531,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -145676,7 +145708,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -146017,7 +146049,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 785
+              "line": 802
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
@@ -147850,7 +147882,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -148391,15 +148423,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 778
+              "line": 795
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 779
+              "line": 796
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 780
+              "line": 797
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -148488,15 +148520,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 117
+              "line": 134
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 118
+              "line": 135
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 119
+              "line": 136
             }
           ]
         },
@@ -149453,7 +149485,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -150307,23 +150339,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -150495,7 +150527,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -150701,7 +150733,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -152243,7 +152275,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -152588,23 +152620,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -152780,7 +152812,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
@@ -153002,7 +153034,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -153570,15 +153602,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 778
+              "line": 795
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 779
+              "line": 796
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 780
+              "line": 797
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -153760,15 +153792,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 117
+              "line": 134
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 118
+              "line": 135
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 119
+              "line": 136
             }
           ]
         },
@@ -153789,7 +153821,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 242
+              "line": 259
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -154239,7 +154271,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 748
+              "line": 765
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
@@ -154781,7 +154813,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 791
+              "line": 808
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -155064,7 +155096,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -155897,7 +155929,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 785
+              "line": 802
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CollectionControls.swift",
@@ -156715,15 +156747,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 778
+              "line": 795
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 779
+              "line": 796
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 780
+              "line": 797
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
@@ -158695,23 +158727,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -158887,7 +158919,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -159093,7 +159125,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -160761,7 +160793,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -162733,23 +162765,23 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 422
+              "line": 439
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 442
+              "line": 459
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 484
+              "line": 501
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 654
+              "line": 671
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 735
+              "line": 752
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -162925,7 +162957,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 782
+              "line": 799
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -163131,7 +163163,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 796
+              "line": 813
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
@@ -163405,19 +163437,19 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 254
+              "line": 271
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 258
+              "line": 275
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 259
+              "line": 276
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 260
+              "line": 277
             }
           ]
         },
@@ -163447,15 +163479,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 425
+              "line": 442
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 426
+              "line": 443
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
-              "line": 427
+              "line": 444
             }
           ]
         },

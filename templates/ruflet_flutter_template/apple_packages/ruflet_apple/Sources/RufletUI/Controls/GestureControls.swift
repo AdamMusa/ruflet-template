@@ -45,6 +45,23 @@ private struct MultiTouchReporter: ViewModifier {
   @State private var beganAt: Date?
 
   func body(content: Content) -> some View {
+    guard node.handlesEvent("multi_tap") || node.handlesEvent("multi_long_press") else {
+      return AnyView(content)
+    }
+    #if canImport(UIKit)
+      // UIKit counts the fingers and names the pointer kind; SwiftUI does
+      // neither, so a detector asking for either drops to a recogniser.
+      return AnyView(
+        content.overlay(
+          RufletMultiTouchRecognizer(node: node, events: events)
+            .allowsHitTesting(false)))
+    #else
+      return AnyView(macOSFallback(content))
+    #endif
+  }
+
+  @ViewBuilder
+  private func macOSFallback(_ content: Content) -> some View {
     if node.handlesEvent("multi_tap") || node.handlesEvent("multi_long_press") {
       content.simultaneousGesture(
         MagnificationGesture()
