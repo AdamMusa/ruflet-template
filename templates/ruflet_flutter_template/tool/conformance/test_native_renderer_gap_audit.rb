@@ -54,8 +54,9 @@ class NativeRendererGapAuditTest < Minitest::Test
     video_complete = @report.fetch("missing_events").find do |gap|
       gap.fetch("wire_type") == "Video" && gap.fetch("event") == "complete"
     end
-    refute_nil video_complete
-    assert_equal true, video_complete.fetch("allowed")
+    assert_nil video_complete
+    assert_includes @surface.fetch("Video").fetch("events"), "complete"
+    assert_includes @surface.fetch("Video").fetch("events"), "track_change"
   end
 
   def test_name_allowlist_does_not_accept_unknown_gaps

@@ -10,11 +10,11 @@
     "flet_types": 212,
     "native_declarations": 210,
     "missing_types": 42,
-    "missing_events": 163,
+    "missing_events": 161,
     "missing_methods": 102,
     "undeclared_gaps": 0,
     "declared_baseline_matches": true,
-    "unresolved_gap_set_sha256": "0d592c4cb844472fa93cab2ecf644ea83bd6fc457c71837ce11ce5551f9295b6"
+    "unresolved_gap_set_sha256": "25e5629299d4f66ebb61db8e16d0ec2a39609050f6a220fd14640f7606f1b5c3"
   },
   "missing_types": [
     {
@@ -1599,22 +1599,6 @@
       "wire_type": "TimePicker",
       "native_type": "TimePicker",
       "event": "entry_mode_change",
-      "allowed": true,
-      "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review.",
-      "gap_classification": "initial_api_parity_backlog"
-    },
-    {
-      "wire_type": "Video",
-      "native_type": "Video",
-      "event": "complete",
-      "allowed": true,
-      "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review.",
-      "gap_classification": "initial_api_parity_backlog"
-    },
-    {
-      "wire_type": "Video",
-      "native_type": "Video",
-      "event": "track_change",
       "allowed": true,
       "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review.",
       "gap_classification": "initial_api_parity_backlog"

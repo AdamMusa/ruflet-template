@@ -111,6 +111,22 @@ public struct ControlNode: Equatable {
     props["on_\(name)"]?.boolValue ?? false
   }
 
+  /// Returns the event name Ruby actually registered for a canonical Flet
+  /// event. Ruflet historically exposed a few past-tense aliases; choosing the
+  /// attached spelling here keeps that compatibility out of every renderer.
+  public func handledEventName(_ canonicalName: String) -> String? {
+    if handlesEvent(canonicalName) { return canonicalName }
+    for alias in Self.eventAliases[canonicalName] ?? [] where handlesEvent(alias) {
+      return alias
+    }
+    return nil
+  }
+
+  private static let eventAliases: [String: [String]] = [
+    "complete": ["completed"],
+    "track_change": ["track_changed"]
+  ]
+
   /// True when the Ruby side asked the host to wrap expanding children, which
   /// `Ruflet::Control#to_patch` sets on `view`, `row` and `column`.
   public var hostExpanded: Bool {

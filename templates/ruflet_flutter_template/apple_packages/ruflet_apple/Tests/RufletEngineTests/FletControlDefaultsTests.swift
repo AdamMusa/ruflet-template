@@ -3,6 +3,16 @@ import RufletProtocol
 import XCTest
 
 final class FletControlDefaultsTests: XCTestCase {
+  func testCanonicalFletEventsResolveRufletCompatibilityAliases() {
+    let node = ControlNode(
+      id: 1, type: "Video",
+      props: ["on_completed": .bool(true), "on_track_changed": .bool(true)])
+
+    XCTAssertEqual(node.handledEventName("complete"), "completed")
+    XCTAssertEqual(node.handledEventName("track_change"), "track_changed")
+    XCTAssertNil(node.handledEventName("error"))
+  }
+
   func testRowUsesPinnedFletDefaultsWhenPropertiesAreAbsent() {
     let row = ControlNode(id: 1, type: "Row")
 

@@ -723,15 +723,14 @@ final class VideoPlayerModel: ObservableObject {
       let volume = node.double("volume") ?? 100
       player.volume = Float(max(0, min(volume > 1 ? volume / 100 : volume, 1)))
       playbackRate = Float(node.double("playback_rate") ?? 1)
+      self.node = node
+      self.events = events
       if sources != playlist || !configured {
         playlist = sources
         index = min(index, max(sources.count - 1, 0))
         configured = true
         load(at: index)
       }
-
-      self.node = node
-      self.events = events
 
       if let completionObserver { NotificationCenter.default.removeObserver(completionObserver) }
       completionObserver = NotificationCenter.default.addObserver(
@@ -744,12 +743,12 @@ final class VideoPlayerModel: ObservableObject {
     #endif
   }
 
-  /// Reports `completed` and advances when the control carries a playlist,
+  /// Reports Flet's canonical `complete` event and advances when the control carries a playlist,
   /// which is what Flet's video does at the end of an item.
   private func itemDidFinish() {
     #if canImport(AVKit)
       if let node, let events {
-        events.fire(node, "completed", data: .int(Int64(index)))
+        events.fire(node, "complete", data: .bool(true))
       }
       guard playlist.count > 1, index + 1 < playlist.count else { return }
       load(at: index + 1)
@@ -779,6 +778,9 @@ final class VideoPlayerModel: ObservableObject {
     private func load(at position: Int) {
       guard playlist.indices.contains(position) else { return }
       index = position
+      if let node, let events {
+        events.fire(node, "track_change", data: .int(Int64(position)))
+      }
       let item = AVPlayerItem(url: playlist[position])
       itemStatusObserver = item.observe(\.status, options: [.new]) { [weak self] item, _ in
         Task { @MainActor in

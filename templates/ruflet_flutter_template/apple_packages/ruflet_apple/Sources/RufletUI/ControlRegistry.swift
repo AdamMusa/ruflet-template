@@ -324,7 +324,8 @@ public enum ControlRegistry {
     add(["WebView"], .visible, "WebViewControlView", .nativeView,
         events: ["page_end", "page_start", "url_change"])
     add(["Video"], .visible, "VideoControlView", .nativeView,
-        events: ["completed", "enter_fullscreen", "error", "exit_fullscreen", "loaded"],
+        events: ["complete", "enter_fullscreen", "error", "exit_fullscreen", "loaded",
+                 "track_change"],
         methods: ["get_current_position", "get_duration", "is_completed", "is_playing",
                   "jump_to", "next", "pause", "play", "play_or_pause", "playlist_add",
                   "playlist_remove", "previous", "seek", "stop"])

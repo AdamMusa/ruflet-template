@@ -39,8 +39,8 @@ public struct RufletEventSink {
     _ name: String,
     data: RufletValue = .null
   ) {
-    guard node.handlesEvent(name) else { return }
-    send(node.id, name, data)
+    guard let registeredName = node.handledEventName(name) else { return }
+    send(node.id, registeredName, data)
   }
 
   /// The change path every value-carrying control shares: write locally so the
