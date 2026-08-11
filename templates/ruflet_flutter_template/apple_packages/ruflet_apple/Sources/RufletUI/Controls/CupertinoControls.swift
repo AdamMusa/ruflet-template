@@ -899,25 +899,112 @@ enum RufletCupertinoActivityIndicatorMetrics {
 struct CupertinoAppBarControlView: View {
   let node: ControlNode
 
+  private var configuration: RufletCupertinoAppBarConfiguration {
+    RufletCupertinoAppBarConfiguration(node: node)
+  }
+
   var body: some View {
+    Group {
+      if configuration.large {
+        VStack(alignment: .leading, spacing: 0) {
+          chromeRow
+          title.font(.largeTitle.weight(.bold))
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+      } else {
+        ZStack {
+          chromeRow
+          title.font(.headline)
+        }
+      }
+    }
+    .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets(
+      top: 0, leading: 12, bottom: 0, trailing: 12))
+    .frame(minHeight: configuration.height)
+    .background(appBarBackground)
+    .overlay(alignment: .bottom) { appBarBorder }
+    .preferredColorScheme(preferredColorScheme)
+  }
+
+  private var chromeRow: some View {
     HStack(spacing: 8) {
       if let leadingID = node.controlID(forKey: "leading") {
         ControlView(id: leadingID, axis: .none)
       }
       Spacer(minLength: 0)
-      if let middleID = node.controlID(forKey: "middle") ?? node.controlID(forKey: "title") {
-        ControlView(id: middleID, axis: .none).font(.headline)
-      }
-      Spacer(minLength: 0)
-      if let trailingID = node.controlID(forKey: "trailing") {
-        ControlView(id: trailingID, axis: .none)
+      HStack(spacing: 8) {
+        if let trailingID = node.controlID(forKey: "trailing") {
+          ControlView(id: trailingID, axis: .none)
+        } else {
+          ForEach(actionIDs, id: \.self) { ControlView(id: $0, axis: .none) }
+        }
       }
     }
-    .padding(.horizontal, 12)
-    .frame(height: 44)
-    .background(MaterialPalette.color(node.string("bgcolor")))
-    .overlay(alignment: .bottom) { Divider() }
+    .frame(minHeight: 44)
   }
+
+  @ViewBuilder
+  private var title: some View {
+    if let titleID = node.controlID(forKey: "title") ?? node.controlID(forKey: "middle") {
+      ControlView(id: titleID, axis: .none)
+    }
+  }
+
+  private var actionIDs: [Int] {
+    node.controlIDs(forKey: "actions")
+  }
+
+  @ViewBuilder
+  private var appBarBackground: some View {
+    if let color = MaterialPalette.color(node.string("bgcolor")) {
+      color
+    } else if configuration.backgroundFilterBlur {
+      Rectangle().fill(.ultraThinMaterial)
+    } else {
+      Color.clear
+    }
+  }
+
+  @ViewBuilder
+  private var appBarBorder: some View {
+    if let border = node.map("border") {
+      Rectangle()
+        .fill(MaterialPalette.color(border["color"]?.stringValue, default: .secondary.opacity(0.25)))
+        .frame(height: CGFloat(border["width"]?.doubleValue ?? 0))
+    } else {
+      Divider()
+    }
+  }
+
+  private var preferredColorScheme: ColorScheme? {
+    switch node.string("brightness")?.lowercased() {
+    case "dark": return .dark
+    case "light": return .light
+    default: return nil
+    }
+  }
+}
+
+struct RufletCupertinoAppBarConfiguration {
+  let large: Bool
+  let automaticallyImplyLeading: Bool
+  let automaticallyImplyTitle: Bool
+  let transitionBetweenRoutes: Bool
+  let automaticBackgroundVisibility: Bool
+  let backgroundFilterBlur: Bool
+  let previousPageTitle: String?
+
+  init(node: ControlNode) {
+    large = node.bool("large") ?? false
+    automaticallyImplyLeading = node.bool("automatically_imply_leading") ?? true
+    automaticallyImplyTitle = node.bool("automatically_imply_title") ?? true
+    transitionBetweenRoutes = node.bool("transition_between_routes") ?? true
+    automaticBackgroundVisibility = node.bool("automatic_background_visibility") ?? true
+    backgroundFilterBlur = node.bool("background_filter_blur") ?? true
+    previousPageTitle = node.string("previous_page_title")
+  }
+
+  var height: CGFloat { large ? 88 : 44 }
 }
 
 /// Flet's `CupertinoNavigationBar` is a `CupertinoTabBar`, despite its name:

@@ -1,5 +1,7 @@
 import XCTest
 @testable import RufletUI
+import RufletEngine
+import RufletProtocol
 
 final class CupertinoControlParityTests: XCTestCase {
   func testActivityIndicatorUsesCupertinoTwelveSpokeModel() {
@@ -14,5 +16,43 @@ final class CupertinoControlParityTests: XCTestCase {
     XCTAssertEqual(RufletCupertinoActivityIndicatorMetrics.revealedSpokes(progress: 0.5), 6)
     XCTAssertEqual(RufletCupertinoActivityIndicatorMetrics.revealedSpokes(progress: 1), 12)
     XCTAssertEqual(RufletCupertinoActivityIndicatorMetrics.revealedSpokes(progress: 2), 12)
+  }
+
+  func testAppBarUsesPinnedCupertinoConstructorDefaults() {
+    let configuration = RufletCupertinoAppBarConfiguration(
+      node: ControlNode(id: 1, type: "CupertinoAppBar"))
+
+    XCTAssertFalse(configuration.large)
+    XCTAssertTrue(configuration.automaticallyImplyLeading)
+    XCTAssertTrue(configuration.automaticallyImplyTitle)
+    XCTAssertTrue(configuration.transitionBetweenRoutes)
+    XCTAssertTrue(configuration.automaticBackgroundVisibility)
+    XCTAssertTrue(configuration.backgroundFilterBlur)
+    XCTAssertNil(configuration.previousPageTitle)
+    XCTAssertEqual(configuration.height, 44)
+  }
+
+  func testLargeAppBarAndExplicitNavigationPropertiesArePreserved() {
+    let configuration = RufletCupertinoAppBarConfiguration(
+      node: ControlNode(
+        id: 1, type: "CupertinoAppBar",
+        props: [
+          "large": .bool(true),
+          "automatically_imply_leading": .bool(false),
+          "automatically_imply_title": .bool(false),
+          "transition_between_routes": .bool(false),
+          "automatic_background_visibility": .bool(false),
+          "background_filter_blur": .bool(false),
+          "previous_page_title": .string("Gallery"),
+        ]))
+
+    XCTAssertTrue(configuration.large)
+    XCTAssertFalse(configuration.automaticallyImplyLeading)
+    XCTAssertFalse(configuration.automaticallyImplyTitle)
+    XCTAssertFalse(configuration.transitionBetweenRoutes)
+    XCTAssertFalse(configuration.automaticBackgroundVisibility)
+    XCTAssertFalse(configuration.backgroundFilterBlur)
+    XCTAssertEqual(configuration.previousPageTitle, "Gallery")
+    XCTAssertEqual(configuration.height, 88)
   }
 }
