@@ -14,6 +14,9 @@ enum ButtonVariant {
   case outlined
   case text
   case icon
+  case filledIcon
+  case filledTonalIcon
+  case outlinedIcon
   case floatingAction
 
   init(wireType: String) {
@@ -22,10 +25,21 @@ enum ButtonVariant {
     case "FilledTonalButton": self = .filledTonal
     case "OutlinedButton": self = .outlined
     case "TextButton": self = .text
-    case "IconButton", "FilledIconButton", "FilledTonalIconButton", "OutlinedIconButton":
-      self = .icon
+    case "IconButton": self = .icon
+    case "FilledIconButton": self = .filledIcon
+    case "FilledTonalIconButton": self = .filledTonalIcon
+    case "OutlinedIconButton": self = .outlinedIcon
     case "FloatingActionButton": self = .floatingAction
     default: self = .elevated
+    }
+  }
+
+  /// The four icon-button wire types differ only in their container, so they
+  /// share one label and one style and are told apart by the palette.
+  var isIconButton: Bool {
+    switch self {
+    case .icon, .filledIcon, .filledTonalIcon, .outlinedIcon: return true
+    default: return false
     }
   }
 }
@@ -51,6 +65,8 @@ struct ButtonControlView: View {
     .modifier(FocusReporter(node: node, events: events))
     .modifier(LongPressReporter(node: node, events: events))
     .modifier(HoverReporter(node: node, events: events))
+    .modifier(VisualDensityPadding(value: node.props["visual_density"]))
+    .modifier(TapFeedback(enabled: node.bool("enable_feedback") != false))
     .disabled(node.bool("disabled") ?? false)
   }
 
@@ -62,6 +78,8 @@ struct ButtonControlView: View {
     }
     events.fire(node, "click")
   }
+
+  private var selected: Bool { node.bool("selected") ?? false }
 
   /// `content` is either a nested control or a plain string.
   ///
@@ -76,29 +94,48 @@ struct ButtonControlView: View {
     return node.string("text") ?? node.string("label")
   }
 
+  private var iconSize: CGFloat {
+    node.double("icon_size").map { CGFloat($0) } ?? RufletThemeDefaults.materialIconButtonSize
+  }
+
   @ViewBuilder
   private var label: some View {
     let icon = node.props["icon"]
 
-    if variant == .icon || variant == .floatingAction {
-      if let contentID = node.controlID(forKey: "content") {
-        ControlView(id: contentID, axis: .none)
-      } else if icon != nil {
+    if variant.isIconButton {
+      if icon != nil || node.props["selected_icon"] != nil {
+        // A selected icon button swaps both its glyph and its colour, which is
+        // what Material's isSelected does.
         RufletIcon(
-          value: icon,
-          size: node.double("icon_size").map { CGFloat($0) }
-            ?? RufletThemeDefaults.materialIconButtonSize,
-          color: MaterialPalette.color(node.string("icon_color")))
+          value: selected ? (node.props["selected_icon"] ?? icon) : icon,
+          size: iconSize,
+          color: IconButtonPresentation(node: node).foreground)
+      } else if let contentID = node.controlID(forKey: "content") {
+        ControlView(id: contentID, axis: .none)
       } else if let caption = captionText {
         Text(caption)
+      }
+    } else if variant == .floatingAction {
+      HStack(spacing: RufletThemeDefaults.floatingActionButtonExtendedIconSpacing) {
+        if icon != nil {
+          RufletIcon(value: icon, size: iconSize, color: nil)
+        }
+        // The round FAB shows its icon *or* its content; only the extended one
+        // shows both.
+        if icon == nil || FloatingActionPresentation(node: node).isExtended {
+          if let contentID = node.controlID(forKey: "content") {
+            ControlView(id: contentID, axis: .none)
+          } else if let caption = captionText {
+            Text(caption)
+          }
+        }
       }
     } else {
       HStack(spacing: RufletThemeDefaults.materialButtonIconSpacing) {
         if icon != nil {
           RufletIcon(
             value: icon,
-            size: node.double("icon_size").map { CGFloat($0) }
-              ?? RufletThemeDefaults.materialIconButtonSize,
+            size: iconSize,
             color: MaterialPalette.color(node.string("icon_color")))
         }
         if let contentID = node.controlID(forKey: "content") {
@@ -133,18 +170,171 @@ private struct NativeButtonPresentation<Content: View>: View {
             shadow: MaterialPalette.color(for: node, property: "shadow_color"),
             elevation: node.double("elevation") ?? RufletThemeDefaults.materialButtonElevation))
     case .floatingAction:
-      // Flet passes nil colours to FloatingActionButton, so native/theme
-      // defaults must remain in charge unless Ruby supplied one explicitly.
+      let geometry = FloatingActionPresentation(node: node)
       content()
-        .buttonStyle(.borderedProminent)
-        .modifier(OptionalTint(color: MaterialPalette.color(node.string("bgcolor"))))
-        .modifier(OptionalForeground(color: MaterialPalette.color(node.string("color"))))
-    case .icon:
+        .buttonStyle(
+          RufletFloatingActionStyle(
+            background: geometry.background,
+            foreground: geometry.foreground,
+            overlay: geometry.overlay,
+            radius: geometry.radius,
+            width: geometry.width,
+            height: geometry.height,
+            padding: geometry.padding,
+            elevation: geometry.elevation(),
+            hoverElevation: geometry.elevation(hovered: true),
+            pressedElevation: geometry.pressedElevation,
+            shadow: MaterialPalette.color(node.string("shadow_color"))))
+    case .icon, .filledIcon, .filledTonalIcon, .outlinedIcon:
+      let presentation = IconButtonPresentation(node: node)
       content()
-        .buttonStyle(.borderless)
-        .modifier(OptionalTint(color: foreground))
-        .modifier(OptionalForeground(color: foreground))
+        .buttonStyle(
+          RufletIconButtonStyle(
+            foreground: presentation.foreground,
+            background: presentation.background,
+            outline: presentation.outline,
+            highlight: MaterialPalette.color(node.string("highlight_color")),
+            splash: MaterialPalette.color(node.string("splash_color")),
+            padding: presentation.padding,
+            alignment: presentation.alignment,
+            constraints: presentation.constraints))
     }
+  }
+}
+
+/// The container an icon button draws behind its glyph.
+///
+/// Flet only reaches `parseButtonStyle` when Ruby supplied a `style`, so a
+/// styleless icon button is left to Flutter's own `_IconButtonDefaultsM3`
+/// family. Both paths are represented: the pinned Flet default (`primary`)
+/// applies when a style is present, and the variant palette applies otherwise.
+struct IconButtonPresentation {
+  let node: ControlNode
+
+  static func palette(for node: ControlNode) -> RufletThemeDefaults.IconButtonPalette {
+    var palette = RufletThemeDefaults.iconButtonPalette(
+      control: node.type,
+      selected: node.bool("selected"),
+      disabled: node.bool("disabled") == true)
+    if node.internals["style"]?.mapValue != nil, node.bool("disabled") != true {
+      palette.foreground = RufletThemeDefaults.colorToken(control: node.type, property: "color")
+        ?? palette.foreground
+    }
+    return palette
+  }
+
+  private var palette: RufletThemeDefaults.IconButtonPalette { Self.palette(for: node) }
+
+  var foreground: Color? {
+    if node.bool("disabled") == true {
+      return MaterialPalette.color(node.string("disabled_color"))
+        ?? MaterialPalette.color(palette.foreground)
+    }
+    if node.bool("selected") == true,
+      let onColor = MaterialPalette.color(node.string("selected_icon_color"))
+    {
+      return onColor
+    }
+    return MaterialPalette.color(node.string("icon_color"))
+      ?? MaterialPalette.color(palette.foreground)
+  }
+
+  var background: Color? {
+    MaterialPalette.color(node.string("bgcolor")) ?? MaterialPalette.color(palette.background)
+  }
+
+  var outline: Color? { MaterialPalette.color(palette.outline) }
+
+  var padding: EdgeInsets {
+    ControlProps.edgeInsets(node.props["padding"]) ?? RufletThemeDefaults.materialIconButtonPadding
+  }
+
+  var alignment: Alignment {
+    ControlProps.alignment(node.props["alignment"]) ?? .center
+  }
+
+  /// `size_constraints` is Flutter's `BoxConstraints`; `splash_radius` is the
+  /// older way of naming the same target, so it stands in when no constraints
+  /// were given. Absent both, the button is Material's 40pt target.
+  var constraints: ControlProps.SizeConstraints {
+    if let explicit = ControlProps.sizeConstraints(node.props["size_constraints"]) {
+      return explicit
+    }
+    let side = node.double("splash_radius").map { CGFloat($0) * 2 }
+      ?? RufletThemeDefaults.materialIconButtonTargetSize
+    return ControlProps.SizeConstraints(minWidth: side, minHeight: side)
+  }
+}
+
+/// The floating action button's geometry and colours, which Flet names
+/// separately from the other button families.
+struct FloatingActionPresentation {
+  let node: ControlNode
+
+  var isMini: Bool { node.bool("mini") == true }
+
+  /// A FAB carrying both an icon and content is `FloatingActionButton.extended`
+  /// — a pill that grows with its label rather than a fixed square.
+  var isExtended: Bool { node.props["icon"] != nil && node.props["content"] != nil }
+
+  var side: CGFloat {
+    isMini
+      ? RufletThemeDefaults.floatingActionButtonMiniSize
+      : RufletThemeDefaults.floatingActionButtonSize
+  }
+
+  var width: CGFloat? { isExtended ? nil : side }
+  var height: CGFloat { side }
+
+  var padding: EdgeInsets {
+    isExtended ? RufletThemeDefaults.floatingActionButtonExtendedPadding : EdgeInsets()
+  }
+
+  var radius: CGFloat {
+    if let explicit = ControlProps.cornerRadius(node.map("shape")?["radius"]) { return explicit }
+    return isMini
+      ? RufletThemeDefaults.floatingActionButtonMiniRadius
+      : RufletThemeDefaults.floatingActionButtonRadius
+  }
+
+  var background: Color? {
+    MaterialPalette.color(for: node, property: "bgcolor")
+  }
+
+  var foreground: Color? {
+    MaterialPalette.color(for: node, property: "foreground_color")
+  }
+
+  /// SwiftUI has no hover or focus state inside a `ButtonStyle`, so the
+  /// pressed tint is the one Flet's splash colour maps onto; the hover and
+  /// focus colours stand in for it when only they were given.
+  var overlay: Color? {
+    MaterialPalette.color(node.string("splash_color"))
+      ?? MaterialPalette.color(node.string("hover_color"))
+      ?? MaterialPalette.color(node.string("focus_color"))
+  }
+
+  /// The FAB's resting height. `hovered` is passed in because SwiftUI keeps
+  /// hover inside the view, and `focus_elevation` folds into it: a SwiftUI
+  /// `ButtonStyle` sees neither state, so the raised height they both name is
+  /// applied to the one the platform does report.
+  func elevation(hovered: Bool = false) -> Double {
+    if node.bool("disabled") == true {
+      return node.double("disabled_elevation")
+        ?? RufletThemeDefaults.floatingActionButtonDisabledElevation
+    }
+    if hovered {
+      return node.double("hover_elevation")
+        ?? node.double("focus_elevation")
+        ?? RufletThemeDefaults.floatingActionButtonHoverElevation
+    }
+    return node.double("elevation") ?? RufletThemeDefaults.floatingActionButtonElevation
+  }
+
+  var pressedElevation: Double {
+    if node.bool("disabled") == true { return elevation() }
+    return node.double("highlight_elevation")
+      ?? RufletThemeDefaults.floatingActionButtonHighlightElevation
   }
 }
 
@@ -175,6 +365,90 @@ private struct RufletMaterialButtonStyle: ButtonStyle {
         color: elevation > 0 ? (shadow ?? .clear) : .clear,
         radius: CGFloat(max(elevation, 0)), y: CGFloat(max(elevation, 0) / 2))
       .contentShape(Capsule())
+  }
+}
+
+/// The icon button: a glyph inside a Material target, over whichever container
+/// its variant draws. The splash colour tints it while the pointer is down and
+/// the highlight colour while it rests, which is what Material's ink does with
+/// the two.
+private struct RufletIconButtonStyle: ButtonStyle {
+  let foreground: Color?
+  let background: Color?
+  let outline: Color?
+  let highlight: Color?
+  let splash: Color?
+  let padding: EdgeInsets
+  let alignment: Alignment
+  let constraints: ControlProps.SizeConstraints
+
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label
+      .foregroundColor(foreground)
+      .padding(padding)
+      .frame(
+        minWidth: constraints.minWidth, maxWidth: constraints.maxWidth,
+        minHeight: constraints.minHeight, maxHeight: constraints.maxHeight,
+        alignment: alignment)
+      .background(Circle().fill(background ?? .clear))
+      .background(
+        Circle().fill(configuration.isPressed ? (splash ?? .clear) : (highlight ?? .clear)))
+      .overlay(Circle().strokeBorder(outline ?? .clear))
+      .contentShape(Circle())
+  }
+}
+
+/// The floating action button, whose shape, size and elevation Flet names
+/// separately from the other families. `width` is nil for the extended form,
+/// which grows with its label instead of staying square.
+private struct RufletFloatingActionStyle: ButtonStyle {
+  let background: Color?
+  let foreground: Color?
+  let overlay: Color?
+  let radius: CGFloat
+  let width: CGFloat?
+  let height: CGFloat
+  let padding: EdgeInsets
+  let elevation: Double
+  let hoverElevation: Double
+  let pressedElevation: Double
+  let shadow: Color?
+
+  @State private var hovering = false
+
+  func makeBody(configuration: Configuration) -> some View {
+    let shape = RoundedRectangle(cornerRadius: radius)
+    let raised = configuration.isPressed
+      ? pressedElevation
+      : (hovering ? hoverElevation : elevation)
+    return configuration.label
+      .foregroundColor(foreground)
+      .padding(padding)
+      .frame(minWidth: width, minHeight: height)
+      .background(shape.fill(background ?? .accentColor))
+      .overlay(shape.fill(configuration.isPressed ? (overlay ?? .clear) : .clear))
+      .contentShape(shape)
+      .shadow(
+        color: shadow ?? .black.opacity(0.25),
+        radius: CGFloat(max(raised, 0)), y: CGFloat(max(raised, 0) / 2))
+      .onHover { hovering = $0 }
+  }
+}
+
+/// `enable_feedback` is the platform tap feedback Material plays on a control.
+struct TapFeedback: ViewModifier {
+  let enabled: Bool
+
+  func body(content: Content) -> some View {
+    #if os(iOS)
+      if enabled {
+        return AnyView(content.simultaneousGesture(
+          TapGesture().onEnded {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+          }))
+      }
+    #endif
+    return AnyView(content)
   }
 }
 

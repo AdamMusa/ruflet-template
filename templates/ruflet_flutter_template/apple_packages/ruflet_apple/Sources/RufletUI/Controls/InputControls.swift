@@ -2,9 +2,15 @@ import RufletEngine
 import RufletProtocol
 import SwiftUI
 
-/// `Switch` — a native `Toggle`.
+/// `Switch` — Material's switch, drawn.
 ///
-/// The value is written locally the instant the toggle flips, so the control
+/// A platform `Toggle` cannot take Flet's thumb, track, outline and thumb-icon
+/// colours: SwiftUI exposes only `tint`, and on Apple it renders as the
+/// Cupertino switch, which is the shape `adaptive: true` is supposed to opt
+/// *into*. So the Material switch is drawn here, next to the hand-drawn
+/// checkbox and radio, and `CupertinoSwitch` stays native.
+///
+/// The value is written locally the instant the switch flips, so the control
 /// tracks the finger, and a `change` event follows. `Page#dispatch_event`
 /// applies the same value to the Ruby control before running the handler, so
 /// the two sides agree without a second round trip.
@@ -13,16 +19,32 @@ struct SwitchControlView: View {
   @Environment(\.rufletEvents) private var events
 
   var body: some View {
+    let disabled = node.bool("disabled") ?? false
+
     HStack(spacing: 0) {
       if labelPosition == .left { label }
-      Toggle("", isOn: binding)
-        .labelsHidden()
-        .toggleStyle(.switch)
-        .tint(MaterialPalette.color(for: node, property: "active_color"))
+      MaterialSwitch(node: node, isOn: isOn)
+        .modifier(
+          MaterialStateLayer(
+            node: node,
+            selected: isOn,
+            radius: node.double("splash_radius").map { CGFloat($0) }
+              ?? RufletThemeDefaults.switchTrackHeight / 2))
+        .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets())
       if labelPosition == .right { label }
     }
+    // Flutter wraps a labelled switch in a GestureDetector, so tapping the
+    // label flips it too.
+    .contentShape(Rectangle())
+    .onTapGesture { if !disabled { toggle() } }
+    .modifier(
+      SelectionScaling(
+        node: node,
+        natural: CGSize(
+          width: RufletThemeDefaults.switchTrackWidth,
+          height: RufletThemeDefaults.switchTrackHeight)))
     .modifier(FocusReporter(node: node, events: events))
-    .disabled(node.bool("disabled") ?? false)
+    .disabled(disabled)
   }
 
   private enum LabelPlacement { case left, right }
@@ -31,19 +53,112 @@ struct SwitchControlView: View {
     node.string("label_position")?.lowercased() == "left" ? .left : .right
   }
 
+  private var isOn: Bool { node.bool("value") ?? false }
+
   @ViewBuilder
   private var label: some View {
     if let labelID = node.controlID(forKey: "label") {
       ControlView(id: labelID, axis: .none)
     } else if let value = node.string("label") {
-      Text(value).rufletTextStyle(RufletTextStyle(node: node, styleKey: "label_text_style"))
+      Text(value)
+        .rufletTextStyle(RufletTextStyle(node: node, styleKey: "label_text_style"))
+        // Flutter recolours a disabled label with the theme's disabled colour
+        // rather than leaving the style's own colour in place.
+        .foregroundColor(node.bool("disabled") == true ? Color.secondary : nil)
     }
   }
 
-  private var binding: Binding<Bool> {
-    Binding(
-      get: { node.bool("value") ?? false },
-      set: { events.commit(node, value: .bool($0)) })
+  private func toggle() {
+    events.commit(node, value: .bool(!isOn))
+  }
+}
+
+/// Material's switch: a 52×32 track carrying a thumb that grows from 16pt to
+/// 24pt when it is on, which is Flutter's `_SwitchConfigM3`.
+private struct MaterialSwitch: View {
+  let node: ControlNode
+  let isOn: Bool
+
+  private var states: Set<RufletWidgetState> { node.widgetStates(selected: isOn) }
+
+  var body: some View {
+    ZStack(alignment: isOn ? .trailing : .leading) {
+      Capsule()
+        .fill(trackColor)
+        .overlay(Capsule().strokeBorder(outlineColor, lineWidth: outlineWidth))
+        .frame(
+          width: RufletThemeDefaults.switchTrackWidth,
+          height: RufletThemeDefaults.switchTrackHeight)
+      thumb
+        .padding(.horizontal, RufletThemeDefaults.switchThumbInset)
+    }
+    .frame(
+      width: RufletThemeDefaults.switchTrackWidth,
+      height: RufletThemeDefaults.switchTrackHeight)
+    .animation(.easeInOut(duration: 0.2), value: isOn)
+  }
+
+  private var thumb: some View {
+    let size = isOn
+      ? RufletThemeDefaults.switchSelectedThumbSize
+      : RufletThemeDefaults.switchThumbSize
+    return Circle()
+      .fill(thumbColor)
+      .frame(width: size, height: size)
+      .overlay { thumbIcon }
+      .shadow(radius: isOn ? 1 : 0)
+  }
+
+  /// `thumb_icon` is a widget-state icon: Flet's usual `{selected: …}` table,
+  /// so the glyph can differ between on and off.
+  @ViewBuilder
+  private var thumbIcon: some View {
+    if let icon = RufletWidgetStateProperty.resolve(node.props["thumb_icon"], in: states) {
+      RufletIcon(value: icon, size: RufletThemeDefaults.switchThumbIconSize, color: trackColor)
+    }
+  }
+
+  /// Flet names the track twice: `track_color` is the stateful spelling and
+  /// `active_track_color`/`inactive_track_color` the plain ones. Flutter
+  /// resolves the stateful property first, then the side-specific one, then
+  /// the theme role.
+  private var trackColor: Color {
+    if let stateful = MaterialPalette.color(stateful: node.props["track_color"], in: states) {
+      return stateful
+    }
+    return MaterialPalette.color(
+      for: node,
+      property: isOn ? "active_track_color" : "inactive_track_color",
+      default: .accentColor)
+  }
+
+  /// `active_color` is Flutter's `activeThumbColor` — the thumb, not the
+  /// track it slides along.
+  private var thumbColor: Color {
+    if let stateful = MaterialPalette.color(stateful: node.props["thumb_color"], in: states) {
+      return stateful
+    }
+    return MaterialPalette.color(
+      for: node,
+      property: isOn ? "active_color" : "inactive_thumb_color",
+      default: .white)
+  }
+
+  /// Material outlines the track only while the switch is off; once it is on
+  /// the filled track is the boundary.
+  private var outlineColor: Color {
+    if let stateful = MaterialPalette.color(
+      stateful: node.props["track_outline_color"], in: states)
+    {
+      return stateful
+    }
+    return isOn ? .clear : MaterialPalette.color(for: node, property: "track_outline_color",
+                                                 default: .secondary)
+  }
+
+  private var outlineWidth: CGFloat {
+    ControlProps.statefulDouble(node.props["track_outline_width"], in: states)
+      ?? RufletThemeDefaults.switchTrackOutlineWidth
   }
 }
 
@@ -53,16 +168,19 @@ struct CheckboxControlView: View {
   @Environment(\.rufletEvents) private var events
 
   var body: some View {
-    Button(action: advance) {
-      HStack(spacing: 0) {
-        if labelPosition == .left { label }
-        checkboxMark
-        if labelPosition == .right { label }
-      }
+    let disabled = node.bool("disabled") ?? false
+
+    HStack(spacing: 0) {
+      if labelPosition == .left { label }
+      checkboxMark
+      if labelPosition == .right { label }
     }
-    .buttonStyle(.plain)
+    .contentShape(Rectangle())
+    .onTapGesture { if !disabled { advance() } }
+    .modifier(SelectionScaling(node: node, natural: RufletThemeDefaults.checkboxTargetSize))
     .modifier(FocusReporter(node: node, events: events))
-    .disabled(node.bool("disabled") ?? false)
+    .accessibilityLabel(node.string("semantics_label") ?? "")
+    .disabled(disabled)
   }
 
   private enum LabelPlacement { case left, right }
@@ -76,54 +194,124 @@ struct CheckboxControlView: View {
     if let labelID = node.controlID(forKey: "label") {
       ControlView(id: labelID, axis: .none)
     } else if let value = node.string("label") {
-      Text(value).rufletTextStyle(RufletTextStyle(node: node, styleKey: "label_style"))
+      Text(value)
+        .rufletTextStyle(RufletTextStyle(node: node, styleKey: "label_style"))
+        .foregroundColor(node.bool("disabled") == true ? Color.secondary : nil)
     }
+  }
+
+  private var state: Bool? { RufletCheckboxState.resting(node) }
+
+  private var states: Set<RufletWidgetState> {
+    node.widgetStates(selected: state == true)
   }
 
   private var checkboxMark: some View {
-    let checked = node.bool("value") ?? false
-    let fill = checked
-      ? MaterialPalette.color(node.string("fill_color"))
-        ?? MaterialPalette.color(for: node, property: "active_color", default: .accentColor)
-      : Color.clear
-    let check = MaterialPalette.color(node.string("check_color"), default: .white)
-    let side = node.map("border_side")
-    let borderColor = MaterialPalette.color(side?["color"]?.stringValue, default: .secondary)
-    let borderWidth = CGFloat(side?["width"]?.doubleValue ?? 1.5)
+    let checked = state
+    let side = ControlProps.statefulBorderSide(node.props["border_side"], in: states)
+    let box = ChipShape(
+      radius: ControlProps.cornerRadius(node.map("shape")?["radius"])
+        ?? RufletThemeDefaults.checkboxCornerRadius)
+
     return ZStack {
-      RoundedRectangle(cornerRadius: 3).fill(fill)
-      RoundedRectangle(cornerRadius: 3).strokeBorder(borderColor, lineWidth: borderWidth)
-      if checked { Image(systemName: "checkmark").font(.system(size: 12, weight: .bold)).foregroundColor(check) }
-      else if node.props["value"]?.isNull == true && node.bool("tristate") == true {
-        Image(systemName: "minus").font(.system(size: 12, weight: .bold)).foregroundColor(check)
+      box.fill(checked == false ? .clear : fillColor)
+      box.strokeBorder(
+        checked == false ? (side?.color ?? outlineColor) : .clear,
+        lineWidth: side?.width ?? RufletThemeDefaults.checkboxBorderWidth)
+      // Flutter draws the tick when the box is checked and the dash when it is
+      // indeterminate, both in `check_color`; an unchecked box is empty.
+      if checked != false {
+        Image(systemName: checked == true ? "checkmark" : "minus")
+          .font(.system(size: RufletThemeDefaults.checkboxMarkSize, weight: .bold))
+          .foregroundColor(checkColor)
       }
     }
-    .frame(width: 20, height: 20)
+    .frame(width: RufletThemeDefaults.checkboxSize, height: RufletThemeDefaults.checkboxSize)
+    .frame(width: targetSide, height: targetSide)
+    .modifier(MaterialStateLayer(node: node, selected: state == true, radius: targetSide / 2))
+    .modifier(VisualDensityPadding(value: node.props["visual_density"]))
   }
 
-  private var symbolName: String {
-    guard let value = node.props["value"], !value.isNull else {
-      return node.bool("tristate") == true ? "minus.square.fill" : "square"
-    }
-    return (value.boolValue ?? false) ? "checkmark.square.fill" : "square"
+  /// `splash_radius` names the ripple, and with it the tap target Material
+  /// reserves around an 18pt box.
+  private var targetSide: CGFloat {
+    node.double("splash_radius").map { CGFloat($0) * 2 } ?? RufletThemeDefaults.checkboxTargetSize
   }
 
-  /// false -> true -> (null when tristate) -> false
+  private var fillColor: Color {
+    MaterialPalette.color(stateful: node.props["fill_color"], in: states)
+      ?? MaterialPalette.color(for: node, property: "active_color", default: .accentColor)
+  }
+
+  private var outlineColor: Color {
+    node.bool("error") == true
+      ? MaterialPalette.color("error", default: .red)
+      : MaterialPalette.color(for: node, property: "inactive_color", default: .secondary)
+  }
+
+  private var checkColor: Color {
+    MaterialPalette.color(node.string("check_color"), default: .white)
+  }
+
   private func advance() {
-    let current = node.props["value"]
-    let next: RufletValue
-    if node.bool("tristate") == true {
-      if current == nil || current!.isNull {
-        next = .bool(false)
-      } else if current!.boolValue == false {
-        next = .bool(true)
-      } else {
-        next = .null
-      }
-    } else {
-      next = .bool(!(current?.boolValue ?? false))
+    events.commit(node, value: RufletCheckboxState.next(after: state, tristate: node.bool("tristate") == true))
+  }
+}
+
+/// The checkbox's `bool?` value, which is where Flutter and a naive Bool part
+/// company.
+enum RufletCheckboxState {
+  /// Flutter's value is `bool?`, and Flet defaults it to nil when the box is
+  /// tristate: a tristate checkbox that was never given a value rests
+  /// *indeterminate*, not unchecked, so absence and `false` differ here.
+  static func resting(_ node: ControlNode) -> Bool? {
+    guard let value = node.props["value"], !value.isNull else {
+      return node.bool("tristate") == true ? nil : false
     }
-    events.commit(node, value: next)
+    return value.boolValue ?? false
+  }
+
+  /// Flutter's cycle. Without tristate it is the plain flip; with it, an
+  /// indeterminate box goes to unchecked, unchecked to checked, and checked
+  /// back to indeterminate.
+  static func next(after state: Bool?, tristate: Bool) -> RufletValue {
+    guard tristate else { return .bool(!(state ?? false)) }
+    switch state {
+    case .none: return .bool(false)
+    case .some(false): return .bool(true)
+    case .some(true): return .null
+    }
+  }
+}
+
+/// Flet scales a selection control into `width`/`height` with a `SizedBox`
+/// around a `FittedBox` — its own source calls this "a hack to size the
+/// switch" — rather than re-laying the control out. Scaling rather than
+/// resizing is the observable part, so it is what is reproduced here.
+/// `natural` is the size being scaled from.
+struct SelectionScaling: ViewModifier {
+  let node: ControlNode
+  let natural: CGSize
+
+  init(node: ControlNode, natural: CGSize) {
+    self.node = node
+    self.natural = natural
+  }
+
+  init(node: ControlNode, natural side: CGFloat) {
+    self.init(node: node, natural: CGSize(width: side, height: side))
+  }
+
+  func body(content: Content) -> some View {
+    let width = node.double("width").map { CGFloat($0) }
+    let height = node.double("height").map { CGFloat($0) }
+    if width == nil && height == nil { return AnyView(content) }
+    return AnyView(
+      content
+        .scaleEffect(
+          x: (width ?? natural.width) / natural.width,
+          y: (height ?? natural.height) / natural.height)
+        .frame(width: width, height: height))
   }
 }
 
@@ -137,15 +325,18 @@ struct RadioControlView: View {
   @Environment(\.rufletEvents) private var events
 
   var body: some View {
-    Button(action: select) {
-      HStack(spacing: 0) {
-        if labelPosition == .left { label }
-        radioMark
-        if labelPosition == .right { label }
-      }
+    let disabled = node.bool("disabled") ?? false
+
+    HStack(spacing: 0) {
+      if labelPosition == .left { label }
+      radioMark
+      if labelPosition == .right { label }
     }
-    .buttonStyle(.plain)
-    .disabled(node.bool("disabled") ?? false)
+    .contentShape(Rectangle())
+    .onTapGesture { if !disabled { select() } }
+    .modifier(SelectionScaling(node: node, natural: RufletThemeDefaults.radioTargetSize))
+    .modifier(FocusReporter(node: node, events: events))
+    .disabled(disabled)
   }
 
   private enum LabelPlacement { case left, right }
@@ -159,18 +350,35 @@ struct RadioControlView: View {
     if let labelID = node.controlID(forKey: "label") {
       ControlView(id: labelID, axis: .none)
     } else if let value = node.string("label") {
-      Text(value).rufletTextStyle(RufletTextStyle(node: node, styleKey: "label_style"))
+      Text(value)
+        .rufletTextStyle(RufletTextStyle(node: node, styleKey: "label_style"))
+        .foregroundColor(node.bool("disabled") == true ? Color.secondary : nil)
     }
   }
 
+  private var states: Set<RufletWidgetState> { node.widgetStates(selected: isSelected) }
+
   private var radioMark: some View {
-    let fill = MaterialPalette.color(node.string("fill_color"))
+    let fill = MaterialPalette.color(stateful: node.props["fill_color"], in: states)
       ?? MaterialPalette.color(for: node, property: "active_color", default: .accentColor)
+    let resting = MaterialPalette.color(for: node, property: "inactive_color", default: .secondary)
     return ZStack {
-      Circle().strokeBorder(isSelected ? fill : Color.secondary, lineWidth: 2)
-      if isSelected { Circle().fill(fill).padding(5) }
+      Circle().strokeBorder(
+        isSelected ? fill : resting, lineWidth: RufletThemeDefaults.radioBorderWidth)
+      if isSelected {
+        Circle()
+          .fill(fill)
+          .frame(width: RufletThemeDefaults.radioDotSize, height: RufletThemeDefaults.radioDotSize)
+      }
     }
-    .frame(width: 20, height: 20)
+    .frame(width: RufletThemeDefaults.radioSize, height: RufletThemeDefaults.radioSize)
+    .frame(width: targetSide, height: targetSide)
+    .modifier(MaterialStateLayer(node: node, selected: isSelected, radius: targetSide / 2))
+    .modifier(VisualDensityPadding(value: node.props["visual_density"]))
+  }
+
+  private var targetSide: CGFloat {
+    node.double("splash_radius").map { CGFloat($0) * 2 } ?? RufletThemeDefaults.radioTargetSize
   }
 
   private var group: ControlNode? {
@@ -226,72 +434,186 @@ struct RadioGroupControlView: View {
   }
 }
 
+/// The value/pixel arithmetic both sliders share.
+///
+/// Keeping it out of the views makes the part that was wrong testable: the
+/// range slider used to convert a drag by dividing by the touch's *starting*
+/// x rather than by the track width, so its thumbs did not follow the finger.
+struct RufletSliderScale {
+  let minimum: Double
+  let maximum: Double
+  let divisions: Int?
+  /// Half a thumb, which both ends of the track reserve so the thumb stays
+  /// inside it at the extremes.
+  let inset: CGFloat
+  /// The distance a thumb centre may travel — the track minus one thumb.
+  let travel: CGFloat
+
+  init(
+    minimum: Double,
+    maximum: Double,
+    divisions: Int?,
+    width: CGFloat,
+    thumbWidth: CGFloat
+  ) {
+    self.minimum = minimum
+    self.maximum = maximum
+    self.divisions = (divisions ?? 0) > 0 ? divisions : nil
+    self.inset = thumbWidth / 2
+    self.travel = max(width - thumbWidth, 1)
+  }
+
+  var span: Double { max(maximum - minimum, .ulpOfOne) }
+
+  /// Where a value's thumb centre sits, measured from the track's left edge.
+  func position(of value: Double) -> CGFloat {
+    let clamped = min(max(value, minimum), maximum)
+    return inset + travel * CGFloat((clamped - minimum) / span)
+  }
+
+  /// The value under a point, snapped to `divisions` when there are any.
+  func value(at x: CGFloat) -> Double {
+    let fraction = min(max(Double((x - inset) / travel), 0), 1)
+    let raw = minimum + fraction * span
+    guard let divisions else { return raw }
+    let step = span / Double(divisions)
+    return min(max(minimum + ((raw - minimum) / step).rounded() * step, minimum), maximum)
+  }
+}
+
+/// How much of the track responds to a tap or drag.
+///
+/// Flutter's `SliderInteraction`, which Flet spells `interaction`.
+enum RufletSliderInteraction: String {
+  case tapAndSlide
+  case tapOnly
+  case slideOnly
+  case slideThumb
+
+  init(wire: String?) {
+    switch wire?.lowercased().replacingOccurrences(of: "_", with: "") {
+    case "taponly": self = .tapOnly
+    case "slideonly": self = .slideOnly
+    case "slidethumb": self = .slideThumb
+    default: self = .tapAndSlide
+    }
+  }
+
+  /// Whether a gesture starting away from the thumb may move it.
+  var acceptsTrackGestures: Bool { self != .slideThumb }
+  var acceptsSlide: Bool { self != .tapOnly }
+}
+
 /// `Slider` — a continuous or stepped value.
 ///
 /// Reports `change_start` when the drag begins, `change` while it moves and
 /// `change_end` when it settles, which is the trio Flet's Slider emits.
+///
+/// Drawn rather than delegated to SwiftUI's `Slider`, which offers no way to
+/// colour the inactive track, the thumb or the secondary track, and no value
+/// bubble — four of the properties Flet's Slider carries.
 struct SliderControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
+  @State private var dragging = false
 
   var body: some View {
-    let minimum = node.double("min") ?? 0
-    let maximum = node.double("max") ?? 1
-    let range = minimum...max(maximum, minimum + .ulpOfOne)
+    let value = clampedValue
 
-    Group {
-      if let divisions = node.int("divisions"), divisions > 0 {
-        Slider(
-          value: binding, in: range,
-          step: (range.upperBound - range.lowerBound) / Double(divisions),
-          onEditingChanged: reportEditing)
-      } else {
-        Slider(value: binding, in: range, onEditingChanged: reportEditing)
-      }
-    }
-    .tint(MaterialPalette.color(for: node, property: "active_color"))
-    .modifier(FocusReporter(node: node, events: events))
-    .disabled(node.bool("disabled") ?? false)
+    MaterialSliderTrack(
+      node: node,
+      thumbs: [value],
+      secondary: node.double("secondary_track_value"),
+      activeRange: minimum...value,
+      interaction: RufletSliderInteraction(wire: node.string("interaction")),
+      bubble: dragging ? bubbleText(for: value) : nil,
+      scale: scale(width:),
+      onEdit: { editing in
+        dragging = editing
+        events.fire(node, editing ? "change_start" : "change_end", data: .double(clampedValue))
+      },
+      onMove: { _, proposed in events.commit(node, value: .double(proposed)) })
+      .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets())
+      .modifier(FocusReporter(node: node, events: events))
+      .disabled(node.bool("disabled") ?? false)
   }
 
-  private var binding: Binding<Double> {
-    Binding(
-      get: { node.double("value") ?? (node.double("min") ?? 0) },
-      set: { events.commit(node, value: .double($0)) })
+  private var minimum: Double { node.double("min") ?? 0 }
+  private var maximum: Double { node.double("max") ?? 1 }
+
+  private var clampedValue: Double {
+    min(max(node.double("value") ?? minimum, minimum), max(maximum, minimum))
   }
 
-  private func reportEditing(_ editing: Bool) {
-    let value = RufletValue.double(node.double("value") ?? 0)
-    events.fire(node, editing ? "change_start" : "change_end", data: value)
+  private func scale(width: CGFloat) -> RufletSliderScale {
+    RufletSliderScale(
+      minimum: minimum, maximum: maximum, divisions: node.int("divisions"), width: width,
+      thumbWidth: RufletThemeDefaults.sliderMetrics(year2023: node.bool("year_2023")).thumbWidth)
+  }
+
+  /// Flet's `label` is a template: it substitutes the thumb's value, rounded
+  /// to `round` decimals, wherever `{value}` appears.
+  private func bubbleText(for value: Double) -> String? {
+    guard let template = node.string("label"), !template.isEmpty else { return nil }
+    let digits = max(node.int("round") ?? 0, 0)
+    return template.replacingOccurrences(
+      of: RufletThemeDefaults.sliderLabelValueToken,
+      with: String(format: "%.\(digits)f", value))
   }
 }
 
 /// `RangeSlider` — two thumbs over one track.
-///
-/// SwiftUI has no range slider, so this is built from two overlaid sliders that
-/// clamp against each other, keeping `start_value` below `end_value`.
 struct RangeSliderControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
+  @State private var dragging = false
 
   var body: some View {
-    let minimum = node.double("min") ?? 0
-    let maximum = node.double("max") ?? 1
     let values = RufletThemeDefaults.rangeSliderValues(node)
-    let start = values.start
-    let end = values.end
+    let start = min(max(values.start, minimum), maximum)
+    let end = min(max(values.end, start), maximum)
 
-    RufletRangeSlider(
-      start: start,
-      end: end,
-      minimum: minimum,
-      maximum: maximum,
-      divisions: node.int("divisions"),
-      activeColor: MaterialPalette.color(for: node, property: "active_color", default: .accentColor),
-      inactiveColor: MaterialPalette.color(node.string("inactive_color"), default: .secondary.opacity(0.25)),
-      onChange: commit,
-      onEditingChanged: { editing in events.fire(node, editing ? "change_start" : "change_end") })
-    .disabled(node.bool("disabled") ?? false)
+    MaterialSliderTrack(
+      node: node,
+      thumbs: [start, end],
+      secondary: nil,
+      activeRange: start...end,
+      interaction: RufletSliderInteraction(wire: node.string("interaction")),
+      bubble: dragging ? bubbleText(start: start, end: end) : nil,
+      scale: scale(width:),
+      onEdit: { editing in
+        dragging = editing
+        events.fire(node, editing ? "change_start" : "change_end")
+      },
+      onMove: { index, proposed in
+        // Each thumb clamps against the other, so the pair stays ordered even
+        // when one is dragged past its neighbour.
+        if index == 0 {
+          commit(start: min(proposed, end), end: end)
+        } else {
+          commit(start: start, end: max(proposed, start))
+        }
+      })
+      .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets())
+      .disabled(node.bool("disabled") ?? false)
+  }
+
+  private var minimum: Double { node.double("min") ?? 0 }
+  private var maximum: Double { node.double("max") ?? 1 }
+
+  private func scale(width: CGFloat) -> RufletSliderScale {
+    RufletSliderScale(
+      minimum: minimum, maximum: maximum, divisions: node.int("divisions"), width: width,
+      thumbWidth: RufletThemeDefaults.sliderMetrics(year2023: node.bool("year_2023")).thumbWidth)
+  }
+
+  private func bubbleText(start: Double, end: Double) -> String? {
+    guard let template = node.string("label"), !template.isEmpty else { return nil }
+    let digits = max(node.int("round") ?? 0, 0)
+    let format = "%.\(digits)f"
+    return template.replacingOccurrences(
+      of: RufletThemeDefaults.sliderLabelValueToken,
+      with: "\(String(format: format, start))–\(String(format: format, end))")
   }
 
   /// `Page#apply_event_value_to_control` looks for a `start_value`/`end_value`
@@ -306,54 +628,145 @@ struct RangeSliderControlView: View {
   }
 }
 
-private struct RufletRangeSlider: View {
-  let start: Double
-  let end: Double
-  let minimum: Double
-  let maximum: Double
-  let divisions: Int?
-  let activeColor: Color
-  let inactiveColor: Color
-  let onChange: (Double, Double) -> Void
-  let onEditingChanged: (Bool) -> Void
+/// Material's slider track, shared by `Slider` and `RangeSlider`.
+///
+/// `thumbs` is one value or two; `activeRange` is the stretch drawn in the
+/// active colour, which is min…value for one thumb and start…end for two.
+private struct MaterialSliderTrack: View {
+  let node: ControlNode
+  let thumbs: [Double]
+  let secondary: Double?
+  let activeRange: ClosedRange<Double>
+  let interaction: RufletSliderInteraction
+  let bubble: String?
+  let scale: (CGFloat) -> RufletSliderScale
+  let onEdit: (Bool) -> Void
+  let onMove: (Int, Double) -> Void
+
+  @State private var held: Int?
+
+  /// The 2023 or 2024 slider shape, chosen by `year_2023`.
+  private var shape: RufletThemeDefaults.SliderMetrics {
+    RufletThemeDefaults.sliderMetrics(year2023: node.bool("year_2023"))
+  }
 
   var body: some View {
     GeometryReader { proxy in
-      let width = max(proxy.size.width - 24, 1)
-      let startX = 12 + width * fraction(start)
-      let endX = 12 + width * fraction(end)
+      let scale = self.scale(proxy.size.width)
       ZStack(alignment: .leading) {
-        Capsule().fill(inactiveColor).frame(height: 4).padding(.horizontal, 12)
-        Capsule().fill(activeColor).frame(width: max(endX - startX, 0), height: 4).offset(x: startX)
-        thumb(at: startX) { proposed in onChange(min(snapped(proposed, width: width), end), end) }
-        thumb(at: endX) { proposed in onChange(start, max(snapped(proposed, width: width), start)) }
+        Capsule()
+          .fill(inactiveColor)
+          .frame(height: shape.trackHeight)
+        if let secondary {
+          segment(from: activeRange.lowerBound, to: secondary, in: scale)
+            .fill(secondaryColor)
+        }
+        segment(from: activeRange.lowerBound, to: activeRange.upperBound, in: scale)
+          .fill(activeColor)
+        ForEach(Array(thumbs.enumerated()), id: \.offset) { index, value in
+          thumb(labelled: index == thumbs.count - 1)
+            .offset(x: scale.position(of: value) - shape.thumbWidth / 2)
+        }
       }
+      .frame(maxHeight: .infinity)
+      .contentShape(Rectangle())
+      .gesture(gesture(in: scale))
     }
-    .frame(minHeight: 44)
+    .frame(height: shape.height)
   }
 
-  private func thumb(at x: CGFloat, changed: @escaping (Double) -> Void) -> some View {
-    Circle()
-      .fill(activeColor)
-      .frame(width: 20, height: 20)
+  private func gesture(in scale: RufletSliderScale) -> some Gesture {
+    DragGesture(minimumDistance: 0)
+      .onChanged { drag in
+        let proposed = scale.value(at: drag.location.x)
+        if held == nil {
+          // Which thumb a gesture owns is decided once, where it went down,
+          // and the same thumb keeps it for the whole drag.
+          guard let claimed = claim(at: drag.startLocation.x, in: scale) else { return }
+          held = claimed
+          onEdit(true)
+        }
+        guard interaction.acceptsSlide || drag.translation == .zero else { return }
+        onMove(held ?? 0, proposed)
+      }
+      .onEnded { _ in
+        guard held != nil else { return }
+        held = nil
+        onEdit(false)
+      }
+  }
+
+  /// The thumb a gesture starting at `x` moves, or nil when the interaction
+  /// mode refuses it.
+  private func claim(at x: CGFloat, in scale: RufletSliderScale) -> Int? {
+    let distances = thumbs.enumerated().map { ($0.offset, abs(scale.position(of: $0.element) - x)) }
+    guard let nearest = distances.min(by: { $0.1 < $1.1 }) else { return nil }
+    // Material's thumb is easier to grab than it is wide, so the hit slop is
+    // the overlay radius rather than the drawn thumb.
+    let onThumb = nearest.1 <= shape.overlayRadius
+    guard onThumb || interaction.acceptsTrackGestures else { return nil }
+    return nearest.0
+  }
+
+  private func segment(
+    from lower: Double, to upper: Double, in scale: RufletSliderScale
+  ) -> some Shape {
+    let start = scale.position(of: min(lower, upper))
+    let end = scale.position(of: max(lower, upper))
+    return SliderSegment(start: start, width: max(end - start, 0), height: shape.trackHeight)
+  }
+
+  private func thumb(labelled: Bool) -> some View {
+    Capsule()
+      .fill(thumbColor)
+      .frame(width: shape.thumbWidth, height: shape.thumbHeight)
       .shadow(radius: 1)
-      .offset(x: x - 10)
-      .gesture(
-        DragGesture(minimumDistance: 0)
-          .onChanged { value in
-            onEditingChanged(true)
-            changed(minimum + Double(max(0, value.location.x - 12)) * span / Double(max(1, value.startLocation.x + 1)))
-          }
-          .onEnded { _ in onEditingChanged(false) })
+      .modifier(
+        MaterialStateLayer(node: node, selected: false, radius: shape.overlayRadius))
+      .overlay(alignment: .top) {
+        if labelled, let bubble {
+          Text(bubble)
+            .font(.caption)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(Capsule().fill(activeColor))
+            .foregroundColor(.white)
+            .fixedSize()
+            .offset(y: -shape.thumbHeight - 8)
+        }
+      }
   }
 
-  private var span: Double { max(maximum - minimum, .ulpOfOne) }
-  private func fraction(_ value: Double) -> CGFloat { CGFloat((value - minimum) / span) }
-  private func snapped(_ x: Double, width: CGFloat) -> Double {
-    let raw = minimum + min(max(x / Double(width), 0), 1) * span
-    guard let divisions, divisions > 0 else { return raw }
-    let step = span / Double(divisions)
-    return minimum + ((raw - minimum) / step).rounded() * step
+  private var states: Set<RufletWidgetState> { node.widgetStates(selected: false) }
+
+  private var activeColor: Color {
+    MaterialPalette.color(for: node, property: "active_color", default: .accentColor)
+  }
+
+  private var inactiveColor: Color {
+    MaterialPalette.color(for: node, property: "inactive_color", default: .secondary.opacity(0.25))
+  }
+
+  private var secondaryColor: Color {
+    MaterialPalette.color(for: node, property: "secondary_active_color", default: activeColor)
+  }
+
+  private var thumbColor: Color {
+    MaterialPalette.color(stateful: node.props["thumb_color"], in: states)
+      ?? MaterialPalette.color(for: node, property: "thumb_color", default: activeColor)
+  }
+}
+
+/// A stretch of the track, positioned from its left edge.
+private struct SliderSegment: Shape {
+  let start: CGFloat
+  let width: CGFloat
+  let height: CGFloat
+
+  func path(in rect: CGRect) -> Path {
+    let bounds = CGRect(
+      x: start, y: rect.midY - height / 2, width: width, height: height)
+    return Capsule().path(in: bounds)
   }
 }
 
@@ -1310,6 +1723,9 @@ struct DropdownM2ControlView: View {
           select(option)
         } label: {
           optionLabel(option)
+            .frame(
+              maxWidth: node.bool("options_fill_horizontally") == true ? .infinity : nil,
+              minHeight: node.double("item_height").map { CGFloat($0) })
         }
         .disabled(option.bool("disabled") ?? false)
       }
@@ -1331,9 +1747,12 @@ struct DropdownM2ControlView: View {
       .overlay(borderStroke)
     }
     .modifier(FixedMenuOrder())
+    .frame(maxHeight: node.double("max_menu_height").map { CGFloat($0) })
     .simultaneousGesture(TapGesture().onEnded { events.fire(node, "click") })
     .modifier(FocusReporter(node: node, events: events))
+    .modifier(TapFeedback(enabled: node.bool("enable_feedback") != false))
     .modifier(RufletFormFieldDecoration(node: node))
+    .shadow(radius: CGFloat(node.double("elevation") ?? 0))
     .disabled(node.bool("disabled") ?? false)
   }
 
@@ -1345,11 +1764,23 @@ struct DropdownM2ControlView: View {
     } else {
       Image(systemName: "chevron.down")
         .font(.system(size: CGFloat(node.double("select_icon_size") ?? 13)))
-        .foregroundColor(
-          MaterialPalette.color(
-            node.string(disabled ? "select_icon_disabled_color" : "select_icon_enabled_color"),
-            default: disabled ? .secondary : .primary))
+        .foregroundColor(selectIconColor(disabled: disabled))
     }
+  }
+
+  /// A disabled dropdown shows its own hint control, if Ruby gave one.
+  private var hintContentID: Int? {
+    if node.bool("disabled") == true, let disabled = node.controlID(forKey: "disabled_hint_content") {
+      return disabled
+    }
+    return node.controlID(forKey: "hint_content")
+  }
+
+  private func selectIconColor(disabled: Bool) -> Color {
+    guard disabled else {
+      return MaterialPalette.color(node.string("select_icon_enabled_color"), default: .primary)
+    }
+    return MaterialPalette.color(node.string("select_icon_disabled_color"), default: .secondary)
   }
 
   private var hintStyle: RufletTextStyle {
@@ -1409,9 +1840,7 @@ struct DropdownM2ControlView: View {
       })
     {
       optionLabel(option)
-    } else if let hintID = node.controlID(
-      forKey: node.bool("disabled") == true ? "disabled_hint_content" : "hint_content")
-    {
+    } else if let hintID = hintContentID {
       ControlView(id: hintID, axis: .none)
     } else {
       Text(node.string("hint_text") ?? "")

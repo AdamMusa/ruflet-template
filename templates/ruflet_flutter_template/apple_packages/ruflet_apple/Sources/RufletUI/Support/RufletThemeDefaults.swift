@@ -39,15 +39,42 @@ enum RufletThemeDefaults {
          ("FilledTonalIconButton", "color"), ("OutlinedIconButton", "color"):
       return "primary"
 
+    // Flutter's `_FABDefaultsM3`. Flet passes no colours to
+    // FloatingActionButton at all, so these are the theme's, not Flet's.
+    case ("FloatingActionButton", "bgcolor"):
+      return "primarycontainer"
+    case ("FloatingActionButton", "foreground_color"):
+      return "onprimarycontainer"
+
     // Flutter receives nil for omitted selection colours and resolves them
     // through the Material theme. These are the corresponding Material 3
     // roles used by the native marks/tracks, not control-local constants.
     case ("Checkbox", "active_color"), ("Radio", "active_color"),
-         ("Switch", "active_color"), ("Slider", "active_color"),
-         ("RangeSlider", "active_color"):
+         ("Slider", "active_color"), ("RangeSlider", "active_color"):
       return "primary"
     case ("Checkbox", "inactive_color"), ("Radio", "inactive_color"):
       return "onsurfacevariant"
+
+    // Flutter's `_SwitchDefaultsM3`. The switch is the one selection control
+    // whose thumb and track are coloured independently, so `active_color` is
+    // its *thumb* — naming it `primary` alongside the others would have
+    // painted the thumb the colour of the track it sits on.
+    case ("Switch", "active_color"):
+      return "onprimary"
+    case ("Switch", "inactive_thumb_color"):
+      return "outline"
+    case ("Switch", "active_track_color"):
+      return "primary"
+    case ("Switch", "inactive_track_color"):
+      return "surfacecontainerhighest"
+    case ("Switch", "track_outline_color"):
+      return "outline"
+    case ("Slider", "inactive_color"), ("RangeSlider", "inactive_color"):
+      return "surfacecontainerhighest"
+    case ("Slider", "thumb_color"), ("RangeSlider", "thumb_color"):
+      return "primary"
+    case ("Slider", "secondary_active_color"):
+      return "primary,0.54"
     case ("Chip", "selected_color"):
       return "secondarycontainer"
     case ("Chip", "border_color"), ("SegmentedButton", "border_color"):
@@ -94,6 +121,156 @@ enum RufletThemeDefaults {
   static let materialButtonElevation = 1.0
   static let materialButtonIconSpacing: CGFloat = 8
   static let materialIconButtonSize: CGFloat = 24
+
+  // Flutter's `_IconButtonDefaultsM3` geometry: a 40×40 target holding a 24pt
+  // glyph inside 8pt of padding.
+  static let materialIconButtonTargetSize: CGFloat = 40
+  static let materialIconButtonPadding = EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
+
+  /// The container, glyph and outline an icon button resolves to when Ruby
+  /// named no colour.
+  ///
+  /// Flutter keeps one set of these per variant (`_IconButtonDefaultsM3`,
+  /// `_FilledIconButtonDefaultsM3`, and the tonal and outlined pairs) and
+  /// resolves them against the button's material state. Two of those states
+  /// are visible here: `selected`, and Flutter's *toggleable* case, which is
+  /// the button having been given an `is_selected` at all. A filled icon
+  /// button that can be toggled is a tinted surface while it is off, and the
+  /// primary container once it is on; one that cannot be toggled is always
+  /// the primary container. Distinguishing them needs `selected` to stay
+  /// optional, hence the triple state rather than a Bool.
+  struct IconButtonPalette: Equatable {
+    var background: String?
+    var foreground: String?
+    var outline: String?
+  }
+
+  static func iconButtonPalette(
+    control: String,
+    selected: Bool?,
+    disabled: Bool
+  ) -> IconButtonPalette {
+    // Flutter's disabled states are the same two opacities on onSurface for
+    // every variant: 0.12 behind, 0.38 in front.
+    let disabledBackground = "onsurface,0.12"
+    let disabledForeground = "onsurface,0.38"
+    let toggleable = selected != nil
+    let isOn = selected == true
+
+    switch control {
+    case "FilledIconButton":
+      if disabled {
+        return IconButtonPalette(background: disabledBackground, foreground: disabledForeground)
+      }
+      if isOn || !toggleable {
+        return IconButtonPalette(background: "primary", foreground: "onprimary")
+      }
+      return IconButtonPalette(background: "surfacecontainerhighest", foreground: "primary")
+
+    case "FilledTonalIconButton":
+      if disabled {
+        return IconButtonPalette(background: disabledBackground, foreground: disabledForeground)
+      }
+      if isOn || !toggleable {
+        return IconButtonPalette(
+          background: "secondarycontainer", foreground: "onsecondarycontainer")
+      }
+      return IconButtonPalette(
+        background: "surfacecontainerhighest", foreground: "onsurfacevariant")
+
+    case "OutlinedIconButton":
+      if disabled {
+        return IconButtonPalette(
+          background: isOn ? disabledBackground : nil,
+          foreground: disabledForeground,
+          outline: isOn ? nil : disabledBackground)
+      }
+      if isOn {
+        return IconButtonPalette(background: "inversesurface", foreground: "oninversesurface")
+      }
+      return IconButtonPalette(foreground: "onsurfacevariant", outline: "outline")
+
+    default:
+      // The standard IconButton has no container at all; only the glyph moves,
+      // to primary once the button is on.
+      if disabled { return IconButtonPalette(foreground: disabledForeground) }
+      return IconButtonPalette(foreground: isOn ? "primary" : "onsurfacevariant")
+    }
+  }
+
+  // Flutter's `_FABDefaultsM3`: a 56pt container on a 16pt rounded rectangle,
+  // 40pt and 12pt when mini, and a 56pt pill when extended. The four
+  // elevations are the FAB's resting, hovered, focused and pressed states.
+  static let floatingActionButtonSize: CGFloat = 56
+  static let floatingActionButtonMiniSize: CGFloat = 40
+  static let floatingActionButtonRadius: CGFloat = 16
+  static let floatingActionButtonMiniRadius: CGFloat = 12
+  static let floatingActionButtonElevation = 6.0
+  static let floatingActionButtonHoverElevation = 8.0
+  static let floatingActionButtonFocusElevation = 6.0
+  static let floatingActionButtonHighlightElevation = 6.0
+  static let floatingActionButtonDisabledElevation = 0.0
+  /// The extended FAB's asymmetric inset — 16pt before the icon, 20pt after
+  /// the label — and the gap Flutter leaves between them.
+  static let floatingActionButtonExtendedPadding =
+    EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 20)
+  static let floatingActionButtonExtendedIconSpacing: CGFloat = 12
+
+  // Flutter's `_SwitchConfigM3`: a 52×32 track whose thumb grows from 16pt to
+  // 24pt as it travels, with a 2pt outline while the switch is off.
+  static let switchTrackWidth: CGFloat = 52
+  static let switchTrackHeight: CGFloat = 32
+  static let switchThumbSize: CGFloat = 16
+  static let switchSelectedThumbSize: CGFloat = 24
+  static let switchThumbIconSize: CGFloat = 16
+  static let switchThumbInset: CGFloat = 4
+  static let switchTrackOutlineWidth: CGFloat = 2
+
+  /// The slider's two shapes.
+  ///
+  /// Flutter's `year2023` flag chooses between the original Material 3 slider
+  /// — a 4pt track under a round 20pt thumb — and the 2024 revision, which
+  /// thickens the track to 16pt and narrows the thumb to a 4pt bar. Flet
+  /// passes the flag through unset, so Flutter's own default (the 2023 shape)
+  /// is what an unconfigured slider gets.
+  struct SliderMetrics: Equatable {
+    var trackHeight: CGFloat
+    var thumbWidth: CGFloat
+    var thumbHeight: CGFloat
+    var overlayRadius: CGFloat
+    var height: CGFloat
+
+    /// The width a thumb occupies horizontally, which is what the track's
+    /// travel is measured against.
+    var thumbFootprint: CGFloat { thumbWidth }
+  }
+
+  static func sliderMetrics(year2023: Bool?) -> SliderMetrics {
+    guard year2023 == false else {
+      return SliderMetrics(
+        trackHeight: 4, thumbWidth: 20, thumbHeight: 20, overlayRadius: 20, height: 48)
+    }
+    return SliderMetrics(
+      trackHeight: 16, thumbWidth: 4, thumbHeight: 44, overlayRadius: 20, height: 48)
+  }
+
+  /// Flet's `Slider(label:)` substitutes the thumb's value into this token.
+  static let sliderLabelValueToken = "{value}"
+
+  // Flutter's `_CheckboxDefaultsM3`: an 18pt box on a 2pt radius, with a 2pt
+  // outline, inside the 40pt target the ripple uses.
+  static let checkboxSize: CGFloat = 18
+  static let checkboxCornerRadius: CGFloat = 2
+  static let checkboxBorderWidth: CGFloat = 2
+  static let checkboxTargetSize: CGFloat = 40
+  static let checkboxMarkSize: CGFloat = 12
+
+  // Flutter's `_RadioDefaultsM3`: a 20pt ring on a 2pt stroke, with a 10pt dot,
+  // inside the same 40pt target the checkbox uses.
+  static let radioSize: CGFloat = 20
+  static let radioBorderWidth: CGFloat = 2
+  static let radioDotSize: CGFloat = 10
+  static let radioTargetSize: CGFloat = 40
 
   // Defaults passed by Flet to Flutter's CupertinoButton constructor. Padding
   // and colours deliberately remain nil so CupertinoButton/SwiftUI owns the

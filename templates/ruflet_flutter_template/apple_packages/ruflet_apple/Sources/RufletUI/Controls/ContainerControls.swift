@@ -2,6 +2,88 @@ import RufletEngine
 import RufletProtocol
 import SwiftUI
 
+/// `ink` paints Material's touch ripple inside the container's own shape.
+private struct ContainerInk: ViewModifier {
+  let node: ControlNode
+  let radii: RufletCornerRadii
+  @State private var pressed = false
+
+  func body(content: Content) -> some View {
+    guard node.bool("ink") == true else { return AnyView(content) }
+    return AnyView(
+      content
+        .background(
+          RufletRoundedRectangle(radii: radii)
+            .fill(pressed
+              ? MaterialPalette.color(node.string("ink_color"), default: .primary.opacity(0.1))
+              : .clear))
+        .simultaneousGesture(
+          DragGesture(minimumDistance: 0)
+            .onChanged { _ in pressed = true }
+            .onEnded { _ in pressed = false }))
+  }
+}
+
+/// `blur` is Flutter's backdrop filter over whatever the container covers.
+private struct ContainerBlur: ViewModifier {
+  let amount: Double?
+
+  func body(content: Content) -> some View {
+    if let amount, amount > 0 {
+      content.background(.ultraThinMaterial).blur(radius: CGFloat(amount))
+    } else {
+      content
+    }
+  }
+}
+
+/// `color_filter` is a colour composited over the container in a blend mode.
+private struct ContainerColorFilter: ViewModifier {
+  let value: RufletValue?
+
+  func body(content: Content) -> some View {
+    guard let map = value?.mapValue,
+      let color = MaterialPalette.color(map["color"]?.stringValue)
+    else { return AnyView(content) }
+    return AnyView(
+      content.overlay(
+        color.blendMode(ControlProps.blendMode(map["blend_mode"]?.stringValue))))
+  }
+}
+
+/// `foreground_decoration` paints over the child rather than behind it.
+private struct ContainerForeground: ViewModifier {
+  let node: ControlNode
+  let radii: RufletCornerRadii
+
+  func body(content: Content) -> some View {
+    guard let decoration = node.map("foreground_decoration") else { return AnyView(content) }
+    let shape = RufletRoundedRectangle(radii: radii)
+    return AnyView(
+      content.overlay(
+        shape.fill(MaterialPalette.color(decoration["color"]?.stringValue, default: .clear))))
+  }
+}
+
+/// `shadow` is Flutter's BoxShadow list; SwiftUI takes them one at a time.
+private struct ContainerShadows: ViewModifier {
+  let value: RufletValue?
+
+  func body(content: Content) -> some View {
+    var result = AnyView(content)
+    for shadow in value?.arrayValue ?? [] {
+      guard let map = shadow.mapValue else { continue }
+      result = AnyView(
+        result.shadow(
+          color: MaterialPalette.color(map["color"]?.stringValue, default: .black.opacity(0.2)),
+          radius: CGFloat(map["blur_radius"]?.doubleValue ?? 0),
+          x: CGFloat(map["offset"]?.mapValue?["x"]?.doubleValue ?? 0),
+          y: CGFloat(map["offset"]?.mapValue?["y"]?.doubleValue ?? 0)))
+    }
+    return result
+  }
+}
+
 /// `Page` — the session root, wire id 1.
 ///
 /// Its `views` prop is a navigator stack; Flet renders the top of it, and so
@@ -386,10 +468,30 @@ struct ContainerControlView: View {
       )
       .background(background(radii: radii))
       .overlay(borderStroke(border: border, radii: radii))
-      .clipShape(RufletRoundedRectangle(radii: radii))
-      .contentShape(RufletRoundedRectangle(radii: radii))
+      // Flutter's BoxShape: a circle ignores the radii entirely.
+      .clipShape(RufletRoundedRectangle(radii: containerRadii))
+      .contentShape(RufletRoundedRectangle(radii: containerRadii))
       .modifier(TapReporter(node: node, events: events))
+      .modifier(ContainerInk(node: node, radii: radii))
+      .modifier(ContainerBlur(amount: node.double("blur")))
+      .modifier(ContainerColorFilter(value: node.props["color_filter"]))
+      .modifier(ContainerForeground(node: node, radii: radii))
+      .modifier(ContainerShadows(value: node.props["shadow"]))
+      .modifier(
+        MaterialThemeModifier(theme: node.map("theme"), darkTheme: node.map("dark_theme")))
+      .preferredColorScheme(themeMode)
+      .animation(rufletAnimation(node.props["animate"]), value: node.bool("visible"))
       .allowsHitTesting(!node.rufletBool("ignore_interactions"))
+  }
+
+  /// `theme_mode` overrides the platform for this subtree, the way a Container
+  /// carrying its own theme does in Flutter.
+  private var themeMode: ColorScheme? {
+    switch node.string("theme_mode")?.lowercased() {
+    case "light": return .light
+    case "dark": return .dark
+    default: return nil
+    }
   }
 
   @ViewBuilder
@@ -401,6 +503,16 @@ struct ContainerControlView: View {
     } else {
       Color.clear
     }
+  }
+
+  /// `shape` is Flutter's BoxShape; a circle rounds to half its side rather
+  /// than to whatever border_radius said.
+  private var containerRadii: RufletCornerRadii {
+    guard node.string("shape")?.lowercased() != "circle" else {
+      return RufletCornerRadii(uniform: 9_999)
+    }
+    return ControlProps.cornerRadii(node.props["border_radius"])
+      ?? RufletCornerRadii(uniform: 0)
   }
 
   @ViewBuilder

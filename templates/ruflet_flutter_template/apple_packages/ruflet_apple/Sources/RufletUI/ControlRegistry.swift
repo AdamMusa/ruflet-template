@@ -262,9 +262,15 @@ public enum ControlRegistry {
         events: ["click", "delete", "select"])
     add(["SegmentedButton"], .visible, "SegmentedButtonControlView", .nativeView,
         events: ["change"])
-    add(["Switch", "Checkbox", "Radio", "RadioGroup"], .visible,
-        "Native selection control", .nativeView, events: ["change"])
-    add(["Slider", "RangeSlider"], .visible, "Native slider control", .nativeView,
+    // Flet gives each of these a FocusNode and reports focus/blur from it, so
+    // the native marks must advertise the pair or FocusReporter never mounts.
+    add(["Switch", "Checkbox", "Radio"], .visible,
+        "Drawn Material selection control", .nativeView,
+        events: ["blur", "change", "focus"])
+    add(["RadioGroup"], .visible, "RadioGroupControlView", .nativeView, events: ["change"])
+    add(["Slider"], .visible, "SliderControlView", .nativeView,
+        events: ["blur", "change", "change_end", "change_start", "focus"])
+    add(["RangeSlider"], .visible, "RangeSliderControlView", .nativeView,
         events: ["change", "change_end", "change_start"])
     add(["TextField", "CupertinoTextField"], .visible, "Native text field", .nativeView,
         events: ["blur", "change", "click", "focus", "selection_change", "submit", "tap_outside"],

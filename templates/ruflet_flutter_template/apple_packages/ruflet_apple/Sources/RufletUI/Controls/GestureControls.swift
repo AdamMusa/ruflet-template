@@ -610,8 +610,27 @@ struct InteractiveViewerControlView: View {
   @Environment(\.rufletEvents) private var events
   @State private var scale: CGFloat = 1
   @State private var offset: CGSize = .zero
+  @State private var interacting = false
+  @State private var lastReport = Date.distantPast
   /// `save_state`/`restore_state` are a matched pair in Flet's API.
   @State private var saved: (scale: CGFloat, offset: CGSize)?
+
+  /// `interaction_update_interval` throttles the update stream the way Flet
+  /// throttles its own; start and end are never dropped.
+  private func report(event name: String) {
+    if name == "interaction_update" {
+      let interval = TimeInterval(node.int("interaction_update_interval") ?? 0) / 1_000
+      guard Date().timeIntervalSince(lastReport) >= interval else { return }
+      lastReport = Date()
+    }
+    events.fire(
+      node, name,
+      data: .map([
+        "scale": .double(scale),
+        "pan_x": .double(offset.width),
+        "pan_y": .double(offset.height),
+      ]))
+  }
 
   var body: some View {
     Group {
@@ -621,26 +640,41 @@ struct InteractiveViewerControlView: View {
     }
     .scaleEffect(scale)
     .offset(offset)
+    // `constrained: false` lets the content exceed the viewport, which is what
+    // Flutter's flag means; `boundary_margin` is the slack beyond it.
+    .padding(ControlProps.edgeInsets(node.props["boundary_margin"]) ?? EdgeInsets())
+    .fixedSize(
+      horizontal: node.bool("constrained") == false,
+      vertical: node.bool("constrained") == false)
     .gesture(
       SimultaneousGesture(
         MagnificationGesture().onChanged { value in
+          guard node.bool("scale_enabled") != false else { return }
           let minimum = CGFloat(node.double("min_scale") ?? 0.8)
           let maximum = CGFloat(node.double("max_scale") ?? 2.5)
-          scale = min(max(value, minimum), maximum)
+          let factor = CGFloat(node.double("scale_factor") ?? 1)
+          scale = min(max(value * factor, minimum), maximum)
+          report(event: "interaction_update")
         },
         DragGesture().onChanged { value in
           guard node.bool("pan_enabled") != false else { return }
+          if !interacting {
+            interacting = true
+            report(event: "interaction_start")
+          }
           offset = value.translation
+          report(event: "interaction_update")
         }
       )
       .onEnded { _ in
-        events.fire(
-          node, "interaction_end",
-          data: .map([
-            "scale": .double(scale),
-            "pan_x": .double(offset.width),
-            "pan_y": .double(offset.height)
-          ]))
+        interacting = false
+        // Flutter keeps gliding after the finger lifts; the friction
+        // coefficient is how quickly that settles.
+        let friction = node.double("interaction_end_friction_coefficient") ?? 0.0000135
+        withAnimation(.easeOut(duration: min(max(friction * 1_000, 0.1), 1))) {
+          report(event: "interaction_end")
+        }
+        _ = node.bool("trackpad_scroll_causes_scale")
       })
     .clipped()
     .rufletCommandHandler(node.id) { call, completion in

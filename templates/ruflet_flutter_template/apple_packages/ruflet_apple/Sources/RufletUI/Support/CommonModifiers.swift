@@ -649,8 +649,11 @@ private struct DecorationModifier: ViewModifier {
   func body(content: Content) -> some View {
     // `bgcolor` on a leaf control paints behind it; Container handles its own
     // richer decoration and does not set this.
+    // `Button` is the canonical wire type the Ruby side sends; `ElevatedButton`
+    // is its alias. Both must be here or the button's fill is painted twice,
+    // once by this modifier and once by the button style.
     let ownsBackground = [
-      "Container", "ProgressBar", "ProgressRing", "ElevatedButton", "FilledButton",
+      "Container", "ProgressBar", "ProgressRing", "Button", "ElevatedButton", "FilledButton",
       "FilledTonalButton", "OutlinedButton", "TextButton", "IconButton", "FilledIconButton",
       "FilledTonalIconButton", "OutlinedIconButton", "FloatingActionButton"
     ].contains(node.type)

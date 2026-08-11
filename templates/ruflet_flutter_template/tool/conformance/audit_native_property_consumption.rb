@@ -88,8 +88,8 @@ module NativePropertyConsumptionAudit
   }.freeze
 
   ACCESSORS = %w[
-    array bool controlID controlIDs double enumValue rufletString int map
-    skipsRufletProperty string
+    array bool controlID controlIDs double enumValue rufletBool rufletString int
+    map skipsRufletProperty string
   ].freeze
 
   module_function

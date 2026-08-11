@@ -424,7 +424,7 @@ struct ExpansionTileControlView: View {
     // `maintain_state` keeps the collapsed children built, which is what
     // Flutter's flag does; SwiftUI discards them otherwise.
     .modifier(MaintainedState(enabled: node.bool("maintain_state") == true))
-    .modifier(FeedbackOnTap(enabled: node.bool("enable_feedback") != false))
+    .modifier(TapFeedback(enabled: node.bool("enable_feedback") != false))
   }
 
   private enum Affinity { case leading, trailing }
@@ -485,22 +485,6 @@ private struct MaintainedState: ViewModifier {
     } else {
       content
     }
-  }
-}
-
-/// `enable_feedback` is the platform tap feedback Material plays on a tile.
-private struct FeedbackOnTap: ViewModifier {
-  let enabled: Bool
-
-  func body(content: Content) -> some View {
-    #if os(iOS)
-      if enabled {
-        return AnyView(content.onTapGesture {
-          UIImpactFeedbackGenerator(style: .light).impactOccurred()
-        })
-      }
-    #endif
-    return AnyView(content)
   }
 }
 
