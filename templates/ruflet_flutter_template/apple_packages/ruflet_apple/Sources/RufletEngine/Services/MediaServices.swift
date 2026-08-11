@@ -58,6 +58,13 @@ public final class FilePickerService: NSObject, RufletService {
 
   /// The result shape Flet's file picker returns: a list of
   /// `{name:, path:, size:}` maps.
+  /// Flet reports the selection on the control as well as returning it to the
+  /// caller, so a Ruby handler fires whether or not the call was awaited.
+  private func reportResult(_ value: RufletValue) {
+    guard let eventNode, let eventContext, eventNode.handlesEvent("result") else { return }
+    eventContext.emitEvent(eventNode.id, "result", value)
+  }
+
   private func describe(_ urls: [URL]) -> RufletValue {
     .array(
       urls.enumerated().map { index, url in
@@ -83,7 +90,9 @@ public final class FilePickerService: NSObject, RufletService {
       panel.begin { response in
         Task { @MainActor in
           self.selectedURLs = response == .OK ? panel.urls : []
-          completion(.success(response == .OK ? self.describe(panel.urls) : .array([])))
+          let files = response == .OK ? self.describe(panel.urls) : RufletValue.array([])
+          self.reportResult(files)
+          completion(.success(files))
         }
       }
     }
@@ -253,7 +262,9 @@ public final class FilePickerService: NSObject, RufletService {
         let completion = pending
         pending = nil
         selectedURLs = urls
-        completion?(.success(describe(urls)))
+        let files = describe(urls)
+        reportResult(files)
+        completion?(.success(files))
       }
     }
 
@@ -264,6 +275,7 @@ public final class FilePickerService: NSObject, RufletService {
         let completion = pending
         pending = nil
         selectedURLs = []
+        reportResult(.array([]))
         completion?(.success(.array([])))
       }
     }

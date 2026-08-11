@@ -227,6 +227,8 @@ public final class AudioService: RufletService {
 public final class AudioRecorderService: RufletService {
   public static let wireType = "AudioRecorder"
 
+  private var streamTimer: Timer?
+
   #if canImport(AVFoundation)
     private var recorder: AVAudioRecorder?
   #endif
@@ -280,6 +282,12 @@ public final class AudioRecorderService: RufletService {
             throw RufletServiceError.failed("The audio recorder could not start")
           }
           self.recorder = recorder
+          // `on_stream` asks for the level as it records. AVAudioRecorder
+          // meters on demand, so a timer samples it at the rate Flet uses.
+          if node?.handlesEvent("stream") == true {
+            recorder.isMeteringEnabled = true
+            self.startStreaming()
+          }
           outputPath = path
           paused = false
           emitState("recording")
@@ -289,6 +297,7 @@ public final class AudioRecorderService: RufletService {
         }
 
       case "stop_recording":
+        stopStreaming()
         recorder?.stop()
         recorder = nil
         paused = false
@@ -296,6 +305,7 @@ public final class AudioRecorderService: RufletService {
         completion(.success(outputPath.map { RufletValue.string($0) } ?? .null))
 
       case "cancel_recording":
+        stopStreaming()
         recorder?.stop()
         recorder = nil
         paused = false
@@ -381,6 +391,31 @@ public final class AudioRecorderService: RufletService {
   private func emitState(_ state: String) {
     guard let eventContext, let eventNode, eventNode.handlesEvent("state_change") else { return }
     eventContext.emitEvent(eventNode.id, "state_change", .map(["state": .string(state)]))
+  }
+
+  /// Samples the recorder's meter and reports it, which is the shape Flet's
+  /// `on_stream` carries: the level as it records.
+  private func startStreaming() {
+    #if canImport(AVFoundation)
+      stopStreaming()
+      streamTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { [weak self] _ in
+        Task { @MainActor in
+          guard let self, let recorder = self.recorder, recorder.isRecording,
+            let eventContext = self.eventContext, let eventNode = self.eventNode
+          else { return }
+          recorder.updateMeters()
+          eventContext.emitEvent(eventNode.id, "stream", .map([
+            "amplitude": .double(Double(recorder.averagePower(forChannel: 0))),
+            "peak": .double(Double(recorder.peakPower(forChannel: 0))),
+          ]))
+        }
+      }
+    #endif
+  }
+
+  private func stopStreaming() {
+    streamTimer?.invalidate()
+    streamTimer = nil
   }
 }
 
