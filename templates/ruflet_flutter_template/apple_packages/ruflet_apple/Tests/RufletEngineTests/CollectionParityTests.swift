@@ -143,8 +143,20 @@ final class CollectionParityTests: XCTestCase {
   func testPageCommandsClampToMountedPageRange() {
     XCTAssertEqual(CollectionParity.clampedIndex(-1, count: 3), 0)
     XCTAssertEqual(CollectionParity.clampedIndex(3, count: 3), 2)
-    XCTAssertEqual(CollectionParity.pageIndex(forOffset: 1.6, count: 3), 2)
+    XCTAssertEqual(
+      CollectionParity.pageIndex(forOffset: 160, pageExtent: 100, count: 3), 2)
+    XCTAssertEqual(
+      CollectionParity.resolvedPageOffset(-1, pageExtent: 100, count: 3), 200)
     XCTAssertEqual(CollectionParity.clampedIndex(2, count: 0), 0)
+  }
+
+  func testPageViewReverseChangesVisualOrderWithoutChangingWireIndices() {
+    XCTAssertEqual(
+      PageViewParity.pages([10, 20, 30], reverse: false),
+      [.init(index: 0, id: 10), .init(index: 1, id: 20), .init(index: 2, id: 30)])
+    XCTAssertEqual(
+      PageViewParity.pages([10, 20, 30], reverse: true),
+      [.init(index: 2, id: 30), .init(index: 1, id: 20), .init(index: 0, id: 10)])
   }
 
   func testDataCellTapDownUsesFletPointerShape() {

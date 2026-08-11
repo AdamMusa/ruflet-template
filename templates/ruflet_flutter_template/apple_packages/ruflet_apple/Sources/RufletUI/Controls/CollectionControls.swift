@@ -324,6 +324,7 @@ struct PageViewControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
   @State private var selectedIndex: Int
+  @State private var viewportExtent: CGFloat = 0
 
   init(node: ControlNode) {
     self.node = node
@@ -333,22 +334,27 @@ struct PageViewControlView: View {
   var body: some View {
     let config = CollectionDefaults.pageView(node)
     TabView(selection: $selectedIndex) {
-      ForEach(Array(node.childIDs.enumerated()), id: \.element) { index, childID in
-        ControlView(id: childID, axis: .none)
+      ForEach(PageViewParity.pages(node.childIDs, reverse: config.reverse), id: \.id) { page in
+        ControlView(id: page.id, axis: .none)
           .modifier(PageViewport(
             horizontal: config.horizontal,
             fraction: config.viewportFraction,
             padEnds: config.padEnds))
-          .tag(index)
+          .tag(page.index)
       }
     }
     .modifier(PagedTabStyle())
     .modifier(PageAxis(horizontal: config.horizontal))
     .modifier(CollectionClip(behavior: config.clipBehavior))
-    // The bar and its pages cross-fade over the duration Ruby names.
-    .animation(
-      .easeInOut(duration: max(node.double("animation_duration") ?? 300, 0) / 1_000),
-      value: selectedIndex)
+    .background(
+      GeometryReader { proxy in
+        Color.clear.onAppear {
+          viewportExtent = config.horizontal ? proxy.size.width : proxy.size.height
+        }
+        .onChange(of: proxy.size) { size in
+          viewportExtent = config.horizontal ? size.width : size.height
+        }
+      })
     .onChange(of: selectedIndex) { value in
       events.setLocal(node.id, "selected_index", .int(Int64(value)))
       events.fire(node, "change", data: .int(Int64(value)))
@@ -369,23 +375,53 @@ struct PageViewControlView: View {
       guard let index = call.argument("index")?.intValue else {
         return completion(.failure(RufletServiceError.invalidArguments("index is required")))
       }
-      selectedIndex = CollectionParity.clampedIndex(index, count: count)
+      let target = CollectionParity.clampedIndex(index, count: count)
+      if call.name == "go_to_page" {
+        withAnimation(PageViewParity.commandAnimation(call)) { selectedIndex = target }
+      } else {
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) { selectedIndex = target }
+      }
       completion(.success(.null))
     case "jump_to":
       guard let value = call.argument("value")?.doubleValue else {
         return completion(.failure(RufletServiceError.invalidArguments("value is required")))
       }
-      selectedIndex = CollectionParity.pageIndex(forOffset: value, count: count)
+      let pageExtent = viewportExtent * max(CollectionDefaults.pageView(node).viewportFraction, 0.01)
+      let offset = CollectionParity.resolvedPageOffset(
+        value, pageExtent: Double(pageExtent), count: count)
+      selectedIndex = CollectionParity.pageIndex(
+        forOffset: offset, pageExtent: Double(pageExtent), count: count)
       completion(.success(.null))
     case "next_page":
-      selectedIndex = CollectionParity.clampedIndex(selectedIndex + 1, count: count)
+      withAnimation(PageViewParity.commandAnimation(call)) {
+        selectedIndex = CollectionParity.clampedIndex(selectedIndex + 1, count: count)
+      }
       completion(.success(.null))
     case "previous_page":
-      selectedIndex = CollectionParity.clampedIndex(selectedIndex - 1, count: count)
+      withAnimation(PageViewParity.commandAnimation(call)) {
+        selectedIndex = CollectionParity.clampedIndex(selectedIndex - 1, count: count)
+      }
       completion(.success(.null))
     default:
       completion(.failure(rufletUnsupported("PageView", call)))
     }
+  }
+}
+
+enum PageViewParity {
+  struct Page: Equatable { let index: Int; let id: Int }
+  static func pages(_ ids: [Int], reverse: Bool) -> [Page] {
+    let pages = ids.enumerated().map { Page(index: $0.offset, id: $0.element) }
+    return reverse ? Array(pages.reversed()) : pages
+  }
+  static func commandAnimation(_ call: RufletMethodCall) -> Animation {
+    let duration = call.argument("duration")?.doubleValue ?? 1_000
+    let curve = call.argument("curve")?.stringValue ?? "linear"
+    return ControlProps.animation(.map([
+      "duration": .double(duration), "curve": .string(curve)
+    ])) ?? .linear(duration: max(duration, 0) / 1_000)
   }
 }
 
@@ -1368,8 +1404,15 @@ enum CollectionParity {
     clampedIndex(index < 0 ? count + index : index, count: count)
   }
 
-  static func pageIndex(forOffset offset: Double, count: Int) -> Int {
-    clampedIndex(Int(offset.rounded()), count: count)
+  static func pageIndex(forOffset offset: Double, pageExtent: Double, count: Int) -> Int {
+    guard pageExtent > 0 else { return 0 }
+    return clampedIndex(Int((offset / pageExtent).rounded()), count: count)
+  }
+
+  static func resolvedPageOffset(_ offset: Double, pageExtent: Double, count: Int) -> Double {
+    guard offset < 0 else { return offset }
+    let maximum = Double(max(count - 1, 0)) * max(pageExtent, 0)
+    return maximum + offset + 1
   }
 
   static func tapDownPayload(x: CGFloat, y: CGFloat) -> RufletValue {

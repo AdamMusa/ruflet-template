@@ -58,4 +58,11 @@ final class ResponsiveGridMathTests: XCTestCase {
     XCTAssertEqual(fullRowWidth, partialRowWidth, accuracy: 0.001)
     XCTAssertEqual(fullRowWidth, 294, accuracy: 0.001)
   }
+
+  func testOversizedSpanIsNotClampedByNativeGrid() {
+    XCTAssertEqual(ResponsiveGridMath.lines(spans: [18, 6], columns: 12), [[0], [1]])
+    XCTAssertEqual(
+      ResponsiveGridMath.itemWidth(span: 18, columns: 12, total: 600, spacing: 12),
+      906, accuracy: 0.001)
+  }
 }

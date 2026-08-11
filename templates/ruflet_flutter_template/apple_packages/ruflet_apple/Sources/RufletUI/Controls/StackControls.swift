@@ -25,7 +25,12 @@ struct RowControlView: View {
     Group {
       if node.bool("wrap") == true {
         WrappingStack(
-          ids: children, spacing: spacing, runSpacing: CGFloat(node.rufletDouble("run_spacing")))
+          ids: children, spacing: spacing,
+          runSpacing: CGFloat(node.rufletDouble("run_spacing")),
+          alignment: main,
+          runAlignment: ControlProps.MainAxisAlignment(node.rufletString("run_alignment")),
+          crossAlignment: RufletWrapMath.crossAlignment(
+            node.string("vertical_alignment"), default: .center))
       } else if hasFlexChildren, #available(iOS 16.0, macOS 13.0, *) {
         RufletFlexLayout(
           axis: .horizontal, spacing: spacing, mainAlignment: main,
@@ -46,16 +51,8 @@ struct RowControlView: View {
     // `intrinsic_height` sizes the row to its tallest child rather than to
     // the space it was offered.
     .fixedSize(horizontal: false, vertical: node.rufletBool("intrinsic_height"))
-    .modifier(ScrollableStack(node: node, axis: .horizontal))
-  }
-
-  /// `run_alignment` places each run across the wrap's cross axis.
-  private var runAlignment: Alignment {
-    switch node.rufletString("run_alignment") {
-    case "center": return .center
-    case "end": return .trailing
-    default: return .leading
-    }
+    .modifier(ScrollableStack(
+      node: node, axis: node.rufletBool("wrap") ? .vertical : .horizontal))
   }
 
   private var hasFlexChildren: Bool {
@@ -85,14 +82,18 @@ struct ColumnControlView: View {
         // start a new one when the run is full, spaced by run_spacing and
         // placed by run_alignment.
         FlowLayout(
+          axis: .vertical,
           spacing: spacing,
-          runSpacing: CGFloat(node.rufletDouble("run_spacing"))
+          runSpacing: CGFloat(node.rufletDouble("run_spacing")),
+          alignment: main,
+          runAlignment: ControlProps.MainAxisAlignment(node.rufletString("run_alignment")),
+          crossAlignment: RufletWrapMath.crossAlignment(
+            node.string("horizontal_alignment"), default: .start)
         ) {
           ForEach(node.childIDs, id: \.self) { id in
             ControlView(id: id, axis: .none)
           }
         }
-        .frame(maxWidth: .infinity, alignment: runAlignment)
       } else if hasFlexChildren, #available(iOS 16.0, macOS 13.0, *) {
         RufletFlexLayout(
           axis: .vertical, spacing: spacing, mainAlignment: main,
@@ -114,16 +115,8 @@ struct ColumnControlView: View {
     // `intrinsic_width` sizes the column to its widest child rather than to
     // the space it was offered.
     .fixedSize(horizontal: node.rufletBool("intrinsic_width"), vertical: false)
-    .modifier(ScrollableStack(node: node, axis: .vertical))
-  }
-
-  /// `run_alignment` places each run across the wrap's cross axis.
-  private var runAlignment: Alignment {
-    switch node.rufletString("run_alignment") {
-    case "center": return .center
-    case "end": return .trailing
-    default: return .leading
-    }
+    .modifier(ScrollableStack(
+      node: node, axis: node.rufletBool("wrap") ? .horizontal : .vertical))
   }
 
   private var hasFlexChildren: Bool {
@@ -231,7 +224,7 @@ struct ScrollableStack: ViewModifier {
         guard node.handlesEvent("scroll") else { return }
         // `scroll_interval` throttles the stream the way Flet throttles its
         // own; zero reports every sample.
-        let interval = TimeInterval(node.int("scroll_interval") ?? 0) / 1_000
+        let interval = TimeInterval(node.int("scroll_interval") ?? 10) / 1_000
         guard Date().timeIntervalSince(lastScrollReport) >= interval else { return }
         lastScrollReport = Date()
         let pixels = max(0, sample.pixels)
@@ -261,7 +254,8 @@ struct ScrollableStack: ViewModifier {
   private var scrolls: Bool {
     guard let value = node.props["scroll"], !value.isNull else { return false }
     if let flag = value.boolValue { return flag }
-    return value.stringValue != nil
+    guard let mode = value.stringValue?.lowercased() else { return false }
+    return ["auto", "adaptive", "always", "hidden"].contains(mode)
   }
 }
 
@@ -308,6 +302,7 @@ struct StackControlView: View {
         }
       }
     }
+    .modifier(StackClip(behavior: node.rufletString("clip_behavior")))
   }
 
   private var expandsChildren: Bool {
@@ -316,6 +311,13 @@ struct StackControlView: View {
 
   private func isPositioned(_ child: ControlNode) -> Bool {
     ["left", "top", "right", "bottom"].contains { child.props[$0]?.doubleValue != nil }
+  }
+}
+
+private struct StackClip: ViewModifier {
+  let behavior: String
+  func body(content: Content) -> some View {
+    behavior.lowercased() == "none" ? AnyView(content) : AnyView(content.clipped())
   }
 }
 
@@ -544,7 +546,7 @@ enum ResponsiveGridMath {
     var current: [Int] = []
     var used = 0.0
     for index in spans.indices {
-      let span = min(max(spans[index], 0), columns)
+      let span = max(spans[index], 0)
       if used + span > columns, !current.isEmpty {
         result.append(current)
         current = []
@@ -636,24 +638,25 @@ private struct ResponsiveGridLayout: Layout {
     let columnCount = max(
       ResponsiveGridMath.value(
         columns, default: 12, width: width, breakpoints: breakpoints), 1)
-    let gap = CGFloat(
+    let gridGap = CGFloat(
       ResponsiveGridMath.value(
         spacing, default: 10, width: width, breakpoints: breakpoints))
+    let placementGap = gridGap - 0.1
     let runGap = CGFloat(
       ResponsiveGridMath.value(
-        runSpacing, default: 10, width: width, breakpoints: breakpoints))
+        runSpacing, default: 10, width: width,
+        breakpoints: ResponsiveGridMath.defaultBreakpoints))
     let resolvedSpans = subviews.indices.map { index in
-      min(
-        max(
-          ResponsiveGridMath.value(
-            index < spans.count ? spans[index] : nil,
-            default: 12, width: width, breakpoints: breakpoints), 0), columnCount)
+      max(
+        ResponsiveGridMath.value(
+          index < spans.count ? spans[index] : nil,
+          default: 12, width: width, breakpoints: breakpoints), 0)
     }
     let lineIndices = ResponsiveGridMath.lines(spans: resolvedSpans, columns: columnCount)
     let lines = lineIndices.map { indices -> Line in
       let sizes = indices.map { index -> CGSize in
         let itemWidth = ResponsiveGridMath.itemWidth(
-          span: resolvedSpans[index], columns: columnCount, total: width, spacing: gap)
+          span: resolvedSpans[index], columns: columnCount, total: width, spacing: gridGap)
         let measured = subviews[index].sizeThatFits(
           ProposedViewSize(width: itemWidth, height: nil))
         // Flet uses ConstrainedBox(minWidth == maxWidth == childWidth).
@@ -665,10 +668,11 @@ private struct ResponsiveGridLayout: Layout {
       }
       return Line(
         indices: indices, sizes: sizes,
-        width: sizes.reduce(0) { $0 + $1.width } + gap * CGFloat(max(sizes.count - 1, 0)),
+        width: sizes.reduce(0) { $0 + $1.width }
+          + placementGap * CGFloat(max(sizes.count - 1, 0)),
         height: sizes.map(\.height).max() ?? 0)
     }
-    return (lines, gap, runGap)
+    return (lines, placementGap, runGap)
   }
 
   private func finiteWidth(_ proposal: CGFloat?, subviews: Subviews) -> CGFloat {
@@ -701,11 +705,18 @@ struct WrappingStack: View {
   let ids: [Int]
   let spacing: CGFloat
   let runSpacing: CGFloat
+  let alignment: ControlProps.MainAxisAlignment
+  let runAlignment: ControlProps.MainAxisAlignment
+  let crossAlignment: ControlProps.CrossAxisAlignment
 
   var body: some View {
     // SwiftUI has no flow layout before iOS 16, so lines are measured with
     // per-child width preferences and grouped as they arrive.
-    FlowLayout(spacing: spacing, runSpacing: runSpacing) {
+    FlowLayout(
+      axis: .horizontal, spacing: spacing, runSpacing: runSpacing,
+      alignment: alignment, runAlignment: runAlignment,
+      crossAlignment: crossAlignment
+    ) {
       ForEach(ids, id: \.self) { id in
         ControlView(id: id, axis: .none)
       }

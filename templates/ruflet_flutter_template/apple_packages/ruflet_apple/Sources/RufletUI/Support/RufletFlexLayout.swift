@@ -20,6 +20,12 @@ enum RufletFlexMath {
     guard total > 0 else { return Array(repeating: 0, count: flexes.count) }
     return flexes.map { max(available, 0) * CGFloat($0 / total) }
   }
+
+  static func stretching(_ size: CGSize, axis: LayoutAxis, crossExtent: CGFloat) -> CGSize {
+    axis == .horizontal
+      ? CGSize(width: size.width, height: max(crossExtent, 0))
+      : CGSize(width: max(crossExtent, 0), height: size.height)
+  }
 }
 
 @available(iOS 16.0, macOS 13.0, *)
@@ -126,6 +132,16 @@ struct RufletFlexLayout: Layout {
       if !subviews[index][LooseFlexValueKey.self] {
         if axis == .horizontal { sizes[index].width = shares[index] }
         else { sizes[index].height = shares[index] }
+      }
+    }
+
+    // A SwiftUI proposal is loose; Flutter's stretch constraint is tight.
+    if crossAlignment == .stretch,
+      let proposedCross, proposedCross.isFinite
+    {
+      for index in subviews.indices {
+        sizes[index] = RufletFlexMath.stretching(
+          sizes[index], axis: axis, crossExtent: proposedCross)
       }
     }
 

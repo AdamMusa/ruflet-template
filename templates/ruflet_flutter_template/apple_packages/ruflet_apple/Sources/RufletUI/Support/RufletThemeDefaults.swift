@@ -87,7 +87,8 @@ enum RufletThemeDefaults {
       return "surfacecontainer"
     case ("Card", "color"):
       return "surfacecontainerlow"
-    case ("DataTable", "divider_color"), ("Divider", "color"):
+    case ("DataTable", "divider_color"), ("Divider", "color"),
+         ("VerticalDivider", "color"):
       return "outlinevariant"
     case ("ProgressBar", "color"), ("ProgressRing", "color"),
          ("SpinKit", "color"):

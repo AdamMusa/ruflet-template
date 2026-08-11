@@ -809,21 +809,31 @@ struct DividerControlView: View {
 
   var body: some View {
     let thickness = CGFloat(node.double("thickness") ?? 1)
-    let color = MaterialPalette.color(node.string("color"), default: .gray.opacity(0.3))
+    let color = MaterialPalette.color(
+      for: node, property: "color", default: .gray.opacity(0.3))
     let extent = CGFloat(node.double("height") ?? node.double("width") ?? 16)
+    let leading = CGFloat(node.double("leading_indent") ?? 0)
+    let trailing = CGFloat(node.double("trailing_indent") ?? 0)
 
-    Rectangle()
-      .fill(color)
+    DividerLine(color: color, radii: ControlProps.cornerRadii(node.props["radius"]))
       .frame(
         width: isVertical ? thickness : nil,
-        height: isVertical ? nil : thickness
-      )
+        height: isVertical ? nil : thickness)
+      .padding(isVertical ? .top : .leading, leading)
+      .padding(isVertical ? .bottom : .trailing, trailing)
       .frame(
         width: isVertical ? extent : nil,
-        height: isVertical ? nil : extent
-      )
-      .padding(.leading, CGFloat(node.double("leading_indent") ?? 0))
-      .padding(.trailing, CGFloat(node.double("trailing_indent") ?? 0))
+        height: isVertical ? nil : extent)
+  }
+}
+
+private struct DividerLine: View {
+  let color: Color
+  let radii: RufletCornerRadii?
+
+  @ViewBuilder var body: some View {
+    if let radii { RufletRoundedRectangle(radii: radii).fill(color) }
+    else { Rectangle().fill(color) }
   }
 }
 
@@ -832,14 +842,19 @@ struct PlaceholderControlView: View {
   let node: ControlNode
 
   var body: some View {
-    let color = MaterialPalette.color(node.string("color"), default: .blue)
+    let color = MaterialPalette.color(node.string("color"), default: Color(
+      red: 69.0 / 255.0, green: 90.0 / 255.0, blue: 100.0 / 255.0))
     ZStack {
       Rectangle().stroke(color, lineWidth: CGFloat(node.double("stroke_width") ?? 2))
-      Path { path in
-        path.move(to: .zero)
-        path.addLine(to: CGPoint(x: 1, y: 1))
+      GeometryReader { proxy in
+        Path { path in
+          path.move(to: .zero)
+          path.addLine(to: CGPoint(x: proxy.size.width, y: proxy.size.height))
+          path.move(to: CGPoint(x: proxy.size.width, y: 0))
+          path.addLine(to: CGPoint(x: 0, y: proxy.size.height))
+        }
+        .stroke(color, lineWidth: CGFloat(node.double("stroke_width") ?? 2))
       }
-      .stroke(color, lineWidth: 1)
       // Flutter's Placeholder can hold a child, and falls back to its own
       // size only where the layout leaves it unconstrained.
       if let contentID = node.controlID(forKey: "content") {
@@ -847,8 +862,8 @@ struct PlaceholderControlView: View {
       }
     }
     .frame(
-      minWidth: node.double("fallback_width").map { CGFloat($0) } ?? 48,
-      minHeight: node.double("fallback_height").map { CGFloat($0) } ?? 48)
+      idealWidth: CGFloat(node.rufletDouble("fallback_width")),
+      idealHeight: CGFloat(node.rufletDouble("fallback_height")))
   }
 }
 
@@ -857,12 +872,57 @@ struct RotatedBoxControlView: View {
   let node: ControlNode
 
   var body: some View {
-    Group {
-      if let contentID = node.controlID(forKey: "content") {
-        ControlView(id: contentID, axis: .none)
+    let turns = node.int("quarter_turns") ?? 0
+    if #available(iOS 16.0, macOS 13.0, *) {
+      RotatedQuarterTurnLayout(quarterTurns: turns) {
+        Group {
+          if let contentID = node.controlID(forKey: "content") {
+            ControlView(id: contentID, axis: .none)
+          }
+        }
+        .rotationEffect(.degrees(Double(turns) * 90))
       }
+    } else {
+      Group {
+        if let contentID = node.controlID(forKey: "content") {
+          ControlView(id: contentID, axis: .none)
+        }
+      }
+      .rotationEffect(.degrees(Double(turns) * 90))
     }
-    .rotationEffect(.degrees(Double(node.int("quarter_turns") ?? 0) * 90))
+  }
+}
+
+enum RotatedQuarterTurnMath {
+  static func normalized(_ turns: Int) -> Int { ((turns % 4) + 4) % 4 }
+  static func swapsAxes(_ turns: Int) -> Bool { normalized(turns) % 2 == 1 }
+  static func outputSize(_ child: CGSize, quarterTurns: Int) -> CGSize {
+    swapsAxes(quarterTurns) ? CGSize(width: child.height, height: child.width) : child
+  }
+}
+
+@available(iOS 16.0, macOS 13.0, *)
+private struct RotatedQuarterTurnLayout: Layout {
+  let quarterTurns: Int
+  func sizeThatFits(
+    proposal: ProposedViewSize, subviews: Subviews, cache: inout Void
+  ) -> CGSize {
+    guard let child = subviews.first else { return .zero }
+    let childProposal = RotatedQuarterTurnMath.swapsAxes(quarterTurns)
+      ? ProposedViewSize(width: proposal.height, height: proposal.width) : proposal
+    return RotatedQuarterTurnMath.outputSize(
+      child.sizeThatFits(childProposal), quarterTurns: quarterTurns)
+  }
+  func placeSubviews(
+    in bounds: CGRect, proposal: ProposedViewSize,
+    subviews: Subviews, cache: inout Void
+  ) {
+    guard let child = subviews.first else { return }
+    let childSize = RotatedQuarterTurnMath.swapsAxes(quarterTurns)
+      ? CGSize(width: bounds.height, height: bounds.width) : bounds.size
+    child.place(
+      at: CGPoint(x: bounds.midX, y: bounds.midY), anchor: .center,
+      proposal: ProposedViewSize(width: childSize.width, height: childSize.height))
   }
 }
 
