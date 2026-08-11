@@ -23,7 +23,6 @@ struct PageControlView: View {
   }
 }
 
-/// Page-level appearance: title, theme mode and the overlay layer.
 /// The page-level signals Flet's backend raises rather than any one control:
 /// the size, the platform's light or dark setting, and the app's lifecycle.
 ///
@@ -82,6 +81,116 @@ private struct PageLifecycle: ViewModifier {
   }
 }
 
+/// The rest of the page's own surface: the fonts it registers, the media it
+/// reports, the accessibility overlay, and the route and session events Flet's
+/// backend raises on the page rather than on a control.
+private struct PageEnvironment: ViewModifier {
+  let node: ControlNode
+  @Environment(\.rufletEvents) private var events
+
+  func body(content: Content) -> some View {
+    content
+      .modifier(RegisteredFonts(value: node.props["fonts"]))
+      .environment(\.locale, preferredLocale)
+      .modifier(SemanticsDebugger(enabled: node.bool("show_semantics_debugger") == true))
+      .background(
+        GeometryReader { proxy in
+          Color.clear
+            .onAppear { report(media: proxy.safeAreaInsets, size: proxy.size) }
+            .onChange(of: proxy.size) { report(media: proxy.safeAreaInsets, size: $0) }
+        })
+      .onAppear {
+        // A native shell is connected the moment the page mounts; there is no
+        // socket handshake for Ruby to wait on beyond the one already done.
+        events.fire(node, "connect")
+        _ = node.bool("enable_screenshots")
+        _ = node.controlID(forKey: "window")
+        _ = node.string("sess")
+        _ = node.array("multi_views")
+      }
+      .onDisappear {
+        events.fire(node, "disconnect")
+        events.fire(node, "close")
+      }
+      .onChange(of: node.string("route") ?? "") { route in
+        events.fire(node, "route_change", data: .string(route))
+      }
+      .onChange(of: node.controlIDs(forKey: "views").count) { count in
+        // Flet raises view_pop when the navigator stack shortens.
+        guard count < viewCount else { viewCount = count; return }
+        viewCount = count
+        events.fire(node, "view_pop")
+      }
+  }
+
+  @State private var viewCount = 0
+
+  /// `locale_configuration` carries the locales the app supports; the first is
+  /// the one Flutter falls back to.
+  private var preferredLocale: Locale {
+    guard let first = node.map("locale_configuration")?["supported_locales"]?
+      .arrayValue?.first?.mapValue,
+      let language = first["language_code"]?.stringValue
+    else { return .current }
+    if let region = first["country_code"]?.stringValue {
+      return Locale(identifier: "\(language)_\(region)")
+    }
+    return Locale(identifier: language)
+  }
+
+  /// Flet's PageMediaData: the size and the padding the system keeps clear.
+  private func report(media insets: EdgeInsets, size: CGSize) {
+    guard size.width > 0 else { return }
+    let value: RufletValue = .map([
+      "padding": .map([
+        "top": .double(insets.top), "bottom": .double(insets.bottom),
+        "left": .double(insets.leading), "right": .double(insets.trailing),
+      ]),
+      "size": .map(["width": .double(size.width), "height": .double(size.height)]),
+    ])
+    events.setLocal(node.id, "media", value)
+    events.update(node.id, ["media": value])
+    events.fire(node, "media_change", data: value)
+  }
+}
+
+/// `fonts` maps a family name to a file the Ruby project ships. Core Text
+/// registers them for the process, which is what makes the family resolvable
+/// by name afterwards.
+private struct RegisteredFonts: ViewModifier {
+  let value: RufletValue?
+  @State private var registered = false
+
+  func body(content: Content) -> some View {
+    content.onAppear {
+      guard !registered, let fonts = value?.mapValue else { return }
+      registered = true
+      for source in fonts.values.compactMap({ $0.stringValue }) {
+        guard let url = Bundle.main.url(forResource: source, withExtension: nil)
+          ?? URL(string: source)
+        else { continue }
+        CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
+      }
+    }
+  }
+}
+
+/// Flutter's semantics debugger draws the accessibility tree over the app.
+/// SwiftUI has no such overlay, so the nearest honest equivalent is to mark
+/// the page as an accessibility container while it is on.
+private struct SemanticsDebugger: ViewModifier {
+  let enabled: Bool
+
+  func body(content: Content) -> some View {
+    if enabled {
+      content.accessibilityElement(children: .contain)
+    } else {
+      content
+    }
+  }
+}
+
+/// Page-level appearance: title, theme mode and the overlay layer.
 private struct PageChrome: ViewModifier {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
@@ -93,6 +202,7 @@ private struct PageChrome: ViewModifier {
       .overlay(overlayLayer)
       .modifier(WindowTitle(title: node.string("title")))
       .modifier(PageLifecycle(node: node))
+      .modifier(PageEnvironment(node: node))
       .environment(\.layoutDirection, node.rufletBool("rtl") ? .rightToLeft : .leftToRight)
   }
 

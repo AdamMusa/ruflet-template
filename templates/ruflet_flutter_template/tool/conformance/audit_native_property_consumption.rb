@@ -45,6 +45,7 @@ module NativePropertyConsumptionAudit
     "Option" => %w[DropdownControlView DropdownM2ControlView],
     "DropdownOption" => %w[DropdownControlView DropdownM2ControlView],
     "AutoCompleteSuggestion" => %w[AutoCompleteControlView],
+    "Page" => %w[ClientCapabilities],
     "AlertDialog" => %w[DialogPresenter],
     "CupertinoAlertDialog" => %w[DialogPresenter],
     "BottomSheet" => %w[DialogPresenter],
@@ -230,6 +231,9 @@ module NativePropertyConsumptionAudit
       line.scan(/\b[a-z][A-Za-z0-9_]*\.(?:#{accessor_pattern})\(\s*(?:forKey:\s*)?"([^"]+)"/) { |match| keys << match[0] }
       line.scan(/\bnode\.props\[\s*"([^"]+)"\s*\]/) { |match| keys << match[0] }
       line.scan(/\b(?:child|control|item|option|suggestion|value)?\.?(?:props)\[\s*"([^"]+)"\s*\]/) { |match| keys << match[0] }
+      # The register payload builds the page map by key, which is how the
+      # engine reports its environment rather than reading it.
+      line.scan(/\bpage\[\s*"([^"]+)"\s*\]\s*=/) { |match| keys << match[0] }
       line.scan(/\bcall\.argument\(\s*"([^"]+)"\s*\)/) { |match| keys << match[0] }
       line.scan(/\bnode\.(?:handlesEvent|sendEvent)\(\s*"([^"]+)"/) { |match| keys << "on_#{match[0]}" }
       line.scan(/\b(?:context\.)?emitEvent\([^\n]*?"([^"]+)"/) { |match| keys << "on_#{match[0]}" }

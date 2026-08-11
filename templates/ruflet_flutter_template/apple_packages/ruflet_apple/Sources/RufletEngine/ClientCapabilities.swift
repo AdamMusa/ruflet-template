@@ -97,23 +97,44 @@ public struct ClientCapabilities {
 
   /// The `register_client` payload.
   public func registerPayload() -> RufletValue {
-    var page: [String: RufletValue] = [
-      "route": .string(route),
-      "width": .double(width),
-      "height": .double(height),
-      "platform": .string(platform),
-      "platform_brightness": .string(platformBrightness),
-      "window": .map(window),
-      "media": .map(media)
-    ]
-    // Flet clients report this; Ruflet reads it through `Page#web`, which must
-    // answer false for a native shell.
+    var page: [String: RufletValue] = [:]
+    page["route"] = .string(route)
+    page["width"] = .double(width)
+    page["height"] = .double(height)
+    page["platform"] = .string(platform)
+    page["platform_brightness"] = .string(platformBrightness)
+    page["window"] = .map(window)
+    page["media"] = .map(media)
+    // The environment flags Flet seeds its own page with, in
+    // `FletBackend`'s constructor. A native Apple shell is none of the web
+    // ones, runs one view, and is not under a test harness, so each answers
+    // definitively rather than being absent — `Page#web` and its siblings
+    // read them straight back.
     page["web"] = .bool(false)
+    page["wasm"] = .bool(false)
+    page["pyodide"] = .bool(false)
+    page["pwa"] = .bool(false)
+    page["multi_view"] = .bool(false)
+    page["test"] = .bool(false)
+    page["debug"] = .bool(isDebugBuild)
+    // A local socket has no HTTP peer, so Flet's request-scoped fields are
+    // empty rather than invented.
+    page["client_ip"] = .string("")
+    page["client_user_agent"] = .string("")
 
     return .map([
       "session_id": .string(sessionID),
       "page_name": .string(pageName),
       "page": .map(page)
     ])
+  }
+
+  /// `debug` is Flutter's `kDebugMode`, which is the unoptimised build.
+  public var isDebugBuild: Bool {
+    #if DEBUG
+      return true
+    #else
+      return false
+    #endif
   }
 }
