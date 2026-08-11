@@ -1,4 +1,6 @@
 import Foundation
+import RufletEngine
+import RufletProtocol
 import XCTest
 @testable import RufletUI
 
@@ -39,5 +41,41 @@ final class RufletInputParityTests: XCTestCase {
     XCTAssertEqual(
       ControlRegistry.descriptor(for: "DatePicker")?.supportedEvents,
       ["change", "dismiss", "entry_mode_change"])
+  }
+
+  func testAutoCompleteSuggestionsAreParsedFromFletValueMaps() {
+    let store = ControlStore()
+    let value = RufletValue.array([
+      .map(["key": .string("nyc"), "value": .string("New York")]),
+      .map(["key": .string("Paris")]),
+      .map(["value": .string("Tokyo")]),
+      .map(["key": .string(""), "value": .string("")]),
+    ])
+
+    XCTAssertEqual(
+      RufletAutoCompleteSuggestion.parse(value, store: store),
+      [
+        RufletAutoCompleteSuggestion(key: "nyc", value: "New York"),
+        RufletAutoCompleteSuggestion(key: "Paris", value: "Paris"),
+        RufletAutoCompleteSuggestion(key: "Tokyo", value: "Tokyo"),
+      ])
+  }
+
+  func testAutoCompleteSelectionPayloadPreservesDistinctKeyAndValue() {
+    let suggestion = RufletAutoCompleteSuggestion(key: "nyc", value: "New York")
+    XCTAssertEqual(
+      suggestion.wireValue,
+      .map(["key": .string("nyc"), "value": .string("New York")]))
+  }
+
+  func testMaterialPickerBoundsAreThePinnedFletDatesNotARollingWindow() {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+    XCTAssertEqual(calendar.component(.year, from: RufletPickerSemantics.defaultFirstDate), 1900)
+    XCTAssertEqual(calendar.component(.month, from: RufletPickerSemantics.defaultFirstDate), 1)
+    XCTAssertEqual(calendar.component(.day, from: RufletPickerSemantics.defaultFirstDate), 1)
+    XCTAssertEqual(calendar.component(.year, from: RufletPickerSemantics.defaultLastDate), 2050)
+    XCTAssertEqual(calendar.component(.month, from: RufletPickerSemantics.defaultLastDate), 1)
+    XCTAssertEqual(calendar.component(.day, from: RufletPickerSemantics.defaultLastDate), 1)
   }
 }

@@ -526,7 +526,7 @@ struct SliderControlView: View {
       secondary: node.double("secondary_track_value"),
       activeRange: minimum...value,
       interaction: RufletSliderInteraction(wire: node.string("interaction")),
-      bubble: dragging ? bubbleText(for: value) : nil,
+      bubbles: [dragging ? bubbleText(for: value) : nil],
       scale: scale(width:),
       onEdit: { editing in
         dragging = editing
@@ -579,7 +579,7 @@ struct RangeSliderControlView: View {
       secondary: nil,
       activeRange: start...end,
       interaction: RufletSliderInteraction(wire: node.string("interaction")),
-      bubble: dragging ? bubbleText(start: start, end: end) : nil,
+      bubbles: dragging ? bubbleTexts(start: start, end: end) : [nil, nil],
       scale: scale(width:),
       onEdit: { editing in
         dragging = editing
@@ -607,13 +607,10 @@ struct RangeSliderControlView: View {
       thumbWidth: RufletThemeDefaults.sliderMetrics(year2023: node.bool("year_2023")).thumbWidth)
   }
 
-  private func bubbleText(start: Double, end: Double) -> String? {
-    guard let template = node.string("label"), !template.isEmpty else { return nil }
-    let digits = max(node.int("round") ?? 0, 0)
-    let format = "%.\(digits)f"
-    return template.replacingOccurrences(
-      of: RufletThemeDefaults.sliderLabelValueToken,
-      with: "\(String(format: format, start))–\(String(format: format, end))")
+  private func bubbleTexts(start: Double, end: Double) -> [String?] {
+    RufletRangeSliderLabels.resolve(
+      template: node.string("label") ?? "", start: start, end: end,
+      digits: node.int("round") ?? 0)
   }
 
   /// `Page#apply_event_value_to_control` looks for a `start_value`/`end_value`
@@ -628,6 +625,18 @@ struct RangeSliderControlView: View {
   }
 }
 
+enum RufletRangeSliderLabels {
+  static func resolve(template: String, start: Double, end: Double, digits: Int) -> [String?] {
+    guard !template.isEmpty else { return [nil, nil] }
+    let format = "%.\(max(digits, 0))f"
+    return [start, end].map { value in
+      template.replacingOccurrences(
+        of: RufletThemeDefaults.sliderLabelValueToken,
+        with: String(format: format, value))
+    }
+  }
+}
+
 /// Material's slider track, shared by `Slider` and `RangeSlider`.
 ///
 /// `thumbs` is one value or two; `activeRange` is the stretch drawn in the
@@ -638,7 +647,10 @@ private struct MaterialSliderTrack: View {
   let secondary: Double?
   let activeRange: ClosedRange<Double>
   let interaction: RufletSliderInteraction
-  let bubble: String?
+  /// One value indicator per thumb. Flutter's `RangeSlider` creates two
+  /// independent `RangeLabels`; combining them over the trailing thumb loses
+  /// both the start thumb's label and the template semantics.
+  let bubbles: [String?]
   let scale: (CGFloat) -> RufletSliderScale
   let onEdit: (Bool) -> Void
   let onMove: (Int, Double) -> Void
@@ -664,7 +676,7 @@ private struct MaterialSliderTrack: View {
         segment(from: activeRange.lowerBound, to: activeRange.upperBound, in: scale)
           .fill(activeColor)
         ForEach(Array(thumbs.enumerated()), id: \.offset) { index, value in
-          thumb(labelled: index == thumbs.count - 1)
+          thumb(bubble: index < bubbles.count ? bubbles[index] : nil)
             .offset(x: scale.position(of: value) - shape.thumbWidth / 2)
         }
       }
@@ -716,7 +728,7 @@ private struct MaterialSliderTrack: View {
     return SliderSegment(start: start, width: max(end - start, 0), height: shape.trackHeight)
   }
 
-  private func thumb(labelled: Bool) -> some View {
+  private func thumb(bubble: String?) -> some View {
     Capsule()
       .fill(thumbColor)
       .frame(width: shape.thumbWidth, height: shape.thumbHeight)
@@ -724,7 +736,7 @@ private struct MaterialSliderTrack: View {
       .modifier(
         MaterialStateLayer(node: node, selected: false, radius: shape.overlayRadius))
       .overlay(alignment: .top) {
-        if labelled, let bubble {
+        if let bubble {
           Text(bubble)
             .font(.caption)
             .padding(.horizontal, 8)
@@ -819,11 +831,11 @@ struct TextFieldControlView: View {
     }
   }
 
-  /// `shift_enter` implies multiline, the way Flet's textfield.dart reads it,
-  /// and a min_lines above one does too.
+  /// `shift_enter` implies multiline, exactly as Flet's textfield.dart reads
+  /// it. `min_lines` only constrains the field after that decision; it does
+  /// not itself change the keyboard or submit semantics.
   private var isMultiline: Bool {
     node.bool("multiline") == true || node.bool("shift_enter") == true
-      || (node.int("min_lines") ?? 1) > 1
   }
 
   /// Flutter defaults max_lines to one for a single-line field and leaves a
@@ -1527,9 +1539,8 @@ struct SearchBarControlView: View {
     }
     .padding(ControlProps.edgeInsets(node.props["bar_padding"])
       ?? EdgeInsets(top: 8, leading: 10, bottom: 8, trailing: 10))
-    // The bar keeps this margin clear of the caret while its text scrolls.
-    .padding(ControlProps.edgeInsets(node.props["bar_scroll_padding"])
-      ?? EdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 20))
+    // `bar_scroll_padding` is the inset used when scrolling the page to keep
+    // the caret visible. It is not layout padding around the search bar.
     .modifier(SlotSizeConstraints(value: node.props["bar_size_constraints"]))
     .background(
       RoundedRectangle(cornerRadius: barRadius)
@@ -1640,9 +1651,11 @@ struct DropdownControlView: View {
     }
     .padding(contentPadding)
     .padding(ControlProps.edgeInsets(node.props["expanded_insets"]) ?? EdgeInsets())
-    .background(RoundedRectangle(cornerRadius: 8).fill(fieldBackground))
+    .background(RoundedRectangle(cornerRadius: fieldRadius).fill(fieldBackground))
     .overlay(borderStroke)
-    .frame(width: node.double("menu_width").map { CGFloat($0) })
+    // DropdownMenu.width sizes the field. `menu_width` belongs only to the
+    // popup surface and must never resize the field itself.
+    .frame(width: node.double("width").map { CGFloat($0) })
     .shadow(radius: CGFloat(node.double("elevation") ?? 0))
     .modifier(MenuSurfaceStyle(value: node.props["menu_style"]))
     .modifier(RufletFormFieldDecoration(node: node))
@@ -1710,18 +1723,25 @@ struct DropdownControlView: View {
   }
 
   private var fieldBackground: Color {
-    MaterialPalette.color(node.string("fill_color"), default: .gray.opacity(0.10))
+    guard node.bool("filled") == true else { return .clear }
+    return MaterialPalette.color(node.string("fill_color"), default: .gray.opacity(0.10))
+  }
+
+  private var fieldRadius: CGFloat {
+    ControlProps.cornerRadius(node.props["border_radius"]) ?? 4
   }
 
   @ViewBuilder
   private var borderStroke: some View {
     if node.string("border")?.lowercased() != "none" {
-      RoundedRectangle(cornerRadius: 8)
+      RoundedRectangle(cornerRadius: fieldRadius)
         .strokeBorder(
           MaterialPalette.color(
-            node.string(focused ? "focused_border_color" : "border_color"), default: .clear),
+            node.string(focused ? "focused_border_color" : "border_color"),
+            default: focused ? .accentColor : .primary),
           lineWidth: CGFloat(
-            node.double(focused ? "focused_border_width" : "border_width") ?? 1))
+            node.double(focused ? "focused_border_width" : "border_width")
+              ?? (focused ? 2 : 1)))
     }
   }
 
@@ -1774,6 +1794,7 @@ struct DropdownM2ControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
+  @FocusState private var focused: Bool
 
   var body: some View {
     Menu {
@@ -1807,12 +1828,21 @@ struct DropdownM2ControlView: View {
     }
     .modifier(FixedMenuOrder())
     .frame(maxHeight: node.double("max_menu_height").map { CGFloat($0) })
+    .focused($focused)
     .simultaneousGesture(TapGesture().onEnded { events.fire(node, "click") })
-    .modifier(FocusReporter(node: node, events: events))
     .modifier(TapFeedback(enabled: node.bool("enable_feedback") != false))
     .modifier(RufletFormFieldDecoration(node: node))
     .shadow(radius: CGFloat(node.double("elevation") ?? 0))
     .disabled(node.bool("disabled") ?? false)
+    .onAppear { focused = node.bool("autofocus") == true }
+    .onChange(of: focused) { events.fire(node, $0 ? "focus" : "blur") }
+    .rufletCommandHandler(node.id) { call, completion in
+      switch call.name {
+      case "focus": focused = true; completion(.success(.null))
+      case "blur": focused = false; completion(.success(.null))
+      default: completion(.failure(rufletUnsupported(node.type, call)))
+      }
+    }
   }
 
   @ViewBuilder
@@ -1927,53 +1957,106 @@ struct AutoCompleteControlView: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 0) {
-      TextField(node.string("hint_text") ?? "", text: $query)
+      TextField("", text: $query)
         .textFieldStyle(.plain)
         .padding(8)
         .background(RoundedRectangle(cornerRadius: 8).fill(Color.gray.opacity(0.12)))
         .onChange(of: query) { value in
-          events.commit(node, value: .string(value))
+          // Flet's controller always synchronizes `value`; `on_change` only
+          // decides whether an event accompanies that synchronization.
+          events.setLocal(node.id, "value", .string(value))
+          events.update(node.id, ["value": .string(value)])
+          events.fire(node, "change", data: .string(value))
         }
 
       if !query.isEmpty {
-        ForEach(matches, id: \.id) { suggestion in
-          Button {
-            let key = suggestion.string("key") ?? suggestion.string("value") ?? ""
-            let value = suggestion.string("value") ?? suggestion.string("key") ?? ""
-            query = key
-            let index = suggestions.firstIndex(where: { $0.id == suggestion.id }) ?? 0
-            events.setLocal(node.id, "_selected_index", .int(Int64(index)))
-            events.update(node.id, ["_selected_index": .int(Int64(index))])
-            events.fire(node, "select", data: .map([
-              "index": .int(Int64(index)),
-              "selection": .map(["key": .string(key), "value": .string(value)]),
-            ]))
-          } label: {
-            Text(suggestion.string("value") ?? "")
-              .frame(maxWidth: .infinity, alignment: .leading)
-              .padding(.vertical, 6)
-              .padding(.horizontal, 8)
+        ScrollView {
+          LazyVStack(alignment: .leading, spacing: 0) {
+            ForEach(matches) { match in
+              Button {
+                select(match)
+              } label: {
+                Text(match.suggestion.value)
+                  .frame(maxWidth: .infinity, alignment: .leading)
+                  .padding(.vertical, 6)
+                  .padding(.horizontal, 8)
+              }
+              .buttonStyle(.plain)
+            }
           }
-          .buttonStyle(.plain)
         }
+        // `suggestions_max_height` is a pixel constraint, not a cap on the
+        // number of matches (the previous implementation always took eight).
+        .frame(maxHeight: CGFloat(node.double("suggestions_max_height") ?? 200))
       }
     }
     .onAppear { query = node.string("value") ?? "" }
   }
 
-  private var suggestions: [ControlNode] {
-    node.controlIDs(forKey: "suggestions").compactMap { store.node($0) }
+  private var suggestions: [RufletAutoCompleteSuggestion] {
+    RufletAutoCompleteSuggestion.parse(node.props["suggestions"], store: store)
   }
 
-  private var matches: [ControlNode] {
-    suggestions
-      .filter {
-        ($0.string("key") ?? $0.string("value") ?? "")
-          .localizedCaseInsensitiveContains(query)
-      }
-      .prefix(node.int("suggestions_max_height").map { _ in 8 } ?? 8)
-      .map { $0 }
+  private var matches: [RufletAutoCompleteMatch] {
+    suggestions.enumerated().compactMap { index, suggestion in
+      // Flet filters on `selectionString()`, which is the key, while it
+      // displays `toString()`, which is the value.
+      suggestion.key.localizedCaseInsensitiveContains(query)
+        ? RufletAutoCompleteMatch(index: index, suggestion: suggestion) : nil
+    }
   }
+
+  private func select(_ match: RufletAutoCompleteMatch) {
+    // Flutter Autocomplete writes displayStringForOption (`value`) into the
+    // field, then reports the original key/value pair and source index.
+    query = match.suggestion.value
+    let index = Int64(match.index)
+    events.setLocal(node.id, "_selected_index", .int(index))
+    events.update(node.id, ["_selected_index": .int(index)])
+    events.fire(node, "select", data: .map([
+      "index": .int(index),
+      "selection": match.suggestion.wireValue,
+    ]))
+  }
+}
+
+struct RufletAutoCompleteSuggestion: Equatable {
+  let key: String
+  let value: String
+
+  var wireValue: RufletValue {
+    .map(["key": .string(key), "value": .string(value)])
+  }
+
+  /// Suggestions are ordinary JSON maps in Flet 0.80.5, not child controls.
+  /// Accept materialized refs too so the native store remains compatible with
+  /// Ruflet's structural-child normalization.
+  static func parse(_ value: RufletValue?, store: ControlStore) -> [Self] {
+    guard let items = value?.arrayValue else { return [] }
+    return items.compactMap { item in
+      if let map = item.mapValue { return parse(map) }
+      if let id = item.controlID, let child = store.node(id) {
+        return parse(child.props)
+      }
+      return nil
+    }
+  }
+
+  static func parse(_ map: [String: RufletValue]) -> Self? {
+    var key = map["key"]?.stringValue
+    var value = map["value"]?.stringValue
+    if key?.isEmpty != false, value?.isEmpty != false { return nil }
+    if key == nil { key = value }
+    if value == nil { value = key }
+    guard let key, let value else { return nil }
+    return Self(key: key, value: value)
+  }
+}
+
+private struct RufletAutoCompleteMatch: Identifiable {
+  let index: Int
+  let suggestion: RufletAutoCompleteSuggestion
+  var id: Int { index }
 }
 
 /// `DatePicker`, `TimePicker` and `DateRangePicker`.
@@ -2047,18 +2130,6 @@ struct DateTimePickerControlView: View {
     return ISO8601DateFormatter().date(from: text)
   }
 
-  private var isOpen: Binding<Bool> {
-    Binding(
-      get: { node.bool("open") ?? false },
-      set: { open in
-        events.setLocal(node.id, "open", .bool(open))
-        if !open {
-          events.update(node.id, ["open": .bool(false)])
-          events.fire(node, "dismiss")
-        }
-      })
-  }
-
   @ViewBuilder
   private var picker: some View {
     VStack(spacing: 16) {
@@ -2116,7 +2187,7 @@ struct DateTimePickerControlView: View {
       }
 
       HStack {
-        Button(node.string("cancel_text") ?? "Cancel") { isOpen.wrappedValue = false }
+        Button(node.string("cancel_text") ?? "Cancel") { close(cancelled: true) }
         Spacer()
         Button(node.string("confirm_text") ?? "OK") { confirm() }
           .keyboardShortcut(.defaultAction)
@@ -2141,27 +2212,39 @@ struct DateTimePickerControlView: View {
 
   private func confirm() {
     let data: RufletValue
+    var updates: [String: RufletValue] = ["open": .bool(false)]
     if kind == .dateRange {
       let start = formattedDate(rangeStart)
       let end = formattedDate(rangeEnd)
       events.setLocal(node.id, "start_value", .string(start))
       events.setLocal(node.id, "end_value", .string(end))
+      updates["start_value"] = .string(start)
+      updates["end_value"] = .string(end)
       data = .map(["start_value": .string(start), "end_value": .string(end)])
     } else {
       let value = kind == .time ? formattedTime(selection) : formattedDate(selection)
       events.setLocal(node.id, "value", .string(value))
+      updates["value"] = .string(value)
       data = .map(["value": .string(value)])
     }
     events.setLocal(node.id, "open", .bool(false))
-    events.update(node.id, ["open": .bool(false)])
+    events.update(node.id, updates)
     events.fire(node, "change", data: data)
+    // Flet always follows the successful `change` with `dismiss(false)`.
+    events.fire(node, "dismiss", data: .bool(false))
+  }
+
+  private func close(cancelled: Bool) {
+    events.setLocal(node.id, "open", .bool(false))
+    events.update(node.id, ["open": .bool(false)])
+    events.fire(node, "dismiss", data: .bool(cancelled))
   }
 
   private var allowedDates: ClosedRange<Date> {
-    let distantPast = Calendar.current.date(byAdding: .year, value: -100, to: Date())!
-    let distantFuture = Calendar.current.date(byAdding: .year, value: 100, to: Date())!
-    let lower = parsedValue(node.string("first_date")) ?? distantPast
-    let upper = parsedValue(node.string("last_date")) ?? distantFuture
+    // These are DatePickerDialog's explicit Flet defaults, not rolling
+    // relative dates. A rolling window changes valid input as time passes.
+    let lower = parsedValue(node.string("first_date")) ?? RufletPickerSemantics.defaultFirstDate
+    let upper = parsedValue(node.string("last_date")) ?? RufletPickerSemantics.defaultLastDate
     return min(lower, upper)...max(lower, upper)
   }
 
@@ -2202,4 +2285,15 @@ struct DateTimePickerControlView: View {
     formatter.dateFormat = "HH:mm"
     return formatter
   }()
+}
+
+enum RufletPickerSemantics {
+  static let defaultFirstDate = date(year: 1900, month: 1, day: 1)
+  static let defaultLastDate = date(year: 2050, month: 1, day: 1)
+
+  private static func date(year: Int, month: Int, day: Int) -> Date {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+    return calendar.date(from: DateComponents(year: year, month: month, day: day))!
+  }
 }

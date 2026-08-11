@@ -184,6 +184,16 @@ final class ValueControlParityTests: XCTestCase {
     XCTAssertFalse(RufletSliderInteraction.tapOnly.acceptsSlide)
   }
 
+  func testRangeSliderBuildsOneFletTemplateLabelPerThumb() {
+    XCTAssertEqual(
+      RufletRangeSliderLabels.resolve(
+        template: "Value: {value}", start: 1.25, end: 8.75, digits: 1),
+      ["Value: 1.2", "Value: 8.8"])
+    XCTAssertEqual(
+      RufletRangeSliderLabels.resolve(template: "", start: 1, end: 2, digits: 0),
+      [nil, nil])
+  }
+
   // MARK: - Checkbox
 
   /// Flutter's checkbox value is `bool?`, and Flet defaults it to nil when the
