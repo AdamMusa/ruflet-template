@@ -619,9 +619,9 @@ struct ChartControlView: View {
         context.fill(Path(roundedRect: rect, cornerRadius: rod.radius), with: .color(rod.color))
         rodX += rod.width
       }
-      if let label = bottomAxisLabel(for: group.x) {
+      if axisShowsLabels(forKey: "bottom_axis"), let label = bottomAxisLabel(for: group.x) {
         context.draw(
-          Text(label).font(.caption2),
+          Text(label).font(axisLabelFont(forKey: "bottom_axis")),
           at: CGPoint(x: centreX, y: chart.maxY + 8), anchor: .top)
       }
     }
@@ -630,16 +630,20 @@ struct ChartControlView: View {
       var rotated = context
       rotated.translateBy(x: plot.minX + 6, y: chart.midY)
       rotated.rotate(by: .degrees(-90))
-      rotated.draw(Text(title).font(.caption2), at: .zero, anchor: .center)
+      rotated.draw(
+        Text(title).font(axisTitleFont(forKey: "left_axis")), at: .zero, anchor: .center)
     }
     if let title = axisTitle(forKey: "right_axis") {
       var rotated = context
       rotated.translateBy(x: chart.maxX - 6, y: chart.midY)
       rotated.rotate(by: .degrees(90))
-      rotated.draw(Text(title).font(.caption2), at: .zero, anchor: .center)
+      rotated.draw(
+        Text(title).font(axisTitleFont(forKey: "right_axis")), at: .zero, anchor: .center)
     }
     if let title = axisTitle(forKey: "top_axis") {
-      context.draw(Text(title).font(.caption2), at: CGPoint(x: chart.midX, y: chart.minY + 8))
+      context.draw(
+        Text(title).font(axisTitleFont(forKey: "top_axis")),
+        at: CGPoint(x: chart.midX, y: chart.minY + 8))
     }
     drawGridAndBorder(in: &context, chart: chart)
   }
@@ -847,15 +851,37 @@ struct ChartControlView: View {
       context.fill(
         path, with: .color(MaterialPalette.color(section.string("color") ?? "primary", default: .primary)))
 
+      let middle = Angle.radians(start.radians + sweep.radians / 2)
       if let title = section.string("title"), !title.isEmpty {
-        let middle = Angle.radians(start.radians + sweep.radians / 2)
         let labelRadius = centreRadius + (radius - centreRadius) * 0.58
         let label = CGPoint(
           x: centre.x + cos(middle.radians) * labelRadius,
           y: centre.y + sin(middle.radians) * labelRadius)
-        context.draw(Text(title).font(.caption), at: label, anchor: .center)
+        var styled = Text(title).font(.caption)
+        if let size = section.map("title_style")?["size"]?.doubleValue {
+          styled = Text(title).font(.system(size: CGFloat(size)))
+        }
+        context.draw(
+          styled.foregroundColor(
+            MaterialPalette.color(section.map("title_style")?["color"]?.stringValue)),
+          at: label, anchor: .center)
       }
-      start = start + sweep
+      // A badge rides at its own fraction of the radius, outside by default.
+      if let badgeID = section.controlID(forKey: "badge_widget"),
+        let badge = store.node(badgeID),
+        let text = controlText(badge.id)
+      {
+        let offset = CGFloat(section.double("badge_position_percentage_offset") ?? 1)
+        let badgeRadius = centreRadius + (radius - centreRadius) * offset
+        context.draw(
+          Text(text).font(.caption2),
+          at: CGPoint(
+            x: centre.x + cos(middle.radians) * badgeRadius,
+            y: centre.y + sin(middle.radians) * badgeRadius),
+          anchor: .center)
+      }
+      // `sections_space` is the gap Flutter leaves between the wedges.
+      start = start + sweep + Angle.degrees(node.double("sections_space") ?? 0)
     }
   }
 
@@ -869,6 +895,29 @@ struct ChartControlView: View {
       let titleID = axis.controlID(forKey: "title")
     else { return nil }
     return controlText(titleID)
+  }
+
+  /// An axis reserves room for its title and its labels, and can hide the
+  /// labels while keeping the space.
+  private func axisTitleFont(forKey key: String) -> Font {
+    guard let axisID = node.controlID(forKey: key), let axis = store.node(axisID),
+      let size = axis.double("title_size")
+    else { return .caption2 }
+    return .system(size: CGFloat(size))
+  }
+
+  private func axisLabelFont(forKey key: String) -> Font {
+    guard let axisID = node.controlID(forKey: key), let axis = store.node(axisID),
+      let size = axis.double("label_size")
+    else { return .caption2 }
+    return .system(size: CGFloat(size))
+  }
+
+  private func axisShowsLabels(forKey key: String) -> Bool {
+    guard let axisID = node.controlID(forKey: key), let axis = store.node(axisID) else {
+      return true
+    }
+    return axis.bool("show_labels") != false
   }
 
   private func bottomAxisLabel(for value: Double) -> String? {

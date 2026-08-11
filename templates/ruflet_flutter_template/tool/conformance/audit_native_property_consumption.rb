@@ -62,6 +62,8 @@ module NativePropertyConsumptionAudit
     "PolygonLayer" => %w[MapControlView],
     "PolygonMarker" => %w[MapControlView],
     "SimpleAttribution" => %w[MapControlView],
+    # Text doubles as a Canvas shape, the way Arc and Circle do.
+    "Text" => %w[CanvasControlView],
     "Arc" => %w[CanvasControlView],
     "Circle" => %w[CanvasControlView],
     "Color" => %w[CanvasControlView],

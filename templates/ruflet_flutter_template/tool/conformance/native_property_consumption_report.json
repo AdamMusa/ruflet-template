@@ -12,12 +12,12 @@
     "controls": 196,
     "properties": 5330,
     "classifications": {
-      "consumed": 1962,
-      "parent_consumed": 3157,
+      "consumed": 1963,
+      "parent_consumed": 3165,
       "service": 156,
-      "unclassified": 55
+      "unclassified": 46
     },
-    "unclassified": 55
+    "unclassified": 46
   },
   "unclassified": [
     {
@@ -172,11 +172,6 @@
     },
     {
       "family": "visual",
-      "wire_type": "PieChart",
-      "property": "sections_space"
-    },
-    {
-      "family": "visual",
       "wire_type": "Points",
       "property": "point_mode"
     },
@@ -217,33 +212,8 @@
     },
     {
       "family": "visual",
-      "wire_type": "Text",
-      "property": "x"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Text",
-      "property": "y"
-    },
-    {
-      "family": "visual",
       "wire_type": "TextField",
       "property": "enable_ime_personalized_learning"
-    },
-    {
-      "family": "visual",
-      "wire_type": "axis",
-      "property": "label_size"
-    },
-    {
-      "family": "visual",
-      "wire_type": "axis",
-      "property": "show_labels"
-    },
-    {
-      "family": "visual",
-      "wire_type": "axis",
-      "property": "title_size"
     },
     {
       "family": "visual",
@@ -274,21 +244,6 @@
       "family": "visual",
       "wire_type": "rod",
       "property": "rod_stack_items"
-    },
-    {
-      "family": "visual",
-      "wire_type": "section",
-      "property": "badge_position_percentage_offset"
-    },
-    {
-      "family": "visual",
-      "wire_type": "section",
-      "property": "badge_widget"
-    },
-    {
-      "family": "visual",
-      "wire_type": "section",
-      "property": "title_style"
     },
     {
       "family": "visual",
@@ -4973,7 +4928,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 681
+              "line": 685
             }
           ]
         },
@@ -4982,7 +4937,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 875
+              "line": 622
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 624
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 924
             }
           ]
         },
@@ -5013,7 +4976,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 651
+              "line": 655
             }
           ]
         },
@@ -5023,6 +4986,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
               "line": 629
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 634
             }
           ]
         },
@@ -5043,7 +5010,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 695
+              "line": 699
             }
           ]
         },
@@ -5060,7 +5027,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 697
+              "line": 701
             }
           ]
         },
@@ -5081,7 +5048,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 694
+              "line": 698
             }
           ]
         },
@@ -5098,7 +5065,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 696
+              "line": 700
             }
           ]
         },
@@ -5124,7 +5091,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 635
+              "line": 636
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 641
             }
           ]
         },
@@ -5142,7 +5113,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 641
+              "line": 643
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 645
             }
           ]
         },
@@ -5151,7 +5126,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 666
+              "line": 670
             }
           ]
         },
@@ -6591,7 +6566,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 875
+              "line": 622
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 624
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 924
             }
           ]
         },
@@ -6614,6 +6597,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
               "line": 629
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 634
             }
           ]
         },
@@ -6634,7 +6621,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 695
+              "line": 699
             }
           ]
         },
@@ -6651,7 +6638,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 697
+              "line": 701
             }
           ]
         },
@@ -6672,7 +6659,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 694
+              "line": 698
             }
           ]
         },
@@ -6689,7 +6676,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 696
+              "line": 700
             }
           ]
         },
@@ -6715,7 +6702,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 635
+              "line": 636
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 641
             }
           ]
         },
@@ -6724,11 +6715,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 690
+              "line": 694
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 771
+              "line": 775
             }
           ]
         },
@@ -6746,7 +6737,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 641
+              "line": 643
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 645
             }
           ]
         },
@@ -6781,7 +6776,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 790
+              "line": 794
             }
           ]
         },
@@ -6790,7 +6785,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 795
+              "line": 799
             }
           ]
         },
@@ -6799,7 +6794,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 796
+              "line": 800
             }
           ]
         },
@@ -6808,7 +6803,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 789
+              "line": 793
             }
           ]
         },
@@ -6829,7 +6824,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 703
+              "line": 707
             }
           ]
         }
@@ -41291,7 +41286,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 875
+              "line": 622
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 624
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 924
             }
           ]
         },
@@ -41332,6 +41335,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
               "line": 629
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 634
             }
           ]
         },
@@ -41352,7 +41359,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 695
+              "line": 699
             }
           ]
         },
@@ -41369,7 +41376,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 697
+              "line": 701
             }
           ]
         },
@@ -41390,7 +41397,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 694
+              "line": 698
             }
           ]
         },
@@ -41407,7 +41414,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 696
+              "line": 700
             }
           ]
         },
@@ -41433,7 +41440,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 635
+              "line": 636
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 641
             }
           ]
         },
@@ -41451,7 +41462,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 641
+              "line": 643
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 645
             }
           ]
         },
@@ -49322,7 +49337,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 818
+              "line": 822
             }
           ]
         },
@@ -49365,13 +49380,18 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 808
+              "line": 812
             }
           ]
         },
         "sections_space": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 884
+            }
+          ]
         },
         "tooltip": {
           "classification": "parent_consumed",
@@ -51741,7 +51761,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 715
+              "line": 719
             }
           ]
         },
@@ -51818,7 +51838,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 888
+              "line": 937
             }
           ]
         }
@@ -51844,7 +51864,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 760
+              "line": 764
             }
           ]
         },
@@ -51853,7 +51873,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 764
+              "line": 768
             }
           ]
         },
@@ -51862,7 +51882,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 722
+              "line": 726
             }
           ]
         },
@@ -51871,7 +51891,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 759
+              "line": 763
             }
           ]
         }
@@ -51901,15 +51921,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 822
+              "line": 826
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 878
+              "line": 927
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 888
+              "line": 937
             }
           ]
         }
@@ -57088,7 +57108,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 875
+              "line": 622
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 624
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 924
             }
           ]
         },
@@ -57111,6 +57139,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
               "line": 629
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 634
             }
           ]
         },
@@ -57131,7 +57163,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 695
+              "line": 699
             }
           ]
         },
@@ -57148,7 +57180,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 697
+              "line": 701
             }
           ]
         },
@@ -57169,7 +57201,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 694
+              "line": 698
             }
           ]
         },
@@ -57186,7 +57218,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 696
+              "line": 700
             }
           ]
         },
@@ -57212,7 +57244,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 635
+              "line": 636
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 641
             }
           ]
         },
@@ -57221,11 +57257,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 690
+              "line": 694
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 771
+              "line": 775
             }
           ]
         },
@@ -57234,7 +57270,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 641
+              "line": 643
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 645
             }
           ]
         },
@@ -57277,15 +57317,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 709
+              "line": 713
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 758
+              "line": 762
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 848
+              "line": 852
             }
           ]
         },
@@ -57294,7 +57334,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 701
+              "line": 705
             }
           ]
         },
@@ -57311,7 +57351,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 703
+              "line": 707
             }
           ]
         },
@@ -57324,7 +57364,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 704
+              "line": 708
             }
           ]
         }
@@ -66385,7 +66425,9 @@
       "implementations": [
         "TextControlView"
       ],
-      "parent_implementations": [],
+      "parent_implementations": [
+        "CanvasControlView"
+      ],
       "service_implementations": [],
       "properties": {
         "alignment": {
@@ -66687,12 +66729,54 @@
           ]
         },
         "x": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "parent_consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 126
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 137
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 146
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 155
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 182
+            }
+          ]
         },
         "y": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "parent_consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 126
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 137
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 146
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 155
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 182
+            }
+          ]
         }
       }
     },
@@ -70182,7 +70266,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1046
+              "line": 1095
             }
           ]
         },
@@ -70191,7 +70275,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1041
+              "line": 1090
             }
           ]
         },
@@ -70209,7 +70293,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1044
+              "line": 1093
             }
           ]
         },
@@ -70218,7 +70302,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1042
+              "line": 1091
             }
           ]
         },
@@ -70227,7 +70311,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 958
+              "line": 1007
             }
           ]
         },
@@ -70236,11 +70320,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 959
+              "line": 1008
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 968
+              "line": 1017
             }
           ]
         },
@@ -70271,7 +70355,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1008
+              "line": 1057
             }
           ]
         },
@@ -70280,15 +70364,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1062
+              "line": 1111
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1063
+              "line": 1112
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1064
+              "line": 1113
             }
           ]
         },
@@ -70297,7 +70381,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1065
+              "line": 1114
             }
           ]
         },
@@ -70306,15 +70390,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 969
+              "line": 1018
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 970
+              "line": 1019
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 971
+              "line": 1020
             }
           ]
         },
@@ -70323,11 +70407,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1119
+              "line": 1168
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1120
+              "line": 1169
             }
           ]
         },
@@ -70336,11 +70420,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 972
+              "line": 1021
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 973
+              "line": 1022
             }
           ]
         },
@@ -70349,15 +70433,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1045
+              "line": 1094
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1046
+              "line": 1095
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1047
+              "line": 1096
             }
           ]
         },
@@ -70366,15 +70450,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1116
+              "line": 1165
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1117
+              "line": 1166
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1118
+              "line": 1167
             }
           ]
         },
@@ -70383,7 +70467,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1048
+              "line": 1097
             }
           ]
         },
@@ -70392,15 +70476,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1108
+              "line": 1157
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1109
+              "line": 1158
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1110
+              "line": 1159
             }
           ]
         },
@@ -70409,15 +70493,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1080
+              "line": 1129
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1081
+              "line": 1130
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1082
+              "line": 1131
             }
           ]
         },
@@ -70439,7 +70523,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1038
+              "line": 1087
             }
           ]
         },
@@ -70448,7 +70532,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1030
+              "line": 1079
             }
           ]
         },
@@ -70457,7 +70541,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1011
+              "line": 1060
             }
           ]
         },
@@ -70466,7 +70550,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1088
+              "line": 1137
             }
           ]
         },
@@ -70475,7 +70559,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1036
+              "line": 1085
             }
           ]
         },
@@ -70484,7 +70568,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1039
+              "line": 1088
             }
           ]
         },
@@ -70502,7 +70586,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 957
+              "line": 1006
             }
           ]
         },
@@ -70511,7 +70595,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1037
+              "line": 1086
             }
           ]
         },
@@ -70520,7 +70604,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1034
+              "line": 1083
             }
           ]
         },
@@ -70529,7 +70613,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1043
+              "line": 1092
             }
           ]
         },
@@ -70556,7 +70640,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1009
+              "line": 1058
             }
           ]
         },
@@ -70565,7 +70649,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 1040
+              "line": 1089
             }
           ]
         },
@@ -72179,38 +72263,53 @@
       "service_implementations": [],
       "properties": {
         "label_size": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "parent_consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 911
+            }
+          ]
         },
         "labels": {
           "classification": "parent_consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 877
+              "line": 926
             }
           ]
         },
         "show_labels": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "parent_consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 920
+            }
+          ]
         },
         "title": {
           "classification": "parent_consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 850
+              "line": 855
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 869
+              "line": 895
             }
           ]
         },
         "title_size": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "parent_consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 904
+            }
+          ]
         }
       }
     },
@@ -72242,15 +72341,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 709
+              "line": 713
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 758
+              "line": 762
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 848
+              "line": 852
             }
           ]
         },
@@ -72336,7 +72435,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 703
+              "line": 707
             }
           ]
         }
@@ -72362,7 +72461,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 879
+              "line": 928
             }
           ]
         },
@@ -72375,15 +72474,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 822
+              "line": 826
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 878
+              "line": 927
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 888
+              "line": 937
             }
           ]
         }
@@ -72417,7 +72516,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 703
+              "line": 707
             }
           ]
         },
@@ -72430,7 +72529,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 704
+              "line": 708
             }
           ]
         }
@@ -72477,15 +72576,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 709
+              "line": 713
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 758
+              "line": 762
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 848
+              "line": 852
             }
           ]
         },
@@ -72546,12 +72645,22 @@
       "service_implementations": [],
       "properties": {
         "badge_position_percentage_offset": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "parent_consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 874
+            }
+          ]
         },
         "badge_widget": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "parent_consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 870
+            }
+          ]
         },
         "color": {
           "classification": "parent_consumed",
@@ -72566,15 +72675,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 709
+              "line": 713
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 758
+              "line": 762
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 848
+              "line": 852
             }
           ]
         },
@@ -72583,7 +72692,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 701
+              "line": 705
             }
           ]
         },
@@ -72592,17 +72701,26 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 850
+              "line": 855
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 869
+              "line": 895
             }
           ]
         },
         "title_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "parent_consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 861
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 866
+            }
+          ]
         },
         "value": {
           "classification": "parent_consumed",
@@ -72613,15 +72731,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 822
+              "line": 826
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 878
+              "line": 927
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 888
+              "line": 937
             }
           ]
         }
@@ -72659,15 +72777,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 709
+              "line": 713
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 758
+              "line": 762
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
-              "line": 848
+              "line": 852
             }
           ]
         },
