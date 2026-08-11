@@ -22,7 +22,13 @@ public struct CameraControlView: View {
   public var body: some View {
     Group {
       #if canImport(AVFoundation) && !targetEnvironment(simulator)
-        CameraPreview(model: model)
+        // `preview_enabled: false` keeps the session running without showing
+        // it, which is what Flet's camera does while it only records.
+        if node.bool("preview_enabled") == false {
+          Color.black
+        } else {
+          CameraPreview(model: model)
+        }
       #else
         // The simulator has no capture device; a black frame is what a camera
         // view looks like there, and it keeps the layout honest.

@@ -345,6 +345,10 @@ struct PageViewControlView: View {
     .modifier(PagedTabStyle())
     .modifier(PageAxis(horizontal: config.horizontal))
     .modifier(CollectionClip(behavior: config.clipBehavior))
+    // The bar and its pages cross-fade over the duration Ruby names.
+    .animation(
+      .easeInOut(duration: max(node.double("animation_duration") ?? 300, 0) / 1_000),
+      value: selectedIndex)
     .onChange(of: selectedIndex) { value in
       events.setLocal(node.id, "selected_index", .int(Int64(value)))
       events.fire(node, "change", data: .int(Int64(value)))
@@ -746,6 +750,10 @@ struct TabsControlView: View {
     .environment(\.rufletTabSelection, Binding(
       get: { selectedIndex },
       set: { selectedIndex = CollectionParity.normalizedIndex($0, count: node.int("length") ?? 0) }))
+    // The bar and its pages cross-fade over the duration Ruby names.
+    .animation(
+      .easeInOut(duration: max(node.double("animation_duration") ?? 300, 0) / 1_000),
+      value: selectedIndex)
     .onChange(of: selectedIndex) { value in
       events.setLocal(node.id, "selected_index", .int(Int64(value)))
       events.fire(node, "change", data: .int(Int64(value)))

@@ -948,7 +948,14 @@ struct MarkdownControlView: View {
   private var markdownURLAction: OpenURLAction {
     OpenURLAction { url in
       events.fire(node, "tap_link", data: .string(url.absoluteString))
-      return node.bool("auto_follow_links") == true ? .systemAction : .handled
+      guard node.bool("auto_follow_links") == true else { return .handled }
+      // `auto_follow_links_target` is Flutter's UrlLauncher mode. A link asked
+      // to stay inside the app has no in-app browser here, so only an external
+      // target hands off to the system; the rest are reported and left.
+      switch node.string("auto_follow_links_target")?.lowercased() {
+      case "self", "in_app_web_view", "inappwebview": return .handled
+      default: return .systemAction
+      }
     }
   }
 }
