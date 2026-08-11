@@ -228,7 +228,7 @@ module NativePropertyConsumptionAudit
       accessor_pattern = ACCESSORS.join("|")
       # A presenter reads the control it is showing through a local of its
       # own, so the receiver is not always `node`.
-      line.scan(/\b[a-z][A-Za-z0-9_]*\.(?:#{accessor_pattern})\(\s*(?:forKey:\s*)?"([^"]+)"/) { |match| keys << match[0] }
+      line.scan(/\b[a-z][A-Za-z0-9_]*\??\.(?:#{accessor_pattern})\(\s*(?:forKey:\s*)?"([^"]+)"/) { |match| keys << match[0] }
       line.scan(/\bnode\.props\[\s*"([^"]+)"\s*\]/) { |match| keys << match[0] }
       line.scan(/\b(?:child|control|item|option|suggestion|value)?\.?(?:props)\[\s*"([^"]+)"\s*\]/) { |match| keys << match[0] }
       # The register payload builds the page map by key, which is how the
@@ -238,11 +238,12 @@ module NativePropertyConsumptionAudit
       line.scan(/\bnode\.(?:handlesEvent|sendEvent)\(\s*"([^"]+)"/) { |match| keys << "on_#{match[0]}" }
       line.scan(/\b(?:context\.)?emitEvent\([^\n]*?"([^"]+)"/) { |match| keys << "on_#{match[0]}" }
       # `events.fire` is the event sink; `onEvent` is the callback a platform
-      # view reports through instead, its first argument being the event name —
+      # view reports through instead, and `emit` is the one a service uses.
+      # Each takes the event name first —
       # that is how the AppKit pointer monitor raises the secondary and
       # tertiary buttons. Both wrap, so both are read over a window.
       window = scanned[index, EVENT_CALL_LOOKAHEAD].join(" ")
-      if (event_call = window[/\b(?:events\.fire|events\.send|onEvent)\((.*)$/, 1])
+      if (event_call = window[/\b(?:events\.fire|events\.send|onEvent|emit)\((.*)$/, 1])
         # Stop at the closing paren so a following statement's literals on the
         # same window cannot be attributed to this call.
         event_call[/\A[^)]*/].scan(/"([^"]+)"/) { |match| keys << "on_#{match[0]}" }

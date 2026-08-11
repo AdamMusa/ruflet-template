@@ -108,6 +108,13 @@ public final class AudioService: RufletService {
         url = parsed
       } else if let source = node.string("src") {
         url = URL(fileURLWithPath: source)
+      } else if let encoded = node.string("src_base64"), let data = Data(base64Encoded: encoded) {
+        // Flet lets a sound travel inline; AVPlayer needs a file, so the bytes
+        // are spilled to a temporary one named for their own digest.
+        let file = FileManager.default.temporaryDirectory
+          .appendingPathComponent("ruflet-audio-\(encoded.hashValue).m4a")
+        try? data.write(to: file)
+        url = file
       } else {
         url = nil
       }
@@ -157,6 +164,27 @@ public final class AudioService: RufletService {
         queue: .main
       ) { [weak self] _ in
         Task { @MainActor in self?.reportCompletion() }
+      }
+
+      // `balance` pans between the channels. AVPlayer has no pan control, so
+      // it goes through the item's audio mix.
+      if let balance = node.double("balance"), balance != 0, let item = player.currentItem,
+        let track = item.asset.tracks(withMediaType: .audio).first
+      {
+        let parameters = AVMutableAudioMixInputParameters(track: track)
+        parameters.setVolumeRamp(
+          fromStartVolume: Float(1 - max(0, balance)),
+          toEndVolume: Float(1 - max(0, -balance)),
+          timeRange: CMTimeRange(start: .zero, duration: .positiveInfinity))
+        let mix = AVMutableAudioMix()
+        mix.inputParameters = [parameters]
+        item.audioMix = mix
+      }
+
+      // Flet starts a sound as soon as it loads when the control says so.
+      if node.bool("autoplay") == true {
+        player.play()
+        emit("state_change", .map(["state": .string("playing")]))
       }
     }
   #endif
