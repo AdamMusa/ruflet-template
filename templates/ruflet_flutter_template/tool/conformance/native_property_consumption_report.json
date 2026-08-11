@@ -12,12 +12,12 @@
     "controls": 196,
     "properties": 5330,
     "classifications": {
-      "consumed": 718,
-      "parent_consumed": 3107,
-      "service": 90,
-      "unclassified": 1415
+      "consumed": 897,
+      "parent_consumed": 3024,
+      "service": 98,
+      "unclassified": 1311
     },
-    "unclassified": 1415
+    "unclassified": 1311
   },
   "unclassified": [
     {
@@ -38,17 +38,7 @@
     {
       "family": "service",
       "wire_type": "Camera",
-      "property": "content"
-    },
-    {
-      "family": "service",
-      "wire_type": "Camera",
       "property": "on_error"
-    },
-    {
-      "family": "service",
-      "wire_type": "Camera",
-      "property": "on_state_change"
     },
     {
       "family": "service",
@@ -69,11 +59,6 @@
       "family": "service",
       "wire_type": "Flashlight",
       "property": "on_error"
-    },
-    {
-      "family": "service",
-      "wire_type": "Geolocator",
-      "property": "configuration"
     },
     {
       "family": "service",
@@ -353,11 +338,6 @@
     {
       "family": "visual",
       "wire_type": "Audio",
-      "property": "on_state_change"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Audio",
       "property": "release_mode"
     },
     {
@@ -423,27 +403,12 @@
     {
       "family": "visual",
       "wire_type": "Button",
-      "property": "autofocus"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Button",
       "property": "badge"
     },
     {
       "family": "visual",
       "wire_type": "Button",
       "property": "clip_behavior"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Button",
-      "property": "on_blur"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Button",
-      "property": "on_focus"
     },
     {
       "family": "visual",
@@ -548,11 +513,6 @@
     {
       "family": "visual",
       "wire_type": "Checkbox",
-      "property": "autofocus"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Checkbox",
       "property": "badge"
     },
     {
@@ -583,17 +543,7 @@
     {
       "family": "visual",
       "wire_type": "Checkbox",
-      "property": "on_blur"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Checkbox",
       "property": "on_change"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Checkbox",
-      "property": "on_focus"
     },
     {
       "family": "visual",
@@ -808,22 +758,12 @@
     {
       "family": "visual",
       "wire_type": "Column",
-      "property": "on_scroll"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Column",
       "property": "run_alignment"
     },
     {
       "family": "visual",
       "wire_type": "Column",
       "property": "run_spacing"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Column",
-      "property": "scroll"
     },
     {
       "family": "visual",
@@ -1008,11 +948,6 @@
     {
       "family": "visual",
       "wire_type": "CupertinoButton",
-      "property": "autofocus"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoButton",
       "property": "badge"
     },
     {
@@ -1033,27 +968,12 @@
     {
       "family": "visual",
       "wire_type": "CupertinoButton",
-      "property": "on_blur"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoButton",
-      "property": "on_focus"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoButton",
       "property": "opacity_on_click"
     },
     {
       "family": "visual",
       "wire_type": "CupertinoButton",
       "property": "size"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoCheckbox",
-      "property": "autofocus"
     },
     {
       "family": "visual",
@@ -1093,17 +1013,7 @@
     {
       "family": "visual",
       "wire_type": "CupertinoCheckbox",
-      "property": "on_blur"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoCheckbox",
       "property": "on_change"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoCheckbox",
-      "property": "on_focus"
     },
     {
       "family": "visual",
@@ -1193,11 +1103,6 @@
     {
       "family": "visual",
       "wire_type": "CupertinoFilledButton",
-      "property": "autofocus"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoFilledButton",
       "property": "badge"
     },
     {
@@ -1214,16 +1119,6 @@
       "family": "visual",
       "wire_type": "CupertinoFilledButton",
       "property": "mouse_cursor"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoFilledButton",
-      "property": "on_blur"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoFilledButton",
-      "property": "on_focus"
     },
     {
       "family": "visual",
@@ -1343,11 +1238,6 @@
     {
       "family": "visual",
       "wire_type": "CupertinoRadio",
-      "property": "autofocus"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoRadio",
       "property": "badge"
     },
     {
@@ -1374,16 +1264,6 @@
       "family": "visual",
       "wire_type": "CupertinoRadio",
       "property": "mouse_cursor"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoRadio",
-      "property": "on_blur"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoRadio",
-      "property": "on_focus"
     },
     {
       "family": "visual",
@@ -1763,11 +1643,6 @@
     {
       "family": "visual",
       "wire_type": "CupertinoTextField",
-      "property": "filled"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
       "property": "fit_parent_size"
     },
     {
@@ -2128,11 +2003,6 @@
     {
       "family": "visual",
       "wire_type": "CupertinoTintedButton",
-      "property": "autofocus"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTintedButton",
       "property": "badge"
     },
     {
@@ -2149,16 +2019,6 @@
       "family": "visual",
       "wire_type": "CupertinoTintedButton",
       "property": "mouse_cursor"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTintedButton",
-      "property": "on_blur"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTintedButton",
-      "property": "on_focus"
     },
     {
       "family": "visual",
@@ -2593,11 +2453,6 @@
     {
       "family": "visual",
       "wire_type": "DropdownM2",
-      "property": "autofocus"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
       "property": "badge"
     },
     {
@@ -2784,16 +2639,6 @@
       "family": "visual",
       "wire_type": "DropdownM2",
       "property": "max_menu_height"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "on_blur"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "on_focus"
     },
     {
       "family": "visual",
@@ -3038,27 +2883,12 @@
     {
       "family": "visual",
       "wire_type": "FilledButton",
-      "property": "autofocus"
-    },
-    {
-      "family": "visual",
-      "wire_type": "FilledButton",
       "property": "badge"
     },
     {
       "family": "visual",
       "wire_type": "FilledButton",
       "property": "clip_behavior"
-    },
-    {
-      "family": "visual",
-      "wire_type": "FilledButton",
-      "property": "on_blur"
-    },
-    {
-      "family": "visual",
-      "wire_type": "FilledButton",
-      "property": "on_focus"
     },
     {
       "family": "visual",
@@ -3074,11 +2904,6 @@
       "family": "visual",
       "wire_type": "FilledIconButton",
       "property": "alignment"
-    },
-    {
-      "family": "visual",
-      "wire_type": "FilledIconButton",
-      "property": "autofocus"
     },
     {
       "family": "visual",
@@ -3114,16 +2939,6 @@
       "family": "visual",
       "wire_type": "FilledIconButton",
       "property": "mouse_cursor"
-    },
-    {
-      "family": "visual",
-      "wire_type": "FilledIconButton",
-      "property": "on_blur"
-    },
-    {
-      "family": "visual",
-      "wire_type": "FilledIconButton",
-      "property": "on_focus"
     },
     {
       "family": "visual",
@@ -3173,27 +2988,12 @@
     {
       "family": "visual",
       "wire_type": "FilledTonalButton",
-      "property": "autofocus"
-    },
-    {
-      "family": "visual",
-      "wire_type": "FilledTonalButton",
       "property": "badge"
     },
     {
       "family": "visual",
       "wire_type": "FilledTonalButton",
       "property": "clip_behavior"
-    },
-    {
-      "family": "visual",
-      "wire_type": "FilledTonalButton",
-      "property": "on_blur"
-    },
-    {
-      "family": "visual",
-      "wire_type": "FilledTonalButton",
-      "property": "on_focus"
     },
     {
       "family": "visual",
@@ -3209,11 +3009,6 @@
       "family": "visual",
       "wire_type": "FilledTonalIconButton",
       "property": "alignment"
-    },
-    {
-      "family": "visual",
-      "wire_type": "FilledTonalIconButton",
-      "property": "autofocus"
     },
     {
       "family": "visual",
@@ -3249,16 +3044,6 @@
       "family": "visual",
       "wire_type": "FilledTonalIconButton",
       "property": "mouse_cursor"
-    },
-    {
-      "family": "visual",
-      "wire_type": "FilledTonalIconButton",
-      "property": "on_blur"
-    },
-    {
-      "family": "visual",
-      "wire_type": "FilledTonalIconButton",
-      "property": "on_focus"
     },
     {
       "family": "visual",
@@ -3349,11 +3134,6 @@
       "family": "visual",
       "wire_type": "FletApp",
       "property": "url"
-    },
-    {
-      "family": "visual",
-      "wire_type": "FloatingActionButton",
-      "property": "autofocus"
     },
     {
       "family": "visual",
@@ -3688,11 +3468,6 @@
     {
       "family": "visual",
       "wire_type": "IconButton",
-      "property": "autofocus"
-    },
-    {
-      "family": "visual",
-      "wire_type": "IconButton",
       "property": "badge"
     },
     {
@@ -3724,16 +3499,6 @@
       "family": "visual",
       "wire_type": "IconButton",
       "property": "mouse_cursor"
-    },
-    {
-      "family": "visual",
-      "wire_type": "IconButton",
-      "property": "on_blur"
-    },
-    {
-      "family": "visual",
-      "wire_type": "IconButton",
-      "property": "on_focus"
     },
     {
       "family": "visual",
@@ -4188,27 +3953,12 @@
     {
       "family": "visual",
       "wire_type": "OutlinedButton",
-      "property": "autofocus"
-    },
-    {
-      "family": "visual",
-      "wire_type": "OutlinedButton",
       "property": "badge"
     },
     {
       "family": "visual",
       "wire_type": "OutlinedButton",
       "property": "clip_behavior"
-    },
-    {
-      "family": "visual",
-      "wire_type": "OutlinedButton",
-      "property": "on_blur"
-    },
-    {
-      "family": "visual",
-      "wire_type": "OutlinedButton",
-      "property": "on_focus"
     },
     {
       "family": "visual",
@@ -4224,11 +3974,6 @@
       "family": "visual",
       "wire_type": "OutlinedIconButton",
       "property": "alignment"
-    },
-    {
-      "family": "visual",
-      "wire_type": "OutlinedIconButton",
-      "property": "autofocus"
     },
     {
       "family": "visual",
@@ -4264,16 +4009,6 @@
       "family": "visual",
       "wire_type": "OutlinedIconButton",
       "property": "mouse_cursor"
-    },
-    {
-      "family": "visual",
-      "wire_type": "OutlinedIconButton",
-      "property": "on_blur"
-    },
-    {
-      "family": "visual",
-      "wire_type": "OutlinedIconButton",
-      "property": "on_focus"
     },
     {
       "family": "visual",
@@ -4349,11 +4084,6 @@
       "family": "visual",
       "wire_type": "Page",
       "property": "client_user_agent"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Page",
-      "property": "dark_theme"
     },
     {
       "family": "visual",
@@ -4494,21 +4224,6 @@
       "family": "visual",
       "wire_type": "Page",
       "property": "test"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Page",
-      "property": "theme"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Page",
-      "property": "theme_mode"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Page",
-      "property": "title"
     },
     {
       "family": "visual",
@@ -4684,11 +4399,6 @@
       "family": "visual",
       "wire_type": "ProgressBar",
       "property": "bar_height"
-    },
-    {
-      "family": "visual",
-      "wire_type": "ProgressBar",
-      "property": "border_radius"
     },
     {
       "family": "visual",
@@ -5053,22 +4763,12 @@
     {
       "family": "visual",
       "wire_type": "Row",
-      "property": "on_scroll"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Row",
       "property": "run_alignment"
     },
     {
       "family": "visual",
       "wire_type": "Row",
       "property": "run_spacing"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Row",
-      "property": "scroll"
     },
     {
       "family": "visual",
@@ -5094,26 +4794,6 @@
       "family": "visual",
       "wire_type": "SafeArea",
       "property": "adaptive"
-    },
-    {
-      "family": "visual",
-      "wire_type": "SafeArea",
-      "property": "avoid_intrusions_bottom"
-    },
-    {
-      "family": "visual",
-      "wire_type": "SafeArea",
-      "property": "avoid_intrusions_left"
-    },
-    {
-      "family": "visual",
-      "wire_type": "SafeArea",
-      "property": "avoid_intrusions_right"
-    },
-    {
-      "family": "visual",
-      "wire_type": "SafeArea",
-      "property": "avoid_intrusions_top"
     },
     {
       "family": "visual",
@@ -5348,11 +5028,6 @@
     {
       "family": "visual",
       "wire_type": "SegmentedButton",
-      "property": "on_change"
-    },
-    {
-      "family": "visual",
-      "wire_type": "SegmentedButton",
       "property": "selected_icon"
     },
     {
@@ -5448,32 +5123,7 @@
     {
       "family": "visual",
       "wire_type": "Semantics",
-      "property": "on_copy"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Semantics",
-      "property": "on_cut"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Semantics",
-      "property": "on_decrease"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Semantics",
-      "property": "on_dismiss"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Semantics",
       "property": "on_double_tap"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Semantics",
-      "property": "on_increase"
     },
     {
       "family": "visual",
@@ -5484,46 +5134,6 @@
       "family": "visual",
       "wire_type": "Semantics",
       "property": "on_long_press_hint_text"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Semantics",
-      "property": "on_move_cursor_backward_by_character"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Semantics",
-      "property": "on_move_cursor_forward_by_character"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Semantics",
-      "property": "on_paste"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Semantics",
-      "property": "on_scroll_down"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Semantics",
-      "property": "on_scroll_left"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Semantics",
-      "property": "on_scroll_right"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Semantics",
-      "property": "on_scroll_up"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Semantics",
-      "property": "on_set_text"
     },
     {
       "family": "visual",
@@ -5567,11 +5177,6 @@
     },
     {
       "family": "visual",
-      "wire_type": "ShaderMask",
-      "property": "border_radius"
-    },
-    {
-      "family": "visual",
       "wire_type": "Shimmer",
       "property": "badge"
     },
@@ -5603,11 +5208,6 @@
     {
       "family": "visual",
       "wire_type": "Slider",
-      "property": "autofocus"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Slider",
       "property": "badge"
     },
     {
@@ -5633,17 +5233,7 @@
     {
       "family": "visual",
       "wire_type": "Slider",
-      "property": "on_blur"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Slider",
       "property": "on_change"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Slider",
-      "property": "on_focus"
     },
     {
       "family": "visual",
@@ -5798,11 +5388,6 @@
     {
       "family": "visual",
       "wire_type": "Switch",
-      "property": "autofocus"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Switch",
       "property": "badge"
     },
     {
@@ -5838,17 +5423,7 @@
     {
       "family": "visual",
       "wire_type": "Switch",
-      "property": "on_blur"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Switch",
       "property": "on_change"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Switch",
-      "property": "on_focus"
     },
     {
       "family": "visual",
@@ -6093,27 +5668,12 @@
     {
       "family": "visual",
       "wire_type": "TextButton",
-      "property": "autofocus"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextButton",
       "property": "badge"
     },
     {
       "family": "visual",
       "wire_type": "TextButton",
       "property": "clip_behavior"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextButton",
-      "property": "on_blur"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextButton",
-      "property": "on_focus"
     },
     {
       "family": "visual",
@@ -6363,11 +5923,6 @@
     {
       "family": "visual",
       "wire_type": "TextField",
-      "property": "keyboard_type"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
       "property": "label_style"
     },
     {
@@ -6563,11 +6118,6 @@
     {
       "family": "visual",
       "wire_type": "Video",
-      "property": "autoplay"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Video",
       "property": "configuration"
     },
     {
@@ -6583,27 +6133,12 @@
     {
       "family": "visual",
       "wire_type": "Video",
-      "property": "muted"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Video",
-      "property": "on_complete"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Video",
       "property": "on_completed"
     },
     {
       "family": "visual",
       "wire_type": "Video",
       "property": "on_enter_fullscreen"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Video",
-      "property": "on_error"
     },
     {
       "family": "visual",
@@ -6618,17 +6153,7 @@
     {
       "family": "visual",
       "wire_type": "Video",
-      "property": "on_loaded"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Video",
       "property": "on_state_change"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Video",
-      "property": "on_track_change"
     },
     {
       "family": "visual",
@@ -6644,16 +6169,6 @@
       "family": "visual",
       "wire_type": "Video",
       "property": "pitch"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Video",
-      "property": "playback_rate"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Video",
-      "property": "playlist"
     },
     {
       "family": "visual",
@@ -6679,11 +6194,6 @@
       "family": "visual",
       "wire_type": "Video",
       "property": "title"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Video",
-      "property": "volume"
     },
     {
       "family": "visual",
@@ -6734,16 +6244,6 @@
       "family": "visual",
       "wire_type": "View",
       "property": "on_confirm_pop"
-    },
-    {
-      "family": "visual",
-      "wire_type": "View",
-      "property": "on_scroll"
-    },
-    {
-      "family": "visual",
-      "wire_type": "View",
-      "property": "scroll"
     },
     {
       "family": "visual",
@@ -6899,26 +6399,6 @@
       "family": "visual",
       "wire_type": "WindowDragArea",
       "property": "badge"
-    },
-    {
-      "family": "visual",
-      "wire_type": "WindowDragArea",
-      "property": "maximizable"
-    },
-    {
-      "family": "visual",
-      "wire_type": "WindowDragArea",
-      "property": "on_double_tap"
-    },
-    {
-      "family": "visual",
-      "wire_type": "WindowDragArea",
-      "property": "on_drag_end"
-    },
-    {
-      "family": "visual",
-      "wire_type": "WindowDragArea",
-      "property": "on_drag_start"
     },
     {
       "family": "visual",
@@ -7230,6 +6710,18 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
               "line": 355
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/CameraControlView.swift",
+              "line": 204
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/CameraControlView.swift",
+              "line": 205
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/CameraControlView.swift",
+              "line": 206
             }
           ]
         },
@@ -7368,6 +6860,22 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/DeviceServices.swift",
               "line": 93
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 355
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/CameraControlView.swift",
+              "line": 204
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/CameraControlView.swift",
+              "line": 205
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/CameraControlView.swift",
+              "line": 206
             }
           ]
         }
@@ -7537,8 +7045,13 @@
           ]
         },
         "content": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
+            }
+          ]
         },
         "data": {
           "classification": "parent_consumed",
@@ -7680,8 +7193,25 @@
           ]
         },
         "on_state_change": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 355
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/CameraControlView.swift",
+              "line": 204
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/CameraControlView.swift",
+              "line": 205
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/CameraControlView.swift",
+              "line": 206
+            }
+          ]
         },
         "on_stream_image": {
           "classification": "unclassified",
@@ -7971,8 +7501,13 @@
       ],
       "properties": {
         "configuration": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 236
+            }
+          ]
         },
         "data": {
           "classification": "service",
@@ -8875,6 +8410,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
               "line": 276
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -9260,6 +8799,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
               "line": 532
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -9357,15 +8900,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -9997,8 +9536,25 @@
           "evidence": []
         },
         "on_state_change": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 355
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/CameraControlView.swift",
+              "line": 204
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/CameraControlView.swift",
+              "line": 205
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/CameraControlView.swift",
+              "line": 206
+            }
+          ]
         },
         "opacity": {
           "classification": "parent_consumed",
@@ -11002,6 +10558,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
               "line": 113
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -11120,15 +10680,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -11479,8 +11035,17 @@
           ]
         },
         "autofocus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 82
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 97
+            }
+          ]
         },
         "badge": {
           "classification": "unclassified",
@@ -11548,6 +11113,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
               "line": 104
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -11667,15 +11236,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -11701,8 +11266,25 @@
           ]
         },
         "on_blur": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_click": {
           "classification": "consumed",
@@ -11722,8 +11304,25 @@
           ]
         },
         "on_focus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_hover": {
           "classification": "consumed",
@@ -12273,6 +11872,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
               "line": 103
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -12361,15 +11964,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -12728,6 +12327,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
               "line": 379
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -12817,15 +12420,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -13152,8 +12751,17 @@
           ]
         },
         "autofocus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 82
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 97
+            }
+          ]
         },
         "badge": {
           "classification": "unclassified",
@@ -13331,15 +12939,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -13365,16 +12969,50 @@
           ]
         },
         "on_blur": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_change": {
           "classification": "unclassified",
           "evidence": []
         },
         "on_focus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_size_change": {
           "classification": "parent_consumed",
@@ -13916,15 +13554,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -13997,6 +13631,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
               "line": 235
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
+              "line": 236
             }
           ]
         },
@@ -14035,11 +13673,11 @@
           ]
         },
         "padding": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 222
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletThemeDefaults.swift",
+              "line": 105
             }
           ]
         },
@@ -14420,6 +14058,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/DisplayControls.swift",
               "line": 307
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -14525,15 +14167,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -14915,6 +14553,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
               "line": 93
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -14942,6 +14584,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
               "line": 95
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletFlexLayout.swift",
+              "line": 44
             }
           ]
         },
@@ -15016,15 +14662,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -15050,8 +14692,25 @@
           ]
         },
         "on_scroll": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
+              "line": 192
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
+              "line": 194
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
+              "line": 195
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
+              "line": 196
+            }
+          ]
         },
         "on_size_change": {
           "classification": "parent_consumed",
@@ -15136,8 +14795,17 @@
           ]
         },
         "scroll": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
+              "line": 171
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
+              "line": 211
+            }
+          ]
         },
         "scroll_interval": {
           "classification": "unclassified",
@@ -15397,6 +15065,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
               "line": 202
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletThemeDefaults.swift",
+              "line": 109
             }
           ]
         },
@@ -15440,6 +15112,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
               "line": 231
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -15561,15 +15237,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -15682,6 +15354,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
               "line": 208
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletThemeDefaults.swift",
+              "line": 105
             }
           ]
         },
@@ -15967,6 +15643,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
               "line": 602
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -16064,15 +15744,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -16558,15 +16234,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -16892,6 +16564,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
               "line": 718
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -16997,15 +16673,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -17792,8 +17464,17 @@
           ]
         },
         "autofocus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 82
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 97
+            }
+          ]
         },
         "badge": {
           "classification": "unclassified",
@@ -17854,6 +17535,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
               "line": 69
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -17981,15 +17666,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -18015,8 +17696,25 @@
           ]
         },
         "on_blur": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_click": {
           "classification": "consumed",
@@ -18036,8 +17734,25 @@
           ]
         },
         "on_focus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_long_press": {
           "classification": "consumed",
@@ -18348,8 +18063,17 @@
           ]
         },
         "autofocus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 82
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 97
+            }
+          ]
         },
         "badge": {
           "classification": "unclassified",
@@ -18491,15 +18215,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -18525,16 +18245,50 @@
           ]
         },
         "on_blur": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_change": {
           "classification": "unclassified",
           "evidence": []
         },
         "on_focus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_size_change": {
           "classification": "parent_consumed",
@@ -19355,8 +19109,17 @@
           ]
         },
         "autofocus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 82
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 97
+            }
+          ]
         },
         "badge": {
           "classification": "unclassified",
@@ -19417,6 +19180,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
               "line": 69
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -19544,15 +19311,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -19578,8 +19341,25 @@
           ]
         },
         "on_blur": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_click": {
           "classification": "consumed",
@@ -19599,8 +19379,25 @@
           ]
         },
         "on_focus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_long_press": {
           "classification": "consumed",
@@ -20058,15 +19855,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -20596,15 +20389,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -20943,6 +20732,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
               "line": 256
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -21060,15 +20853,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -21392,8 +21181,17 @@
           ]
         },
         "autofocus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 82
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 97
+            }
+          ]
         },
         "badge": {
           "classification": "unclassified",
@@ -21531,15 +21329,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -21565,12 +21359,46 @@
           ]
         },
         "on_blur": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_focus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_size_change": {
           "classification": "parent_consumed",
@@ -21897,6 +21725,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
               "line": 226
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -21993,15 +21825,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -22847,6 +22675,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
               "line": 226
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -22935,15 +22767,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -23850,6 +23678,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
               "line": 212
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletThemeDefaults.swift",
+              "line": 109
             }
           ]
         },
@@ -24012,8 +23844,13 @@
           "evidence": []
         },
         "filled": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletThemeDefaults.swift",
+              "line": 122
+            }
+          ]
         },
         "fit_parent_size": {
           "classification": "unclassified",
@@ -24293,11 +24130,11 @@
           ]
         },
         "padding": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 222
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletThemeDefaults.swift",
+              "line": 105
             }
           ]
         },
@@ -25107,8 +24944,17 @@
           ]
         },
         "autofocus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 82
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 97
+            }
+          ]
         },
         "badge": {
           "classification": "unclassified",
@@ -25169,6 +25015,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
               "line": 69
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -25296,15 +25146,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -25330,8 +25176,25 @@
           ]
         },
         "on_blur": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_click": {
           "classification": "consumed",
@@ -25351,8 +25214,25 @@
           ]
         },
         "on_focus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_long_press": {
           "classification": "consumed",
@@ -25943,15 +25823,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -26551,6 +26427,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/InputControls.swift",
               "line": 1192
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletThemeDefaults.swift",
+              "line": 115
             }
           ]
         },
@@ -26742,6 +26622,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/InputControls.swift",
               "line": 1191
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletThemeDefaults.swift",
+              "line": 115
             }
           ]
         },
@@ -26960,6 +26844,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
               "line": 484
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -27078,15 +26966,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -27741,15 +27625,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -28174,8 +28054,17 @@
           ]
         },
         "autofocus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 82
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 97
+            }
+          ]
         },
         "badge": {
           "classification": "unclassified",
@@ -28454,15 +28343,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -28488,8 +28373,25 @@
           ]
         },
         "on_blur": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_change": {
           "classification": "consumed",
@@ -28530,8 +28432,25 @@
           ]
         },
         "on_focus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_size_change": {
           "classification": "parent_consumed",
@@ -28965,6 +28884,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CollectionControls.swift",
               "line": 372
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -29078,12 +29001,8 @@
           "classification": "parent_consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -29404,6 +29323,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CollectionControls.swift",
               "line": 345
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -29508,15 +29431,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -29896,6 +29815,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CollectionControls.swift",
               "line": 308
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -30043,15 +29966,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -30420,8 +30339,17 @@
           ]
         },
         "autofocus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 82
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 97
+            }
+          ]
         },
         "badge": {
           "classification": "unclassified",
@@ -30489,6 +30417,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
               "line": 104
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -30608,15 +30540,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -30642,8 +30570,25 @@
           ]
         },
         "on_blur": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_click": {
           "classification": "consumed",
@@ -30663,8 +30608,25 @@
           ]
         },
         "on_focus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_hover": {
           "classification": "consumed",
@@ -30970,8 +30932,17 @@
           ]
         },
         "autofocus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 82
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 97
+            }
+          ]
         },
         "badge": {
           "classification": "unclassified",
@@ -31152,15 +31123,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -31186,8 +31153,25 @@
           ]
         },
         "on_blur": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_click": {
           "classification": "consumed",
@@ -31207,8 +31191,25 @@
           ]
         },
         "on_focus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_hover": {
           "classification": "consumed",
@@ -31547,8 +31548,17 @@
           ]
         },
         "autofocus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 82
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 97
+            }
+          ]
         },
         "badge": {
           "classification": "unclassified",
@@ -31616,6 +31626,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
               "line": 104
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -31735,15 +31749,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -31769,8 +31779,25 @@
           ]
         },
         "on_blur": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_click": {
           "classification": "consumed",
@@ -31790,8 +31817,25 @@
           ]
         },
         "on_focus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_hover": {
           "classification": "consumed",
@@ -32097,8 +32141,17 @@
           ]
         },
         "autofocus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 82
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 97
+            }
+          ]
         },
         "badge": {
           "classification": "unclassified",
@@ -32279,15 +32332,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -32313,8 +32362,25 @@
           ]
         },
         "on_blur": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_click": {
           "classification": "consumed",
@@ -32334,8 +32400,25 @@
           ]
         },
         "on_focus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_hover": {
           "classification": "consumed",
@@ -32792,15 +32875,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -33110,8 +33189,17 @@
           ]
         },
         "autofocus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 82
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 97
+            }
+          ]
         },
         "badge": {
           "classification": "unclassified",
@@ -33166,6 +33254,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
               "line": 104
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -33312,15 +33404,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -33687,6 +33775,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
               "line": 24
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -33810,15 +33902,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -34861,6 +34949,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CollectionControls.swift",
               "line": 93
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -34979,15 +35071,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -35414,6 +35502,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
               "line": 371
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -35502,15 +35594,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -36288,8 +36376,17 @@
           ]
         },
         "autofocus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 82
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 97
+            }
+          ]
         },
         "badge": {
           "classification": "unclassified",
@@ -36470,15 +36567,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -36504,8 +36597,25 @@
           ]
         },
         "on_blur": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_click": {
           "classification": "consumed",
@@ -36525,8 +36635,25 @@
           ]
         },
         "on_focus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_hover": {
           "classification": "consumed",
@@ -36917,6 +37044,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/GestureControls.swift",
               "line": 618
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -37031,15 +37162,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -37852,15 +37979,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -38356,6 +38479,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CollectionControls.swift",
               "line": 45
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -38487,15 +38614,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -39464,6 +39587,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
               "line": 522
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -39570,15 +39697,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -40714,15 +40837,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -41087,8 +41206,17 @@
           ]
         },
         "autofocus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 82
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 97
+            }
+          ]
         },
         "badge": {
           "classification": "unclassified",
@@ -41130,6 +41258,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
               "line": 104
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -41240,15 +41372,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -41274,8 +41402,25 @@
           ]
         },
         "on_blur": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_click": {
           "classification": "consumed",
@@ -41295,8 +41440,25 @@
           ]
         },
         "on_focus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_hover": {
           "classification": "consumed",
@@ -41602,8 +41764,17 @@
           ]
         },
         "autofocus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 82
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 97
+            }
+          ]
         },
         "badge": {
           "classification": "unclassified",
@@ -41784,15 +41955,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -41818,8 +41985,25 @@
           ]
         },
         "on_blur": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_click": {
           "classification": "consumed",
@@ -41839,8 +42023,25 @@
           ]
         },
         "on_focus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_hover": {
           "classification": "consumed",
@@ -42160,8 +42361,13 @@
           ]
         },
         "dark_theme": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
+              "line": 33
+            }
+          ]
         },
         "data": {
           "classification": "parent_consumed",
@@ -42391,16 +42597,31 @@
           "evidence": []
         },
         "theme": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
+              "line": 33
+            }
+          ]
         },
         "theme_mode": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
+              "line": 43
+            }
+          ]
         },
         "title": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
+              "line": 36
+            }
+          ]
         },
         "tooltip": {
           "classification": "parent_consumed",
@@ -42648,6 +42869,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CollectionControls.swift",
               "line": 201
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -42771,15 +42996,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -43193,11 +43414,11 @@
           ]
         },
         "content": {
-          "classification": "consumed",
+          "classification": "service",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 499
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -43316,15 +43537,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "service",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -44272,6 +44489,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
               "line": 418
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -44415,15 +44636,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -44534,11 +44751,11 @@
           ]
         },
         "padding": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 222
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletThemeDefaults.swift",
+              "line": 105
             }
           ]
         },
@@ -44828,8 +45045,13 @@
           ]
         },
         "border_radius": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletThemeDefaults.swift",
+              "line": 109
+            }
+          ]
         },
         "bottom": {
           "classification": "parent_consumed",
@@ -46081,15 +46303,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -46841,6 +47059,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
               "line": 128
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletThemeDefaults.swift",
+              "line": 109
             }
           ]
         },
@@ -47075,6 +47297,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CollectionControls.swift",
               "line": 130
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -47170,12 +47396,8 @@
           "classification": "parent_consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -47520,6 +47742,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CollectionControls.swift",
               "line": 130
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -47646,15 +47872,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -48081,6 +48303,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
               "line": 435
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -48169,15 +48395,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -48521,6 +48743,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
               "line": 482
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -48609,15 +48835,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -48963,6 +49185,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
               "line": 50
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -48990,6 +49216,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
               "line": 52
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletFlexLayout.swift",
+              "line": 44
             }
           ]
         },
@@ -49055,15 +49285,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -49089,8 +49315,25 @@
           ]
         },
         "on_scroll": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
+              "line": 192
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
+              "line": 194
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
+              "line": 195
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
+              "line": 196
+            }
+          ]
         },
         "on_size_change": {
           "classification": "parent_consumed",
@@ -49175,8 +49418,17 @@
           ]
         },
         "scroll": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
+              "line": 171
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
+              "line": 211
+            }
+          ]
         },
         "scroll_interval": {
           "classification": "unclassified",
@@ -49548,11 +49800,11 @@
           ]
         },
         "padding": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 222
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletThemeDefaults.swift",
+              "line": 105
             }
           ]
         },
@@ -49809,20 +50061,40 @@
           ]
         },
         "avoid_intrusions_bottom": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
+              "line": 426
+            }
+          ]
         },
         "avoid_intrusions_left": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
+              "line": 427
+            }
+          ]
         },
         "avoid_intrusions_right": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
+              "line": 428
+            }
+          ]
         },
         "avoid_intrusions_top": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
+              "line": 425
+            }
+          ]
         },
         "badge": {
           "classification": "unclassified",
@@ -49856,6 +50128,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
               "line": 410
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -49957,15 +50233,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -50351,6 +50623,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
               "line": 32
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -51384,15 +51660,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -51418,8 +51690,13 @@
           ]
         },
         "on_change": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
+              "line": 307
+            }
+          ]
         },
         "on_size_change": {
           "classification": "parent_consumed",
@@ -51456,11 +51733,11 @@
           ]
         },
         "padding": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 222
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletThemeDefaults.swift",
+              "line": 105
             }
           ]
         },
@@ -51656,6 +51933,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
               "line": 84
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -51806,16 +52087,31 @@
           "evidence": []
         },
         "on_copy": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 171
+            }
+          ]
         },
         "on_cut": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 172
+            }
+          ]
         },
         "on_decrease": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 144
+            }
+          ]
         },
         "on_did_gain_accessibility_focus": {
           "classification": "consumed",
@@ -51836,16 +52132,42 @@
           ]
         },
         "on_dismiss": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 154
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 155
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 156
+            }
+          ]
         },
         "on_double_tap": {
           "classification": "unclassified",
           "evidence": []
         },
         "on_increase": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 141
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 142
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 143
+            }
+          ]
         },
         "on_long_press": {
           "classification": "unclassified",
@@ -51856,36 +52178,76 @@
           "evidence": []
         },
         "on_move_cursor_backward_by_character": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 178
+            }
+          ]
         },
         "on_move_cursor_forward_by_character": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 175
+            }
+          ]
         },
         "on_paste": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 173
+            }
+          ]
         },
         "on_scroll_down": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 170
+            }
+          ]
         },
         "on_scroll_left": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 167
+            }
+          ]
         },
         "on_scroll_right": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 168
+            }
+          ]
         },
         "on_scroll_up": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 169
+            }
+          ]
         },
         "on_set_text": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 181
+            }
+          ]
         },
         "on_tap": {
           "classification": "unclassified",
@@ -51957,6 +52319,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
               "line": 89
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 182
             }
           ]
         },
@@ -52133,8 +52499,13 @@
           "evidence": []
         },
         "border_radius": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletThemeDefaults.swift",
+              "line": 109
+            }
+          ]
         },
         "bottom": {
           "classification": "parent_consumed",
@@ -52164,6 +52535,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
               "line": 341
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -52252,15 +52627,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -52612,6 +52983,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
               "line": 299
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -52721,15 +53096,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -53040,8 +53411,17 @@
           ]
         },
         "autofocus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 82
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 97
+            }
+          ]
         },
         "badge": {
           "classification": "unclassified",
@@ -53197,15 +53577,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -53231,8 +53607,25 @@
           ]
         },
         "on_blur": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_change": {
           "classification": "unclassified",
@@ -53273,8 +53666,25 @@
           ]
         },
         "on_focus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_size_change": {
           "classification": "parent_consumed",
@@ -53315,11 +53725,11 @@
           "evidence": []
         },
         "padding": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 222
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletThemeDefaults.swift",
+              "line": 105
             }
           ]
         },
@@ -53555,6 +53965,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
               "line": 276
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -53906,7 +54320,7 @@
           ]
         },
         "animate_position": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
@@ -53967,7 +54381,7 @@
           "evidence": []
         },
         "bottom": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
@@ -53994,6 +54408,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
               "line": 247
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -54060,7 +54478,7 @@
           ]
         },
         "left": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
@@ -54086,15 +54504,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -54154,7 +54568,7 @@
           ]
         },
         "right": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
@@ -54212,7 +54626,7 @@
           ]
         },
         "top": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
@@ -54423,6 +54837,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
               "line": 502
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -54432,6 +54850,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
               "line": 502
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -54533,15 +54955,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -54919,8 +55337,17 @@
           ]
         },
         "autofocus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 82
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 97
+            }
+          ]
         },
         "badge": {
           "classification": "unclassified",
@@ -55075,15 +55502,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -55109,16 +55532,50 @@
           ]
         },
         "on_blur": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_change": {
           "classification": "unclassified",
           "evidence": []
         },
         "on_focus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_size_change": {
           "classification": "parent_consumed",
@@ -55159,11 +55616,11 @@
           "evidence": []
         },
         "padding": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 222
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletThemeDefaults.swift",
+              "line": 105
             }
           ]
         },
@@ -55635,15 +56092,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -56066,6 +56519,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CollectionControls.swift",
               "line": 541
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -56154,15 +56611,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -56490,6 +56943,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CollectionControls.swift",
               "line": 410
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -56595,15 +57052,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -57137,8 +57590,17 @@
           ]
         },
         "autofocus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 82
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 97
+            }
+          ]
         },
         "badge": {
           "classification": "unclassified",
@@ -57180,6 +57642,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
               "line": 104
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -57290,15 +57756,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -57324,8 +57786,25 @@
           ]
         },
         "on_blur": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_click": {
           "classification": "consumed",
@@ -57345,8 +57824,25 @@
           ]
         },
         "on_focus": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/EventReporters.swift",
+              "line": 100
+            }
+          ]
         },
         "on_hover": {
           "classification": "consumed",
@@ -57992,8 +58488,13 @@
           "evidence": []
         },
         "keyboard_type": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/InputControls.swift",
+              "line": 766
+            }
+          ]
         },
         "label": {
           "classification": "consumed",
@@ -58073,15 +58574,11 @@
           "evidence": []
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -58909,6 +59406,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
               "line": 278
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -58997,15 +59498,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -59195,8 +59692,13 @@
           ]
         },
         "autoplay": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 957
+            }
+          ]
         },
         "configuration": {
           "classification": "unclassified",
@@ -59260,12 +59762,30 @@
           ]
         },
         "muted": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 937
+            }
+          ]
         },
         "on_complete": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 964
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 965
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 966
+            }
+          ]
         },
         "on_completed": {
           "classification": "unclassified",
@@ -59276,8 +59796,17 @@
           "evidence": []
         },
         "on_error": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 1006
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 1007
+            }
+          ]
         },
         "on_exit_fullscreen": {
           "classification": "unclassified",
@@ -59288,16 +59817,42 @@
           "evidence": []
         },
         "on_loaded": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 1003
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 1004
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 1005
+            }
+          ]
         },
         "on_state_change": {
           "classification": "unclassified",
           "evidence": []
         },
         "on_track_change": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 995
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 996
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 997
+            }
+          ]
         },
         "on_track_changed": {
           "classification": "unclassified",
@@ -59325,12 +59880,22 @@
           "evidence": []
         },
         "playback_rate": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 940
+            }
+          ]
         },
         "playlist": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 975
+            }
+          ]
         },
         "playlist_mode": {
           "classification": "unclassified",
@@ -59389,8 +59954,13 @@
           ]
         },
         "volume": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
+              "line": 938
+            }
+          ]
         },
         "wakelock": {
           "classification": "unclassified",
@@ -59574,6 +60144,26 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
               "line": 132
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
+              "line": 252
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/InputControls.swift",
+              "line": 1108
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
+              "line": 144
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
+              "line": 333
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
+              "line": 288
             }
           ]
         },
@@ -59609,15 +60199,11 @@
           ]
         },
         "controls": {
-          "classification": "consumed",
+          "classification": "service",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 156
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 166
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -59652,11 +60238,11 @@
           "evidence": []
         },
         "expand": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 185
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletFlexLayout.swift",
+              "line": 44
             }
           ]
         },
@@ -59762,15 +60348,11 @@
           ]
         },
         "offset": {
-          "classification": "parent_consumed",
+          "classification": "service",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -59800,8 +60382,25 @@
           "evidence": []
         },
         "on_scroll": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
+              "line": 192
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
+              "line": 194
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
+              "line": 195
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
+              "line": 196
+            }
+          ]
         },
         "on_size_change": {
           "classification": "parent_consumed",
@@ -59900,8 +60499,17 @@
           ]
         },
         "scroll": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
+              "line": 171
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift",
+              "line": 211
+            }
+          ]
         },
         "scroll_interval": {
           "classification": "unclassified",
@@ -60386,6 +60994,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
               "line": 388
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
+              "line": 71
             }
           ]
         },
@@ -60474,19 +61086,24 @@
           ]
         },
         "maximizable": {
-          "classification": "unclassified",
-          "evidence": []
-        },
-        "offset": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 289
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 405
             },
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 297
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 441
+            }
+          ]
+        },
+        "offset": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletMedia/MediaCaptureServices.swift",
+              "line": 452
             }
           ]
         },
@@ -60512,16 +61129,55 @@
           ]
         },
         "on_double_tap": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 408
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 409
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 440
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 441
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 442
+            }
+          ]
         },
         "on_drag_end": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 431
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 432
+            }
+          ]
         },
         "on_drag_start": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 420
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/WrapperControls.swift",
+              "line": 421
+            }
+          ]
         },
         "on_size_change": {
           "classification": "parent_consumed",
@@ -60830,6 +61486,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/MediaControls.swift",
               "line": 558
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletThemeDefaults.swift",
+              "line": 109
             }
           ]
         },

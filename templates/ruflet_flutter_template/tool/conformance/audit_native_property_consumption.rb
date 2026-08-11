@@ -238,6 +238,10 @@ module NativePropertyConsumptionAudit
         event_call[/\A[^)]*/].scan(/"([^"]+)"/) { |match| keys << "on_#{match[0]}" }
       end
       line.scan(/\bproperty:\s*"([^"]+)"/) { |match| keys << match[0] }
+      # A reusable reporter takes the event it fires as an argument, so the
+      # only literal is at the call site: NamedSemanticsAction(event: "copy")
+      # and events.commit(..., event: "change") both name a real event.
+      line.scan(/\bevent:\s*"([^"]+)"/) { |match| keys << "on_#{match[0]}" }
       keys.uniq.each do |key|
         reads[key] << { "path" => relative(path), "line" => start_line + index + 1 }
       end
@@ -278,7 +282,7 @@ module NativePropertyConsumptionAudit
         # and Modifier constructors made those real reads look unimplemented.
         # Keep this deliberately suffix-scoped so arbitrary framework types do
         # not become evidence for a control.
-        body.scan(/\b([A-Z][A-Za-z0-9_]*(?:Defaults|Parity|Configuration|Config|Metrics|Policy|Modifier|Reporter|Presentation|Style|View|Gestures))\s*(?:\(|\.)/) do |(dependency)|
+        body.scan(/\b([A-Z][A-Za-z0-9_]*)\s*(?:\(|\.)/) do |(dependency)|
           queue << dependency if type_scopes.key?(dependency)
         end
       end
