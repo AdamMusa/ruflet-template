@@ -242,7 +242,7 @@ module NativePropertyConsumptionAudit
       # that is how the AppKit pointer monitor raises the secondary and
       # tertiary buttons. Both wrap, so both are read over a window.
       window = scanned[index, EVENT_CALL_LOOKAHEAD].join(" ")
-      if (event_call = window[/\b(?:events\.fire|onEvent)\((.*)$/, 1])
+      if (event_call = window[/\b(?:events\.fire|events\.send|onEvent)\((.*)$/, 1])
         # Stop at the closing paren so a following statement's literals on the
         # same window cannot be attributed to this call.
         event_call[/\A[^)]*/].scan(/"([^"]+)"/) { |match| keys << "on_#{match[0]}" }

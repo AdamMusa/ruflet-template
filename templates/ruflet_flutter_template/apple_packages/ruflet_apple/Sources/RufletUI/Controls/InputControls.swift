@@ -932,6 +932,47 @@ private struct KeyboardType: ViewModifier {
   }
 }
 
+/// The validation strings a Material date picker shows under its field when
+/// what was typed cannot be parsed or falls outside the allowed range.
+private struct PickerValidation: ViewModifier {
+  let node: ControlNode
+  let kind: DateTimePickerControlView.Kind
+
+  func body(content: Content) -> some View {
+    VStack(alignment: .leading, spacing: 4) {
+      content
+      if let message = message {
+        Text(message).font(.caption2).foregroundColor(.red)
+      }
+      HStack(spacing: 12) {
+        if let start = node.string("field_start_hint_text") {
+          Text(start).font(.caption2).foregroundColor(.secondary)
+        }
+        if let end = node.string("field_end_hint_text") {
+          Text(end).font(.caption2).foregroundColor(.secondary)
+        }
+        if let hint = node.string("field_hint_text") {
+          Text(hint).font(.caption2).foregroundColor(.secondary)
+        }
+        if let label = node.string("field_label_text") {
+          Text(label).font(.caption2).foregroundColor(.secondary)
+        }
+        if let save = node.string("save_text") {
+          Text(save).font(.caption2).foregroundColor(.accentColor)
+        }
+      }
+    }
+  }
+
+  /// Flutter shows one of these at a time: the format complaint first, then
+  /// the out-of-range one, and for a range the invalid-range message.
+  private var message: String? {
+    node.string("error_format_text")
+      ?? node.string("error_invalid_text")
+      ?? node.string("error_invalid_range_text")
+  }
+}
+
 /// `SearchBar` — a text field that reports `change`, `submit` and `tap`, and
 /// answers Ruby's `focus`, `open_view` and `close_view`.
 struct SearchBarControlView: View {
@@ -1470,7 +1511,41 @@ struct DateTimePickerControlView: View {
         RoundedRectangle(cornerRadius: 14)
           .fill(MaterialPalette.color(node.string("bgcolor"), default: pickerSurface)))
       .shadow(radius: 20)
-      .padding(24)
+      .padding(ControlProps.edgeInsets(node.props["inset_padding"])
+        ?? EdgeInsets(top: 24, leading: 24, bottom: 24, trailing: 24))
+      .environment(\.locale, pickerLocale)
+      .modifier(PickerValidation(node: node, kind: kind))
+      .onAppear {
+        // `adaptive` picks the Cupertino wheel on Apple, which is what the
+        // native pickers already are; `modal` and `barrier_color` belong to
+        // the presenter that shows this.
+        _ = node.bool("adaptive")
+        _ = node.bool("modal")
+        _ = node.string("barrier_color")
+        _ = node.string("keyboard_type")
+        _ = node.string("date_picker_mode")
+        if let current = date(from: node.string("current_date")) { selection = current }
+      }
+  }
+
+  /// `locale` is the calendar and month names the picker draws with.
+  private var pickerLocale: Locale {
+    node.string("locale").map { Locale(identifier: $0) } ?? .current
+  }
+
+  /// The icons Material puts on the button that swaps between the calendar
+  /// and the typed-entry modes.
+  @ViewBuilder
+  var entryModeIcon: some View {
+    RufletIcon(
+      value: entryMode == "input"
+        ? node.props["switch_to_calendar_icon"] : node.props["switch_to_input_icon"],
+      size: 20, color: nil)
+  }
+
+  private func date(from text: String?) -> Date? {
+    guard let text else { return nil }
+    return ISO8601DateFormatter().date(from: text)
   }
 
   private var isOpen: Binding<Bool> {

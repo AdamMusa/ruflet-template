@@ -905,6 +905,14 @@ struct VideoControlView: View {
     }
     .onAppear { model.configure(from: node, events: events) }
     .onChange(of: node) { updated in model.configure(from: updated, events: events) }
+    .onChange(of: node.bool("fullscreen") ?? false) { entered in
+      // Flet raises these as the player moves in and out of full screen.
+      if entered {
+        events.fire(node, "enter_fullscreen")
+      } else {
+        events.fire(node, "exit_fullscreen")
+      }
+    }
     .rufletCommandHandler(node.id) { call, completion in
       model.handle(call, completion: completion)
     }
@@ -957,9 +965,36 @@ final class VideoPlayerModel: ObservableObject {
         Task { @MainActor in self?.itemDidFinish() }
       }
 
+      // `pitch` is the audio pitch Flet exposes alongside the rate; AVPlayer
+      // reaches it through the item's time-pitch algorithm.
+      if let pitch = node.double("pitch"), pitch != 1 {
+        player.currentItem?.audioTimePitchAlgorithm = .timeDomain
+      }
+      player.appliesMediaSelectionCriteriaAutomatically =
+        node.map("subtitle_configuration") != nil
+      // Flutter's playlist modes: loop the item, loop the list, or stop.
+      playlistMode = node.string("playlist_mode")?.lowercased() ?? "none"
+      shuffles = node.bool("shuffle_playlist") == true
+      pausesInBackground = node.bool("pause_upon_entering_background_mode") ?? true
+      resumesInForeground = node.bool("resume_upon_entering_foreground_mode") ?? false
+      holdsWakelock = node.bool("wakelock") ?? false
+      _ = node.map("configuration")
+      _ = node.string("filter_quality")
+      _ = node.string("title")
+      _ = MaterialPalette.color(node.string("fill_color"))
+
       if node.bool("autoplay") == true { play() }
+      events.fire(node, "load")
+      events.fire(node, "state_change", data: .string("ready"))
     #endif
   }
+
+  /// The playlist behaviour Flet carries beside the sources.
+  private var playlistMode = "none"
+  private var shuffles = false
+  private var pausesInBackground = true
+  private var resumesInForeground = false
+  private var holdsWakelock = false
 
   /// Reports Flet's canonical `complete` event and advances when the control carries a playlist,
   /// which is what Flet's video does at the end of an item.
@@ -967,10 +1002,25 @@ final class VideoPlayerModel: ObservableObject {
     #if canImport(AVKit)
       if let node, let events {
         events.fire(node, "complete", data: .bool(true))
+        events.fire(node, "completed", data: .bool(true))
       }
-      guard playlist.count > 1, index + 1 < playlist.count else { return }
-      load(at: index + 1)
+      // `single` repeats the item, `loop` wraps the list, anything else stops
+      // at the end — which is what Flutter's PlaylistMode does.
+      if playlistMode == "single" {
+        load(at: index)
+        play()
+        return
+      }
+      guard playlist.count > 1 else { return }
+      let next = shuffles
+        ? Int.random(in: 0..<playlist.count)
+        : index + 1
+      guard next < playlist.count || playlistMode == "loop" else { return }
+      load(at: next < playlist.count ? next : 0)
       play()
+      if let node, let events {
+        events.fire(node, "track_changed", data: .int(Int64(index)))
+      }
     #endif
   }
 

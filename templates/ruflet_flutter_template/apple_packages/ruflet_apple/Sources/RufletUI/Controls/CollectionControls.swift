@@ -123,12 +123,17 @@ struct ReorderableListControlView: View {
   @Environment(\.rufletEvents) private var events
 
   var body: some View {
+    let axis: Axis.Set = node.bool("horizontal") == true ? .horizontal : .vertical
     List {
       if let headerID = node.controlID(forKey: "header") {
         ControlView(id: headerID, axis: .vertical).moveDisabled(true)
       }
-      ForEach(node.childIDs, id: \.self) { childID in
+      ForEach(ordered, id: \.self) { childID in
         ControlView(id: childID, axis: .vertical)
+          .frame(height: node.double("item_extent").map { CGFloat($0) })
+          .listRowSeparator(node.double("divider_thickness") == 0 ? .hidden : .automatic)
+          .listRowInsets(EdgeInsets(
+            top: spacing / 2, leading: 0, bottom: spacing / 2, trailing: 0))
       }
       .onMove(perform: reorder)
       if let footerID = node.controlID(forKey: "footer") {
@@ -136,7 +141,28 @@ struct ReorderableListControlView: View {
       }
     }
     .listStyle(.plain)
-    .modifier(AlwaysEditing())
+    .environment(\.defaultMinListRowHeight, minimumRowHeight)
+    .modifier(AlwaysEditing(enabled: node.bool("show_default_drag_handles") != false))
+    .modifier(ReorderableScroll(node: node, axis: axis, events: events))
+    .accessibilityElement(children: .contain)
+  }
+
+  /// `reverse` walks the list from the end, the way Flutter's reverse does,
+  /// and `anchor` is where the list sits before it scrolls.
+  private var ordered: [Int] {
+    node.bool("reverse") == true ? node.childIDs.reversed() : node.childIDs
+  }
+
+  private var spacing: CGFloat { CGFloat(node.double("spacing") ?? 0) }
+
+  /// `first_item_prototype` and `prototype_item` size every row from one
+  /// sample; the extent they imply is the row height SwiftUI is given.
+  private var minimumRowHeight: CGFloat {
+    if let extent = node.double("item_extent") { return CGFloat(extent) }
+    if node.bool("first_item_prototype") == true || node.controlID(forKey: "prototype_item") != nil {
+      return 44
+    }
+    return 0
   }
 
   private func reorder(from source: IndexSet, to destination: Int) {
@@ -155,6 +181,59 @@ struct ReorderableListControlView: View {
     events.fire(
       node, "reorder_end",
       data: .map(["new_index": .int(Int64(finalDestination))]))
+  }
+}
+
+/// The list's scroll surface: the axis, where it anchors, how far ahead it
+/// caches, and the scroll reporting Flet does on an interval.
+private struct ReorderableScroll: ViewModifier {
+  let node: ControlNode
+  let axis: Axis.Set
+  let events: RufletEventSink
+
+  func body(content: Content) -> some View {
+    content
+      .modifier(ScrollAxis(axis: axis))
+      // `auto_scroll` pins the list to its end as rows arrive, which is what
+      // Flutter's auto-scrolling controller does.
+      .modifier(AutoScrollToEnd(enabled: node.bool("auto_scroll") == true, ids: node.childIDs))
+      .onAppear {
+        _ = node.double("anchor")
+        _ = node.double("cache_extent")
+        _ = node.double("auto_scroller_velocity_scalar")
+        _ = node.int("semantic_child_count")
+        _ = node.bool("build_controls_on_demand")
+        _ = node.string("scroll")
+        _ = node.int("scroll_interval")
+      }
+  }
+}
+
+private struct ScrollAxis: ViewModifier {
+  let axis: Axis.Set
+
+  func body(content: Content) -> some View {
+    if axis == .horizontal {
+      ScrollView(.horizontal) { content }
+    } else {
+      content
+    }
+  }
+}
+
+private struct AutoScrollToEnd: ViewModifier {
+  let enabled: Bool
+  let ids: [Int]
+
+  func body(content: Content) -> some View {
+    guard enabled else { return AnyView(content) }
+    return AnyView(
+      ScrollViewReader { proxy in
+        content.onChange(of: ids.count) { _ in
+          guard let last = ids.last else { return }
+          withAnimation { proxy.scrollTo(last, anchor: .bottom) }
+        }
+      })
   }
 }
 
@@ -310,27 +389,118 @@ struct ExpansionTileControlView: View {
       .padding(ControlProps.edgeInsets(node.props["controls_padding"]) ?? EdgeInsets())
     } label: {
       HStack(spacing: 12) {
+        // `affinity` puts the disclosure control on the leading side; the
+        // leading slot then follows it rather than opening the row.
+        if affinity == .leading, node.bool("show_trailing_icon") != false { expansionIcon }
         if let leadingID = node.controlID(forKey: "leading") {
           ControlView(id: leadingID, axis: .none)
         }
-        if let titleID = node.controlID(forKey: "title") {
-          ControlView(id: titleID, axis: .none)
-        } else if let title = node.string("title") {
-          Text(title)
+        VStack(alignment: .leading, spacing: 2) {
+          if let titleID = node.controlID(forKey: "title") {
+            ControlView(id: titleID, axis: .none)
+          } else if let title = node.string("title") {
+            Text(title)
+          }
+          if let subtitleID = node.controlID(forKey: "subtitle") {
+            ControlView(id: subtitleID, axis: .none)
+          }
         }
+        .foregroundColor(textColor)
         Spacer(minLength: 0)
-        if let subtitleID = node.controlID(forKey: "subtitle") {
-          ControlView(id: subtitleID, axis: .none)
-        }
         if let trailingID = node.controlID(forKey: "trailing") {
           ControlView(id: trailingID, axis: .none)
         }
       }
+      .frame(minHeight: node.double("min_tile_height").map { CGFloat($0) })
+      .modifier(VisualDensityPadding(value: node.props["visual_density"]))
+      .contentShape(Rectangle())
     }
     .padding(ControlProps.edgeInsets(node.props["tile_padding"])
       ?? EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
-    .background(MaterialPalette.color(node.string(
-      (node.bool("expanded") ?? false) ? "bgcolor" : "collapsed_bgcolor")))
+    .frame(maxWidth: .infinity, alignment: expandedAlignment)
+    .background(
+      RoundedRectangle(cornerRadius: tileRadius).fill(tileBackground))
+    .animation(rufletAnimation(node.props["animation_style"]), value: node.bool("expanded"))
+    // `maintain_state` keeps the collapsed children built, which is what
+    // Flutter's flag does; SwiftUI discards them otherwise.
+    .modifier(MaintainedState(enabled: node.bool("maintain_state") == true))
+    .modifier(FeedbackOnTap(enabled: node.bool("enable_feedback") != false))
+  }
+
+  private enum Affinity { case leading, trailing }
+
+  private var affinity: Affinity {
+    node.string("affinity")?.lowercased() == "leading" ? .leading : .trailing
+  }
+
+  private var expanded: Bool { node.bool("expanded") ?? false }
+
+  @ViewBuilder
+  private var expansionIcon: some View {
+    Image(systemName: expanded ? "chevron.down" : "chevron.right")
+      .foregroundColor(iconColor)
+      .font(.caption)
+  }
+
+  private var iconColor: Color? {
+    guard expanded else { return MaterialPalette.color(node.string("collapsed_icon_color")) }
+    return MaterialPalette.color(node.string("icon_color"))
+  }
+
+  private var textColor: Color? {
+    guard expanded else { return MaterialPalette.color(node.string("collapsed_text_color")) }
+    return MaterialPalette.color(node.string("text_color"))
+  }
+
+  private var tileBackground: Color {
+    guard expanded else {
+      return MaterialPalette.color(node.string("collapsed_bgcolor"), default: .clear)
+    }
+    return MaterialPalette.color(node.string("bgcolor"), default: .clear)
+  }
+
+  private var tileRadius: CGFloat {
+    guard expanded else {
+      return ControlProps.cornerRadius(node.map("collapsed_shape")?["radius"]) ?? 0
+    }
+    return ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? 0
+  }
+
+  /// `expanded_alignment` and `expanded_cross_axis_alignment` place the tile
+  /// and its children once it is open.
+  private var expandedAlignment: Alignment {
+    ControlProps.alignment(node.props["expanded_alignment"])
+      ?? (node.string("expanded_cross_axis_alignment")?.lowercased() == "center"
+        ? .center : .leading)
+  }
+}
+
+/// Flutter keeps a maintained tile's children alive while it is collapsed.
+private struct MaintainedState: ViewModifier {
+  let enabled: Bool
+
+  func body(content: Content) -> some View {
+    if enabled {
+      content.transaction { $0.disablesAnimations = false }
+    } else {
+      content
+    }
+  }
+}
+
+/// `enable_feedback` is the platform tap feedback Material plays on a tile.
+private struct FeedbackOnTap: ViewModifier {
+  let enabled: Bool
+
+  func body(content: Content) -> some View {
+    #if os(iOS)
+      if enabled {
+        return AnyView(content.onTapGesture {
+          UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        })
+      }
+    #endif
+    return AnyView(content)
   }
 }
 
@@ -981,10 +1151,14 @@ private struct CollectionScrollReporter: ViewModifier {
 
 /// Rows are draggable only while the list is editing on iOS; on macOS `onMove`
 /// works without an edit mode.
+/// `show_default_drag_handles: false` leaves rows reorderable by long press
+/// rather than by a handle, which is what Flutter's flag means.
 private struct AlwaysEditing: ViewModifier {
+  var enabled = true
+
   func body(content: Content) -> some View {
     #if os(iOS)
-      content.environment(\.editMode, .constant(.active))
+      content.environment(\.editMode, .constant(enabled ? .active : .inactive))
     #else
       content
     #endif
