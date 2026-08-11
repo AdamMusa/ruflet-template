@@ -67,6 +67,24 @@ struct CupertinoSwitchControlView: View {
     }
     .toggleStyle(.switch)
     .tint(MaterialPalette.color(node.string("active_color")))
+    .background(thumbImageValidation)
+  }
+
+  @ViewBuilder
+  private var thumbImageValidation: some View {
+    let source = node.bool("value") == true
+      ? node.string("active_thumb_image_src") : node.string("inactive_thumb_image_src")
+    if let source, let url = URL(string: source), url.scheme != nil {
+      AsyncImage(url: url) { phase in
+        if case .failure(let error) = phase {
+          Color.clear.onAppear {
+            events.fire(node, "image_error", data: .string(error.localizedDescription))
+          }
+        }
+      }
+      .frame(width: 0, height: 0)
+      .hidden()
+    }
   }
 }
 

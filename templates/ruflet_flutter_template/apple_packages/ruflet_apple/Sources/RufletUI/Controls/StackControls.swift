@@ -162,11 +162,45 @@ private struct CrossStretch: ViewModifier {
 struct ScrollableStack: ViewModifier {
   let node: ControlNode
   let axis: Axis.Set
+  @Environment(\.rufletEvents) private var events
+  @State private var viewportExtent: CGFloat = 0
+  @State private var previousPixels: CGFloat = 0
 
   func body(content: Content) -> some View {
     if scrolls {
       ScrollView(axis, showsIndicators: node.string("scroll") != "hidden") {
-        content
+        content.background(
+          GeometryReader { proxy in
+            Color.clear.preference(
+              key: StackScrollSampleKey.self,
+              value: StackScrollSample(
+                pixels: axis == .horizontal
+                  ? -proxy.frame(in: .named("ruflet-stack-scroll-\(node.id)")).minX
+                  : -proxy.frame(in: .named("ruflet-stack-scroll-\(node.id)")).minY,
+                contentExtent: axis == .horizontal ? proxy.size.width : proxy.size.height))
+          })
+      }
+      .coordinateSpace(name: "ruflet-stack-scroll-\(node.id)")
+      .background(
+        GeometryReader { proxy in
+          Color.clear.preference(
+            key: StackScrollViewportKey.self,
+            value: axis == .horizontal ? proxy.size.width : proxy.size.height)
+        })
+      .onPreferenceChange(StackScrollViewportKey.self) { viewportExtent = $0 }
+      .onPreferenceChange(StackScrollSampleKey.self) { sample in
+        guard node.handlesEvent("scroll") else { return }
+        let pixels = max(0, sample.pixels)
+        let delta = pixels - previousPixels
+        previousPixels = pixels
+        events.fire(node, "scroll", data: .map([
+          "pixels": .double(Double(pixels)),
+          "min_scroll_extent": .double(0),
+          "max_scroll_extent": .double(Double(max(0, sample.contentExtent - viewportExtent))),
+          "viewport_dimension": .double(Double(viewportExtent)),
+          "event_type": .string("update"),
+          "scroll_delta": .double(Double(delta)),
+        ]))
       }
     } else {
       content
@@ -178,6 +212,23 @@ struct ScrollableStack: ViewModifier {
     if let flag = value.boolValue { return flag }
     return value.stringValue != nil
   }
+}
+
+private struct StackScrollSample: Equatable {
+  var pixels: CGFloat = 0
+  var contentExtent: CGFloat = 0
+}
+
+private struct StackScrollSampleKey: PreferenceKey {
+  static var defaultValue = StackScrollSample()
+  static func reduce(value: inout StackScrollSample, nextValue: () -> StackScrollSample) {
+    value = nextValue()
+  }
+}
+
+private struct StackScrollViewportKey: PreferenceKey {
+  static var defaultValue: CGFloat = 0
+  static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
 }
 
 /// `Stack` — children drawn on top of one another.
