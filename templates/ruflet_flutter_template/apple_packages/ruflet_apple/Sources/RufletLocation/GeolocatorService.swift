@@ -18,6 +18,7 @@ public final class GeolocatorService: NSObject, RufletService {
   private var pending: [RufletMethodCompletion] = []
   private var streamTarget: Int?
   private var context: RufletServiceContext?
+  private var streaming = false
 
   public override init() {
     super.init()
@@ -32,6 +33,7 @@ public final class GeolocatorService: NSObject, RufletService {
   ) {
     self.context = context
     self.streamTarget = node?.id
+    if let node { configureStream(node: node) }
 
     switch call.name {
     case "request_permission":
@@ -77,6 +79,43 @@ public final class GeolocatorService: NSObject, RufletService {
         .failure(RufletServiceError.unsupportedMethod(type: "Geolocator", method: call.name)))
     }
   }
+
+  /// Flet's geolocator subscribes to a continuous position stream, configured
+  /// from `configuration`, and reports each fix as `position_change`. Nothing
+  /// streams while the control has no handler for it.
+  private func configureStream(node: ControlNode) {
+    #if canImport(CoreLocation)
+      let settings = node.map("configuration") ?? [:]
+      manager.desiredAccuracy = Self.accuracy(settings["accuracy"]?.stringValue)
+      // Flet defaults the filter to 0, which CoreLocation spells as "none".
+      let distanceFilter = settings["distance_filter"]?.doubleValue ?? 0
+      manager.distanceFilter = distanceFilter > 0 ? distanceFilter : kCLDistanceFilterNone
+
+      guard node.handlesEvent("position_change") else {
+        streaming = false
+        return manager.stopUpdatingLocation()
+      }
+      guard !streaming else { return }
+      streaming = true
+      manager.startUpdatingLocation()
+    #endif
+  }
+
+  #if canImport(CoreLocation)
+    /// geolocator's `LocationAccuracy`, whose default is `best`.
+    static func accuracy(_ name: String?) -> CLLocationAccuracy {
+      switch name?.lowercased() {
+      case "lowest": return kCLLocationAccuracyThreeKilometers
+      case "low": return kCLLocationAccuracyKilometer
+      case "medium": return kCLLocationAccuracyHundredMeters
+      case "high": return kCLLocationAccuracyNearestTenMeters
+      case "bestfornavigation", "best_for_navigation":
+        return kCLLocationAccuracyBestForNavigation
+      case "reduced": return kCLLocationAccuracyReduced
+      default: return kCLLocationAccuracyBest
+      }
+    }
+  #endif
 
   private static func describe(_ location: CLLocation) -> RufletValue {
     .map([

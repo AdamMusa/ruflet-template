@@ -1,5 +1,35 @@
 {
   "parent_consumed": {},
   "service": {},
-  "unsupported": {}
+  "unsupported": {
+    "Audio": {
+      "balance": {
+        "reason": "audioplayers maps setBalance onto AVAudioPlayer.pan, which requires a fully buffered local source. This service plays through AVPlayer so it can stream a URL, and AVPlayer exposes no channel-pan control — AVAudioMix carries volume ramps only. Supporting balance means adding a second, AVAudioPlayer-backed path for local and base64 sources."
+      }
+    },
+    "AudioRecorder": {
+      "on_stream": {
+        "reason": "Flet's own audio_recorder renderer (flet_packages/flet_audio_recorder/lib/src/audio_recorder.dart) emits state_change and nothing else, so there is no upstream streaming behaviour to match."
+      },
+      "on_upload": {
+        "reason": "Flet's own audio_recorder renderer emits state_change and nothing else; the recorder never performs an upload, so on_upload has no consumer upstream either."
+      }
+    },
+    "FilePicker": {
+      "on_result": {
+        "reason": "Flet's file_picker service reports progress through the upload event and returns picked files as the method-call result rather than pushing a result event; flet_packages/flet/lib/src/services/file_picker.dart triggers only \"upload\"."
+      }
+    },
+    "SecureStorage": {
+      "android_options": {
+        "reason": "Configures flutter_secure_storage's Android EncryptedSharedPreferences back end (cipher algorithms, biometric enforcement). The Apple renderer stores through the Keychain and has no Android back end to configure."
+      },
+      "windows_options": {
+        "reason": "Configures flutter_secure_storage's Windows credential-store back end, which does not exist on Apple platforms."
+      },
+      "web_options": {
+        "reason": "Configures flutter_secure_storage's web back end, whose wrapping key lives in browser local storage; a native Apple client has no such back end."
+      }
+    }
+  }
 }

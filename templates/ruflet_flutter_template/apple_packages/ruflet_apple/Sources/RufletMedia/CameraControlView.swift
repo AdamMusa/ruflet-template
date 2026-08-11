@@ -21,13 +21,19 @@ public struct CameraControlView: View {
 
   public var body: some View {
     Group {
-      #if canImport(AVFoundation) && !targetEnvironment(simulator)
-        CameraPreview(model: model)
-      #else
-        // The simulator has no capture device; a black frame is what a camera
-        // view looks like there, and it keeps the layout honest.
-        Color.black
-      #endif
+      if !model.previewEnabled(node) {
+        // Flet collapses the preview to an empty box rather than tearing the
+        // capture session down, so capture methods keep working.
+        Color.clear.frame(width: 0, height: 0)
+      } else {
+        #if canImport(AVFoundation) && !targetEnvironment(simulator)
+          CameraPreview(model: model)
+        #else
+          // The simulator has no capture device; a black frame is what a camera
+          // view looks like there, and it keeps the layout honest.
+          Color.black
+        #endif
+      }
     }
     .onAppear { model.start(node: node, events: events) }
     .onDisappear { model.stop() }
@@ -50,6 +56,18 @@ final class CameraModel: NSObject, ObservableObject {
     private var control: ControlNode?
     private var events = RufletEventSink()
   #endif
+
+  /// Flet's camera shows its preview unless `preview_enabled` turns it off,
+  /// and defaults to showing it.
+  func previewEnabled(_ node: ControlNode) -> Bool {
+    node.bool("preview_enabled") ?? true
+  }
+
+  /// Flet only pushes frames when the control is listening for them, so the
+  /// stream stays off until a `stream_image` handler exists.
+  func streamsImages(_ node: ControlNode) -> Bool {
+    node.handlesEvent("stream_image")
+  }
 
   func start(node: ControlNode, events: RufletEventSink) {
     #if canImport(AVFoundation) && !targetEnvironment(simulator)
@@ -177,6 +195,9 @@ final class CameraModel: NSObject, ObservableObject {
       self.events = events
       configure(node: node)
       guard !streamingImages else { return completion(.success(.null)) }
+      // Flet drops the frame when nothing is listening; not attaching the
+      // output at all is the same contract without the per-frame cost.
+      guard streamsImages(node) else { return completion(.success(.null)) }
       videoOutput.alwaysDiscardsLateVideoFrames = true
       videoOutput.videoSettings = [
         kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA

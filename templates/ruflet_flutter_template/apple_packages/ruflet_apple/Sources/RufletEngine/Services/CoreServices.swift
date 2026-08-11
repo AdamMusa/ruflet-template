@@ -424,6 +424,7 @@ public final class SecureStorageService: RufletStreamingService {
   private var targetID: Int?
   private var context: RufletServiceContext?
   private var protectedDataObservers: [NSObjectProtocol] = []
+  private var options: [String: RufletValue] = [:]
 
   public init() {}
 
@@ -458,6 +459,7 @@ public final class SecureStorageService: RufletStreamingService {
     context: RufletServiceContext,
     completion: @escaping RufletMethodCompletion
   ) {
+    applyPlatformOptions(node)
     switch call.name {
     case "set", "write":
       guard let key = call.argument("key")?.stringValue,
@@ -506,14 +508,14 @@ public final class SecureStorageService: RufletStreamingService {
       SecItemDelete(
         [
           kSecClass as String: kSecClassGenericPassword,
-          kSecAttrService as String: service
+          kSecAttrService as String: options["account_name"]?.stringValue ?? service
         ] as CFDictionary)
       completion(.success(.bool(true)))
 
     case "get_all", "read_all":
       var query: [String: Any] = [
         kSecClass as String: kSecClassGenericPassword,
-        kSecAttrService as String: service,
+        kSecAttrService as String: options["account_name"]?.stringValue ?? service,
         kSecReturnAttributes as String: true,
         kSecReturnData as String: true,
         kSecMatchLimit as String: kSecMatchLimitAll
@@ -546,12 +548,62 @@ public final class SecureStorageService: RufletStreamingService {
     }
   }
 
+  /// flutter_secure_storage takes a per-platform options map. Only the Apple
+  /// pair applies here; `android_options`, `windows_options` and `web_options`
+  /// configure back ends this renderer does not have.
+  private func applyPlatformOptions(_ node: ControlNode?) {
+    guard let node else { return }
+    #if os(macOS)
+      options = node.map("macos_options") ?? [:]
+    #else
+      options = node.map("ios_options") ?? [:]
+    #endif
+  }
+
+  /// flutter_secure_storage's Darwin back end spells its `account_name` as the
+  /// keychain service, and keys the item by account.
   private func query(key: String) -> [String: Any] {
-    [
+    var query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
-      kSecAttrService as String: service,
-      kSecAttrAccount as String: key
+      kSecAttrService as String: options["account_name"]?.stringValue ?? service,
+      kSecAttrAccount as String: key,
+      kSecAttrAccessible as String: Self.accessibility(options["accessibility"]?.stringValue)
     ]
+    if let group = options["group_id"]?.stringValue {
+      query[kSecAttrAccessGroup as String] = group
+    }
+    if let synchronizable = options["synchronizable"]?.boolValue {
+      query[kSecAttrSynchronizable as String] = synchronizable
+    }
+    if let label = options["label"]?.stringValue { query[kSecAttrLabel as String] = label }
+    if let comment = options["comment"]?.stringValue { query[kSecAttrComment as String] = comment }
+    if let description = options["description"]?.stringValue {
+      query[kSecAttrDescription as String] = description
+    }
+    if let invisible = options["is_invisible"]?.boolValue {
+      query[kSecAttrIsInvisible as String] = invisible
+    }
+    if let negative = options["is_negative"]?.boolValue {
+      query[kSecAttrIsNegative as String] = negative
+    }
+    #if os(macOS)
+      // MacOsOptions defaults this on, which is what routes the item to the
+      // data-protection keychain rather than the file-based one.
+      query[kSecUseDataProtectionKeychain as String] =
+        options["uses_data_protection_keychain"]?.boolValue ?? true
+    #endif
+    return query
+  }
+
+  /// flutter_secure_storage's `KeychainAccessibility`, defaulting to `unlocked`.
+  static func accessibility(_ name: String?) -> CFString {
+    switch name?.lowercased() {
+    case "passcode": return kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly
+    case "unlocked_this_device": return kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+    case "first_unlock": return kSecAttrAccessibleAfterFirstUnlock
+    case "first_unlock_this_device": return kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+    default: return kSecAttrAccessibleWhenUnlocked
+    }
   }
 
   private func reportProtectedDataAvailability() {

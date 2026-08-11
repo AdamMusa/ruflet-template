@@ -28,6 +28,13 @@ public final class AudioService: RufletService {
   private var context: RufletServiceContext?
   private var controlID: Int?
   private var control: ControlNode?
+  /// Flet reports whole seconds and suppresses a repeat of the second it last
+  /// reported, so the last reported value has to be remembered.
+  private var reportedPositionMilliseconds: Int64?
+  private var durationMilliseconds: Int64?
+  /// A base64 source is decoded once and played from a temporary file, which
+  /// is removed when the player is released.
+  private var decodedSource: URL?
 
   public init() {}
 
@@ -45,18 +52,18 @@ public final class AudioService: RufletService {
           player?.seek(to: CMTime(seconds: milliseconds / 1000, preferredTimescale: 600))
         }
         player?.play()
-        emit("state_change", .map(["state": .string("playing")]))
+        emit(event: "state_change", .map(["state": .string("playing")]))
         completion(.success(.null))
 
       case "pause":
         player?.pause()
-        emit("state_change", .map(["state": .string("paused")]))
+        emit(event: "state_change", .map(["state": .string("paused")]))
         completion(.success(.null))
 
       case "release", "stop":
         player?.pause()
         player?.seek(to: .zero)
-        emit("state_change", .map(["state": .string("stopped")]))
+        emit(event: "state_change", .map(["state": .string("stopped")]))
         if call.name == "release" { releasePlayer() }
         completion(.success(.null))
 
@@ -65,7 +72,7 @@ public final class AudioService: RufletService {
         player?.seek(
           to: CMTime(seconds: milliseconds / 1000, preferredTimescale: 600)
         ) { [weak self] _ in
-          Task { @MainActor in self?.emit("seek_complete", .null) }
+          Task { @MainActor in self?.emit(event: "seek_complete", .null) }
         }
         completion(.success(.null))
 
@@ -99,42 +106,63 @@ public final class AudioService: RufletService {
   }
 
   #if canImport(AVFoundation)
+    /// Flet resolves the source from `src` or, when the caller sent the bytes
+    /// inline, from `src_base64`. A URL with a scheme streams; anything else is
+    /// a device path.
+    private func resolveSource(node: ControlNode) -> URL? {
+      if let source = node.string("src"), !source.isEmpty {
+        if let parsed = URL(string: source), parsed.scheme != nil { return parsed }
+        return URL(fileURLWithPath: source)
+      }
+      guard let encoded = node.string("src_base64"),
+        let data = Data(base64Encoded: encoded)
+      else { return nil }
+      // AVPlayer plays from a URL rather than from memory, so the decoded
+      // bytes are staged in the temporary directory for the player's lifetime.
+      let staged = URL(fileURLWithPath: NSTemporaryDirectory())
+        .appendingPathComponent("ruflet-audio-\(UUID().uuidString)")
+      guard (try? data.write(to: staged)) != nil else { return nil }
+      decodedSource = staged
+      return staged
+    }
+
     /// The source lives on the control's `src`, and Flet reports `state_change`
     /// when playback finishes, so both are wired here.
     private func ensurePlayer(node: ControlNode?, context: RufletServiceContext) {
       guard player == nil, let node else { return }
-      let url: URL?
-      if let source = node.string("src"), let parsed = URL(string: source), parsed.scheme != nil {
-        url = parsed
-      } else if let source = node.string("src") {
-        url = URL(fileURLWithPath: source)
-      } else {
-        url = nil
-      }
-      guard let url else { return }
+      guard let url = resolveSource(node: node) else { return }
 
       let player = AVPlayer(url: url)
-      player.volume = Float(node.double("volume") ?? 1)
+      // Flet ignores a volume outside the unit range rather than clamping it.
+      if let volume = node.double("volume"), (0...1).contains(volume) {
+        player.volume = Float(volume)
+      } else {
+        player.volume = 1
+      }
       self.player = player
 
       self.context = context
       controlID = node.id
       control = node
+      reportedPositionMilliseconds = nil
+      durationMilliseconds = nil
       itemStatusObserver = player.currentItem?.observe(\.status, options: [.initial, .new]) {
         [weak self] item, _ in
         Task { @MainActor in
           guard let self else { return }
           switch item.status {
           case .readyToPlay:
-            self.emit("loaded", .null)
+            // Flet fires `loaded` once the source has been set, then autoplays.
+            self.emit(event: "loaded", .null)
             if item.duration.seconds.isFinite {
-              self.emit(
-                "duration_change",
-                .map(["duration": .int(Int64(item.duration.seconds * 1000))]))
+              let milliseconds = Int64(item.duration.seconds * 1000)
+              self.durationMilliseconds = milliseconds
+              self.emit(event: "duration_change", .map(["duration": .int(milliseconds)]))
             }
+            self.startAutoplayIfRequested()
           case .failed:
             self.emit(
-              "error",
+              event: "error",
               .string(item.error?.localizedDescription ?? "The audio could not be loaded"))
           default:
             break
@@ -146,9 +174,7 @@ public final class AudioService: RufletService {
       ) { [weak self] time in
         Task { @MainActor in
           guard time.seconds.isFinite else { return }
-          self?.emit(
-            "position_change",
-            .map(["position": .int(Int64(time.seconds.rounded() * 1000))]))
+          self?.reportPosition(seconds: time.seconds)
         }
       }
       observer = NotificationCenter.default.addObserver(
@@ -161,16 +187,91 @@ public final class AudioService: RufletService {
     }
   #endif
 
-  private func reportCompletion() {
-    emit("state_change", .map(["state": .string("completed")]))
-    guard control?.string("release_mode")?.lowercased() == "loop" else { return }
-    player?.seek(to: .zero)
-    player?.play()
+  /// What Flet reports for a periodic tick, or `nil` when the tick repeats the
+  /// second already reported. Flet reports whole seconds, and lets the final
+  /// tick through when the raw position has reached the duration exactly.
+  public struct PositionReport: Equatable, Sendable {
+    /// The whole-second position Flet puts on the event.
+    public let milliseconds: Int64
+    /// What the service remembers as last reported.
+    public let retained: Int64
   }
 
-  private func emit(_ name: String, _ data: RufletValue) {
-    guard let context, let controlID, let control, control.handlesEvent(name) else { return }
-    context.emitEvent(controlID, name, data)
+  nonisolated public static func positionReport(
+    rawMilliseconds: Int64,
+    lastReported: Int64?,
+    durationMilliseconds: Int64?
+  ) -> PositionReport? {
+    let rounded = Int64((Double(rawMilliseconds) / 1000).rounded()) * 1000
+    // Flet starts from -1 so the first tick, including a zero, always reports.
+    if rounded != (lastReported ?? -1) {
+      return PositionReport(milliseconds: rounded, retained: rounded)
+    }
+    if let durationMilliseconds, rawMilliseconds == durationMilliseconds {
+      return PositionReport(milliseconds: rounded, retained: durationMilliseconds)
+    }
+    return nil
+  }
+
+  private func reportPosition(seconds: Double) {
+    let raw = Int64(seconds * 1000)
+    guard
+      let report = Self.positionReport(
+        rawMilliseconds: raw,
+        lastReported: reportedPositionMilliseconds,
+        durationMilliseconds: durationMilliseconds)
+    else { return }
+    reportedPositionMilliseconds = report.retained
+    emit(event: "position_change", .map(["position": .int(report.milliseconds)]))
+  }
+
+  /// Flet resumes as soon as a new source has loaded when `autoplay` is set.
+  private func startAutoplayIfRequested() {
+    guard let control, control.bool("autoplay") == true else { return }
+    #if canImport(AVFoundation)
+      player?.play()
+    #endif
+    emit(event: "state_change", .map(["state": .string("playing")]))
+  }
+
+  /// audioplayers' release modes: `loop` restarts, `stop` rewinds and holds the
+  /// source, and `release` — its default when the control leaves the property
+  /// unset — frees the player once playback completes.
+  public enum ReleaseMode: String, Sendable {
+    case loop
+    case stop
+    case release
+  }
+
+  nonisolated public static func releaseMode(_ raw: String?) -> ReleaseMode {
+    guard let raw, let parsed = ReleaseMode(rawValue: raw.lowercased()) else { return .release }
+    return parsed
+  }
+
+  private func reportCompletion() {
+    emit(event: "state_change", .map(["state": .string("completed")]))
+    guard let control else { return }
+    reportedPositionMilliseconds = nil
+    switch Self.releaseMode(control.string("release_mode")) {
+    case .loop:
+      #if canImport(AVFoundation)
+        player?.seek(to: .zero)
+        player?.play()
+      #endif
+    case .stop:
+      #if canImport(AVFoundation)
+        player?.seek(to: .zero)
+      #endif
+    case .release:
+      #if canImport(AVFoundation)
+        releasePlayer()
+      #endif
+    }
+  }
+
+  private func emit(event: String, _ data: RufletValue) {
+    guard let context, let controlID, let control, control.handlesEvent(event) else { return }
+    context.emitEvent(controlID, event, data)
   }
 
   #if canImport(AVFoundation)
@@ -182,6 +283,8 @@ public final class AudioService: RufletService {
       itemStatusObserver?.invalidate()
       itemStatusObserver = nil
       player = nil
+      if let decodedSource { try? FileManager.default.removeItem(at: decodedSource) }
+      decodedSource = nil
     }
   #endif
 
