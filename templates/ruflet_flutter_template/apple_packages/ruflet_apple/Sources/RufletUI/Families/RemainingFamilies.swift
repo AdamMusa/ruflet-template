@@ -49,7 +49,9 @@ extension ControlRegistry {
       return AnyView(CupertinoDatePickerControlView(node: node, timerMode: true))
     case "CupertinoActivityIndicator":
       return AnyView(CupertinoActivityIndicatorControlView(node: node))
-    case "CupertinoAppBar", "CupertinoNavigationBar":
+    case "CupertinoAppBar":
+      return AnyView(CupertinoAppBarControlView(node: node))
+    case "CupertinoNavigationBar":
       return AnyView(CupertinoNavigationBarControlView(node: node))
     case "CupertinoActionSheet":
       return AnyView(CupertinoActionSheetControlView(node: node))

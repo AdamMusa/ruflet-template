@@ -289,6 +289,10 @@ struct SnackBarControlView: View {
       in: RoundedRectangle(cornerRadius: 8))
     .foregroundColor(.white)
     .padding(16)
+    // Flutter's SnackBar invokes `onVisible` when the presentation becomes
+    // visible. The action click stays on SnackBarAction when it is a control;
+    // the string shorthand reports `action` on the SnackBar above.
+    .onAppear { events.fire(node, "visible") }
     .task(id: node.id) { await autoDismiss() }
   }
 
@@ -458,17 +462,44 @@ struct MenuBarControlView: View {
 /// `SubmenuButton` — a labelled menu that can nest further submenus.
 struct SubmenuButtonControlView: View {
   let node: ControlNode
+  @Environment(\.rufletEvents) private var events
+  @State private var presented = false
 
   var body: some View {
-    Menu {
-      ControlList(ids: node.controlIDs(forKey: "controls") + node.childIDs, axis: .vertical)
+    Button {
+      presented.toggle()
     } label: {
-      if let contentID = node.controlID(forKey: "content") {
-        ControlView(id: contentID, axis: .none)
-      } else {
-        Text(node.string("text") ?? "")
+      HStack(spacing: 8) {
+        if let leadingID = node.controlID(forKey: "leading") {
+          ControlView(id: leadingID, axis: .none)
+        }
+        if let contentID = node.controlID(forKey: "content") {
+          ControlView(id: contentID, axis: .none)
+        } else {
+          Text(node.string("text") ?? "")
+        }
+        if let trailingID = node.controlID(forKey: "trailing") {
+          ControlView(id: trailingID, axis: .none)
+        }
       }
     }
+    .buttonStyle(.plain)
+    .disabled(node.bool("disabled") ?? false)
+    .popover(isPresented: $presented) {
+      ControlList(ids: controlIDs, axis: .vertical)
+        .padding(.vertical, 6)
+        .frame(minWidth: 180)
+    }
+    .onChange(of: presented) { open in
+      events.fire(node, open ? "open" : "close")
+    }
+    .onHover { inside in
+      events.fire(node, "hover", data: .bool(inside))
+    }
+  }
+
+  private var controlIDs: [Int] {
+    orderedUnique(node.controlIDs(forKey: "controls") + node.childIDs)
   }
 }
 
@@ -476,10 +507,13 @@ struct SubmenuButtonControlView: View {
 struct MenuItemButtonControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
+  @Environment(\.dismiss) private var dismiss
+  @FocusState private var focused: Bool
 
   var body: some View {
     Button {
       events.fire(node, "click")
+      if node.bool("close_on_click") ?? true { dismiss() }
     } label: {
       HStack(spacing: 8) {
         if let leadingID = node.controlID(forKey: "leading") {
@@ -494,7 +528,20 @@ struct MenuItemButtonControlView: View {
       }
     }
     .disabled(node.bool("disabled") ?? false)
+    .focused($focused)
+    .onAppear {
+      if node.bool("autofocus") == true { focused = true }
+    }
+    .onHover { inside in
+      if inside, node.bool("focus_on_hover") ?? true { focused = true }
+      events.fire(node, "hover", data: .bool(inside))
+    }
   }
+}
+
+private func orderedUnique(_ ids: [Int]) -> [Int] {
+  var seen = Set<Int>()
+  return ids.filter { seen.insert($0).inserted }
 }
 
 /// `ContextMenu` — a right-click / long-press menu around its content.

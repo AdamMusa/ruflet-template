@@ -236,8 +236,8 @@ struct CupertinoActivityIndicatorControlView: View {
   }
 }
 
-/// `CupertinoAppBar` / `CupertinoNavigationBar` — the iOS title bar.
-struct CupertinoNavigationBarControlView: View {
+/// `CupertinoAppBar` — the iOS title bar.
+struct CupertinoAppBarControlView: View {
   let node: ControlNode
 
   var body: some View {
@@ -258,6 +258,69 @@ struct CupertinoNavigationBarControlView: View {
     .frame(height: 44)
     .background(MaterialPalette.color(node.string("bgcolor")))
     .overlay(alignment: .bottom) { Divider() }
+  }
+}
+
+/// Flet's `CupertinoNavigationBar` is a `CupertinoTabBar`, despite its name:
+/// destinations select an index and emit that integer through `change`.
+struct CupertinoNavigationBarControlView: View {
+  let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
+  @Environment(\.rufletEvents) private var events
+
+  var body: some View {
+    HStack(spacing: 0) {
+      ForEach(Array(destinationIDs.enumerated()), id: \.element) { index, id in
+        Button {
+          events.commit(node, key: "selected_index", value: .int(Int64(index)))
+        } label: {
+          destination(id, selected: index == (node.int("selected_index") ?? 0))
+            .frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.plain)
+        .disabled(node.bool("disabled") ?? false)
+      }
+    }
+    .padding(.vertical, 6)
+    .background(MaterialPalette.color(node.string("bgcolor")))
+    .overlay(alignment: .top) { Divider() }
+  }
+
+  private var destinationIDs: [Int] {
+    var seen = Set<Int>()
+    return (node.controlIDs(forKey: "destinations") + node.childIDs)
+      .filter { seen.insert($0).inserted }
+  }
+
+  @ViewBuilder
+  private func destination(_ id: Int, selected: Bool) -> some View {
+    if let destination = store.node(id) {
+      VStack(spacing: 2) {
+        let iconID = selected
+          ? destination.controlID(forKey: "selected_icon") ?? destination.controlID(forKey: "icon")
+          : destination.controlID(forKey: "icon")
+        if let iconID { destinationIcon(iconID) }
+        Text(destination.string("label") ?? "")
+          .font(.caption2)
+      }
+      .foregroundColor(
+        selected
+          ? MaterialPalette.color(node.string("active_color"), default: .accentColor)
+          : MaterialPalette.color(node.string("inactive_color"), default: .secondary))
+    }
+  }
+
+  @ViewBuilder
+  private func destinationIcon(_ id: Int) -> some View {
+    if let icon = store.node(id), icon.type == "Icon" {
+      RufletIcon(
+        value: icon.props["name"] ?? icon.props["icon"],
+        size: icon.double("size").map { CGFloat($0) }
+          ?? CGFloat(node.double("icon_size") ?? 30),
+        color: MaterialPalette.color(icon.string("color")))
+    } else {
+      ControlView(id: id, axis: .none)
+    }
   }
 }
 

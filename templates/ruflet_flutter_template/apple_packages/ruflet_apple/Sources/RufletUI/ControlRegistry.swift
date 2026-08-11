@@ -153,8 +153,10 @@ public enum ControlRegistry {
     add(["Overlay", "Dialogs", "ServiceRegistry", "Window"], .host,
         "RufletAppView host", .hostManaged)
     add(["AlertDialog", "CupertinoAlertDialog", "BottomSheet", "CupertinoBottomSheet",
-         "SnackBar", "Banner"], .host, "OverlayPresenter", .hostManaged,
+         "Banner"], .host, "OverlayPresenter", .hostManaged,
         events: ["dismiss", "visible"])
+    add(["SnackBar"], .host, "OverlayPresenter", .hostManaged,
+        events: ["action", "dismiss", "visible"])
 
     // Shared layout and wrappers.
     add(["Row"], .visible, "RowControlView", .nativeView)
@@ -298,8 +300,11 @@ public enum ControlRegistry {
     add(["PopupMenuButton"], .visible, "PopupMenuControlView", .nativeView,
         events: ["cancel", "open", "select"])
     add(["MenuBar"], .visible, "MenuBarControlView", .nativeView)
-    add(["SubmenuButton"], .visible, "SubmenuButtonControlView", .nativeView)
-    add(["MenuItemButton", "PopupMenuItem"], .visible, "MenuItemButtonControlView", .nativeView,
+    add(["SubmenuButton"], .visible, "SubmenuButtonControlView", .nativeView,
+        events: ["close", "hover", "open"])
+    add(["MenuItemButton"], .visible, "MenuItemButtonControlView", .nativeView,
+        events: ["click", "hover"])
+    add(["PopupMenuItem"], .visible, "MenuItemButtonControlView", .nativeView,
         events: ["click"])
     add(["ContextMenu"], .visible, "ContextMenuControlView", .nativeView,
         events: ["dismiss", "select"], methods: ["open"])
@@ -333,8 +338,9 @@ public enum ControlRegistry {
         "Cupertino native value control", .nativeView, events: ["change"])
     add(["CupertinoActivityIndicator"], .visible, "CupertinoActivityIndicatorControlView",
         .nativeView)
-    add(["CupertinoAppBar", "CupertinoNavigationBar"], .visible,
-        "CupertinoNavigationBarControlView", .nativeView)
+    add(["CupertinoAppBar"], .visible, "CupertinoAppBarControlView", .nativeView)
+    add(["CupertinoNavigationBar"], .visible, "CupertinoNavigationBarControlView", .nativeView,
+        events: ["change"])
     add(["CupertinoActionSheet"], .visible, "CupertinoActionSheetControlView", .nativeView)
 
     // Drawing, charts and their parent-owned data.
