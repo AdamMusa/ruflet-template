@@ -690,16 +690,44 @@ struct CupertinoPickerControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
+  @State private var wheelIndex: Int
+
+  init(node: ControlNode) {
+    self.node = node
+    _wheelIndex = State(
+      initialValue: CupertinoPickerParity.initialIndex(
+        selected: node.int("selected_index") ?? 0,
+        count: node.childIDs.count,
+        looping: node.bool("looping") == true))
+  }
 
   var body: some View {
     Picker(
       "",
       selection: Binding(
-        get: { node.int("selected_index") ?? 0 },
-        set: { events.commit(node, key: "selected_index", value: .int(Int64($0))) })
+        get: { wheelIndex },
+        set: { newIndex in
+          wheelIndex = newIndex
+          let real = CupertinoPickerParity.realIndex(newIndex, count: node.childIDs.count)
+          events.commit(node, key: "selected_index", value: .int(Int64(real)))
+          guard node.bool("looping") == true,
+            CupertinoPickerParity.shouldRecenter(newIndex, count: node.childIDs.count)
+          else { return }
+          // Keep the wheel far from either finite edge. The jump is invisible
+          // because every repeated row has identical content.
+          DispatchQueue.main.async {
+            wheelIndex = CupertinoPickerParity.initialIndex(
+              selected: real, count: node.childIDs.count, looping: true)
+          }
+        })
     ) {
-      ForEach(Array(node.childIDs.enumerated()), id: \.element) { index, childID in
-        ControlView(id: childID, axis: .none).tag(index)
+      ForEach(0..<CupertinoPickerParity.itemCount(count: node.childIDs.count, looping: node.bool("looping") == true), id: \.self) { index in
+        if !node.childIDs.isEmpty {
+          ControlView(
+            id: node.childIDs[CupertinoPickerParity.realIndex(index, count: node.childIDs.count)],
+            axis: .none
+          ).tag(index)
+        }
       }
     }
     .modifier(WheelPickerStyle())
@@ -718,7 +746,13 @@ struct CupertinoPickerControlView: View {
       PickerMagnifier(
         enabled: node.bool("use_magnifier") == true,
         factor: node.double("magnification") ?? 1))
-    .onAppear { _ = node.bool("looping") }
+    .onChange(of: node.int("selected_index") ?? 0) { selected in
+      let real = CupertinoPickerParity.realIndex(wheelIndex, count: node.childIDs.count)
+      guard selected != real else { return }
+      wheelIndex = CupertinoPickerParity.initialIndex(
+        selected: selected, count: node.childIDs.count,
+        looping: node.bool("looping") == true)
+    }
   }
 
   /// `selection_overlay` is the band drawn behind the selected row; Flet lets
@@ -735,6 +769,35 @@ struct CupertinoPickerControlView: View {
             default: .gray.opacity(0.2)))
         .frame(height: CGFloat(node.double("item_extent") ?? 32))
     }
+  }
+}
+
+/// Flutter's `looping` wheel uses a looping child delegate. SwiftUI exposes
+/// no equivalent, so the native host presents many identical cycles and keeps
+/// the selection in the middle cycle. These helpers are deliberately pure so
+/// the index contract is independently testable.
+enum CupertinoPickerParity {
+  static let cycles = 101
+
+  static func realIndex(_ index: Int, count: Int) -> Int {
+    guard count > 0 else { return 0 }
+    return ((index % count) + count) % count
+  }
+
+  static func itemCount(count: Int, looping: Bool) -> Int {
+    guard count > 0 else { return 0 }
+    return looping ? count * cycles : count
+  }
+
+  static func initialIndex(selected: Int, count: Int, looping: Bool) -> Int {
+    guard count > 0 else { return 0 }
+    let real = realIndex(selected, count: count)
+    return looping ? (cycles / 2) * count + real : real
+  }
+
+  static func shouldRecenter(_ index: Int, count: Int) -> Bool {
+    guard count > 0 else { return false }
+    return index < count * 2 || index >= count * (cycles - 2)
   }
 }
 

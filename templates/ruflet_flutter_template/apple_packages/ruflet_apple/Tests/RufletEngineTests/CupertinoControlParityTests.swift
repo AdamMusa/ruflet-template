@@ -77,4 +77,19 @@ final class CupertinoControlParityTests: XCTestCase {
     XCTAssertEqual(RufletCupertinoTimerModel.values(interval: 15), [0, 15, 30, 45])
     XCTAssertEqual(RufletCupertinoTimerModel.snap(43, interval: 15), 30)
   }
+
+  func testLoopingPickerStartsInMiddleCycleAndMapsBackToRealChild() {
+    XCTAssertEqual(CupertinoPickerParity.itemCount(count: 4, looping: false), 4)
+    XCTAssertEqual(CupertinoPickerParity.itemCount(count: 4, looping: true), 404)
+    XCTAssertEqual(CupertinoPickerParity.initialIndex(selected: 2, count: 4, looping: true), 202)
+    XCTAssertEqual(CupertinoPickerParity.realIndex(202, count: 4), 2)
+    XCTAssertEqual(CupertinoPickerParity.realIndex(-1, count: 4), 3)
+  }
+
+  func testLoopingPickerRecentersOnlyNearFiniteDelegateEdges() {
+    XCTAssertTrue(CupertinoPickerParity.shouldRecenter(3, count: 4))
+    XCTAssertFalse(CupertinoPickerParity.shouldRecenter(202, count: 4))
+    XCTAssertTrue(CupertinoPickerParity.shouldRecenter(400, count: 4))
+    XCTAssertFalse(CupertinoPickerParity.shouldRecenter(0, count: 0))
+  }
 }
