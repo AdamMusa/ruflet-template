@@ -191,6 +191,29 @@ public enum ControlProps {
       height: map["scale_y"]?.doubleValue ?? 1)
   }
 
+  /// Flutter's `BoxConstraints`, which Flet serialises as the four bounds.
+  public struct SizeConstraints: Equatable {
+    public var minWidth: CGFloat?
+    public var maxWidth: CGFloat?
+    public var minHeight: CGFloat?
+    public var maxHeight: CGFloat?
+  }
+
+  /// `parseBoxConstraints` defaults the minimums to zero and the maximums to
+  /// infinity. Neither is a bound SwiftUI can be given, so an absent or
+  /// unbounded edge stays nil and the frame is left to size itself.
+  public static func sizeConstraints(_ value: RufletValue?) -> SizeConstraints? {
+    guard let map = value?.mapValue else { return nil }
+    func bound(_ key: String) -> CGFloat? {
+      guard let raw = map[key]?.doubleValue, raw.isFinite, raw > 0 else { return nil }
+      return CGFloat(raw)
+    }
+    let constraints = SizeConstraints(
+      minWidth: bound("min_width"), maxWidth: bound("max_width"),
+      minHeight: bound("min_height"), maxHeight: bound("max_height"))
+    return constraints == SizeConstraints() ? nil : constraints
+  }
+
   /// Flet's `BorderRadius`: a number, or per-corner values.
   public static func cornerRadius(_ value: RufletValue?) -> CGFloat? {
     cornerRadii(value)?.maximum

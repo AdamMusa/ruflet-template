@@ -220,6 +220,7 @@ struct CupertinoTextFieldControlView: View {
       RoundedRectangle(cornerRadius: cornerRadius)
         .fill(fieldBackground))
     .overlay(borderStroke)
+    .modifier(RufletFormFieldDecoration(node: node))
     .onAppear {
       focused = node.bool("autofocus") == true
       selection = RufletTextSelection.explicit(on: node)

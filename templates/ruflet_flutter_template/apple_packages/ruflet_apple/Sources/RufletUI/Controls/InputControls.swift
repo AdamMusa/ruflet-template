@@ -369,29 +369,20 @@ struct TextFieldControlView: View {
   @State private var selection = NSRange(location: 0, length: 0)
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 4) {
-      HStack(spacing: 8) {
-        if let prefixID = node.controlID(forKey: "prefix_icon") {
-          ControlView(id: prefixID, axis: .none)
-        }
-        field
-        if let suffixID = node.controlID(forKey: "suffix_icon") {
-          ControlView(id: suffixID, axis: .none)
-        }
-      }
-        .textFieldStyle(.plain)
-        .padding(8)
-        .background(
-          RoundedRectangle(cornerRadius: ControlProps.cornerRadius(node.props["border_radius"]) ?? 8)
-            .fill(fieldBackground))
-        .overlay(borderStroke)
-      if let helper = node.string("helper_text"), !helper.isEmpty {
-        Text(helper).font(.caption2).foregroundColor(.secondary)
-      }
-      if let error = node.string("error_text"), !error.isEmpty {
-        Text(error).font(.caption2).foregroundColor(.red)
-      }
+    HStack(spacing: 8) {
+      RufletFormFieldSlot(node: node, key: "prefix_icon")
+      RufletFormFieldSlot(node: node, key: "prefix", styleKey: "prefix_style")
+      field
+      RufletFormFieldSlot(node: node, key: "suffix", styleKey: "suffix_style")
+      RufletFormFieldSlot(node: node, key: "suffix_icon")
     }
+    .textFieldStyle(.plain)
+    .padding(contentPadding)
+    .background(
+      RoundedRectangle(cornerRadius: ControlProps.cornerRadius(node.props["border_radius"]) ?? 8)
+        .fill(fieldBackground))
+    .overlay(borderStroke)
+    .modifier(RufletFormFieldDecoration(node: node))
     .onAppear {
       focused = node.bool("autofocus") == true
       selection = explicitSelection
@@ -436,18 +427,39 @@ struct TextFieldControlView: View {
     }
   }
 
+  /// `dense` and `collapsed` are Material's two tighter insets; anything else
+  /// takes `content_padding` when Ruby supplies it.
+  private var contentPadding: EdgeInsets {
+    if let explicit = ControlProps.edgeInsets(node.props["content_padding"]) { return explicit }
+    if node.bool("collapsed") == true { return EdgeInsets() }
+    let inset: CGFloat = node.bool("dense") == true ? 4 : 8
+    return EdgeInsets(top: inset, leading: inset, bottom: inset, trailing: inset)
+  }
+
+  private var hasError: Bool {
+    node.controlID(forKey: "error") != nil || !(node.string("error") ?? "").isEmpty
+  }
+
   @ViewBuilder
   private var borderStroke: some View {
     let radius = ControlProps.cornerRadius(node.props["border_radius"]) ?? 8
     if node.string("border")?.lowercased() != "none" {
       RoundedRectangle(cornerRadius: radius)
         .strokeBorder(
-          node.string("error_text").map { _ in
-            MaterialPalette.color(for: node, property: "error_border_color", default: .red)
-          }
-            ?? MaterialPalette.color(for: node, property: "border_color", default: .clear),
-          lineWidth: CGFloat(node.double("border_width") ?? 1))
+          borderColor,
+          lineWidth: CGFloat(
+            node.double(focused ? "focused_border_width" : "border_width") ?? 1))
     }
+  }
+
+  private var borderColor: Color {
+    if hasError {
+      return MaterialPalette.color(for: node, property: "error_border_color", default: .red)
+    }
+    if focused, let focusedColor = MaterialPalette.color(node.string("focused_border_color")) {
+      return focusedColor
+    }
+    return MaterialPalette.color(for: node, property: "border_color", default: .clear)
   }
 
   private var fieldBackground: Color {
