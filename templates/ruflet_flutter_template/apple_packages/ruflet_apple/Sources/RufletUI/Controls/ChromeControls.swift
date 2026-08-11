@@ -350,7 +350,7 @@ enum ChromeDefaults {
   }
 }
 
-private struct ChromeClipModifier: ViewModifier {
+struct ChromeClipModifier: ViewModifier {
   let behavior: String
   func body(content: Content) -> some View {
     behavior.lowercased() == "none" ? AnyView(content) : AnyView(content.clipped())

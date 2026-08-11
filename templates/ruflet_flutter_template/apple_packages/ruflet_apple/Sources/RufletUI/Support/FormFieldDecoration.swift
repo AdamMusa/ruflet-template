@@ -59,6 +59,9 @@ struct RufletFormFieldDecoration: ViewModifier {
     VStack(alignment: .leading, spacing: 4) {
       if hasLabel {
         RufletFormFieldSlot(node: node, key: "label", styleKey: "label_style")
+          // `align_label_with_hint` lines the label up with the hint rather
+          // than centring it on a multiline field's box.
+          .padding(.leading, node.bool("align_label_with_hint") == true ? labelInset : 0)
       }
       HStack(spacing: 8) {
         if node.controlID(forKey: "icon") != nil {
@@ -119,5 +122,12 @@ struct RufletFormFieldDecoration: ViewModifier {
 
   private var constraints: ControlProps.SizeConstraints? {
     ControlProps.sizeConstraints(node.props["size_constraints"])
+  }
+
+  /// The label sits over the field's own content inset when it is aligned
+  /// with the hint rather than with the decoration's edge.
+  private var labelInset: CGFloat {
+    ControlProps.edgeInsets(node.props["content_padding"])?.leading
+      ?? (node.bool("dense") == true ? 4 : 8)
   }
 }

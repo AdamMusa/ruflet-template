@@ -366,22 +366,30 @@ struct TextFieldControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
   @State private var focused = false
+  @State private var hovering = false
   @State private var selection = NSRange(location: 0, length: 0)
 
   var body: some View {
-    HStack(spacing: 8) {
+    HStack(alignment: verticalAlignment, spacing: 8) {
       RufletFormFieldSlot(node: node, key: "prefix_icon")
+        .modifier(SlotSizeConstraints(value: node.props["prefix_icon_size_constraints"]))
       RufletFormFieldSlot(node: node, key: "prefix", styleKey: "prefix_style")
       field
       RufletFormFieldSlot(node: node, key: "suffix", styleKey: "suffix_style")
       RufletFormFieldSlot(node: node, key: "suffix_icon")
+        .modifier(SlotSizeConstraints(value: node.props["suffix_icon_size_constraints"]))
     }
     .textFieldStyle(.plain)
     .padding(contentPadding)
+    .frame(maxWidth: fitsParent ? .infinity : nil, maxHeight: fitsParent ? .infinity : nil)
     .background(
       RoundedRectangle(cornerRadius: ControlProps.cornerRadius(node.props["border_radius"]) ?? 8)
         .fill(fieldBackground))
     .overlay(borderStroke)
+    // Flutter clips a decorated field to its border; hardEdge is the default.
+    .modifier(
+      ChromeClipModifier(behavior: node.string("clip_behavior") ?? "hardEdge"))
+    .modifier(FieldHoverTracker(hovering: $hovering))
     .modifier(RufletFormFieldDecoration(node: node))
     .onAppear {
       focused = node.bool("autofocus") == true
@@ -398,15 +406,33 @@ struct TextFieldControlView: View {
     }
   }
 
+  /// `shift_enter` implies multiline, the way Flet's textfield.dart reads it,
+  /// and a min_lines above one does too.
+  private var isMultiline: Bool {
+    node.bool("multiline") == true || node.bool("shift_enter") == true
+      || (node.int("min_lines") ?? 1) > 1
+  }
+
+  /// Flutter defaults max_lines to one for a single-line field and leaves a
+  /// multiline one unbounded.
+  private var maxLines: Int? {
+    node.int("max_lines") ?? (isMultiline ? nil : 1)
+  }
+
   @ViewBuilder
   private var field: some View {
     // A Material label rests inside an empty field and floats only while
     // editing. Native TextField's prompt is the closest Apple equivalent and
     // keeps fixed-height fields from clipping a separate label row.
     let prompt = node.string("hint_text") ?? node.string("label") ?? ""
-    if node.bool("multiline") == true || (node.int("min_lines") ?? 1) > 1 {
+    if isMultiline {
       TextEditor(text: binding)
+        .rufletTextStyle(fieldTextStyle)
+        .lineLimit(maxLines)
         .frame(minHeight: CGFloat((node.int("min_lines") ?? 3) * 20))
+        // Flutter scrolls a multiline field with this padding held clear of
+        // the caret; the inset is the closest equivalent.
+        .modifier(ScrollInset(insets: scrollPadding))
     } else {
       #if canImport(UIKit) || canImport(AppKit)
         RufletNativeTextInput(
@@ -415,15 +441,53 @@ struct TextFieldControlView: View {
           selection: $selection,
           placeholder: prompt,
           secure: node.bool("password") == true,
-          traits: RufletTextInputTraits(node: node),
+          traits: traits,
           onTap: { events.fire(node, "click") },
           onTapOutside: { events.fire(node, "tap_outside") },
           onSubmit: { events.fire(node, "submit", data: .string($0)) })
+          .modifier(PlaceholderStyle(node: node, showing: binding.wrappedValue.isEmpty))
       #else
         TextField(prompt, text: binding)
           .onSubmit { events.fire(node, "submit", data: .string(binding.wrappedValue)) }
           .modifier(KeyboardType(node: node))
       #endif
+    }
+  }
+
+  /// Flet layers the field's text style: `text_style` first, then `text_size`,
+  /// then `focused_color` while focused and `color` otherwise.
+  private var fieldTextStyle: RufletTextStyle {
+    var style = RufletTextStyle(node: node, styleKey: "text_style")
+    if let size = node.double("text_size") { style.size = CGFloat(size) }
+    let resting = MaterialPalette.color(node.string("color"))
+    let active = MaterialPalette.color(node.string("focused_color"))
+    if let color = focused ? (active ?? resting) : resting { style.color = color }
+    return style
+  }
+
+  private var traits: RufletTextInputTraits {
+    var traits = RufletTextInputTraits(node: node)
+    // The field's own style wins over the traits' colour and size, so the two
+    // cannot disagree about which one painted the text.
+    traits.textColor = fieldTextStyle.color
+    traits.fontSize = fieldTextStyle.size
+    return traits
+  }
+
+  private var scrollPadding: EdgeInsets {
+    ControlProps.edgeInsets(node.props["scroll_padding"])
+      ?? EdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 20)
+  }
+
+  private var fitsParent: Bool { node.bool("fit_parent_size") == true }
+
+  /// `text_vertical_align` runs -1 (top) to 1 (bottom) the way Flutter's
+  /// alignment axes do.
+  private var verticalAlignment: VerticalAlignment {
+    switch node.double("text_vertical_align") {
+    case .some(let value) where value <= -0.5: return .top
+    case .some(let value) where value >= 0.5: return .bottom
+    default: return .center
     }
   }
 
@@ -445,26 +509,43 @@ struct TextFieldControlView: View {
     let radius = ControlProps.cornerRadius(node.props["border_radius"]) ?? 8
     if node.string("border")?.lowercased() != "none" {
       RoundedRectangle(cornerRadius: radius)
-        .strokeBorder(
-          borderColor,
-          lineWidth: CGFloat(
-            node.double(focused ? "focused_border_width" : "border_width") ?? 1))
+        .strokeBorder(borderColor, lineWidth: borderWidth)
     }
+  }
+
+  private var borderWidth: CGFloat {
+    let resting = node.double("border_width") ?? 1
+    guard focused else { return CGFloat(resting) }
+    return CGFloat(node.double("focused_border_width") ?? resting)
   }
 
   private var borderColor: Color {
     if hasError {
       return MaterialPalette.color(for: node, property: "error_border_color", default: .red)
     }
-    if focused, let focusedColor = MaterialPalette.color(node.string("focused_border_color")) {
+    if focused,
+      let focusedColor = MaterialPalette.color(
+        node.string("focused_border_color") ?? node.string("focus_color"))
+    {
       return focusedColor
     }
     return MaterialPalette.color(for: node, property: "border_color", default: .clear)
   }
 
+  /// Material resolves a field's fill from its interaction state, so the
+  /// focused, hovered and resting colours are tried in that order.
   private var fieldBackground: Color {
+    if focused, let focusedFill = MaterialPalette.color(node.string("focused_bgcolor")) {
+      return focusedFill
+    }
+    if hovering, let hover = MaterialPalette.color(node.string("hover_color")) {
+      return hover
+    }
     if let explicit = MaterialPalette.color(node.props["bgcolor"]?.stringValue) {
       return explicit
+    }
+    if node.bool("filled") == true, let fill = MaterialPalette.color(node.string("fill_color")) {
+      return fill
     }
     return MaterialPalette.color(RufletThemeDefaults.backgroundToken(for: node)) ?? .clear
   }
@@ -756,6 +837,69 @@ private struct CodeEditorChrome: ViewModifier {
 }
 
 /// Flet's `KeyboardType`, where the platform has an equivalent.
+/// Tracks the pointer so a field can paint its `hover_color`.
+private struct FieldHoverTracker: ViewModifier {
+  @Binding var hovering: Bool
+
+  func body(content: Content) -> some View {
+    content.onHover { hovering = $0 }
+  }
+}
+
+/// `prefix_icon_size_constraints` and its suffix twin are Flutter
+/// `BoxConstraints` on the slot rather than on the field.
+private struct SlotSizeConstraints: ViewModifier {
+  let value: RufletValue?
+
+  func body(content: Content) -> some View {
+    if let constraints = ControlProps.sizeConstraints(value) {
+      content.frame(
+        minWidth: constraints.minWidth, maxWidth: constraints.maxWidth,
+        minHeight: constraints.minHeight, maxHeight: constraints.maxHeight)
+    } else {
+      content
+    }
+  }
+}
+
+/// `scroll_padding` is the margin Flutter keeps between the caret and the
+/// edge while a multiline field scrolls.
+private struct ScrollInset: ViewModifier {
+  let insets: EdgeInsets
+
+  func body(content: Content) -> some View {
+    if #available(iOS 17.0, macOS 14.0, *) {
+      content.contentMargins(.all, insets, for: .scrollContent)
+    } else {
+      content.padding(insets)
+    }
+  }
+}
+
+/// `hint_style`, `hint_max_lines` and `hint_fade_duration` describe the
+/// placeholder, which neither platform field styles directly, so it is drawn
+/// over an empty field.
+private struct PlaceholderStyle: ViewModifier {
+  let node: ControlNode
+  let showing: Bool
+
+  func body(content: Content) -> some View {
+    guard let hint = node.string("hint_text"), !hint.isEmpty,
+      node.map("hint_style") != nil || node.int("hint_max_lines") != nil
+    else { return AnyView(content) }
+    let duration = (node.double("hint_fade_duration") ?? 0) / 1_000
+    return AnyView(
+      content.overlay(alignment: .leading) {
+        Text(hint)
+          .lineLimit(node.int("hint_max_lines"))
+          .rufletTextStyle(RufletTextStyle(node: node, styleKey: "hint_style"))
+          .opacity(showing ? 1 : 0)
+          .animation(.easeInOut(duration: duration), value: showing)
+          .allowsHitTesting(false)
+      })
+  }
+}
+
 /// Flutter lists dropdown options in the order they were given, but SwiftUI
 /// reverses a menu that opens upwards. `menuOrder` pins it, and arrived in
 /// iOS 16 against a package that ships to iOS 15.

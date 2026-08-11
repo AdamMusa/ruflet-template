@@ -39,6 +39,13 @@ struct RufletTextInputTraits {
   var animateCursorOpacity = true
   var obscuringCharacter = "•"
   var hasError = false
+  var alwaysCallOnTap = false
+  var stylusHandwriting = true
+  var ignoresUpDownKeys = false
+  /// Flutter's `StrutStyle` forces a minimum line box. Only the metrics that
+  /// have a paragraph-style counterpart are carried.
+  var strutHeight: CGFloat?
+  var strutLeading: CGFloat?
 
   /// The caret colour Flutter resolves: the error colour wins while the field
   /// is in error, then `cursor_color`, then the platform tint.
@@ -133,6 +140,13 @@ struct RufletTextInputTraits {
     obscuringCharacter = node.string("obscuring_character") ?? "•"
     hasError = node.controlID(forKey: "error") != nil
       || !(node.string("error") ?? node.string("error_text") ?? "").isEmpty
+    alwaysCallOnTap = node.bool("always_call_on_tap") ?? false
+    stylusHandwriting = node.bool("enable_stylus_handwriting") ?? true
+    ignoresUpDownKeys = node.bool("ignore_up_down_keys") ?? false
+    if let strut = node.map("strut_style") {
+      strutHeight = strut["height"]?.doubleValue.map { CGFloat($0) }
+      strutLeading = strut["leading"]?.doubleValue.map { CGFloat($0) }
+    }
   }
 
   /// The filter and the length limit in the order Flutter applies its
@@ -375,6 +389,38 @@ enum RufletTextSelection {
       if !traits.showCursor { view.tintColor = .clear }
       if let color = traits.textColor { view.textColor = UIColor(color) }
       if let size = traits.fontSize { view.font = .systemFont(ofSize: size) }
+      // Scribble is on by default; `enable_stylus_handwriting: false` turns it
+      // off, which UIKit expresses by refusing the interaction.
+      if #available(iOS 14.0, *) {
+        let existing = view.interactions.compactMap { $0 as? UIScribbleInteraction }
+        if traits.stylusHandwriting {
+          existing.forEach(view.removeInteraction)
+        } else if existing.isEmpty {
+          view.addInteraction(UIScribbleInteraction(delegate: ScribbleBlocker.shared))
+        }
+      }
+      applyStrut(traits, to: view)
+    }
+
+    /// Flutter's strut sets a floor under the line box. `height` is a multiple
+    /// of the font size and `leading` adds to it, which is what a paragraph
+    /// style's minimum line height expresses.
+    private func applyStrut(_ traits: RufletTextInputTraits, to view: UITextField) {
+      guard traits.strutHeight != nil || traits.strutLeading != nil else { return }
+      let size = traits.fontSize ?? view.font?.pointSize ?? UIFont.systemFontSize
+      let paragraph = NSMutableParagraphStyle()
+      paragraph.minimumLineHeight = (traits.strutHeight ?? 1) * size
+        + (traits.strutLeading ?? 0) * size
+      view.defaultTextAttributes[.paragraphStyle] = paragraph
+    }
+
+    /// A delegate that refuses every Scribble session, so the interaction can
+    /// stand in for the switch UIKit does not expose.
+    private final class ScribbleBlocker: NSObject, UIScribbleInteractionDelegate {
+      static let shared = ScribbleBlocker()
+      func scribbleInteraction(
+        _ interaction: UIScribbleInteraction, shouldBeginAt location: CGPoint
+      ) -> Bool { false }
     }
 
     private static func keyboardType(_ value: String?) -> UIKeyboardType {
@@ -467,6 +513,13 @@ enum RufletTextSelection {
         reportSelection(sender)
       }
 
+      /// `always_call_on_tap` reports a tap on a field that already has focus,
+      /// which `editingDidBegin` alone would miss.
+      func textFieldShouldBeginEditing(_ textField: UITextField) -> Bool {
+        if parent.traits.alwaysCallOnTap, textField.isFirstResponder { parent.onTap() }
+        return true
+      }
+
       @objc func ended(_ sender: UITextField) {
         parent.focused = false
         if programmaticBlur {
@@ -535,6 +588,19 @@ enum RufletTextSelection {
   /// on the cell is the documented hook for that.
   final class RufletFieldEditor: NSTextView {
     var traits = RufletTextInputTraits()
+
+    /// `ignore_up_down_keys` keeps the arrows from moving the caret so the
+    /// surrounding application can use them, which is what Flet's shortcut
+    /// wrapper does on desktop.
+    override func doCommand(by selector: Selector) {
+      if traits.ignoresUpDownKeys,
+        selector == #selector(NSResponder.moveUp(_:))
+          || selector == #selector(NSResponder.moveDown(_:))
+      {
+        return
+      }
+      super.doCommand(by: selector)
+    }
 
     override func drawInsertionPoint(in rect: NSRect, color: NSColor, turnedOn flag: Bool) {
       // `animate_cursor_opacity: false` means a caret that does not blink, so
@@ -640,6 +706,16 @@ enum RufletTextSelection {
       view.alignment = Self.alignment(traits.textAlign)
       if let color = traits.textColor { view.textColor = NSColor(color) }
       if let size = traits.fontSize { view.font = .systemFont(ofSize: size) }
+      // Flutter's strut sets a floor under the line box: `height` multiplies
+      // the font size and `leading` adds to it.
+      if traits.strutHeight != nil || traits.strutLeading != nil {
+        let size = traits.fontSize ?? view.font?.pointSize ?? NSFont.systemFontSize
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.minimumLineHeight = (traits.strutHeight ?? 1) * size
+          + (traits.strutLeading ?? 0) * size
+        view.attributedStringValue = NSAttributedString(
+          string: view.stringValue, attributes: [.paragraphStyle: paragraph])
+      }
       // AppKit paints the caret and selection from the field editor, which is
       // shared per window, so the colours are set when this field owns it.
       (view.cell as? RufletTextFieldCell)?.traits = traits
