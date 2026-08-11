@@ -193,16 +193,27 @@ public enum ControlProps {
 
   /// Flet's `BorderRadius`: a number, or per-corner values.
   public static func cornerRadius(_ value: RufletValue?) -> CGFloat? {
+    cornerRadii(value)?.maximum
+  }
+
+  /// Preserve Flutter's four independent `BorderRadius` corners. A missing
+  /// corner remains square instead of inheriting the largest supplied radius.
+  public static func cornerRadii(_ value: RufletValue?) -> FletCornerRadii? {
     guard let value else { return nil }
-    if let uniform = value.doubleValue { return CGFloat(uniform) }
+    if let uniform = value.doubleValue {
+      return FletCornerRadii(uniform: CGFloat(uniform))
+    }
     guard let map = value.mapValue else { return nil }
-    let corners = [
-      "top_left", "top_right", "bottom_left", "bottom_right"
-    ].compactMap { map[$0]?.doubleValue }
-    guard let first = corners.first else { return nil }
-    // SwiftUI shapes take one radius; use the largest so a rounded corner is
-    // never silently squared off.
-    return CGFloat(corners.max() ?? first)
+    let topLeft = map["top_left"]?.doubleValue ?? map["top_start"]?.doubleValue ?? 0
+    let topRight = map["top_right"]?.doubleValue ?? map["top_end"]?.doubleValue ?? 0
+    let bottomLeft = map["bottom_left"]?.doubleValue ?? map["bottom_start"]?.doubleValue ?? 0
+    let bottomRight = map["bottom_right"]?.doubleValue ?? map["bottom_end"]?.doubleValue ?? 0
+    guard topLeft != 0 || topRight != 0 || bottomLeft != 0 || bottomRight != 0 else {
+      return nil
+    }
+    return FletCornerRadii(
+      topLeft: CGFloat(topLeft), topRight: CGFloat(topRight),
+      bottomLeft: CGFloat(bottomLeft), bottomRight: CGFloat(bottomRight))
   }
 
   /// Flet's `Border`/`BorderSide`, reduced to the single stroke SwiftUI draws.
@@ -211,6 +222,76 @@ public enum ControlProps {
     let side = map["top"]?.mapValue ?? map["left"]?.mapValue ?? map
     guard let width = side["width"]?.doubleValue, width > 0 else { return nil }
     return (MaterialPalette.color(side["color"]?.stringValue, default: .gray), CGFloat(width))
+  }
+}
+
+public struct FletCornerRadii: Equatable, Sendable {
+  public let topLeft: CGFloat
+  public let topRight: CGFloat
+  public let bottomLeft: CGFloat
+  public let bottomRight: CGFloat
+
+  public init(topLeft: CGFloat, topRight: CGFloat, bottomLeft: CGFloat, bottomRight: CGFloat) {
+    self.topLeft = max(0, topLeft)
+    self.topRight = max(0, topRight)
+    self.bottomLeft = max(0, bottomLeft)
+    self.bottomRight = max(0, bottomRight)
+  }
+
+  public init(uniform: CGFloat) {
+    self.init(topLeft: uniform, topRight: uniform, bottomLeft: uniform, bottomRight: uniform)
+  }
+
+  public var maximum: CGFloat { max(topLeft, topRight, bottomLeft, bottomRight) }
+}
+
+/// Platform-neutral equivalent of Flutter's `RRect.fromRectAndCorners`.
+/// Adjacent radii are proportionally normalized when they exceed an edge.
+public struct FletRoundedRectangle: Shape {
+  public let radii: FletCornerRadii
+
+  public init(radii: FletCornerRadii) { self.radii = radii }
+
+  public func path(in rect: CGRect) -> Path {
+    let scale = min(
+      1,
+      ratio(rect.width, radii.topLeft + radii.topRight),
+      ratio(rect.width, radii.bottomLeft + radii.bottomRight),
+      ratio(rect.height, radii.topLeft + radii.bottomLeft),
+      ratio(rect.height, radii.topRight + radii.bottomRight))
+    let tl = radii.topLeft * scale
+    let tr = radii.topRight * scale
+    let bl = radii.bottomLeft * scale
+    let br = radii.bottomRight * scale
+
+    var path = Path()
+    path.move(to: CGPoint(x: rect.minX + tl, y: rect.minY))
+    path.addLine(to: CGPoint(x: rect.maxX - tr, y: rect.minY))
+    if tr > 0 {
+      path.addQuadCurve(to: CGPoint(x: rect.maxX, y: rect.minY + tr),
+                        control: CGPoint(x: rect.maxX, y: rect.minY))
+    }
+    path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - br))
+    if br > 0 {
+      path.addQuadCurve(to: CGPoint(x: rect.maxX - br, y: rect.maxY),
+                        control: CGPoint(x: rect.maxX, y: rect.maxY))
+    }
+    path.addLine(to: CGPoint(x: rect.minX + bl, y: rect.maxY))
+    if bl > 0 {
+      path.addQuadCurve(to: CGPoint(x: rect.minX, y: rect.maxY - bl),
+                        control: CGPoint(x: rect.minX, y: rect.maxY))
+    }
+    path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + tl))
+    if tl > 0 {
+      path.addQuadCurve(to: CGPoint(x: rect.minX + tl, y: rect.minY),
+                        control: CGPoint(x: rect.minX, y: rect.minY))
+    }
+    path.closeSubpath()
+    return path
+  }
+
+  private func ratio(_ extent: CGFloat, _ sum: CGFloat) -> CGFloat {
+    sum > 0 ? extent / sum : 1
   }
 }
 

@@ -58,4 +58,26 @@ final class FletGeometryTests: XCTestCase {
     XCTAssertEqual(ControlProps.continuousAlignment(.string("top_left")), .topLeft)
     XCTAssertEqual(ControlProps.continuousAlignment(.string("bottomEnd")), .bottomRight)
   }
+
+  func testIndependentBorderRadiiRemainIndependent() {
+    let radii = ControlProps.cornerRadii(.map([
+      "top_left": .double(4),
+      "top_right": .double(8),
+      "bottom_left": .double(12),
+      "bottom_right": .double(16),
+    ]))
+
+    XCTAssertEqual(
+      radii,
+      FletCornerRadii(topLeft: 4, topRight: 8, bottomLeft: 12, bottomRight: 16))
+    XCTAssertEqual(ControlProps.cornerRadius(.map(["top_left": .double(4)])), 4)
+  }
+
+  func testRoundedRectangleNormalizesOversizedAdjacentCorners() {
+    let shape = FletRoundedRectangle(
+      radii: FletCornerRadii(topLeft: 80, topRight: 80, bottomLeft: 0, bottomRight: 0))
+    let path = shape.path(in: CGRect(x: 0, y: 0, width: 100, height: 40))
+
+    XCTAssertEqual(path.boundingRect, CGRect(x: 0, y: 0, width: 100, height: 40))
+  }
 }

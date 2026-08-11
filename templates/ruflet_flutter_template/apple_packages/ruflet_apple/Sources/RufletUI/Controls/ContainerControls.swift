@@ -199,7 +199,8 @@ struct ContainerControlView: View {
   @Environment(\.rufletEvents) private var events
 
   var body: some View {
-    let radius = ControlProps.cornerRadius(node.props["border_radius"]) ?? 0
+    let radii = ControlProps.cornerRadii(node.props["border_radius"])
+      ?? FletCornerRadii(uniform: 0)
     let border = ControlProps.border(node.props["border"])
     let alignment = ControlProps.continuousAlignment(node.props["alignment"])
 
@@ -214,10 +215,10 @@ struct ContainerControlView: View {
           alignment: alignment,
           requiresTightWidth: axis.requiresTightWidth)
       )
-      .background(background(radius: radius))
-      .overlay(borderStroke(border: border, radius: radius))
-      .clipShape(RoundedRectangle(cornerRadius: radius))
-      .contentShape(RoundedRectangle(cornerRadius: radius))
+      .background(background(radii: radii))
+      .overlay(borderStroke(border: border, radii: radii))
+      .clipShape(FletRoundedRectangle(radii: radii))
+      .contentShape(FletRoundedRectangle(radii: radii))
       .modifier(TapReporter(node: node, events: events))
       .allowsHitTesting(!node.fletBool("ignore_interactions"))
   }
@@ -234,20 +235,22 @@ struct ContainerControlView: View {
   }
 
   @ViewBuilder
-  private func background(radius: CGFloat) -> some View {
+  private func background(radii: FletCornerRadii) -> some View {
     let gradient = GradientProps.linear(node.props["gradient"])
     if let gradient {
-      RoundedRectangle(cornerRadius: radius).fill(gradient)
+      FletRoundedRectangle(radii: radii).fill(gradient)
     } else if let color = MaterialPalette.color(node.string("bgcolor")) {
-      RoundedRectangle(cornerRadius: radius).fill(color)
+      FletRoundedRectangle(radii: radii).fill(color)
     }
   }
 
   @ViewBuilder
-  private func borderStroke(border: (color: Color, width: CGFloat)?, radius: CGFloat) -> some View {
+  private func borderStroke(
+    border: (color: Color, width: CGFloat)?, radii: FletCornerRadii
+  ) -> some View {
     if let border {
-      RoundedRectangle(cornerRadius: radius)
-        .strokeBorder(border.color, lineWidth: border.width)
+      FletRoundedRectangle(radii: radii)
+        .stroke(border.color, lineWidth: border.width)
     }
   }
 }
