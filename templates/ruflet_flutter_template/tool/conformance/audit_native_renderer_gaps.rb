@@ -109,7 +109,7 @@ module NativeRendererGapAudit
       source = File.read(path)
       class_matches = []
       offset = 0
-      pattern = /\bclass\s+(\w+)\s*:\s*[^\{]*\bRufletService\b[^\{]*\{/
+      pattern = /\bclass\s+(\w+)\s*:\s*[^\{]*\bRuflet(?:Streaming)?Service\b[^\{]*\{/
       while (match = source.match(pattern, offset))
         class_matches << [match[1], match.end(0) - 1]
         offset = match.end(0)
@@ -120,14 +120,36 @@ module NativeRendererGapAudit
         wire_type = body[/static\s+let\s+wireType\s*=\s*["']([^"']+)["']/, 1]
         next unless wire_type
 
+        extension_bodies = []
+        extension_offset = 0
+        extension_pattern = /\bextension\s+#{Regexp.escape(class_name)}\b[^\{]*\{/
+        while (extension_match = source.match(extension_pattern, extension_offset))
+          extension_body = balanced(
+            source,
+            extension_match.end(0) - 1,
+            open_character: "{",
+            close_character: "}"
+          )
+          break unless extension_body
+
+          extension_bodies << extension_body
+          extension_offset = extension_match.begin(0) + extension_body.length
+        end
+        implementation = ([body] + extension_bodies).join("\n")
+
+        case_methods = implementation.scan(/case\s+((?:["'][^"']+["']\s*,?\s*)+):/m)
+          .flatten
+          .flat_map { |clause| clause.scan(/["']([^"']+)["']/).flatten }
+        compared_methods = implementation.scan(/call\.name\s*==\s*["']([^"']+)["']/).flatten
+
         declaration = {
           "wire_type" => wire_type,
           "declaration" => "service",
           "classification" => "service",
           "implementation" => class_name,
           "rendering" => "serviceOnly",
-          "events" => body.scan(/\.emitEvent\([^,]+,\s*["']([^"']+)["']/m).flatten.uniq.sort,
-          "methods" => body.scan(/case\s+["']([^"']+)["']\s*:/).flatten.uniq.sort
+          "events" => implementation.scan(/\.emitEvent\([^,]+,\s*["']([^"']+)["']/m).flatten.uniq.sort,
+          "methods" => (case_methods + compared_methods).uniq.sort
         }
         declarations[wire_type] = declaration
         class_declarations[class_name] = declaration

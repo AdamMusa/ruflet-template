@@ -69,6 +69,10 @@ public enum RufletServiceError: LocalizedError, Equatable {
   /// The service exists, in a module this target did not link.
   case moduleNotLinked(type: String, bundle: String)
   case invalidArguments(String)
+  /// The upstream command exists, but the current Apple platform has no
+  /// equivalent API. This is intentionally distinct from an unknown method
+  /// and from a temporarily unavailable device (for example, no camera).
+  case platformUnsupported(type: String, method: String, platform: String)
   case unavailable(String)
   case failed(String)
 
@@ -85,6 +89,8 @@ public enum RufletServiceError: LocalizedError, Equatable {
         + "to RufletAppView(services:)."
     case .invalidArguments(let detail):
       return "Invalid arguments: \(detail)"
+    case .platformUnsupported(let type, let method, let platform):
+      return "\(type).\(method) is not supported on \(platform)"
     case .unavailable(let detail):
       return detail
     case .failed(let detail):

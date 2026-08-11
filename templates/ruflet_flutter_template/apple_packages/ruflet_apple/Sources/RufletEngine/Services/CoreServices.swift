@@ -36,6 +36,54 @@ public final class PageService: RufletService {
         drawerID, key: "_open", value: .bool(call.name.hasPrefix("show")))
       completion(.success(.null))
 
+    case "push_route":
+      guard let route = call.argument("route")?.stringValue else {
+        return completion(.failure(RufletServiceError.invalidArguments("route is required")))
+      }
+      guard let node else {
+        return completion(.failure(RufletServiceError.unknownTarget(call.controlID)))
+      }
+      context.store.setLocalProperty(node.id, key: "route", value: .string(route))
+      completion(.success(.null))
+
+    case "get_device_info":
+      var info: [String: RufletValue] = [
+        "os": .string(Self.platformName),
+        "os_version": .string(ProcessInfo.processInfo.operatingSystemVersionString),
+        "locale": .string(Locale.current.identifier)
+      ]
+      #if canImport(UIKit)
+        info["model"] = .string(UIDevice.current.model)
+        info["device_name"] = .string(UIDevice.current.name)
+      #elseif canImport(AppKit)
+        info["model"] = .string("Mac")
+        info["device_name"] = .string(Host.current().localizedName ?? "Mac")
+      #endif
+      completion(.success(.map(info)))
+
+    case "set_allowed_device_orientations":
+      #if os(iOS)
+        let values = call.argument("orientations")?.arrayValue?.compactMap(\.stringValue) ?? []
+        let mask = Self.orientationMask(values)
+        if #available(iOS 16.0, *) {
+          for scene in UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }) {
+            scene.requestGeometryUpdate(.iOS(interfaceOrientations: mask))
+          }
+        }
+        completion(.success(.null))
+      #else
+        completion(.failure(RufletServiceError.platformUnsupported(
+          type: node?.type ?? "Page", method: call.name, platform: Self.platformName)))
+      #endif
+
+    case "take_screenshot":
+      completion(.failure(RufletServiceError.platformUnsupported(
+        type: node?.type ?? "Page", method: call.name, platform: Self.platformName)))
+
+    case "confirm_pop":
+      completion(.failure(RufletServiceError.platformUnsupported(
+        type: node?.type ?? "View", method: call.name, platform: Self.platformName)))
+
     case "scroll_to":
       // Scroll position is owned by SwiftUI's own scroll views; there is no way
       // to drive one imperatively without a ScrollViewReader per control, which
@@ -47,6 +95,65 @@ public final class PageService: RufletService {
     default:
       completion(
         .failure(RufletServiceError.unsupportedMethod(type: "Page", method: call.name)))
+    }
+  }
+
+  private static var platformName: String {
+    #if os(iOS)
+      return "iOS"
+    #elseif os(macOS)
+      return "macOS"
+    #else
+      return "this Apple platform"
+    #endif
+  }
+
+  #if os(iOS)
+    private static func orientationMask(_ names: [String]) -> UIInterfaceOrientationMask {
+      guard !names.isEmpty else { return .all }
+      var mask: UIInterfaceOrientationMask = []
+      for name in names.map({ $0.lowercased() }) {
+        switch name {
+        case "portrait_up", "portrait": mask.insert(.portrait)
+        case "portrait_down": mask.insert(.portraitUpsideDown)
+        case "landscape_left": mask.insert(.landscapeLeft)
+        case "landscape_right": mask.insert(.landscapeRight)
+        default: continue
+        }
+      }
+      return mask.isEmpty ? .all : mask
+    }
+  #endif
+}
+
+/// Browser context-menu policy is a web-only host concern. Keeping it as a
+/// real service means Ruby receives an immediate, classified answer instead
+/// of timing out or being told the method is unknown.
+@MainActor
+public final class BrowserContextMenuService: RufletService {
+  public static let wireType = "BrowserContextMenu"
+  public init() {}
+
+  public func invoke(
+    _ call: RufletMethodCall,
+    node: ControlNode?,
+    context: RufletServiceContext,
+    completion: @escaping RufletMethodCompletion
+  ) {
+    switch call.name {
+    case "disable_menu", "enable_menu":
+      #if os(iOS)
+        let platform = "iOS"
+      #elseif os(macOS)
+        let platform = "macOS"
+      #else
+        let platform = "this Apple platform"
+      #endif
+      completion(.failure(RufletServiceError.platformUnsupported(
+        type: Self.wireType, method: call.name, platform: platform)))
+    default:
+      completion(.failure(RufletServiceError.unsupportedMethod(
+        type: Self.wireType, method: call.name)))
     }
   }
 }
@@ -581,7 +688,9 @@ public final class SemanticsAnnouncementService: RufletService {
         "disable_animations": .bool(UIAccessibility.isReduceMotionEnabled),
         "high_contrast": .bool(UIAccessibility.isDarkerSystemColorsEnabled),
         "invert_colors": .bool(UIAccessibility.isInvertColorsEnabled),
-        "reduce_motion": .bool(UIAccessibility.isReduceMotionEnabled)
+        "reduce_motion": .bool(UIAccessibility.isReduceMotionEnabled),
+        "on_off_switch_labels": .bool(UIAccessibility.shouldDifferentiateWithoutColor),
+        "supports_announcements": .bool(true)
       ])
     #elseif canImport(AppKit)
       let defaults = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
@@ -591,7 +700,9 @@ public final class SemanticsAnnouncementService: RufletService {
         "disable_animations": .bool(defaults),
         "high_contrast": .bool(NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast),
         "invert_colors": .bool(NSWorkspace.shared.accessibilityDisplayShouldInvertColors),
-        "reduce_motion": .bool(defaults)
+        "reduce_motion": .bool(defaults),
+        "on_off_switch_labels": .bool(false),
+        "supports_announcements": .bool(true)
       ])
     #else
       return .map([:])

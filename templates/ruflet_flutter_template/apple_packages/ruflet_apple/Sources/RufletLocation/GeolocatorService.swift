@@ -120,9 +120,13 @@ extension GeolocatorService: CLLocationManagerDelegate {
     _ manager: CLLocationManager, didFailWithError error: Error
   ) {
     Task { @MainActor in
+      if let target = self.streamTarget {
+        self.context?.emitEvent(target, "error", .map([
+          "error": .string(error.localizedDescription)
+        ]))
+      }
       self.pending.forEach { $0(.failure(RufletServiceError.failed(error.localizedDescription))) }
       self.pending.removeAll()
     }
   }
 }
-

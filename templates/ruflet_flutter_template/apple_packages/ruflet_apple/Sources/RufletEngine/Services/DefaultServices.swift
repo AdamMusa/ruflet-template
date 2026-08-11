@@ -15,6 +15,10 @@ extension ServiceRegistry {
   /// call that hangs.
   public func registerDefaults() {
     register(PageService.self) { PageService() }
+    registerNamed("View") { PageService() }
+    registerNamed("BasePage") { PageService() }
+    registerNamed("Pagelet") { PageService() }
+    register(BrowserContextMenuService.self) { BrowserContextMenuService() }
 
     register(ClipboardService.self) { ClipboardService() }
     register(SharedPreferencesService.self) { SharedPreferencesService() }
@@ -28,6 +32,7 @@ extension ServiceRegistry {
     register(BatteryService.self) { BatteryService() }
     markStreaming([BatteryService.wireType])
     register(ConnectivityService.self) { ConnectivityService() }
+    markStreaming([ConnectivityService.wireType])
     register(PermissionHandlerService.self) { PermissionHandlerService() }
     register(ScreenBrightnessService.self) { ScreenBrightnessService() }
 

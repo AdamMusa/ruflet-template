@@ -203,6 +203,9 @@ public final class AudioRecorderService: RufletService {
     private var recorder: AVAudioRecorder?
   #endif
   private var outputPath: String?
+  private var paused = false
+  private var eventContext: RufletServiceContext?
+  private var eventNode: ControlNode?
 
   public init() {}
 
@@ -212,6 +215,8 @@ public final class AudioRecorderService: RufletService {
     context: RufletServiceContext,
     completion: @escaping RufletMethodCompletion
   ) {
+    eventContext = context
+    eventNode = node
     #if canImport(AVFoundation)
       switch call.name {
       case "start_recording":
@@ -248,6 +253,8 @@ public final class AudioRecorderService: RufletService {
           }
           self.recorder = recorder
           outputPath = path
+          paused = false
+          emitState("recording")
           completion(.success(.bool(true)))
         } catch {
           completion(.failure(RufletServiceError.failed(error.localizedDescription)))
@@ -256,18 +263,54 @@ public final class AudioRecorderService: RufletService {
       case "stop_recording":
         recorder?.stop()
         recorder = nil
+        paused = false
+        emitState("stopped")
         completion(.success(outputPath.map { RufletValue.string($0) } ?? .null))
+
+      case "cancel_recording":
+        recorder?.stop()
+        recorder = nil
+        paused = false
+        if let outputPath { try? FileManager.default.removeItem(atPath: outputPath) }
+        outputPath = nil
+        emitState("stopped")
+        completion(.success(.null))
 
       case "pause_recording":
         recorder?.pause()
+        paused = recorder != nil
+        emitState("paused")
         completion(.success(.null))
 
       case "resume_recording":
         recorder?.record()
+        paused = false
+        emitState("recording")
         completion(.success(.null))
 
       case "is_recording":
         completion(.success(.bool(recorder?.isRecording ?? false)))
+
+      case "is_paused":
+        completion(.success(.bool(paused)))
+
+      case "get_input_devices":
+        #if os(iOS)
+          let inputs = AVAudioSession.sharedInstance().availableInputs ?? []
+          completion(.success(.array(inputs.map { input in
+            .map([
+              "id": .string(input.uid),
+              "label": .string(input.portName)
+            ])
+          })))
+        #else
+          let devices = AVCaptureDevice.DiscoverySession(
+            deviceTypes: [.builtInMicrophone], mediaType: .audio, position: .unspecified
+          ).devices
+          completion(.success(.array(devices.map { device in
+            .map(["id": .string(device.uniqueID), "label": .string(device.localizedName)])
+          })))
+        #endif
 
       case "is_supported_encoder":
         completion(.success(.bool(true)))
@@ -306,6 +349,11 @@ public final class AudioRecorderService: RufletService {
       completion(.failure(RufletServiceError.unavailable("AVFoundation is unavailable")))
     #endif
   }
+
+  private func emitState(_ state: String) {
+    guard let eventContext, let eventNode, eventNode.handlesEvent("state_change") else { return }
+    eventContext.emitEvent(eventNode.id, "state_change", .map(["state": .string(state)]))
+  }
 }
 
 
@@ -313,6 +361,8 @@ public final class AudioRecorderService: RufletService {
 @MainActor
 public final class CameraService: RufletService {
   public static let wireType = "Camera"
+
+  private var selectedDeviceID: String?
 
   public init() {}
 
@@ -349,12 +399,178 @@ public final class CameraService: RufletService {
           Task { @MainActor in completion(.success(.bool(granted))) }
         }
 
+      #if os(iOS)
+      case "get_min_zoom_level":
+        completion(.success(.double(1)))
+
+      case "get_max_zoom_level":
+        guard let device = selectedDevice(call) else {
+          return completion(.failure(RufletServiceError.unavailable("No camera is available")))
+        }
+        completion(.success(.double(Double(device.activeFormat.videoMaxZoomFactor))))
+
+      case "get_min_exposure_offset":
+        guard let device = selectedDevice(call) else {
+          return completion(.failure(RufletServiceError.unavailable("No camera is available")))
+        }
+        completion(.success(.double(Double(device.minExposureTargetBias))))
+
+      case "get_max_exposure_offset":
+        guard let device = selectedDevice(call) else {
+          return completion(.failure(RufletServiceError.unavailable("No camera is available")))
+        }
+        completion(.success(.double(Double(device.maxExposureTargetBias))))
+
+      case "get_exposure_offset_step_size":
+        // AVFoundation accepts a continuous target bias rather than exposing
+        // the plugin's discrete Android step size.
+        completion(.success(.double(0)))
+      #else
+      case "get_min_zoom_level", "get_max_zoom_level", "get_min_exposure_offset",
+        "get_max_exposure_offset", "get_exposure_offset_step_size":
+        completion(.failure(RufletServiceError.platformUnsupported(
+          type: Self.wireType, method: call.name, platform: Self.platformName)))
+      #endif
+
+      case "set_description":
+        selectedDeviceID = Self.descriptionID(call.argument("description"))
+        completion(.success(.null))
+
+      #if os(iOS)
+      case "set_zoom_level":
+        guard let zoom = call.argument("zoom")?.doubleValue,
+          let device = selectedDevice(call)
+        else {
+          return completion(.failure(RufletServiceError.invalidArguments(
+            "zoom and an available camera are required")))
+        }
+        configure(device, completion: completion) {
+          device.videoZoomFactor = min(max(CGFloat(zoom), 1), device.activeFormat.videoMaxZoomFactor)
+        }
+
+      case "set_exposure_offset":
+        guard let offset = call.argument("offset")?.doubleValue,
+          let device = selectedDevice(call)
+        else {
+          return completion(.failure(RufletServiceError.invalidArguments(
+            "offset and an available camera are required")))
+        }
+        do {
+          try device.lockForConfiguration()
+          device.setExposureTargetBias(Float(offset)) { _ in
+            Task { @MainActor in completion(.success(.double(offset))) }
+          }
+          device.unlockForConfiguration()
+        } catch {
+          completion(.failure(RufletServiceError.failed(error.localizedDescription)))
+        }
+
+      case "set_flash_mode":
+        guard let device = selectedDevice(call), device.hasFlash else {
+          return completion(.failure(RufletServiceError.unavailable("This camera has no flash")))
+        }
+        let mode = call.argument("mode")?.stringValue?.lowercased() ?? "off"
+        configure(device, completion: completion) {
+          device.flashMode = mode == "on" ? .on : (mode == "auto" ? .auto : .off)
+        }
+
+      case "set_focus_mode":
+        guard let device = selectedDevice(call) else {
+          return completion(.failure(RufletServiceError.unavailable("No camera is available")))
+        }
+        let mode = call.argument("mode")?.stringValue?.lowercased() ?? "auto"
+        configure(device, completion: completion) {
+          let target: AVCaptureDevice.FocusMode = mode.contains("locked") ? .locked : .continuousAutoFocus
+          if device.isFocusModeSupported(target) { device.focusMode = target }
+        }
+
+      case "set_exposure_mode":
+        guard let device = selectedDevice(call) else {
+          return completion(.failure(RufletServiceError.unavailable("No camera is available")))
+        }
+        let mode = call.argument("mode")?.stringValue?.lowercased() ?? "auto"
+        configure(device, completion: completion) {
+          let target: AVCaptureDevice.ExposureMode = mode.contains("locked") ? .locked : .continuousAutoExposure
+          if device.isExposureModeSupported(target) { device.exposureMode = target }
+        }
+
+      case "set_focus_point", "set_exposure_point":
+        guard let point = call.argument("point")?.mapValue,
+          let x = point["dx"]?.doubleValue ?? point["x"]?.doubleValue,
+          let y = point["dy"]?.doubleValue ?? point["y"]?.doubleValue,
+          let device = selectedDevice(call)
+        else {
+          return completion(.failure(RufletServiceError.invalidArguments(
+            "point and an available camera are required")))
+        }
+        configure(device, completion: completion) {
+          let focus = CGPoint(x: min(max(x, 0), 1), y: min(max(y, 0), 1))
+          if call.name == "set_focus_point", device.isFocusPointOfInterestSupported {
+            device.focusPointOfInterest = focus
+          } else if call.name == "set_exposure_point", device.isExposurePointOfInterestSupported {
+            device.exposurePointOfInterest = focus
+          }
+        }
+      #else
+      case "set_zoom_level", "set_exposure_offset", "set_flash_mode", "set_focus_mode",
+        "set_exposure_mode", "set_focus_point", "set_exposure_point":
+        completion(.failure(RufletServiceError.platformUnsupported(
+          type: Self.wireType, method: call.name, platform: Self.platformName)))
+      #endif
+
+      case "supports_image_streaming":
+        completion(.success(.bool(false)))
+
+      case "initialize", "lock_capture_orientation", "unlock_capture_orientation",
+        "pause_preview", "resume_preview", "take_picture", "prepare_for_video_recording",
+        "start_video_recording", "pause_video_recording", "resume_video_recording",
+        "stop_video_recording", "start_image_stream", "stop_image_stream":
+        completion(.failure(RufletServiceError.platformUnsupported(
+          type: Self.wireType, method: call.name, platform: Self.platformName)))
+
       default:
         completion(
           .failure(RufletServiceError.unsupportedMethod(type: "Camera", method: call.name)))
       }
     #else
       completion(.failure(RufletServiceError.unavailable("No camera on this platform")))
+    #endif
+  }
+
+  #if canImport(AVFoundation)
+    private func selectedDevice(_ call: RufletMethodCall) -> AVCaptureDevice? {
+      let requested = Self.descriptionID(call.argument("description")) ?? selectedDeviceID
+      if let requested, let device = AVCaptureDevice(uniqueID: requested) { return device }
+      return AVCaptureDevice.default(for: .video)
+    }
+
+    private static func descriptionID(_ value: RufletValue?) -> String? {
+      value?["name"]?.stringValue ?? value?["id"]?.stringValue ?? value?.stringValue
+    }
+
+    private func configure(
+      _ device: AVCaptureDevice,
+      completion: @escaping RufletMethodCompletion,
+      change: () -> Void
+    ) {
+      do {
+        try device.lockForConfiguration()
+        change()
+        device.unlockForConfiguration()
+        completion(.success(.null))
+      } catch {
+        completion(.failure(RufletServiceError.failed(error.localizedDescription)))
+      }
+    }
+  #endif
+
+  private static var platformName: String {
+    #if os(iOS)
+      return "iOS service mode; use the Camera control for capture"
+    #elseif os(macOS)
+      return "macOS service mode; use the Camera control for capture"
+    #else
+      return "this Apple platform"
     #endif
   }
 }

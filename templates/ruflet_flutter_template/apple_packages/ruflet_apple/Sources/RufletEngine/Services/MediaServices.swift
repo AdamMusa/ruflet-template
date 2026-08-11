@@ -36,13 +36,22 @@ public final class FilePickerService: NSObject, RufletService {
     case "get_directory_path":
       pickDirectory(call, completion: completion)
     case "upload":
-      // Uploading is the Ruby side's job once it has the paths; there is no
-      // client-side transfer to perform.
-      completion(.success(.null))
+      completion(.failure(RufletServiceError.platformUnsupported(
+        type: Self.wireType, method: call.name, platform: Self.platformName)))
     default:
       completion(
         .failure(RufletServiceError.unsupportedMethod(type: "FilePicker", method: call.name)))
     }
+  }
+
+  private static var platformName: String {
+    #if os(iOS)
+      return "iOS"
+    #elseif os(macOS)
+      return "macOS"
+    #else
+      return "this Apple platform"
+    #endif
   }
 
   /// The result shape Flet's file picker returns: a list of
@@ -234,16 +243,29 @@ public final class ShareService: RufletService {
       sheet.popoverPresentationController?.sourceView = presenter.view
       sheet.popoverPresentationController?.sourceRect = CGRect(
         x: presenter.view.bounds.midX, y: presenter.view.bounds.midY, width: 0, height: 0)
-      presenter.present(sheet, animated: true) {
-        Task { @MainActor in completion(.success(.null)) }
+      sheet.completionWithItemsHandler = { activity, completed, _, error in
+        Task { @MainActor in
+          if let error {
+            completion(.failure(RufletServiceError.failed(error.localizedDescription)))
+          } else {
+            completion(.success(.map([
+              "status": .string(completed ? "success" : "dismissed"),
+              "raw": .string(activity?.rawValue ?? "")
+            ])))
+          }
+        }
       }
+      presenter.present(sheet, animated: true)
     #elseif canImport(AppKit)
       guard let view = NSApp.keyWindow?.contentView else {
         return completion(.failure(RufletServiceError.unavailable("No window to present from")))
       }
       let picker = NSSharingServicePicker(items: items)
       picker.show(relativeTo: view.bounds, of: view, preferredEdge: .minY)
-      completion(.success(.null))
+      completion(.success(.map([
+        "status": .string("success"),
+        "raw": .string("")
+      ])))
     #else
       completion(.failure(RufletServiceError.unavailable("No share sheet on this platform")))
     #endif

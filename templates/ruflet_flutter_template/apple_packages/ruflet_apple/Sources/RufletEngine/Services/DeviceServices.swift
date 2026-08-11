@@ -129,7 +129,7 @@ public final class BatteryService: RufletStreamingService {
 
 /// `Connectivity` — the current link type, plus `change` events as it moves.
 @MainActor
-public final class ConnectivityService: RufletService {
+public final class ConnectivityService: RufletStreamingService {
   public static let wireType = "Connectivity"
 
   #if canImport(Network)
@@ -139,6 +139,12 @@ public final class ConnectivityService: RufletService {
   #endif
 
   public init() {}
+
+  public func activate(node: ControlNode, context: RufletServiceContext) {
+    #if canImport(Network)
+      startMonitoring(node: node, context: context)
+    #endif
+  }
 
   public func invoke(
     _ call: RufletMethodCall,
@@ -150,7 +156,7 @@ public final class ConnectivityService: RufletService {
       startMonitoring(node: node, context: context)
       switch call.name {
       case "get_connectivity":
-        completion(.success(.string(current)))
+        completion(.success(.array([.string(current)])))
       default:
         completion(
           .failure(
@@ -173,7 +179,9 @@ public final class ConnectivityService: RufletService {
         Task { @MainActor in
           guard let self, kind != self.current else { return }
           self.current = kind
-          context.emitEvent(id, "change", .string(kind))
+          context.emitEvent(id, "change", .map([
+            "connectivity": .array([.string(kind)])
+          ]))
         }
       }
       monitor.start(queue: DispatchQueue(label: "com.izeesoft.ruflet.connectivity"))
