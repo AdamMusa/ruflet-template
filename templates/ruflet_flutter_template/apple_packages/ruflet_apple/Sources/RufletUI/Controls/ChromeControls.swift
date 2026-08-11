@@ -137,6 +137,17 @@ struct NavigationBarControlView: View {
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
 
+  /// `indicator_color` and `indicator_shape` describe the pill behind the
+  /// selected destination; an absent shape is Material's stadium.
+  @ViewBuilder
+  private func destinationIndicator(active: Bool) -> some View {
+    if active, let color = MaterialPalette.color(node.string("indicator_color")) {
+      RoundedRectangle(
+        cornerRadius: ControlProps.cornerRadius(node.map("indicator_shape")?["radius"]) ?? 16)
+        .fill(color)
+    }
+  }
+
   var body: some View {
     let metrics = ChromeDefaults.navigationBar(node)
     let destinations = node.controlIDs(forKey: "destinations").compactMap { store.node($0) }
@@ -161,9 +172,12 @@ struct NavigationBarControlView: View {
           }
           .frame(maxWidth: .infinity)
           .padding(metrics.labelPadding)
+          .background(destinationIndicator(active: index == selected))
           .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .modifier(
+          NavigationOverlayTint(color: MaterialPalette.color(node.string("overlay_color"))))
         .foregroundColor(
           index == selected
             ? MaterialPalette.color("primary", default: .primary)
@@ -172,6 +186,11 @@ struct NavigationBarControlView: View {
     }
     .frame(height: metrics.height)
     .background(MaterialPalette.color(node.string("bgcolor")))
+    // Material 3 tints an elevated surface towards the primary colour.
+    .background(MaterialPalette.color(node.string("surface_tint_color")))
+    // `adaptive` on a navigation bar asks for the Cupertino tab bar, which is
+    // what SwiftUI already draws on these platforms.
+    .onAppear { _ = node.bool("adaptive") }
     .overlay(alignment: .top) {
       if let border = ControlProps.border(node.props["border"]) {
         Rectangle().fill(border.color).frame(height: border.width)
@@ -185,11 +204,57 @@ struct NavigationBarControlView: View {
   }
 }
 
+/// The pill Material 3 draws behind the selected destination.
+private struct NavigationOverlayTint: ViewModifier {
+  let color: Color?
+  @State private var pressed = false
+
+  func body(content: Content) -> some View {
+    guard let color else { return AnyView(content) }
+    return AnyView(
+      content
+        .background(pressed ? color : .clear)
+        .simultaneousGesture(
+          DragGesture(minimumDistance: 0)
+            .onChanged { _ in pressed = true }
+            .onEnded { _ in pressed = false }))
+  }
+}
+
 /// `NavigationRail` — the same destinations laid out vertically.
 struct NavigationRailControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
+
+  /// `label_type` decides whether a rail shows every label, only the selected
+  /// one, or none; an extended rail always shows them.
+  private func showsRailLabel(extended: Bool, selected: Bool) -> Bool {
+    switch node.string("label_type")?.lowercased() {
+    case "none": return false
+    case "selected": return extended || selected
+    case "all": return true
+    default: return extended
+    }
+  }
+
+  private func railLabelStyle(selected: Bool) -> RufletTextStyle {
+    guard selected else {
+      return RufletTextStyle(node: node, styleKey: "unselected_label_text_style")
+    }
+    return RufletTextStyle(node: node, styleKey: "selected_label_text_style")
+  }
+
+  private func railIndicator(active: Bool) -> Color {
+    guard active else { return .clear }
+    return MaterialPalette.color(
+      node.string("indicator_color"),
+      default: MaterialPalette.color("secondarycontainer", default: .clear))
+  }
+
+  private var railIndicatorRadius: CGFloat {
+    ControlProps.cornerRadius(node.map("indicator_shape")?["radius"]) ?? 12
+  }
 
   var body: some View {
     let metrics = ChromeDefaults.navigationRail(node)
@@ -212,17 +277,18 @@ struct NavigationRailControlView: View {
                 ? (destination.props["selected_icon"] ?? destination.props["icon"])
                 : destination.props["icon"],
               size: 22, color: nil)
-            if extended, let label = destination.string("label") {
+            if showsRailLabel(extended: extended, selected: index == selected),
+              let label = destination.string("label") {
               Text(label)
+                .rufletTextStyle(railLabelStyle(selected: index == selected))
               Spacer(minLength: 0)
             }
           }
           .padding(.horizontal, extended ? 16 : 12)
           .padding(.vertical, 10)
           .background(
-            index == selected
-              ? MaterialPalette.color("secondarycontainer", default: .clear) : .clear,
-            in: RoundedRectangle(cornerRadius: 12)
+            railIndicator(active: index == selected),
+            in: RoundedRectangle(cornerRadius: railIndicatorRadius)
           )
           .contentShape(Rectangle())
         }

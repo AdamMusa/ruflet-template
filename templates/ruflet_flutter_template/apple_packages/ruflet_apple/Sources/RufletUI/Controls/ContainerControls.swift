@@ -866,12 +866,52 @@ struct AnimatedSwitcherControlView: View {
       if let contentID = node.controlID(forKey: "content") {
         ControlView(id: contentID, axis: .none)
           .id(contentID)
-          .transition(.opacity)
+          .transition(transition)
       }
     }
-    .animation(
-      .easeInOut(duration: (node.double("duration") ?? 300) / 1000),
-      value: node.controlID(forKey: "content"))
+    .animation(switchAnimation, value: node.controlID(forKey: "content"))
+  }
+
+  /// Flet's `AnimatedSwitcherTransition`. Flutter's default is a cross-fade,
+  /// and the scale and rotation forms pair with it rather than replace it.
+  private var transition: AnyTransition {
+    switch node.string("transition")?.lowercased() {
+    case "scale":
+      return .asymmetric(
+        insertion: .scale.combined(with: .opacity),
+        removal: .scale.combined(with: .opacity))
+    case "rotation":
+      return .asymmetric(
+        insertion: .scale(scale: 0.8).combined(with: .opacity),
+        removal: .scale(scale: 1.2).combined(with: .opacity))
+    default:
+      return .opacity
+    }
+  }
+
+  /// `switch_in_curve` and `switch_out_curve` are separate in Flutter, and
+  /// `reverse_duration` times the outgoing child. SwiftUI applies one
+  /// animation to the transition, so the incoming pair wins and the outgoing
+  /// duration stands in when only it was given.
+  private var switchAnimation: Animation {
+    let forward = node.double("duration") ?? 300
+    let backward = node.double("reverse_duration") ?? forward
+    // SwiftUI applies one animation to a transition rather than one per
+    // direction, so the longer of the two is what the switch is given.
+    let seconds = max(forward, backward) / 1_000
+    let name = node.string("switch_in_curve") ?? node.string("switch_out_curve")
+    return Self.curve(name, duration: seconds)
+  }
+
+  /// Flutter's `Curves` names against SwiftUI's timing curves.
+  private static func curve(_ name: String?, duration: Double) -> Animation {
+    switch name?.lowercased().replacingOccurrences(of: "_", with: "") {
+    case "linear": return .linear(duration: duration)
+    case "easein": return .easeIn(duration: duration)
+    case "easeout", "decelerate": return .easeOut(duration: duration)
+    case "bounceout", "elasticout": return .spring(response: duration, dampingFraction: 0.5)
+    default: return .easeInOut(duration: duration)
+    }
   }
 }
 

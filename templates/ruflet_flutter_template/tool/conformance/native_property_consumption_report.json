@@ -12,12 +12,12 @@
     "controls": 196,
     "properties": 5330,
     "classifications": {
-      "consumed": 1894,
+      "consumed": 1908,
       "parent_consumed": 3154,
       "service": 156,
-      "unclassified": 126
+      "unclassified": 112
     },
-    "unclassified": 126
+    "unclassified": 112
   },
   "unclassified": [
     {
@@ -59,26 +59,6 @@
       "family": "service",
       "wire_type": "SecureStorage",
       "property": "windows_options"
-    },
-    {
-      "family": "visual",
-      "wire_type": "AnimatedSwitcher",
-      "property": "reverse_duration"
-    },
-    {
-      "family": "visual",
-      "wire_type": "AnimatedSwitcher",
-      "property": "switch_in_curve"
-    },
-    {
-      "family": "visual",
-      "wire_type": "AnimatedSwitcher",
-      "property": "switch_out_curve"
-    },
-    {
-      "family": "visual",
-      "wire_type": "AnimatedSwitcher",
-      "property": "transition"
     },
     {
       "family": "visual",
@@ -334,56 +314,6 @@
       "family": "visual",
       "wire_type": "MenuItemButton",
       "property": "semantic_label"
-    },
-    {
-      "family": "visual",
-      "wire_type": "NavigationBar",
-      "property": "adaptive"
-    },
-    {
-      "family": "visual",
-      "wire_type": "NavigationBar",
-      "property": "indicator_color"
-    },
-    {
-      "family": "visual",
-      "wire_type": "NavigationBar",
-      "property": "indicator_shape"
-    },
-    {
-      "family": "visual",
-      "wire_type": "NavigationBar",
-      "property": "overlay_color"
-    },
-    {
-      "family": "visual",
-      "wire_type": "NavigationBar",
-      "property": "surface_tint_color"
-    },
-    {
-      "family": "visual",
-      "wire_type": "NavigationRail",
-      "property": "indicator_color"
-    },
-    {
-      "family": "visual",
-      "wire_type": "NavigationRail",
-      "property": "indicator_shape"
-    },
-    {
-      "family": "visual",
-      "wire_type": "NavigationRail",
-      "property": "label_type"
-    },
-    {
-      "family": "visual",
-      "wire_type": "NavigationRail",
-      "property": "selected_label_text_style"
-    },
-    {
-      "family": "visual",
-      "wire_type": "NavigationRail",
-      "property": "unselected_label_text_style"
     },
     {
       "family": "visual",
@@ -3547,7 +3477,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 874
+              "line": 872
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
@@ -3590,7 +3520,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 873
+              "line": 897
             }
           ]
         },
@@ -3725,8 +3655,13 @@
           ]
         },
         "reverse_duration": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
+              "line": 898
+            }
+          ]
         },
         "right": {
           "classification": "parent_consumed",
@@ -3778,12 +3713,22 @@
           ]
         },
         "switch_in_curve": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
+              "line": 902
+            }
+          ]
         },
         "switch_out_curve": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
+              "line": 902
+            }
+          ]
         },
         "tooltip": {
           "classification": "parent_consumed",
@@ -3804,8 +3749,13 @@
           ]
         },
         "transition": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
+              "line": 878
+            }
+          ]
         },
         "visible": {
           "classification": "parent_consumed",
@@ -3863,7 +3813,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 309
+              "line": 375
             }
           ]
         },
@@ -3936,11 +3886,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 311
+              "line": 377
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 323
+              "line": 389
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FieldStyling.swift",
@@ -4009,19 +3959,19 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 310
+              "line": 376
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 321
+              "line": 387
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 337
+              "line": 403
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 346
+              "line": 412
             }
           ]
         },
@@ -4034,7 +3984,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 312
+              "line": 378
             }
           ]
         },
@@ -4061,7 +4011,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 313
+              "line": 379
             }
           ]
         },
@@ -4170,7 +4120,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 308
+              "line": 374
             }
           ]
         },
@@ -4201,7 +4151,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 306
+              "line": 372
             }
           ]
         },
@@ -5664,7 +5614,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 317
+              "line": 383
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletThemeDefaults.swift",
@@ -5690,11 +5640,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 311
+              "line": 377
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 323
+              "line": 389
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FieldStyling.swift",
@@ -5763,19 +5713,19 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 310
+              "line": 376
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 321
+              "line": 387
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 337
+              "line": 403
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 346
+              "line": 412
             }
           ]
         },
@@ -5802,11 +5752,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 320
+              "line": 386
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 336
+              "line": 402
             }
           ]
         },
@@ -5850,7 +5800,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 324
+              "line": 390
             }
           ]
         },
@@ -5923,7 +5873,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 319
+              "line": 385
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletThemeDefaults.swift",
@@ -44142,8 +44092,13 @@
       "service_implementations": [],
       "properties": {
         "adaptive": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
+              "line": 193
+            }
+          ]
         },
         "align": {
           "classification": "parent_consumed",
@@ -44267,7 +44222,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 334
+              "line": 400
             }
           ]
         },
@@ -44298,7 +44253,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 174
+              "line": 188
             }
           ]
         },
@@ -44307,7 +44262,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 176
+              "line": 195
             }
           ]
         },
@@ -44343,7 +44298,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 142
+              "line": 153
             }
           ]
         },
@@ -44361,19 +44316,19 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 310
+              "line": 376
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 321
+              "line": 387
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 337
+              "line": 403
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 346
+              "line": 412
             }
           ]
         },
@@ -44400,21 +44355,31 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 320
+              "line": 386
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 336
+              "line": 402
             }
           ]
         },
         "indicator_color": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
+              "line": 144
+            }
+          ]
         },
         "indicator_shape": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
+              "line": 146
+            }
+          ]
         },
         "key": {
           "classification": "parent_consumed",
@@ -44430,7 +44395,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 328
+              "line": 394
             }
           ]
         },
@@ -44439,7 +44404,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 339
+              "line": 405
             }
           ]
         },
@@ -44512,15 +44477,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 146
+              "line": 157
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 147
+              "line": 158
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 148
+              "line": 159
             }
           ]
         },
@@ -44559,8 +44524,13 @@
           ]
         },
         "overlay_color": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
+              "line": 180
+            }
+          ]
         },
         "right": {
           "classification": "parent_consumed",
@@ -44607,11 +44577,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 143
+              "line": 154
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 148
+              "line": 159
             }
           ]
         },
@@ -44620,7 +44590,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 181
+              "line": 200
             }
           ]
         },
@@ -44634,8 +44604,13 @@
           ]
         },
         "surface_tint_color": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
+              "line": 190
+            }
+          ]
         },
         "tooltip": {
           "classification": "parent_consumed",
@@ -44882,7 +44857,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 244
+              "line": 310
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/TextStyleMapping.swift",
+              "line": 51
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -44895,10 +44874,6 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FieldStyling.swift",
               "line": 95
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/TextStyleMapping.swift",
-              "line": 51
             }
           ]
         },
@@ -44934,7 +44909,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 196
+              "line": 261
             }
           ]
         },
@@ -44956,19 +44931,19 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 310
+              "line": 376
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 321
+              "line": 387
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 337
+              "line": 403
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 346
+              "line": 412
             }
           ]
         },
@@ -44995,7 +44970,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 198
+              "line": 263
             }
           ]
         },
@@ -45004,7 +44979,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 347
+              "line": 413
             }
           ]
         },
@@ -45013,21 +44988,31 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 320
+              "line": 386
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 336
+              "line": 402
             }
           ]
         },
         "indicator_color": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
+              "line": 251
+            }
+          ]
         },
         "indicator_shape": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
+              "line": 256
+            }
+          ]
         },
         "key": {
           "classification": "parent_consumed",
@@ -45039,15 +45024,20 @@
           ]
         },
         "label_type": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
+              "line": 233
+            }
+          ]
         },
         "leading": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 201
+              "line": 266
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -45086,7 +45076,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 243
+              "line": 309
             }
           ]
         },
@@ -45095,7 +45085,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 348
+              "line": 414
             }
           ]
         },
@@ -45134,15 +45124,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 205
+              "line": 270
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 206
+              "line": 271
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 207
+              "line": 272
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -45297,17 +45287,22 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 197
+              "line": 262
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 207
+              "line": 272
             }
           ]
         },
         "selected_label_text_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
+              "line": 245
+            }
+          ]
         },
         "size_change_interval": {
           "classification": "parent_consumed",
@@ -45341,7 +45336,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 238
+              "line": 304
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -45350,15 +45345,20 @@
           ]
         },
         "unselected_label_text_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
+              "line": 243
+            }
+          ]
         },
         "use_indicator": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
-              "line": 349
+              "line": 415
             }
           ]
         },
