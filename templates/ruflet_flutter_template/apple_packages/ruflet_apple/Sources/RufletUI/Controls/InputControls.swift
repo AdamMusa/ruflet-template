@@ -942,40 +942,16 @@ struct SearchBarControlView: View {
   @State private var selection = NSRange(location: 0, length: 0)
 
   var body: some View {
-    HStack(spacing: 8) {
-      Image(systemName: "magnifyingglass").foregroundColor(.secondary)
-      #if canImport(UIKit) || canImport(AppKit)
-        RufletNativeTextInput(
-          text: searchValue,
-          focused: $nativeFocused,
-          selection: $selection,
-          placeholder: node.string("bar_hint_text") ?? node.string("view_hint_text") ?? "",
-          secure: false,
-          onTap: { events.fire(node, "tap") },
-          onTapOutside: { events.fire(node, "tap_outside_bar") },
-          onSubmit: { events.fire(node, "submit", data: .string($0)) })
-      #else
-        TextField(
-          node.string("bar_hint_text") ?? node.string("view_hint_text") ?? "",
-          text: searchValue)
-        .textFieldStyle(.plain)
-        .focused($focused)
-        .onSubmit { events.fire(node, "submit", data: .string(node.string("value") ?? "")) }
-      #endif
-
-      if !(node.string("value") ?? "").isEmpty {
-        Button {
-          events.commit(node, value: .string(""))
-        } label: {
-          Image(systemName: "xmark.circle.fill").foregroundColor(.secondary)
-        }
-        .buttonStyle(.plain)
+    VStack(alignment: .leading, spacing: 0) {
+      bar
+      // Flet's SearchView is the sheet the bar opens onto: its own header,
+      // padding and surface, with the suggestion controls beneath a divider.
+      if nativeFocused, !node.controlIDs(forKey: "controls").isEmpty {
+        Divider().background(MaterialPalette.color(node.string("divider_color")))
+        suggestions
       }
     }
-    .padding(.horizontal, 10)
-    .padding(.vertical, 8)
-    .background(Capsule().fill(Color.gray.opacity(0.14)))
-    .onChange(of: nativeFocused) { events.fire(node, $0 ? "focus" : "blur") }
+    .frame(maxWidth: node.bool("full_screen") == true ? .infinity : nil)
     .rufletCommandHandler(node.id) { call, completion in
       switch call.name {
       case "focus", "open_view":
@@ -996,10 +972,145 @@ struct SearchBarControlView: View {
     }
   }
 
+  /// The suggestion sheet. `shrink_wrap` sizes it to its content rather than
+  /// letting it fill, and `view_header_height` fixes the header row.
+  private var suggestions: some View {
+    VStack(alignment: .leading, spacing: 0) {
+      if let header = node.string("view_hint_text") {
+        Text(header)
+          .rufletTextStyle(RufletTextStyle(node: node, styleKey: "view_header_text_style"))
+          .frame(height: node.double("view_header_height").map { CGFloat($0) })
+          .padding(ControlProps.edgeInsets(node.props["view_bar_padding"]) ?? EdgeInsets())
+      }
+      ControlList(ids: node.controlIDs(forKey: "controls"), axis: .vertical)
+    }
+    .padding(ControlProps.edgeInsets(node.props["view_padding"]) ?? EdgeInsets())
+    .frame(maxWidth: node.bool("shrink_wrap") == true ? nil : .infinity, alignment: .leading)
+    .modifier(SlotSizeConstraints(value: node.props["view_size_constraints"]))
+    .background(
+      RoundedRectangle(cornerRadius: shapeRadius(node.props["view_shape"]))
+        .fill(MaterialPalette.color(node.string("view_bgcolor"), default: .clear)))
+    .overlay(
+      RoundedRectangle(cornerRadius: shapeRadius(node.props["view_shape"]))
+        .strokeBorder(
+          MaterialPalette.color(node.map("view_side")?["color"]?.stringValue, default: .clear),
+          lineWidth: CGFloat(node.map("view_side")?["width"]?.doubleValue ?? 0)))
+    .shadow(radius: CGFloat(node.double("view_elevation") ?? 0))
+  }
+
+  private func shapeRadius(_ value: RufletValue?) -> CGFloat {
+    ControlProps.cornerRadius(value?.mapValue?["radius"]) ?? 0
+  }
+
+  private var bar: some View {
+    HStack(spacing: 8) {
+      if let leading = node.controlID(forKey: "bar_leading") {
+        ControlView(id: leading, axis: .none)
+      } else if let viewLeading = node.controlID(forKey: "view_leading") {
+        ControlView(id: viewLeading, axis: .none)
+      } else {
+        Image(systemName: "magnifyingglass").foregroundColor(.secondary)
+      }
+      #if canImport(UIKit) || canImport(AppKit)
+        RufletNativeTextInput(
+          text: searchValue,
+          focused: $nativeFocused,
+          selection: $selection,
+          placeholder: node.string("bar_hint_text") ?? node.string("view_hint_text") ?? "",
+          secure: false,
+          traits: barTraits,
+          onTap: { events.fire(node, "tap") },
+          onTapOutside: { events.fire(node, "tap_outside_bar") },
+          onSubmit: { events.fire(node, "submit", data: .string($0)) })
+          .modifier(SearchBarHint(node: node, showing: (node.string("value") ?? "").isEmpty))
+      #else
+        TextField(
+          node.string("bar_hint_text") ?? node.string("view_hint_text") ?? "",
+          text: searchValue)
+        .textFieldStyle(.plain)
+        .focused($focused)
+        .onSubmit { events.fire(node, "submit", data: .string(node.string("value") ?? "")) }
+      #endif
+
+      if !(node.string("value") ?? "").isEmpty {
+        Button {
+          events.commit(node, value: .string(""))
+        } label: {
+          Image(systemName: "xmark.circle.fill").foregroundColor(.secondary)
+        }
+        .buttonStyle(.plain)
+      }
+      if let trailing = node.controlIDs(forKey: "bar_trailing").first
+        ?? node.controlIDs(forKey: "view_trailing").first
+      {
+        ControlView(id: trailing, axis: .none)
+      }
+    }
+    .padding(ControlProps.edgeInsets(node.props["bar_padding"])
+      ?? EdgeInsets(top: 8, leading: 10, bottom: 8, trailing: 10))
+    // The bar keeps this margin clear of the caret while its text scrolls.
+    .padding(ControlProps.edgeInsets(node.props["bar_scroll_padding"]) ?? EdgeInsets())
+    .modifier(SlotSizeConstraints(value: node.props["bar_size_constraints"]))
+    .background(
+      RoundedRectangle(cornerRadius: barRadius)
+        .fill(MaterialPalette.color(node.string("bar_bgcolor"), default: .gray.opacity(0.14))))
+    .overlay(
+      RoundedRectangle(cornerRadius: barRadius)
+        .strokeBorder(
+          MaterialPalette.color(
+            node.map("bar_border_side")?["color"]?.stringValue, default: .clear),
+          lineWidth: CGFloat(node.map("bar_border_side")?["width"]?.doubleValue ?? 0)))
+    .shadow(
+      color: MaterialPalette.color(node.string("bar_shadow_color"), default: .black.opacity(0.2)),
+      radius: CGFloat(node.double("bar_elevation") ?? 0))
+    .onAppear { nativeFocused = node.bool("autofocus") == true }
+    .onChange(of: nativeFocused) { events.fire(node, $0 ? "focus" : "blur") }
+  }
+
+  /// `bar_shape` is an OutlinedBorder; a search bar is a capsule by default,
+  /// so an absent radius takes half the bar's height.
+  private var barRadius: CGFloat {
+    ControlProps.cornerRadius(node.map("bar_shape")?["radius"]) ?? 22
+  }
+
+  /// The bar's own text styling, plus the scroll padding Flet names for it.
+  private var barTraits: RufletTextInputTraits {
+    var traits = RufletTextInputTraits(node: node)
+    let style = RufletTextStyle(node: node, styleKey: "bar_text_style")
+    traits.textColor = style.color
+    traits.fontSize = style.size
+    if let overlay = MaterialPalette.color(node.string("bar_overlay_color")) {
+      traits.selectionColor = overlay
+    }
+    return traits
+  }
+
   private var searchValue: Binding<String> {
     Binding(
       get: { node.string("value") ?? "" },
       set: { events.commit(node, value: .string($0)) })
+  }
+}
+
+/// `bar_hint_text_style` and `view_hint_text_style` style the placeholder,
+/// which neither platform field does directly.
+private struct SearchBarHint: ViewModifier {
+  let node: ControlNode
+  let showing: Bool
+
+  func body(content: Content) -> some View {
+    guard node.map("bar_hint_text_style") != nil || node.map("view_hint_text_style") != nil
+    else { return AnyView(content) }
+    let key = node.map("bar_hint_text_style") != nil
+      ? "bar_hint_text_style" : "view_hint_text_style"
+    let text = node.string("bar_hint_text") ?? node.string("view_hint_text") ?? ""
+    return AnyView(
+      content.overlay(alignment: .leading) {
+        Text(text)
+          .rufletTextStyle(RufletTextStyle(node: node, styleKey: key))
+          .opacity(showing ? 1 : 0)
+          .allowsHitTesting(false)
+      })
   }
 }
 

@@ -196,40 +196,48 @@ struct OptionalForeground: ViewModifier {
 struct ChipControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
+  @State private var pressed = false
 
   var body: some View {
     let selected = node.bool("selected") ?? false
 
     HStack(spacing: 6) {
-      if node.props["leading"] != nil {
+      // A selected chip shows the checkmark in place of its leading icon,
+      // which is what Material's `showCheckmark` does.
+      if selected, node.bool("show_checkmark") != false {
+        Image(systemName: "checkmark")
+          .font(.caption)
+          .foregroundColor(MaterialPalette.color(node.string("check_color")))
+      } else if node.props["leading"] != nil {
         RufletIcon(value: node.props["leading"], size: 16, color: nil)
+          .modifier(ChipSlotConstraints(value: node.props["leading_size_constraints"]))
       }
-      if let labelID = node.controlID(forKey: "label") {
-        ControlView(id: labelID, axis: .none)
-      } else if let label = node.string("label") {
-        Text(label).font(.subheadline)
-      }
+      label
+        .padding(ControlProps.edgeInsets(node.props["label_padding"]) ?? EdgeInsets())
       if node.handlesEvent("delete") {
         Button {
           events.fire(node, "delete")
         } label: {
-          Image(systemName: "xmark.circle.fill").font(.caption)
+          deleteIcon
         }
         .buttonStyle(.plain)
+        .help(node.string("delete_icon_tooltip") ?? "")
+        .modifier(ChipSlotConstraints(value: node.props["delete_icon_size_constraints"]))
       }
     }
     .padding(.horizontal, 12)
     .padding(.vertical, 6)
-    .background(
-      Capsule().fill(
-        selected
-          ? MaterialPalette.color(for: node, property: "selected_color", default: .clear)
-          : MaterialPalette.color(node.string("bgcolor"), default: .clear)))
-    .overlay(
-      Capsule().strokeBorder(
-        MaterialPalette.color(for: node, property: "border_color", default: .clear),
-        lineWidth: selected ? 0 : 1))
+    .modifier(VisualDensityPadding(value: node.props["visual_density"]))
+    .background(shape.fill(fill))
+    .overlay(shape.strokeBorder(borderColor, lineWidth: borderWidth))
+    .shadow(color: shadowColor, radius: elevation)
     .contentShape(Capsule())
+    .animation(rufletAnimation(node.props["select_animation_style"]), value: selected)
+    .animation(slotAnimation, value: node.props["leading"] != nil)
+    .simultaneousGesture(
+      DragGesture(minimumDistance: 0)
+        .onChanged { _ in pressed = true }
+        .onEnded { _ in pressed = false })
     .onTapGesture {
       guard node.bool("disabled") != true else { return }
       if node.handlesEvent("select") {
@@ -237,6 +245,133 @@ struct ChipControlView: View {
       } else {
         events.fire(node, "click")
       }
+    }
+  }
+
+  @ViewBuilder
+  private var label: some View {
+    if let labelID = node.controlID(forKey: "label") {
+      ControlView(id: labelID, axis: .none)
+    } else if let label = node.string("label") {
+      Text(label)
+        .rufletTextStyle(RufletTextStyle(node: node, styleKey: "label_text_style"))
+    }
+  }
+
+  @ViewBuilder
+  private var deleteIcon: some View {
+    if node.props["delete_icon"] != nil {
+      RufletIcon(
+        value: node.props["delete_icon"], size: 16,
+        color: MaterialPalette.color(node.string("delete_icon_color")))
+    } else {
+      Image(systemName: "xmark.circle.fill")
+        .font(.caption)
+        .foregroundColor(MaterialPalette.color(node.string("delete_icon_color")))
+    }
+  }
+
+  /// `shape` is Flutter's `OutlinedBorder`; a chip is a capsule unless a
+  /// corner radius says otherwise.
+  private var shape: ChipShape {
+    ChipShape(radius: ControlProps.cornerRadius(node.map("shape")?["radius"]))
+  }
+
+  private var fill: Color {
+    if node.bool("disabled") == true {
+      return MaterialPalette.color(node.string("disabled_color"), default: .clear)
+    }
+    let selected = node.bool("selected") ?? false
+    return selected
+      ? MaterialPalette.color(for: node, property: "selected_color", default: .clear)
+      : MaterialPalette.color(node.string("bgcolor"), default: .clear)
+  }
+
+  private var borderColor: Color {
+    if let side = node.map("border_side"), let color = side["color"]?.stringValue {
+      return MaterialPalette.color(color, default: .clear)
+    }
+    return MaterialPalette.color(for: node, property: "border_color", default: .clear)
+  }
+
+  private var borderWidth: CGFloat {
+    if let side = node.map("border_side"), let width = side["width"]?.doubleValue {
+      return CGFloat(width)
+    }
+    return (node.bool("selected") ?? false) ? 0 : 1
+  }
+
+  private var shadowColor: Color {
+    let resting = MaterialPalette.color(node.string("shadow_color"), default: .black.opacity(0.2))
+    guard node.bool("selected") ?? false else { return resting }
+    return MaterialPalette.color(node.string("selected_shadow_color"), default: resting)
+  }
+
+  /// `elevation_on_click` is Material's pressed elevation; a chip that names
+  /// one lifts while the pointer is down.
+  private var elevation: CGFloat {
+    let resting = node.double("elevation") ?? 0
+    guard pressed, let raised = node.double("elevation_on_click") else { return CGFloat(resting) }
+    return CGFloat(raised)
+  }
+
+  /// The drawer animations Flutter runs when the leading or delete icon
+  /// appears; both are duration-carrying AnimationStyles like the selection.
+  private var slotAnimation: Animation? {
+    rufletAnimation(
+      node.props["leading_drawer_animation_style"]
+        ?? node.props["delete_drawer_animation_style"]
+        ?? node.props["enable_animation_style"])
+  }
+}
+
+/// A capsule unless Ruby gave a corner radius. Insettable so `strokeBorder`
+/// draws inside the edge; `AnyShape` would have done but it is iOS 16.
+struct ChipShape: InsettableShape {
+  let radius: CGFloat?
+  var inset: CGFloat = 0
+
+  func path(in rect: CGRect) -> Path {
+    let bounds = rect.insetBy(dx: inset, dy: inset)
+    let corner = radius ?? min(bounds.width, bounds.height) / 2
+    return RoundedRectangle(cornerRadius: corner).path(in: bounds)
+  }
+
+  func inset(by amount: CGFloat) -> ChipShape {
+    ChipShape(radius: radius, inset: inset + amount)
+  }
+}
+
+/// Flutter's `AnimationStyle`, which carries a duration in milliseconds.
+func rufletAnimation(_ value: RufletValue?) -> Animation? {
+  guard let map = value?.mapValue else { return .default }
+  guard let duration = map["duration"]?.doubleValue else { return .default }
+  return .easeInOut(duration: duration / 1_000)
+}
+
+/// Flutter's `VisualDensity` shifts a control's padding on both axes; the
+/// units are logical pixels per step.
+struct VisualDensityPadding: ViewModifier {
+  let value: RufletValue?
+
+  func body(content: Content) -> some View {
+    guard let map = value?.mapValue else { return AnyView(content) }
+    let horizontal = CGFloat(map["horizontal"]?.doubleValue ?? 0) * 2
+    let vertical = CGFloat(map["vertical"]?.doubleValue ?? 0) * 2
+    return AnyView(content.padding(.horizontal, horizontal).padding(.vertical, vertical))
+  }
+}
+
+private struct ChipSlotConstraints: ViewModifier {
+  let value: RufletValue?
+
+  func body(content: Content) -> some View {
+    if let constraints = ControlProps.sizeConstraints(value) {
+      content.frame(
+        minWidth: constraints.minWidth, maxWidth: constraints.maxWidth,
+        minHeight: constraints.minHeight, maxHeight: constraints.maxHeight)
+    } else {
+      content
     }
   }
 }

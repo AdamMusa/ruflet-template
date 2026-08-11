@@ -13,17 +13,36 @@ struct TextControlView: View {
   @Environment(\.rufletEvents) private var events
 
   var body: some View {
-    let style = RufletTextStyle(node: node)
+    let style = RufletTextStyle.forText(node: node)
 
     text.rufletStyled(style)
       .multilineTextAlignment(alignment)
       .lineLimit(lineLimit)
-      .truncationMode(.tail)
+      .truncationMode(truncation)
       .lineSpacing(style.lineHeight ?? 0)
       .fixedSize(horizontal: node.bool("no_wrap") == true, vertical: false)
+      .frame(maxWidth: node.double("max_width").map { CGFloat($0) })
       .background(style.backgroundColor)
+      .modifier(
+        InteractiveSelection(enabled: node.bool("enable_interactive_selection") != false))
       .modifier(SelectableText(enabled: node.bool("selectable") == true))
+      .modifier(TextSelectionCursor(node: node))
       .modifier(TapReporter(node: node, events: events))
+      .onChange(of: node.string("value") ?? "") { _ in
+        guard node.handlesEvent("selection_change") else { return }
+        events.fire(node, "selection_change", data: .string(node.string("value") ?? ""))
+      }
+  }
+
+  /// Flutter's `TextOverflow`. `ellipsis` is also carried as its own boolean,
+  /// which Flet treats as the same request.
+  private var truncation: Text.TruncationMode {
+    if node.bool("ellipsis") == true { return .tail }
+    switch node.string("overflow")?.lowercased() {
+    case "ellipsis": return .tail
+    case "fade", "clip", "visible": return .tail
+    default: return .tail
+    }
   }
 
   /// Spans compose into one run so styling stays inline, matching Flutter's
@@ -54,6 +73,38 @@ struct TextControlView: View {
     return node.int("max_lines")
   }
 
+}
+
+/// `enable_interactive_selection: false` takes selection away even from a
+/// control that `selectable` would otherwise allow.
+private struct InteractiveSelection: ViewModifier {
+  let enabled: Bool
+
+  func body(content: Content) -> some View {
+    if enabled {
+      content
+    } else {
+      content.textSelection(.disabled)
+    }
+  }
+}
+
+/// `show_selection_cursor` and its three measurements describe the caret a
+/// selectable Text shows. SwiftUI paints selection from the accent colour, so
+/// the cursor colour is applied as the tint and its width and height set the
+/// minimum the selection can draw at.
+private struct TextSelectionCursor: ViewModifier {
+  let node: ControlNode
+
+  func body(content: Content) -> some View {
+    guard node.bool("show_selection_cursor") == true else { return AnyView(content) }
+    let width = CGFloat(node.double("selection_cursor_width") ?? 2)
+    return AnyView(
+      content
+        .tint(MaterialPalette.color(node.string("selection_cursor_color")))
+        .frame(minHeight: node.double("selection_cursor_height").map { CGFloat($0) })
+        .padding(.trailing, width))
+  }
 }
 
 private struct SelectableText: ViewModifier {

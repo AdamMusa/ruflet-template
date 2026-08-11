@@ -32,6 +32,61 @@ struct RufletTextStyle {
   /// than a style map.
   init() {}
 
+  /// `Text` carries its own typography beside the `style` map, and Flet layers
+  /// the two: the theme style is the base, `style` refines it, and the
+  /// top-level `size`, `weight`, `italic`, `font_family`, `color` and
+  /// `bgcolor` override whatever the map set.
+  static func forText(node: ControlNode) -> RufletTextStyle {
+    var style = RufletTextStyle(node: node, styleKey: "style")
+    if let theme = node.string("theme_style") { style.themeStyle = themeTextStyle(theme) }
+    if let size = node.double("size") { style.size = CGFloat(size) }
+    if let weight = node.string("weight") { style.weight = fontWeight(weight) }
+    if node.bool("italic") == true { style.italic = true }
+    if let family = node.string("font_family")
+      ?? node.array("font_family_fallback")?.first?.stringValue
+    {
+      style.fontFamily = family
+    }
+    if let color = MaterialPalette.color(node.string("color")) { style.color = color }
+    if let background = MaterialPalette.color(node.string("bgcolor")) {
+      style.backgroundColor = background
+    }
+    return style
+  }
+
+  /// Flutter's `TextTheme` slots, which Flet passes through by name.
+  static func themeTextStyle(_ name: String) -> Font.TextStyle? {
+    switch name.lowercased().replacingOccurrences(of: "_", with: "") {
+    case "displaylarge", "displaymedium", "displaysmall": return .largeTitle
+    case "headlinelarge": return .title
+    case "headlinemedium": return .title2
+    case "headlinesmall": return .title3
+    case "titlelarge": return .title3
+    case "titlemedium", "titlesmall": return .headline
+    case "bodylarge": return .body
+    case "bodymedium": return .callout
+    case "bodysmall": return .footnote
+    case "labellarge", "labelmedium": return .caption
+    case "labelsmall": return .caption2
+    default: return nil
+    }
+  }
+
+  static func fontWeight(_ name: String) -> Font.Weight? {
+    switch name.lowercased().replacingOccurrences(of: "w", with: "") {
+    case "100", "thin": return .thin
+    case "200", "extralight": return .ultraLight
+    case "300", "light": return .light
+    case "400", "normal", "regular": return .regular
+    case "500", "medium": return .medium
+    case "600", "semibold": return .semibold
+    case "700", "bold": return .bold
+    case "800", "extrabold": return .heavy
+    case "900", "black": return .black
+    default: return nil
+    }
+  }
+
   init(node: ControlNode, styleKey: String = "style") {
     if let style = node.map(styleKey) {
       apply(map: style)
