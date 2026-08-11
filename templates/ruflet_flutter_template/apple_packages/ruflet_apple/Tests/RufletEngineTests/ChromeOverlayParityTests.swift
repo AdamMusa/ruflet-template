@@ -56,6 +56,44 @@ final class ChromeOverlayParityTests: XCTestCase {
     }
   }
 
+  func testAlertDialogOnlyUsesCupertinoDesignWhenExplicitOrAdaptive() {
+    let material = ControlNode(id: 70, type: "AlertDialog")
+    let adaptive = ControlNode(
+      id: 71, type: "AlertDialog", props: ["adaptive": .bool(true)])
+    let cupertino = ControlNode(id: 72, type: "CupertinoAlertDialog")
+
+    XCTAssertFalse(RufletOverlaySemantics.usesCupertinoDialog(material))
+    XCTAssertTrue(RufletOverlaySemantics.usesCupertinoDialog(adaptive))
+    XCTAssertTrue(RufletOverlaySemantics.usesCupertinoDialog(cupertino))
+  }
+
+  func testOverlayBarrierDismissalUsesTheControlsOwnFletFlag() {
+    XCTAssertTrue(
+      RufletOverlaySemantics.allowsBarrierDismiss(ControlNode(id: 80, type: "AlertDialog")))
+    XCTAssertFalse(
+      RufletOverlaySemantics.allowsBarrierDismiss(
+        ControlNode(id: 81, type: "AlertDialog", props: ["modal": .bool(true)])))
+    XCTAssertTrue(
+      RufletOverlaySemantics.allowsBarrierDismiss(ControlNode(id: 82, type: "BottomSheet")))
+    XCTAssertFalse(
+      RufletOverlaySemantics.allowsBarrierDismiss(
+        ControlNode(id: 83, type: "BottomSheet", props: ["dismissible": .bool(false)])))
+  }
+
+  func testOverlayDismissUpdatesOpenBeforeSendingDismiss() {
+    let node = ControlNode(
+      id: 90, type: "SnackBar", props: ["on_dismiss": .bool(true)])
+    var operations: [String] = []
+    let sink = RufletEventSink(
+      send: { _, name, _ in operations.append("event:\(name)") },
+      setLocal: { _, key, value in operations.append("local:\(key)=\(value == .bool(false))") },
+      update: { _, values in operations.append("update:\(values["open"] == .bool(false))") })
+
+    RufletOverlaySemantics.dismiss(node, through: sink)
+
+    XCTAssertEqual(operations, ["local:open=true", "update:true", "event:dismiss"])
+  }
+
   private func events(_ type: String) -> Set<String> {
     ControlRegistry.builtInDescriptor(for: type)?.supportedEvents ?? []
   }

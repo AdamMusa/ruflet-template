@@ -1261,7 +1261,7 @@ private struct FieldHoverTracker: ViewModifier {
 
 /// `prefix_icon_size_constraints` and its suffix twin are Flutter
 /// `BoxConstraints` on the slot rather than on the field.
-private struct SlotSizeConstraints: ViewModifier {
+struct SlotSizeConstraints: ViewModifier {
   let value: RufletValue?
 
   func body(content: Content) -> some View {
@@ -1418,6 +1418,7 @@ struct SearchBarControlView: View {
   @Environment(\.rufletEvents) private var events
   @FocusState private var focused: Bool
   @State private var nativeFocused = false
+  @State private var viewOpen = false
   @State private var selection = NSRange(location: 0, length: 0)
 
   var body: some View {
@@ -1425,7 +1426,7 @@ struct SearchBarControlView: View {
       bar
       // Flet's SearchView is the sheet the bar opens onto: its own header,
       // padding and surface, with the suggestion controls beneath a divider.
-      if nativeFocused, !node.controlIDs(forKey: "controls").isEmpty {
+      if viewOpen, !node.controlIDs(forKey: "controls").isEmpty {
         Divider().background(MaterialPalette.color(node.string("divider_color")))
         suggestions
       }
@@ -1433,16 +1434,22 @@ struct SearchBarControlView: View {
     .frame(maxWidth: node.bool("full_screen") == true ? .infinity : nil)
     .rufletCommandHandler(node.id) { call, completion in
       switch call.name {
-      case "focus", "open_view":
+      case "focus":
         focused = true
         nativeFocused = true
         completion(.success(.null))
+      case "open_view":
+        viewOpen = true
+        completion(.success(.null))
       case "close_view":
-        focused = false
-        nativeFocused = false
-        // Flet's close_view also sets the bar's text to the value it carries.
-        if let value = call.argument("text")?.stringValue {
-          events.setLocal(node.id, "value", .string(value))
+        // The pinned SearchController only applies close_view while its view
+        // is open. Closing the view does not blur the separate bar FocusNode.
+        if viewOpen {
+          viewOpen = false
+          if let value = call.argument("text")?.stringValue {
+            events.setLocal(node.id, "value", .string(value))
+            events.update(node.id, ["value": .string(value)])
+          }
         }
         completion(.success(.null))
       default:
@@ -1511,24 +1518,18 @@ struct SearchBarControlView: View {
         .onSubmit { events.fire(node, "submit", data: .string(node.string("value") ?? "")) }
       #endif
 
-      if !(node.string("value") ?? "").isEmpty {
-        Button {
-          events.commit(node, value: .string(""))
-        } label: {
-          Image(systemName: "xmark.circle.fill").foregroundColor(.secondary)
-        }
-        .buttonStyle(.plain)
-      }
-      if let trailing = node.controlIDs(forKey: "bar_trailing").first
-        ?? node.controlIDs(forKey: "view_trailing").first
-      {
-        ControlView(id: trailing, axis: .none)
+      let trailing = node.controlIDs(forKey: "bar_trailing").isEmpty
+        ? node.controlIDs(forKey: "view_trailing")
+        : node.controlIDs(forKey: "bar_trailing")
+      if !trailing.isEmpty {
+        ControlList(ids: trailing, axis: .horizontal)
       }
     }
     .padding(ControlProps.edgeInsets(node.props["bar_padding"])
       ?? EdgeInsets(top: 8, leading: 10, bottom: 8, trailing: 10))
     // The bar keeps this margin clear of the caret while its text scrolls.
-    .padding(ControlProps.edgeInsets(node.props["bar_scroll_padding"]) ?? EdgeInsets())
+    .padding(ControlProps.edgeInsets(node.props["bar_scroll_padding"])
+      ?? EdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 20))
     .modifier(SlotSizeConstraints(value: node.props["bar_size_constraints"]))
     .background(
       RoundedRectangle(cornerRadius: barRadius)
