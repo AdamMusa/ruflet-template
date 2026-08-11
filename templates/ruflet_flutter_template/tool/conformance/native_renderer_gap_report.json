@@ -10,11 +10,11 @@
     "flet_types": 212,
     "native_declarations": 210,
     "missing_types": 42,
-    "missing_events": 155,
+    "missing_events": 154,
     "missing_methods": 96,
     "undeclared_gaps": 0,
     "declared_baseline_matches": true,
-    "unresolved_gap_set_sha256": "d7a0d976e2198ec2417c35af8ebfe404bd2b65ec3068949142df59f0405ab93a"
+    "unresolved_gap_set_sha256": "8c7efec54b0d20dbe28d32c12f19cee24359073a95fb7f003527f7c3c4738fee"
   },
   "missing_types": [
     {
@@ -367,14 +367,6 @@
       "wire_type": "BarChart",
       "native_type": "BarChart",
       "event": "event",
-      "allowed": true,
-      "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review.",
-      "gap_classification": "initial_api_parity_backlog"
-    },
-    {
-      "wire_type": "Battery",
-      "native_type": "Battery",
-      "event": "state_change",
       "allowed": true,
       "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review.",
       "gap_classification": "initial_api_parity_backlog"

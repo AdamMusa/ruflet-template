@@ -26,6 +26,7 @@ extension ServiceRegistry {
     register(SemanticsAnnouncementService.self) { SemanticsAnnouncementService() }
 
     register(BatteryService.self) { BatteryService() }
+    markStreaming([BatteryService.wireType])
     register(ConnectivityService.self) { ConnectivityService() }
     register(PermissionHandlerService.self) { PermissionHandlerService() }
     register(ScreenBrightnessService.self) { ScreenBrightnessService() }

@@ -16,13 +16,34 @@ import RufletProtocol
 
 /// `Battery` — level, charging state and low-power mode.
 @MainActor
-public final class BatteryService: RufletService {
+public final class BatteryService: RufletStreamingService {
   public static let wireType = "Battery"
+  private var stateObserver: NSObjectProtocol?
+  private var targetID: Int?
+  private var emitEvent: ((_ target: Int, _ name: String, _ data: RufletValue) -> Void)?
 
-  public init() {
+  public init() {}
+
+  public func activate(node: ControlNode, context: RufletServiceContext) {
+    guard node.handlesEvent("state_change") else { return }
+    targetID = node.id
+    emitEvent = context.emitEvent
     #if os(iOS)
       UIDevice.current.isBatteryMonitoringEnabled = true
+      if stateObserver == nil {
+        stateObserver = NotificationCenter.default.addObserver(
+          forName: UIDevice.batteryStateDidChangeNotification,
+          object: UIDevice.current,
+          queue: .main
+        ) { [weak self] _ in
+          Task { @MainActor in self?.reportBatteryState() }
+        }
+      }
     #endif
+  }
+
+  deinit {
+    if let stateObserver { NotificationCenter.default.removeObserver(stateObserver) }
   }
 
   public func invoke(
@@ -31,6 +52,9 @@ public final class BatteryService: RufletService {
     context: RufletServiceContext,
     completion: @escaping RufletMethodCompletion
   ) {
+    #if os(iOS)
+      UIDevice.current.isBatteryMonitoringEnabled = true
+    #endif
     switch call.name {
     case "get_battery_level":
       #if os(iOS)
@@ -62,6 +86,24 @@ public final class BatteryService: RufletService {
         .failure(RufletServiceError.unsupportedMethod(type: "Battery", method: call.name)))
     }
   }
+
+  private func reportBatteryState() {
+    guard let targetID, let emitEvent else { return }
+    #if os(iOS)
+      emitEvent(targetID, "state_change", .map(["state": .string(Self.stateName(UIDevice.current.batteryState))]))
+    #endif
+  }
+
+  #if os(iOS)
+    private static func stateName(_ state: UIDevice.BatteryState) -> String {
+      switch state {
+      case .charging: return "charging"
+      case .full: return "full"
+      case .unplugged: return "discharging"
+      default: return "unknown"
+      }
+    }
+  #endif
 
   #if canImport(IOKit) && os(macOS)
     /// Reads the charge percentage out of IOKit's power-source snapshot.

@@ -346,6 +346,9 @@ public enum ControlRegistry {
         methods: ["get_current_position", "get_duration", "pause", "play", "release",
                   "resume", "seek"])
     add(["AudioRecorder"], .service, "RufletMedia AudioRecorderService", .serviceOnly)
+    add(["Battery"], .service, "BatteryService", .serviceOnly,
+        events: ["state_change"],
+        methods: ["get_battery_level", "get_battery_state", "is_in_battery_save_mode"])
 
     return result
   }()
