@@ -516,11 +516,14 @@ struct DismissibleControlView: View {
       layoutDirection: layoutDirection)
   }
 
+  /// A swipe towards the start reveals `secondary_background`; the other way
+  /// reveals `background`.
   @ViewBuilder
   private func background(direction: String?) -> some View {
-    let key = direction == "endToStart" || direction == "up"
-      ? "secondary_background" : "background"
-    if let id = node.controlID(forKey: key) {
+    let secondary = direction == "endToStart" || direction == "up"
+    if secondary, let id = node.controlID(forKey: "secondary_background") {
+      ControlView(id: id, axis: .none)
+    } else if !secondary, let id = node.controlID(forKey: "background") {
       ControlView(id: id, axis: .none)
     } else {
       Color.clear
@@ -578,6 +581,12 @@ struct DismissibleControlView: View {
     return values[direction]?.doubleValue ?? 0.4
   }
 
+  /// `cross_axis_end_offset` shifts the row across its own axis as it leaves,
+  /// which Flutter measures in fractions of the row's height.
+  private var crossAxisEndOffset: CGFloat {
+    CGFloat(node.double("cross_axis_end_offset") ?? 0) * measuredSize.height
+  }
+
   private func finishDismiss(direction: String) {
     let distance: CGFloat = 2_000
     let target: CGSize
@@ -587,10 +596,15 @@ struct DismissibleControlView: View {
     case "down": target = CGSize(width: 0, height: distance)
     default: target = CGSize(width: 0, height: -distance)
     }
-    let seconds = (node.double("duration") ?? 200) / 1_000
-    withAnimation(.easeOut(duration: seconds)) { translation = target }
+    // Flutter splits the exit in two: the row slides away over
+    // `movement_duration`, then its space collapses over `resize_duration`.
+    let seconds = (node.double("movement_duration") ?? node.double("duration") ?? 200) / 1_000
+    let collapse = (node.double("resize_duration") ?? 300) / 1_000
+    withAnimation(.easeOut(duration: seconds)) {
+      translation = CGSize(width: target.width, height: target.height + crossAxisEndOffset)
+    }
     DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
-      dismissed = true
+      withAnimation(.easeOut(duration: collapse)) { dismissed = true }
       events.fire(node, "resize")
       events.fire(node, "dismiss", data: .map(["direction": .string(direction)]))
     }
@@ -598,7 +612,10 @@ struct DismissibleControlView: View {
 
   private func resetDismiss() {
     thresholdReached = false
-    withAnimation(.easeOut(duration: (node.double("duration") ?? 200) / 1_000)) {
+    withAnimation(
+      .easeOut(
+        duration: (node.double("movement_duration") ?? node.double("duration") ?? 200) / 1_000)
+    ) {
       translation = .zero
     }
   }

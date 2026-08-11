@@ -575,6 +575,36 @@ struct CupertinoSegmentedControlView: View {
     }
     .pickerStyle(.segmented)
     .labelsHidden()
+    // Cupertino's segmented control names its four colours separately; the
+    // selected one is the tint SwiftUI paints the active segment with.
+    .tint(MaterialPalette.color(node.string("selected_color")))
+    .background(MaterialPalette.color(node.string("unselected_color")))
+    .foregroundColor(foreground)
+    .modifier(SegmentedPressTint(color: MaterialPalette.color(node.string("click_color"))))
+    .disabled(node.bool("disabled") ?? false)
+  }
+
+  private var foreground: Color? {
+    guard node.bool("disabled") == true else { return nil }
+    return MaterialPalette.color(node.string("disabled_text_color"))
+      ?? MaterialPalette.color(node.string("disabled_color"))
+  }
+}
+
+/// `click_color` is the wash Cupertino paints while a segment is held.
+private struct SegmentedPressTint: ViewModifier {
+  let color: Color?
+  @State private var pressed = false
+
+  func body(content: Content) -> some View {
+    guard let color else { return AnyView(content) }
+    return AnyView(
+      content
+        .background(pressed ? color : .clear)
+        .simultaneousGesture(
+          DragGesture(minimumDistance: 0)
+            .onChanged { _ in pressed = true }
+            .onEnded { _ in pressed = false }))
   }
 }
 

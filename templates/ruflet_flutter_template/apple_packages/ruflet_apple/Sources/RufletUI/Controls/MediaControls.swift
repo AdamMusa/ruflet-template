@@ -632,6 +632,58 @@ struct ChartControlView: View {
       rotated.rotate(by: .degrees(-90))
       rotated.draw(Text(title).font(.caption2), at: .zero, anchor: .center)
     }
+    if let title = axisTitle(forKey: "right_axis") {
+      var rotated = context
+      rotated.translateBy(x: chart.maxX - 6, y: chart.midY)
+      rotated.rotate(by: .degrees(90))
+      rotated.draw(Text(title).font(.caption2), at: .zero, anchor: .center)
+    }
+    if let title = axisTitle(forKey: "top_axis") {
+      context.draw(Text(title).font(.caption2), at: CGPoint(x: chart.midX, y: chart.minY + 8))
+    }
+    drawGridAndBorder(in: &context, chart: chart)
+  }
+
+  /// `horizontal_grid_lines` and `vertical_grid_lines` are FlLine maps —
+  /// a colour, a width and an interval — and `border` is the box around the
+  /// plot rather than around the whole chart.
+  private func drawGridAndBorder(in context: inout GraphicsContext, chart: CGRect) {
+    if let line = node.map("horizontal_grid_lines") {
+      let interval = CGFloat(line["interval"]?.doubleValue ?? 0)
+      let step = interval > 0 ? interval : chart.height / 4
+      var y = chart.minY
+      while y <= chart.maxY, step > 0 {
+        var path = Path()
+        path.move(to: CGPoint(x: chart.minX, y: y))
+        path.addLine(to: CGPoint(x: chart.maxX, y: y))
+        context.stroke(
+          path,
+          with: .color(MaterialPalette.color(line["color"]?.stringValue, default: .secondary)),
+          lineWidth: CGFloat(line["width"]?.doubleValue ?? 1))
+        y += step
+      }
+    }
+    if let line = node.map("vertical_grid_lines") {
+      let interval = CGFloat(line["interval"]?.doubleValue ?? 0)
+      let step = interval > 0 ? interval : chart.width / 4
+      var x = chart.minX
+      while x <= chart.maxX, step > 0 {
+        var path = Path()
+        path.move(to: CGPoint(x: x, y: chart.minY))
+        path.addLine(to: CGPoint(x: x, y: chart.maxY))
+        context.stroke(
+          path,
+          with: .color(MaterialPalette.color(line["color"]?.stringValue, default: .secondary)),
+          lineWidth: CGFloat(line["width"]?.doubleValue ?? 1))
+        x += step
+      }
+    }
+    if let border = node.map("border") {
+      context.stroke(
+        Path(chart),
+        with: .color(MaterialPalette.color(border["color"]?.stringValue, default: .secondary)),
+        lineWidth: CGFloat(border["width"]?.doubleValue ?? 1))
+    }
   }
 
   private func drawScatter(in context: inout GraphicsContext, plot: CGRect) {

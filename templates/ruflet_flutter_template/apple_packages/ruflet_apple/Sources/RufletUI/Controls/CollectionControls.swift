@@ -379,9 +379,12 @@ struct ListTileControlView: View {
 
   var body: some View {
     let metrics = CollectionDefaults.listTile(node)
-    HStack(alignment: rowAlignment, spacing: metrics.horizontalTitleGap) {
+    HStack(alignment: rowAlignment, spacing: leadingGap ?? metrics.horizontalTitleGap) {
       if let leadingID = node.controlID(forKey: "leading") {
         ControlView(id: leadingID, axis: .none)
+          .frame(
+            width: node.double("leading_size").map { CGFloat($0) },
+            height: node.double("leading_size").map { CGFloat($0) })
           .frame(minWidth: metrics.minLeadingWidth)
       } else if node.props["leading"] != nil {
         RufletIcon(
@@ -415,6 +418,9 @@ struct ListTileControlView: View {
         RufletIcon(
           value: node.props["trailing"], size: 22,
           color: MaterialPalette.color(node.string("icon_color")))
+      } else if let info = node.controlID(forKey: "additional_info") {
+        // Cupertino puts a second, quieter value before the chevron.
+        ControlView(id: info, axis: .none).foregroundColor(.secondary)
       } else if let trailingText = node.string("trailing") {
         Text(trailingText)
           .rufletTextStyle(RufletTextStyle(node: node, styleKey: "leading_and_trailing_text_style"))
@@ -440,6 +446,17 @@ struct ListTileControlView: View {
     .opacity(node.bool("disabled") == true ? 0.45 : 1)
     .allowsHitTesting(node.bool("disabled") != true)
     .clipShape(RoundedRectangle(cornerRadius: tileRadius))
+    .modifier(
+      ListTileSplash(
+        color: MaterialPalette.color(node.string("bgcolor_activated"))))
+    .overlay(alignment: .bottom) {
+      if isNotched {
+        Rectangle()
+          .fill(Color.secondary.opacity(0.25))
+          .frame(height: 0.5)
+          .padding(.leading, leadingGap ?? 16)
+      }
+    }
     .modifier(VisualDensityPadding(value: node.props["visual_density"]))
     .contentShape(Rectangle())
     .modifier(TapFeedback(enabled: node.bool("enable_feedback") != false))
@@ -460,6 +477,16 @@ struct ListTileControlView: View {
   private var tileRadius: CGFloat {
     ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? 0
   }
+
+  /// `leading_to_title` is Cupertino's own gap between the leading slot and
+  /// the title, which it names separately from Material's.
+  private var leadingGap: CGFloat? {
+    node.double("leading_to_title").map { CGFloat($0) }
+  }
+
+  /// A notched Cupertino tile insets its separator to start at the title, and
+  /// `bgcolor_activated` is the fill while it is held.
+  private var isNotched: Bool { node.bool("notched") == true }
 }
 
 /// Material fills a pressed tile with its splash colour.
