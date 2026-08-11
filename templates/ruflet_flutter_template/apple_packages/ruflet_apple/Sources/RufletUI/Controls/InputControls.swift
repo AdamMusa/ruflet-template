@@ -838,6 +838,82 @@ struct DropdownControlView: View {
   }
 }
 
+/// The legacy Material 2 dropdown is intentionally separate from the modern
+/// editable DropdownMenu. Flet builds it with `DropdownButtonFormField`: the
+/// field itself reports `click`, selecting an option reports `change`, and an
+/// option can independently report its own `click` event.
+struct DropdownM2ControlView: View {
+  let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
+  @Environment(\.rufletEvents) private var events
+
+  var body: some View {
+    Menu {
+      ForEach(optionNodes, id: \.id) { option in
+        Button {
+          select(option)
+        } label: {
+          optionLabel(option)
+        }
+        .disabled(option.bool("disabled") ?? false)
+      }
+    } label: {
+      HStack(spacing: 8) {
+        selectedLabel
+        Spacer(minLength: 8)
+        if let iconID = node.controlID(forKey: "select_icon") {
+          ControlView(id: iconID, axis: .none)
+        } else {
+          Image(systemName: "chevron.down")
+        }
+      }
+      .contentShape(Rectangle())
+    }
+    .simultaneousGesture(TapGesture().onEnded { events.fire(node, "click") })
+    .modifier(FocusReporter(node: node, events: events))
+    .disabled(node.bool("disabled") ?? false)
+  }
+
+  private func select(_ option: ControlNode) {
+    let value = option.string("key") ?? option.string("text") ?? String(option.id)
+    events.setLocal(node.id, "value", .string(value))
+    events.update(node.id, ["value": .string(value)])
+    events.fire(option, "click")
+    events.fire(node, "change", data: .string(value))
+  }
+
+  private var optionNodes: [ControlNode] {
+    let ids = node.controlIDs(forKey: "options") + node.childIDs
+    var seen = Set<Int>()
+    return ids.filter { seen.insert($0).inserted }.compactMap { store.node($0) }
+  }
+
+  @ViewBuilder
+  private var selectedLabel: some View {
+    if let value = node.string("value"),
+      let option = optionNodes.first(where: {
+        ($0.string("key") ?? $0.string("text") ?? String($0.id)) == value
+      })
+    {
+      optionLabel(option)
+    } else if let hintID = node.controlID(forKey: node.bool("disabled") == true ? "disabled_hint" : "hint") {
+      ControlView(id: hintID, axis: .none)
+    } else {
+      Text(node.string("hint_text") ?? "")
+        .foregroundColor(.secondary)
+    }
+  }
+
+  @ViewBuilder
+  private func optionLabel(_ option: ControlNode) -> some View {
+    if let contentID = option.controlID(forKey: "content") {
+      ControlView(id: contentID, axis: .none)
+    } else {
+      Text(option.string("text") ?? option.string("key") ?? String(option.id))
+    }
+  }
+}
+
 /// `AutoComplete` — a field with a filtered suggestion list underneath.
 struct AutoCompleteControlView: View {
   let node: ControlNode

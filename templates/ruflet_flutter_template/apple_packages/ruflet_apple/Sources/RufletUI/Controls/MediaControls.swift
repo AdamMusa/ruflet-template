@@ -1148,12 +1148,15 @@ struct MapControlView: View {
   @Environment(\.rufletEvents) private var events
 
   var body: some View {
-    Group {
+    ZStack {
       #if canImport(MapKit)
         MapContainer(model: model)
       #else
         Color.gray.opacity(0.2)
       #endif
+      ForEach(attributionNodes, id: \.id) { attribution in
+        MapAttributionView(node: attribution)
+      }
     }
     .onAppear { model.configure(from: node, store: store, events: events) }
     .onChange(of: store.revision) { _ in
@@ -1162,6 +1165,45 @@ struct MapControlView: View {
     .rufletCommandHandler(node.id) { call, completion in
       model.handle(call, completion: completion)
     }
+  }
+
+  private var attributionNodes: [ControlNode] {
+    let layerIDs = node.controlIDs(forKey: "layers") + node.childIDs
+    return layerIDs.compactMap { store.node($0) }.filter { $0.type == "SimpleAttribution" }
+  }
+}
+
+private struct MapAttributionView: View {
+  let node: ControlNode
+  @Environment(\.rufletEvents) private var events
+
+  var body: some View {
+    VStack {
+      if alignment.vertical == .bottom { Spacer() }
+      HStack {
+        if alignment.horizontal == .trailing { Spacer() }
+        Button {
+          events.fire(node, "click")
+        } label: {
+          if let textID = node.controlID(forKey: "text") {
+            ControlView(id: textID, axis: .none)
+          } else {
+            Text(node.string("text") ?? "Placeholder Text")
+          }
+        }
+        .buttonStyle(.plain)
+        .padding(4)
+        .background(MaterialPalette.color(node.string("bgcolor")) ?? Color.primary.opacity(0.08))
+        if alignment.horizontal == .leading { Spacer() }
+      }
+      if alignment.vertical == .top { Spacer() }
+    }
+    .padding(4)
+    .allowsHitTesting(!(node.bool("disabled") ?? false))
+  }
+
+  private var alignment: Alignment {
+    ControlProps.alignment(node.props["alignment"]) ?? .bottomTrailing
   }
 }
 
@@ -1256,7 +1298,11 @@ struct MapControlView: View {
         switch layer.type {
         case "TileLayer":
           if let template = layer.string("url_template"), !template.isEmpty {
-            let overlay = MKTileOverlay(urlTemplate: template)
+            let overlay = ReportingTileOverlay(urlTemplate: template)
+            overlay.onError = { [weak self] message in
+              guard let self else { return }
+              self.events.fire(layer, "image_error", data: .string(message))
+            }
             overlay.tileSize = CGSize(
               width: layer.double("tile_size") ?? 256,
               height: layer.double("tile_size") ?? 256)
@@ -1477,6 +1523,20 @@ struct MapControlView: View {
 
       default:
         completion(.failure(rufletUnsupported("Map", call)))
+      }
+    }
+  }
+
+  private final class ReportingTileOverlay: MKTileOverlay {
+    var onError: ((String) -> Void)?
+
+    override func loadTile(
+      at path: MKTileOverlayPath,
+      result: @escaping (Data?, (any Error)?) -> Void
+    ) {
+      super.loadTile(at: path) { [weak self] data, error in
+        if let error { self?.onError?(error.localizedDescription) }
+        result(data, error)
       }
     }
   }

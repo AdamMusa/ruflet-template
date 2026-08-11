@@ -34,6 +34,9 @@ final class FletInputParityTests: XCTestCase {
       ControlRegistry.descriptor(for: "Dropdown")?.supportedEvents,
       ["blur", "focus", "select", "text_change"])
     XCTAssertEqual(
+      ControlRegistry.descriptor(for: "DropdownM2")?.supportedEvents,
+      ["blur", "change", "click", "focus"])
+    XCTAssertEqual(
       ControlRegistry.descriptor(for: "DatePicker")?.supportedEvents,
       ["change", "dismiss", "entry_mode_change"])
   }

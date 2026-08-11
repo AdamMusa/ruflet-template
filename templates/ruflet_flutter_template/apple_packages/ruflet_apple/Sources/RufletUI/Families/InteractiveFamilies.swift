@@ -42,8 +42,10 @@ extension ControlRegistry {
       return AnyView(CodeEditorControlView(node: node))
     case "SearchBar":
       return AnyView(SearchBarControlView(node: node))
-    case "Dropdown", "DropdownM2":
+    case "Dropdown":
       return AnyView(DropdownControlView(node: node))
+    case "DropdownM2":
+      return AnyView(DropdownM2ControlView(node: node))
     case "AutoComplete":
       return AnyView(AutoCompleteControlView(node: node))
     case "DatePicker":
