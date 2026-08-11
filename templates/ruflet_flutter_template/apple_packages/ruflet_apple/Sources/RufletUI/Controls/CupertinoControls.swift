@@ -826,20 +826,72 @@ struct CupertinoActivityIndicatorControlView: View {
   let node: ControlNode
 
   var body: some View {
-    // A stopped indicator shows its spokes without turning, and a progress
-    // value makes it determinate rather than a spinner.
-    Group {
-      if let progress = node.double("progress") {
-        ProgressView(value: progress, total: 1)
-      } else if node.bool("animating") == false {
-        ProgressView(value: 0, total: 1)
-      } else {
-        ProgressView()
+    RufletCupertinoActivityIndicator(
+      radius: CGFloat(node.double("radius") ?? 10),
+      color: MaterialPalette.color(node.string("color")) ?? .secondary,
+      progress: node.double("progress"),
+      animating: node.double("progress") == nil && (node.bool("animating") ?? true))
+  }
+}
+
+/// Flet uses `CupertinoActivityIndicator.partiallyRevealed` when `progress`
+/// is supplied. SwiftUI's determinate `ProgressView` is a ring, not
+/// Cupertino's twelve spokes, so the native renderer draws the same spoke
+/// model and only reveals the requested fraction.
+struct RufletCupertinoActivityIndicator: View {
+  let radius: CGFloat
+  let color: Color
+  let progress: Double?
+  let animating: Bool
+  @State private var rotation = 0.0
+
+  var body: some View {
+    Canvas { context, size in
+      let center = CGPoint(x: size.width / 2, y: size.height / 2)
+      let spokeCount = RufletCupertinoActivityIndicatorMetrics.spokeCount
+      let visible = RufletCupertinoActivityIndicatorMetrics.revealedSpokes(progress: progress)
+      let length = max(radius * 0.46, 1)
+      let width = max(radius * 0.22, 1)
+
+      for index in 0..<visible {
+        var path = Path()
+        path.move(to: CGPoint(x: center.x, y: center.y - radius + width / 2))
+        path.addLine(
+          to: CGPoint(x: center.x, y: center.y - radius + width / 2 + length))
+        var spoke = context
+        spoke.translateBy(x: center.x, y: center.y)
+        spoke.rotate(by: .degrees(Double(index) * 360 / Double(spokeCount)))
+        spoke.translateBy(x: -center.x, y: -center.y)
+        spoke.opacity = progress == nil
+          ? 0.25 + (0.75 * Double(index + 1) / Double(spokeCount))
+          : 1
+        spoke.stroke(path, with: .color(color), style: StrokeStyle(lineWidth: width, lineCap: .round))
       }
     }
-    .progressViewStyle(.circular)
-    .scaleEffect(CGFloat(node.double("radius") ?? 10) / 10)
-    .tint(MaterialPalette.color(node.string("color")))
+    .frame(width: radius * 2, height: radius * 2)
+    .rotationEffect(.degrees(rotation))
+    .onAppear { updateAnimation() }
+    .onChange(of: animating) { _ in updateAnimation() }
+  }
+
+  private func updateAnimation() {
+    guard animating else {
+      rotation = 0
+      return
+    }
+    rotation = 0
+    withAnimation(.linear(duration: 0.9).repeatForever(autoreverses: false)) {
+      rotation = 360
+    }
+  }
+}
+
+enum RufletCupertinoActivityIndicatorMetrics {
+  static let spokeCount = 12
+
+  static func revealedSpokes(progress: Double?) -> Int {
+    guard let progress else { return spokeCount }
+    return Int(ceil(min(max(progress, 0), 1) * Double(spokeCount)))
   }
 }
 
