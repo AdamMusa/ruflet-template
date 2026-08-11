@@ -168,22 +168,25 @@ struct NavigationBarControlView: View {
   }
 
   var body: some View {
+    if node.bool("adaptive") == true {
+      CupertinoNavigationBarControlView(node: node)
+    } else {
+      materialBar
+    }
+  }
+
+  private var materialBar: some View {
     let metrics = ChromeDefaults.navigationBar(node)
     let destinations = node.controlIDs(forKey: "destinations").compactMap { store.node($0) }
     let selected = node.int("selected_index") ?? 0
 
-    HStack(spacing: 0) {
+    return HStack(spacing: 0) {
       ForEach(Array(destinations.enumerated()), id: \.element.id) { index, destination in
         Button {
           events.commit(node, key: "selected_index", value: .int(Int64(index)))
         } label: {
           VStack(spacing: 4) {
-            RufletIcon(
-              value: index == selected
-                ? (destination.props["selected_icon"] ?? destination.props["icon"])
-                : destination.props["icon"],
-              size: 22,
-              color: nil)
+            destinationIcon(destination, selected: index == selected)
             if metrics.showsLabel(selected: index == selected),
               let label = destination.string("label") {
               Text(label).font(.caption2)
@@ -195,6 +198,7 @@ struct NavigationBarControlView: View {
           .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .disabled((node.bool("disabled") ?? false) || (destination.bool("disabled") ?? false))
         .modifier(
           NavigationOverlayTint(color: MaterialPalette.color(node.string("overlay_color"))))
         .foregroundColor(
@@ -207,9 +211,6 @@ struct NavigationBarControlView: View {
     .background(MaterialPalette.color(node.string("bgcolor")))
     // Material 3 tints an elevated surface towards the primary colour.
     .background(MaterialPalette.color(node.string("surface_tint_color")))
-    // `adaptive` on a navigation bar asks for the Cupertino tab bar, which is
-    // what SwiftUI already draws on these platforms.
-    .onAppear { _ = node.bool("adaptive") }
     .overlay(alignment: .top) {
       if let border = ControlProps.border(node.props["border"]) {
         Rectangle().fill(border.color).frame(height: border.width)
@@ -220,6 +221,24 @@ struct NavigationBarControlView: View {
       radius: metrics.elevation > 0 ? metrics.elevation : 0,
       y: metrics.elevation > 0 ? -metrics.elevation / 2 : 0)
     .animation(metrics.animation, value: selected)
+  }
+
+  @ViewBuilder
+  private func destinationIcon(_ destination: ControlNode, selected: Bool) -> some View {
+    let selectedID = destination.controlID(forKey: "selected_icon")
+    let iconID = destination.controlID(forKey: "icon")
+    if selected, let selectedID {
+      ControlView(id: selectedID, axis: .none)
+    } else if let iconID {
+      ControlView(id: iconID, axis: .none)
+    } else {
+      RufletIcon(
+        value: selected
+          ? (destination.props["selected_icon"] ?? destination.props["icon"])
+          : destination.props["icon"],
+        size: 22,
+        color: nil)
+    }
   }
 }
 
@@ -291,27 +310,22 @@ struct NavigationRailControlView: View {
           events.commit(node, key: "selected_index", value: .int(Int64(index)))
         } label: {
           HStack(spacing: 8) {
-            RufletIcon(
-              value: index == selected
-                ? (destination.props["selected_icon"] ?? destination.props["icon"])
-                : destination.props["icon"],
-              size: 22, color: nil)
-            if showsRailLabel(extended: extended, selected: index == selected),
-              let label = destination.string("label") {
-              Text(label)
-                .rufletTextStyle(railLabelStyle(selected: index == selected))
+            railDestinationIcon(destination, selected: index == selected)
+            if showsRailLabel(extended: extended, selected: index == selected) {
+              railDestinationLabel(destination, selected: index == selected)
               Spacer(minLength: 0)
             }
           }
           .padding(.horizontal, extended ? 16 : 12)
           .padding(.vertical, 10)
           .background(
-            railIndicator(active: index == selected),
+            railIndicator(active: metrics.useIndicator && index == selected),
             in: RoundedRectangle(cornerRadius: railIndicatorRadius)
           )
           .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .disabled((node.bool("disabled") ?? false) || (destination.bool("disabled") ?? false))
         .foregroundColor(
           index == selected
             ? MaterialPalette.color("onsecondarycontainer", default: .primary)
@@ -330,6 +344,35 @@ struct NavigationRailControlView: View {
     .shadow(
       color: .black.opacity(0.2), radius: metrics.elevation > 0 ? metrics.elevation : 0,
       x: metrics.elevation > 0 ? metrics.elevation / 2 : 0)
+  }
+
+  @ViewBuilder
+  private func railDestinationIcon(_ destination: ControlNode, selected: Bool) -> some View {
+    let selectedID = destination.controlID(forKey: "selected_icon")
+    let iconID = destination.controlID(forKey: "icon")
+    if selected, let selectedID {
+      ControlView(id: selectedID, axis: .none)
+    } else if let iconID {
+      ControlView(id: iconID, axis: .none)
+    } else {
+      RufletIcon(
+        value: selected
+          ? (destination.props["selected_icon"] ?? destination.props["icon"])
+          : destination.props["icon"],
+        size: 22,
+        color: nil)
+    }
+  }
+
+  @ViewBuilder
+  private func railDestinationLabel(_ destination: ControlNode, selected: Bool) -> some View {
+    if let labelID = destination.controlID(forKey: "label") {
+      ControlView(id: labelID, axis: .none)
+        .rufletTextStyle(railLabelStyle(selected: selected))
+    } else {
+      Text(destination.string("label") ?? "")
+        .rufletTextStyle(railLabelStyle(selected: selected))
+    }
   }
 }
 
@@ -460,12 +503,16 @@ struct NavigationDrawerControlView: View {
 
   var body: some View {
     let selected = node.int("selected_index")
+    let controls = drawerControls
 
     ScrollView {
       VStack(alignment: .leading, spacing: 2) {
-        ForEach(Array(node.childIDs.enumerated()), id: \.element) { index, childID in
+        ForEach(Array(controls.enumerated()), id: \.element) { childIndex, childID in
           if let child = store.node(childID), child.type == "NavigationDrawerDestination" {
-            destinationRow(child, index: index, selected: selected)
+            destinationRow(
+              child,
+              index: destinationIndex(for: childIndex, in: controls),
+              selected: selected)
           } else {
             ControlView(id: childID, axis: .vertical)
           }
@@ -483,7 +530,7 @@ struct NavigationDrawerControlView: View {
       events.commit(node, key: "selected_index", value: .int(Int64(index)))
     } label: {
       HStack(spacing: 12) {
-        RufletIcon(value: destination.props["icon"], size: 22, color: nil)
+        drawerDestinationIcon(destination, selected: index == selected)
         if let labelID = destination.controlID(forKey: "label") {
           ControlView(id: labelID, axis: .none)
         } else {
@@ -493,20 +540,46 @@ struct NavigationDrawerControlView: View {
       }
       .padding(.horizontal, 16)
       .padding(.vertical, 12)
+      .background(MaterialPalette.color(destination.string("bgcolor")))
       .background(
         index == selected
-          ? MaterialPalette.color("secondarycontainer", default: .clear) : .clear,
-        in: Capsule()
+          ? MaterialPalette.color(
+            node.string("indicator_color"),
+            default: MaterialPalette.color("secondarycontainer", default: .clear)) : .clear,
+        in: RoundedRectangle(cornerRadius: drawerIndicatorRadius)
       )
       .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
+    .disabled(destination.bool("disabled") ?? false)
     .foregroundColor(
       index == selected
         ? MaterialPalette.color("onsecondarycontainer", default: .primary)
         : MaterialPalette.color("onsurface", default: .primary)
     )
-    .padding(.horizontal, 8)
+    .padding(drawerTilePadding)
+  }
+
+  private var drawerControls: [Int] {
+    let explicit = node.controlIDs(forKey: "controls")
+    return explicit.isEmpty ? node.childIDs : explicit
+  }
+
+  /// Flutter's NavigationDrawer selected index counts destinations, not
+  /// headings/dividers interleaved in the controls list.
+  private func destinationIndex(for childIndex: Int, in controls: [Int]) -> Int {
+    controls.prefix(childIndex).reduce(into: 0) { count, childID in
+      if store.node(childID)?.type == "NavigationDrawerDestination" { count += 1 }
+    }
+  }
+
+  private var drawerTilePadding: EdgeInsets {
+    ControlProps.edgeInsets(node.props["tile_padding"])
+      ?? EdgeInsets(top: 0, leading: 12, bottom: 0, trailing: 12)
+  }
+
+  private var drawerIndicatorRadius: CGFloat {
+    ControlProps.cornerRadius(node.map("indicator_shape")?["radius"]) ?? 28
   }
 
   private var drawerSurface: Color {
@@ -517,5 +590,23 @@ struct NavigationDrawerControlView: View {
     #else
       return .white
     #endif
+  }
+
+  @ViewBuilder
+  private func drawerDestinationIcon(_ destination: ControlNode, selected: Bool) -> some View {
+    let selectedID = destination.controlID(forKey: "selected_icon")
+    let iconID = destination.controlID(forKey: "icon")
+    if selected, let selectedID {
+      ControlView(id: selectedID, axis: .none)
+    } else if let iconID {
+      ControlView(id: iconID, axis: .none)
+    } else {
+      RufletIcon(
+        value: selected
+          ? (destination.props["selected_icon"] ?? destination.props["icon"])
+          : destination.props["icon"],
+        size: 22,
+        color: nil)
+    }
   }
 }
