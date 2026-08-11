@@ -78,6 +78,43 @@ enum FletThemeDefaults {
     }
   }
 
+  /// Returns the explicit wire value when present, otherwise the pinned Flet
+  /// theme role. Tests use this string-level resolver so omitted and explicit
+  /// behavior can be verified without comparing platform `Color` objects.
+  static func resolvedColorToken(for node: ControlNode, property: String) -> String? {
+    if let explicit = node.props[property]?.stringValue,
+      !explicit.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    {
+      return explicit
+    }
+    return colorToken(control: node.type, property: property)
+  }
+
+  static let materialButtonPadding = EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8)
+  static let materialButtonElevation = 1.0
+  static let materialButtonIconSpacing: CGFloat = 8
+  static let materialIconButtonSize: CGFloat = 24
+
+  // Defaults passed by Flet to Flutter's CupertinoButton constructor. Padding
+  // and colours deliberately remain nil so CupertinoButton/SwiftUI owns the
+  // native size and theme appearance.
+  static let cupertinoButtonPressedOpacity = 0.4
+  static let cupertinoButtonCornerRadius: CGFloat = 8
+
+  static func cupertinoButtonPadding(_ node: ControlNode) -> EdgeInsets? {
+    ControlProps.edgeInsets(node.props["padding"])
+  }
+
+  static func cupertinoButtonRadius(_ node: ControlNode) -> CGFloat {
+    ControlProps.cornerRadius(node.props["border_radius"]) ?? cupertinoButtonCornerRadius
+  }
+
+  static func rangeSliderValues(_ node: ControlNode) -> (start: Double, end: Double) {
+    // These are the explicit defaults in Flet's RangeSliderControl. They are
+    // independent of min/max and therefore intentionally both zero.
+    (node.double("start_value") ?? 0, node.double("end_value") ?? 0)
+  }
+
   /// A Material TextField is transparent unless `filled` is true. Flet's
   /// default is `filled: false`; treating omission as a gray fill was the main
   /// source of the renderer's extra background bands.
