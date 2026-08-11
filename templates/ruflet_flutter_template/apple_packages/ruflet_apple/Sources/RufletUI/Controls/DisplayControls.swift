@@ -287,26 +287,108 @@ struct ImageControlView: View {
   var body: some View {
     content
       .modifier(ImageFit(node: node))
+      .modifier(ImageColorFilter(node: node))
       .clipShape(RoundedRectangle(cornerRadius: ControlProps.cornerRadius(node.props["border_radius"]) ?? 0))
+      .modifier(ImageSemantics(node: node))
       .modifier(TapReporter(node: node, events: events))
   }
 
   @ViewBuilder
   private var content: some View {
-    if let source = node.string("src"), let url = URL(string: source), url.scheme != nil {
-      RemoteImage(
-        url: url,
-        errorContentID: node.controlID(forKey: "error_content"),
-        onLoad: { events.fire(node, "load") },
-        onError: { message in events.fire(node, "error", data: .string(message)) })
-    } else if let base64 = node.string("src_base64"), let data = Data(base64Encoded: base64) {
+    if case .binary(let data) = RufletImageSource(node: node) {
       PlatformImageView(data: data)
-    } else if let name = node.string("src") {
+    } else if case .remote(let url) = RufletImageSource(node: node) {
+      if url.isFileURL, let data = try? Data(contentsOf: url) {
+        PlatformImageView(data: data)
+      } else {
+        RemoteImage(
+          url: url,
+          errorContentID: node.controlID(forKey: "error_content"),
+          onLoad: { events.fire(node, "load") },
+          onError: { message in events.fire(node, "error", data: .string(message)) })
+      }
+    } else if case .asset(let name) = RufletImageSource(node: node) {
       // A bundle resource, the way a packaged Ruby project ships its assets.
       Image(name)
         .resizable()
     } else {
-      Color.clear
+      Text("Image must have \"src\" specified.")
+        .font(.caption)
+        .foregroundColor(.secondary)
+    }
+  }
+}
+
+/// The forms accepted by Flet's `getSrc`: bytes, data URIs, network/file URLs,
+/// and packaged assets. Resolution is deliberately separate from SwiftUI so
+/// byte/data-URI behavior is covered without a network or snapshot test.
+enum RufletImageSource: Equatable {
+  case binary(Data)
+  case remote(URL)
+  case asset(String)
+  case missing
+
+  init(node: ControlNode) {
+    if case .binary(let bytes) = node.props["src"] {
+      self = .binary(Data(bytes))
+      return
+    }
+    if let base64 = node.string("src_base64"), let data = Data(base64Encoded: base64) {
+      self = .binary(data)
+      return
+    }
+    guard let source = node.string("src"), !source.isEmpty else {
+      self = .missing
+      return
+    }
+    if let data = Self.dataURI(source) {
+      self = .binary(data)
+    } else if let url = URL(string: source),
+      let scheme = url.scheme?.lowercased(),
+      scheme == "http" || scheme == "https" || scheme == "file"
+    {
+      self = .remote(url)
+    } else {
+      self = .asset(source)
+    }
+  }
+
+  static func dataURI(_ source: String) -> Data? {
+    guard source.lowercased().hasPrefix("data:"), let comma = source.firstIndex(of: ",")
+    else { return nil }
+    let metadata = source[..<comma].lowercased()
+    let payload = String(source[source.index(after: comma)...])
+    if metadata.contains(";base64") { return Data(base64Encoded: payload) }
+    return payload.removingPercentEncoding?.data(using: .utf8)
+  }
+}
+
+private struct ImageColorFilter: ViewModifier {
+  let node: ControlNode
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if let color = MaterialPalette.color(node.string("color")) {
+      content
+        .colorMultiply(color)
+        .blendMode(ControlProps.blendMode(node.string("color_blend_mode")))
+    } else {
+      content
+    }
+  }
+}
+
+private struct ImageSemantics: ViewModifier {
+  let node: ControlNode
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if node.bool("exclude_from_semantics") == true {
+      content.accessibilityHidden(true)
+    } else if let label = node.string("semantics_label"), !label.isEmpty {
+      content.accessibilityLabel(label)
+    } else {
+      content
     }
   }
 }

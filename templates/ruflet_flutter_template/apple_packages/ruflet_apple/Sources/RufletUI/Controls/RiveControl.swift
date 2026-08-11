@@ -13,6 +13,7 @@ import SwiftUI
 struct RiveControlView: View {
   let node: ControlNode
   @State private var viewModel: RufletRiveViewModel?
+  @State private var artboardSize: CGSize?
   @State private var errorMessage: String?
 
   var body: some View {
@@ -29,7 +30,10 @@ struct RiveControlView: View {
         ProgressView()
       }
     }
-    .clipped(antialiased: true)
+    .modifier(
+      RiveGeometry(
+        intrinsicSize: node.bool("use_art_board_size") == true ? artboardSize : nil,
+        clipRect: RufletRiveClipRect(node.props["clip_rect"])))
     .task(id: configurationKey) { await load() }
     .onChange(of: node.double("speed_multiplier") ?? 1) { speed in
       viewModel?.speedMultiplier = speed
@@ -43,13 +47,16 @@ struct RiveControlView: View {
       stringList("animations").joined(separator: ","),
       stringList("state_machines").joined(separator: ","),
       node.string("fit") ?? "contain",
-      node.string("alignment") ?? "center"
+      node.string("alignment") ?? "center",
+      node.bool("use_art_board_size") == true ? "intrinsic" : "layout",
+      String(describing: node.props["clip_rect"]),
     ].joined(separator: "|")
   }
 
   @MainActor
   private func load() async {
     viewModel = nil
+    artboardSize = nil
     errorMessage = nil
     guard let source = node.string("src"), !source.isEmpty else {
       errorMessage = "Rive requires a source."
@@ -79,6 +86,7 @@ struct RiveControlView: View {
           artboardName: node.string("art_board"))
       }
       result.speedMultiplier = node.double("speed_multiplier") ?? 1
+      artboardSize = model.artboard.bounds().size
       viewModel = result
     } catch {
       errorMessage = "Rive failed to load: \(error.localizedDescription)"
@@ -146,6 +154,44 @@ struct RiveControlView: View {
     case "bottomright": return .bottomRight
     default: return .center
     }
+  }
+}
+
+/// Flutter's `Rect.fromLTRB` wire value used by Rive's custom clipper.
+struct RufletRiveClipRect: Equatable {
+  let rect: CGRect
+
+  init?(_ value: RufletValue?) {
+    guard let map = value?.mapValue,
+      let left = map["left"]?.doubleValue,
+      let top = map["top"]?.doubleValue,
+      let right = map["right"]?.doubleValue,
+      let bottom = map["bottom"]?.doubleValue,
+      right >= left, bottom >= top
+    else { return nil }
+    rect = CGRect(x: left, y: top, width: right - left, height: bottom - top)
+  }
+}
+
+private struct RiveGeometry: ViewModifier {
+  let intrinsicSize: CGSize?
+  let clipRect: RufletRiveClipRect?
+
+  func body(content: Content) -> some View {
+    let sized = AnyView(
+      content.frame(width: intrinsicSize?.width, height: intrinsicSize?.height))
+    if let clipRect {
+      return AnyView(sized.clipShape(RiveClipShape(rect: clipRect.rect)))
+    }
+    return AnyView(sized.clipped(antialiased: true))
+  }
+}
+
+private struct RiveClipShape: Shape {
+  let rect: CGRect
+
+  func path(in _: CGRect) -> Path {
+    Path(rect)
   }
 }
 

@@ -28,6 +28,22 @@ final class DisplayPluginParityTests: XCTestCase {
     }
   }
 
+  func testRiveClipRectUsesFlutterLTRBGeometry() {
+    let clip = RufletRiveClipRect(.map([
+      "left": .double(10), "top": .double(20),
+      "right": .double(70), "bottom": .double(55),
+    ]))
+    XCTAssertEqual(clip?.rect, CGRect(x: 10, y: 20, width: 60, height: 35))
+  }
+
+  func testRiveRejectsIncompleteOrInvertedClipRects() {
+    XCTAssertNil(RufletRiveClipRect(.map(["left": .double(1)])))
+    XCTAssertNil(RufletRiveClipRect(.map([
+      "left": .double(9), "top": .double(0),
+      "right": .double(2), "bottom": .double(10),
+    ])))
+  }
+
   func testCanvasCaptureBufferReturnsFletBinaryAndClearsIt() {
     var capture = CanvasCaptureBuffer()
     XCTAssertEqual(capture.wireValue, .null)

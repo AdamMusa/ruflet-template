@@ -1,3 +1,6 @@
+import RufletEngine
+import RufletProtocol
+@testable import RufletUI
 import XCTest
 
 /// Ruflet exposes one `RufletSpinKit` control with a `variant`, where Flet has
@@ -35,5 +38,52 @@ final class SpinKitCoverageTests: XCTestCase {
   func testTheVariantListMatchesFletsCount() {
     XCTAssertEqual(fletVariants.count, 30)
     XCTAssertEqual(Set(fletVariants).count, 30, "the variant list repeats a name")
+  }
+
+  func testPinnedDefaultsMatchFletSpinKit() {
+    let configuration = RufletSpinKitConfiguration(
+      node: ControlNode(id: 1, type: "RufletSpinKit", props: [:]))
+    XCTAssertEqual(configuration.variant, "rotating_circle")
+    XCTAssertEqual(configuration.size, 50)
+    XCTAssertEqual(configuration.duration, 1.2)
+    XCTAssertEqual(configuration.itemCount, 5)
+    XCTAssertEqual(configuration.waveType, "start")
+  }
+
+  func testIndividualFletWireTypeResolvesItsOwnVariant() {
+    let configuration = RufletSpinKitConfiguration(
+      node: ControlNode(
+        id: 1,
+        type: "SpinKitPouringHourGlassRefined",
+        props: ["size": .double(64), "duration": .int(2400)]))
+    XCTAssertEqual(configuration.variant, "pouring_hour_glass_refined")
+    XCTAssertEqual(configuration.size, 64)
+    XCTAssertEqual(configuration.duration, 2.4)
+  }
+
+  func testVariantSpecificMeasurementsAreResolved() {
+    let configuration = RufletSpinKitConfiguration(
+      node: ControlNode(
+        id: 1,
+        type: "SpinKitWave",
+        props: [
+          "line_width": .double(9), "border_width": .double(4),
+          "item_count": .int(8), "wave_type": .string("end")
+        ]))
+    XCTAssertEqual(configuration.lineWidth, 9)
+    XCTAssertEqual(configuration.borderWidth, 4)
+    XCTAssertEqual(configuration.itemCount, 8)
+    XCTAssertEqual(configuration.waveType, "end")
+  }
+
+  func testEveryIndividualFletSpinnerWireTypeIsRegistered() {
+    for variant in fletVariants {
+      let type = "SpinKit" + variant.split(separator: "_")
+        .map { $0.prefix(1).uppercased() + $0.dropFirst() }
+        .joined()
+      let node = ControlNode(id: 1, type: type, props: [:])
+      XCTAssertNotNil(ControlRegistry.build(node: node, axis: .none))
+      XCTAssertEqual(ControlRegistry.builtInDescriptor(for: type)?.rendering, .nativeView)
+    }
   }
 }

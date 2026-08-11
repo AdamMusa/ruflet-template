@@ -232,7 +232,9 @@ public enum ControlRegistry {
         events: ["click", "error", "load"])
     add(["ProgressBar"], .visible, "ProgressBarControlView", .nativeView)
     add(["ProgressRing"], .visible, "ProgressRingControlView", .nativeView)
-    add(["RufletSpinKit"], .visible, "SpinKitControlView", .nativeView)
+    add(
+      ["RufletSpinKit"] + RufletSpinKitConfiguration.fletWireTypes,
+      .visible, "SpinKitControlView", .nativeView)
     add(["Rive"], .visible, "RiveControlView", .nativeView)
     add(["Lottie"], .visible, "LottieControlView", .nativeView,
         events: ["error", "load"])

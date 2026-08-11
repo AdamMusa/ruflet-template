@@ -1,30 +1,88 @@
 import RufletEngine
 import SwiftUI
 
+/// Values shared by Ruflet's generic spinner and the thirty native Flet wire
+/// types. Keeping this resolution outside the drawing code makes the defaults
+/// testable and prevents an individual `SpinKit*` control silently falling
+/// back to the generic circle.
+struct RufletSpinKitConfiguration: Equatable {
+  static let fletWireTypes = [
+    "SpinKitRotatingPlain", "SpinKitDoubleBounce", "SpinKitWave",
+    "SpinKitWanderingCubes", "SpinKitFadingFour", "SpinKitFadingCube",
+    "SpinKitPulse", "SpinKitChasingDots", "SpinKitThreeBounce", "SpinKitCircle",
+    "SpinKitCubeGrid", "SpinKitFadingCircle", "SpinKitRotatingCircle",
+    "SpinKitFoldingCube", "SpinKitPumpingHeart", "SpinKitHourGlass",
+    "SpinKitPouringHourGlass", "SpinKitPouringHourGlassRefined", "SpinKitFadingGrid",
+    "SpinKitRing", "SpinKitRipple", "SpinKitDualRing", "SpinKitSpinningCircle",
+    "SpinKitSpinningLines", "SpinKitSquareCircle", "SpinKitThreeInOut",
+    "SpinKitDancingSquare", "SpinKitPianoWave", "SpinKitPulsingGrid",
+    "SpinKitWaveSpinner",
+  ]
+
+  let variant: String
+  let size: CGFloat
+  let duration: TimeInterval
+  let lineWidth: CGFloat?
+  let borderWidth: CGFloat?
+  let itemCount: Int
+  let waveType: String
+
+  init(node: ControlNode) {
+    variant = Self.variant(node)
+    size = CGFloat(node.double("size") ?? 50)
+    duration = max((node.double("duration") ?? 1200) / 1000, 0.15)
+    lineWidth = node.double("line_width").map { CGFloat($0) }
+    borderWidth = node.double("border_width").map { CGFloat($0) }
+    itemCount = max(node.int("item_count") ?? 5, 1)
+    waveType = node.string("wave_type")?.lowercased() ?? "start"
+  }
+
+  private static func variant(_ node: ControlNode) -> String {
+    if node.type == "RufletSpinKit" {
+      let value = node.string("variant")?.trimmingCharacters(in: .whitespacesAndNewlines)
+      return value?.isEmpty == false ? normalize(value!) : "rotating_circle"
+    }
+    guard node.type.hasPrefix("SpinKit") else { return "rotating_circle" }
+    let suffix = node.type.dropFirst("SpinKit".count)
+    var words: [String] = []
+    var current = ""
+    for character in suffix {
+      if character.isUppercase, !current.isEmpty {
+        words.append(current.lowercased())
+        current = ""
+      }
+      current.append(character)
+    }
+    if !current.isEmpty { words.append(current.lowercased()) }
+    return words.joined(separator: "_")
+  }
+
+  private static func normalize(_ value: String) -> String {
+    value.lowercased()
+      .replacingOccurrences(of: "-", with: "_")
+      .replacingOccurrences(of: " ", with: "_")
+  }
+}
+
 /// Native SwiftUI implementations of the flet_spinkit variants Ruflet exposes.
 struct SpinKitControlView: View {
   let node: ControlNode
 
   var body: some View {
+    let configuration = RufletSpinKitConfiguration(node: node)
     TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { timeline in
       let seconds = timeline.date.timeIntervalSinceReferenceDate
-      let duration = max((node.double("duration") ?? 1200) / 1000, 0.15)
-      glyph(phase: seconds / duration)
+      glyph(phase: seconds / configuration.duration, configuration: configuration)
     }
-    .frame(width: size, height: size)
+    .frame(width: configuration.size, height: configuration.size)
     .accessibilityHidden(true)
   }
 
-  private var variant: String {
-    (node.string("variant") ?? "circle").lowercased().replacingOccurrences(of: "-", with: "_")
-  }
-
-  private var size: CGFloat { CGFloat(node.double("size") ?? 36) }
   private var color: Color {
     MaterialPalette.color(for: node, property: "color", default: .primary)
   }
+  private var size: CGFloat { RufletSpinKitConfiguration(node: node).size }
 
-  @ViewBuilder
   /// The two halves of SpinKitRotatingCircle's cycle. The first axis eases in
   /// across 0...0.5 and then stays turned; the second eases out across
   /// 0.5...1 and is flat until it starts.
@@ -41,8 +99,9 @@ struct SpinKitControlView: View {
   }
 
   @ViewBuilder
-  private func glyph(phase: Double) -> some View {
-    switch variant {
+  private func glyph(phase: Double, configuration: RufletSpinKitConfiguration) -> some View {
+    let size = configuration.size
+    switch configuration.variant {
     case "rotating_circle":
       // SpinKitRotatingCircle tumbles a disc: 180 degrees about X over the
       // first half of the cycle, easing in, then 180 about Y over the second,
@@ -63,7 +122,7 @@ struct SpinKitControlView: View {
         pulseCircle(phase: phase, offset: 0.5)
       }
     case "wave", "piano_wave", "spinning_lines":
-      bars(phase: phase)
+      bars(phase: phase, configuration: configuration)
     case "wandering_cubes", "dancing_square":
       wanderingSquares(phase: phase)
     case "fading_four":
@@ -96,18 +155,18 @@ struct SpinKitControlView: View {
         .rotationEffect(.degrees(floor(phase * 2) * 180))
         .animation(.easeInOut(duration: 0.35), value: floor(phase * 2))
     case "ripple":
-      ripple(phase: phase)
+      ripple(phase: phase, configuration: configuration)
     case "dual_ring":
-      rings(phase: phase, dual: true)
+      rings(phase: phase, dual: true, configuration: configuration)
     case "ring", "wave_spinner":
-      rings(phase: phase, dual: false)
+      rings(phase: phase, dual: false, configuration: configuration)
     case "square_circle":
       RoundedRectangle(cornerRadius: size * (0.1 + 0.4 * waveValue(phase)))
         .fill(color)
         .frame(width: size * 0.72, height: size * 0.72)
         .rotationEffect(.degrees(phase * 180))
     default:
-      rings(phase: phase, dual: false)
+      rings(phase: phase, dual: false, configuration: configuration)
     }
   }
 
@@ -123,12 +182,18 @@ struct SpinKitControlView: View {
       .opacity(0.3 + 0.7 * Double(1 - value))
   }
 
-  private func bars(phase: Double) -> some View {
-    HStack(alignment: .center, spacing: size * 0.06) {
-      ForEach(0..<5, id: \.self) { index in
+  private func bars(phase: Double, configuration: RufletSpinKitConfiguration) -> some View {
+    let size = configuration.size
+    let count = configuration.itemCount
+    let phaseDirection = configuration.waveType == "end" ? -1.0 : 1.0
+    return HStack(alignment: .center, spacing: size * 0.06) {
+      ForEach(0..<count, id: \.self) { index in
         RoundedRectangle(cornerRadius: size * 0.03)
           .fill(color)
-          .frame(width: size * 0.11, height: size * (0.28 + 0.65 * waveValue(phase - Double(index) * 0.11)))
+          .frame(
+            width: max(size * 0.04, size * 0.67 / CGFloat(count)),
+            height: size * (0.28 + 0.65 * waveValue(
+              phase - phaseDirection * Double(index) * 0.11)))
       }
     }
   }
@@ -145,7 +210,7 @@ struct SpinKitControlView: View {
   }
 
   private func orbitingDots(count: Int, phase: Double, fading: Bool) -> some View {
-    ZStack {
+    return ZStack {
       ForEach(0..<count, id: \.self) { index in
         let step = Double(index) / Double(count)
         Circle()
@@ -160,7 +225,7 @@ struct SpinKitControlView: View {
   }
 
   private func wanderingSquares(phase: Double) -> some View {
-    ZStack {
+    return ZStack {
       ForEach(0..<2, id: \.self) { index in
         let angle = (phase + Double(index) * 0.5) * .pi * 2
         RoundedRectangle(cornerRadius: size * 0.04)
@@ -203,27 +268,34 @@ struct SpinKitControlView: View {
     .scaleEffect(0.72)
   }
 
-  private func rings(phase: Double, dual: Bool) -> some View {
-    ZStack {
+  private func rings(
+    phase: Double,
+    dual: Bool,
+    configuration: RufletSpinKitConfiguration
+  ) -> some View {
+    let size = configuration.size
+    let width = configuration.lineWidth ?? 7
+    return ZStack {
       Circle()
         .trim(from: 0.08, to: dual ? 0.46 : 0.78)
-        .stroke(color, style: StrokeStyle(lineWidth: max(2, size * 0.1), lineCap: .round))
+        .stroke(color, style: StrokeStyle(lineWidth: width, lineCap: .round))
       if dual {
         Circle()
           .trim(from: 0.58, to: 0.9)
-          .stroke(color.opacity(0.45), style: StrokeStyle(lineWidth: max(2, size * 0.1), lineCap: .round))
+          .stroke(color.opacity(0.45), style: StrokeStyle(lineWidth: width, lineCap: .round))
       }
     }
     .padding(size * 0.08)
     .rotationEffect(.degrees(phase * 360))
   }
 
-  private func ripple(phase: Double) -> some View {
-    ZStack {
+  private func ripple(phase: Double, configuration: RufletSpinKitConfiguration) -> some View {
+    let width = configuration.borderWidth ?? 6
+    return ZStack {
       ForEach(0..<2, id: \.self) { index in
         let progress = (phase + Double(index) * 0.5).truncatingRemainder(dividingBy: 1)
         Circle()
-          .stroke(color.opacity(1 - progress), lineWidth: max(1, size * 0.06))
+          .stroke(color.opacity(1 - progress), lineWidth: width)
           .scaleEffect(0.15 + progress * 0.85)
       }
     }

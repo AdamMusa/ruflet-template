@@ -11,6 +11,30 @@ final class DisplayParityTests: XCTestCase {
     ControlNode(id: 1, type: type, props: props)
   }
 
+  // MARK: - Image
+
+  func testImageResolvesBinaryAndDataURISourcesBeforeURLs() {
+    XCTAssertEqual(
+      RufletImageSource(node: node("Image", ["src": .binary([0x89, 0x50])])),
+      .binary(Data([0x89, 0x50])))
+    XCTAssertEqual(
+      RufletImageSource(node: node("Image", ["src": .string("data:text/plain;base64,SGk=")])),
+      .binary(Data("Hi".utf8)))
+    XCTAssertEqual(
+      RufletImageSource(node: node("Image", ["src": .string("data:text/plain,hello%20world")])),
+      .binary(Data("hello world".utf8)))
+  }
+
+  func testImageDistinguishesNetworkAndPackagedSources() {
+    XCTAssertEqual(
+      RufletImageSource(node: node("Image", ["src": .string("https://example.test/a.png")])),
+      .remote(URL(string: "https://example.test/a.png")!))
+    XCTAssertEqual(
+      RufletImageSource(node: node("Image", ["src": .string("images/a.png")])),
+      .asset("images/a.png"))
+    XCTAssertEqual(RufletImageSource(node: node("Image")), .missing)
+  }
+
   // MARK: - Icon
 
   /// Flutter only multiplies the icon by the text scaler when it was asked to,
