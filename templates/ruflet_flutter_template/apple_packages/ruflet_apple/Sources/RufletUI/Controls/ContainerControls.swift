@@ -959,18 +959,7 @@ struct AnimatedSwitcherControlView: View {
     // direction, so the longer of the two is what the switch is given.
     let seconds = max(forward, backward) / 1_000
     let name = node.string("switch_in_curve") ?? node.string("switch_out_curve")
-    return Self.curve(name, duration: seconds)
-  }
-
-  /// Flutter's `Curves` names against SwiftUI's timing curves.
-  private static func curve(_ name: String?, duration: Double) -> Animation {
-    switch name?.lowercased().replacingOccurrences(of: "_", with: "") {
-    case "linear": return .linear(duration: duration)
-    case "easein": return .easeIn(duration: duration)
-    case "easeout", "decelerate": return .easeOut(duration: duration)
-    case "bounceout", "elasticout": return .spring(response: duration, dampingFraction: 0.5)
-    default: return .easeInOut(duration: duration)
-    }
+    return RufletCurve.animation(name, duration: seconds)
   }
 }
 

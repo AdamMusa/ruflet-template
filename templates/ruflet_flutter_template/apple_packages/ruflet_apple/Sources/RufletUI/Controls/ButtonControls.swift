@@ -620,7 +620,7 @@ struct ChipShape: InsettableShape {
 func rufletAnimation(_ value: RufletValue?) -> Animation? {
   guard let map = value?.mapValue else { return .default }
   guard let duration = map["duration"]?.doubleValue else { return .default }
-  return .easeInOut(duration: duration / 1_000)
+  return RufletCurve.animation(map["curve"]?.stringValue, duration: duration / 1_000)
 }
 
 /// Flutter's `VisualDensity` shifts a control's padding on both axes; the

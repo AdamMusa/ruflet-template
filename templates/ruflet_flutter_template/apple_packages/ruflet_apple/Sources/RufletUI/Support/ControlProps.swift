@@ -19,15 +19,7 @@ public enum ControlProps {
     guard let value else { return nil }
     let duration = animationDurationSeconds(value)
     guard let duration else { return nil }
-    let curve = value["curve"]?.stringValue?.lowercased() ?? "easeinout"
-    switch curve.replacingOccurrences(of: "_", with: "") {
-    case "linear": return .linear(duration: duration)
-    case "easein": return .easeIn(duration: duration)
-    case "easeout": return .easeOut(duration: duration)
-    case "fastoutslowin", "easeinout": return .easeInOut(duration: duration)
-    case "bounceout", "elasticout": return .spring(response: duration, dampingFraction: 0.62)
-    default: return .easeInOut(duration: duration)
-    }
+    return RufletCurve.animation(value["curve"]?.stringValue, duration: duration)
   }
 
   /// Duration used by both SwiftUI interpolation and Flet's `animation_end`
