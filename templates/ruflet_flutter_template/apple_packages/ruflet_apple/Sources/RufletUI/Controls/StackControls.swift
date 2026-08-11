@@ -43,7 +43,19 @@ struct RowControlView: View {
         }
       }
     }
+    // `intrinsic_height` sizes the row to its tallest child rather than to
+    // the space it was offered.
+    .fixedSize(horizontal: false, vertical: node.rufletBool("intrinsic_height"))
     .modifier(ScrollableStack(node: node, axis: .horizontal))
+  }
+
+  /// `run_alignment` places each run across the wrap's cross axis.
+  private var runAlignment: Alignment {
+    switch node.rufletString("run_alignment") {
+    case "center": return .center
+    case "end": return .trailing
+    default: return .leading
+    }
   }
 
   private var hasFlexChildren: Bool {
@@ -68,7 +80,20 @@ struct ColumnControlView: View {
     let tight = node.rufletBool("tight")
 
     Group {
-      if hasFlexChildren, #available(iOS 16.0, macOS 13.0, *) {
+      if node.rufletBool("wrap") {
+        // A wrapping Column is Flutter's Wrap: children run down a column and
+        // start a new one when the run is full, spaced by run_spacing and
+        // placed by run_alignment.
+        FlowLayout(
+          spacing: spacing,
+          runSpacing: CGFloat(node.rufletDouble("run_spacing"))
+        ) {
+          ForEach(node.childIDs, id: \.self) { id in
+            ControlView(id: id, axis: .none)
+          }
+        }
+        .frame(maxWidth: .infinity, alignment: runAlignment)
+      } else if hasFlexChildren, #available(iOS 16.0, macOS 13.0, *) {
         RufletFlexLayout(
           axis: .vertical, spacing: spacing, mainAlignment: main,
           crossAlignment: cross, tight: tight
@@ -86,7 +111,19 @@ struct ColumnControlView: View {
       }
     }
     .modifier(CrossStretch(alignment: cross, axis: .vertical))
+    // `intrinsic_width` sizes the column to its widest child rather than to
+    // the space it was offered.
+    .fixedSize(horizontal: node.rufletBool("intrinsic_width"), vertical: false)
     .modifier(ScrollableStack(node: node, axis: .vertical))
+  }
+
+  /// `run_alignment` places each run across the wrap's cross axis.
+  private var runAlignment: Alignment {
+    switch node.rufletString("run_alignment") {
+    case "center": return .center
+    case "end": return .trailing
+    default: return .leading
+    }
   }
 
   private var hasFlexChildren: Bool {
@@ -165,9 +202,11 @@ struct ScrollableStack: ViewModifier {
   @Environment(\.rufletEvents) private var events
   @State private var viewportExtent: CGFloat = 0
   @State private var previousPixels: CGFloat = 0
+  @State private var lastScrollReport = Date.distantPast
 
   func body(content: Content) -> some View {
     if scrolls {
+      ScrollViewReader { proxy in
       ScrollView(axis, showsIndicators: node.string("scroll") != "hidden") {
         content.background(
           GeometryReader { proxy in
@@ -190,6 +229,11 @@ struct ScrollableStack: ViewModifier {
       .onPreferenceChange(StackScrollViewportKey.self) { viewportExtent = $0 }
       .onPreferenceChange(StackScrollSampleKey.self) { sample in
         guard node.handlesEvent("scroll") else { return }
+        // `scroll_interval` throttles the stream the way Flet throttles its
+        // own; zero reports every sample.
+        let interval = TimeInterval(node.int("scroll_interval") ?? 0) / 1_000
+        guard Date().timeIntervalSince(lastScrollReport) >= interval else { return }
+        lastScrollReport = Date()
         let pixels = max(0, sample.pixels)
         let delta = pixels - previousPixels
         previousPixels = pixels
@@ -201,6 +245,13 @@ struct ScrollableStack: ViewModifier {
           "event_type": .string("update"),
           "scroll_delta": .double(Double(delta)),
         ]))
+      }
+      // `auto_scroll` keeps the end in view as children arrive, which is what
+      // Flet's auto-scrolling controller does.
+      .onChange(of: node.childIDs.count) { _ in
+        guard node.bool("auto_scroll") == true, let last = node.childIDs.last else { return }
+        withAnimation { proxy.scrollTo(last, anchor: axis == .horizontal ? .trailing : .bottom) }
+      }
       }
     } else {
       content

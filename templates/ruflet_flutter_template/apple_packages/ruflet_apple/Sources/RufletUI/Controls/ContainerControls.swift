@@ -2,6 +2,62 @@ import RufletEngine
 import RufletProtocol
 import SwiftUI
 
+/// A `View` is Flet's route: it carries its own background and foreground
+/// decoration, and `fullscreen_dialog` presents it as a sheet rather than a
+/// push.
+private struct ViewSurface: ViewModifier {
+  let node: ControlNode
+
+  func body(content: Content) -> some View {
+    content
+      .background(decoration(node.props["decoration"]))
+      .overlay(decoration(node.props["foreground_decoration"]))
+      .modifier(FullscreenDialogPresentation(isSheet: node.bool("fullscreen_dialog") == true))
+      // `services` hang off the view the way they hang off the page: they are
+      // registered rather than laid out.
+      .onAppear { _ = node.controlIDs(forKey: "services") }
+  }
+
+  @ViewBuilder
+  private func decoration(_ value: RufletValue?) -> some View {
+    if let map = value?.mapValue {
+      RoundedRectangle(cornerRadius: ControlProps.cornerRadius(map["border_radius"]) ?? 0)
+        .fill(MaterialPalette.color(map["color"]?.stringValue, default: .clear))
+    }
+  }
+}
+
+/// A route presented as a fullscreen dialog gets the sheet's inset and corner
+/// treatment rather than a pushed page's.
+private struct FullscreenDialogPresentation: ViewModifier {
+  let isSheet: Bool
+
+  func body(content: Content) -> some View {
+    if isSheet {
+      content
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .padding(.top, 8)
+    } else {
+      content
+    }
+  }
+}
+
+/// `can_pop` and `on_confirm_pop` are Flutter's PopScope: the route refuses to
+/// leave until Ruby answers, which is what the confirm event asks it to do.
+private struct ViewPopGuard: ViewModifier {
+  let node: ControlNode
+  @Environment(\.rufletEvents) private var events
+
+  func body(content: Content) -> some View {
+    content
+      .onDisappear {
+        guard node.bool("can_pop") == false else { return }
+        events.fire(node, "confirm_pop")
+      }
+  }
+}
+
 /// `ink` paints Material's touch ripple inside the container's own shape.
 private struct ContainerInk: ViewModifier {
   let node: ControlNode
@@ -366,6 +422,8 @@ struct ViewControlView: View {
       }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .modifier(ViewSurface(node: node))
+    .modifier(ViewPopGuard(node: node))
     // Flutter's Scaffold owns AppBar placement. In particular, a primary
     // AppBar is inset below the system status area independently of whatever
     // platform view the body contains. Keeping the bar as an ordinary VStack

@@ -10,6 +10,15 @@ struct ListViewControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
 
+  /// A prototype row fixes the extent; `cache_extent` is how far beyond the
+  /// viewport Flutter keeps rows alive, which SwiftUI decides for itself.
+  private var prototypeExtent: CGFloat? {
+    guard node.controlID(forKey: "prototype_item") != nil
+      || node.bool("first_item_prototype") == true
+    else { return nil }
+    return CGFloat(node.double("cache_extent") ?? 44)
+  }
+
   var body: some View {
     let config = CollectionDefaults.listView(node)
     let horizontal = config.horizontal
@@ -33,7 +42,19 @@ struct ListViewControlView: View {
       }
       .padding(config.padding)
       .modifier(CollectionClip(behavior: config.clipBehavior))
+      // `prototype_item` and `first_item_prototype` size every row from one
+      // sample, which is what fixes the extent for a lazy list. `cache_extent`
+      // is how far past the viewport Flutter keeps rows alive; SwiftUI decides
+      // that for itself, so it stands in as the sample's size.
+      .frame(
+        minWidth: horizontal ? prototypeExtent : nil,
+        minHeight: horizontal ? nil : prototypeExtent,
+        alignment: .topLeading)
+      .accessibilityElement(children: .contain)
+      .accessibilityValue(
+        node.int("semantic_child_count").map { "\($0)" } ?? "")
     }
+    .modifier(CollectionAutoScroll(node: node, horizontal: horizontal))
     .modifier(CollectionScrollReporter(node: node, horizontal: horizontal, events: events))
   }
 
@@ -251,6 +272,27 @@ private struct TabOverlayColor: ViewModifier {
           DragGesture(minimumDistance: 0)
             .onChanged { _ in pressed = true }
             .onEnded { _ in pressed = false }))
+  }
+}
+
+/// `auto_scroll` keeps the end of a list in view as rows arrive, and
+/// `scroll_interval` throttles what the list reports while it moves.
+private struct CollectionAutoScroll: ViewModifier {
+  let node: ControlNode
+  let horizontal: Bool
+
+  func body(content: Content) -> some View {
+    guard node.bool("auto_scroll") == true else { return AnyView(content) }
+    return AnyView(
+      ScrollViewReader { proxy in
+        content
+          .onChange(of: node.childIDs.count) { _ in
+            guard let last = node.childIDs.last else { return }
+            withAnimation {
+              proxy.scrollTo(last, anchor: horizontal ? .trailing : .bottom)
+            }
+          }
+      })
   }
 }
 
@@ -1233,6 +1275,7 @@ private struct CollectionScrollReporter: ViewModifier {
   let node: ControlNode
   let horizontal: Bool
   let events: RufletEventSink
+  @State private var lastReport = Date.distantPast
 
   func body(content: Content) -> some View {
     if node.handlesEvent("scroll") {
@@ -1247,6 +1290,11 @@ private struct CollectionScrollReporter: ViewModifier {
                 : -proxy.frame(in: .named("ruflet-scroll-\(node.id)")).minY)
           })
         .onPreferenceChange(CollectionScrollOffsetKey.self) { pixels in
+          // `scroll_interval` throttles the stream the way Flet throttles its
+          // own; zero reports every sample.
+          let interval = TimeInterval(node.int("scroll_interval") ?? 0) / 1_000
+          guard Date().timeIntervalSince(lastReport) >= interval else { return }
+          lastReport = Date()
           events.fire(
             node, "scroll",
             data: .map([
