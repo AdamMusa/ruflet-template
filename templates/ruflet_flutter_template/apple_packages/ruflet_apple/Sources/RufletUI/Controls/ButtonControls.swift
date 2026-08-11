@@ -482,8 +482,8 @@ struct ChipControlView: View {
         Image(systemName: "checkmark")
           .font(.caption)
           .foregroundColor(MaterialPalette.color(node.string("check_color")))
-      } else if node.props["leading"] != nil {
-        RufletIcon(value: node.props["leading"], size: 16, color: nil)
+      } else if let leadingID = node.controlID(forKey: "leading") {
+        ControlView(id: leadingID, axis: .none)
           .modifier(ChipSlotConstraints(value: node.props["leading_size_constraints"]))
       }
       label
@@ -495,12 +495,12 @@ struct ChipControlView: View {
           deleteIcon
         }
         .buttonStyle(.plain)
-        .help(node.string("delete_icon_tooltip") ?? "")
+        .help(node.string("delete_button_tooltip") ?? "")
         .modifier(ChipSlotConstraints(value: node.props["delete_icon_size_constraints"]))
       }
     }
-    .padding(.horizontal, 12)
-    .padding(.vertical, 6)
+    .padding(ControlProps.edgeInsets(node.props["padding"])
+      ?? EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12))
     .modifier(VisualDensityPadding(value: node.props["visual_density"]))
     .background(shape.fill(fill))
     .overlay(shape.strokeBorder(borderColor, lineWidth: borderWidth))
@@ -514,12 +514,16 @@ struct ChipControlView: View {
         .onEnded { _ in pressed = false })
     .onTapGesture {
       guard node.bool("disabled") != true else { return }
+      // InputChip rejects this combination; prefer neither event over
+      // silently choosing one and diverging from the Flet validation path.
+      guard !(node.handlesEvent("select") && node.handlesEvent("click")) else { return }
       if node.handlesEvent("select") {
         events.commit(node, key: "selected", value: .bool(!selected), event: "select")
-      } else {
+      } else if node.handlesEvent("click") {
         events.fire(node, "click")
       }
     }
+    .modifier(FocusReporter(node: node, events: events))
   }
 
   @ViewBuilder
@@ -552,6 +556,10 @@ struct ChipControlView: View {
   }
 
   private var fill: Color {
+    let states = node.widgetStates(selected: node.bool("selected"), extra: pressed ? [.pressed] : [])
+    if let stateColor = MaterialPalette.color(stateful: node.props["color"], in: states) {
+      return stateColor
+    }
     if node.bool("disabled") == true {
       return MaterialPalette.color(node.string("disabled_color"), default: .clear)
     }
@@ -675,6 +683,8 @@ struct SegmentedButtonControlView: View {
                 : MaterialPalette.color(for: node, property: "bgcolor", default: .clear))
         }
         .buttonStyle(.plain)
+        .disabled(node.bool("disabled") == true || segment.bool("disabled") == true)
+        .help(segment.bool("disabled") == true ? "" : (segment.string("tooltip") ?? ""))
       }
     }
     .background(
@@ -683,6 +693,7 @@ struct SegmentedButtonControlView: View {
       Capsule().strokeBorder(
         MaterialPalette.color(for: node, property: "border_color", default: .clear)))
     .disabled(node.bool("disabled") ?? false)
+    .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets())
   }
 
   @ViewBuilder
@@ -696,6 +707,10 @@ struct SegmentedButtonControlView: View {
         } else {
           Image(systemName: "checkmark").font(.caption)
         }
+      } else if let iconID = segment.controlID(forKey: "icon") {
+        ControlView(id: iconID, axis: .none)
+      } else if segment.props["icon"] != nil {
+        RufletIcon(value: segment.props["icon"], size: 16, color: nil)
       }
       if let labelID = segment.controlID(forKey: "label") {
         ControlView(id: labelID, axis: .none)
