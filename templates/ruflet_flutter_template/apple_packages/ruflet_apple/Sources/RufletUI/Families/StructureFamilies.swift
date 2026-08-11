@@ -19,8 +19,10 @@ extension ControlRegistry {
       return AnyView(ExpansionTileControlView(node: node))
     case "ExpansionPanelList":
       return AnyView(ExpansionPanelListControlView(node: node))
-    case "Tabs", "TabBar":
+    case "Tabs":
       return AnyView(TabsControlView(node: node))
+    case "TabBar":
+      return AnyView(TabBarControlView(node: node))
     case "TabBarView":
       return AnyView(TabBarViewControlView(node: node))
     case "DataTable":

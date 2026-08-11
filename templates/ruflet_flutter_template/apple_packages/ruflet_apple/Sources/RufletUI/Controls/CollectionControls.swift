@@ -15,7 +15,10 @@ struct ListViewControlView: View {
     let spacing = CGFloat(node.double("spacing") ?? 0)
     let axis: LayoutAxis = horizontal ? .horizontal : .vertical
 
-    ScrollView(horizontal ? .horizontal : .vertical, showsIndicators: true) {
+    ScrollView(
+      horizontal ? .horizontal : .vertical,
+      showsIndicators: node.string("scroll") != "hidden"
+    ) {
       Group {
         if horizontal {
           LazyHStack(spacing: spacing) { rows(axis: axis) }
@@ -25,6 +28,7 @@ struct ListViewControlView: View {
       }
       .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets())
     }
+    .modifier(CollectionScrollReporter(node: node, horizontal: horizontal, events: events))
   }
 
   /// `divider_thickness` puts a rule between items — the one place a Flet list
@@ -32,9 +36,10 @@ struct ListViewControlView: View {
   @ViewBuilder
   private func rows(axis: LayoutAxis) -> some View {
     let thickness = node.double("divider_thickness") ?? 0
-    let children = node.childIDs
+    let children = (node.bool("reverse") ?? false) ? Array(node.childIDs.reversed()) : node.childIDs
+    let itemExtent = node.double("item_extent").map { CGFloat($0) }
 
-    ForEach(Array(children.enumerated()), id: \.element) { index, childID in
+    ForEach(children.indices, id: \.self) { index in
       if thickness > 0, index > 0 {
         Divider()
           .frame(
@@ -42,7 +47,10 @@ struct ListViewControlView: View {
             height: axis == .horizontal ? nil : CGFloat(thickness))
           .background(MaterialPalette.color(node.string("divider_color")))
       }
-      ControlView(id: childID, axis: axis)
+      ControlView(id: children[index], axis: axis)
+        .frame(
+          width: axis == .horizontal ? itemExtent : nil,
+          height: axis == .vertical ? itemExtent : nil)
     }
   }
 }
@@ -51,16 +59,36 @@ struct ListViewControlView: View {
 /// (`runs_count`) or a maximum item extent, the two modes Flet exposes.
 struct GridViewControlView: View {
   let node: ControlNode
+  @Environment(\.rufletEvents) private var events
 
   var body: some View {
     let spacing = CGFloat(node.double("spacing") ?? 10)
     let runSpacing = CGFloat(node.double("run_spacing") ?? 10)
 
-    ScrollView(node.bool("horizontal") == true ? .horizontal : .vertical) {
-      LazyVGrid(columns: columns(spacing: spacing), spacing: runSpacing) {
-        ControlList(ids: node.childIDs, axis: .none)
+    let horizontal = node.bool("horizontal") ?? false
+    ScrollView(horizontal ? .horizontal : .vertical) {
+      Group {
+        if horizontal {
+          LazyHGrid(rows: rows(spacing: spacing), spacing: runSpacing) {
+            gridChildren
+          }
+        } else {
+          LazyVGrid(columns: columns(spacing: spacing), spacing: runSpacing) {
+            gridChildren
+          }
+        }
       }
       .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets())
+    }
+    .modifier(CollectionScrollReporter(node: node, horizontal: horizontal, events: events))
+  }
+
+  @ViewBuilder
+  private var gridChildren: some View {
+    let ids = (node.bool("reverse") ?? false) ? Array(node.childIDs.reversed()) : node.childIDs
+    ForEach(ids, id: \.self) { childID in
+      ControlView(id: childID, axis: .none)
+        .aspectRatio(CGFloat(node.double("child_aspect_ratio") ?? 1), contentMode: .fit)
     }
   }
 
@@ -68,7 +96,15 @@ struct GridViewControlView: View {
     if let runs = node.int("runs_count"), runs > 0 {
       return Array(repeating: GridItem(.flexible(), spacing: spacing), count: runs)
     }
-    let extent = CGFloat(node.double("max_extent") ?? 150)
+    let extent = CGFloat(node.double("max_extent") ?? 1)
+    return [GridItem(.adaptive(minimum: extent), spacing: spacing)]
+  }
+
+  private func rows(spacing: CGFloat) -> [GridItem] {
+    if let runs = node.int("runs_count"), runs > 0 {
+      return Array(repeating: GridItem(.flexible(), spacing: spacing), count: runs)
+    }
+    let extent = CGFloat(node.double("max_extent") ?? 1)
     return [GridItem(.adaptive(minimum: extent), spacing: spacing)]
   }
 }
@@ -83,10 +119,16 @@ struct ReorderableListControlView: View {
 
   var body: some View {
     List {
+      if let headerID = node.controlID(forKey: "header") {
+        ControlView(id: headerID, axis: .vertical).moveDisabled(true)
+      }
       ForEach(node.childIDs, id: \.self) { childID in
         ControlView(id: childID, axis: .vertical)
       }
       .onMove(perform: reorder)
+      if let footerID = node.controlID(forKey: "footer") {
+        ControlView(id: footerID, axis: .vertical).moveDisabled(true)
+      }
     }
     .listStyle(.plain)
     .modifier(AlwaysEditing())
@@ -94,14 +136,20 @@ struct ReorderableListControlView: View {
 
   private func reorder(from source: IndexSet, to destination: Int) {
     guard let origin = source.first else { return }
+    let finalDestination = CollectionParity.reorderDestination(
+      from: origin, insertionSlot: destination)
+    events.fire(
+      node, "reorder_start",
+      data: .map(["old_index": .int(Int64(origin))]))
     events.send(
       node.id, "reorder",
       .map([
         "old_index": .int(Int64(origin)),
-        // SwiftUI reports the slot *before* removal; Flutter reports the final
-        // index, so close the gap when moving down.
-        "new_index": .int(Int64(destination > origin ? destination - 1 : destination))
+        "new_index": .int(Int64(finalDestination))
       ]))
+    events.fire(
+      node, "reorder_end",
+      data: .map(["new_index": .int(Int64(finalDestination))]))
   }
 }
 
@@ -109,18 +157,57 @@ struct ReorderableListControlView: View {
 struct PageViewControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
+  @State private var selectedIndex: Int
+
+  init(node: ControlNode) {
+    self.node = node
+    _selectedIndex = State(initialValue: node.int("selected_index") ?? 0)
+  }
 
   var body: some View {
-    TabView(
-      selection: Binding(
-        get: { node.int("selected_index") ?? 0 },
-        set: { events.commit(node, key: "selected_index", value: .int(Int64($0))) })
-    ) {
+    TabView(selection: $selectedIndex) {
       ForEach(Array(node.childIDs.enumerated()), id: \.element) { index, childID in
         ControlView(id: childID, axis: .none).tag(index)
       }
     }
     .modifier(PagedTabStyle())
+    .onChange(of: selectedIndex) { value in
+      events.setLocal(node.id, "selected_index", .int(Int64(value)))
+      events.fire(node, "change", data: .int(Int64(value)))
+    }
+    .onChange(of: node.int("selected_index") ?? 0) { value in
+      selectedIndex = CollectionParity.clampedIndex(value, count: node.childIDs.count)
+    }
+    .rufletCommandHandler(node.id, handler: handleCommand)
+  }
+
+  private func handleCommand(
+    _ call: RufletMethodCall,
+    completion: @escaping RufletMethodCompletion
+  ) {
+    let count = node.childIDs.count
+    switch call.name {
+    case "go_to_page", "jump_to_page":
+      guard let index = call.argument("index")?.intValue else {
+        return completion(.failure(RufletServiceError.invalidArguments("index is required")))
+      }
+      selectedIndex = CollectionParity.clampedIndex(index, count: count)
+      completion(.success(.null))
+    case "jump_to":
+      guard let value = call.argument("value")?.doubleValue else {
+        return completion(.failure(RufletServiceError.invalidArguments("value is required")))
+      }
+      selectedIndex = CollectionParity.pageIndex(forOffset: value, count: count)
+      completion(.success(.null))
+    case "next_page":
+      selectedIndex = CollectionParity.clampedIndex(selectedIndex + 1, count: count)
+      completion(.success(.null))
+    case "previous_page":
+      selectedIndex = CollectionParity.clampedIndex(selectedIndex - 1, count: count)
+      completion(.success(.null))
+    default:
+      completion(.failure(rufletUnsupported("PageView", call)))
+    }
   }
 }
 
@@ -150,17 +237,23 @@ struct ListTileControlView: View {
       VStack(alignment: .leading, spacing: 2) {
         if let titleID = node.controlID(forKey: "title") {
           ControlView(id: titleID, axis: .none)
+        } else if let title = node.string("title") {
+          Text(title)
         }
         if let subtitleID = node.controlID(forKey: "subtitle") {
           ControlView(id: subtitleID, axis: .none)
             .font(.subheadline)
             .foregroundColor(.secondary)
+        } else if let subtitle = node.string("subtitle") {
+          Text(subtitle).font(.subheadline).foregroundColor(.secondary)
         }
       }
       .frame(maxWidth: .infinity, alignment: .leading)
 
       if let trailingID = node.controlID(forKey: "trailing") {
         ControlView(id: trailingID, axis: .none)
+      } else if node.props["trailing"] != nil {
+        RufletIcon(value: node.props["trailing"], size: 22, color: nil)
       }
     }
     .padding(ControlProps.edgeInsets(node.props["content_padding"]) ?? EdgeInsets(
@@ -169,6 +262,11 @@ struct ListTileControlView: View {
       (node.bool("selected") ?? false)
         ? MaterialPalette.color(node.string("selected_tile_color") ?? "secondarycontainer")
         : MaterialPalette.color(node.string("bgcolor")))
+    .foregroundColor(MaterialPalette.color(
+      (node.bool("selected") ?? false) ? node.string("selected_color") : node.string("text_color"),
+      default: .primary))
+    .opacity(node.bool("disabled") == true ? 0.45 : 1)
+    .allowsHitTesting(node.bool("disabled") != true)
     .contentShape(Rectangle())
     .modifier(TapReporter(node: node, events: events))
   }
@@ -182,12 +280,13 @@ struct ExpansionTileControlView: View {
   var body: some View {
     DisclosureGroup(
       isExpanded: Binding(
-        get: { node.bool("initially_expanded") ?? node.bool("expanded") ?? false },
+        get: { node.bool("expanded") ?? false },
         set: { events.commit(node, key: "expanded", value: .bool($0)) })
     ) {
       VStack(alignment: .leading, spacing: 0) {
-        ControlList(ids: node.childIDs, axis: .vertical)
+        ControlList(ids: node.controlIDs(forKey: "controls"), axis: .vertical)
       }
+      .padding(ControlProps.edgeInsets(node.props["controls_padding"]) ?? EdgeInsets())
     } label: {
       HStack(spacing: 12) {
         if let leadingID = node.controlID(forKey: "leading") {
@@ -195,10 +294,22 @@ struct ExpansionTileControlView: View {
         }
         if let titleID = node.controlID(forKey: "title") {
           ControlView(id: titleID, axis: .none)
+        } else if let title = node.string("title") {
+          Text(title)
+        }
+        Spacer(minLength: 0)
+        if let subtitleID = node.controlID(forKey: "subtitle") {
+          ControlView(id: subtitleID, axis: .none)
+        }
+        if let trailingID = node.controlID(forKey: "trailing") {
+          ControlView(id: trailingID, axis: .none)
         }
       }
     }
-    .padding(.horizontal, 16)
+    .padding(ControlProps.edgeInsets(node.props["tile_padding"])
+      ?? EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+    .background(MaterialPalette.color(node.string(
+      (node.bool("expanded") ?? false) ? "bgcolor" : "collapsed_bgcolor")))
   }
 }
 
@@ -209,7 +320,7 @@ struct ExpansionPanelListControlView: View {
   @Environment(\.rufletEvents) private var events
 
   var body: some View {
-    VStack(spacing: CGFloat(node.double("spacing") ?? 2)) {
+    VStack(spacing: CGFloat(node.double("spacing") ?? 16)) {
       ForEach(node.childIDs, id: \.self) { panelID in
         if let panel = store.node(panelID) {
           ExpansionPanelView(node: panel, list: node)
@@ -230,14 +341,11 @@ private struct ExpansionPanelView: View {
         get: { node.bool("expanded") ?? false },
         set: { expanded in
           events.setLocal(node.id, "expanded", .bool(expanded))
-          // Flet reports the change on the list, carrying the panel's index.
-          guard list.handlesEvent("change") else { return }
-          events.send(
-            list.id, "change",
-            .map([
-              "index": .int(Int64(list.childIDs.firstIndex(of: node.id) ?? 0)),
-              "expanded": .bool(expanded)
-            ]))
+          // Flet's ExpansionPanelList callback carries the panel index. The
+          // expanded property itself lives on the structural panel child.
+          events.fire(
+            list, "change",
+            data: .int(Int64(list.childIDs.firstIndex(of: node.id) ?? 0)))
         })
     ) {
       if let contentID = node.controlID(forKey: "content") {
@@ -253,100 +361,148 @@ private struct ExpansionPanelView: View {
   }
 }
 
-/// `Tabs` / `TabBar` — a tab strip over `TabBarView` content.
+private struct RufletTabSelectionKey: EnvironmentKey {
+  static let defaultValue: Binding<Int>? = nil
+}
+
+private extension EnvironmentValues {
+  var rufletTabSelection: Binding<Int>? {
+    get { self[RufletTabSelectionKey.self] }
+    set { self[RufletTabSelectionKey.self] = newValue }
+  }
+}
+
+/// `Tabs` owns the selection controller. Its content owns the actual TabBar
+/// and TabBarView, exactly as Flet's ancestor TabController contract does.
 struct TabsControlView: View {
+  let node: ControlNode
+  @Environment(\.rufletEvents) private var events
+  @State private var selectedIndex: Int
+
+  init(node: ControlNode) {
+    self.node = node
+    _selectedIndex = State(initialValue: node.int("selected_index") ?? 0)
+  }
+
+  var body: some View {
+    Group {
+      if let contentID = node.controlID(forKey: "content") {
+        ControlView(id: contentID, axis: .vertical)
+      } else {
+        EmptyView()
+      }
+    }
+    .environment(\.rufletTabSelection, Binding(
+      get: { selectedIndex },
+      set: { selectedIndex = CollectionParity.normalizedIndex($0, count: node.int("length") ?? 0) }))
+    .onChange(of: selectedIndex) { value in
+      events.setLocal(node.id, "selected_index", .int(Int64(value)))
+      events.fire(node, "change", data: .int(Int64(value)))
+    }
+    .onChange(of: node.int("selected_index") ?? 0) { value in
+      selectedIndex = CollectionParity.normalizedIndex(value, count: node.int("length") ?? 0)
+    }
+    .rufletCommandHandler(node.id, handler: handleCommand)
+  }
+
+  private func handleCommand(
+    _ call: RufletMethodCall,
+    completion: @escaping RufletMethodCompletion
+  ) {
+    guard call.name == "move_to" else {
+      return completion(.failure(rufletUnsupported("Tabs", call)))
+    }
+    guard let index = call.argument("index")?.intValue else {
+      return completion(.failure(RufletServiceError.invalidArguments("index is required")))
+    }
+    selectedIndex = CollectionParity.normalizedIndex(index, count: node.int("length") ?? 0)
+    completion(.success(.null))
+  }
+}
+
+/// Flet's Material TabBar, with parent-owned `Tab` metadata.
+struct TabBarControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
+  @Environment(\.rufletTabSelection) private var selection
 
   var body: some View {
-    let tabs = tabNodes
-    let selected = node.int("selected_index") ?? 0
-
-    VStack(spacing: 0) {
-      Picker(
-        "",
-        selection: Binding(
-          get: { selected },
-          set: { events.commit(node, key: "selected_index", value: .int(Int64($0))) })
-      ) {
-        ForEach(Array(tabs.enumerated()), id: \.element.id) { index, tab in
-          tabLabel(tab).tag(index)
-        }
-      }
-      .pickerStyle(.segmented)
-      .labelsHidden()
-      .padding(.horizontal)
-      .padding(.vertical, 8)
-
-      if let content = tabs.indices.contains(selected) ? tabs[selected].controlID(forKey: "content") : nil {
-        ControlView(id: content, axis: .vertical)
-          .frame(maxWidth: .infinity, maxHeight: .infinity)
-      } else if let tabView = effectiveTabView {
-        let pages = tabView.childIDs
-        if pages.indices.contains(selected) {
-          ControlView(id: pages[selected], axis: .vertical)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }
+    let tabs = node.controlIDs(forKey: "tabs").compactMap { store.node($0) }
+    let scrollable = node.bool("scrollable") ?? true
+    Group {
+      if scrollable {
+        ScrollView(.horizontal, showsIndicators: false) { strip(tabs) }
+      } else {
+        strip(tabs).frame(maxWidth: .infinity)
       }
     }
-  }
-
-  private var tabNodes: [ControlNode] {
-    let owner = effectiveTabBar ?? node
-    let ids = owner.controlIDs(forKey: "tabs") + owner.childIDs
-    return ids.compactMap { store.node($0) }.filter { $0.type == "Tab" }
-  }
-
-  private var effectiveTabBar: ControlNode? {
-    node.type == "TabBar" ? node : descendant(ofType: "TabBar", from: node)
-  }
-
-  private var effectiveTabView: ControlNode? {
-    if let directID = node.controlID(forKey: "tab_bar_view") { return store.node(directID) }
-    return descendant(ofType: "TabBarView", from: node)
-  }
-
-  private func descendant(ofType type: String, from root: ControlNode) -> ControlNode? {
-    var pending = root.props.values.flatMap(controlIDs)
-    var visited: Set<Int> = []
-    while let id = pending.popLast() {
-      guard visited.insert(id).inserted, let child = store.node(id) else { continue }
-      if child.type == type { return child }
-      pending.append(contentsOf: child.props.values.flatMap(controlIDs))
+    .overlay(alignment: .bottom) {
+      Rectangle()
+        .fill(MaterialPalette.color(node.string("divider_color"), default: .clear))
+        .frame(height: CGFloat(node.double("divider_height") ?? 1))
     }
-    return nil
+    .rufletCommandHandler(node.id, handler: handleCommand)
   }
 
-  private func controlIDs(in value: RufletValue) -> [Int] {
-    switch value {
-    case .controlRef(let id): return [id]
-    case .array(let values): return values.flatMap(controlIDs)
-    case .map(let values): return values.values.flatMap(controlIDs)
-    default: return []
+  private func strip(_ tabs: [ControlNode]) -> some View {
+    HStack(spacing: 0) {
+      ForEach(Array(tabs.enumerated()), id: \.element.id) { index, tab in
+        Button {
+          selection?.wrappedValue = index
+          events.fire(node, "click", data: .int(Int64(index)))
+        } label: {
+          tabLabel(tab)
+            .foregroundColor(MaterialPalette.color(
+              index == selection?.wrappedValue
+                ? node.string("label_color") : node.string("unselected_label_color"),
+              default: index == selection?.wrappedValue ? .accentColor : .secondary))
+            .padding(.horizontal, 16)
+            .frame(minHeight: CGFloat(tab.double("height") ?? 46))
+            .overlay(alignment: .bottom) {
+              if index == selection?.wrappedValue {
+                Rectangle()
+                  .fill(MaterialPalette.color(node.string("indicator_color"), default: .accentColor))
+                  .frame(height: CGFloat(node.double("indicator_thickness") ?? 2))
+              }
+            }
+        }
+        .buttonStyle(.plain)
+        .onHover { hovering in
+          events.fire(
+            node, "hover",
+            data: .map(["hovering": .bool(hovering), "index": .int(Int64(index))]))
+        }
+      }
     }
+  }
+
+  private func handleCommand(
+    _ call: RufletMethodCall,
+    completion: @escaping RufletMethodCompletion
+  ) {
+    guard call.name == "move_to" else {
+      return completion(.failure(rufletUnsupported("TabBar", call)))
+    }
+    guard let index = call.argument("index")?.intValue, let selection else {
+      return completion(.failure(RufletServiceError.invalidArguments("index is required")))
+    }
+    selection.wrappedValue = index
+    completion(.success(.null))
   }
 
   @ViewBuilder
   private func tabLabel(_ tab: ControlNode) -> some View {
-    // `Label` is one semantic view, so SwiftUI passes it to the native picker
-    // as one segment. Building an HStack here makes SwiftUI flatten the icon
-    // and title into separate segments.
-    if let label = tab.string("label") ?? tab.string("text"), !label.isEmpty,
-      let symbol = IconMapping.symbol(for: tab.props["icon"])
-    {
-      Label(label, systemImage: symbol)
-        .labelStyle(.titleAndIcon)
-    } else if let label = tab.string("label") ?? tab.string("text"), !label.isEmpty {
+    let label = tab.string("label") ?? tab.string("text")
+    let symbol = IconMapping.symbol(for: tab.props["icon"])
+    if let label, let symbol {
+      Label(label, systemImage: symbol).labelStyle(.titleAndIcon)
+    } else if let label {
       Text(label)
-    } else if let symbol = IconMapping.symbol(for: tab.props["icon"]) {
+    } else if let symbol {
       Image(systemName: symbol)
-    } else if let contentID = tab.controlID(forKey: "tab_content"),
-      let content = store.node(contentID), content.type == "Text"
-    {
-      Text(content.string("value") ?? "")
-    } else {
-      Text("Tab")
+    } else if let labelID = tab.controlID(forKey: "label") {
+      ControlView(id: labelID, axis: .none)
     }
   }
 }
@@ -354,13 +510,29 @@ struct TabsControlView: View {
 /// `TabBarView` — the pages behind a `TabBar`.
 struct TabBarViewControlView: View {
   let node: ControlNode
+  @Environment(\.rufletTabSelection) private var selection
 
   var body: some View {
-    let selected = node.int("selected_index") ?? 0
+    let selected = selection?.wrappedValue ?? 0
     let children = node.childIDs
     if children.indices.contains(selected) {
       ControlView(id: children[selected], axis: .vertical)
     }
+    EmptyView().rufletCommandHandler(node.id, handler: handleCommand)
+  }
+
+  private func handleCommand(
+    _ call: RufletMethodCall,
+    completion: @escaping RufletMethodCompletion
+  ) {
+    guard call.name == "move_to" else {
+      return completion(.failure(rufletUnsupported("TabBarView", call)))
+    }
+    guard let index = call.argument("index")?.intValue, let selection else {
+      return completion(.failure(RufletServiceError.invalidArguments("index is required")))
+    }
+    selection.wrappedValue = index
+    completion(.success(.null))
   }
 }
 
@@ -379,8 +551,15 @@ struct DataTableControlView: View {
     ScrollView(.horizontal, showsIndicators: true) {
       VStack(alignment: .leading, spacing: 0) {
         HStack(spacing: spacing) {
+          if node.bool("show_checkbox_column") == true {
+            Button { selectAll(rows) } label: {
+              Image(systemName: allSelected(rows) ? "checkmark.square.fill" : "square")
+            }
+            .buttonStyle(.plain)
+            .disabled(!node.handlesEvent("select_all"))
+          }
           ForEach(columns, id: \.id) { column in
-            headerCell(column)
+            headerCell(column, index: columns.firstIndex(where: { $0.id == column.id }) ?? 0)
           }
         }
         .frame(minHeight: CGFloat(node.double("heading_row_height")
@@ -391,6 +570,13 @@ struct DataTableControlView: View {
 
         ForEach(rows, id: \.id) { row in
           HStack(spacing: spacing) {
+            if node.bool("show_checkbox_column") == true {
+              Button { selectRow(row, selected: !(row.bool("selected") ?? false)) } label: {
+                Image(systemName: (row.bool("selected") ?? false) ? "checkmark.square.fill" : "square")
+              }
+              .buttonStyle(.plain)
+              .disabled(!row.handlesEvent("select_change"))
+            }
             ForEach(row.controlIDs(forKey: "cells"), id: \.self) { cellID in
               cellContent(cellID)
             }
@@ -402,7 +588,8 @@ struct DataTableControlView: View {
             (row.bool("selected") ?? false)
               ? MaterialPalette.color("secondarycontainer", default: .clear) : Color.clear)
           .contentShape(Rectangle())
-          .onTapGesture { events.fire(row, "select_changed") }
+          .onTapGesture { selectRow(row, selected: !(row.bool("selected") ?? false)) }
+          .modifier(LongPressReporter(node: row, events: events))
 
           if node.double("divider_thickness") ?? 1 > 0 { tableDivider }
         }
@@ -418,30 +605,164 @@ struct DataTableControlView: View {
   }
 
   @ViewBuilder
-  private func headerCell(_ column: ControlNode) -> some View {
-    if let labelID = column.controlID(forKey: "label") {
-      ControlView(id: labelID, axis: .none)
-    } else {
-      Text(column.string("label") ?? "")
+  private func headerCell(_ column: ControlNode, index: Int) -> some View {
+    Button {
+      let ascending = node.int("sort_column_index") == index
+        ? !(node.bool("sort_ascending") ?? false) : true
+      events.fire(
+        column, "sort",
+        data: .map(["ci": .int(Int64(index)), "asc": .bool(ascending)]))
+    } label: {
+      HStack(spacing: 4) {
+        if let labelID = column.controlID(forKey: "label") {
+          ControlView(id: labelID, axis: .none)
+        } else {
+          Text(column.string("label") ?? "")
+        }
+        if node.int("sort_column_index") == index {
+          Image(systemName: (node.bool("sort_ascending") ?? false) ? "arrow.up" : "arrow.down")
+            .font(.caption)
+        }
+      }
     }
+    .buttonStyle(.plain)
+    .disabled(!column.handlesEvent("sort"))
   }
 
   @ViewBuilder
   private func cellContent(_ cellID: Int) -> some View {
     if let cell = store.node(cellID) {
-      if let contentID = cell.controlID(forKey: "content") {
-        ControlView(id: contentID, axis: .none)
-      } else if let text = cell.string("content") {
-        HStack(spacing: 4) {
-          Text(text)
-          if cell.bool("show_edit_icon") == true {
-            Image(systemName: "pencil").foregroundColor(.secondary)
+      Group {
+        if let contentID = cell.controlID(forKey: "content") {
+          ControlView(id: contentID, axis: .none)
+        } else if let text = cell.string("content") {
+          HStack(spacing: 4) {
+            Text(text)
+            if cell.bool("show_edit_icon") == true {
+              Image(systemName: "pencil").foregroundColor(.secondary)
+            }
           }
+          .opacity(cell.bool("placeholder") == true ? 0.55 : 1)
         }
-        .opacity(cell.bool("placeholder") == true ? 0.55 : 1)
       }
+      .contentShape(Rectangle())
+      .modifier(DataCellInteractionReporter(node: cell, events: events))
     } else {
       ControlView(id: cellID, axis: .none)
+    }
+  }
+
+  private func selectRow(_ row: ControlNode, selected: Bool) {
+    guard row.handlesEvent("select_change") else { return }
+    events.setLocal(row.id, "selected", .bool(selected))
+    events.send(row.id, "select_change", .bool(selected))
+  }
+
+  private func allSelected(_ rows: [ControlNode]) -> Bool {
+    !rows.isEmpty && rows.allSatisfy { $0.bool("selected") ?? false }
+  }
+
+  private func selectAll(_ rows: [ControlNode]) {
+    let selected = !allSelected(rows)
+    events.fire(node, "select_all", data: .bool(selected))
+  }
+}
+
+/// DataCell exposes five independent gestures in Flet. This modifier keeps
+/// those handlers on the structural cell id instead of accidentally firing on
+/// DataTable, which is the source of the current silent/double-click bug.
+private struct DataCellInteractionReporter: ViewModifier {
+  let node: ControlNode
+  let events: RufletEventSink
+  @State private var pointerOrigin: CGPoint?
+
+  func body(content: Content) -> some View {
+    content
+      .onTapGesture(count: 2) { events.fire(node, "double_tap") }
+      .onTapGesture(count: 1) { events.fire(node, "tap") }
+      .modifier(LongPressReporter(node: node, events: events))
+      .simultaneousGesture(
+        DragGesture(minimumDistance: 0, coordinateSpace: .local)
+          .onChanged { value in
+            guard pointerOrigin == nil else { return }
+            pointerOrigin = value.startLocation
+            events.fire(
+              node, "tap_down",
+              data: CollectionParity.tapDownPayload(
+                x: value.startLocation.x, y: value.startLocation.y))
+          }
+          .onEnded { value in
+            defer { pointerOrigin = nil }
+            guard let origin = pointerOrigin else { return }
+            let distance = hypot(value.location.x - origin.x, value.location.y - origin.y)
+            if distance > 18 { events.fire(node, "tap_cancel") }
+          })
+  }
+}
+
+/// Pure collection semantics shared by views and regression tests.
+enum CollectionParity {
+  static func reorderDestination(from origin: Int, insertionSlot: Int) -> Int {
+    insertionSlot > origin ? insertionSlot - 1 : insertionSlot
+  }
+
+  static func clampedIndex(_ index: Int, count: Int) -> Int {
+    guard count > 0 else { return 0 }
+    return min(max(index, 0), count - 1)
+  }
+
+  static func normalizedIndex(_ index: Int, count: Int) -> Int {
+    clampedIndex(index < 0 ? count + index : index, count: count)
+  }
+
+  static func pageIndex(forOffset offset: Double, count: Int) -> Int {
+    clampedIndex(Int(offset.rounded()), count: count)
+  }
+
+  static func tapDownPayload(x: CGFloat, y: CGFloat) -> RufletValue {
+    .map([
+      "local_x": .double(Double(x)), "local_y": .double(Double(y)),
+      "global_x": .double(Double(x)), "global_y": .double(Double(y)),
+      "kind": .string("touch")
+    ])
+  }
+}
+
+private struct CollectionScrollOffsetKey: PreferenceKey {
+  static var defaultValue: CGFloat = 0
+  static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+    value = nextValue()
+  }
+}
+
+private struct CollectionScrollReporter: ViewModifier {
+  let node: ControlNode
+  let horizontal: Bool
+  let events: RufletEventSink
+
+  func body(content: Content) -> some View {
+    if node.handlesEvent("scroll") {
+      content
+        .coordinateSpace(name: "ruflet-scroll-\(node.id)")
+        .background(
+          GeometryReader { proxy in
+            Color.clear.preference(
+              key: CollectionScrollOffsetKey.self,
+              value: horizontal
+                ? -proxy.frame(in: .named("ruflet-scroll-\(node.id)")).minX
+                : -proxy.frame(in: .named("ruflet-scroll-\(node.id)")).minY)
+          })
+        .onPreferenceChange(CollectionScrollOffsetKey.self) { pixels in
+          events.fire(
+            node, "scroll",
+            data: .map([
+              "pixels": .double(Double(max(0, pixels))),
+              "event_type": .string("update"),
+              "axis": .string(horizontal ? "horizontal" : "vertical")
+            ]))
+        }
+    } else {
+      content
     }
   }
 }
