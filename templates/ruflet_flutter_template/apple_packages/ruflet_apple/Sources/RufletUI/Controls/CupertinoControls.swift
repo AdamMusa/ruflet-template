@@ -50,7 +50,10 @@ struct CupertinoButtonControlView: View {
       .modifier(FocusReporter(node: node, events: events))
       .modifier(LongPressReporter(node: node, events: events))
       // Cupertino dims a button while it is held rather than washing it.
-      .modifier(CupertinoPressOpacity(value: node.double("opacity_on_click")))
+      // Flet passes 0.4 when the property is omitted, matching
+      // CupertinoButton.pressedOpacity rather than SwiftUI's button-style
+      // feedback.
+      .modifier(CupertinoPressOpacity(value: node.double("opacity_on_click") ?? 0.4))
       .disabled(node.bool("disabled") ?? false)
   }
 
@@ -91,18 +94,16 @@ struct CupertinoButtonControlView: View {
 
 /// Cupertino's press feedback is a fade, and the button names how far.
 private struct CupertinoPressOpacity: ViewModifier {
-  let value: Double?
+  let value: Double
   @State private var pressed = false
 
   func body(content: Content) -> some View {
-    guard let value else { return AnyView(content) }
-    return AnyView(
-      content
-        .opacity(pressed ? value : 1)
-        .simultaneousGesture(
-          DragGesture(minimumDistance: 0)
-            .onChanged { _ in pressed = true }
-            .onEnded { _ in pressed = false }))
+    content
+      .opacity(pressed ? value : 1)
+      .simultaneousGesture(
+        DragGesture(minimumDistance: 0)
+          .onChanged { _ in pressed = true }
+          .onEnded { _ in pressed = false })
   }
 }
 
@@ -150,6 +151,7 @@ struct CupertinoSwitchControlView: View {
       if labelPosition == .right { label }
     }
     .modifier(FocusReporter(node: node, events: events))
+    .disabled(node.bool("disabled") ?? false)
   }
 
   private var binding: Binding<Bool> {
@@ -171,6 +173,11 @@ struct CupertinoSwitchControlView: View {
     if let text = node.string("label") {
       Text(text)
         .foregroundColor(labelColor)
+        .contentShape(Rectangle())
+        .onTapGesture {
+          guard node.bool("disabled") != true else { return }
+          binding.wrappedValue.toggle()
+        }
     }
   }
 
@@ -246,6 +253,7 @@ private struct SwitchTrackOutline: ViewModifier {
 struct CupertinoSliderControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
+  @State private var currentValue: Double?
 
   /// `divisions` is a count in Flutter and a stride in SwiftUI.
   private func sliderStep(minimum: Double, maximum: Double) -> Double.Stride {
@@ -261,8 +269,11 @@ struct CupertinoSliderControlView: View {
 
     Slider(
       value: Binding(
-        get: { node.double("value") ?? minimum },
-        set: { events.commit(node, value: .double($0)) }),
+        get: { currentValue ?? clampedNodeValue(minimum: minimum, maximum: maximum) },
+        set: {
+          currentValue = $0
+          events.commit(node, value: .double($0))
+        }),
       in: minimum...max(maximum, minimum + .ulpOfOne),
       // `divisions` snaps the slider to discrete steps, which SwiftUI takes
       // as the distance between them rather than as a count.
@@ -270,13 +281,22 @@ struct CupertinoSliderControlView: View {
       onEditingChanged: { editing in
         events.fire(
           node, editing ? "change_start" : "change_end",
-          data: .double(node.double("value") ?? minimum))
+          data: .double(currentValue ?? clampedNodeValue(minimum: minimum, maximum: maximum)))
       }
     )
     .tint(MaterialPalette.color(node.string("active_color")))
     // Cupertino names the knob's colour separately from the track's.
     .modifier(SliderThumbTint(color: MaterialPalette.color(node.string("thumb_color"))))
     .modifier(FocusReporter(node: node, events: events))
+    .disabled(node.bool("disabled") ?? false)
+    .onAppear { currentValue = clampedNodeValue(minimum: minimum, maximum: maximum) }
+    .onChange(of: node.double("value")) { _ in
+      currentValue = clampedNodeValue(minimum: minimum, maximum: maximum)
+    }
+  }
+
+  private func clampedNodeValue(minimum: Double, maximum: Double) -> Double {
+    min(max(node.double("value") ?? minimum, minimum), max(maximum, minimum))
   }
 }
 
