@@ -463,25 +463,10 @@ struct TextFieldControlView: View {
       set: { events.commit(node, value: .string($0)) })
   }
 
-  private var explicitSelection: NSRange {
-    guard let map = node.map("selection"),
-      let base = map["base_offset"]?.intValue,
-      let extent = map["extent_offset"]?.intValue
-    else { return NSRange(location: 0, length: 0) }
-    let start = max(0, min(base, extent))
-    let end = min((node.string("value") ?? "").utf16.count, max(base, extent))
-    return NSRange(location: start, length: max(0, end - start))
-  }
+  private var explicitSelection: NSRange { RufletTextSelection.explicit(on: node) }
 
   private func reportSelection(_ range: NSRange) {
-    let source = node.string("value") ?? ""
-    guard let resolved = RufletTextSelection.normalized(range, in: source),
-      let data = RufletTextSelection.eventData(resolved, in: source)
-    else { return }
-    let selectionValue = RufletTextSelection.wireValue(resolved)
-    events.setLocal(node.id, "selection", selectionValue)
-    events.update(node.id, ["selection": selectionValue])
-    events.fire(node, "selection_change", data: data)
+    RufletTextSelection.report(range, on: node, to: events)
   }
 }
 

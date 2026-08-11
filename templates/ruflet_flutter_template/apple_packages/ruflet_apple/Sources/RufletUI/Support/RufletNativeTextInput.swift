@@ -92,6 +92,32 @@ enum RufletTextSelection {
       "selection": wireValue(resolved),
     ])
   }
+
+  /// The selection Ruby set on the control, clamped to the current value.
+  static func explicit(on node: ControlNode) -> NSRange {
+    guard let map = node.map("selection"),
+      let base = map["base_offset"]?.intValue,
+      let extent = map["extent_offset"]?.intValue
+    else { return NSRange(location: 0, length: 0) }
+    let start = max(0, min(base, extent))
+    let end = min((node.string("value") ?? "").utf16.count, max(base, extent))
+    return NSRange(location: start, length: max(0, end - start))
+  }
+
+  /// Writes the selection back onto the control before reporting it, so Ruby
+  /// reads the same range whether or not it declared a handler.
+  static func report(
+    _ range: NSRange, on node: ControlNode, to events: RufletEventSink
+  ) {
+    let source = node.string("value") ?? ""
+    guard let resolved = normalized(range, in: source),
+      let data = eventData(resolved, in: source)
+    else { return }
+    let value = wireValue(resolved)
+    events.setLocal(node.id, "selection", value)
+    events.update(node.id, ["selection": value])
+    events.fire(node, "selection_change", data: data)
+  }
 }
 
 #if canImport(UIKit)

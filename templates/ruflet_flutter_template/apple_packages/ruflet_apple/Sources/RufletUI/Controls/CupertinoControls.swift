@@ -201,20 +201,151 @@ struct CupertinoSelectionControlView: View {
 struct CupertinoTextFieldControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
+  @State private var focused = false
+  @State private var selection = NSRange(location: 0, length: 0)
+  @State private var revealed = false
 
   var body: some View {
-    TextField(
-      node.string("placeholder_text") ?? "",
-      text: Binding(
-        get: { node.string("value") ?? "" },
-        set: { events.commit(node, value: .string($0)) })
-    )
-    .textFieldStyle(.plain)
-    .padding(8)
+    HStack(spacing: 6) {
+      overlay(forKey: "prefix_icon", mode: node.string("prefix_visibility_mode"))
+      overlay(forKey: "prefix", mode: node.string("prefix_visibility_mode"))
+      field
+      overlay(forKey: "suffix", mode: node.string("suffix_visibility_mode"))
+      overlay(forKey: "suffix_icon", mode: node.string("suffix_visibility_mode"))
+      revealButton
+      clearButton
+    }
+    .padding(contentPadding)
     .background(
-      RoundedRectangle(cornerRadius: ControlProps.cornerRadius(node.props["border_radius"]) ?? 8)
-        .fill(MaterialPalette.color(node.string("bgcolor"), default: .gray.opacity(0.12))))
-    .onSubmit { events.fire(node, "submit", data: .string(node.string("value") ?? "")) }
+      RoundedRectangle(cornerRadius: cornerRadius)
+        .fill(fieldBackground))
+    .overlay(borderStroke)
+    .onAppear {
+      focused = node.bool("autofocus") == true
+      selection = RufletTextSelection.explicit(on: node)
+    }
+    .onChange(of: focused) { events.fire(node, $0 ? "focus" : "blur") }
+    .onChange(of: selection) { RufletTextSelection.report($0, on: node, to: events) }
+    .rufletCommandHandler(node.id) { call, completion in
+      switch call.name {
+      case "focus": focused = true; completion(.success(.null))
+      case "blur": focused = false; completion(.success(.null))
+      default: completion(.failure(rufletUnsupported(node.type, call)))
+      }
+    }
+  }
+
+  @ViewBuilder
+  private var field: some View {
+    let placeholder = node.string("placeholder_text") ?? ""
+    let obscure = node.bool("password") == true && !revealed
+    if node.bool("multiline") == true || (node.int("min_lines") ?? 1) > 1 {
+      TextEditor(text: binding)
+        .frame(minHeight: CGFloat((node.int("min_lines") ?? 3) * 20))
+    } else {
+      #if canImport(UIKit) || canImport(AppKit)
+        RufletNativeTextInput(
+          text: binding,
+          focused: $focused,
+          selection: $selection,
+          placeholder: placeholder,
+          secure: obscure,
+          traits: RufletTextInputTraits(node: node),
+          onTap: { events.fire(node, "click") },
+          onTapOutside: { events.fire(node, "tap_outside") },
+          onSubmit: { events.fire(node, "submit", data: .string($0)) })
+      #else
+        TextField(placeholder, text: binding)
+          .onSubmit { events.fire(node, "submit", data: .string(binding.wrappedValue)) }
+      #endif
+    }
+  }
+
+  /// Flutter's `OverlayVisibilityMode`, which decides whether the clear button
+  /// and the prefix and suffix slots are shown against the editing state.
+  private func shows(_ mode: String?, default fallback: Bool) -> Bool {
+    switch mode?.lowercased().replacingOccurrences(of: "_", with: "") {
+    case "never": return false
+    case "editing": return focused
+    case "notediting": return !focused
+    case "always": return true
+    default: return fallback
+    }
+  }
+
+  @ViewBuilder
+  private func overlay(forKey key: String, mode: String?) -> some View {
+    if let id = node.controlID(forKey: key), shows(mode, default: true) {
+      ControlView(id: id, axis: .none)
+    }
+  }
+
+  /// `clear_button_visibility_mode` defaults to never, the way
+  /// CupertinoTextField's own does.
+  @ViewBuilder
+  private var clearButton: some View {
+    if shows(node.string("clear_button_visibility_mode"), default: false),
+      !(node.string("value") ?? "").isEmpty {
+      Button {
+        events.commit(node, value: .string(""))
+      } label: {
+        Image(systemName: "xmark.circle.fill").foregroundColor(.secondary)
+      }
+      .buttonStyle(.plain)
+      .accessibilityLabel(node.string("clear_button_semantics_label") ?? "Clear")
+    }
+  }
+
+  @ViewBuilder
+  private var revealButton: some View {
+    if node.bool("password") == true, node.bool("can_reveal_password") == true {
+      Button {
+        revealed.toggle()
+      } label: {
+        Image(systemName: revealed ? "eye.slash" : "eye").foregroundColor(.secondary)
+      }
+      .buttonStyle(.plain)
+    }
+  }
+
+  private var binding: Binding<String> {
+    Binding(
+      get: { node.string("value") ?? "" },
+      set: { events.commit(node, value: .string($0)) })
+  }
+
+  private var cornerRadius: CGFloat {
+    ControlProps.cornerRadius(node.props["border_radius"]) ?? 8
+  }
+
+  private var contentPadding: EdgeInsets {
+    ControlProps.edgeInsets(node.props["content_padding"])
+      ?? ControlProps.edgeInsets(node.props["padding"])
+      ?? EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
+  }
+
+  private var fieldBackground: Color {
+    let key = focused ? "focused_bgcolor" : "bgcolor"
+    if let explicit = MaterialPalette.color(node.string(key) ?? node.string("bgcolor")) {
+      return explicit
+    }
+    if node.bool("filled") == true {
+      return MaterialPalette.color(node.string("fill_color"), default: .gray.opacity(0.12))
+    }
+    return MaterialPalette.color(node.string("fill_color"), default: .gray.opacity(0.12))
+  }
+
+  @ViewBuilder
+  private var borderStroke: some View {
+    if node.string("border")?.lowercased() != "none" {
+      RoundedRectangle(cornerRadius: cornerRadius)
+        .strokeBorder(
+          MaterialPalette.color(
+            node.string(focused ? "focused_border_color" : "border_color"),
+            default: .clear),
+          lineWidth: CGFloat(
+            node.double(focused ? "focused_border_width" : "border_width") ?? 1))
+    }
   }
 }
 
