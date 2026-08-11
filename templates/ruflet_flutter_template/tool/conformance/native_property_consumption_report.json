@@ -12,12 +12,12 @@
     "controls": 196,
     "properties": 5330,
     "classifications": {
-      "consumed": 1184,
-      "parent_consumed": 3105,
-      "service": 110,
-      "unclassified": 931
+      "consumed": 1232,
+      "parent_consumed": 3108,
+      "service": 115,
+      "unclassified": 875
     },
-    "unclassified": 931
+    "unclassified": 875
   },
   "unclassified": [
     {
@@ -33,11 +33,6 @@
     {
       "family": "service",
       "wire_type": "Camera",
-      "property": "on_error"
-    },
-    {
-      "family": "service",
-      "wire_type": "Camera",
       "property": "on_stream_image"
     },
     {
@@ -49,16 +44,6 @@
       "family": "service",
       "wire_type": "FilePicker",
       "property": "on_result"
-    },
-    {
-      "family": "service",
-      "wire_type": "Flashlight",
-      "property": "on_error"
-    },
-    {
-      "family": "service",
-      "wire_type": "Geolocator",
-      "property": "on_error"
     },
     {
       "family": "service",
@@ -212,16 +197,6 @@
     },
     {
       "family": "visual",
-      "wire_type": "AppBar",
-      "property": "title_text_style"
-    },
-    {
-      "family": "visual",
-      "wire_type": "AppBar",
-      "property": "toolbar_text_style"
-    },
-    {
-      "family": "visual",
       "wire_type": "Arc",
       "property": "paint"
     },
@@ -264,11 +239,6 @@
       "family": "visual",
       "wire_type": "Audio",
       "property": "on_duration_change"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Audio",
-      "property": "on_error"
     },
     {
       "family": "visual",
@@ -413,22 +383,12 @@
     {
       "family": "visual",
       "wire_type": "Checkbox",
-      "property": "error"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Checkbox",
       "property": "focus_color"
     },
     {
       "family": "visual",
       "wire_type": "Checkbox",
       "property": "hover_color"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Checkbox",
-      "property": "label_style"
     },
     {
       "family": "visual",
@@ -1143,16 +1103,6 @@
     {
       "family": "visual",
       "wire_type": "CupertinoTextField",
-      "property": "counter"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "counter_style"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
       "property": "cursor_error_color"
     },
     {
@@ -1188,16 +1138,6 @@
     {
       "family": "visual",
       "wire_type": "CupertinoTextField",
-      "property": "error"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "error_style"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
       "property": "fit_parent_size"
     },
     {
@@ -1229,16 +1169,6 @@
       "family": "visual",
       "wire_type": "CupertinoTextField",
       "property": "gradient"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "helper"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "helper_style"
     },
     {
       "family": "visual",
@@ -1284,11 +1214,6 @@
       "family": "visual",
       "wire_type": "CupertinoTextField",
       "property": "keyboard_brightness"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "label_style"
     },
     {
       "family": "visual",
@@ -1364,11 +1289,6 @@
       "family": "visual",
       "wire_type": "CupertinoTextField",
       "property": "suffix_style"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "text_style"
     },
     {
       "family": "visual",
@@ -1648,11 +1568,6 @@
     {
       "family": "visual",
       "wire_type": "Dropdown",
-      "property": "error_style"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Dropdown",
       "property": "error_text"
     },
     {
@@ -1669,11 +1584,6 @@
       "family": "visual",
       "wire_type": "Dropdown",
       "property": "focused_border_width"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Dropdown",
-      "property": "helper_style"
     },
     {
       "family": "visual",
@@ -1698,22 +1608,7 @@
     {
       "family": "visual",
       "wire_type": "Dropdown",
-      "property": "label_style"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Dropdown",
-      "property": "leading_icon"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Dropdown",
       "property": "menu_style"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Dropdown",
-      "property": "selected_suffix"
     },
     {
       "family": "visual",
@@ -1722,23 +1617,8 @@
     },
     {
       "family": "visual",
-      "wire_type": "Dropdown",
-      "property": "text_style"
-    },
-    {
-      "family": "visual",
       "wire_type": "DropdownM2",
       "property": "align_label_with_hint"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "counter"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "counter_style"
     },
     {
       "family": "visual",
@@ -1754,16 +1634,6 @@
       "family": "visual",
       "wire_type": "DropdownM2",
       "property": "enable_feedback"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "error"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "error_style"
     },
     {
       "family": "visual",
@@ -1793,27 +1663,12 @@
     {
       "family": "visual",
       "wire_type": "DropdownM2",
-      "property": "helper"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "helper_style"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
       "property": "hint_content"
     },
     {
       "family": "visual",
       "wire_type": "DropdownM2",
       "property": "hint_fade_duration"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "hint_style"
     },
     {
       "family": "visual",
@@ -1828,11 +1683,6 @@
     {
       "family": "visual",
       "wire_type": "DropdownM2",
-      "property": "label_style"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
       "property": "max_menu_height"
     },
     {
@@ -1843,22 +1693,7 @@
     {
       "family": "visual",
       "wire_type": "DropdownM2",
-      "property": "prefix"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "prefix_icon"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
       "property": "prefix_icon_size_constraints"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "prefix_style"
     },
     {
       "family": "visual",
@@ -1873,27 +1708,7 @@
     {
       "family": "visual",
       "wire_type": "DropdownM2",
-      "property": "suffix"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "suffix_icon"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
       "property": "suffix_icon_size_constraints"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "suffix_style"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "text_style"
     },
     {
       "family": "visual",
@@ -2179,11 +1994,6 @@
       "family": "visual",
       "wire_type": "FletApp",
       "property": "force_pyodide"
-    },
-    {
-      "family": "visual",
-      "wire_type": "FletApp",
-      "property": "on_error"
     },
     {
       "family": "visual",
@@ -2868,11 +2678,6 @@
     {
       "family": "visual",
       "wire_type": "Page",
-      "property": "on_error"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Page",
       "property": "on_login"
     },
     {
@@ -3189,11 +2994,6 @@
       "family": "visual",
       "wire_type": "Radio",
       "property": "hover_color"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Radio",
-      "property": "label_style"
     },
     {
       "family": "visual",
@@ -3743,11 +3543,6 @@
     {
       "family": "visual",
       "wire_type": "Switch",
-      "property": "label_text_style"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Switch",
       "property": "overlay_color"
     },
     {
@@ -3983,16 +3778,6 @@
     {
       "family": "visual",
       "wire_type": "TextField",
-      "property": "counter"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "counter_style"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
       "property": "cursor_error_color"
     },
     {
@@ -4023,11 +3808,6 @@
     {
       "family": "visual",
       "wire_type": "TextField",
-      "property": "error_style"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
       "property": "fit_parent_size"
     },
     {
@@ -4049,16 +3829,6 @@
       "family": "visual",
       "wire_type": "TextField",
       "property": "focused_color"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "helper"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "helper_style"
     },
     {
       "family": "visual",
@@ -4103,11 +3873,6 @@
     {
       "family": "visual",
       "wire_type": "TextField",
-      "property": "label_style"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
       "property": "max_lines"
     },
     {
@@ -4118,22 +3883,7 @@
     {
       "family": "visual",
       "wire_type": "TextField",
-      "property": "prefix"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "prefix_icon"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
       "property": "prefix_icon_size_constraints"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "prefix_style"
     },
     {
       "family": "visual",
@@ -4153,27 +3903,7 @@
     {
       "family": "visual",
       "wire_type": "TextField",
-      "property": "suffix"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "suffix_icon"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
       "property": "suffix_icon_size_constraints"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "suffix_style"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "text_style"
     },
     {
       "family": "visual",
@@ -4334,16 +4064,6 @@
       "family": "visual",
       "wire_type": "View",
       "property": "decoration"
-    },
-    {
-      "family": "visual",
-      "wire_type": "View",
-      "property": "drawer"
-    },
-    {
-      "family": "visual",
-      "wire_type": "View",
-      "property": "end_drawer"
     },
     {
       "family": "visual",
@@ -5289,8 +5009,13 @@
           ]
         },
         "on_error": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 101
+            }
+          ]
         },
         "on_size_change": {
           "classification": "parent_consumed",
@@ -5664,8 +5389,13 @@
           ]
         },
         "on_error": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 101
+            }
+          ]
         }
       }
     },
@@ -5709,8 +5439,13 @@
           ]
         },
         "on_error": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 101
+            }
+          ]
         },
         "on_position_change": {
           "classification": "unclassified",
@@ -6764,6 +6499,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
               "line": 64
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 65
             }
           ]
         },
@@ -7721,8 +7460,17 @@
           ]
         },
         "title_text_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
+              "line": 90
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
+              "line": 94
+            }
+          ]
         },
         "toolbar_height": {
           "classification": "consumed",
@@ -7743,8 +7491,17 @@
           ]
         },
         "toolbar_text_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
+              "line": 52
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
+              "line": 70
+            }
+          ]
         },
         "tooltip": {
           "classification": "parent_consumed",
@@ -7895,8 +7652,13 @@
           "evidence": []
         },
         "on_error": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 101
+            }
+          ]
         },
         "on_loaded": {
           "classification": "unclassified",
@@ -9697,6 +9459,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
               "line": 64
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 65
             }
           ]
         },
@@ -11490,8 +11256,13 @@
           ]
         },
         "error": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 101
+            }
+          ]
         },
         "expand": {
           "classification": "parent_consumed",
@@ -11580,6 +11351,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
               "line": 243
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 61
             }
           ]
         },
@@ -11593,8 +11368,17 @@
           ]
         },
         "label_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/InputControls.swift",
+              "line": 79
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 61
+            }
+          ]
         },
         "left": {
           "classification": "parent_consumed",
@@ -12444,6 +12228,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
               "line": 243
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 61
             }
           ]
         },
@@ -12770,6 +12558,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
               "line": 201
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
+              "line": 236
             }
           ]
         },
@@ -16941,6 +16733,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
               "line": 64
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 65
             }
           ]
         },
@@ -17596,6 +17392,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
               "line": 243
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 61
             }
           ]
         },
@@ -18908,6 +18708,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
               "line": 64
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 65
             }
           ]
         },
@@ -20397,6 +20201,10 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
+              "line": 479
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
               "line": 481
             }
           ]
@@ -20956,6 +20764,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
               "line": 390
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
+              "line": 391
             }
           ]
         },
@@ -21319,6 +21131,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
               "line": 243
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 61
             }
           ]
         },
@@ -22170,6 +21986,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
               "line": 368
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
+              "line": 369
             }
           ]
         },
@@ -23240,6 +23060,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
               "line": 368
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
+              "line": 369
             }
           ]
         },
@@ -24219,12 +24043,22 @@
           ]
         },
         "counter": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 111
+            }
+          ]
         },
         "counter_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 111
+            }
+          ]
         },
         "cursor_color": {
           "classification": "consumed",
@@ -24304,8 +24138,13 @@
           ]
         },
         "error": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 101
+            }
+          ]
         },
         "error_max_lines": {
           "classification": "consumed",
@@ -24317,8 +24156,13 @@
           ]
         },
         "error_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 101
+            }
+          ]
         },
         "expand": {
           "classification": "parent_consumed",
@@ -24406,8 +24250,13 @@
           ]
         },
         "helper": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 105
+            }
+          ]
         },
         "helper_max_lines": {
           "classification": "consumed",
@@ -24419,8 +24268,13 @@
           ]
         },
         "helper_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 105
+            }
+          ]
         },
         "hint_fade_duration": {
           "classification": "unclassified",
@@ -24453,6 +24307,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
               "line": 64
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 65
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -24506,6 +24364,10 @@
               "line": 243
             },
             {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 61
+            },
+            {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
               "line": 113
             },
@@ -24516,8 +24378,13 @@
           ]
         },
         "label_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 61
+            }
+          ]
         },
         "left": {
           "classification": "parent_consumed",
@@ -25108,8 +24975,13 @@
           ]
         },
         "text_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "parent_consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
+              "line": 131
+            }
+          ]
         },
         "text_vertical_align": {
           "classification": "unclassified",
@@ -26054,6 +25926,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
               "line": 64
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 65
             }
           ]
         },
@@ -28636,8 +28512,13 @@
           "evidence": []
         },
         "error_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 101
+            }
+          ]
         },
         "error_text": {
           "classification": "unclassified",
@@ -28717,8 +28598,13 @@
           ]
         },
         "helper_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 105
+            }
+          ]
         },
         "helper_text": {
           "classification": "unclassified",
@@ -28766,6 +28652,10 @@
           "classification": "consumed",
           "evidence": [
             {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 61
+            },
+            {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
               "line": 113
             },
@@ -28780,12 +28670,22 @@
           ]
         },
         "label_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 61
+            }
+          ]
         },
         "leading_icon": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/InputControls.swift",
+              "line": 874
+            }
+          ]
         },
         "left": {
           "classification": "parent_consumed",
@@ -29073,8 +28973,13 @@
           ]
         },
         "selected_suffix": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/InputControls.swift",
+              "line": 889
+            }
+          ]
         },
         "selected_trailing_icon": {
           "classification": "unclassified",
@@ -29125,8 +29030,13 @@
           ]
         },
         "text_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/InputControls.swift",
+              "line": 889
+            }
+          ]
         },
         "tooltip": {
           "classification": "parent_consumed",
@@ -29585,12 +29495,22 @@
           ]
         },
         "counter": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 111
+            }
+          ]
         },
         "counter_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 111
+            }
+          ]
         },
         "data": {
           "classification": "parent_consumed",
@@ -29648,8 +29568,13 @@
           "evidence": []
         },
         "error": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 101
+            }
+          ]
         },
         "error_max_lines": {
           "classification": "consumed",
@@ -29661,8 +29586,13 @@
           ]
         },
         "error_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 101
+            }
+          ]
         },
         "expand": {
           "classification": "parent_consumed",
@@ -29763,8 +29693,13 @@
           ]
         },
         "helper": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 105
+            }
+          ]
         },
         "helper_max_lines": {
           "classification": "consumed",
@@ -29776,8 +29711,13 @@
           ]
         },
         "helper_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 105
+            }
+          ]
         },
         "hint_content": {
           "classification": "unclassified",
@@ -29797,8 +29737,13 @@
           ]
         },
         "hint_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/InputControls.swift",
+              "line": 1060
+            }
+          ]
         },
         "hint_text": {
           "classification": "consumed",
@@ -29821,8 +29766,16 @@
           "classification": "consumed",
           "evidence": [
             {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/InputControls.swift",
+              "line": 1022
+            },
+            {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
               "line": 64
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 65
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -29847,6 +29800,10 @@
           "classification": "consumed",
           "evidence": [
             {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 61
+            },
+            {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
               "line": 113
             },
@@ -29861,8 +29818,13 @@
           ]
         },
         "label_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 61
+            }
+          ]
         },
         "left": {
           "classification": "parent_consumed",
@@ -30173,20 +30135,35 @@
           ]
         },
         "prefix": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/InputControls.swift",
+              "line": 1024
+            }
+          ]
         },
         "prefix_icon": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/InputControls.swift",
+              "line": 1023
+            }
+          ]
         },
         "prefix_icon_size_constraints": {
           "classification": "unclassified",
           "evidence": []
         },
         "prefix_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/InputControls.swift",
+              "line": 1024
+            }
+          ]
         },
         "right": {
           "classification": "parent_consumed",
@@ -30273,20 +30250,35 @@
           ]
         },
         "suffix": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/InputControls.swift",
+              "line": 1027
+            }
+          ]
         },
         "suffix_icon": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/InputControls.swift",
+              "line": 1028
+            }
+          ]
         },
         "suffix_icon_size_constraints": {
           "classification": "unclassified",
           "evidence": []
         },
         "suffix_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/InputControls.swift",
+              "line": 1027
+            }
+          ]
         },
         "text_size": {
           "classification": "consumed",
@@ -30298,8 +30290,13 @@
           ]
         },
         "text_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "parent_consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
+              "line": 131
+            }
+          ]
         },
         "text_vertical_align": {
           "classification": "unclassified",
@@ -31784,6 +31781,10 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CollectionControls.swift",
+              "line": 305
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CollectionControls.swift",
               "line": 333
             }
           ]
@@ -32541,6 +32542,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
               "line": 64
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 65
             }
           ]
         },
@@ -33214,6 +33219,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
               "line": 64
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 65
             }
           ]
         },
@@ -33994,6 +34003,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
               "line": 64
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 65
             }
           ]
         },
@@ -34667,6 +34680,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
               "line": 64
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 65
             }
           ]
         },
@@ -35396,8 +35413,13 @@
           ]
         },
         "on_error": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 101
+            }
+          ]
         },
         "on_size_change": {
           "classification": "parent_consumed",
@@ -35902,6 +35924,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
               "line": 64
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 65
             }
           ]
         },
@@ -39474,6 +39500,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
               "line": 64
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 65
             }
           ]
         },
@@ -43739,6 +43769,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
               "line": 143
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
+              "line": 148
             }
           ]
         },
@@ -44409,6 +44443,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
               "line": 197
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ChromeControls.swift",
+              "line": 207
             }
           ]
         },
@@ -44826,6 +44864,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
               "line": 64
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 65
             }
           ]
         },
@@ -45499,6 +45541,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
               "line": 64
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 65
             }
           ]
         },
@@ -46177,8 +46223,13 @@
           "evidence": []
         },
         "on_error": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 101
+            }
+          ]
         },
         "on_keyboard_event": {
           "classification": "service",
@@ -46277,6 +46328,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/CoreServices.swift",
               "line": 78
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/CoreServices.swift",
+              "line": 84
             }
           ]
         },
@@ -48429,6 +48484,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
               "line": 64
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 65
             }
           ]
         },
@@ -50218,6 +50277,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
               "line": 243
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 61
             }
           ]
         },
@@ -50231,8 +50294,17 @@
           ]
         },
         "label_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/InputControls.swift",
+              "line": 162
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 61
+            }
+          ]
         },
         "left": {
           "classification": "parent_consumed",
@@ -56255,6 +56327,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
               "line": 289
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ButtonControls.swift",
+              "line": 307
             }
           ]
         },
@@ -56600,6 +56676,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
               "line": 243
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 61
             }
           ]
         },
@@ -58347,6 +58427,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
               "line": 243
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 61
             }
           ]
         },
@@ -60706,6 +60790,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
               "line": 243
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 61
             }
           ]
         },
@@ -60719,8 +60807,13 @@
           ]
         },
         "label_text_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/InputControls.swift",
+              "line": 39
+            }
+          ]
         },
         "left": {
           "classification": "parent_consumed",
@@ -63356,6 +63449,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
               "line": 64
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 65
             }
           ]
         },
@@ -64077,12 +64174,22 @@
           ]
         },
         "counter": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 111
+            }
+          ]
         },
         "counter_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 111
+            }
+          ]
         },
         "cursor_color": {
           "classification": "consumed",
@@ -64172,6 +64279,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/InputControls.swift",
               "line": 440
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 101
             }
           ]
         },
@@ -64185,8 +64296,13 @@
           ]
         },
         "error_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 101
+            }
+          ]
         },
         "expand": {
           "classification": "parent_consumed",
@@ -64275,8 +64391,13 @@
           ]
         },
         "helper": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 105
+            }
+          ]
         },
         "helper_max_lines": {
           "classification": "consumed",
@@ -64288,8 +64409,13 @@
           ]
         },
         "helper_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 105
+            }
+          ]
         },
         "hint_fade_duration": {
           "classification": "unclassified",
@@ -64326,6 +64452,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
               "line": 64
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 65
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -64383,6 +64513,10 @@
               "line": 406
             },
             {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 61
+            },
+            {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
               "line": 113
             },
@@ -64393,8 +64527,13 @@
           ]
         },
         "label_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 61
+            }
+          ]
         },
         "left": {
           "classification": "parent_consumed",
@@ -64839,20 +64978,35 @@
           ]
         },
         "prefix": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/InputControls.swift",
+              "line": 374
+            }
+          ]
         },
         "prefix_icon": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/InputControls.swift",
+              "line": 373
+            }
+          ]
         },
         "prefix_icon_size_constraints": {
           "classification": "unclassified",
           "evidence": []
         },
         "prefix_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/InputControls.swift",
+              "line": 374
+            }
+          ]
         },
         "read_only": {
           "classification": "consumed",
@@ -64979,20 +65133,35 @@
           "evidence": []
         },
         "suffix": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/InputControls.swift",
+              "line": 376
+            }
+          ]
         },
         "suffix_icon": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/InputControls.swift",
+              "line": 377
+            }
+          ]
         },
         "suffix_icon_size_constraints": {
           "classification": "unclassified",
           "evidence": []
         },
         "suffix_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/InputControls.swift",
+              "line": 376
+            }
+          ]
         },
         "text_align": {
           "classification": "consumed",
@@ -65013,8 +65182,13 @@
           ]
         },
         "text_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "parent_consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
+              "line": 131
+            }
+          ]
         },
         "text_vertical_align": {
           "classification": "unclassified",
@@ -66470,12 +66644,22 @@
           ]
         },
         "drawer": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
+              "line": 349
+            }
+          ]
         },
         "end_drawer": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/OverlayControls.swift",
+              "line": 350
+            }
+          ]
         },
         "expand": {
           "classification": "consumed",
@@ -66713,6 +66897,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/CoreServices.swift",
               "line": 78
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/CoreServices.swift",
+              "line": 84
             }
           ]
         },
@@ -66946,6 +67134,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
               "line": 64
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/FormFieldDecoration.swift",
+              "line": 65
             }
           ]
         },
