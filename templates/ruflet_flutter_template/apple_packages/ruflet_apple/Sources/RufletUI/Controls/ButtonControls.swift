@@ -87,17 +87,18 @@ struct ButtonControlView: View {
         RufletIcon(
           value: icon,
           size: node.double("icon_size").map { CGFloat($0) }
-            ?? (variant == .floatingAction ? 22 : 20),
+            ?? FletThemeDefaults.materialIconButtonSize,
           color: MaterialPalette.color(node.string("icon_color")))
       } else if let caption = captionText {
         Text(caption)
       }
     } else {
-      HStack(spacing: 6) {
+      HStack(spacing: FletThemeDefaults.materialButtonIconSpacing) {
         if icon != nil {
           RufletIcon(
             value: icon,
-            size: node.double("icon_size").map { CGFloat($0) } ?? 17,
+            size: node.double("icon_size").map { CGFloat($0) }
+              ?? FletThemeDefaults.materialIconButtonSize,
             color: MaterialPalette.color(node.string("icon_color")))
         }
         if let contentID = node.controlID(forKey: "content") {
@@ -119,20 +120,26 @@ private struct NativeButtonPresentation<Content: View>: View {
 
   @ViewBuilder
   var body: some View {
-    let fill = MaterialPalette.color(node.string("bgcolor"))
-    let foreground = MaterialPalette.color(node.string("color"))
+    let fill = MaterialPalette.color(for: node, property: "bgcolor")
+    let foreground = MaterialPalette.color(for: node, property: "color")
     switch variant {
-    case .filled, .elevated, .floatingAction:
+    case .filled, .filledTonal, .outlined, .text, .elevated:
+      content()
+        .buttonStyle(
+          FletMaterialButtonStyle(
+            foreground: foreground,
+            background: fill,
+            overlay: MaterialPalette.color(for: node, property: "overlay_color"),
+            shadow: MaterialPalette.color(for: node, property: "shadow_color"),
+            elevation: node.double("elevation") ?? FletThemeDefaults.materialButtonElevation))
+    case .floatingAction:
+      // Flet passes nil colours to FloatingActionButton, so native/theme
+      // defaults must remain in charge unless Ruby supplied one explicitly.
       content()
         .buttonStyle(.borderedProminent)
-        .modifier(OptionalTint(color: fill))
-        .modifier(OptionalForeground(color: foreground))
-    case .filledTonal, .outlined:
-      content()
-        .buttonStyle(.bordered)
-        .modifier(OptionalTint(color: fill ?? foreground))
-        .modifier(OptionalForeground(color: foreground))
-    case .text, .icon:
+        .modifier(OptionalTint(color: MaterialPalette.color(node.string("bgcolor"))))
+        .modifier(OptionalForeground(color: MaterialPalette.color(node.string("color"))))
+    case .icon:
       content()
         .buttonStyle(.borderless)
         .modifier(OptionalTint(color: foreground))
@@ -141,14 +148,44 @@ private struct NativeButtonPresentation<Content: View>: View {
   }
 }
 
-private struct OptionalTint: ViewModifier {
+/// The exact common defaults Flet 0.80.5 supplies to `parseButtonStyle` for
+/// Button/Filled/FilledTonal/Outlined/TextButton. Flutter constructors still
+/// provide interaction behavior; this style only resolves Flet's shared
+/// Material presentation instead of letting each SwiftUI style invent a
+/// different platform fallback.
+private struct FletMaterialButtonStyle: ButtonStyle {
+  let foreground: Color?
+  let background: Color?
+  let overlay: Color?
+  let shadow: Color?
+  let elevation: Double
+
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label
+      .padding(FletThemeDefaults.materialButtonPadding)
+      .frame(minHeight: FletThemeDefaults.minimumInteractiveDimension)
+      .foregroundColor(foreground)
+      .background(background ?? .clear, in: Capsule())
+      .overlay {
+        if configuration.isPressed {
+          Capsule().fill(overlay ?? .clear)
+        }
+      }
+      .shadow(
+        color: elevation > 0 ? (shadow ?? .clear) : .clear,
+        radius: CGFloat(max(elevation, 0)), y: CGFloat(max(elevation, 0) / 2))
+      .contentShape(Capsule())
+  }
+}
+
+struct OptionalTint: ViewModifier {
   let color: Color?
   func body(content: Content) -> some View {
     if let color { content.tint(color) } else { content }
   }
 }
 
-private struct OptionalForeground: ViewModifier {
+struct OptionalForeground: ViewModifier {
   let color: Color?
   func body(content: Content) -> some View {
     if let color { content.foregroundColor(color) } else { content }
@@ -186,12 +223,15 @@ struct ChipControlView: View {
     .background(
       Capsule().fill(
         selected
-          ? MaterialPalette.color(
-            node.string("selected_color") ?? "secondarycontainer", default: .clear)
-          : MaterialPalette.color(node.string("bgcolor"), default: .gray.opacity(0.15))))
-    .overlay(Capsule().strokeBorder(.gray.opacity(0.3), lineWidth: selected ? 0 : 1))
+          ? MaterialPalette.color(for: node, property: "selected_color", default: .clear)
+          : MaterialPalette.color(node.string("bgcolor"), default: .clear)))
+    .overlay(
+      Capsule().strokeBorder(
+        MaterialPalette.color(for: node, property: "border_color", default: .clear),
+        lineWidth: selected ? 0 : 1))
     .contentShape(Capsule())
     .onTapGesture {
+      guard node.bool("disabled") != true else { return }
       if node.handlesEvent("select") {
         events.commit(node, key: "selected", value: .bool(!selected), event: "select")
       } else {
@@ -222,13 +262,18 @@ struct SegmentedButtonControlView: View {
             .padding(.vertical, 7)
             .background(
               selected.contains(value)
-                ? MaterialPalette.color("secondarycontainer", default: .clear) : Color.clear)
+                ? MaterialPalette.color(for: node, property: "selected_color", default: .clear)
+                : MaterialPalette.color(for: node, property: "bgcolor", default: .clear))
         }
         .buttonStyle(.plain)
       }
     }
-    .background(RoundedRectangle(cornerRadius: 8).fill(Color.gray.opacity(0.12)))
-    .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(.gray.opacity(0.3)))
+    .background(
+      Capsule().fill(MaterialPalette.color(for: node, property: "bgcolor", default: .clear)))
+    .overlay(
+      Capsule().strokeBorder(
+        MaterialPalette.color(for: node, property: "border_color", default: .clear)))
+    .disabled(node.bool("disabled") ?? false)
   }
 
   @ViewBuilder

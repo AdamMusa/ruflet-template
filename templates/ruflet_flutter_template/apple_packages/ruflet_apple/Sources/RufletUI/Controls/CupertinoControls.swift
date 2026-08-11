@@ -13,42 +13,89 @@ import SwiftUI
 /// `CupertinoButton` / `CupertinoFilledButton` / `CupertinoTintedButton`.
 struct CupertinoButtonControlView: View {
   let node: ControlNode
-  let filled: Bool
 
   @Environment(\.rufletEvents) private var events
+  @Environment(\.openURL) private var openURL
 
+  @ViewBuilder
   var body: some View {
-    Button {
-      events.fire(node, "click")
-    } label: {
-      Group {
-        if let contentID = node.controlID(forKey: "content") {
-          ControlView(id: contentID, axis: .none)
-        } else {
-          Text(node.string("text") ?? "")
-        }
-      }
-      .padding(.horizontal, 16)
-      .padding(.vertical, 10)
-      .frame(minWidth: node.double("min_size").map { CGFloat($0) })
+    switch variant {
+    case .plain:
+      configuredButton.buttonStyle(.borderless)
+    case .filled:
+      configuredButton.buttonStyle(.borderedProminent)
+    case .tinted:
+      configuredButton.buttonStyle(.bordered)
     }
-    .buttonStyle(.plain)
-    .foregroundColor(
-      filled
-        ? .white
-        : MaterialPalette.color(node.string("color") ?? "#007aff", default: .primary))
-    .background(
-      RoundedRectangle(cornerRadius: ControlProps.cornerRadius(node.props["border_radius"]) ?? 8)
-        .fill(background))
-    .opacity(node.bool("disabled") == true ? Double(node.double("disabled_opacity") ?? 0.4) : 1)
-    .disabled(node.bool("disabled") ?? false)
   }
 
-  private var background: Color {
-    if filled {
-      return MaterialPalette.color(node.string("bgcolor") ?? "#007aff", default: .primary)
+  private enum Variant { case plain, filled, tinted }
+
+  private var variant: Variant {
+    switch node.type {
+    case "CupertinoFilledButton": return .filled
+    case "CupertinoTintedButton": return .tinted
+    default: return .plain
     }
-    return MaterialPalette.color(node.string("bgcolor"), default: .clear)
+  }
+
+  private var configuredButton: some View {
+    Button(action: activate) { label }
+      // CupertinoButton receives nil for omitted padding, color and bgcolor.
+      // These optional modifiers preserve that native constructor behavior.
+      .modifier(OptionalEdgeInsets(insets: FletThemeDefaults.cupertinoButtonPadding(node)))
+      .modifier(OptionalMinimumSize(value: node.props["min_size"]))
+      .modifier(OptionalTint(color: MaterialPalette.color(node.string("bgcolor"))))
+      .modifier(OptionalForeground(color: MaterialPalette.color(node.string("color"))))
+      .modifier(FocusReporter(node: node, events: events))
+      .modifier(LongPressReporter(node: node, events: events))
+      .disabled(node.bool("disabled") ?? false)
+  }
+
+  @ViewBuilder
+  private var label: some View {
+    let icon = node.props["icon"]
+    HStack(spacing: FletThemeDefaults.materialButtonIconSpacing) {
+      if icon != nil {
+        RufletIcon(
+          value: icon,
+          size: node.double("icon_size").map { CGFloat($0) }
+            ?? FletThemeDefaults.materialIconButtonSize,
+          color: MaterialPalette.color(node.string("icon_color")))
+      }
+      if let contentID = node.controlID(forKey: "content") {
+        ControlView(id: contentID, axis: .none)
+      } else {
+        Text(node.string("content") ?? node.string("text") ?? "")
+      }
+    }
+  }
+
+  private func activate() {
+    if let url = node.string("url").flatMap(URL.init(string:)) { openURL(url) }
+    events.fire(node, "click")
+  }
+}
+
+private struct OptionalEdgeInsets: ViewModifier {
+  let insets: EdgeInsets?
+  func body(content: Content) -> some View {
+    if let insets { content.padding(insets) } else { content }
+  }
+}
+
+private struct OptionalMinimumSize: ViewModifier {
+  let value: RufletValue?
+  func body(content: Content) -> some View {
+    if let map = value?.mapValue {
+      let width = CGFloat(map["width"]?.doubleValue ?? 0)
+      let height = CGFloat(map["height"]?.doubleValue ?? 0)
+      content.frame(
+        minWidth: width,
+        minHeight: height)
+    } else {
+      content
+    }
   }
 }
 
@@ -128,12 +175,14 @@ struct CupertinoSelectionControlView: View {
         Image(systemName: symbol)
           .foregroundColor(
             (node.bool("value") ?? false)
-              ? MaterialPalette.color(node.string("active_color") ?? "#007aff", default: .primary)
+              ? MaterialPalette.color(node.string("active_color"))
               : .secondary)
         if let label = node.string("label") { Text(label) }
       }
     }
     .buttonStyle(.plain)
+    .modifier(FocusReporter(node: node, events: events))
+    .disabled(node.bool("disabled") ?? false)
   }
 
   private var symbol: String {

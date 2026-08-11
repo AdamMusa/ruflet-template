@@ -11,22 +11,28 @@ struct ListViewControlView: View {
   @Environment(\.rufletEvents) private var events
 
   var body: some View {
-    let horizontal = node.bool("horizontal") ?? false
-    let spacing = CGFloat(node.double("spacing") ?? 0)
+    let config = CollectionDefaults.listView(node)
+    let horizontal = config.horizontal
+    let spacing = config.spacing
     let axis: LayoutAxis = horizontal ? .horizontal : .vertical
 
     ScrollView(
       horizontal ? .horizontal : .vertical,
-      showsIndicators: node.string("scroll") != "hidden"
+      showsIndicators: config.showsIndicators
     ) {
       Group {
-        if horizontal {
+        if horizontal, config.lazy {
           LazyHStack(spacing: spacing) { rows(axis: axis) }
-        } else {
+        } else if horizontal {
+          HStack(spacing: spacing) { rows(axis: axis) }
+        } else if config.lazy {
           LazyVStack(spacing: spacing) { rows(axis: axis) }
+        } else {
+          VStack(spacing: spacing) { rows(axis: axis) }
         }
       }
-      .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets())
+      .padding(config.padding)
+      .modifier(CollectionClip(behavior: config.clipBehavior))
     }
     .modifier(CollectionScrollReporter(node: node, horizontal: horizontal, events: events))
   }
@@ -62,25 +68,24 @@ struct GridViewControlView: View {
   @Environment(\.rufletEvents) private var events
 
   var body: some View {
-    let spacing = CGFloat(node.double("spacing") ?? 10)
-    let runSpacing = CGFloat(node.double("run_spacing") ?? 10)
-
-    let horizontal = node.bool("horizontal") ?? false
-    ScrollView(horizontal ? .horizontal : .vertical) {
+    let config = CollectionDefaults.gridView(node)
+    ScrollView(config.horizontal ? .horizontal : .vertical,
+      showsIndicators: config.showsIndicators) {
       Group {
-        if horizontal {
-          LazyHGrid(rows: rows(spacing: spacing), spacing: runSpacing) {
+        if config.horizontal {
+          LazyHGrid(rows: rows(spacing: config.runSpacing), spacing: config.spacing) {
             gridChildren
           }
         } else {
-          LazyVGrid(columns: columns(spacing: spacing), spacing: runSpacing) {
+          LazyVGrid(columns: columns(spacing: config.runSpacing), spacing: config.spacing) {
             gridChildren
           }
         }
       }
-      .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets())
+      .padding(config.padding)
+      .modifier(CollectionClip(behavior: config.clipBehavior))
     }
-    .modifier(CollectionScrollReporter(node: node, horizontal: horizontal, events: events))
+    .modifier(CollectionScrollReporter(node: node, horizontal: config.horizontal, events: events))
   }
 
   @ViewBuilder
@@ -161,16 +166,24 @@ struct PageViewControlView: View {
 
   init(node: ControlNode) {
     self.node = node
-    _selectedIndex = State(initialValue: node.int("selected_index") ?? 0)
+    _selectedIndex = State(initialValue: CollectionDefaults.pageView(node).selectedIndex)
   }
 
   var body: some View {
+    let config = CollectionDefaults.pageView(node)
     TabView(selection: $selectedIndex) {
       ForEach(Array(node.childIDs.enumerated()), id: \.element) { index, childID in
-        ControlView(id: childID, axis: .none).tag(index)
+        ControlView(id: childID, axis: .none)
+          .modifier(PageViewport(
+            horizontal: config.horizontal,
+            fraction: config.viewportFraction,
+            padEnds: config.padEnds))
+          .tag(index)
       }
     }
     .modifier(PagedTabStyle())
+    .modifier(PageAxis(horizontal: config.horizontal))
+    .modifier(CollectionClip(behavior: config.clipBehavior))
     .onChange(of: selectedIndex) { value in
       events.setLocal(node.id, "selected_index", .int(Int64(value)))
       events.fire(node, "change", data: .int(Int64(value)))
@@ -227,11 +240,16 @@ struct ListTileControlView: View {
   @Environment(\.rufletEvents) private var events
 
   var body: some View {
-    HStack(spacing: 12) {
+    let metrics = CollectionDefaults.listTile(node)
+    HStack(spacing: metrics.horizontalTitleGap) {
       if let leadingID = node.controlID(forKey: "leading") {
         ControlView(id: leadingID, axis: .none)
+          .frame(minWidth: metrics.minLeadingWidth)
       } else if node.props["leading"] != nil {
-        RufletIcon(value: node.props["leading"], size: 22, color: nil)
+        RufletIcon(
+          value: node.props["leading"], size: 22,
+          color: MaterialPalette.color(node.string("icon_color")))
+          .frame(minWidth: metrics.minLeadingWidth)
       }
 
       VStack(alignment: .leading, spacing: 2) {
@@ -253,11 +271,14 @@ struct ListTileControlView: View {
       if let trailingID = node.controlID(forKey: "trailing") {
         ControlView(id: trailingID, axis: .none)
       } else if node.props["trailing"] != nil {
-        RufletIcon(value: node.props["trailing"], size: 22, color: nil)
+        RufletIcon(
+          value: node.props["trailing"], size: 22,
+          color: MaterialPalette.color(node.string("icon_color")))
       }
     }
-    .padding(ControlProps.edgeInsets(node.props["content_padding"]) ?? EdgeInsets(
-      top: 8, leading: 16, bottom: 8, trailing: 16))
+    .padding(metrics.contentPadding)
+    .padding(.vertical, metrics.minVerticalPadding)
+    .frame(minHeight: metrics.minHeight)
     .background(
       (node.bool("selected") ?? false)
         ? MaterialPalette.color(node.string("selected_tile_color") ?? "secondarycontainer")
@@ -429,7 +450,8 @@ struct TabBarControlView: View {
 
   var body: some View {
     let tabs = node.controlIDs(forKey: "tabs").compactMap { store.node($0) }
-    let scrollable = node.bool("scrollable") ?? true
+    let metrics = CollectionDefaults.tabBar(node)
+    let scrollable = metrics.scrollable
     Group {
       if scrollable {
         ScrollView(.horizontal, showsIndicators: false) { strip(tabs) }
@@ -440,13 +462,15 @@ struct TabBarControlView: View {
     .overlay(alignment: .bottom) {
       Rectangle()
         .fill(MaterialPalette.color(node.string("divider_color"), default: .clear))
-        .frame(height: CGFloat(node.double("divider_height") ?? 1))
+        .frame(height: metrics.dividerHeight)
     }
+    .padding(metrics.padding)
     .rufletCommandHandler(node.id, handler: handleCommand)
   }
 
   private func strip(_ tabs: [ControlNode]) -> some View {
-    HStack(spacing: 0) {
+    let metrics = CollectionDefaults.tabBar(node)
+    return HStack(spacing: 0) {
       ForEach(Array(tabs.enumerated()), id: \.element.id) { index, tab in
         Button {
           selection?.wrappedValue = index
@@ -457,13 +481,13 @@ struct TabBarControlView: View {
               index == selection?.wrappedValue
                 ? node.string("label_color") : node.string("unselected_label_color"),
               default: index == selection?.wrappedValue ? .accentColor : .secondary))
-            .padding(.horizontal, 16)
-            .frame(minHeight: CGFloat(tab.double("height") ?? 46))
+            .padding(metrics.labelPadding)
+            .frame(minHeight: CollectionDefaults.tabHeight(tab))
             .overlay(alignment: .bottom) {
               if index == selection?.wrappedValue {
                 Rectangle()
                   .fill(MaterialPalette.color(node.string("indicator_color"), default: .accentColor))
-                  .frame(height: CGFloat(node.double("indicator_thickness") ?? 2))
+                  .frame(height: metrics.indicatorThickness)
               }
             }
         }
@@ -545,13 +569,15 @@ struct DataTableControlView: View {
   var body: some View {
     let columns = node.controlIDs(forKey: "columns").compactMap { store.node($0) }
     let rows = node.controlIDs(forKey: "rows").compactMap { store.node($0) }
-    let spacing = CGFloat(node.double("column_spacing")
-      ?? Double(FletThemeDefaults.dataTableColumnSpacing))
+    let metrics = CollectionDefaults.dataTable(node)
+    let spacing = metrics.columnSpacing
+    let showsCheckboxes = metrics.showCheckboxColumn
+      && rows.contains(where: { $0.handlesEvent("select_change") })
 
     ScrollView(.horizontal, showsIndicators: true) {
       VStack(alignment: .leading, spacing: 0) {
         HStack(spacing: spacing) {
-          if node.bool("show_checkbox_column") == true {
+          if showsCheckboxes {
             Button { selectAll(rows) } label: {
               Image(systemName: allSelected(rows) ? "checkmark.square.fill" : "square")
             }
@@ -562,15 +588,15 @@ struct DataTableControlView: View {
             headerCell(column, index: columns.firstIndex(where: { $0.id == column.id }) ?? 0)
           }
         }
-        .frame(minHeight: CGFloat(node.double("heading_row_height")
-          ?? Double(FletThemeDefaults.dataTableHeadingHeight)))
+        .frame(height: metrics.headingRowHeight)
+        .background(MaterialPalette.color(node.string("heading_row_color")))
         .font(.subheadline.weight(.semibold))
 
         tableDivider
 
         ForEach(rows, id: \.id) { row in
           HStack(spacing: spacing) {
-            if node.bool("show_checkbox_column") == true {
+            if showsCheckboxes {
               Button { selectRow(row, selected: !(row.bool("selected") ?? false)) } label: {
                 Image(systemName: (row.bool("selected") ?? false) ? "checkmark.square.fill" : "square")
               }
@@ -581,8 +607,7 @@ struct DataTableControlView: View {
               cellContent(cellID)
             }
           }
-          .frame(minHeight: CGFloat(node.double("data_row_min_height")
-            ?? Double(FletThemeDefaults.dataTableRowMinHeight)))
+          .frame(minHeight: metrics.dataRowMinHeight, maxHeight: metrics.dataRowMaxHeight)
           .frame(maxWidth: .infinity, alignment: .leading)
           .background(
             (row.bool("selected") ?? false)
@@ -591,17 +616,18 @@ struct DataTableControlView: View {
           .onTapGesture { selectRow(row, selected: !(row.bool("selected") ?? false)) }
           .modifier(LongPressReporter(node: row, events: events))
 
-          if node.double("divider_thickness") ?? 1 > 0 { tableDivider }
+          if metrics.dividerThickness > 0,
+            row.id != rows.last?.id || metrics.showBottomBorder { tableDivider }
         }
       }
-      .padding(.horizontal, 12)
+      .padding(.horizontal, metrics.horizontalMargin)
     }
   }
 
   private var tableDivider: some View {
     Rectangle()
       .fill(MaterialPalette.color(for: node, property: "divider_color", default: .clear))
-      .frame(height: CGFloat(node.double("divider_thickness") ?? 1))
+      .frame(height: CollectionDefaults.dataTable(node).dividerThickness)
   }
 
   @ViewBuilder
@@ -624,8 +650,11 @@ struct DataTableControlView: View {
             .font(.caption)
         }
       }
+      .frame(maxWidth: .infinity,
+        alignment: column.bool("numeric") == true ? .trailing : .leading)
     }
     .buttonStyle(.plain)
+    .help(column.string("tooltip") ?? "")
     .disabled(!column.handlesEvent("sort"))
   }
 
@@ -665,6 +694,189 @@ struct DataTableControlView: View {
   private func selectAll(_ rows: [ControlNode]) {
     let selected = !allSelected(rows)
     events.fire(node, "select_all", data: .bool(selected))
+  }
+}
+
+/// Omitted values in this family come from Flutter constructors or Material
+/// theme data. Keeping the resolution pure makes explicit DSL values and
+/// upstream defaults follow the same path.
+enum CollectionDefaults {
+  struct ListViewValues {
+    let horizontal: Bool
+    let spacing: CGFloat
+    let padding: EdgeInsets
+    let lazy: Bool
+    let showsIndicators: Bool
+    let clipBehavior: String
+  }
+
+  struct GridViewValues {
+    let horizontal: Bool
+    let spacing: CGFloat
+    let runSpacing: CGFloat
+    let padding: EdgeInsets
+    let showsIndicators: Bool
+    let clipBehavior: String
+  }
+
+  struct ListTileValues {
+    let contentPadding: EdgeInsets
+    let horizontalTitleGap: CGFloat
+    let minLeadingWidth: CGFloat
+    let minVerticalPadding: CGFloat
+    let minHeight: CGFloat
+  }
+
+  struct TabBarValues {
+    let scrollable: Bool
+    let indicatorThickness: CGFloat
+    let dividerHeight: CGFloat
+    let padding: EdgeInsets
+    let labelPadding: EdgeInsets
+  }
+
+  struct DataTableValues {
+    let columnSpacing: CGFloat
+    let horizontalMargin: CGFloat
+    let headingRowHeight: CGFloat
+    let dataRowMinHeight: CGFloat
+    let dataRowMaxHeight: CGFloat
+    let dividerThickness: CGFloat
+    let showBottomBorder: Bool
+    let showCheckboxColumn: Bool
+  }
+
+  struct PageViewValues {
+    let horizontal: Bool
+    let reverse: Bool
+    let keepPage: Bool
+    let padEnds: Bool
+    let implicitScrolling: Bool
+    let snap: Bool
+    let viewportFraction: CGFloat
+    let selectedIndex: Int
+    let clipBehavior: String
+  }
+
+  static func listView(_ node: ControlNode) -> ListViewValues {
+    ListViewValues(
+      horizontal: node.bool("horizontal") ?? false,
+      spacing: CGFloat(node.double("spacing") ?? 0),
+      padding: ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets(),
+      lazy: node.bool("build_controls_on_demand") ?? true,
+      showsIndicators: node.string("scroll") != "hidden",
+      clipBehavior: node.string("clip_behavior") ?? "hardEdge")
+  }
+
+  static func gridView(_ node: ControlNode) -> GridViewValues {
+    GridViewValues(
+      horizontal: node.bool("horizontal") ?? false,
+      spacing: CGFloat(node.double("spacing") ?? 10),
+      runSpacing: CGFloat(node.double("run_spacing") ?? 10),
+      padding: ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets(),
+      showsIndicators: node.string("scroll") != "hidden",
+      clipBehavior: node.string("clip_behavior") ?? "hardEdge")
+  }
+
+  static func listTile(_ node: ControlNode) -> ListTileValues {
+    let dense = node.bool("dense") == true
+    let hasSubtitle = node.props["subtitle"] != nil || node.controlID(forKey: "subtitle") != nil
+    let defaultHeight: CGFloat = node.bool("is_three_line") == true
+      ? 88 : (hasSubtitle ? 72 : FletThemeDefaults.listTileMinHeight)
+    return ListTileValues(
+      contentPadding: ControlProps.edgeInsets(node.props["content_padding"])
+        ?? FletThemeDefaults.listTileContentPadding,
+      horizontalTitleGap: CGFloat(node.double("horizontal_spacing")
+        ?? Double(FletThemeDefaults.listTileHorizontalTitleGap)),
+      minLeadingWidth: CGFloat(node.double("min_leading_width")
+        ?? Double(FletThemeDefaults.listTileMinLeadingWidth)),
+      minVerticalPadding: CGFloat(node.double("min_vertical_padding")
+        ?? Double(FletThemeDefaults.listTileMinVerticalPadding)),
+      minHeight: CGFloat(node.double("min_height") ?? Double(defaultHeight - (dense ? 8 : 0))))
+  }
+
+  static func tabBar(_ node: ControlNode) -> TabBarValues {
+    TabBarValues(
+      scrollable: node.bool("scrollable") ?? true,
+      indicatorThickness: CGFloat(node.double("indicator_thickness") ?? 2),
+      dividerHeight: CGFloat(node.double("divider_height")
+        ?? Double(FletThemeDefaults.tabBarDividerHeight)),
+      padding: ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets(),
+      labelPadding: ControlProps.edgeInsets(node.props["label_padding"])
+        ?? FletThemeDefaults.tabBarLabelPadding)
+  }
+
+  static func tabHeight(_ tab: ControlNode) -> CGFloat {
+    if let height = tab.double("height") { return CGFloat(height) }
+    let hasIcon = tab.props["icon"] != nil || tab.controlID(forKey: "icon") != nil
+    let hasLabel = tab.string("label") != nil || tab.string("text") != nil
+      || tab.controlID(forKey: "label") != nil
+    return hasIcon && hasLabel
+      ? FletThemeDefaults.tabHeightWithIconAndLabel : FletThemeDefaults.tabHeight
+  }
+
+  static func dataTable(_ node: ControlNode) -> DataTableValues {
+    DataTableValues(
+      columnSpacing: CGFloat(node.double("column_spacing")
+        ?? Double(FletThemeDefaults.dataTableColumnSpacing)),
+      horizontalMargin: CGFloat(node.double("horizontal_margin")
+        ?? Double(FletThemeDefaults.dataTableHorizontalMargin)),
+      headingRowHeight: CGFloat(node.double("heading_row_height")
+        ?? Double(FletThemeDefaults.dataTableHeadingHeight)),
+      dataRowMinHeight: CGFloat(node.double("data_row_min_height")
+        ?? Double(FletThemeDefaults.dataTableRowMinHeight)),
+      dataRowMaxHeight: CGFloat(node.double("data_row_max_height")
+        ?? Double(FletThemeDefaults.dataTableRowMaxHeight)),
+      dividerThickness: CGFloat(node.double("divider_thickness") ?? 1),
+      showBottomBorder: node.bool("show_bottom_border") ?? false,
+      showCheckboxColumn: node.bool("show_checkbox_column") ?? false)
+  }
+
+  static func pageView(_ node: ControlNode) -> PageViewValues {
+    PageViewValues(
+      horizontal: node.bool("horizontal") ?? true,
+      reverse: node.bool("reverse") ?? false,
+      keepPage: node.bool("keep_page") ?? true,
+      padEnds: node.bool("pad_ends") ?? true,
+      implicitScrolling: node.bool("implicit_scrolling") ?? false,
+      snap: node.bool("snap") ?? true,
+      viewportFraction: CGFloat(node.double("viewport_fraction") ?? 1),
+      selectedIndex: node.int("selected_index") ?? 0,
+      clipBehavior: node.string("clip_behavior") ?? "hardEdge")
+  }
+}
+
+private struct CollectionClip: ViewModifier {
+  let behavior: String
+  func body(content: Content) -> some View {
+    if behavior.lowercased() == "none" { content } else { content.clipped() }
+  }
+}
+
+private struct PageAxis: ViewModifier {
+  let horizontal: Bool
+  func body(content: Content) -> some View {
+    content.rotationEffect(.degrees(horizontal ? 0 : -90))
+  }
+}
+
+private struct PageViewport: ViewModifier {
+  let horizontal: Bool
+  let fraction: CGFloat
+  let padEnds: Bool
+
+  func body(content: Content) -> some View {
+    GeometryReader { proxy in
+      let clamped = min(max(fraction, 0.01), 1)
+      content
+        .rotationEffect(.degrees(horizontal ? 0 : 90))
+        .frame(
+          width: horizontal ? proxy.size.width * clamped : proxy.size.width,
+          height: horizontal ? proxy.size.height : proxy.size.height * clamped)
+        .frame(
+          maxWidth: .infinity, maxHeight: .infinity,
+          alignment: padEnds ? .center : .topLeading)
+    }
   }
 }
 

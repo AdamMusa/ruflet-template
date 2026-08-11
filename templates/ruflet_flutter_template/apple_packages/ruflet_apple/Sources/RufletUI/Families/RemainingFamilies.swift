@@ -25,10 +25,8 @@ extension ControlRegistry {
   /// The Cupertino family.
   static func cupertino(_ node: ControlNode, _ axis: LayoutAxis) -> AnyView? {
     switch node.type {
-    case "CupertinoButton":
-      return AnyView(CupertinoButtonControlView(node: node, filled: false))
-    case "CupertinoFilledButton", "CupertinoTintedButton":
-      return AnyView(CupertinoButtonControlView(node: node, filled: true))
+    case "CupertinoButton", "CupertinoFilledButton", "CupertinoTintedButton":
+      return AnyView(CupertinoButtonControlView(node: node))
     case "CupertinoSwitch":
       return AnyView(CupertinoSwitchControlView(node: node))
     case "CupertinoSlider":

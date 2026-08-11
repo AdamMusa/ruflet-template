@@ -57,12 +57,7 @@ public enum MaterialPalette {
   /// Flet/Flutter theme role for this control. A nil result is meaningful for
   /// native Apple controls: it lets SwiftUI apply the platform appearance.
   static func color(for node: ControlNode, property: String) -> Color? {
-    if let explicit = node.props[property]?.stringValue,
-      let resolved = color(explicit)
-    {
-      return resolved
-    }
-    return color(FletThemeDefaults.colorToken(control: node.type, property: property))
+    color(FletThemeDefaults.resolvedColorToken(for: node, property: property))
   }
 
   static func color(

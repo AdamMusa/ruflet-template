@@ -16,6 +16,44 @@ enum FletThemeDefaults {
 
   static func colorToken(control: String, property: String) -> String? {
     switch (control, property) {
+    // Flet 0.80.5 passes these values to parseButtonStyle even when the Ruby
+    // control omitted `style`, `color`, and `bgcolor`. Keep the Material roles
+    // here rather than teaching each native button a local blue/gray fallback.
+    case ("Button", "color"), ("FilledButton", "color"),
+         ("FilledTonalButton", "color"), ("OutlinedButton", "color"),
+         ("TextButton", "color"), ("SegmentedButton", "color"):
+      return "primary"
+    case ("Button", "bgcolor"), ("FilledButton", "bgcolor"),
+         ("FilledTonalButton", "bgcolor"), ("OutlinedButton", "bgcolor"),
+         ("TextButton", "bgcolor"), ("SegmentedButton", "bgcolor"):
+      return "surface"
+    case ("Button", "overlay_color"), ("FilledButton", "overlay_color"),
+         ("FilledTonalButton", "overlay_color"), ("OutlinedButton", "overlay_color"),
+         ("TextButton", "overlay_color"), ("SegmentedButton", "overlay_color"):
+      return "primary,0.08"
+    case ("Button", "shadow_color"), ("FilledButton", "shadow_color"),
+         ("FilledTonalButton", "shadow_color"), ("OutlinedButton", "shadow_color"),
+         ("TextButton", "shadow_color"), ("SegmentedButton", "shadow_color"):
+      return "shadow"
+    case ("IconButton", "color"), ("FilledIconButton", "color"),
+         ("FilledTonalIconButton", "color"), ("OutlinedIconButton", "color"):
+      return "primary"
+
+    // Flutter receives nil for omitted selection colours and resolves them
+    // through the Material theme. These are the corresponding Material 3
+    // roles used by the native marks/tracks, not control-local constants.
+    case ("Checkbox", "active_color"), ("Radio", "active_color"),
+         ("Switch", "active_color"), ("Slider", "active_color"),
+         ("RangeSlider", "active_color"):
+      return "primary"
+    case ("Checkbox", "inactive_color"), ("Radio", "inactive_color"):
+      return "onsurfacevariant"
+    case ("Chip", "selected_color"):
+      return "secondarycontainer"
+    case ("Chip", "border_color"), ("SegmentedButton", "border_color"):
+      return "outlinevariant"
+    case ("SegmentedButton", "selected_color"):
+      return "secondarycontainer"
     case ("AppBar", "bgcolor"):
       return "surface"
     case ("BottomAppBar", "bgcolor"):
@@ -78,9 +116,26 @@ enum FletThemeDefaults {
     #endif
   }
 
-  static let dataTableColumnSpacing: CGFloat = 24
+  // Flutter DataTable constructor/theme fallbacks (Material 3).
+  static let dataTableColumnSpacing: CGFloat = 56
+  static let dataTableHorizontalMargin: CGFloat = 24
   static let dataTableHeadingHeight: CGFloat = 56
   static let dataTableRowMinHeight: CGFloat = 48
+  static let dataTableRowMaxHeight: CGFloat = 48
+
+  // `_LisTileDefaultsM3` values used when ListTileTheme leaves a field null.
+  static let listTileContentPadding = EdgeInsets(
+    top: 0, leading: 16, bottom: 0, trailing: 24)
+  static let listTileHorizontalTitleGap: CGFloat = 16
+  static let listTileMinLeadingWidth: CGFloat = 24
+  static let listTileMinVerticalPadding: CGFloat = 8
+  static let listTileMinHeight: CGFloat = 56
+
+  static let tabBarLabelPadding = EdgeInsets(
+    top: 0, leading: 16, bottom: 0, trailing: 16)
+  static let tabBarDividerHeight: CGFloat = 1
+  static let tabHeight: CGFloat = 46
+  static let tabHeightWithIconAndLabel: CGFloat = 72
   static let progressRingDiameter: CGFloat = 40
   static let progressStrokeWidth: CGFloat = 4
 }

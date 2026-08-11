@@ -21,13 +21,14 @@ struct SwitchControlView: View {
       }
     }
     .toggleStyle(.switch)
-    .tint(MaterialPalette.color(node.string("active_color") ?? "primary"))
+    .tint(MaterialPalette.color(for: node, property: "active_color"))
     // `label_position: "left"` puts the label before the switch, which is the
     // platform default; "right" flips it.
     .environment(
       \.layoutDirection,
       node.string("label_position")?.lowercased() == "right" ? .rightToLeft : .leftToRight)
     .modifier(FocusReporter(node: node, events: events))
+    .disabled(node.bool("disabled") ?? false)
   }
 
   private var binding: Binding<Bool> {
@@ -48,8 +49,8 @@ struct CheckboxControlView: View {
         Image(systemName: symbolName)
           .foregroundColor(
             (node.bool("value") ?? false)
-              ? MaterialPalette.color(node.string("active_color") ?? "primary", default: .primary)
-              : .secondary)
+              ? MaterialPalette.color(for: node, property: "active_color", default: .primary)
+              : MaterialPalette.color(for: node, property: "inactive_color", default: .secondary))
           .font(.system(size: 20))
         if let labelID = node.controlID(forKey: "label") {
           ControlView(id: labelID, axis: .none)
@@ -60,6 +61,7 @@ struct CheckboxControlView: View {
     }
     .buttonStyle(.plain)
     .modifier(FocusReporter(node: node, events: events))
+    .disabled(node.bool("disabled") ?? false)
   }
 
   private var symbolName: String {
@@ -103,8 +105,8 @@ struct RadioControlView: View {
         Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
           .foregroundColor(
             isSelected
-              ? MaterialPalette.color(node.string("active_color") ?? "primary", default: .primary)
-              : .secondary)
+              ? MaterialPalette.color(for: node, property: "active_color", default: .primary)
+              : MaterialPalette.color(for: node, property: "inactive_color", default: .secondary))
           .font(.system(size: 20))
         if let labelID = node.controlID(forKey: "label") {
           ControlView(id: labelID, axis: .none)
@@ -114,6 +116,7 @@ struct RadioControlView: View {
       }
     }
     .buttonStyle(.plain)
+    .disabled(node.bool("disabled") ?? false)
   }
 
   private var group: ControlNode? {
@@ -188,7 +191,7 @@ struct SliderControlView: View {
         Slider(value: binding, in: range, onEditingChanged: reportEditing)
       }
     }
-    .tint(MaterialPalette.color(node.string("active_color") ?? "primary"))
+    .tint(MaterialPalette.color(for: node, property: "active_color"))
     .modifier(FocusReporter(node: node, events: events))
   }
 
@@ -215,8 +218,9 @@ struct RangeSliderControlView: View {
   var body: some View {
     let minimum = node.double("min") ?? 0
     let maximum = node.double("max") ?? 1
-    let start = node.double("start_value") ?? minimum
-    let end = node.double("end_value") ?? maximum
+    let values = FletThemeDefaults.rangeSliderValues(node)
+    let start = values.start
+    let end = values.end
 
     VStack(spacing: 4) {
       Slider(
@@ -230,7 +234,8 @@ struct RangeSliderControlView: View {
           set: { commit(start: start, end: max($0, start)) }),
         in: minimum...max(maximum, minimum + .ulpOfOne))
     }
-    .tint(MaterialPalette.color(node.string("active_color") ?? "primary"))
+    .tint(MaterialPalette.color(for: node, property: "active_color"))
+    .disabled(node.bool("disabled") ?? false)
   }
 
   /// `Page#apply_event_value_to_control` looks for a `start_value`/`end_value`
