@@ -757,28 +757,107 @@ struct CupertinoDatePickerControlView: View {
   let node: ControlNode
   let timerMode: Bool
   @Environment(\.rufletEvents) private var events
-  @State private var selection = Date()
+  @State private var selection: Date
+  @State private var timerSeconds: Int
 
+  init(node: ControlNode, timerMode: Bool) {
+    self.node = node
+    self.timerMode = timerMode
+    let formatter = ISO8601DateFormatter()
+    _selection = State(initialValue: node.string("value").flatMap(formatter.date(from:)) ?? Date())
+    _timerSeconds = State(initialValue: max(node.int("value") ?? 0, 0))
+  }
+
+  @ViewBuilder
   var body: some View {
-    DatePicker(
-      "", selection: $selection, in: allowedRange,
-      displayedComponents: components)
+    if timerMode {
+      timerPicker
+    } else {
+      datePicker
+    }
+  }
+
+  private var datePicker: some View {
+    DatePicker("", selection: $selection, in: allowedRange, displayedComponents: components)
       .modifier(WheelDatePickerStyle())
       .labelsHidden()
       .environment(\.locale, pickerLocale)
       .frame(minHeight: node.double("item_extent").map { CGFloat($0) * 5 })
+      .background(MaterialPalette.color(node.string("bgcolor")))
       .onChange(of: selection) { value in
         events.commit(node, value: .string(ISO8601DateFormatter().string(from: value)))
       }
-      .onAppear {
-        // `date_order` is the field order Flutter draws; the system locale
-        // decides it here, and `show_day_of_week` and the 24-hour switch are
-        // likewise the locale's to make on Apple.
-        _ = node.string("date_order")
-        _ = node.bool("show_day_of_week")
-        _ = node.bool("use_24h_format")
-        _ = node.int("minute_interval")
+  }
+
+  private var timerPicker: some View {
+    HStack(spacing: 0) {
+      if timerColumns.hours {
+        durationColumn(
+          values: Array(0..<24), selection: hoursBinding,
+          suffix: "h")
       }
+      if timerColumns.minutes {
+        durationColumn(
+          values: strideValues(interval: node.int("minute_interval") ?? 1),
+          selection: minutesBinding, suffix: "min")
+      }
+      if timerColumns.seconds {
+        durationColumn(
+          values: strideValues(interval: node.int("second_interval") ?? 1),
+          selection: secondsBinding, suffix: "sec")
+      }
+    }
+    .frame(minHeight: CGFloat(node.double("item_extent") ?? 32) * 5)
+    .background(MaterialPalette.color(node.string("bgcolor")))
+  }
+
+  private func durationColumn(values: [Int], selection: Binding<Int>, suffix: String) -> some View {
+    Picker("", selection: selection) {
+      ForEach(values, id: \.self) { value in
+        Text("\(value) \(suffix)").tag(value)
+      }
+    }
+    .modifier(WheelPickerStyle())
+    .labelsHidden()
+    .frame(maxWidth: .infinity)
+  }
+
+  private var timerColumns: (hours: Bool, minutes: Bool, seconds: Bool) {
+    RufletCupertinoTimerModel.columns(mode: node.string("mode"))
+  }
+
+  private func strideValues(interval: Int) -> [Int] {
+    RufletCupertinoTimerModel.values(interval: interval)
+  }
+
+  private var hoursBinding: Binding<Int> {
+    Binding(get: { timerSeconds / 3_600 }, set: { setTimer(hours: $0) })
+  }
+
+  private var minutesBinding: Binding<Int> {
+    Binding(
+      get: {
+        RufletCupertinoTimerModel.snap(
+          (timerSeconds % 3_600) / 60, interval: node.int("minute_interval") ?? 1)
+      },
+      set: { setTimer(minutes: $0) })
+  }
+
+  private var secondsBinding: Binding<Int> {
+    Binding(
+      get: {
+        RufletCupertinoTimerModel.snap(
+          timerSeconds % 60, interval: node.int("second_interval") ?? 1)
+      },
+      set: { setTimer(seconds: $0) })
+  }
+
+  private func setTimer(hours: Int? = nil, minutes: Int? = nil, seconds: Int? = nil) {
+    let next = (hours ?? timerSeconds / 3_600) * 3_600
+      + (minutes ?? (timerSeconds % 3_600) / 60) * 60
+      + (seconds ?? timerSeconds % 60)
+    timerSeconds = next
+    events.commit(node, value: .int(Int64(next)))
   }
 
   private var pickerLocale: Locale {
@@ -804,20 +883,31 @@ struct CupertinoDatePickerControlView: View {
   }
 
   private var components: DatePickerComponents {
-    if timerMode {
-      // Flutter's CupertinoTimerPickerMode picks which columns show; SwiftUI
-      // offers hour-and-minute, so a seconds-only timer still shows minutes.
-      _ = node.int("second_interval")
-      switch node.string("mode")?.lowercased() {
-      case "hm", "hour_minute", "hms", "hour_minute_second": return [.hourAndMinute]
-      default: return [.hourAndMinute]
-      }
-    }
     switch node.string("date_picker_mode")?.lowercased() {
     case "time": return [.hourAndMinute]
-    case "datetime": return [.date, .hourAndMinute]
-    default: return [.date]
+    case "date": return [.date]
+    case "date_and_time", "datetime": return [.date, .hourAndMinute]
+    default: return [.date, .hourAndMinute]
     }
+  }
+}
+
+enum RufletCupertinoTimerModel {
+  static func columns(mode: String?) -> (hours: Bool, minutes: Bool, seconds: Bool) {
+    switch mode?.lowercased() {
+    case "hour_minute", "hm": return (true, true, false)
+    case "minute_second", "minute_seconds", "ms": return (false, true, true)
+    default: return (true, true, true)
+    }
+  }
+
+  static func values(interval: Int) -> [Int] {
+    Array(stride(from: 0, to: 60, by: max(interval, 1)))
+  }
+
+  static func snap(_ value: Int, interval: Int) -> Int {
+    let interval = max(interval, 1)
+    return min(max((value / interval) * interval, 0), values(interval: interval).last ?? 0)
   }
 }
 

@@ -55,4 +55,26 @@ final class CupertinoControlParityTests: XCTestCase {
     XCTAssertEqual(configuration.previousPageTitle, "Gallery")
     XCTAssertEqual(configuration.height, 88)
   }
+
+  func testTimerPickerDefaultsToHourMinuteSecondColumns() {
+    let columns = RufletCupertinoTimerModel.columns(mode: nil)
+    XCTAssertTrue(columns.hours)
+    XCTAssertTrue(columns.minutes)
+    XCTAssertTrue(columns.seconds)
+  }
+
+  func testTimerPickerModesAndIntervalsMatchCupertinoConstructor() {
+    let hourMinute = RufletCupertinoTimerModel.columns(mode: "hour_minute")
+    XCTAssertTrue(hourMinute.hours)
+    XCTAssertTrue(hourMinute.minutes)
+    XCTAssertFalse(hourMinute.seconds)
+
+    let minuteSecond = RufletCupertinoTimerModel.columns(mode: "minute_seconds")
+    XCTAssertFalse(minuteSecond.hours)
+    XCTAssertTrue(minuteSecond.minutes)
+    XCTAssertTrue(minuteSecond.seconds)
+
+    XCTAssertEqual(RufletCupertinoTimerModel.values(interval: 15), [0, 15, 30, 45])
+    XCTAssertEqual(RufletCupertinoTimerModel.snap(43, interval: 15), 30)
+  }
 }
