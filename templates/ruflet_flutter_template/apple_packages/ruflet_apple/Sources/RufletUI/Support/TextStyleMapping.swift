@@ -28,6 +28,10 @@ struct RufletTextStyle {
 
   /// Reads a style map, then lets the control's own inline props override it —
   /// the precedence Flet applies.
+  /// An unstyled starting point, for a slot Ruby gave a bare value rather
+  /// than a style map.
+  init() {}
+
   init(node: ControlNode, styleKey: String = "style") {
     if let style = node.map(styleKey) {
       apply(map: style)

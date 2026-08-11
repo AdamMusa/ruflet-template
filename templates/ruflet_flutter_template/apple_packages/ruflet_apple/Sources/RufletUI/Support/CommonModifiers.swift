@@ -56,6 +56,7 @@ struct CommonControlModifiers: ViewModifier {
       .modifier(RufletMarginModifier(node: node))
       // Positioned is implemented by Stack/Overlay because SwiftUI, like
       // Flutter, needs the parent constraints to resolve left+right/top+bottom.
+      .modifier(RufletBadgeModifier(node: node))
       .modifier(RufletSizeChangeModifier(node: node))
       .modifier(RufletExpandModifier(node: node, axis: axis))
       // Flutter resolves the cursor from the whole hit-tested stack, so this
@@ -69,6 +70,81 @@ struct CommonControlModifiers: ViewModifier {
 /// inventing a different fallback.
 enum RufletBaseControlDefaults {
   static let sizeChangeIntervalMilliseconds = 10
+}
+
+/// `badge` — the count or dot Material hangs off a control's corner.
+///
+/// Flet takes either a Badge control or a bare value, which it wraps in a
+/// label; `wrapWithBadge` does both. A badge with no visible label is the
+/// small dot, which is Flutter's behaviour when `label_visible` is false.
+struct RufletBadgeModifier: ViewModifier {
+  let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
+
+  func body(content: Content) -> some View {
+    if let badge = badgeNode {
+      content.overlay(alignment: alignment(badge)) {
+        marker(badge).offset(offset(badge))
+      }
+    } else if let text = node.string("badge"), !text.isEmpty {
+      content.overlay(alignment: .topTrailing) {
+        label(Text(text), on: nil).offset(x: 4, y: -4)
+      }
+    } else {
+      content
+    }
+  }
+
+  private var badgeNode: ControlNode? {
+    node.controlID(forKey: "badge").flatMap { store.node($0) }
+  }
+
+  @ViewBuilder
+  private func marker(_ badge: ControlNode) -> some View {
+    if badge.bool("label_visible") == false {
+      Circle()
+        .fill(MaterialPalette.color(badge.string("bgcolor"), default: .red))
+        .frame(
+          width: CGFloat(badge.double("small_size") ?? 6),
+          height: CGFloat(badge.double("small_size") ?? 6))
+    } else if let labelID = badge.controlID(forKey: "label") {
+      label(AnyView(ControlView(id: labelID, axis: .none)), on: badge)
+    } else {
+      label(Text(badge.string("label") ?? ""), on: badge)
+    }
+  }
+
+  private func label(_ content: some View, on badge: ControlNode?) -> some View {
+    let large = CGFloat(badge?.double("large_size") ?? 16)
+    return content
+      .rufletTextStyle(textStyle(badge))
+      .padding(
+        ControlProps.edgeInsets(badge?.props["padding"])
+          ?? EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4))
+      .frame(minWidth: large, minHeight: large)
+      .background(
+        Capsule().fill(MaterialPalette.color(badge?.string("bgcolor"), default: .red)))
+  }
+
+  private func textStyle(_ badge: ControlNode?) -> RufletTextStyle {
+    guard let badge else { return RufletTextStyle() }
+    var style = RufletTextStyle(node: badge, styleKey: "text_style")
+    if style.color == nil {
+      style.color = MaterialPalette.color(badge.string("text_color"), default: .white)
+    }
+    if style.size == nil, style.themeStyle == nil { style.themeStyle = Font.TextStyle.caption2 }
+    return style
+  }
+
+  private func alignment(_ badge: ControlNode) -> Alignment {
+    ControlProps.alignment(badge.props["alignment"]) ?? .topTrailing
+  }
+
+  private func offset(_ badge: ControlNode) -> CGSize {
+    guard let map = badge.map("offset") else { return CGSize(width: 4, height: -4) }
+    return CGSize(
+      width: CGFloat(map["x"]?.doubleValue ?? 4), height: CGFloat(map["y"]?.doubleValue ?? -4))
+  }
 }
 
 /// `mouse_cursor` — Flutter's `SystemMouseCursors` names against AppKit's
