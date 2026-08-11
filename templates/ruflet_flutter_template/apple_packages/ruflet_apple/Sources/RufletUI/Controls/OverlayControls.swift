@@ -39,9 +39,14 @@ struct DialogPresenter: ViewModifier {
     let modals = openDialogs.filter { $0.type != "SnackBar" && $0.type != "Banner" }
     if let dialog = modals.last {
       ZStack {
-        Color.black.opacity(0.3)
+        // `modal` keeps the barrier from dismissing, and `barrier_color`
+        // paints it — both are the dialog's own properties in Flet.
+        MaterialPalette.color(dialog.string("barrier_color"), default: .black.opacity(0.3))
           .ignoresSafeArea()
-          .onTapGesture { dismiss(dialog, barrierDismiss: true) }
+          .onTapGesture {
+            guard dialog.bool("modal") != true else { return }
+            dismiss(dialog, barrierDismiss: true)
+          }
         modalBody(dialog)
       }
       .transition(.opacity)
@@ -123,27 +128,64 @@ struct AlertDialogControlView: View {
   }
 
   private var materialDialog: some View {
-    VStack(alignment: .leading, spacing: 16) {
+    let body = VStack(alignment: .leading, spacing: 16) {
+      if node.controlID(forKey: "icon") != nil {
+        RufletFormFieldSlot(node: node, key: "icon")
+          .padding(ControlProps.edgeInsets(node.props["icon_padding"]) ?? EdgeInsets())
+      }
       if let titleID = node.controlID(forKey: "title") {
-        ControlView(id: titleID, axis: .none).font(.headline)
+        ControlView(id: titleID, axis: .none)
+          .rufletTextStyle(RufletTextStyle(node: node, styleKey: "title_text_style"))
+          .padding(ControlProps.edgeInsets(node.props["title_padding"]) ?? EdgeInsets())
       }
       if let contentID = node.controlID(forKey: "content") {
         ControlView(id: contentID, axis: .vertical)
+          .rufletTextStyle(RufletTextStyle(node: node, styleKey: "content_text_style"))
       }
       if !node.controlIDs(forKey: "actions").isEmpty {
-        HStack(spacing: 8) {
-          Spacer(minLength: 0)
+        HStack(spacing: CGFloat(node.double("actions_overflow_button_spacing") ?? 8)) {
+          if actionsAlignment != .leading { Spacer(minLength: 0) }
           ControlList(ids: node.controlIDs(forKey: "actions"), axis: .horizontal)
+            .padding(ControlProps.edgeInsets(node.props["action_button_padding"]) ?? EdgeInsets())
+          if actionsAlignment == .leading { Spacer(minLength: 0) }
         }
+        .padding(ControlProps.edgeInsets(node.props["actions_padding"]) ?? EdgeInsets())
       }
     }
     .padding(20)
     .frame(maxWidth: 420)
     .background(
-      RoundedRectangle(cornerRadius: 14)
+      RoundedRectangle(cornerRadius: dialogRadius)
         .fill(MaterialPalette.color(node.string("bgcolor"), default: dialogSurface)))
-    .shadow(radius: 20)
-    .padding(24)
+    .shadow(
+      color: MaterialPalette.color(node.string("shadow_color"), default: .black.opacity(0.3)),
+      radius: CGFloat(node.double("elevation") ?? 20))
+    .padding(ControlProps.edgeInsets(node.props["inset_padding"]) ?? EdgeInsets(
+      top: 24, leading: 24, bottom: 24, trailing: 24))
+
+    // `scrollable` lets a tall dialog scroll rather than overflow, which is
+    // what Material's AlertDialog does with the same flag.
+    return Group {
+      if node.bool("scrollable") == true {
+        ScrollView { body }
+      } else {
+        body
+      }
+    }
+  }
+
+  /// `shape` is an OutlinedBorder; Material's dialog corner is 14 without one.
+  private var dialogRadius: CGFloat {
+    ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? 14
+  }
+
+  /// `actions_alignment` is Flutter's MainAxisAlignment across the button row.
+  private var actionsAlignment: HorizontalAlignment {
+    switch node.string("actions_alignment")?.lowercased() {
+    case "start", "spacebetween": return .leading
+    case "center": return .center
+    default: return .trailing
+    }
   }
 
   private var appleAlert: some View {

@@ -105,25 +105,84 @@ struct CupertinoSwitchControlView: View {
   @Environment(\.rufletEvents) private var events
 
   var body: some View {
-    Toggle(
-      isOn: Binding(
-        get: { node.bool("value") ?? false },
-        set: { events.commit(node, value: .bool($0)) })
-    ) {
-      if let label = node.string("label") { Text(label) }
+    HStack(spacing: 8) {
+      if labelPosition == .left { label }
+      Toggle("", isOn: binding)
+        .labelsHidden()
+        .toggleStyle(.switch)
+        // Ruby names the switch's colours after the parts they paint, the way
+        // Flutter's CupertinoSwitch does: the track when on is
+        // `active_track_color`, not the `active_color` the sliders and
+        // selection controls use.
+        .tint(trackColor)
+        .overlay(thumbOverlay)
+        .background(thumbImageValidation)
+        .modifier(SwitchTrackOutline(node: node))
+      if labelPosition == .right { label }
     }
-    .toggleStyle(.switch)
-    // Ruby names the switch's colours after the parts they paint, the way
-    // Flutter's CupertinoSwitch does: the track when on is `active_track_color`,
-    // not the `active_color` the sliders and selection controls use.
-    .tint(MaterialPalette.color(node.string("active_track_color")))
-    .background(thumbImageValidation)
+    .modifier(FocusReporter(node: node, events: events))
+  }
+
+  private var binding: Binding<Bool> {
+    Binding(
+      get: { node.bool("value") ?? false },
+      set: { events.commit(node, value: .bool($0)) })
+  }
+
+  private enum LabelPlacement { case left, right }
+
+  private var labelPosition: LabelPlacement {
+    node.string("label_position")?.lowercased() == "left" ? .left : .right
+  }
+
+  /// The on and off label colours tint the tiny I/O marks Cupertino draws
+  /// inside the track.
+  @ViewBuilder
+  private var label: some View {
+    if let text = node.string("label") {
+      Text(text)
+        .foregroundColor(labelColor)
+    }
+  }
+
+  private var labelColor: Color? {
+    guard node.bool("value") ?? false else {
+      return MaterialPalette.color(node.string("off_label_color"))
+    }
+    return MaterialPalette.color(node.string("on_label_color"))
+  }
+
+  private var trackColor: Color? {
+    guard node.bool("value") ?? false else {
+      return MaterialPalette.color(node.string("inactive_track_color"))
+    }
+    return MaterialPalette.color(node.string("active_track_color"))
+  }
+
+  /// `thumb_icon` and the thumb colours paint the knob, which SwiftUI's Toggle
+  /// does not expose, so they are drawn over it.
+  @ViewBuilder
+  private var thumbOverlay: some View {
+    let on = node.bool("value") ?? false
+    let tint = on
+      ? MaterialPalette.color(node.string("thumb_color"))
+      : MaterialPalette.color(node.string("inactive_thumb_color"))
+    if node.props["thumb_icon"] != nil || tint != nil {
+      HStack {
+        if on { Spacer(minLength: 0) }
+        RufletIcon(value: node.props["thumb_icon"], size: 12, color: tint)
+        if !on { Spacer(minLength: 0) }
+      }
+      .padding(.horizontal, 4)
+      .allowsHitTesting(false)
+    }
   }
 
   @ViewBuilder
   private var thumbImageValidation: some View {
     let source = node.bool("value") == true
-      ? node.string("active_thumb_image_src") : node.string("inactive_thumb_image_src")
+      ? node.string("active_thumb_image") ?? node.string("active_thumb_image_src")
+      : node.string("inactive_thumb_image") ?? node.string("inactive_thumb_image_src")
     if let source, let url = URL(string: source), url.scheme != nil {
       AsyncImage(url: url) { phase in
         if case .failure(let error) = phase {
@@ -135,6 +194,22 @@ struct CupertinoSwitchControlView: View {
       .frame(width: 0, height: 0)
       .hidden()
     }
+  }
+}
+
+/// `track_outline_color` and `track_outline_width` stroke the track, which
+/// Cupertino draws around an off switch.
+private struct SwitchTrackOutline: ViewModifier {
+  let node: ControlNode
+
+  func body(content: Content) -> some View {
+    guard let color = MaterialPalette.color(node.string("track_outline_color")) else {
+      return AnyView(content)
+    }
+    return AnyView(
+      content.overlay(
+        Capsule().strokeBorder(
+          color, lineWidth: CGFloat(node.double("track_outline_width") ?? 1))))
   }
 }
 

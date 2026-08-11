@@ -225,7 +225,9 @@ module NativePropertyConsumptionAudit
     scanned.each_with_index do |line, index|
       keys = []
       accessor_pattern = ACCESSORS.join("|")
-      line.scan(/\bnode\.(?:#{accessor_pattern})\(\s*(?:forKey:\s*)?"([^"]+)"/) { |match| keys << match[0] }
+      # A presenter reads the control it is showing through a local of its
+      # own, so the receiver is not always `node`.
+      line.scan(/\b[a-z][A-Za-z0-9_]*\.(?:#{accessor_pattern})\(\s*(?:forKey:\s*)?"([^"]+)"/) { |match| keys << match[0] }
       line.scan(/\bnode\.props\[\s*"([^"]+)"\s*\]/) { |match| keys << match[0] }
       line.scan(/\b(?:child|control|item|option|suggestion|value)?\.?(?:props)\[\s*"([^"]+)"\s*\]/) { |match| keys << match[0] }
       line.scan(/\bcall\.argument\(\s*"([^"]+)"\s*\)/) { |match| keys << match[0] }
