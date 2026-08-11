@@ -13,11 +13,11 @@
     "properties": 5330,
     "classifications": {
       "consumed": 1516,
-      "parent_consumed": 3160,
-      "service": 115,
-      "unclassified": 539
+      "parent_consumed": 3157,
+      "service": 143,
+      "unclassified": 514
     },
-    "unclassified": 539
+    "unclassified": 514
   },
   "unclassified": [
     {
@@ -2524,131 +2524,6 @@
       "family": "visual",
       "wire_type": "View",
       "property": "spacing"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Window",
-      "property": "always_on_bottom"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Window",
-      "property": "always_on_top"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Window",
-      "property": "badge_label"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Window",
-      "property": "brightness"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Window",
-      "property": "focused"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Window",
-      "property": "frameless"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Window",
-      "property": "full_screen"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Window",
-      "property": "ignore_mouse_events"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Window",
-      "property": "max_height"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Window",
-      "property": "max_width"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Window",
-      "property": "maximizable"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Window",
-      "property": "maximized"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Window",
-      "property": "min_height"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Window",
-      "property": "min_width"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Window",
-      "property": "minimizable"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Window",
-      "property": "minimized"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Window",
-      "property": "movable"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Window",
-      "property": "on_event"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Window",
-      "property": "prevent_close"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Window",
-      "property": "progress_bar"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Window",
-      "property": "resizable"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Window",
-      "property": "shadow"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Window",
-      "property": "skip_task_bar"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Window",
-      "property": "title_bar_buttons_hidden"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Window",
-      "property": "title_bar_hidden"
     },
     {
       "family": "visual",
@@ -68715,12 +68590,22 @@
           ]
         },
         "always_on_bottom": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 99
+            }
+          ]
         },
         "always_on_top": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 97
+            }
+          ]
         },
         "aspect_ratio": {
           "classification": "parent_consumed",
@@ -68732,8 +68617,13 @@
           ]
         },
         "badge_label": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 121
+            }
+          ]
         },
         "bgcolor": {
           "classification": "service",
@@ -68757,8 +68647,13 @@
           ]
         },
         "brightness": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 105
+            }
+          ]
         },
         "data": {
           "classification": "parent_consumed",
@@ -68770,27 +68665,38 @@
           ]
         },
         "focused": {
-          "classification": "unclassified",
-          "evidence": []
-        },
-        "frameless": {
-          "classification": "unclassified",
-          "evidence": []
-        },
-        "full_screen": {
-          "classification": "unclassified",
-          "evidence": []
-        },
-        "height": {
-          "classification": "parent_consumed",
+          "classification": "service",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 221
-            },
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 115
+            }
+          ]
+        },
+        "frameless": {
+          "classification": "service",
+          "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 225
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 80
+            }
+          ]
+        },
+        "full_screen": {
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 109
+            }
+          ]
+        },
+        "height": {
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 65
             }
           ]
         },
@@ -68812,8 +68718,13 @@
           ]
         },
         "ignore_mouse_events": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 87
+            }
+          ]
         },
         "key": {
           "classification": "parent_consumed",
@@ -68834,85 +68745,174 @@
           ]
         },
         "max_height": {
-          "classification": "unclassified",
-          "evidence": []
-        },
-        "max_width": {
-          "classification": "unclassified",
-          "evidence": []
-        },
-        "maximizable": {
-          "classification": "unclassified",
-          "evidence": []
-        },
-        "maximized": {
-          "classification": "unclassified",
-          "evidence": []
-        },
-        "min_height": {
-          "classification": "unclassified",
-          "evidence": []
-        },
-        "min_width": {
-          "classification": "unclassified",
-          "evidence": []
-        },
-        "minimizable": {
-          "classification": "unclassified",
-          "evidence": []
-        },
-        "minimized": {
-          "classification": "unclassified",
-          "evidence": []
-        },
-        "movable": {
-          "classification": "unclassified",
-          "evidence": []
-        },
-        "on_event": {
-          "classification": "unclassified",
-          "evidence": []
-        },
-        "opacity": {
-          "classification": "parent_consumed",
+          "classification": "service",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 362
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 71
+            }
+          ]
+        },
+        "max_width": {
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 71
+            }
+          ]
+        },
+        "maximizable": {
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 91
+            }
+          ]
+        },
+        "maximized": {
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 113
+            }
+          ]
+        },
+        "min_height": {
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 68
+            }
+          ]
+        },
+        "min_width": {
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 68
+            }
+          ]
+        },
+        "minimizable": {
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 77
+            }
+          ]
+        },
+        "minimized": {
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 114
+            }
+          ]
+        },
+        "movable": {
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 84
             },
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 370
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 85
+            }
+          ]
+        },
+        "on_event": {
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 55
+            }
+          ]
+        },
+        "opacity": {
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 88
             }
           ]
         },
         "prevent_close": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 124
+            }
+          ]
         },
         "progress_bar": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 122
+            }
+          ]
         },
         "resizable": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 76
+            }
+          ]
         },
         "shadow": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 86
+            }
+          ]
         },
         "skip_task_bar": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 123
+            }
+          ]
         },
         "title_bar_buttons_hidden": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 92
+            }
+          ]
         },
         "title_bar_hidden": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "service",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 81
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 83
+            }
+          ]
         },
         "top": {
           "classification": "parent_consumed",
@@ -68933,15 +68933,11 @@
           ]
         },
         "width": {
-          "classification": "parent_consumed",
+          "classification": "service",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 221
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift",
-              "line": 224
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/WindowService.swift",
+              "line": 65
             }
           ]
         }
