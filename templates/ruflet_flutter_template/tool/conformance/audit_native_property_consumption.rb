@@ -253,7 +253,7 @@ module NativePropertyConsumptionAudit
       # sits at the construction site rather than inside the accessor:
       # RufletFormFieldSlot(key: "helper", styleKey: "helper_style") and
       # events.commit(key: "selected_index") all name a real property.
-      line.scan(/\b(?:style)?[kK]ey:\s*"([^"]+)"/) { |match| keys << match[0] }
+      line.scan(/\b[A-Za-z]*[kK]ey:\s*"([^"]+)"/) { |match| keys << match[0] }
       # A reusable reporter takes the event it fires as an argument, so the
       # only literal is at the call site: NamedSemanticsAction(event: "copy")
       # and events.commit(..., event: "change") both name a real event.

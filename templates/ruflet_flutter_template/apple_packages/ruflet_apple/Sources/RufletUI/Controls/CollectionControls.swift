@@ -915,6 +915,7 @@ struct DataTableControlView: View {
         .frame(height: metrics.headingRowHeight)
         .background(MaterialPalette.color(node.string("heading_row_color")))
         .font(.subheadline.weight(.semibold))
+        .rufletTextStyle(RufletTextStyle(node: node, styleKey: "heading_text_style"))
 
         tableDivider
 
@@ -925,6 +926,7 @@ struct DataTableControlView: View {
                 Image(systemName: (row.bool("selected") ?? false) ? "checkmark.square.fill" : "square")
               }
               .buttonStyle(.plain)
+              .padding(.horizontal, CGFloat(node.double("checkbox_horizontal_margin") ?? 0))
               .disabled(!row.handlesEvent("select_change"))
             }
             ForEach(row.controlIDs(forKey: "cells"), id: \.self) { cellID in
@@ -933,9 +935,10 @@ struct DataTableControlView: View {
           }
           .frame(minHeight: metrics.dataRowMinHeight, maxHeight: metrics.dataRowMaxHeight)
           .frame(maxWidth: .infinity, alignment: .leading)
-          .background(
-            (row.bool("selected") ?? false)
-              ? MaterialPalette.color("secondarycontainer", default: .clear) : Color.clear)
+          .rufletTextStyle(RufletTextStyle(node: node, styleKey: "data_text_style"))
+          .background(rowBackground(row))
+          .overlay(alignment: .bottom) { horizontalRule }
+          .overlay(alignment: .trailing) { verticalRule }
           .contentShape(Rectangle())
           .onTapGesture { selectRow(row, selected: !(row.bool("selected") ?? false)) }
           .modifier(LongPressReporter(node: row, events: events))
@@ -1013,6 +1016,40 @@ struct DataTableControlView: View {
 
   private func allSelected(_ rows: [ControlNode]) -> Bool {
     !rows.isEmpty && rows.allSatisfy { $0.bool("selected") ?? false }
+  }
+
+  /// `data_row_color` is a WidgetStateProperty: Flet sends the resting colour
+  /// and the selected one under their state names.
+  private func rowBackground(_ row: ControlNode) -> Color {
+    let states = node.map("data_row_color")
+    let selected = row.bool("selected") ?? false
+    if selected {
+      return MaterialPalette.color(
+        states?["selected"]?.stringValue,
+        default: MaterialPalette.color("secondarycontainer", default: .clear))
+    }
+    return MaterialPalette.color(
+      states?["default"]?.stringValue ?? states?[""]?.stringValue, default: .clear)
+  }
+
+  /// `horizontal_lines` and `vertical_lines` are BorderSides drawn between
+  /// the cells rather than around the table.
+  @ViewBuilder
+  private var horizontalRule: some View {
+    if let side = node.map("horizontal_lines") {
+      Rectangle()
+        .fill(MaterialPalette.color(side["color"]?.stringValue, default: .clear))
+        .frame(height: CGFloat(side["width"]?.doubleValue ?? 1))
+    }
+  }
+
+  @ViewBuilder
+  private var verticalRule: some View {
+    if let side = node.map("vertical_lines") {
+      Rectangle()
+        .fill(MaterialPalette.color(side["color"]?.stringValue, default: .clear))
+        .frame(width: CGFloat(side["width"]?.doubleValue ?? 1))
+    }
   }
 
   private func selectAll(_ rows: [ControlNode]) {

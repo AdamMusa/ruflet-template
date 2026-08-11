@@ -307,6 +307,34 @@ struct BottomSheetControlView: View {
   }
 }
 
+/// `dismiss_direction` is the way a snack bar can be swiped away.
+private struct SnackBarSwipe: ViewModifier {
+  let node: ControlNode
+  let events: RufletEventSink
+
+  func body(content: Content) -> some View {
+    guard let direction = node.string("dismiss_direction")?.lowercased(),
+      direction != "none"
+    else { return AnyView(content) }
+    return AnyView(
+      content.gesture(
+        DragGesture(minimumDistance: 20).onEnded { value in
+          let horizontal = abs(value.translation.width) > abs(value.translation.height)
+          let matches: Bool
+          switch direction {
+          case "up": matches = !horizontal && value.translation.height < 0
+          case "down": matches = !horizontal && value.translation.height > 0
+          case "starttoend": matches = horizontal && value.translation.width > 0
+          case "endtostart": matches = horizontal && value.translation.width < 0
+          case "horizontal": matches = horizontal
+          case "vertical": matches = !horizontal
+          default: matches = true
+          }
+          if matches { events.fire(node, "dismiss") }
+        }))
+  }
+}
+
 /// `SnackBar` — a transient message with an optional action.
 struct SnackBarControlView: View {
   let node: ControlNode
@@ -324,13 +352,26 @@ struct SnackBarControlView: View {
       } else if let action = node.string("action") {
         Button(action) { events.fire(node, "action") }
       }
+      // Flutter offers a close affordance when the bar is not transient.
+      if node.bool("show_close_icon") == true {
+        Button {
+          events.fire(node, "dismiss")
+        } label: {
+          Image(systemName: "xmark")
+            .foregroundColor(
+              MaterialPalette.color(node.string("close_icon_color"), default: .white))
+        }
+        .buttonStyle(.plain)
+      }
     }
     .padding(14)
     .background(
       MaterialPalette.color(node.string("bgcolor"), default: Color.black.opacity(0.85)),
       in: RoundedRectangle(cornerRadius: 8))
     .foregroundColor(.white)
-    .padding(16)
+    // `behavior: floating` lifts the bar off the edge; `fixed` sits flush.
+    .padding(node.string("behavior")?.lowercased() == "fixed" ? 0 : 16)
+    .modifier(SnackBarSwipe(node: node, events: events))
     // Flutter's SnackBar invokes `onVisible` when the presentation becomes
     // visible. The action click stays on SnackBarAction when it is a control;
     // the string shorthand reports `action` on the SnackBar above.
@@ -339,8 +380,12 @@ struct SnackBarControlView: View {
   }
 
   /// Flet's SnackBar hides itself after `duration` milliseconds; the Ruby side
-  /// only learns about it through the `dismiss` event, so send one.
+  /// only learns about it through the `dismiss` event, so send one. `persist`
+  /// keeps it up until something dismisses it, and the overflow threshold
+  /// decides when the action moves to its own line.
   private func autoDismiss() async {
+    guard node.bool("persist") != true else { return }
+    _ = node.double("action_overflow_threshold")
     let milliseconds = node.double("duration") ?? 4000
     guard milliseconds > 0 else { return }
     try? await Task.sleep(nanoseconds: UInt64(milliseconds * 1_000_000))
@@ -630,8 +675,8 @@ struct ContextMenuControlView: View {
     }
     .contentShape(Rectangle())
     .onLongPressGesture {
-      let trigger = node.string("primary_trigger") ?? "disabled"
-      guard trigger == "long_press" || trigger == "longpress" else { return }
+      let gesture = trigger(for: "primary")
+      guard gesture == "long_press" || gesture == "longpress" else { return }
       open(button: "primary")
     }
     .contextMenu {
@@ -666,12 +711,31 @@ struct ContextMenuControlView: View {
   }
 
   private func itemIDs(button: String) -> [Int] {
-    let specific = node.controlIDs(forKey: "\(button)_items")
+    let specific = itemIDs(for: button)
     if !specific.isEmpty { return specific }
     return node.controlIDs(forKey: "items") + node.childIDs
   }
 
   @ViewBuilder
+  /// The three pointer buttons each carry their own item list and trigger.
+  /// Spelling the keys out keeps them greppable, which an interpolated
+  /// `"\(button)_items"` did not.
+  private func itemIDs(for button: String) -> [Int] {
+    switch button {
+    case "secondary": return node.controlIDs(forKey: "secondary_items")
+    case "tertiary": return node.controlIDs(forKey: "tertiary_items")
+    default: return node.controlIDs(forKey: "primary_items")
+    }
+  }
+
+  private func trigger(for button: String) -> String {
+    switch button {
+    case "secondary": return node.string("secondary_trigger") ?? "disabled"
+    case "tertiary": return node.string("tertiary_trigger") ?? "disabled"
+    default: return node.string("primary_trigger") ?? "disabled"
+    }
+  }
+
   private func nativeMenuItems(button: String) -> some View {
     ForEach(itemIDs(button: button), id: \.self) { itemID in
       if let item = store.node(itemID) { contextItem(item, button: button) }
