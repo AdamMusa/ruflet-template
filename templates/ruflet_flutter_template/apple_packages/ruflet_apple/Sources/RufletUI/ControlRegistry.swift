@@ -148,8 +148,10 @@ public enum ControlRegistry {
     }
 
     // Page and presentation hosts.
-    add(["Page"], .host, "PageControlView", .hostManaged)
-    add(["View", "BasePage"], .host, "ViewControlView", .hostManaged)
+    add(["Page"], .host, "PageControlView", .hostManaged,
+        events: ["keyboard_event", "locale_change"])
+    add(["View", "BasePage"], .host, "ViewControlView", .hostManaged,
+        events: ["scroll"])
     add(["Overlay", "Dialogs", "ServiceRegistry", "Window"], .host,
         "RufletAppView host", .hostManaged)
     add(["AlertDialog", "CupertinoAlertDialog", "BottomSheet", "CupertinoBottomSheet",
@@ -159,12 +161,12 @@ public enum ControlRegistry {
         events: ["action", "dismiss", "visible"])
 
     // Shared layout and wrappers.
-    add(["Row"], .visible, "RowControlView", .nativeView)
-    add(["Column"], .visible, "ColumnControlView", .nativeView)
+    add(["Row"], .visible, "RowControlView", .nativeView, events: ["scroll"])
+    add(["Column"], .visible, "ColumnControlView", .nativeView, events: ["scroll"])
     add(["ResponsiveRow"], .visible, "ResponsiveRowControlView", .nativeView)
     add(["Stack"], .visible, "StackControlView", .nativeView)
     add(["Container"], .visible, "ContainerControlView", .nativeView,
-        events: ["click", "hover", "long_press"])
+        events: ["animation_end", "click", "hover", "long_press", "tap_down"])
     add(["Card"], .visible, "CardControlView", .nativeView)
     add(["SafeArea"], .visible, "SafeAreaControlView", .nativeView)
     add(["Divider", "VerticalDivider"], .visible, "DividerControlView", .nativeView)
@@ -173,15 +175,22 @@ public enum ControlRegistry {
     add(["Pagelet"], .visible, "PageletControlView", .nativeView)
     add(["AnimatedSwitcher"], .visible, "AnimatedSwitcherControlView", .nativeView)
     add(["Hero"], .visible, "HeroControlView", .nativeView)
-    add(["Semantics"], .visible, "SemanticsControlView", .nativeView)
+    add(["Semantics"], .visible, "SemanticsControlView", .nativeView,
+        events: ["click", "copy", "cut", "decrease", "did_gain_accessibility_focus",
+                 "did_lose_accessibility_focus", "dismiss", "increase",
+                 "move_cursor_backward_by_character", "move_cursor_forward_by_character",
+                 "paste", "scroll_down", "scroll_left", "scroll_right", "scroll_up",
+                 "set_text"])
     add(["MergeSemantics"], .visible, "MergeSemanticsControlView", .nativeView)
-    add(["SelectionArea"], .visible, "SelectionAreaControlView", .nativeView)
+    add(["SelectionArea"], .visible, "SelectionAreaControlView", .nativeView,
+        events: ["change"])
     add(["TransparentPointer"], .visible, "TransparentPointerControlView", .nativeView)
     add(["Shimmer"], .visible, "ShimmerControlView", .nativeView)
     add(["ShaderMask"], .visible, "ShaderMaskControlView", .nativeView)
     add(["Screenshot"], .visible, "ScreenshotControlView", .nativeView,
         methods: ["capture"])
-    add(["WindowDragArea"], .visible, "WindowDragAreaControlView", .nativeView)
+    add(["WindowDragArea"], .visible, "WindowDragAreaControlView", .nativeView,
+        events: ["double_tap", "drag_end", "drag_start"])
     add(["AutofillGroup"], .visible, "InertWrapperControlView", .nativeView)
     add(["BrowserContextMenu"], .unsupported, "InertWrapperControlView", .unsupportedFallback)
     add(["FletApp"], .unsupported, "PassthroughControlView", .unsupportedFallback)
@@ -238,8 +247,10 @@ public enum ControlRegistry {
     add(["SearchBar"], .visible, "SearchBarControlView", .nativeView,
         events: ["blur", "change", "focus", "submit", "tap", "tap_outside_bar"],
         methods: ["close_view", "focus", "open_view"])
-    add(["Dropdown", "DropdownM2"], .visible, "DropdownControlView", .nativeView,
+    add(["Dropdown"], .visible, "DropdownControlView", .nativeView,
         events: ["blur", "focus", "select", "text_change"], methods: ["focus"])
+    add(["DropdownM2"], .visible, "DropdownM2ControlView", .nativeView,
+        events: ["blur", "change", "click", "focus"], methods: ["focus"])
     add(["AutoComplete"], .visible, "AutoCompleteControlView", .nativeView,
         events: ["change", "select"])
     add(["DatePicker", "TimePicker"], .visible,
@@ -315,27 +326,50 @@ public enum ControlRegistry {
 
     // Gesture surfaces.
     add(["GestureDetector"], .visible, "GestureDetectorControlView", .nativeView,
-        events: ["double_tap", "hover", "long_press", "pan_end", "pan_start",
-                 "pan_update", "secondary_tap", "tap"])
+        events: ["double_tap", "double_tap_cancel", "double_tap_down", "enter", "exit",
+                 "force_press_end", "force_press_peak", "force_press_start", "force_press_update",
+                 "horizontal_drag_cancel", "horizontal_drag_down", "horizontal_drag_end",
+                 "horizontal_drag_start", "horizontal_drag_update", "hover", "long_press",
+                 "long_press_cancel", "long_press_down", "long_press_end",
+                 "long_press_move_update", "long_press_start", "long_press_up",
+                 "multi_long_press", "multi_tap", "pan_cancel", "pan_down", "pan_end",
+                 "pan_start", "pan_update", "right_pan_end", "right_pan_start",
+                 "right_pan_update", "scale_end", "scale_start", "scale_update", "scroll",
+                 "secondary_long_press", "secondary_long_press_cancel",
+                 "secondary_long_press_down", "secondary_long_press_end",
+                 "secondary_long_press_move_update", "secondary_long_press_start",
+                 "secondary_long_press_up", "secondary_tap", "secondary_tap_cancel",
+                 "secondary_tap_down", "secondary_tap_up", "tap", "tap_cancel", "tap_down",
+                 "tap_move", "tap_up", "tertiary_long_press", "tertiary_long_press_cancel",
+                 "tertiary_long_press_down", "tertiary_long_press_end",
+                 "tertiary_long_press_move_update", "tertiary_long_press_start",
+                 "tertiary_long_press_up", "tertiary_tap_cancel", "tertiary_tap_down",
+                 "tertiary_tap_up", "vertical_drag_cancel", "vertical_drag_down",
+                 "vertical_drag_end", "vertical_drag_start", "vertical_drag_update"])
     add(["Draggable"], .visible, "DraggableControlView", .nativeView,
         events: ["drag_complete", "drag_end", "drag_start"])
     add(["DragTarget"], .visible, "DragTargetControlView", .nativeView,
         events: ["accept", "leave", "move", "will_accept"])
     add(["Dismissible"], .visible, "DismissibleControlView", .nativeView,
-        events: ["dismiss", "update"])
+        events: ["confirm_dismiss", "dismiss", "resize", "update"],
+        methods: ["confirm_dismiss"])
     add(["InteractiveViewer"], .visible, "InteractiveViewerControlView", .nativeView,
         events: ["interaction_end", "interaction_start", "interaction_update"],
         methods: ["pan", "reset", "restore_state", "save_state", "zoom"])
     add(["KeyboardListener"], .visible, "KeyboardListenerControlView", .nativeView,
-        events: ["key"])
+        events: ["key_down", "key_repeat", "key_up"], methods: ["focus"])
 
     // Cupertino-native controls.
     add(["CupertinoButton", "CupertinoFilledButton", "CupertinoTintedButton"], .visible,
-        "CupertinoButtonControlView", .nativeView, events: buttonEvents)
-    add(["CupertinoSwitch", "CupertinoSlider", "CupertinoCheckbox", "CupertinoRadio",
-         "CupertinoSegmentedButton", "CupertinoSlidingSegmentedButton", "CupertinoPicker",
+        "CupertinoButtonControlView", .nativeView, events: buttonEvents, methods: ["focus"])
+    add(["CupertinoCheckbox", "CupertinoRadio", "CupertinoSegmentedButton",
+         "CupertinoSlidingSegmentedButton", "CupertinoPicker",
          "CupertinoDatePicker", "CupertinoTimerPicker"], .visible,
         "Cupertino native value control", .nativeView, events: ["change"])
+    add(["CupertinoSwitch"], .visible, "CupertinoSwitchControlView", .nativeView,
+        events: ["change", "image_error"])
+    add(["CupertinoSlider"], .visible, "CupertinoSliderControlView", .nativeView,
+        events: ["change", "change_end", "change_start"])
     add(["CupertinoActivityIndicator"], .visible, "CupertinoActivityIndicatorControlView",
         .nativeView)
     add(["CupertinoAppBar"], .visible, "CupertinoAppBarControlView", .nativeView)
@@ -376,8 +410,17 @@ public enum ControlRegistry {
     add(["TileLayer", "MarkerLayer", "Marker", "CircleLayer", "CircleMarker",
          "PolylineLayer", "PolylineMarker", "PolygonLayer", "PolygonMarker",
          "SimpleAttribution"], .structuralChild, "MapKit layer metadata", .metadataOnly)
+    result["tilelayer"] = ControlDescriptor(
+      wireType: "TileLayer", classification: .structuralChild,
+      implementation: "ReportingTileOverlay", rendering: .metadataOnly,
+      supportedEvents: ["image_error"])
+    result["simpleattribution"] = ControlDescriptor(
+      wireType: "SimpleAttribution", classification: .structuralChild,
+      implementation: "MapAttributionView", rendering: .metadataOnly,
+      supportedEvents: ["click"])
     add(["Camera"], .visible, "RufletMedia.CameraControlView",
-        .optionalBundle("RufletMedia"), events: ["error", "initialized", "picture_taken"])
+        .optionalBundle("RufletMedia"),
+        events: ["error", "initialized", "picture_taken", "state_change", "stream_image"])
     add(["Audio"], .service, "RufletMedia AudioService", .serviceOnly,
         events: ["duration_change", "error", "loaded", "position_change", "seek_complete",
                  "state_change"],
