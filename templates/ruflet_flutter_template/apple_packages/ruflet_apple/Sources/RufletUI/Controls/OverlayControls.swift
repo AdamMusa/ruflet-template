@@ -375,14 +375,14 @@ struct PopupMenuControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
+  @State private var presented = false
+  @State private var completedSelection = false
 
   var body: some View {
-    Menu {
-      ForEach(node.childIDs, id: \.self) { itemID in
-        if let item = store.node(itemID) {
-          menuItem(item)
-        }
-      }
+    Button {
+      completedSelection = false
+      presented = true
+      events.fire(node, "open")
     } label: {
       if let contentID = node.controlID(forKey: "content") {
         ControlView(id: contentID, axis: .none)
@@ -394,7 +394,24 @@ struct PopupMenuControlView: View {
           .contentShape(Rectangle())
       }
     }
-    .menuStyle(.borderlessButton)
+    .buttonStyle(.plain)
+    .disabled(node.bool("disabled") ?? false)
+    .popover(isPresented: $presented) {
+      VStack(alignment: .leading, spacing: 0) {
+        ForEach(itemIDs, id: \.self) { itemID in
+          if let item = store.node(itemID) { menuItem(item) }
+        }
+      }
+      .padding(.vertical, 6)
+      .frame(minWidth: 180)
+    }
+    .onChange(of: presented) { open in
+      if !open, !completedSelection { events.fire(node, "cancel") }
+    }
+  }
+
+  private var itemIDs: [Int] {
+    node.controlIDs(forKey: "items") + node.childIDs
   }
 
   @ViewBuilder
@@ -403,7 +420,11 @@ struct PopupMenuControlView: View {
       Divider()
     } else {
       Button {
+        completedSelection = true
+        // Flet's popup entry value is the wire id of the selected item.
+        events.fire(node, "select", data: .string(String(item.id)))
         events.fire(item, "click")
+        presented = false
       } label: {
         HStack {
           if item.props["icon"] != nil {
@@ -412,7 +433,7 @@ struct PopupMenuControlView: View {
           if let contentID = item.controlID(forKey: "content") {
             ControlView(id: contentID, axis: .none)
           } else {
-            Text(item.string("text") ?? "")
+            Text(item.string("content") ?? item.string("text") ?? "")
           }
         }
       }
@@ -479,6 +500,11 @@ struct MenuItemButtonControlView: View {
 /// `ContextMenu` — a right-click / long-press menu around its content.
 struct ContextMenuControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
+  @Environment(\.rufletEvents) private var events
+  @State private var presented = false
+  @State private var completedSelection = false
+  @State private var activeButton = "primary"
 
   var body: some View {
     Group {
@@ -486,8 +512,107 @@ struct ContextMenuControlView: View {
         ControlView(id: contentID, axis: .none)
       }
     }
-    .contextMenu {
-      ControlList(ids: node.controlIDs(forKey: "menu_items") + node.childIDs, axis: .vertical)
+    .contentShape(Rectangle())
+    .onLongPressGesture {
+      let trigger = node.string("primary_trigger") ?? "disabled"
+      guard trigger == "long_press" || trigger == "longpress" else { return }
+      open(button: "primary")
     }
+    .contextMenu {
+      nativeMenuItems(button: "secondary")
+    }
+    .popover(isPresented: $presented) {
+      VStack(alignment: .leading, spacing: 0) {
+        popoverMenuItems(button: activeButton)
+      }
+      .padding(.vertical, 6)
+      .frame(minWidth: 180)
+    }
+    .onChange(of: presented) { open in
+      if !open, !completedSelection {
+        events.fire(node, "dismiss", data: .map(eventPayload(button: activeButton)))
+      }
+    }
+    .rufletCommandHandler(node.id) { call, completion in
+      guard call.name == "open" else {
+        completion(.failure(rufletUnsupported(node.type, call)))
+        return
+      }
+      open(button: call.argument("button")?.stringValue ?? "primary")
+      completion(.success(.null))
+    }
+  }
+
+  private func open(button: String) {
+    activeButton = button
+    completedSelection = false
+    presented = true
+  }
+
+  private func itemIDs(button: String) -> [Int] {
+    let specific = node.controlIDs(forKey: "\(button)_items")
+    if !specific.isEmpty { return specific }
+    return node.controlIDs(forKey: "items") + node.childIDs
+  }
+
+  @ViewBuilder
+  private func nativeMenuItems(button: String) -> some View {
+    ForEach(itemIDs(button: button), id: \.self) { itemID in
+      if let item = store.node(itemID) { contextItem(item, button: button) }
+    }
+  }
+
+  @ViewBuilder
+  private func popoverMenuItems(button: String) -> some View {
+    ForEach(itemIDs(button: button), id: \.self) { itemID in
+      if let item = store.node(itemID) { contextItem(item, button: button) }
+    }
+  }
+
+  @ViewBuilder
+  private func contextItem(_ item: ControlNode, button: String) -> some View {
+    if item.bool("_divider") == true {
+      Divider()
+    } else {
+      Button {
+        select(item, button: button)
+      } label: {
+        HStack(spacing: 8) {
+          if item.props["icon"] != nil {
+            RufletIcon(value: item.props["icon"], size: 16, color: nil)
+          }
+          if let contentID = item.controlID(forKey: "content") {
+            ControlView(id: contentID, axis: .none)
+          } else {
+            Text(item.string("content") ?? item.string("text") ?? item.string("value") ?? "")
+          }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 7)
+      }
+      .buttonStyle(.plain)
+      .disabled(item.bool("disabled") ?? false)
+    }
+  }
+
+  private func select(_ item: ControlNode, button: String) {
+    completedSelection = true
+    let ids = itemIDs(button: button)
+    var payload = eventPayload(button: button)
+    payload["id"] = .int(Int64(item.id))
+    payload["idx"] = .int(Int64(ids.firstIndex(of: item.id) ?? 0))
+    events.fire(node, "select", data: .map(payload))
+    events.fire(item, "click")
+    presented = false
+  }
+
+  private func eventPayload(button: String) -> [String: RufletValue] {
+    let ids = itemIDs(button: button)
+    return [
+      "b": .string(button),
+      "tr": .string(node.string("\(button)_trigger") ?? "disabled"),
+      "ic": .int(Int64(ids.count)),
+    ]
   }
 }
