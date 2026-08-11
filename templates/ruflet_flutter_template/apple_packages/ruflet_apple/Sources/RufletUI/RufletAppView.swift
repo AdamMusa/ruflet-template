@@ -86,8 +86,20 @@ public struct RufletAppView: View {
 }
 
 /// Renders one connected session.
-private struct RufletSessionView: View {
+struct RufletSessionView: View {
   @ObservedObject var session: RufletSession
+  var nativeScene: RufletNativeScene?
+  var sceneRegistry: RufletNativeSceneRegistry?
+
+  init(
+    session: RufletSession,
+    nativeScene: RufletNativeScene? = nil,
+    sceneRegistry: RufletNativeSceneRegistry? = nil
+  ) {
+    self.session = session
+    self.nativeScene = nativeScene
+    self.sceneRegistry = sceneRegistry
+  }
 
   var body: some View {
     ZStack {
@@ -98,6 +110,7 @@ private struct RufletSessionView: View {
         // claim them here while they are mounted.
         .environment(\.rufletCommands, session.commands)
         .environment(\.rufletServerURL, session.serverURL)
+        .environment(\.rufletNativeScene, nativeScene)
 
       switch session.status {
       case .crashed(let message):
@@ -112,6 +125,13 @@ private struct RufletSessionView: View {
         EmptyView()
       }
     }
+    .onAppear { bindScenesIfRegistered() }
+    .onChange(of: session.status) { _ in bindScenesIfRegistered() }
+  }
+
+  private func bindScenesIfRegistered() {
+    guard session.status == .connected else { return }
+    sceneRegistry?.bind(to: session)
   }
 }
 

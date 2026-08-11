@@ -43,21 +43,6 @@ private struct FullscreenDialogPresentation: ViewModifier {
   }
 }
 
-/// `can_pop` and `on_confirm_pop` are Flutter's PopScope: the route refuses to
-/// leave until Ruby answers, which is what the confirm event asks it to do.
-private struct ViewPopGuard: ViewModifier {
-  let node: ControlNode
-  @Environment(\.rufletEvents) private var events
-
-  func body(content: Content) -> some View {
-    content
-      .onDisappear {
-        guard node.bool("can_pop") == false else { return }
-        events.fire(node, "confirm_pop")
-      }
-  }
-}
-
 /// The border an outlined card draws in place of a shadow.
 private struct CardOutline: ViewModifier {
   let radius: CGFloat
@@ -162,16 +147,35 @@ private struct ContainerShadows: ViewModifier {
 struct PageControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
+  @Environment(\.rufletNativeScene) private var nativeScene
 
   var body: some View {
     Group {
-      if let viewID = node.controlIDs(forKey: "views").last {
-        ControlView(id: viewID, axis: .vertical)
+      if let presentationPage {
+        Group {
+          if let viewID = presentationPage.controlIDs(forKey: "views").last {
+            ControlView(id: viewID, axis: .vertical)
+          } else {
+            Color.clear
+          }
+        }
+        .environment(\.rufletPageScrollCommand, RufletPageScrollCommand(node.props["_scroll_command"]))
+        .modifier(PageChrome(node: presentationPage, eventNode: node))
       } else {
         Color.clear
+          .modifier(PageChrome(node: node, eventNode: node))
       }
     }
-    .modifier(PageChrome(node: node))
+  }
+
+  /// Flet selects the `BasePage` whose `view_id` matches the native platform
+  /// view. A scene with no matching BasePage deliberately shows the startup
+  /// surface until Ruby handles `multi_view_add` and supplies it.
+  private var presentationPage: ControlNode? {
+    guard let nativeScene else { return node }
+    return node.controlIDs(forKey: "multi_views")
+      .compactMap(store.node)
+      .first(where: { $0.int("view_id") == nativeScene.id })
   }
 }
 
@@ -219,14 +223,15 @@ private struct PageLifecycle: ViewModifier {
     events.fire(node, "platform_brightness_change", data: .string(name))
   }
 
-  /// SwiftUI collapses Flutter's five `AppLifecycleState` cases into three.
-  /// `detached` and `hidden` have no scene phase to raise them.
+  /// SwiftUI collapses Flet's seven `AppLifecycleListener` callbacks into
+  /// three scene phases. Keep Flet's callback spelling (`resume`, `pause`),
+  /// rather than Flutter's enum spelling (`resumed`, `paused`).
   private func report(phase: ScenePhase) {
     let state: String
     switch phase {
-    case .active: state = "resumed"
+    case .active: state = "resume"
     case .inactive: state = "inactive"
-    case .background: state = "paused"
+    case .background: state = "pause"
     @unknown default: return
     }
     events.fire(node, "app_lifecycle_state_change", data: .map(["state": .string(state)]))
@@ -238,7 +243,9 @@ private struct PageLifecycle: ViewModifier {
 /// backend raises on the page rather than on a control.
 private struct PageEnvironment: ViewModifier {
   let node: ControlNode
+  let eventNode: ControlNode
   @Environment(\.rufletEvents) private var events
+  @EnvironmentObject private var store: ControlStore
 
   func body(content: Content) -> some View {
     content
@@ -254,28 +261,40 @@ private struct PageEnvironment: ViewModifier {
       .onAppear {
         // A native shell is connected the moment the page mounts; there is no
         // socket handshake for Ruby to wait on beyond the one already done.
-        events.fire(node, "connect")
+        events.fire(eventNode, "connect")
         _ = node.bool("enable_screenshots")
         _ = node.controlID(forKey: "window")
         _ = node.string("sess")
         _ = node.array("multi_views")
+        viewRoutes = routes
       }
       .onDisappear {
-        events.fire(node, "disconnect")
-        events.fire(node, "close")
+        events.fire(eventNode, "disconnect")
+        events.fire(eventNode, "close")
       }
       .onChange(of: node.string("route") ?? "") { route in
-        events.fire(node, "route_change", data: .string(route))
+        events.fire(eventNode, "route_change", data: .map(["route": .string(route)]))
       }
-      .onChange(of: node.controlIDs(forKey: "views").count) { count in
-        // Flet raises view_pop when the navigator stack shortens.
-        guard count < viewCount else { viewCount = count; return }
-        viewCount = count
-        events.fire(node, "view_pop")
+      .onChange(of: routes) { nextRoutes in
+        // Flet reports the route that the platform navigator popped. Preserve
+        // the route rather than reducing this to a count-only notification.
+        if nextRoutes.count < viewRoutes.count,
+          let popped = viewRoutes.dropFirst(nextRoutes.count).first
+        {
+          events.fire(eventNode, "view_pop", data: .map(["route": .string(popped)]))
+        }
+        viewRoutes = nextRoutes
       }
   }
 
-  @State private var viewCount = 0
+  @State private var viewRoutes: [String] = []
+
+  private var routes: [String] {
+    node.controlIDs(forKey: "views").map { id in
+      // A View's route defaults to its id in Flet's pop protocol.
+      store.node(id)?.string("route") ?? String(id)
+    }
+  }
 
   /// `locale_configuration` carries the locales the app supports; the first is
   /// the one Flutter falls back to.
@@ -300,9 +319,9 @@ private struct PageEnvironment: ViewModifier {
       ]),
       "size": .map(["width": .double(size.width), "height": .double(size.height)]),
     ])
-    events.setLocal(node.id, "media", value)
-    events.update(node.id, ["media": value])
-    events.fire(node, "media_change", data: value)
+    events.setLocal(eventNode.id, "media", value)
+    events.update(eventNode.id, ["media": value])
+    events.fire(eventNode, "media_change", data: value)
   }
 }
 
@@ -345,6 +364,7 @@ private struct SemanticsDebugger: ViewModifier {
 /// Page-level appearance: title, theme mode and the overlay layer.
 private struct PageChrome: ViewModifier {
   let node: ControlNode
+  let eventNode: ControlNode
   @EnvironmentObject private var store: ControlStore
 
   func body(content: Content) -> some View {
@@ -353,8 +373,8 @@ private struct PageChrome: ViewModifier {
       .preferredColorScheme(colorScheme)
       .overlay(overlayLayer)
       .modifier(WindowTitle(title: node.string("title")))
-      .modifier(PageLifecycle(node: node))
-      .modifier(PageEnvironment(node: node))
+      .modifier(PageLifecycle(node: eventNode))
+      .modifier(PageEnvironment(node: node, eventNode: eventNode))
       .environment(\.layoutDirection, node.rufletBool("rtl") ? .rightToLeft : .leftToRight)
   }
 
@@ -437,7 +457,6 @@ struct ViewControlView: View {
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .modifier(ViewSurface(node: node))
-    .modifier(ViewPopGuard(node: node))
     // Flutter's Scaffold owns AppBar placement. In particular, a primary
     // AppBar is inset below the system status area independently of whatever
     // platform view the body contains. Keeping the bar as an ordinary VStack

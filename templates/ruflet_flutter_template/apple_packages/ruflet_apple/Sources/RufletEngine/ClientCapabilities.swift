@@ -25,6 +25,10 @@ public struct ClientCapabilities {
   public var platformBrightness: String
   public var window: [String: RufletValue]
   public var media: [String: RufletValue]
+  /// Whether this host renders one Ruflet page into multiple native windows.
+  /// This is a host capability, not a control preference: Flet reports it in
+  /// the registration payload before Ruby builds the first `BasePage`.
+  public var multiView: Bool
 
   public init(
     sessionID: String = "",
@@ -35,7 +39,8 @@ public struct ClientCapabilities {
     platform: String = ClientCapabilities.currentPlatform,
     platformBrightness: String = "light",
     window: [String: RufletValue] = [:],
-    media: [String: RufletValue] = [:]
+    media: [String: RufletValue] = [:],
+    multiView: Bool = false
   ) {
     self.sessionID = sessionID
     self.pageName = pageName
@@ -46,6 +51,7 @@ public struct ClientCapabilities {
     self.platformBrightness = platformBrightness
     self.window = window
     self.media = media
+    self.multiView = multiView
   }
 
   /// The value Flet reports for these platforms, so `page.platform == "ios"`
@@ -114,7 +120,7 @@ public struct ClientCapabilities {
     page["wasm"] = .bool(false)
     page["pyodide"] = .bool(false)
     page["pwa"] = .bool(false)
-    page["multi_view"] = .bool(false)
+    page["multi_view"] = .bool(multiView)
     page["test"] = .bool(false)
     page["debug"] = .bool(isDebugBuild)
     // A local socket has no HTTP peer, so Flet's request-scoped fields are

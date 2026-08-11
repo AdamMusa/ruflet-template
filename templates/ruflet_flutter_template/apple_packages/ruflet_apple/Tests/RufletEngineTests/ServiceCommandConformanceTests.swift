@@ -75,6 +75,64 @@ final class ServiceCommandConformanceTests: XCTestCase {
   }
 
   @MainActor
+  func testViewConfirmPopCompletesThePendingDecisionWithFletRoutePayload() {
+    let store = ControlStore()
+    store.applyPageProperties([
+      "views": .array([
+        .map([
+          RufletControlKey.id: .int(7),
+          RufletControlKey.type: .string("View"),
+          "route": .string("/details"),
+        ])
+      ])
+    ])
+    let view = store.node(7)!
+    var observed: (Int, String, RufletValue)?
+    let serviceContext = context(store: store) { observed = ($0, $1, $2) }
+
+    let rejected = invoke(
+      PageService(), type: "View", method: "confirm_pop",
+      args: .map(["should_pop": .bool(false)]), node: view, context: serviceContext)
+    XCTAssertEqual(try? rejected?.get(), .null)
+    XCTAssertNil(observed)
+
+    let accepted = invoke(
+      PageService(), type: "View", method: "confirm_pop",
+      args: .map(["should_pop": .bool(true)]), node: view, context: serviceContext)
+    XCTAssertEqual(try? accepted?.get(), .null)
+    XCTAssertEqual(observed?.0, RufletWireID.page)
+    XCTAssertEqual(observed?.1, "view_pop")
+    XCTAssertEqual(observed?.2, .map(["route": .string("/details")]))
+  }
+
+  @MainActor
+  func testPageScrollToHandsTheExactFletCommandToTheMountedTopView() {
+    let store = ControlStore()
+    store.applyPageProperties([
+      "views": .array([
+        .map([RufletControlKey.id: .int(7), RufletControlKey.type: .string("View")])
+      ])
+    ])
+    let serviceContext = context(store: store)
+    let reply = invoke(
+      PageService(), type: "Page", method: "scroll_to",
+      args: .map([
+        "offset": .double(-40), "delta": .null, "scroll_key": .null,
+        "duration": .int(500), "curve": .string("ease_in"),
+      ]),
+      node: store.page,
+      context: serviceContext)
+
+    XCTAssertEqual(try? reply?.get(), .null)
+    let command = store.page?.map("_scroll_command")
+    XCTAssertEqual(command?["target_id"], .int(7))
+    XCTAssertEqual(command?["offset"], .double(-40))
+    XCTAssertEqual(command?["duration"], .int(500))
+    XCTAssertEqual(command?["curve"], .string("ease_in"))
+    XCTAssertFalse(command?["token"]?.stringValue?.isEmpty ?? true)
+  }
+
+  @MainActor
   func testUnsupportedPlatformCommandsAreClassifiedRatherThanUnknown() {
     let browserReply = invoke(
       BrowserContextMenuService(), type: "BrowserContextMenu", method: "disable_menu")

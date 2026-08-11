@@ -1,6 +1,11 @@
 import RufletEngine
 import RufletProtocol
 import SwiftUI
+#if canImport(UIKit)
+  import UIKit
+#elseif canImport(AppKit)
+  import AppKit
+#endif
 
 /// `Row` — a horizontal stack.
 ///
@@ -184,6 +189,141 @@ private struct CrossStretch: ViewModifier {
   }
 }
 
+struct RufletPageScrollCommand: Equatable {
+  let targetID: Int
+  let offset: Double?
+  let delta: Double?
+  let scrollKey: RufletValue?
+  let duration: Double
+  let curve: String
+  let token: String
+
+  init?(_ value: RufletValue?) {
+    guard let map = value?.mapValue,
+      let targetID = map["target_id"]?.intValue,
+      let token = map["token"]?.stringValue
+    else { return nil }
+    self.targetID = targetID
+    offset = map["offset"]?.doubleValue
+    delta = map["delta"]?.doubleValue
+    scrollKey = map["scroll_key"].flatMap { $0.isNull ? nil : $0 }
+    duration = map["duration"]?.doubleValue ?? 0
+    curve = map["curve"]?.stringValue ?? "ease"
+    self.token = token
+  }
+}
+
+private struct RufletPageScrollCommandKey: EnvironmentKey {
+  static let defaultValue: RufletPageScrollCommand? = nil
+}
+
+extension EnvironmentValues {
+  var rufletPageScrollCommand: RufletPageScrollCommand? {
+    get { self[RufletPageScrollCommandKey.self] }
+    set { self[RufletPageScrollCommandKey.self] = newValue }
+  }
+}
+
+@MainActor
+private final class RufletNativeScrollDriver: ObservableObject {
+  #if canImport(UIKit)
+    weak var scrollView: UIScrollView?
+
+    func move(offset: Double?, delta: Double?, duration: Double, curve: String, axis: Axis.Set) {
+      guard let scrollView else { return }
+      let current = axis == .horizontal ? scrollView.contentOffset.x : scrollView.contentOffset.y
+      let maximum = axis == .horizontal
+        ? max(0, scrollView.contentSize.width - scrollView.bounds.width)
+        : max(0, scrollView.contentSize.height - scrollView.bounds.height)
+      var target = offset.map { CGFloat($0) } ?? current + CGFloat(delta ?? 0)
+      if let offset, offset < 0 { target = maximum + CGFloat(offset) + 1 }
+      target = min(max(0, target), maximum)
+      var point = scrollView.contentOffset
+      if axis == .horizontal { point.x = target } else { point.y = target }
+      guard duration >= 1 else {
+        scrollView.setContentOffset(point, animated: false)
+        return
+      }
+      UIView.animate(
+        withDuration: duration / 1_000,
+        delay: 0,
+        options: animationOptions(curve),
+        animations: { scrollView.contentOffset = point })
+    }
+
+    private func animationOptions(_ curve: String) -> UIView.AnimationOptions {
+      switch curve.lowercased() {
+      case "linear": return .curveLinear
+      case "ease_in", "easein": return .curveEaseIn
+      case "ease_out", "easeout": return .curveEaseOut
+      default: return .curveEaseInOut
+      }
+    }
+  #elseif canImport(AppKit)
+    weak var scrollView: NSScrollView?
+
+    func move(offset: Double?, delta: Double?, duration: Double, curve _: String, axis: Axis.Set) {
+      guard let scrollView else { return }
+      let clip = scrollView.contentView
+      let current = axis == .horizontal ? clip.bounds.origin.x : clip.bounds.origin.y
+      let documentSize = scrollView.documentView?.bounds.size ?? .zero
+      let maximum = axis == .horizontal
+        ? max(0, documentSize.width - clip.bounds.width)
+        : max(0, documentSize.height - clip.bounds.height)
+      var target = offset.map { CGFloat($0) } ?? current + CGFloat(delta ?? 0)
+      if let offset, offset < 0 { target = maximum + CGFloat(offset) + 1 }
+      target = min(max(0, target), maximum)
+      var point = clip.bounds.origin
+      if axis == .horizontal { point.x = target } else { point.y = target }
+      guard duration >= 1 else {
+        clip.setBoundsOrigin(point)
+        scrollView.reflectScrolledClipView(clip)
+        return
+      }
+      NSAnimationContext.runAnimationGroup { context in
+        context.duration = duration / 1_000
+        clip.animator().setBoundsOrigin(point)
+      }
+    }
+  #endif
+}
+
+#if canImport(UIKit)
+private struct RufletNativeScrollLocator: UIViewRepresentable {
+  @ObservedObject var driver: RufletNativeScrollDriver
+  func makeUIView(context: Context) -> UIView { UIView(frame: .zero) }
+  func updateUIView(_ view: UIView, context: Context) {
+    DispatchQueue.main.async {
+      var ancestor = view.superview
+      while let candidate = ancestor {
+        if let scrollView = candidate as? UIScrollView {
+          driver.scrollView = scrollView
+          return
+        }
+        ancestor = candidate.superview
+      }
+    }
+  }
+}
+#elseif canImport(AppKit)
+private struct RufletNativeScrollLocator: NSViewRepresentable {
+  @ObservedObject var driver: RufletNativeScrollDriver
+  func makeNSView(context: Context) -> NSView { NSView(frame: .zero) }
+  func updateNSView(_ view: NSView, context: Context) {
+    DispatchQueue.main.async {
+      var ancestor = view.superview
+      while let candidate = ancestor {
+        if let scrollView = candidate as? NSScrollView {
+          driver.scrollView = scrollView
+          return
+        }
+        ancestor = candidate.superview
+      }
+    }
+  }
+}
+#endif
+
 /// Wraps a stack in a `ScrollView` when Ruby set `scroll`.
 ///
 /// Flet accepts `"auto"`, `"always"`, `"adaptive"`, `"hidden"` and `true`; all
@@ -193,6 +333,9 @@ struct ScrollableStack: ViewModifier {
   let node: ControlNode
   let axis: Axis.Set
   @Environment(\.rufletEvents) private var events
+  @Environment(\.rufletPageScrollCommand) private var pageScrollCommand
+  @EnvironmentObject private var store: ControlStore
+  @StateObject private var nativeDriver = RufletNativeScrollDriver()
   @State private var viewportExtent: CGFloat = 0
   @State private var previousPixels: CGFloat = 0
   @State private var lastScrollReport = Date.distantPast
@@ -201,7 +344,9 @@ struct ScrollableStack: ViewModifier {
     if scrolls {
       ScrollViewReader { proxy in
       ScrollView(axis, showsIndicators: node.string("scroll") != "hidden") {
-        content.background(
+        content
+          .background(RufletNativeScrollLocator(driver: nativeDriver))
+          .background(
           GeometryReader { proxy in
             Color.clear.preference(
               key: StackScrollSampleKey.self,
@@ -245,6 +390,22 @@ struct ScrollableStack: ViewModifier {
         guard node.bool("auto_scroll") == true, let last = node.childIDs.last else { return }
         withAnimation { proxy.scrollTo(last, anchor: axis == .horizontal ? .trailing : .bottom) }
       }
+      .onChange(of: pageScrollCommand) { command in
+        guard let command, command.targetID == node.id else { return }
+        if let targetID = scrollTargetID(command.scrollKey) {
+          let animation = command.duration >= 1
+            ? Animation.easeInOut(duration: command.duration / 1_000)
+            : nil
+          withAnimation(animation) { proxy.scrollTo(targetID) }
+        } else {
+          nativeDriver.move(
+            offset: command.offset,
+            delta: command.delta,
+            duration: command.duration,
+            curve: command.curve,
+            axis: axis)
+        }
+      }
       }
     } else {
       content
@@ -256,6 +417,16 @@ struct ScrollableStack: ViewModifier {
     if let flag = value.boolValue { return flag }
     guard let mode = value.stringValue?.lowercased() else { return false }
     return ["auto", "adaptive", "always", "hidden"].contains(mode)
+  }
+
+  private func scrollTargetID(_ key: RufletValue?) -> Int? {
+    guard let key else { return nil }
+    if let id = key.intValue, store.node(id) != nil { return id }
+    guard let name = key.stringValue else { return nil }
+    return store.nodes.values.first(where: { candidate in
+      candidate.props["key"]?.stringValue == name
+        || candidate.props["key"]?.intValue.map(String.init) == name
+    })?.id
   }
 }
 

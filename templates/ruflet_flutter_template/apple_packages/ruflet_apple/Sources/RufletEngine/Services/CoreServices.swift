@@ -4,6 +4,9 @@ import RufletProtocol
 #if canImport(UIKit)
   import UIKit
 #endif
+#if canImport(GameController)
+  import GameController
+#endif
 #if canImport(AppKit)
   import AppKit
 #endif
@@ -23,6 +26,10 @@ public final class PageService: RufletStreamingService {
   private var localeObserver: NSObjectProtocol?
   #if canImport(AppKit)
     private var keyboardMonitor: Any?
+  #endif
+  #if canImport(GameController) && !os(macOS)
+    private var keyboardConnectObserver: NSObjectProtocol?
+    private var keyboardDisconnectObserver: NSObjectProtocol?
   #endif
 
   public init() {}
@@ -49,12 +56,42 @@ public final class PageService: RufletStreamingService {
         }
       }
     #endif
+    #if canImport(GameController) && !os(macOS)
+      if node.handlesEvent("keyboard_event"), keyboardConnectObserver == nil {
+        keyboardConnectObserver = NotificationCenter.default.addObserver(
+          forName: .GCKeyboardDidConnect,
+          object: nil,
+          queue: .main
+        ) { [weak self] notification in
+          Task { @MainActor in
+            self?.bindKeyboard(notification.object as? GCKeyboard)
+          }
+        }
+        keyboardDisconnectObserver = NotificationCenter.default.addObserver(
+          forName: .GCKeyboardDidDisconnect,
+          object: nil,
+          queue: .main
+        ) { [weak self] _ in
+          Task { @MainActor in self?.bindKeyboard(GCKeyboard.coalesced) }
+        }
+        bindKeyboard(GCKeyboard.coalesced)
+      }
+    #endif
   }
 
   deinit {
     if let localeObserver { NotificationCenter.default.removeObserver(localeObserver) }
     #if canImport(AppKit)
       if let keyboardMonitor { NSEvent.removeMonitor(keyboardMonitor) }
+    #endif
+    #if canImport(GameController) && !os(macOS)
+      if let keyboardConnectObserver {
+        NotificationCenter.default.removeObserver(keyboardConnectObserver)
+      }
+      if let keyboardDisconnectObserver {
+        NotificationCenter.default.removeObserver(keyboardDisconnectObserver)
+      }
+      GCKeyboard.coalesced?.keyboardInput?.keyChangedHandler = nil
     #endif
   }
 
@@ -119,16 +156,37 @@ public final class PageService: RufletStreamingService {
         type: node?.type ?? "Page", method: call.name, platform: Self.platformName)))
 
     case "confirm_pop":
-      completion(.failure(RufletServiceError.platformUnsupported(
-        type: node?.type ?? "View", method: call.name, platform: Self.platformName)))
+      guard let node else {
+        return completion(.failure(RufletServiceError.unknownTarget(call.controlID)))
+      }
+      let shouldPop = call.argument("should_pop")?.boolValue ?? false
+      if shouldPop {
+        // Flet completes the pending PopScope decision, then its navigator
+        // reports `view_pop` on Page with the route it removed. The Apple host
+        // has a server-owned view stack rather than a local Navigator, so the
+        // equivalent completion is the same Page event; Ruby then supplies the
+        // shorter authoritative `views` list.
+        let route = node.string("route") ?? String(node.id)
+        context.emitEvent(
+          RufletWireID.page, "view_pop", .map(["route": .string(route)]))
+      }
+      completion(.success(.null))
 
     case "scroll_to":
-      // Scroll position is owned by SwiftUI's own scroll views; there is no way
-      // to drive one imperatively without a ScrollViewReader per control, which
-      // the renderer does not install. Report it rather than pretend.
-      completion(
-        .failure(
-          RufletServiceError.unsupportedMethod(type: "Page", method: "scroll_to")))
+      guard let node else {
+        return completion(.failure(RufletServiceError.unknownTarget(call.controlID)))
+      }
+      // Flet's Page method drives the top View's ScrollableControl. Keep the
+      // command on Page so the mounted Apple host (which owns UIScrollView /
+      // NSScrollView) can execute it, including repeated identical calls.
+      guard let viewID = node.controlIDs(forKey: "views").last else {
+        return completion(.failure(RufletServiceError.unavailable("Page has no active View")))
+      }
+      var command = call.args.mapValue ?? [:]
+      command["target_id"] = .int(Int64(viewID))
+      command["token"] = .string(UUID().uuidString)
+      context.store.setLocalProperty(node.id, key: "_scroll_command", value: .map(command))
+      completion(.success(.null))
 
     default:
       completion(
@@ -180,6 +238,71 @@ public final class PageService: RufletStreamingService {
         "alt": .bool(flags.contains(.option)),
         "meta": .bool(flags.contains(.command))
       ]))
+    }
+  #endif
+
+  #if canImport(GameController) && !os(macOS)
+    /// `HardwareKeyboard` is process-global in Flutter. GameController exposes
+    /// the same hardware-keyboard stream on Apple platforms without installing
+    /// a hidden text field or stealing focus from a rendered TextField.
+    private func bindKeyboard(_ keyboard: GCKeyboard?) {
+      keyboard?.keyboardInput?.keyChangedHandler = { [weak self] input, key, code, pressed in
+        guard pressed else { return }
+        Task { @MainActor in self?.reportKey(input: input, key: key, code: code) }
+      }
+    }
+
+    private func reportKey(input: GCKeyboardInput, key: GCDeviceButtonInput, code: GCKeyCode) {
+      guard let targetID, let context else { return }
+      let shift = Self.pressed(input, .leftShift) || Self.pressed(input, .rightShift)
+      let ctrl = Self.pressed(input, .leftControl) || Self.pressed(input, .rightControl)
+      let alt = Self.pressed(input, .leftAlt) || Self.pressed(input, .rightAlt)
+      let meta = Self.pressed(input, .leftGUI) || Self.pressed(input, .rightGUI)
+      context.emitEvent(targetID, "keyboard_event", .map([
+        "key": .string(Self.keyName(code, shifted: shift) ?? key.localizedName ?? ""),
+        "shift": .bool(shift),
+        "ctrl": .bool(ctrl),
+        "alt": .bool(alt),
+        "meta": .bool(meta)
+      ]))
+    }
+
+    private static func pressed(_ input: GCKeyboardInput, _ code: GCKeyCode) -> Bool {
+      input.button(forKeyCode: code)?.isPressed == true
+    }
+
+    private static func keyName(_ code: GCKeyCode, shifted: Bool) -> String? {
+      let letters: [(GCKeyCode, Character)] = [
+        (.keyA, "a"), (.keyB, "b"), (.keyC, "c"), (.keyD, "d"), (.keyE, "e"),
+        (.keyF, "f"), (.keyG, "g"), (.keyH, "h"), (.keyI, "i"), (.keyJ, "j"),
+        (.keyK, "k"), (.keyL, "l"), (.keyM, "m"), (.keyN, "n"), (.keyO, "o"),
+        (.keyP, "p"), (.keyQ, "q"), (.keyR, "r"), (.keyS, "s"), (.keyT, "t"),
+        (.keyU, "u"), (.keyV, "v"), (.keyW, "w"), (.keyX, "x"), (.keyY, "y"),
+        (.keyZ, "z")
+      ]
+      if let character = letters.first(where: { $0.0 == code })?.1 {
+        let value = String(character)
+        return shifted ? value.uppercased() : value
+      }
+      let printable: [GCKeyCode: (String, String)] = [
+        .one: ("1", "!"), .two: ("2", "@"), .three: ("3", "#"),
+        .four: ("4", "$"), .five: ("5", "%"), .six: ("6", "^"),
+        .seven: ("7", "&"), .eight: ("8", "*"), .nine: ("9", "("),
+        .zero: ("0", ")"), .spacebar: (" ", " "), .hyphen: ("-", "_"),
+        .equalSign: ("=", "+"), .openBracket: ("[", "{"),
+        .closeBracket: ("]", "}"), .backslash: ("\\", "|"),
+        .semicolon: (";", ":"), .quote: ("'", "\""),
+        .graveAccentAndTilde: ("`", "~"), .comma: (",", "<"),
+        .period: (".", ">"), .slash: ("/", "?")
+      ]
+      if let pair = printable[code] { return shifted ? pair.1 : pair.0 }
+      let named: [GCKeyCode: String] = [
+        .returnOrEnter: "Enter", .escape: "Escape", .deleteOrBackspace: "Backspace",
+        .tab: "Tab", .deleteForward: "Delete", .home: "Home", .end: "End",
+        .pageUp: "Page Up", .pageDown: "Page Down", .leftArrow: "Arrow Left",
+        .rightArrow: "Arrow Right", .upArrow: "Arrow Up", .downArrow: "Arrow Down"
+      ]
+      return named[code]
     }
   #endif
 
