@@ -1565,6 +1565,7 @@ struct VideoControlView: View {
   let node: ControlNode
   @StateObject private var model = VideoPlayerModel()
   @Environment(\.rufletEvents) private var events
+  @Environment(\.scenePhase) private var scenePhase
 
   var body: some View {
     Group {
@@ -1576,20 +1577,15 @@ struct VideoControlView: View {
           fullscreen: node.bool("fullscreen") ?? false,
           node: node,
           events: events)
+        .background(MaterialPalette.color(node.string("fill_color"), default: .black))
       #else
         Color.black
       #endif
     }
     .onAppear { model.configure(from: node, events: events) }
+    .onDisappear { model.disappear() }
     .onChange(of: node) { updated in model.configure(from: updated, events: events) }
-    .onChange(of: node.bool("fullscreen") ?? false) { entered in
-      // Flet raises these as the player moves in and out of full screen.
-      if entered {
-        events.fire(node, "enter_fullscreen")
-      } else {
-        events.fire(node, "exit_fullscreen")
-      }
-    }
+    .onChange(of: scenePhase) { model.scenePhaseChanged($0) }
     .rufletCommandHandler(node.id) { call, completion in
       model.handle(call, completion: completion)
     }
@@ -1603,7 +1599,7 @@ final class VideoPlayerModel: ObservableObject {
     let player = AVPlayer()
   #endif
 
-  private var playlist: [URL] = []
+  private var playlist: [VideoMediaSource] = []
   private var index = 0
   private var configured = false
   private var playbackRate: Float = 1
@@ -1624,45 +1620,34 @@ final class VideoPlayerModel: ObservableObject {
     #if canImport(AVKit)
       player.isMuted = node.bool("muted") ?? false
       let volume = node.double("volume") ?? 100
-      player.volume = Float(max(0, min(volume > 1 ? volume / 100 : volume, 1)))
-      playbackRate = Float(node.double("playback_rate") ?? 1)
+      player.volume = Float(max(0, min(volume / 100, 1)))
+      let newPlaybackRate = Float(node.double("playback_rate") ?? 1)
+      let rateChangedWhilePlaying = playbackRate != newPlaybackRate && player.rate != 0
+      playbackRate = newPlaybackRate
       self.node = node
       self.events = events
-      if sources != playlist || !configured {
+      let sourcesChanged = sources != playlist || !configured
+      if sourcesChanged {
         playlist = sources
         index = min(index, max(sources.count - 1, 0))
         configured = true
         load(at: index)
       }
 
-      if let completionObserver { NotificationCenter.default.removeObserver(completionObserver) }
-      completionObserver = NotificationCenter.default.addObserver(
-        forName: .AVPlayerItemDidPlayToEndTime, object: nil, queue: .main
-      ) { [weak self] _ in
-        Task { @MainActor in self?.itemDidFinish() }
-      }
-
-      // `pitch` is the audio pitch Flet exposes alongside the rate; AVPlayer
-      // reaches it through the item's time-pitch algorithm.
-      if let pitch = node.double("pitch"), pitch != 1 {
-        player.currentItem?.audioTimePitchAlgorithm = .timeDomain
-      }
-      player.appliesMediaSelectionCriteriaAutomatically =
-        node.map("subtitle_configuration") != nil
+      // media_kit supports independent pitch. AVPlayer does not expose a pitch
+      // control; changing its time-pitch preservation algorithm would not be an
+      // equivalent implementation and is therefore deliberately avoided.
+      player.appliesMediaSelectionCriteriaAutomatically = true
       // Flutter's playlist modes: loop the item, loop the list, or stop.
       playlistMode = node.string("playlist_mode")?.lowercased() ?? "none"
       shuffles = node.bool("shuffle_playlist") == true
       pausesInBackground = node.bool("pause_upon_entering_background_mode") ?? true
       resumesInForeground = node.bool("resume_upon_entering_foreground_mode") ?? false
-      holdsWakelock = node.bool("wakelock") ?? false
-      _ = node.map("configuration")
-      _ = node.string("filter_quality")
-      _ = node.string("title")
-      _ = MaterialPalette.color(node.string("fill_color"))
+      holdsWakelock = node.bool("wakelock") ?? true
+      setWakelock(holdsWakelock)
 
-      if node.bool("autoplay") == true { play() }
-      events.fire(node, "load")
-      events.fire(node, "state_change", data: .string("ready"))
+      if sourcesChanged, node.bool("autoplay") == true { play() }
+      else if rateChangedWhilePlaying { play() }
     #endif
   }
 
@@ -1671,7 +1656,8 @@ final class VideoPlayerModel: ObservableObject {
   private var shuffles = false
   private var pausesInBackground = true
   private var resumesInForeground = false
-  private var holdsWakelock = false
+  private var holdsWakelock = true
+  private var wasPlayingBeforeBackground = false
 
   /// Reports Flet's canonical `complete` event and advances when the control carries a playlist,
   /// which is what Flet's video does at the end of an item.
@@ -1679,7 +1665,6 @@ final class VideoPlayerModel: ObservableObject {
     #if canImport(AVKit)
       if let node, let events {
         events.fire(node, "complete", data: .bool(true))
-        events.fire(node, "completed", data: .bool(true))
       }
       // `single` repeats the item, `loop` wraps the list, anything else stops
       // at the end — which is what Flutter's PlaylistMode does.
@@ -1695,24 +1680,15 @@ final class VideoPlayerModel: ObservableObject {
       guard next < playlist.count || playlistMode == "loop" else { return }
       load(at: next < playlist.count ? next : 0)
       play()
-      if let node, let events {
-        events.fire(node, "track_changed", data: .int(Int64(index)))
-      }
     #endif
   }
 
-  private static func sources(in node: ControlNode) -> [URL] {
+  static func sources(in node: ControlNode) -> [VideoMediaSource] {
     if let playlist = node.array("playlist") {
-      return playlist.compactMap { entry in
-        guard let raw = entry["resource"]?.stringValue
-          ?? entry["resource_url"]?.stringValue
-          ?? entry["src"]?.stringValue
-          ?? entry.stringValue else { return nil }
-        return URL(string: raw) ?? URL(fileURLWithPath: raw)
-      }
+      return playlist.compactMap(VideoMediaSource.init)
     }
     guard let raw = node.string("src") else { return [] }
-    return [URL(string: raw) ?? URL(fileURLWithPath: raw)]
+    return [VideoMediaSource(resource: raw)]
   }
 
   #if canImport(AVKit)
@@ -1726,13 +1702,28 @@ final class VideoPlayerModel: ObservableObject {
       if let node, let events {
         events.fire(node, "track_change", data: .int(Int64(position)))
       }
-      let item = AVPlayerItem(url: playlist[position])
-      itemStatusObserver = item.observe(\.status, options: [.new]) { [weak self] item, _ in
+      let source = playlist[position]
+      let asset: AVURLAsset
+      if source.httpHeaders.isEmpty {
+        asset = AVURLAsset(url: source.url)
+      } else {
+        asset = AVURLAsset(
+          url: source.url,
+          options: ["AVURLAssetHTTPHeaderFieldsKey": source.httpHeaders])
+      }
+      let item = AVPlayerItem(asset: asset)
+      if let completionObserver { NotificationCenter.default.removeObserver(completionObserver) }
+      completionObserver = NotificationCenter.default.addObserver(
+        forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main
+      ) { [weak self] _ in
+        Task { @MainActor in self?.itemDidFinish() }
+      }
+      itemStatusObserver = item.observe(\.status, options: [.initial, .new]) { [weak self] item, _ in
         Task { @MainActor in
           guard let self, let node = self.node, let events = self.events else { return }
           switch item.status {
           case .readyToPlay:
-            events.fire(node, "loaded", data: .int(Int64(self.index)))
+            events.fire(node, "loaded")
           case .failed:
             events.fire(
               node, "error",
@@ -1773,7 +1764,7 @@ final class VideoPlayerModel: ObservableObject {
         completion(.success(.null))
       case "stop":
         player.pause()
-        player.seek(to: .zero)
+        if !playlist.isEmpty { load(at: 0) }
         completion(.success(.null))
       case "seek":
         if let milliseconds = call.argument("position")?.doubleValue {
@@ -1783,17 +1774,24 @@ final class VideoPlayerModel: ObservableObject {
       case "jump_to":
         // Takes a playlist index rather than a time.
         if let position = call.argument("media_index")?.intValue {
+          let wasPlaying = player.rate != 0
           load(at: position)
-          play()
+          if wasPlaying { play() }
         }
         completion(.success(.null))
       case "next":
-        load(at: index + 1)
-        play()
+        if index + 1 < playlist.count {
+          let wasPlaying = player.rate != 0
+          load(at: index + 1)
+          if wasPlaying { play() }
+        }
         completion(.success(.null))
       case "previous":
-        load(at: index - 1)
-        play()
+        if index > 0 {
+          let wasPlaying = player.rate != 0
+          load(at: index - 1)
+          if wasPlaying { play() }
+        }
         completion(.success(.null))
       case "get_current_position":
         completion(.success(positionMilliseconds.map { RufletValue.int($0) } ?? .null))
@@ -1807,15 +1805,26 @@ final class VideoPlayerModel: ObservableObject {
         else { return completion(.success(.bool(false))) }
         completion(.success(.bool(position >= duration)))
       case "playlist_add":
-        if let raw = call.argument("media")?["resource_url"]?.stringValue {
-          playlist.append(URL(string: raw) ?? URL(fileURLWithPath: raw))
+        if let media = call.argument("media"), let source = VideoMediaSource(media) {
+          playlist.append(source)
         }
         completion(.success(.null))
       case "playlist_remove":
         if let position = call.argument("media_index")?.intValue,
           playlist.indices.contains(position)
         {
+          let wasPlaying = player.rate != 0
           playlist.remove(at: position)
+          if playlist.isEmpty {
+            index = 0
+            player.replaceCurrentItem(with: nil)
+          } else if position == index {
+            index = min(position, playlist.count - 1)
+            load(at: index)
+            if wasPlaying { play() }
+          } else if position < index {
+            index -= 1
+          }
         }
         completion(.success(.null))
       default:
@@ -1826,9 +1835,66 @@ final class VideoPlayerModel: ObservableObject {
     #endif
   }
 
+  func scenePhaseChanged(_ phase: ScenePhase) {
+    #if canImport(AVKit)
+      switch phase {
+      case .background, .inactive:
+        guard pausesInBackground else { return }
+        wasPlayingBeforeBackground = player.rate != 0
+        player.pause()
+      case .active:
+        if resumesInForeground && wasPlayingBeforeBackground { play() }
+        wasPlayingBeforeBackground = false
+      @unknown default:
+        break
+      }
+    #endif
+  }
+
+  func disappear() {
+    setWakelock(false)
+  }
+
+  private func setWakelock(_ enabled: Bool) {
+    #if canImport(UIKit)
+      UIApplication.shared.isIdleTimerDisabled = enabled
+    #endif
+  }
+
   deinit {
     if let completionObserver { NotificationCenter.default.removeObserver(completionObserver) }
     itemStatusObserver?.invalidate()
+  }
+}
+
+/// The exact serializable subset of media_kit's `Media`: resource and HTTP
+/// headers. `extras` are mpv-specific and intentionally do not alter Apple's
+/// AVURLAsset behavior.
+struct VideoMediaSource: Equatable {
+  let resource: String
+  let url: URL
+  let httpHeaders: [String: String]
+
+  init(resource: String, httpHeaders: [String: String] = [:]) {
+    self.resource = resource
+    self.url = URL(string: resource) ?? URL(fileURLWithPath: resource)
+    self.httpHeaders = httpHeaders
+  }
+
+  init?(_ value: RufletValue) {
+    if let raw = value.stringValue {
+      self.init(resource: raw)
+      return
+    }
+    guard let map = value.mapValue,
+      let resource = map["resource"]?.stringValue
+        ?? map["resource_url"]?.stringValue
+        ?? map["src"]?.stringValue
+    else { return nil }
+    let headers = map["http_headers"]?.mapValue?.reduce(into: [String: String]()) {
+      if let string = $1.value.stringValue { $0[$1.key] = string }
+    } ?? [:]
+    self.init(resource: resource, httpHeaders: headers)
   }
 }
 
@@ -1890,6 +1956,7 @@ final class VideoPlayerModel: ObservableObject {
             }
           }
         } else if !fullscreen, let fullscreenController = context.coordinator.fullscreenController {
+          events.fire(node, "exit_fullscreen")
           fullscreenController.dismiss(animated: true)
           context.coordinator.fullscreenController = nil
         }

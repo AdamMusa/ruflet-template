@@ -22,20 +22,24 @@ public struct CameraControlView: View {
   public var body: some View {
     Group {
       #if canImport(AVFoundation) && !targetEnvironment(simulator)
-        // `preview_enabled: false` keeps the session running without showing
-        // it, which is what Flet's camera does while it only records.
-        if node.bool("preview_enabled") == false {
-          Color.black
-        } else {
+        if model.isInitialized && (node.bool("preview_enabled") ?? true) {
           CameraPreview(model: model)
+            .overlay {
+              if let contentID = node.controlID(forKey: "content") {
+                ControlView(id: contentID, axis: .none)
+              }
+            }
+        } else {
+          // Flet's Camera is a zero-sized LayoutControl until initialize has
+          // produced a controller. `preview_enabled: false` likewise hides the
+          // preview without stopping capture or recording.
+          EmptyView()
         }
       #else
-        // The simulator has no capture device; a black frame is what a camera
-        // view looks like there, and it keeps the layout honest.
-        Color.black
+        EmptyView()
       #endif
     }
-    .onAppear { model.start(node: node, events: events) }
+    .onAppear { model.attach(node: node, events: events) }
     .onDisappear { model.stop() }
     .rufletCommandHandler(node.id) { call, completion in
       model.handle(call, node: node, events: events, completion: completion)
@@ -45,30 +49,33 @@ public struct CameraControlView: View {
 
 @MainActor
 final class CameraModel: NSObject, ObservableObject {
+  @Published private(set) var isInitialized = false
   #if canImport(AVFoundation)
     let session = AVCaptureSession()
     private let photoOutput = AVCapturePhotoOutput()
     private let videoOutput = AVCaptureVideoDataOutput()
+    private let movieOutput = AVCaptureMovieFileOutput()
     private let videoQueue = DispatchQueue(label: "com.izeesoft.ruflet.camera.images")
     private var pendingCapture: RufletMethodCompletion?
+    private var pendingRecording: RufletMethodCompletion?
+    private var recordingURL: URL?
     private var configured = false
     private var streamingImages = false
+    private var captureOrientationLocked = false
+    private var recordingPaused = false
+    private var flashMode: AVCaptureDevice.FlashMode = .auto
+    private var lastDescription: RufletValue?
+    private var lastEnableAudio = true
+    private var lastResolutionPreset: String?
+    private var lastFPS: Int?
     private var control: ControlNode?
     private var events = RufletEventSink()
   #endif
 
-  func start(node: ControlNode, events: RufletEventSink) {
-    #if canImport(AVFoundation) && !targetEnvironment(simulator)
+  func attach(node: ControlNode, events: RufletEventSink) {
+    #if canImport(AVFoundation)
       control = node
       self.events = events
-      configure(node: node)
-      guard !session.isRunning else { return }
-      // Starting blocks; AVFoundation asks that it happen off the main thread.
-      let session = session
-      Task { [weak self] in
-        await Task.detached { session.startRunning() }.value
-        self?.emitState()
-      }
     #endif
   }
 
@@ -78,35 +85,77 @@ final class CameraModel: NSObject, ObservableObject {
       let session = session
       Task { [weak self] in
         await Task.detached { session.stopRunning() }.value
-        self?.emitState()
+        self?.isInitialized = false
       }
     #endif
   }
 
   #if canImport(AVFoundation)
-    private func configure(node: ControlNode) {
-      guard !configured else { return }
+    private func configure(
+      node: ControlNode,
+      description: RufletValue?,
+      enableAudio: Bool,
+      resolutionPreset: String?,
+      fps: Int?
+    ) throws {
+      if configured { return }
       configured = true
 
       session.beginConfiguration()
-      session.sessionPreset = .photo
+      defer { session.commitConfiguration() }
+      session.sessionPreset = Self.sessionPreset(resolutionPreset)
 
-      // Flet's camera names the lens as "front"/"back".
-      let wantsFront = node.string("lens_direction")?.lowercased() == "front"
-      if let device = AVCaptureDevice.DiscoverySession(
+      let requestedName = description?["name"]?.stringValue
+        ?? description?["id"]?.stringValue
+      let wantsFront = description?["lens_direction"]?.stringValue?.lowercased() == "front"
+      let devices = AVCaptureDevice.DiscoverySession(
         deviceTypes: [.builtInWideAngleCamera],
         mediaType: .video,
         position: wantsFront ? .front : .back
-      ).devices.first,
-        let input = try? AVCaptureDeviceInput(device: device),
-        session.canAddInput(input)
+      ).devices
+      guard let device = devices.first(where: {
+        requestedName == nil || $0.uniqueID == requestedName || $0.localizedName == requestedName
+      }) ?? devices.first else {
+        configured = false
+        throw RufletServiceError.unavailable("No matching camera is available")
+      }
+      let input = try AVCaptureDeviceInput(device: device)
+      guard session.canAddInput(input) else {
+        configured = false
+        throw RufletServiceError.unavailable("The selected camera cannot be attached")
+      }
+      session.addInput(input)
+      if let fps, fps > 0,
+        device.activeFormat.videoSupportedFrameRateRanges.contains(where: {
+          $0.minFrameRate <= Double(fps) && Double(fps) <= $0.maxFrameRate
+        })
       {
-        session.addInput(input)
+        try device.lockForConfiguration()
+        let duration = CMTime(value: 1, timescale: CMTimeScale(fps))
+        device.activeVideoMinFrameDuration = duration
+        device.activeVideoMaxFrameDuration = duration
+        device.unlockForConfiguration()
+      }
+      if enableAudio, let microphone = AVCaptureDevice.default(for: .audio) {
+        let audioInput = try AVCaptureDeviceInput(device: microphone)
+        if session.canAddInput(audioInput) { session.addInput(audioInput) }
       }
       if session.canAddOutput(photoOutput) {
         session.addOutput(photoOutput)
       }
-      session.commitConfiguration()
+      if session.canAddOutput(movieOutput) { session.addOutput(movieOutput) }
+    }
+
+    private static func sessionPreset(_ value: String?) -> AVCaptureSession.Preset {
+      switch value?.lowercased() {
+      case "low": return .low
+      case "medium": return .medium
+      case "high": return .high
+      case "very_high": return .hd1280x720
+      case "ultra_high": return .hd1920x1080
+      case "max": return .photo
+      default: return .photo
+      }
     }
   #endif
 
@@ -126,7 +175,7 @@ final class CameraModel: NSObject, ObservableObject {
         ).devices
         completion(.success(.array(devices.map { device in
           .map([
-            "name": .string(device.localizedName),
+            "name": .string(device.uniqueID),
             "lens_direction": .string(device.position == .front ? "front" : "back"),
             "sensor_orientation": .int(device.position == .front ? 270 : 90),
             "lens_type": .string("wide")
@@ -136,25 +185,264 @@ final class CameraModel: NSObject, ObservableObject {
         #if targetEnvironment(simulator)
           completion(.failure(RufletServiceError.unavailable("No camera on this simulator")))
         #else
-          configure(node: node)
-          start(node: node, events: events)
-          emitState()
-          completion(.success(.null))
+          do {
+            control = node
+            self.events = events
+            lastDescription = call.argument("description")
+            guard let description = lastDescription,
+              Self.isCameraDescription(description)
+            else {
+              throw RufletServiceError.invalidArguments(
+                "Camera description is required for initialization.")
+            }
+            lastEnableAudio = call.argument("enable_audio")?.boolValue ?? true
+            lastResolutionPreset = call.argument("resolution_preset")?.stringValue
+            lastFPS = call.argument("fps")?.intValue.map { Int($0) }
+            try configure(
+              node: node,
+              description: description,
+              enableAudio: lastEnableAudio,
+              resolutionPreset: lastResolutionPreset,
+              fps: lastFPS)
+            startSession(completion: completion)
+          } catch {
+            configured = false
+            completion(.failure(error))
+          }
         #endif
       case "take_picture", "capture":
         #if targetEnvironment(simulator)
           completion(.failure(RufletServiceError.unavailable("No camera on this simulator")))
         #else
+        guard configured, session.isRunning else {
+          completion(.failure(RufletServiceError.unavailable(
+            "Camera is not initialized. Call initialize first.")))
+          return
+        }
         guard pendingCapture == nil else {
           return completion(.failure(RufletServiceError.failed("A capture is already in flight")))
         }
         pendingCapture = completion
         emitState(takingPicture: true)
-        photoOutput.capturePhoto(with: AVCapturePhotoSettings(), delegate: self)
+        let settings = AVCapturePhotoSettings()
+        if videoDevice?.hasFlash == true { settings.flashMode = flashMode }
+        photoOutput.capturePhoto(with: settings, delegate: self)
         #endif
-      case "start", "resume":
-        start(node: node, events: events)
+      case "pause_preview":
+        pauseSession(completion: completion)
+      case "resume_preview":
+        startSession(completion: completion)
+      case "get_min_zoom_level":
+        withVideoDevice(completion) { _ in .double(1) }
+      case "get_max_zoom_level":
+        #if os(iOS)
+        withVideoDevice(completion) { device in
+          .double(Double(device.activeFormat.videoMaxZoomFactor))
+        }
+        #else
+        completion(.failure(Self.platformUnsupported(call.name)))
+        #endif
+      case "get_min_exposure_offset":
+        #if os(iOS)
+        withVideoDevice(completion) { .double(Double($0.minExposureTargetBias)) }
+        #else
+        completion(.failure(Self.platformUnsupported(call.name)))
+        #endif
+      case "get_max_exposure_offset":
+        #if os(iOS)
+        withVideoDevice(completion) { .double(Double($0.maxExposureTargetBias)) }
+        #else
+        completion(.failure(Self.platformUnsupported(call.name)))
+        #endif
+      case "get_exposure_offset_step_size":
+        // iOS accepts a continuous target bias, so zero is the camera plugin's
+        // canonical representation of no discrete step.
+        withVideoDevice(completion) { _ in .double(0) }
+      case "set_zoom_level":
+        #if os(iOS)
+        guard call.argument("zoom")?.doubleValue != nil else {
+          completion(.success(.null))
+          return
+        }
+        configureDevice(call, completion: completion) { device in
+          let zoom = call.argument("zoom")!.doubleValue!
+          device.videoZoomFactor = min(
+            max(CGFloat(zoom), 1), device.activeFormat.videoMaxZoomFactor)
+          return .null
+        }
+        #else
+        completion(.failure(Self.platformUnsupported(call.name)))
+        #endif
+      case "set_exposure_offset":
+        #if os(iOS)
+        guard let offset = call.argument("offset")?.doubleValue else {
+          completion(.success(.null))
+          return
+        }
+        guard let device = videoDevice else {
+          completion(.failure(RufletServiceError.unavailable(
+            "Camera is not initialized. Call initialize first.")))
+          return
+        }
+        do {
+          try device.lockForConfiguration()
+          device.setExposureTargetBias(Float(offset)) { _ in
+            Task { @MainActor in
+              device.unlockForConfiguration()
+              self.emitState()
+              completion(.success(.double(offset)))
+            }
+          }
+        } catch { completion(.failure(error)) }
+        #else
+        completion(.failure(Self.platformUnsupported(call.name)))
+        #endif
+      case "set_flash_mode":
+        guard let value = call.argument("mode")?.stringValue?.lowercased(),
+          ["off", "on", "auto", "torch"].contains(value)
+        else {
+          completion(.success(.null))
+          return
+        }
+        configureDevice(call, completion: completion) { device in
+          let mode: AVCaptureDevice.FlashMode = value == "on" || value == "torch"
+            ? .on : (value == "auto" ? .auto : .off)
+          guard device.isFlashModeSupported(mode) else {
+            throw RufletServiceError.unavailable("The selected flash mode is unavailable")
+          }
+          device.flashMode = mode
+          self.flashMode = mode
+          return .null
+        }
+      case "set_focus_mode":
+        guard let value = call.argument("mode")?.stringValue?.lowercased(),
+          ["auto", "locked"].contains(value)
+        else {
+          completion(.success(.null))
+          return
+        }
+        configureDevice(call, completion: completion) { device in
+          let mode: AVCaptureDevice.FocusMode = value == "locked" ? .locked : .continuousAutoFocus
+          guard device.isFocusModeSupported(mode) else {
+            throw RufletServiceError.unavailable("The selected focus mode is unavailable")
+          }
+          device.focusMode = mode
+          return .null
+        }
+      case "set_exposure_mode":
+        guard let value = call.argument("mode")?.stringValue?.lowercased(),
+          ["auto", "locked"].contains(value)
+        else {
+          completion(.success(.null))
+          return
+        }
+        configureDevice(call, completion: completion) { device in
+          let mode: AVCaptureDevice.ExposureMode = value == "locked" ? .locked : .continuousAutoExposure
+          guard device.isExposureModeSupported(mode) else {
+            throw RufletServiceError.unavailable("The selected exposure mode is unavailable")
+          }
+          device.exposureMode = mode
+          return .null
+        }
+      case "set_focus_point", "set_exposure_point":
+        configureDevice(call, completion: completion) { device in
+          let value = call.argument("point")?.mapValue
+          let x = value?["dx"]?.doubleValue ?? value?["x"]?.doubleValue
+          let y = value?["dy"]?.doubleValue ?? value?["y"]?.doubleValue
+          // camera_avfoundation accepts null to reset the metering point. Its
+          // native reset target is the center of the sensor.
+          let point = CGPoint(
+            x: min(max(x ?? 0.5, 0), 1),
+            y: min(max(y ?? 0.5, 0), 1))
+          if call.name == "set_focus_point" {
+            guard device.isFocusPointOfInterestSupported else {
+              throw RufletServiceError.unavailable("Focus points are unavailable")
+            }
+            device.focusPointOfInterest = point
+          } else {
+            guard device.isExposurePointOfInterestSupported else {
+              throw RufletServiceError.unavailable("Exposure points are unavailable")
+            }
+            device.exposurePointOfInterest = point
+          }
+          return .null
+        }
+      case "lock_capture_orientation":
+        captureOrientationLocked = true
+        applyOrientation(call.argument("orientation")?.stringValue)
+        emitState()
         completion(.success(.null))
+      case "unlock_capture_orientation":
+        captureOrientationLocked = false
+        emitState()
+        completion(.success(.null))
+      case "prepare_for_video_recording":
+        completion(.success(.null))
+      case "start_video_recording":
+        startVideoRecording(completion: completion)
+      case "pause_video_recording":
+        if #available(iOS 18.0, macOS 15.0, *) {
+          movieOutput.pauseRecording()
+          recordingPaused = true
+          emitState()
+          completion(.success(.null))
+        } else {
+          completion(.failure(RufletServiceError.unavailable(
+            "Pausing a camera recording requires iOS 18 or macOS 15.")))
+        }
+      case "resume_video_recording":
+        if #available(iOS 18.0, macOS 15.0, *) {
+          movieOutput.resumeRecording()
+          recordingPaused = false
+          emitState()
+          completion(.success(.null))
+        } else {
+          completion(.failure(RufletServiceError.unavailable(
+            "Resuming a camera recording requires iOS 18 or macOS 15.")))
+        }
+      case "stop_video_recording":
+        guard movieOutput.isRecording else {
+          completion(.failure(RufletServiceError.unavailable("No video recording is active")))
+          return
+        }
+        pendingRecording = completion
+        movieOutput.stopRecording()
+      case "set_description":
+        guard let description = call.argument("description"),
+          Self.isCameraDescription(description)
+        else {
+          completion(.success(.null))
+          return
+        }
+        guard configured else {
+          completion(.failure(RufletServiceError.unavailable(
+            "Camera is not initialized. Call initialize first.")))
+          return
+        }
+        let wasRunning = session.isRunning
+        let session = session
+        Task { [weak self] in
+          if wasRunning {
+            await Task.detached { session.stopRunning() }.value
+          }
+          guard let self else { return }
+          do {
+            self.resetConfiguration()
+            self.lastDescription = description
+            try self.configure(
+              node: node, description: self.lastDescription,
+              enableAudio: self.lastEnableAudio, resolutionPreset: self.lastResolutionPreset,
+              fps: self.lastFPS)
+            if wasRunning {
+              await Task.detached { session.startRunning() }.value
+            }
+            self.isInitialized = !wasRunning || session.isRunning
+            self.emitState()
+            completion(.success(.null))
+          } catch { completion(.failure(error)) }
+        }
+      case "start", "resume":
+        startSession(completion: completion)
       case "stop", "pause":
         stop()
         completion(.success(.null))
@@ -163,6 +451,10 @@ final class CameraModel: NSObject, ObservableObject {
       case "stop_image_stream":
         stopImageStream(completion: completion)
       case "supports_image_streaming":
+        guard configured else {
+          completion(.failure(RufletServiceError.unavailable("Camera is not initialized. Call initialize first.")))
+          return
+        }
         completion(.success(.bool(true)))
       default:
         completion(.failure(rufletUnsupported("Camera", call)))
@@ -174,6 +466,127 @@ final class CameraModel: NSObject, ObservableObject {
   }
 
   #if canImport(AVFoundation)
+    private static func isCameraDescription(_ value: RufletValue) -> Bool {
+      value["name"]?.stringValue != nil && value["sensor_orientation"]?.intValue != nil
+    }
+
+    private static func platformUnsupported(_ method: String) -> RufletServiceError {
+      .platformUnsupported(type: "Camera", method: method, platform: "macOS")
+    }
+
+    private var videoDevice: AVCaptureDevice? {
+      session.inputs.compactMap { $0 as? AVCaptureDeviceInput }
+        .first(where: { $0.device.hasMediaType(.video) })?.device
+    }
+
+    private func startSession(completion: @escaping RufletMethodCompletion) {
+      guard configured else {
+        completion(.failure(RufletServiceError.unavailable("Camera is not initialized. Call initialize first.")))
+        return
+      }
+      guard !session.isRunning else {
+        isInitialized = true
+        emitState()
+        completion(.success(.null))
+        return
+      }
+      let session = session
+      Task { [weak self] in
+        await Task.detached { session.startRunning() }.value
+        guard let self else { return }
+        self.isInitialized = session.isRunning
+        self.emitState()
+        completion(.success(.null))
+      }
+    }
+
+    private func pauseSession(completion: @escaping RufletMethodCompletion) {
+      guard session.isRunning else {
+        completion(.success(.null))
+        return
+      }
+      let session = session
+      Task { [weak self] in
+        await Task.detached { session.stopRunning() }.value
+        self?.emitState()
+        completion(.success(.null))
+      }
+    }
+
+    private func withVideoDevice(
+      _ completion: @escaping RufletMethodCompletion,
+      value: (AVCaptureDevice) -> RufletValue
+    ) {
+      guard let device = videoDevice else {
+        completion(.failure(RufletServiceError.unavailable("Camera is not initialized. Call initialize first.")))
+        return
+      }
+      completion(.success(value(device)))
+    }
+
+    private func configureDevice(
+      _ call: RufletMethodCall,
+      completion: @escaping RufletMethodCompletion,
+      change: (AVCaptureDevice) throws -> RufletValue
+    ) {
+      guard let device = videoDevice else {
+        completion(.failure(RufletServiceError.unavailable("Camera is not initialized. Call initialize first.")))
+        return
+      }
+      do {
+        try device.lockForConfiguration()
+        defer { device.unlockForConfiguration() }
+        let result = try change(device)
+        emitState()
+        completion(.success(result))
+      } catch { completion(.failure(error)) }
+    }
+
+    private func resetConfiguration() {
+      videoOutput.setSampleBufferDelegate(nil, queue: nil)
+      session.beginConfiguration()
+      session.inputs.forEach(session.removeInput)
+      session.outputs.forEach(session.removeOutput)
+      session.commitConfiguration()
+      configured = false
+      streamingImages = false
+      isInitialized = false
+    }
+
+    private func applyOrientation(_ name: String?) {
+      #if canImport(UIKit)
+        let orientation: AVCaptureVideoOrientation
+        switch name?.lowercased() {
+        case "landscape_left": orientation = .landscapeLeft
+        case "landscape_right": orientation = .landscapeRight
+        case "portrait_down": orientation = .portraitUpsideDown
+        default: orientation = .portrait
+        }
+        for connection in [photoOutput.connection(with: .video), movieOutput.connection(with: .video),
+          videoOutput.connection(with: .video)].compactMap({ $0 }) where connection.isVideoOrientationSupported {
+          connection.videoOrientation = orientation
+        }
+      #endif
+    }
+
+    private func startVideoRecording(completion: @escaping RufletMethodCompletion) {
+      guard configured, session.isRunning else {
+        completion(.failure(RufletServiceError.unavailable("Camera is not initialized. Call initialize first.")))
+        return
+      }
+      guard !movieOutput.isRecording else {
+        completion(.failure(RufletServiceError.failed("A video recording is already active")))
+        return
+      }
+      let url = FileManager.default.temporaryDirectory
+        .appendingPathComponent("ruflet-camera-\(UUID().uuidString).mov")
+      recordingURL = url
+      recordingPaused = false
+      movieOutput.startRecording(to: url, recordingDelegate: self)
+      emitState()
+      completion(.success(.null))
+    }
+
     private func startImageStream(
       node: ControlNode,
       events: RufletEventSink,
@@ -181,7 +594,10 @@ final class CameraModel: NSObject, ObservableObject {
     ) {
       control = node
       self.events = events
-      configure(node: node)
+      guard configured else {
+        completion(.failure(RufletServiceError.unavailable("Camera is not initialized. Call initialize first.")))
+        return
+      }
       guard !streamingImages else { return completion(.success(.null)) }
       videoOutput.alwaysDiscardsLateVideoFrames = true
       videoOutput.videoSettings = [
@@ -216,13 +632,13 @@ final class CameraModel: NSObject, ObservableObject {
       let input = session.inputs.compactMap { $0 as? AVCaptureDeviceInput }.first
       let device = input?.device
       var state: [String: RufletValue] = [
-        "is_initialized": .bool(configured),
-        "is_recording_video": .bool(false),
-        "is_recording_paused": .bool(false),
+        "is_initialized": .bool(isInitialized),
+        "is_recording_video": .bool(movieOutput.isRecording),
+        "is_recording_paused": .bool(recordingPaused),
         "is_taking_picture": .bool(takingPicture),
         "is_streaming_images": .bool(streamingImages),
         "is_preview_paused": .bool(!session.isRunning),
-        "is_capture_orientation_locked": .bool(false),
+        "is_capture_orientation_locked": .bool(captureOrientationLocked),
         "has_error": .bool(false)
       ]
       if let device {
@@ -230,13 +646,14 @@ final class CameraModel: NSObject, ObservableObject {
         let width = Double(dimensions.width)
         let height = Double(dimensions.height)
         state["description"] = .map([
-          "name": .string(device.localizedName),
+          "name": .string(device.uniqueID),
           "lens_direction": .string(device.position == .front ? "front" : "back"),
           "sensor_orientation": .int(device.position == .front ? 270 : 90),
           "lens_type": .string("wide")
         ])
         state["device_orientation"] = .string("portrait_up")
-        state["flash_mode"] = .string("auto")
+        let flashName = flashMode == .on ? "on" : (flashMode == .off ? "off" : "auto")
+        state["flash_mode"] = .string(flashName)
         state["exposure_mode"] = .string(
           device.exposureMode == .continuousAutoExposure ? "auto" : "locked")
         state["focus_mode"] = .string(
@@ -275,6 +692,40 @@ final class CameraModel: NSObject, ObservableObject {
           completion?(.failure(RufletServiceError.failed("The photo produced no data")))
         }
       }
+    }
+  }
+
+  extension CameraModel: AVCaptureFileOutputRecordingDelegate {
+    nonisolated func fileOutput(
+      _ output: AVCaptureFileOutput,
+      didFinishRecordingTo outputFileURL: URL,
+      from connections: [AVCaptureConnection],
+      error: Error?
+    ) {
+      let data = try? Data(contentsOf: outputFileURL)
+      try? FileManager.default.removeItem(at: outputFileURL)
+      Task { @MainActor in
+        let completion = pendingRecording
+        pendingRecording = nil
+        recordingURL = nil
+        recordingPaused = false
+        emitState()
+        if let error {
+          completion?(.failure(RufletServiceError.failed(error.localizedDescription)))
+        } else if let data {
+          completion?(.success(.binary([UInt8](data))))
+        } else {
+          completion?(.failure(RufletServiceError.failed("The video recording produced no data")))
+        }
+      }
+    }
+
+    nonisolated func fileOutput(
+      _ output: AVCaptureFileOutput,
+      didStartRecordingTo fileURL: URL,
+      from connections: [AVCaptureConnection]
+    ) {
+      Task { @MainActor in emitState() }
     }
   }
 

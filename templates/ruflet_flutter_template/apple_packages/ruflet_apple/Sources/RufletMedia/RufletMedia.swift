@@ -27,6 +27,10 @@ public enum RufletMedia: RufletServiceBundle {
     registry.registerNamed("AudioRecorder") { AudioRecorderService() }
     registry.registerNamed("Camera") { CameraService() }
     registry.registerNamed("Flashlight") { FlashlightService() }
+    // Flet services receive `update()` whenever their wire properties change.
+    // Audio owns a persistent player, so it needs the same lifecycle hook for
+    // source, volume, balance, rate and release-mode updates made after mount.
+    registry.markStreaming(["Audio"])
 
     // Ruflet treats camera as a *visual* service, so it also has a control to
     // render. Registering the view here keeps the preview out of apps that do

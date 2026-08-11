@@ -3,7 +3,7 @@ import RufletEngine
 import RufletProtocol
 
 #if canImport(AVFoundation)
-  import AVFoundation
+  @preconcurrency import AVFoundation
 #endif
 #if canImport(UIKit)
   import UIKit
@@ -14,7 +14,7 @@ import RufletProtocol
 
 /// `Audio` — playback of a single source, driven entirely by method calls.
 @MainActor
-public final class AudioService: RufletService {
+public final class AudioService: RufletStreamingService {
   public static let wireType = "Audio"
 
   #if canImport(AVFoundation)
@@ -22,14 +22,21 @@ public final class AudioService: RufletService {
     private var observer: Any?
     private var timeObserver: Any?
     private var itemStatusObserver: NSKeyValueObservation?
+    private var temporarySourceURL: URL?
   #endif
   /// Held rather than captured: the notification closure is `@Sendable`, and
   /// the context is not.
   private var context: RufletServiceContext?
   private var controlID: Int?
   private var control: ControlNode?
+  private var sourceIdentity: String?
+  private var playbackRate: Float = 1
 
   public init() {}
+
+  public func activate(node: ControlNode, context: RufletServiceContext) {
+    ensurePlayer(node: node, context: context)
+  }
 
   public func invoke(
     _ call: RufletMethodCall,
@@ -42,9 +49,23 @@ public final class AudioService: RufletService {
       case "play", "resume":
         ensurePlayer(node: node, context: context)
         if call.name == "play", let milliseconds = call.argument("position")?.doubleValue {
-          player?.seek(to: CMTime(seconds: milliseconds / 1000, preferredTimescale: 600))
+          guard let player else {
+            completion(.success(.null))
+            return
+          }
+          player.seek(
+            to: CMTime(seconds: milliseconds / 1000, preferredTimescale: 600)
+          ) { [weak self] _ in
+            Task { @MainActor in
+              guard let self else { return }
+              player.playImmediately(atRate: self.playbackRate)
+              self.emit("state_change", .map(["state": .string("playing")]))
+              completion(.success(.null))
+            }
+          }
+          return
         }
-        player?.play()
+        player?.playImmediately(atRate: playbackRate)
         emit("state_change", .map(["state": .string("playing")]))
         completion(.success(.null))
 
@@ -62,12 +83,18 @@ public final class AudioService: RufletService {
 
       case "seek":
         let milliseconds = call.argument("position")?.doubleValue ?? 0
-        player?.seek(
+        guard let player else {
+          completion(.success(.null))
+          return
+        }
+        player.seek(
           to: CMTime(seconds: milliseconds / 1000, preferredTimescale: 600)
         ) { [weak self] _ in
-          Task { @MainActor in self?.emit("seek_complete", .null) }
+          Task { @MainActor in
+            self?.emit("seek_complete", .null)
+            completion(.success(.null))
+          }
         }
-        completion(.success(.null))
 
       case "get_duration":
         guard let seconds = player?.currentItem?.duration.seconds, seconds.isFinite else {
@@ -80,14 +107,6 @@ public final class AudioService: RufletService {
           return completion(.success(.null))
         }
         completion(.success(.int(Int64(seconds * 1000))))
-
-      case "set_volume":
-        player?.volume = Float(call.argument("volume")?.doubleValue ?? 1)
-        completion(.success(.null))
-
-      case "set_playback_rate":
-        player?.rate = Float(call.argument("playback_rate")?.doubleValue ?? 1)
-        completion(.success(.null))
 
       default:
         completion(
@@ -102,12 +121,15 @@ public final class AudioService: RufletService {
     /// The source lives on the control's `src`, and Flet reports `state_change`
     /// when playback finishes, so both are wired here.
     private func ensurePlayer(node: ControlNode?, context: RufletServiceContext) {
-      guard player == nil, let node else { return }
+      guard let node else { return }
       let url: URL?
+      let identity: String?
       if let source = node.string("src"), let parsed = URL(string: source), parsed.scheme != nil {
         url = parsed
+        identity = "url:\(source)"
       } else if let source = node.string("src") {
         url = URL(fileURLWithPath: source)
+        identity = "file:\(source)"
       } else if let encoded = node.string("src_base64"), let data = Data(base64Encoded: encoded) {
         // Flet lets a sound travel inline; AVPlayer needs a file, so the bytes
         // are spilled to a temporary one named for their own digest.
@@ -115,18 +137,46 @@ public final class AudioService: RufletService {
           .appendingPathComponent("ruflet-audio-\(encoded.hashValue).m4a")
         try? data.write(to: file)
         url = file
+        identity = "base64:\(encoded.hashValue)"
       } else {
         url = nil
+        identity = nil
       }
-      guard let url else { return }
-
-      let player = AVPlayer(url: url)
-      player.volume = Float(node.double("volume") ?? 1)
-      self.player = player
+      guard let url, let identity else { return }
 
       self.context = context
       controlID = node.id
       control = node
+
+      let sourceChanged = player == nil || identity != sourceIdentity
+      if sourceChanged {
+        releasePlayer()
+        if identity.hasPrefix("base64:") { temporarySourceURL = url }
+        sourceIdentity = identity
+        installPlayer(url: url, node: node)
+      }
+
+      guard let player else { return }
+      let volume = node.double("volume") ?? 1
+      if (0...1).contains(volume) { player.volume = Float(volume) }
+      playbackRate = Float(node.double("playback_rate") ?? 1)
+      if player.rate != 0 { player.rate = playbackRate }
+      // Keep parity with audioplayers_darwin 6.4.0: Flet forwards balance,
+      // while the pinned Apple backend explicitly treats setBalance as a
+      // no-op. AVPlayer has no channel-pan API, so applying whole-track volume
+      // here would be observably incorrect.
+
+      // Flet applies autoplay when a source is mounted/replaced. A later
+      // property update must not unexpectedly resume audio the user paused.
+      if sourceChanged, node.bool("autoplay") == true {
+        player.playImmediately(atRate: playbackRate)
+      }
+    }
+
+    private func installPlayer(url: URL, node: ControlNode) {
+      let player = AVPlayer(url: url)
+      self.player = player
+
       itemStatusObserver = player.currentItem?.observe(\.status, options: [.initial, .new]) {
         [weak self] item, _ in
         Task { @MainActor in
@@ -166,34 +216,23 @@ public final class AudioService: RufletService {
         Task { @MainActor in self?.reportCompletion() }
       }
 
-      // `balance` pans between the channels. AVPlayer has no pan control, so
-      // it goes through the item's audio mix.
-      if let balance = node.double("balance"), balance != 0, let item = player.currentItem,
-        let track = item.asset.tracks(withMediaType: .audio).first
-      {
-        let parameters = AVMutableAudioMixInputParameters(track: track)
-        parameters.setVolumeRamp(
-          fromStartVolume: Float(1 - max(0, balance)),
-          toEndVolume: Float(1 - max(0, -balance)),
-          timeRange: CMTimeRange(start: .zero, duration: .positiveInfinity))
-        let mix = AVMutableAudioMix()
-        mix.inputParameters = [parameters]
-        item.audioMix = mix
-      }
-
-      // Flet starts a sound as soon as it loads when the control says so.
-      if node.bool("autoplay") == true {
-        player.play()
-        emit("state_change", .map(["state": .string("playing")]))
-      }
     }
+
   #endif
 
   private func reportCompletion() {
     emit("state_change", .map(["state": .string("completed")]))
-    guard control?.string("release_mode")?.lowercased() == "loop" else { return }
-    player?.seek(to: .zero)
-    player?.play()
+    switch control?.string("release_mode")?.lowercased() ?? "release" {
+    case "loop":
+      player?.seek(to: .zero)
+      player?.playImmediately(atRate: playbackRate)
+    case "stop":
+      player?.pause()
+      player?.seek(to: .zero)
+    default:
+      // audioplayers defaults to ReleaseMode.release.
+      releasePlayer()
+    }
   }
 
   private func emit(_ name: String, _ data: RufletValue) {
@@ -210,6 +249,9 @@ public final class AudioService: RufletService {
       itemStatusObserver?.invalidate()
       itemStatusObserver = nil
       player = nil
+      if let temporarySourceURL { try? FileManager.default.removeItem(at: temporarySourceURL) }
+      temporarySourceURL = nil
+      sourceIdentity = nil
     }
   #endif
 
@@ -227,13 +269,12 @@ public final class AudioService: RufletService {
 public final class AudioRecorderService: RufletService {
   public static let wireType = "AudioRecorder"
 
-  private var streamTimer: Timer?
-
   #if canImport(AVFoundation)
     private var recorder: AVAudioRecorder?
   #endif
   private var outputPath: String?
   private var paused = false
+  private var recorderState = "stopped"
   private var eventContext: RufletServiceContext?
   private var eventNode: ControlNode?
 
@@ -250,25 +291,59 @@ public final class AudioRecorderService: RufletService {
     #if canImport(AVFoundation)
       switch call.name {
       case "start_recording":
-        let path =
-          call.argument("output_path")?.stringValue
-          ?? (NSTemporaryDirectory() as NSString).appendingPathComponent(
-            "ruflet-recording-\(UUID().uuidString).m4a")
+        // Validate the device-only path before asking for microphone access.
+        // This preserves Flet's false result while avoiding a permission prompt
+        // for a request that could never start recording.
+        guard let path = call.argument("output_path")?.stringValue, !path.isEmpty else {
+          completion(.success(.bool(false)))
+          return
+        }
+        let permission = AVCaptureDevice.authorizationStatus(for: .audio)
+        if permission == .denied || permission == .restricted {
+          completion(.success(.bool(false)))
+          return
+        }
+        if permission == .notDetermined {
+          AVCaptureDevice.requestAccess(for: .audio) { [weak self] granted in
+            Task { @MainActor in
+              guard let self else { return }
+              if granted {
+                self.invoke(call, node: node, context: context, completion: completion)
+              } else {
+                completion(.success(.bool(false)))
+              }
+            }
+          }
+          return
+        }
+        // `record` requires a writable device path on native targets. Flet
+        // deliberately returns false when it is omitted rather than silently
+        // inventing a temporary file (web is the only target where it may be
+        // empty).
         do {
           try FileManager.default.createDirectory(
             at: URL(fileURLWithPath: path).deletingLastPathComponent(),
             withIntermediateDirectories: true)
-          #if os(iOS)
-            let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.playAndRecord, mode: .default)
-            try session.setActive(true)
-          #endif
-          let encoder = call.argument("configuration")?["encoder"]?.stringValue?.lowercased()
-          let format = encoder == "wav" ? kAudioFormatLinearPCM : kAudioFormatMPEG4AAC
+          let configuration = call.argument("configuration")?.mapValue ?? [:]
+          let encoder = configuration["encoder"]?.stringValue?.lowercased() ?? "wav"
+          guard Self.isSupportedEncoder(encoder), let format = Self.formatID(for: encoder) else {
+            completion(.success(.bool(false)))
+            return
+          }
+          if recorder != nil {
+            recorder?.stop()
+            recorder = nil
+            paused = false
+            emitState("stopped")
+          }
+          let requestedSampleRate = configuration["sample_rate"]?.doubleValue ?? 44_100
+          let sampleRate = Self.sampleRate(for: encoder, requested: requestedSampleRate)
           var settings: [String: Any] = [
             AVFormatIDKey: Int(format),
-            AVSampleRateKey: 44_100,
-            AVNumberOfChannelsKey: 1
+            AVSampleRateKey: sampleRate,
+            AVNumberOfChannelsKey: configuration["channels"]?.intValue ?? 2,
+            AVEncoderBitRateKey: configuration["bit_rate"]?.intValue ?? 128_000,
+            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
           ]
           if format == kAudioFormatLinearPCM {
             settings[AVLinearPCMBitDepthKey] = 16
@@ -278,16 +353,20 @@ public final class AudioRecorderService: RufletService {
           let recorder = try AVAudioRecorder(
             url: URL(fileURLWithPath: path),
             settings: settings)
+          #if os(iOS)
+            try Self.configureAudioSession(configuration)
+            if let requestedID = configuration["device"]?["id"]?.stringValue,
+              let input = AVAudioSession.sharedInstance().availableInputs?.first(where: {
+                $0.uid == requestedID
+              })
+            {
+              try AVAudioSession.sharedInstance().setPreferredInput(input)
+            }
+          #endif
           guard recorder.prepareToRecord(), recorder.record() else {
             throw RufletServiceError.failed("The audio recorder could not start")
           }
           self.recorder = recorder
-          // `on_stream` asks for the level as it records. AVAudioRecorder
-          // meters on demand, so a timer samples it at the rate Flet uses.
-          if node?.handlesEvent("stream") == true {
-            recorder.isMeteringEnabled = true
-            self.startStreaming()
-          }
           outputPath = path
           paused = false
           emitState("recording")
@@ -297,15 +376,15 @@ public final class AudioRecorderService: RufletService {
         }
 
       case "stop_recording":
-        stopStreaming()
+        let path = recorder == nil ? nil : outputPath
         recorder?.stop()
         recorder = nil
         paused = false
         emitState("stopped")
-        completion(.success(outputPath.map { RufletValue.string($0) } ?? .null))
+        outputPath = nil
+        completion(.success(path.map { RufletValue.string($0) } ?? .null))
 
       case "cancel_recording":
-        stopStreaming()
         recorder?.stop()
         recorder = nil
         paused = false
@@ -315,19 +394,24 @@ public final class AudioRecorderService: RufletService {
         completion(.success(.null))
 
       case "pause_recording":
-        recorder?.pause()
-        paused = recorder != nil
-        emitState("paused")
+        if let recorder, recorder.isRecording, !paused {
+          recorder.pause()
+          paused = true
+          emitState("paused")
+        }
         completion(.success(.null))
 
       case "resume_recording":
-        recorder?.record()
-        paused = false
-        emitState("recording")
+        if let recorder, paused {
+          recorder.record()
+          paused = false
+          emitState("recording")
+        }
         completion(.success(.null))
 
       case "is_recording":
-        completion(.success(.bool(recorder?.isRecording ?? false)))
+        // record's paused state is still an active recording.
+        completion(.success(.bool(recorder != nil)))
 
       case "is_paused":
         completion(.success(.bool(paused)))
@@ -335,23 +419,21 @@ public final class AudioRecorderService: RufletService {
       case "get_input_devices":
         #if os(iOS)
           let inputs = AVAudioSession.sharedInstance().availableInputs ?? []
-          completion(.success(.array(inputs.map { input in
-            .map([
-              "id": .string(input.uid),
-              "label": .string(input.portName)
-            ])
-          })))
+          completion(.success(.map(Dictionary(uniqueKeysWithValues: inputs.map {
+            ($0.uid, RufletValue.string($0.portName))
+          }))))
         #else
           let devices = AVCaptureDevice.DiscoverySession(
             deviceTypes: [.builtInMicrophone], mediaType: .audio, position: .unspecified
           ).devices
-          completion(.success(.array(devices.map { device in
-            .map(["id": .string(device.uniqueID), "label": .string(device.localizedName)])
-          })))
+          completion(.success(.map(Dictionary(uniqueKeysWithValues: devices.map {
+            ($0.uniqueID, RufletValue.string($0.localizedName))
+          }))))
         #endif
 
       case "is_supported_encoder":
-        completion(.success(.bool(true)))
+        let encoder = call.argument("encoder")?.stringValue?.lowercased()
+        completion(.success(.bool(encoder.map(Self.isSupportedEncoder) ?? false)))
 
       case "has_permission":
         #if os(iOS)
@@ -389,34 +471,97 @@ public final class AudioRecorderService: RufletService {
   }
 
   private func emitState(_ state: String) {
+    guard recorderState != state else { return }
+    recorderState = state
     guard let eventContext, let eventNode, eventNode.handlesEvent("state_change") else { return }
-    eventContext.emitEvent(eventNode.id, "state_change", .map(["state": .string(state)]))
+    eventContext.emitEvent(eventNode.id, "state_change", .string(state))
   }
 
-  /// Samples the recorder's meter and reports it, which is the shape Flet's
-  /// `on_stream` carries: the level as it records.
-  private func startStreaming() {
-    #if canImport(AVFoundation)
-      stopStreaming()
-      streamTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { [weak self] _ in
-        Task { @MainActor in
-          guard let self, let recorder = self.recorder, recorder.isRecording,
-            let eventContext = self.eventContext, let eventNode = self.eventNode
-          else { return }
-          recorder.updateMeters()
-          eventContext.emitEvent(eventNode.id, "stream", .map([
-            "amplitude": .double(Double(recorder.averagePower(forChannel: 0))),
-            "peak": .double(Double(recorder.peakPower(forChannel: 0))),
-          ]))
+  #if canImport(AVFoundation)
+    private static func formatID(for encoder: String) -> AudioFormatID? {
+      switch encoder.replacingOccurrences(of: "-", with: "_") {
+      case "wav", "pcm16bits": return kAudioFormatLinearPCM
+      case "aaclc", "aac_lc": return kAudioFormatMPEG4AAC
+      case "aache", "aac_he": return kAudioFormatMPEG4AAC_HE_V2
+      case "aaceld", "aac_eld": return kAudioFormatMPEG4AAC_ELD_V2
+      case "amrnb", "amr_nb": return kAudioFormatAMR
+      case "amrwb", "amr_wb": return kAudioFormatAMR_WB
+      case "opus": return kAudioFormatOpus
+      case "flac": return kAudioFormatFLAC
+      case "alac": return kAudioFormatAppleLossless
+      default: return nil
+      }
+    }
+
+    /// Mirrors record_ios' advertised encoder surface. Some Core Audio format
+    /// identifiers exist on Apple platforms but the pinned plug-in deliberately
+    /// reports them as unsupported because its recording pipeline cannot
+    /// guarantee conversion for those formats.
+    private static func isSupportedEncoder(_ encoder: String) -> Bool {
+      switch encoder.replacingOccurrences(of: "-", with: "_") {
+      case "wav", "pcm16bits", "aaclc", "aac_lc", "aaceld", "aac_eld", "opus", "flac":
+        return true
+      default:
+        return false
+      }
+    }
+
+    private static func sampleRate(for encoder: String, requested: Double) -> Double {
+      guard encoder.replacingOccurrences(of: "-", with: "_") == "opus" else {
+        return requested
+      }
+      return [8_000.0, 12_000, 16_000, 24_000, 48_000]
+        .min(by: { abs($0 - requested) < abs($1 - requested) }) ?? 48_000
+    }
+
+    #if os(iOS)
+      private static func configureAudioSession(_ configuration: [String: RufletValue]) throws {
+        let session = AVAudioSession.sharedInstance()
+        let ios = configuration["ios_configuration"]?.mapValue ?? [:]
+        let manage = ios["manage_audio_session"]?.boolValue ?? true
+        let optionNames = ios["options"]?.arrayValue?.compactMap(\.stringValue)
+        let options = audioSessionOptions(optionNames)
+
+        try session.setPreferredSampleRate(
+          min(configuration["sample_rate"]?.doubleValue ?? 44_100, 48_000))
+        if manage {
+          try session.setCategory(.playAndRecord, mode: .default, options: options)
+          try session.setActive(true, options: .notifyOthersOnDeactivation)
+        }
+        let channels = min(
+          configuration["channels"]?.intValue ?? 2,
+          session.maximumInputNumberOfChannels)
+        if channels > 0 { try session.setPreferredInputNumberOfChannels(channels) }
+      }
+
+      private static func audioSessionOptions(_ names: [String]?)
+        -> AVAudioSession.CategoryOptions
+      {
+        let values = names ?? ["default_to_speaker", "allow_bluetooth", "allow_bluetooth_a2dp"]
+        return values.reduce(into: AVAudioSession.CategoryOptions()) { result, raw in
+          switch raw.replacingOccurrences(of: "_", with: "").lowercased() {
+          case "mixwithothers": result.insert(.mixWithOthers)
+          case "duckothers": result.insert(.duckOthers)
+          case "allowbluetooth":
+            #if compiler(>=6.2)
+              result.insert(.allowBluetoothHFP)
+            #else
+              result.insert(.allowBluetooth)
+            #endif
+          case "defaulttospeaker": result.insert(.defaultToSpeaker)
+          case "interruptspokenaudioandmixwithothers":
+            result.insert(.interruptSpokenAudioAndMixWithOthers)
+          case "allowbluetootha2dp": result.insert(.allowBluetoothA2DP)
+          case "allowairplay": result.insert(.allowAirPlay)
+          case "overridemutedmicrophoneinterruption":
+            if #available(iOS 14.5, *) { result.insert(.overrideMutedMicrophoneInterruption) }
+          default: break
+          }
         }
       }
     #endif
-  }
+  #endif
 
-  private func stopStreaming() {
-    streamTimer?.invalidate()
-    streamTimer = nil
-  }
 }
 
 

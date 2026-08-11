@@ -458,13 +458,26 @@ public enum ControlRegistry {
       supportedEvents: ["click"])
     add(["Camera"], .visible, "RufletMedia.CameraControlView",
         .optionalBundle("RufletMedia"),
-        events: ["error", "initialized", "picture_taken", "state_change", "stream_image"])
+        events: ["state_change", "stream_image"],
+        methods: ["get_available_cameras", "get_exposure_offset_step_size",
+                  "get_max_exposure_offset", "get_max_zoom_level",
+                  "get_min_exposure_offset", "get_min_zoom_level", "initialize",
+                  "lock_capture_orientation", "pause_preview", "pause_video_recording",
+                  "prepare_for_video_recording", "resume_preview", "resume_video_recording",
+                  "set_description", "set_exposure_mode", "set_exposure_offset",
+                  "set_exposure_point", "set_flash_mode", "set_focus_mode",
+                  "set_focus_point", "set_zoom_level", "start_image_stream",
+                  "start_video_recording", "stop_image_stream", "stop_video_recording",
+                  "supports_image_streaming", "take_picture", "unlock_capture_orientation"])
     add(["Audio"], .service, "RufletMedia AudioService", .serviceOnly,
-        events: ["duration_change", "error", "loaded", "position_change", "seek_complete",
-                 "state_change"],
+        events: ["duration_change", "loaded", "position_change", "seek_complete", "state_change"],
         methods: ["get_current_position", "get_duration", "pause", "play", "release",
                   "resume", "seek"])
-    add(["AudioRecorder"], .service, "RufletMedia AudioRecorderService", .serviceOnly)
+    add(["AudioRecorder"], .service, "RufletMedia AudioRecorderService", .serviceOnly,
+        events: ["state_change"],
+        methods: ["cancel_recording", "get_input_devices", "has_permission", "is_paused",
+                  "is_recording", "is_supported_encoder", "pause_recording",
+                  "resume_recording", "start_recording", "stop_recording"])
     add(["Battery"], .service, "BatteryService", .serviceOnly,
         events: ["state_change"],
         methods: ["get_battery_level", "get_battery_state", "is_in_battery_save_mode"])
