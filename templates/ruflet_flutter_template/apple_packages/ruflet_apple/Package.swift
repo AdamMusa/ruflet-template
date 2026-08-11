@@ -26,6 +26,7 @@ let package = Package(
     .library(name: "RufletEngine", targets: ["RufletEngine"])
   ],
   dependencies: [
+    .package(url: "https://github.com/airbnb/lottie-ios.git", exact: "4.6.1"),
     .package(url: "https://github.com/rive-app/rive-ios.git", exact: "6.9.5")
   ],
   targets: [
@@ -38,6 +39,7 @@ let package = Package(
       name: "RufletUI",
       dependencies: [
         "RufletEngine", "RufletProtocol", "MaterialColorUtilities",
+        .product(name: "Lottie", package: "lottie-ios"),
         .product(name: "RiveRuntime", package: "rive-ios")
       ]),
     .target(name: "RufletApple", dependencies: ["RufletUI", "RufletEngine", "RufletProtocol"]),

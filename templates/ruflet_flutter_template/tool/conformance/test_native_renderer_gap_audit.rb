@@ -47,9 +47,9 @@ class NativeRendererGapAuditTest < Minitest::Test
 
   def test_report_keeps_declared_gaps_actionable
     lottie = @report.fetch("missing_types").find { |gap| gap.fetch("wire_type") == "Lottie" }
-    refute_nil lottie
-    assert_equal true, lottie.fetch("allowed")
-    assert_equal "initial_api_parity_backlog", lottie.fetch("gap_classification")
+    assert_nil lottie
+    assert_includes @surface.fetch("Lottie").fetch("events"), "load"
+    assert_includes @surface.fetch("Lottie").fetch("events"), "error"
 
     video_complete = @report.fetch("missing_events").find do |gap|
       gap.fetch("wire_type") == "Video" && gap.fetch("event") == "complete"

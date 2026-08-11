@@ -21,6 +21,8 @@ extension ControlRegistry {
       return AnyView(SpinKitControlView(node: node))
     case "Rive":
       return AnyView(RiveControlView(node: node))
+    case "Lottie":
+      return AnyView(LottieControlView(node: node))
     case "CircleAvatar":
       return AnyView(CircleAvatarControlView(node: node))
     case "Badge":

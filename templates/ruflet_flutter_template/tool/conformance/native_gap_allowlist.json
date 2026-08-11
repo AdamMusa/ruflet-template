@@ -17,7 +17,7 @@
   },
   "declared_baseline": {
     "classification": "initial_api_parity_backlog",
-    "gap_set_sha256": "fb8683e74728308f037e171b0ad09939ea5f47f21cf4cc3da4a25106169723a8",
+    "gap_set_sha256": "0d592c4cb844472fa93cab2ecf644ea83bd6fc457c71837ce11ce5551f9295b6",
     "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review."
   },
   "type_gaps": {},

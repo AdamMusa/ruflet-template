@@ -195,6 +195,8 @@ public enum ControlRegistry {
     add(["ProgressRing"], .visible, "ProgressRingControlView", .nativeView)
     add(["RufletSpinKit"], .visible, "SpinKitControlView", .nativeView)
     add(["Rive"], .visible, "RiveControlView", .nativeView)
+    add(["Lottie"], .visible, "LottieControlView", .nativeView,
+        events: ["error", "load"])
     add(["CircleAvatar"], .visible, "CircleAvatarControlView", .nativeView)
     add(["Badge"], .visible, "BadgeControlView", .nativeView)
     add(["Markdown"], .visible, "MarkdownControlView", .nativeView,

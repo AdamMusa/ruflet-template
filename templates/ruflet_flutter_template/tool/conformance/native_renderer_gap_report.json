@@ -8,13 +8,13 @@
   },
   "summary": {
     "flet_types": 212,
-    "native_declarations": 209,
-    "missing_types": 43,
+    "native_declarations": 210,
+    "missing_types": 42,
     "missing_events": 163,
     "missing_methods": 102,
     "undeclared_gaps": 0,
     "declared_baseline_matches": true,
-    "unresolved_gap_set_sha256": "fb8683e74728308f037e171b0ad09939ea5f47f21cf4cc3da4a25106169723a8"
+    "unresolved_gap_set_sha256": "0d592c4cb844472fa93cab2ecf644ea83bd6fc457c71837ce11ce5551f9295b6"
   },
   "missing_types": [
     {
@@ -64,14 +64,6 @@
       "allowed": true,
       "gap_classification": "ignored_package",
       "reason": "Advertising controls are not exposed by the Ruflet DSL."
-    },
-    {
-      "wire_type": "Lottie",
-      "package": "flet_lottie",
-      "classification": "widget",
-      "allowed": true,
-      "gap_classification": "initial_api_parity_backlog",
-      "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review."
     },
     {
       "wire_type": "MaterialPicker",
