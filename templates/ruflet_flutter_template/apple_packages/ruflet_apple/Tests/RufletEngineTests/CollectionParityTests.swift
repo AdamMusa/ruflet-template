@@ -15,6 +15,8 @@ final class CollectionParityTests: XCTestCase {
     XCTAssertFalse(grid.horizontal)
     XCTAssertEqual(grid.spacing, 10)
     XCTAssertEqual(grid.runSpacing, 10)
+    XCTAssertEqual(grid.runsCount, 1)
+    XCTAssertNil(grid.maxExtent)
 
     let page = CollectionDefaults.pageView(ControlNode(id: 3, type: "PageView"))
     XCTAssertTrue(page.horizontal)
@@ -57,6 +59,13 @@ final class CollectionParityTests: XCTestCase {
     XCTAssertTrue(grid.horizontal)
     XCTAssertEqual(grid.spacing, 3)
     XCTAssertEqual(grid.runSpacing, 9)
+
+    let adaptiveGrid = CollectionDefaults.gridView(ControlNode(
+      id: 20, type: "GridView", props: [
+        "runs_count": .int(9), "max_extent": .double(120)
+      ]))
+    // Flet gives max_extent precedence over runs_count.
+    XCTAssertEqual(adaptiveGrid.maxExtent, 120)
 
     let tile = CollectionDefaults.listTile(ControlNode(
       id: 3, type: "ListTile", props: [

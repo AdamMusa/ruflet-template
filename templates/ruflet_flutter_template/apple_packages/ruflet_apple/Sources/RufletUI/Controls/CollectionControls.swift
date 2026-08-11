@@ -126,18 +126,20 @@ struct GridViewControlView: View {
   }
 
   private func columns(spacing: CGFloat) -> [GridItem] {
-    if let runs = node.int("runs_count"), runs > 0 {
-      return Array(repeating: GridItem(.flexible(), spacing: spacing), count: runs)
+    let config = CollectionDefaults.gridView(node)
+    if config.maxExtent == nil {
+      return Array(repeating: GridItem(.flexible(), spacing: spacing), count: config.runsCount)
     }
-    let extent = CGFloat(node.double("max_extent") ?? 1)
+    let extent = config.maxExtent ?? 1
     return [GridItem(.adaptive(minimum: extent), spacing: spacing)]
   }
 
   private func rows(spacing: CGFloat) -> [GridItem] {
-    if let runs = node.int("runs_count"), runs > 0 {
-      return Array(repeating: GridItem(.flexible(), spacing: spacing), count: runs)
+    let config = CollectionDefaults.gridView(node)
+    if config.maxExtent == nil {
+      return Array(repeating: GridItem(.flexible(), spacing: spacing), count: config.runsCount)
     }
-    let extent = CGFloat(node.double("max_extent") ?? 1)
+    let extent = config.maxExtent ?? 1
     return [GridItem(.adaptive(minimum: extent), spacing: spacing)]
   }
 }
@@ -477,6 +479,9 @@ struct ListTileControlView: View {
 
       if let trailingID = node.controlID(forKey: "trailing") {
         ControlView(id: trailingID, axis: .none)
+      } else if let trailingText = node.string("trailing") {
+        Text(trailingText)
+          .rufletTextStyle(RufletTextStyle(node: node, styleKey: "leading_and_trailing_text_style"))
       } else if node.props["trailing"] != nil {
         RufletIcon(
           value: node.props["trailing"], size: 22,
@@ -484,9 +489,6 @@ struct ListTileControlView: View {
       } else if let info = node.controlID(forKey: "additional_info") {
         // Cupertino puts a second, quieter value before the chevron.
         ControlView(id: info, axis: .none).foregroundColor(.secondary)
-      } else if let trailingText = node.string("trailing") {
-        Text(trailingText)
-          .rufletTextStyle(RufletTextStyle(node: node, styleKey: "leading_and_trailing_text_style"))
       }
       // `toggle_inputs` lets a tap anywhere on the row drive the switch or
       // checkbox it carries, rather than only the control itself.
@@ -698,7 +700,7 @@ struct ExpansionPanelListControlView: View {
           ExpansionPanelView(node: panel, list: node)
             .padding(
               ControlProps.edgeInsets(node.props["expanded_header_padding"]) ?? EdgeInsets())
-            .shadow(radius: CGFloat(node.double("elevation") ?? 0))
+            .shadow(radius: CGFloat(node.double("elevation") ?? 2))
           if index < node.childIDs.count - 1, let divider = dividerColor {
             Rectangle().fill(divider).frame(height: 1)
           }
@@ -920,13 +922,6 @@ struct TabBarControlView: View {
             .rufletTextStyle(labelStyle(selected: index == selection?.wrappedValue))
             .padding(metrics.labelPadding)
             .frame(minHeight: CollectionDefaults.tabHeight(tab))
-            .overlay(alignment: .bottom) {
-              if index == selection?.wrappedValue {
-                Rectangle()
-                  .fill(MaterialPalette.color(node.string("indicator_color"), default: .accentColor))
-                  .frame(height: metrics.indicatorThickness)
-              }
-            }
         }
         .buttonStyle(.plain)
         .onHover { hovering in
@@ -1194,6 +1189,8 @@ enum CollectionDefaults {
     let padding: EdgeInsets
     let showsIndicators: Bool
     let clipBehavior: String
+    let runsCount: Int
+    let maxExtent: CGFloat?
   }
 
   struct ListTileValues {
@@ -1252,7 +1249,9 @@ enum CollectionDefaults {
       runSpacing: CGFloat(node.double("run_spacing") ?? 10),
       padding: ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets(),
       showsIndicators: node.string("scroll") != "hidden",
-      clipBehavior: node.string("clip_behavior") ?? "hardEdge")
+      clipBehavior: node.string("clip_behavior") ?? "hardEdge",
+      runsCount: max(node.int("runs_count") ?? 1, 1),
+      maxExtent: node.double("max_extent").map { CGFloat(max($0, 1)) })
   }
 
   static func listTile(_ node: ControlNode) -> ListTileValues {
