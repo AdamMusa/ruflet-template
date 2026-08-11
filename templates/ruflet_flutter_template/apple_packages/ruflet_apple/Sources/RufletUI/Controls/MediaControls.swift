@@ -30,14 +30,21 @@ struct CanvasControlView: View {
   @State private var reportedSize: CGSize = .zero
   @State private var lastResizeReport = Date.distantPast
   @State private var capture = CanvasCaptureBuffer()
+  @Environment(\.displayScale) private var displayScale
+
+  private var shapeIDs: [Int] {
+    orderedUnique(node.controlIDs(forKey: "shapes") + node.childIDs)
+  }
 
   var body: some View {
     ZStack {
       Canvas { context, size in
-        for shapeID in node.controlIDs(forKey: "shapes") + node.childIDs {
+        for shapeID in shapeIDs {
           guard let shape = store.node(shapeID) else { continue }
           draw(shape, in: &context, size: size)
         }
+      } symbols: {
+        canvasImageSymbols
       }
       if let contentID = node.controlID(forKey: "content") {
         ControlView(id: contentID, axis: .none)
@@ -83,7 +90,7 @@ struct CanvasControlView: View {
         return
       }
       let renderer = ImageRenderer(content: captureSurface.frame(width: reportedSize.width, height: reportedSize.height))
-      renderer.scale = call.argument("pixel_ratio")?.doubleValue ?? 1
+      renderer.scale = call.argument("pixel_ratio")?.doubleValue ?? displayScale
       #if canImport(UIKit)
         capture.store(renderer.uiImage?.pngData())
       #elseif canImport(AppKit)
@@ -106,36 +113,44 @@ struct CanvasControlView: View {
 
   private var captureSurface: some View {
     Canvas { context, size in
-      for shapeID in node.controlIDs(forKey: "shapes") + node.childIDs {
+      for shapeID in shapeIDs {
         guard let shape = store.node(shapeID) else { continue }
         draw(shape, in: &context, size: size)
       }
+    } symbols: {
+      canvasImageSymbols
     }
     .environmentObject(store)
   }
 
+  @ViewBuilder
+  private var canvasImageSymbols: some View {
+    ForEach(shapeIDs, id: \.self) { shapeID in
+      if let shape = store.node(shapeID), shape.type == "Image" {
+        CanvasShapeImageView(node: shape)
+          .tag(shapeID)
+      }
+    }
+  }
+
   private func draw(_ shape: ControlNode, in context: inout GraphicsContext, size: CGSize) {
-    let paint = shape.map("paint") ?? [:]
-    let stroke = MaterialPalette.color(paint["color"]?.stringValue, default: .primary)
-    let width = CGFloat(paint["stroke_width"]?.doubleValue ?? 1)
-    let filled = paint["style"]?.stringValue?.lowercased() == "fill"
+    let paint = CanvasPaint(shape.map("paint"))
 
     switch shape.type {
     case "Line":
       var path = Path()
       path.move(to: CGPoint(x: shape.double("x1") ?? 0, y: shape.double("y1") ?? 0))
       path.addLine(to: CGPoint(x: shape.double("x2") ?? 0, y: shape.double("y2") ?? 0))
-      context.stroke(path, with: .color(stroke), lineWidth: width)
+      paint.stroke(path, in: &context)
 
     case "Rect":
       let rect = CGRect(
         x: shape.double("x") ?? 0, y: shape.double("y") ?? 0,
         width: shape.double("width") ?? 0, height: shape.double("height") ?? 0)
-      let radius = ControlProps.cornerRadius(shape.props["border_radius"]) ?? 0
-      let path = Path(roundedRect: rect, cornerRadius: radius)
-      filled
-        ? context.fill(path, with: .color(stroke))
-        : context.stroke(path, with: .color(stroke), lineWidth: width)
+      let radii = ControlProps.cornerRadii(shape.props["border_radius"])
+        ?? RufletCornerRadii(uniform: 0)
+      let path = RufletRoundedRectangle(radii: radii).path(in: rect)
+      paint.draw(path, in: &context)
 
     case "Circle":
       let radius = CGFloat(shape.double("radius") ?? 0)
@@ -143,18 +158,14 @@ struct CanvasControlView: View {
         x: (shape.double("x") ?? 0) - radius, y: (shape.double("y") ?? 0) - radius,
         width: radius * 2, height: radius * 2)
       let path = Path(ellipseIn: rect)
-      filled
-        ? context.fill(path, with: .color(stroke))
-        : context.stroke(path, with: .color(stroke), lineWidth: width)
+      paint.draw(path, in: &context)
 
     case "Oval":
       let rect = CGRect(
         x: shape.double("x") ?? 0, y: shape.double("y") ?? 0,
         width: shape.double("width") ?? 0, height: shape.double("height") ?? 0)
       let path = Path(ellipseIn: rect)
-      filled
-        ? context.fill(path, with: .color(stroke))
-        : context.stroke(path, with: .color(stroke), lineWidth: width)
+      paint.draw(path, in: &context)
 
     case "Arc":
       let rect = CGRect(
@@ -165,12 +176,10 @@ struct CanvasControlView: View {
         startAngle: shape.double("start_angle") ?? 0,
         sweepAngle: shape.double("sweep_angle") ?? 0,
         useCenter: shape.bool("use_center") ?? false)
-      filled
-        ? context.fill(path, with: .color(stroke))
-        : context.stroke(path, with: .color(stroke), lineWidth: width)
+      paint.draw(path, in: &context)
 
     case "Fill":
-      context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(stroke))
+      paint.fill(Path(CGRect(origin: .zero, size: size)), in: &context)
 
     case "Points":
       // Flutter's PointMode: points draws a dot each, lines joins them in
@@ -192,52 +201,83 @@ struct CanvasControlView: View {
             path.addLine(to: centres[pair + 1])
           }
         }
-        context.stroke(path, with: .color(stroke), lineWidth: width)
+        paint.stroke(path, in: &context)
         break
       }
       for centre in centres {
         let rect = CGRect(
-          x: centre.x - width / 2, y: centre.y - width / 2,
-          width: width, height: width)
-        context.fill(Path(ellipseIn: rect), with: .color(stroke))
+          x: centre.x - paint.strokeWidth / 2, y: centre.y - paint.strokeWidth / 2,
+          width: paint.strokeWidth, height: paint.strokeWidth)
+        paint.fill(Path(ellipseIn: rect), in: &context)
       }
 
     case "Text":
-      context.draw(
-        Text(shape.string("text") ?? "").foregroundColor(stroke),
-        at: CGPoint(x: shape.double("x") ?? 0, y: shape.double("y") ?? 0),
-        anchor: .topLeading)
+      drawText(shape, in: &context)
 
     case "Path":
       let path = Self.path(from: shape.array("elements") ?? [])
-      filled
-        ? context.fill(path, with: .color(stroke))
-        : context.stroke(path, with: .color(stroke), lineWidth: width)
+      paint.draw(path, in: &context)
 
     case "Color":
-      // Flet's Color shape paints the whole canvas in a blend mode.
-      context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(stroke))
+      var colored = context
+      colored.blendMode = CanvasPaint.blendMode(shape.string("blend_mode"))
+      colored.fill(
+        Path(CGRect(origin: .zero, size: size)),
+        with: .color(MaterialPalette.color(shape.string("color"), default: .black)))
 
     case "Shadow":
-      // A shadow with no shape to cast from is a soft blur of the canvas edge,
-      // which is what Flutter draws for a bare Shadow element.
+      let path = Self.path(from: shape.array("path") ?? [])
       var shadowed = context
       shadowed.addFilter(
         .shadow(
-          color: stroke,
-          radius: CGFloat(shape.double("blur_radius") ?? 4),
-          x: CGFloat(shape.double("dx") ?? 0),
-          y: CGFloat(shape.double("dy") ?? 0)))
+          color: MaterialPalette.color(shape.string("color"), default: .black),
+          radius: CGFloat(shape.double("elevation") ?? 0), x: 0, y: 0))
+      shadowed.fill(path, with: .color(.black.opacity(shape.bool("transparent_occluder") == true ? 0.001 : 1)))
+
+    case "Image":
+      guard let symbol = context.resolveSymbol(id: shape.id) else { break }
+      let width = CGFloat(shape.double("width") ?? symbol.size.width)
+      let height = CGFloat(shape.double("height") ?? symbol.size.height)
+      context.draw(
+        symbol, in: CGRect(
+          x: CGFloat(shape.double("x") ?? 0), y: CGFloat(shape.double("y") ?? 0),
+          width: width, height: height))
 
     default:
       RufletLog.debug("Canvas shape `\(shape.type)` is not drawn by the Apple engine")
     }
   }
 
+  private func drawText(_ shape: ControlNode, in context: inout GraphicsContext) {
+    let style = shape.map("style") ?? [:]
+    var text = Text(shape.string("value") ?? "")
+      .foregroundColor(MaterialPalette.color(style["color"]?.stringValue, default: .primary))
+    if let size = style["size"]?.doubleValue { text = text.font(.system(size: CGFloat(size))) }
+    if style["weight"]?.stringValue?.lowercased().contains("bold") == true {
+      text = text.fontWeight(.bold)
+    }
+    let alignment = ControlProps.continuousAlignment(shape.props["alignment"]) ?? .topLeft
+    let anchor = UnitPoint(
+      x: (alignment.x + 1) / 2,
+      y: (alignment.y + 1) / 2)
+    var transformed = context
+    let point = CGPoint(x: shape.double("x") ?? 0, y: shape.double("y") ?? 0)
+    transformed.translateBy(x: point.x, y: point.y)
+    transformed.rotate(by: .radians(shape.double("rotate") ?? 0))
+    transformed.draw(text, at: .zero, anchor: anchor)
+  }
+
+  private func orderedUnique(_ ids: [Int]) -> [Int] {
+    var seen = Set<Int>()
+    return ids.filter { seen.insert($0).inserted }
+  }
+
   /// Flet's `Path` carries a list of typed elements: `MoveTo`, `LineTo`,
   /// `QuadraticTo`, `CubicTo`, `Arc`, `Oval`, `Rect`, `SubPath` and `Close`.
   static func path(from elements: [RufletValue]) -> Path {
     var path = Path()
+    var current = CGPoint.zero
+    var subpathStart = CGPoint.zero
     for element in elements {
       guard let map = element.mapValue else { continue }
       let x = map["x"]?.doubleValue ?? 0
@@ -245,14 +285,42 @@ struct CanvasControlView: View {
 
       switch (map["_type"]?.stringValue ?? map["type"]?.stringValue ?? "").lowercased() {
       case "moveto":
-        path.move(to: CGPoint(x: x, y: y))
+        current = CGPoint(x: x, y: y)
+        subpathStart = current
+        path.move(to: current)
       case "lineto":
-        path.addLine(to: CGPoint(x: x, y: y))
+        current = CGPoint(x: x, y: y)
+        path.addLine(to: current)
       case "quadraticto":
-        path.addQuadCurve(
-          to: CGPoint(x: map["x"]?.doubleValue ?? 0, y: map["y"]?.doubleValue ?? 0),
-          control: CGPoint(
-            x: map["cp1x"]?.doubleValue ?? 0, y: map["cp1y"]?.doubleValue ?? 0))
+        let end = CGPoint(x: x, y: y)
+        let control = CGPoint(
+          x: map["cp1x"]?.doubleValue ?? 0, y: map["cp1y"]?.doubleValue ?? 0)
+        let weight = map["w"]?.doubleValue ?? 1
+        if abs(weight - 1) < .ulpOfOne {
+          path.addQuadCurve(to: end, control: control)
+        } else {
+          // Flutter uses Path.conicTo. Sample the rational quadratic when the
+          // conic weight differs from one; SwiftUI has no conic primitive.
+          for step in 1...24 {
+            let t = Double(step) / 24
+            let mt = 1 - t
+            let denominator = mt * mt + 2 * weight * mt * t + t * t
+            path.addLine(to: CGPoint(
+              x: (mt * mt * current.x + 2 * weight * mt * t * control.x + t * t * end.x)
+                / denominator,
+              y: (mt * mt * current.y + 2 * weight * mt * t * control.y + t * t * end.y)
+                / denominator))
+          }
+        }
+        current = end
+      case "arcto":
+        let end = CGPoint(x: x, y: y)
+        addEndpointArc(
+          to: &path, from: current, to: end,
+          radius: CGFloat(map["radius"]?.doubleValue ?? 0),
+          largeArc: map["large_arc"]?.boolValue ?? false,
+          clockwise: map["clockwise"]?.boolValue ?? true)
+        current = end
       case "cubicto":
         path.addCurve(
           to: CGPoint(x: x, y: y),
@@ -260,6 +328,7 @@ struct CanvasControlView: View {
             x: map["cp1x"]?.doubleValue ?? 0, y: map["cp1y"]?.doubleValue ?? 0),
           control2: CGPoint(
             x: map["cp2x"]?.doubleValue ?? 0, y: map["cp2y"]?.doubleValue ?? 0))
+        current = CGPoint(x: x, y: y)
       case "arc":
         path.addPath(
           ellipticalArc(
@@ -277,18 +346,77 @@ struct CanvasControlView: View {
             width: map["width"]?.doubleValue ?? 0,
             height: map["height"]?.doubleValue ?? 0))
       case "rect":
-        path.addRect(
-          CGRect(
-            x: x, y: y,
-            width: map["width"]?.doubleValue ?? 0,
-            height: map["height"]?.doubleValue ?? 0))
+        let rect = CGRect(
+          x: x, y: y,
+          width: map["width"]?.doubleValue ?? 0,
+          height: map["height"]?.doubleValue ?? 0)
+        let radii = ControlProps.cornerRadii(map["border_radius"])
+          ?? RufletCornerRadii(uniform: 0)
+        path.addPath(RufletRoundedRectangle(radii: radii).path(in: rect))
+      case "subpath":
+        let nested = Self.path(from: map["elements"]?.arrayValue ?? [])
+        path.addPath(
+          nested,
+          transform: CGAffineTransform(
+            translationX: CGFloat(map["x"]?.doubleValue ?? 0),
+            y: CGFloat(map["y"]?.doubleValue ?? 0)))
       case "close":
         path.closeSubpath()
+        current = subpathStart
       default:
         continue
       }
     }
     return path
+  }
+
+  /// Circular endpoint arc used by Flutter's `Path.arcToPoint`. Rotation is
+  /// intentionally absent because Ruflet's `ArcTo.radius` is circular; a
+  /// rotated circle is unchanged. Positive sweeps are clockwise in the
+  /// screen's y-down coordinate system.
+  static func addEndpointArc(
+    to path: inout Path, from start: CGPoint, to end: CGPoint,
+    radius requestedRadius: CGFloat, largeArc: Bool, clockwise: Bool
+  ) {
+    let dx = end.x - start.x
+    let dy = end.y - start.y
+    let distance = hypot(dx, dy)
+    guard requestedRadius > 0, distance > .ulpOfOne else {
+      path.addLine(to: end)
+      return
+    }
+    let radius = max(requestedRadius, distance / 2)
+    let midpoint = CGPoint(x: (start.x + end.x) / 2, y: (start.y + end.y) / 2)
+    let height = sqrt(max(radius * radius - distance * distance / 4, 0))
+    let perpendicular = CGPoint(x: -dy / distance, y: dx / distance)
+    let candidates = [
+      CGPoint(x: midpoint.x + perpendicular.x * height, y: midpoint.y + perpendicular.y * height),
+      CGPoint(x: midpoint.x - perpendicular.x * height, y: midpoint.y - perpendicular.y * height),
+    ]
+
+    func sweep(around center: CGPoint) -> Double {
+      let startAngle = atan2(start.y - center.y, start.x - center.x)
+      let endAngle = atan2(end.y - center.y, end.x - center.x)
+      var value = endAngle - startAngle
+      if clockwise {
+        while value < 0 { value += 2 * .pi }
+      } else {
+        while value > 0 { value -= 2 * .pi }
+      }
+      return value
+    }
+    let center = candidates.first {
+      let magnitude = abs(sweep(around: $0))
+      return largeArc ? magnitude >= .pi : magnitude <= .pi
+    } ?? candidates[0]
+    let startAngle = atan2(start.y - center.y, start.x - center.x)
+    let arcSweep = sweep(around: center)
+    let segments = max(1, Int(ceil(abs(arcSweep) / (.pi / 32))))
+    for step in 1...segments {
+      let angle = startAngle + arcSweep * Double(step) / Double(segments)
+      path.addLine(to: CGPoint(
+        x: center.x + radius * cos(angle), y: center.y + radius * sin(angle)))
+    }
   }
 
   /// Flutter Canvas angles are radians in the screen coordinate system:
@@ -346,6 +474,158 @@ struct CanvasCaptureBuffer: Equatable {
   }
 }
 
+/// Flutter's `dart:ui.Paint` defaults and the subset which SwiftUI's
+/// immediate-mode canvas can express directly. Keeping this translation in
+/// one value prevents every shape from inventing its own colour, width, and
+/// stroke defaults.
+struct CanvasPaint: Equatable {
+  let colorName: String?
+  let style: String
+  let strokeWidth: CGFloat
+  let strokeCap: CGLineCap
+  let strokeJoin: CGLineJoin
+  let strokeMiterLimit: CGFloat
+  let dash: [CGFloat]
+  let antiAlias: Bool
+  let blendModeName: String?
+
+  init(_ map: [String: RufletValue]?) {
+    colorName = map?["color"]?.stringValue
+    style = map?["style"]?.stringValue?.lowercased() ?? "fill"
+    // A zero-width Flutter stroke is a one-device-pixel hairline. SwiftUI
+    // drops a literal zero, so use one logical pixel rather than disappearing.
+    strokeWidth = CGFloat(max(map?["stroke_width"]?.doubleValue ?? 0, 1))
+    strokeCap = Self.lineCap(map?["stroke_cap"]?.stringValue)
+    strokeJoin = Self.lineJoin(map?["stroke_join"]?.stringValue)
+    strokeMiterLimit = CGFloat(map?["stroke_miter_limit"]?.doubleValue ?? 4)
+    dash = (map?["stroke_dash_pattern"]?.arrayValue ?? [])
+      .compactMap(\.doubleValue).map { CGFloat($0) }
+    antiAlias = map?["anti_alias"]?.boolValue ?? true
+    blendModeName = map?["blend_mode"]?.stringValue
+  }
+
+  var color: Color { MaterialPalette.color(colorName, default: .black) }
+
+  func draw(_ path: Path, in context: inout GraphicsContext) {
+    style == "stroke" ? stroke(path, in: &context) : fill(path, in: &context)
+  }
+
+  func fill(_ path: Path, in context: inout GraphicsContext) {
+    var copy = context
+    copy.blendMode = Self.blendMode(blendModeName)
+    copy.fill(path, with: .color(color), style: FillStyle(antialiased: antiAlias))
+  }
+
+  func stroke(_ path: Path, in context: inout GraphicsContext) {
+    var copy = context
+    copy.blendMode = Self.blendMode(blendModeName)
+    copy.stroke(
+      path, with: .color(color),
+      style: StrokeStyle(
+        lineWidth: strokeWidth, lineCap: strokeCap, lineJoin: strokeJoin,
+        miterLimit: strokeMiterLimit, dash: dash))
+  }
+
+  static func lineCap(_ value: String?) -> CGLineCap {
+    switch value?.lowercased() {
+    case "round": return .round
+    case "square": return .square
+    default: return .butt
+    }
+  }
+
+  static func lineJoin(_ value: String?) -> CGLineJoin {
+    switch value?.lowercased() {
+    case "round": return .round
+    case "bevel": return .bevel
+    default: return .miter
+    }
+  }
+
+  static func blendMode(_ value: String?) -> GraphicsContext.BlendMode {
+    switch value?.lowercased() {
+    case "multiply": return .multiply
+    case "screen": return .screen
+    case "overlay": return .overlay
+    case "darken": return .darken
+    case "lighten": return .lighten
+    case "difference": return .difference
+    case "exclusion": return .exclusion
+    default: return .normal // Flutter's default `srcOver`.
+    }
+  }
+}
+
+/// Image shapes are supplied as Canvas symbols so remote, file, asset, data
+/// URI, and binary sources share the same loader as Flet's ordinary Image.
+private struct CanvasShapeImageView: View {
+  let node: ControlNode
+
+  @ViewBuilder
+  var body: some View {
+    switch RufletImageSource(node: node) {
+    case .binary(let data):
+      PlatformImageView(data: data)
+    case .remote(let url):
+      if url.isFileURL, let data = try? Data(contentsOf: url) {
+        PlatformImageView(data: data)
+      } else {
+        AsyncImage(url: url) { image in image.resizable() } placeholder: { Color.clear }
+      }
+    case .asset(let name):
+      Image(name).resizable()
+    case .missing:
+      Color.clear
+    }
+  }
+}
+
+/// Renderer-wide chart semantics copied from the pinned Flet chart controls.
+/// Keeping these decisions outside individual chart painters prevents a bar,
+/// pie, or radar chart from quietly inventing a different default.
+struct ChartControlSemantics {
+  static let unboundedHeight: CGFloat = 300
+
+  static func rotationDegrees(for node: ControlNode) -> Double {
+    Double((node.int("rotation_quarter_turns") ?? 0) % 4) * 90
+  }
+
+  static func shouldEmitEvent(for node: ControlNode) -> Bool {
+    guard node.bool("on_event") == true, node.bool("disabled") != true else { return false }
+    // PieTouchData is always enabled in Flet. Every other family honours its
+    // `interactive` property, whose generated default is true.
+    return node.type == "PieChart" || (node.bool("interactive") ?? true)
+  }
+
+  static func borderSide(
+    _ map: [String: RufletValue]?, defaultColor: Color, defaultWidth: CGFloat
+  ) -> (color: Color, width: CGFloat) {
+    (
+      MaterialPalette.color(map?["color"]?.stringValue, default: defaultColor),
+      CGFloat(map?["width"]?.doubleValue ?? Double(defaultWidth)))
+  }
+
+  static func radarPolygon(
+    center: CGPoint, radius: CGFloat, sides: Int, circular: Bool
+  ) -> Path {
+    guard sides >= 3 else { return Path() }
+    if circular {
+      return Path(ellipseIn: CGRect(
+        x: center.x - radius, y: center.y - radius,
+        width: radius * 2, height: radius * 2))
+    }
+    var path = Path()
+    for side in 0..<sides {
+      let angle = Double(side) / Double(sides) * 2 * .pi - .pi / 2
+      let point = CGPoint(
+        x: center.x + radius * cos(angle), y: center.y + radius * sin(angle))
+      side == 0 ? path.move(to: point) : path.addLine(to: point)
+    }
+    path.closeSubpath()
+    return path
+  }
+}
+
 /// The chart family, drawn from the same control trees Flet's chart widgets take.
 ///
 /// The chart controls do not share a wire shape: lines contain data series,
@@ -361,6 +641,11 @@ struct ChartControlView: View {
   var body: some View {
     Canvas { context, size in
       let plot = CGRect(origin: .zero, size: size).insetBy(dx: 8, dy: 8)
+      if let background = node.string("bgcolor") {
+        context.fill(
+          Path(CGRect(origin: .zero, size: size)),
+          with: .color(MaterialPalette.color(background, default: .clear)))
+      }
       switch node.type {
       case "PieChart":
         drawPie(in: &context, plot: plot)
@@ -376,7 +661,11 @@ struct ChartControlView: View {
         drawLines(in: &context, plot: plot)
       }
     }
-    .frame(minHeight: 120)
+    // Flet caps only an *unbounded* chart at 300. An unconditional max-height
+    // changes explicitly-sized charts, so advertise 300 as the intrinsic
+    // ideal while still accepting the bounds supplied by the DSL.
+    .frame(minHeight: 0, idealHeight: ChartControlSemantics.unboundedHeight)
+    .rotationEffect(.degrees(ChartControlSemantics.rotationDegrees(for: node)))
     .background {
       GeometryReader { geometry in
         Color.clear
@@ -389,7 +678,8 @@ struct ChartControlView: View {
       // with no minimum distance reports the same location on release, which
       // is how the gesture detector reads tap positions here too.
       DragGesture(minimumDistance: 0).onEnded { event in
-        guard node.rufletBool("interactive") || node.type == "PieChart" else { return }
+        guard ChartControlSemantics.shouldEmitEvent(for: node)
+        else { return }
         events.fire(node, "event", data: chartEvent(at: event.location))
       })
   }
@@ -464,6 +754,12 @@ struct ChartControlView: View {
     let strokeWidth: CGFloat
     let curved: Bool
     let roundedStrokeCap: Bool
+    let roundedStrokeJoin: Bool
+    let dash: [CGFloat]
+    let stepDirection: Double?
+    let belowColor: Color?
+    let aboveColor: Color?
+    let point: RufletValue?
   }
 
   private var lineSeries: [LineSeries] {
@@ -473,11 +769,21 @@ struct ChartControlView: View {
       let values = points(in: group)
       guard !values.isEmpty else { return nil }
       return LineSeries(
-        color: MaterialPalette.color(group.string("color") ?? "primary", default: .primary),
+        color: MaterialPalette.color(group.string("color"), default: .cyan),
         points: values,
         strokeWidth: CGFloat(group.double("stroke_width") ?? 2),
         curved: group.bool("curved") ?? false,
-        roundedStrokeCap: group.bool("rounded_stroke_cap") ?? false)
+        roundedStrokeCap: group.bool("rounded_stroke_cap") ?? false,
+        roundedStrokeJoin: group.bool("rounded_stroke_join") ?? false,
+        dash: (group.array("dash_pattern") ?? []).compactMap(\.doubleValue).map { CGFloat($0) },
+        stepDirection: group.double("step_direction"),
+        belowColor: group.string("below_line_bgcolor").map {
+          MaterialPalette.color($0, default: .clear)
+        },
+        aboveColor: group.string("above_line_bgcolor").map {
+          MaterialPalette.color($0, default: .clear)
+        },
+        point: group.props["point"])
     }
   }
 
@@ -536,7 +842,16 @@ struct ChartControlView: View {
       var path = Path()
       path.move(to: first)
 
-      if entry.curved, projected.count > 2 {
+      if let stepDirection = entry.stepDirection {
+        var previous = first
+        for point in projected.dropFirst() {
+          let split = previous.x + (point.x - previous.x) * CGFloat(stepDirection)
+          path.addLine(to: CGPoint(x: split, y: previous.y))
+          path.addLine(to: CGPoint(x: split, y: point.y))
+          path.addLine(to: point)
+          previous = point
+        }
+      } else if entry.curved, projected.count > 2 {
         for index in 0..<(projected.count - 1) {
           let previous = projected[max(index - 1, 0)]
           let current = projected[index]
@@ -554,14 +869,39 @@ struct ChartControlView: View {
         for point in projected.dropFirst() { path.addLine(to: point) }
       }
 
+      if let below = entry.belowColor {
+        var area = path
+        area.addLine(to: CGPoint(x: projected.last?.x ?? first.x, y: plot.maxY))
+        area.addLine(to: CGPoint(x: first.x, y: plot.maxY))
+        area.closeSubpath()
+        context.fill(area, with: .color(below))
+      }
+      if let above = entry.aboveColor {
+        var area = path
+        area.addLine(to: CGPoint(x: projected.last?.x ?? first.x, y: plot.minY))
+        area.addLine(to: CGPoint(x: first.x, y: plot.minY))
+        area.closeSubpath()
+        context.fill(area, with: .color(above))
+      }
+
       context.stroke(
         path,
         with: .color(entry.color),
         style: StrokeStyle(
           lineWidth: entry.strokeWidth,
           lineCap: entry.roundedStrokeCap ? .round : .butt,
-          lineJoin: .round))
+          lineJoin: entry.roundedStrokeJoin ? .round : .miter,
+          dash: entry.dash))
+
+      if entry.point != nil, entry.point?.boolValue != false {
+        for point in projected {
+          context.fill(
+            Path(ellipseIn: CGRect(x: point.x - 4, y: point.y - 4, width: 8, height: 8)),
+            with: .color(entry.color))
+        }
+      }
     }
+    drawGridAndBorder(in: &context, chart: plot)
   }
 
   private struct BarRod {
@@ -572,6 +912,12 @@ struct ChartControlView: View {
     let radius: CGFloat
     let gradient: LinearGradient?
     let stack: [BarStackItem]
+    let borderColor: Color?
+    let borderWidth: CGFloat
+    let backgroundFromY: Double?
+    let backgroundToY: Double?
+    let backgroundColor: Color?
+    let selected: Bool
   }
 
   private struct BarGroup {
@@ -600,7 +946,8 @@ struct ChartControlView: View {
       let rodIDs = orderedUnique(group.controlIDs(forKey: "rods") + group.childIDs)
       let rods = rodIDs.compactMap { rodID -> BarRod? in
         guard let rod = store.node(rodID), rod.double("to_y") != nil else { return nil }
-        let stackIDs = orderedUnique(rod.controlIDs(forKey: "rod_stack_items"))
+        let stackIDs = orderedUnique(
+          rod.controlIDs(forKey: "stack_items") + rod.controlIDs(forKey: "rod_stack_items"))
         let stack = stackIDs.compactMap { itemID -> BarStackItem? in
           guard let item = store.node(itemID), item.double("to_y") != nil else { return nil }
           let side = item.map("border_side")
@@ -614,20 +961,32 @@ struct ChartControlView: View {
         return BarRod(
           fromY: rod.double("from_y") ?? 0,
           toY: rod.double("to_y") ?? 0,
-          width: CGFloat(rod.double("width") ?? 6),
-          color: MaterialPalette.color(rod.string("color") ?? "primary", default: .primary),
+          width: CGFloat(rod.double("width") ?? 8),
+          color: MaterialPalette.color(rod.string("color"), default: .blue.opacity(0.7)),
           radius: ControlProps.cornerRadius(rod.props["border_radius"]) ?? 0,
           gradient: GradientProps.linear(rod.props["gradient"]),
-          stack: stack)
+          stack: stack,
+          borderColor: MaterialPalette.color(rod.map("border_side")?["color"]?.stringValue),
+          borderWidth: CGFloat(rod.map("border_side")?["width"]?.doubleValue ?? 0),
+          backgroundFromY: rod.double("bg_from_y"),
+          backgroundToY: rod.double("bg_to_y"),
+          backgroundColor: rod.string("bgcolor").map {
+            MaterialPalette.color($0, default: .clear)
+          },
+          selected: rod.bool("selected") ?? false)
       }
       guard !rods.isEmpty else { return nil }
       return BarGroup(
         x: group.double("x") ?? Double(ids.firstIndex(of: id) ?? 0),
         rods: rods,
-        barsSpace: CGFloat(group.double("bars_space") ?? 0),
-        tooltipIndicators: (group.array("showing_tooltip_indicators") ?? [])
-          .compactMap { $0.intValue })
+        barsSpace: CGFloat(group.double("spacing") ?? group.double("bars_space") ?? 0),
+        tooltipIndicators: interactiveChart
+          ? [] : rods.enumerated().compactMap { $0.element.selected ? $0.offset : nil })
     }
+  }
+
+  private var interactiveChart: Bool {
+    node.rufletBool("interactive") && node.bool("disabled") != true
   }
 
   private func drawBars(in context: inout GraphicsContext, plot: CGRect) {
@@ -678,6 +1037,16 @@ struct ChartControlView: View {
         + group.barsSpace * CGFloat(max(group.rods.count - 1, 0))
       var rodX = centreX - totalWidth / 2
       for (rodIndex, rod) in group.rods.enumerated() {
+        if let from = rod.backgroundFromY, let to = rod.backgroundToY,
+          let background = rod.backgroundColor
+        {
+          let backgroundTop = min(y(from), y(to))
+          context.fill(
+            Path(roundedRect: CGRect(
+              x: rodX, y: backgroundTop, width: rod.width,
+              height: max(abs(y(from) - y(to)), 1)), cornerRadius: rod.radius),
+            with: .color(background))
+        }
         let top = min(y(rod.fromY), y(rod.toY))
         let rect = CGRect(
           x: rodX, y: top,
@@ -689,6 +1058,9 @@ struct ChartControlView: View {
           context.fill(shape, with: .style(gradient))
         } else {
           context.fill(shape, with: .color(rod.color))
+        }
+        if let border = rod.borderColor, rod.borderWidth > 0 {
+          context.stroke(shape, with: .color(border), lineWidth: rod.borderWidth)
         }
         // Stacked items sit inside the rod, each measured on the same axis.
         for item in rod.stack {
@@ -784,7 +1156,8 @@ struct ChartControlView: View {
   private func drawScatter(in context: inout GraphicsContext, plot: CGRect) {
     let spots = orderedUnique(node.controlIDs(forKey: "spots") + node.childIDs)
       .compactMap { store.node($0) }
-      .filter { $0.double("x") != nil && $0.double("y") != nil }
+      .filter { $0.double("x") != nil && $0.double("y") != nil && $0.bool("visible") != false }
+      .sorted { ($0.int("render_priority") ?? 0) < ($1.int("render_priority") ?? 0) }
     guard !spots.isEmpty else { return }
     let minX = node.double("min_x") ?? spots.compactMap { $0.double("x") }.min() ?? 0
     let maxX = node.double("max_x") ?? spots.compactMap { $0.double("x") }.max() ?? 1
@@ -802,7 +1175,26 @@ struct ChartControlView: View {
           x: point.x - radius, y: point.y - radius,
           width: radius * 2, height: radius * 2)),
         with: .color(MaterialPalette.color(spot.string("color") ?? "primary", default: .primary)))
+      if let label = spot.string("label_text"), !label.isEmpty {
+        let style = spot.map("label_text_style") ?? [:]
+        var text = Text(label)
+          .font(.system(size: CGFloat(style["size"]?.doubleValue ?? 12)))
+          .foregroundColor(MaterialPalette.color(style["color"]?.stringValue,
+            default: MaterialPalette.color(spot.string("color"), default: .primary)))
+        if style["weight"]?.stringValue?.lowercased().contains("bold") == true {
+          text = text.fontWeight(.bold)
+        }
+        context.draw(text, at: CGPoint(x: point.x, y: point.y - radius - 3), anchor: .bottom)
+      }
+      if spot.bool("selected") == true {
+        context.stroke(
+          Path(ellipseIn: CGRect(
+            x: point.x - radius - 3, y: point.y - radius - 3,
+            width: radius * 2 + 6, height: radius * 2 + 6)),
+          with: .color(.primary), lineWidth: 1)
+      }
     }
+    drawGridAndBorder(in: &context, chart: plot)
   }
 
   /// `RadarChart` — one closed polygon per data set over a spoked grid.
@@ -826,26 +1218,52 @@ struct ChartControlView: View {
 
     let centre = CGPoint(x: plot.midX, y: plot.midY)
     let radius = min(plot.width, plot.height) / 2
-    let maximum = max(entries.flatMap { $0 }.max() ?? 1, .ulpOfOne)
+    let values = entries.flatMap { $0 }
+    let minimum = node.bool("center_min_value") == true ? (values.min() ?? 0) : 0
+    let maximum = max(values.max() ?? 1, minimum + .ulpOfOne)
 
     func point(spoke: Int, magnitude: Double) -> CGPoint {
       // Start at twelve o'clock, like Flutter's radar chart.
       let angle = Double(spoke) / Double(spokes) * 2 * .pi - .pi / 2
-      let distance = radius * CGFloat(magnitude / maximum)
+      let distance = radius * CGFloat((magnitude - minimum) / (maximum - minimum))
       return CGPoint(x: centre.x + distance * cos(angle), y: centre.y + distance * sin(angle))
     }
 
-    // The grid first, so the data sits on top of it.
+    if let background = node.string("radar_bgcolor") {
+      context.fill(Path(ellipseIn: plot), with: .color(MaterialPalette.color(background, default: .clear)))
+    }
+
+    // The grid first, so the data sits on top of it. Flet's default is one
+    // intermediate tick and a two-point grid/radar border.
     var grid = Path()
     for spoke in 0..<spokes {
       grid.move(to: centre)
       grid.addLine(to: point(spoke: spoke, magnitude: maximum))
     }
-    context.stroke(grid, with: .color(.secondary.opacity(0.3)), lineWidth: 1)
+    let gridSide = ChartControlSemantics.borderSide(
+      node.map("grid_border_side"), defaultColor: .secondary.opacity(0.3), defaultWidth: 2)
+    context.stroke(grid, with: .color(gridSide.color), lineWidth: gridSide.width)
+    let tickSide = ChartControlSemantics.borderSide(
+      node.map("tick_border_side"), defaultColor: .secondary.opacity(0.3), defaultWidth: 2)
+    for tick in 1...(node.int("tick_count") ?? 1) {
+      let tickRadius = radius * CGFloat(tick) / CGFloat((node.int("tick_count") ?? 1) + 1)
+      let tickPath = ChartControlSemantics.radarPolygon(
+        center: centre, radius: tickRadius, sides: spokes,
+        circular: node.string("radar_shape")?.lowercased() == "circle")
+      context.stroke(tickPath, with: .color(tickSide.color), lineWidth: tickSide.width)
+    }
+    let radarSide = ChartControlSemantics.borderSide(
+      node.map("radar_border_side"), defaultColor: .secondary, defaultWidth: 2)
+    context.stroke(
+      ChartControlSemantics.radarPolygon(
+        center: centre, radius: radius, sides: spokes,
+        circular: node.string("radar_shape")?.lowercased() == "circle"),
+      with: .color(radarSide.color), lineWidth: radarSide.width)
 
     for (index, title) in titles.enumerated() where index < spokes {
       guard let text = title.string("text") ?? controlText(title.id) else { continue }
-      let offset = CGFloat(title.double("position_percentage_offset") ?? 1.05)
+      let offset = CGFloat(title.double("position_percentage_offset")
+        ?? node.double("title_position_percentage_offset") ?? 0.2) + 1
       let angle = Double(index) / Double(spokes) * 2 * .pi - .pi / 2
       var placed = context
       placed.translateBy(
@@ -866,14 +1284,27 @@ struct ChartControlView: View {
       // A set names its fill and its border separately; `color` is the older
       // spelling that stood for both.
       let set = sets[index]
-      let colour = MaterialPalette.color(set.string("color") ?? "primary", default: .primary)
-      let fill = MaterialPalette.color(set.string("fill_color"), default: colour.opacity(0.25))
-      let border = MaterialPalette.color(set.string("border_color"), default: colour)
-      context.fill(path, with: .color(fill))
+      let fill = MaterialPalette.color(set.string("fill_color"), default: .cyan)
+      let border = MaterialPalette.color(set.string("border_color"), default: .cyan)
+      if let gradient = GradientProps.linear(set.props["fill_gradient"]) {
+        context.fill(path, with: .style(gradient))
+      } else {
+        context.fill(path, with: .color(fill))
+      }
       context.stroke(
         path, with: .color(border),
         lineWidth: CGFloat(set.double("border_width") ?? 2))
+      let entryRadius = CGFloat(set.double("entry_radius") ?? 5)
+      for (spoke, value) in values.enumerated() {
+        let entry = point(spoke: spoke, magnitude: value)
+        context.fill(
+          Path(ellipseIn: CGRect(
+            x: entry.x - entryRadius, y: entry.y - entryRadius,
+            width: entryRadius * 2, height: entryRadius * 2)),
+          with: .color(border))
+      }
     }
+    drawGridAndBorder(in: &context, chart: plot)
   }
 
   /// `CandlestickChart` — a wick from low to high with an open/close body,
@@ -887,31 +1318,37 @@ struct ChartControlView: View {
   private func drawCandlesticks(in context: inout GraphicsContext, plot: CGRect) {
     let spots = (node.controlIDs(forKey: "spots") + node.childIDs)
       .compactMap { store.node($0) }
-      .filter { $0.type == "CandlestickChartSpot" }
+      .filter { $0.type == "CandlestickChartSpot" && $0.bool("visible") != false }
     guard !spots.isEmpty else { return }
 
     let lows = spots.compactMap { $0.double("low") }
     let highs = spots.compactMap { $0.double("high") }
-    guard let minimum = lows.min(), let maximum = highs.max() else { return }
+    guard let dataMinimum = lows.min(), let dataMaximum = highs.max() else { return }
+    let minimum = node.double("min_y") ?? dataMinimum
+    let maximum = node.double("max_y") ?? dataMaximum
     let span = max(maximum - minimum, .ulpOfOne)
 
     func y(_ value: Double) -> CGFloat {
       plot.maxY - CGFloat((value - minimum) / span) * plot.height
     }
 
-    let step = plot.width / CGFloat(spots.count)
+    let minX = node.double("min_x") ?? spots.compactMap { $0.double("x") }.min() ?? 0
+    let maxX = node.double("max_x") ?? spots.compactMap { $0.double("x") }.max() ?? 1
+    let xSpan = max(maxX - minX, .ulpOfOne)
+    let step = plot.width / CGFloat(max(spots.count, 1))
     let bodyWidth = max(step * 0.6, 1)
 
-    for (index, spot) in spots.enumerated() {
+    for spot in spots {
       let open = spot.double("open") ?? 0
       let close = spot.double("close") ?? 0
-      let x = plot.minX + step * (CGFloat(index) + 0.5)
+      let xValue = spot.double("x") ?? 0
+      let x = plot.minX + CGFloat((xValue - minX) / xSpan) * plot.width
       let colour: Color = close >= open ? .green : .red
 
       var wick = Path()
       wick.move(to: CGPoint(x: x, y: y(spot.double("high") ?? 0)))
       wick.addLine(to: CGPoint(x: x, y: y(spot.double("low") ?? 0)))
-      context.stroke(wick, with: .color(colour), lineWidth: 1)
+      context.stroke(wick, with: .color(colour), lineWidth: candleLineWidth(spot))
 
       let top = min(y(open), y(close))
       let body = CGRect(
@@ -919,6 +1356,7 @@ struct ChartControlView: View {
         width: bodyWidth, height: max(abs(y(open) - y(close)), 1))
       context.fill(Path(body), with: .color(colour))
     }
+    drawGridAndBorder(in: &context, chart: plot)
   }
 
   private func drawPie(in context: inout GraphicsContext, plot: CGRect) {
@@ -933,10 +1371,11 @@ struct ChartControlView: View {
     let requestedRadius = sections.compactMap { $0.double("radius") }.max().map { CGFloat($0) }
     let radius = min(requestedRadius ?? availableRadius, availableRadius)
     let centreRadius = min(CGFloat(node.double("center_space_radius") ?? 0), radius)
-    var start = Angle.degrees(-90)
+    var start = Angle.degrees(-90 + (node.double("start_degree_offset") ?? 0))
+    let sectionGap = Angle.radians((node.double("sections_space") ?? 0) / Double(max(radius, 1)))
 
     for section in sections {
-      let sweep = Angle.degrees((section.double("value") ?? 0) / total * 360)
+      let sweep = Angle.degrees((section.double("value") ?? 0) / total * 360) - sectionGap
       var path = Path()
       if centreRadius > 0 {
         let outerStart = CGPoint(
@@ -961,12 +1400,20 @@ struct ChartControlView: View {
           center: centre, radius: radius,
           startAngle: start, endAngle: start + sweep, clockwise: false)
       }
-      context.fill(
-        path, with: .color(MaterialPalette.color(section.string("color") ?? "primary", default: .primary)))
+      if let gradient = GradientProps.linear(section.props["gradient"]) {
+        context.fill(path, with: .style(gradient))
+      } else {
+        context.fill(
+          path, with: .color(MaterialPalette.color(section.string("color"), default: .primary)))
+      }
+      let side = ChartControlSemantics.borderSide(
+        section.map("border_side"), defaultColor: .clear, defaultWidth: 0)
+      if side.width > 0 { context.stroke(path, with: .color(side.color), lineWidth: side.width) }
 
       let middle = Angle.radians(start.radians + sweep.radians / 2)
       if let title = section.string("title"), !title.isEmpty {
-        let labelRadius = centreRadius + (radius - centreRadius) * 0.58
+        let labelRadius = centreRadius + (radius - centreRadius)
+          * CGFloat(section.double("title_position") ?? 0.5)
         let label = CGPoint(
           x: centre.x + cos(middle.radians) * labelRadius,
           y: centre.y + sin(middle.radians) * labelRadius)
@@ -980,11 +1427,12 @@ struct ChartControlView: View {
           at: label, anchor: .center)
       }
       // A badge rides at its own fraction of the radius, outside by default.
-      if let badgeID = section.controlID(forKey: "badge_widget"),
+      if let badgeID = section.controlID(forKey: "badge") ?? section.controlID(forKey: "badge_widget"),
         let badge = store.node(badgeID),
         let text = controlText(badge.id)
       {
-        let offset = CGFloat(section.double("badge_position_percentage_offset") ?? 1)
+        let offset = CGFloat(section.double("badge_position")
+          ?? section.double("badge_position_percentage_offset") ?? 1)
         let badgeRadius = centreRadius + (radius - centreRadius) * offset
         context.draw(
           Text(text).font(.caption2),
@@ -994,7 +1442,14 @@ struct ChartControlView: View {
           anchor: .center)
       }
       // `sections_space` is the gap Flutter leaves between the wedges.
-      start = start + sweep + Angle.degrees(node.double("sections_space") ?? 0)
+      start = start + sweep + sectionGap
+    }
+    if centreRadius > 0, let color = node.string("center_space_color") {
+      context.fill(
+        Path(ellipseIn: CGRect(
+          x: centre.x - centreRadius, y: centre.y - centreRadius,
+          width: centreRadius * 2, height: centreRadius * 2)),
+        with: .color(MaterialPalette.color(color, default: .clear)))
     }
   }
 

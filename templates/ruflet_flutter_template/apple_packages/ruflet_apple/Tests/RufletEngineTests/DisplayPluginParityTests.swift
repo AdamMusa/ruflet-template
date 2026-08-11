@@ -1,4 +1,5 @@
 @testable import RufletUI
+import RufletEngine
 import RufletProtocol
 import XCTest
 
@@ -99,6 +100,96 @@ final class DisplayPluginParityTests: XCTestCase {
 
     XCTAssertEqual(path.boundingRect.width, 40, accuracy: 0.001)
     XCTAssertEqual(path.boundingRect.height, 20, accuracy: 0.001)
+  }
+
+  func testCanvasPaintUsesFlutterPaintDefaults() {
+    let paint = CanvasPaint(nil)
+    XCTAssertEqual(paint.style, "fill")
+    XCTAssertEqual(paint.strokeWidth, 1) // Flutter's zero-width hairline remains visible.
+    XCTAssertEqual(paint.strokeCap, .butt)
+    XCTAssertEqual(paint.strokeJoin, .miter)
+    XCTAssertEqual(paint.strokeMiterLimit, 4)
+    XCTAssertTrue(paint.dash.isEmpty)
+    XCTAssertTrue(paint.antiAlias)
+  }
+
+  func testCanvasArcToUsesEndpointRadiusInsteadOfDegenerateTangentArc() {
+    let path = CanvasControlView.path(from: [
+      .map(["_type": .string("MoveTo"), "x": .double(0), "y": .double(0)]),
+      .map([
+        "_type": .string("ArcTo"), "x": .double(100), "y": .double(0),
+        "radius": .double(50), "clockwise": .bool(true), "large_arc": .bool(false),
+      ]),
+    ])
+    XCTAssertEqual(path.boundingRect.width, 100, accuracy: 0.001)
+    XCTAssertEqual(path.boundingRect.height, 50, accuracy: 0.001)
+  }
+
+  func testCanvasConicQuadraticHonorsWeight() {
+    let weighted = CanvasControlView.path(from: [
+      .map(["_type": .string("MoveTo"), "x": .double(0), "y": .double(0)]),
+      .map([
+        "_type": .string("QuadraticTo"), "cp1x": .double(50), "cp1y": .double(100),
+        "x": .double(100), "y": .double(0), "w": .double(0.25),
+      ]),
+    ])
+    XCTAssertEqual(weighted.boundingRect.width, 100, accuracy: 0.001)
+    XCTAssertGreaterThan(weighted.boundingRect.height, 0)
+    XCTAssertLessThan(weighted.boundingRect.height, 50)
+  }
+
+  func testCanvasPaintConsumesStrokeAndBlendPropertiesCentrally() {
+    let paint = CanvasPaint([
+      "style": .string("stroke"),
+      "stroke_width": .double(3),
+      "stroke_cap": .string("round"),
+      "stroke_join": .string("bevel"),
+      "stroke_miter_limit": .double(7),
+      "stroke_dash_pattern": .array([.double(2), .double(5)]),
+      "anti_alias": .bool(false),
+      "blend_mode": .string("multiply"),
+    ])
+    XCTAssertEqual(paint.style, "stroke")
+    XCTAssertEqual(paint.strokeWidth, 3)
+    XCTAssertEqual(paint.strokeCap, .round)
+    XCTAssertEqual(paint.strokeJoin, .bevel)
+    XCTAssertEqual(paint.strokeMiterLimit, 7)
+    XCTAssertEqual(paint.dash, [2, 5])
+    XCTAssertFalse(paint.antiAlias)
+    XCTAssertEqual(paint.blendModeName, "multiply")
+  }
+
+  func testChartDefaultsAreSharedAcrossFamilies() {
+    XCTAssertEqual(ChartControlSemantics.unboundedHeight, 300)
+    let scatter = ControlNode(id: 1, type: "ScatterChart", props: [
+      "rotation_quarter_turns": .int(3), "on_event": .bool(true),
+    ])
+    XCTAssertEqual(ChartControlSemantics.rotationDegrees(for: scatter), 270)
+    XCTAssertTrue(ChartControlSemantics.shouldEmitEvent(for: scatter))
+
+    let disabled = ControlNode(id: 2, type: "RadarChart", props: [
+      "on_event": .bool(true), "disabled": .bool(true),
+    ])
+    XCTAssertFalse(ChartControlSemantics.shouldEmitEvent(for: disabled))
+
+    let nonInteractive = ControlNode(id: 3, type: "BarChart", props: [
+      "on_event": .bool(true), "interactive": .bool(false),
+    ])
+    XCTAssertFalse(ChartControlSemantics.shouldEmitEvent(for: nonInteractive))
+
+    let pie = ControlNode(id: 4, type: "PieChart", props: [
+      "on_event": .bool(true), "interactive": .bool(false),
+    ])
+    XCTAssertTrue(ChartControlSemantics.shouldEmitEvent(for: pie))
+  }
+
+  func testRadarShapeSupportsFletPolygonAndCircleModes() {
+    let polygon = ChartControlSemantics.radarPolygon(
+      center: CGPoint(x: 50, y: 50), radius: 25, sides: 4, circular: false)
+    let circle = ChartControlSemantics.radarPolygon(
+      center: CGPoint(x: 50, y: 50), radius: 25, sides: 4, circular: true)
+    XCTAssertEqual(polygon.boundingRect, CGRect(x: 25, y: 25, width: 50, height: 50))
+    XCTAssertEqual(circle.boundingRect, CGRect(x: 25, y: 25, width: 50, height: 50))
   }
 
   private func events(_ type: String) -> Set<String> {
