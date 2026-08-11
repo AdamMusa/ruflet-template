@@ -223,6 +223,21 @@ map it to an SF Symbol.
 swift test
 ```
 
+`swift test` builds the macOS slice only, and half this package is behind
+`os(iOS)` or `canImport(UIKit)`. Compile the other half before you push:
+
+```bash
+xcodebuild -scheme RufletApple -destination 'generic/platform=iOS Simulator' build
+```
+
+Everything an iOS deployment target rules out compiles cleanly on macOS, whose
+minimum is three releases later — `Locale.language`, `SpatialTapGesture` and
+`menuOrder` are all iOS 16 — and so does anything naming an AppKit API that
+UIKit spells differently. The iOS build had been broken for some time because
+nothing ran it. Repeat it for `RufletMotion`, `RufletLocation` and
+`RufletMedia` when you touch them: each is its own scheme, and their sources
+are entirely inside those guards.
+
 The suite covers the codec against byte fixtures captured from
 `Ruflet::WireCodec`, the store's patch/update/removal semantics, the session's
 five actions, renderer coverage for every wire type, and offscreen rendering.
