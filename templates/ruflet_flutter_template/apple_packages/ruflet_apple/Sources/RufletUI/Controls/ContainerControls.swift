@@ -24,6 +24,64 @@ struct PageControlView: View {
 }
 
 /// Page-level appearance: title, theme mode and the overlay layer.
+/// The page-level signals Flet's backend raises rather than any one control:
+/// the size, the platform's light or dark setting, and the app's lifecycle.
+///
+/// Each writes its property back onto the page before reporting, exactly as
+/// `FletBackend.updatePageSize` and `updateBrightness` do, so Ruby reads the
+/// current value whether or not it registered a handler.
+private struct PageLifecycle: ViewModifier {
+  let node: ControlNode
+  @Environment(\.rufletEvents) private var events
+  @Environment(\.colorScheme) private var colorScheme
+  @Environment(\.scenePhase) private var scenePhase
+
+  func body(content: Content) -> some View {
+    content
+      .background(
+        GeometryReader { proxy in
+          Color.clear
+            .onAppear { report(size: proxy.size) }
+            .onChange(of: proxy.size) { report(size: $0) }
+        })
+      .onAppear { report(brightness: colorScheme) }
+      .onChange(of: colorScheme) { report(brightness: $0) }
+      .onChange(of: scenePhase) { report(phase: $0) }
+  }
+
+  private func report(size: CGSize) {
+    guard size.width > 0, size.height > 0 else { return }
+    let props: [String: RufletValue] = [
+      "width": .double(size.width), "height": .double(size.height),
+    ]
+    for (key, value) in props { events.setLocal(node.id, key, value) }
+    events.update(node.id, props)
+    events.fire(node, "resize", data: .map(props))
+  }
+
+  /// Flet sends the Flutter `Brightness` case name, which is the bare word.
+  private func report(brightness: ColorScheme) {
+    let name = brightness == .dark ? "dark" : "light"
+    guard node.string("platform_brightness") != name else { return }
+    events.setLocal(node.id, "platform_brightness", .string(name))
+    events.update(node.id, ["platform_brightness": .string(name)])
+    events.fire(node, "platform_brightness_change", data: .string(name))
+  }
+
+  /// SwiftUI collapses Flutter's five `AppLifecycleState` cases into three.
+  /// `detached` and `hidden` have no scene phase to raise them.
+  private func report(phase: ScenePhase) {
+    let state: String
+    switch phase {
+    case .active: state = "resumed"
+    case .inactive: state = "inactive"
+    case .background: state = "paused"
+    @unknown default: return
+    }
+    events.fire(node, "app_lifecycle_state_change", data: .map(["state": .string(state)]))
+  }
+}
+
 private struct PageChrome: ViewModifier {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
@@ -34,6 +92,7 @@ private struct PageChrome: ViewModifier {
       .preferredColorScheme(colorScheme)
       .overlay(overlayLayer)
       .modifier(WindowTitle(title: node.string("title")))
+      .modifier(PageLifecycle(node: node))
       .environment(\.layoutDirection, node.rufletBool("rtl") ? .rightToLeft : .leftToRight)
   }
 

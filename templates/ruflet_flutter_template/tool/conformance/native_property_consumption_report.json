@@ -12,12 +12,12 @@
     "controls": 196,
     "properties": 5330,
     "classifications": {
-      "consumed": 1241,
+      "consumed": 1245,
       "parent_consumed": 3108,
       "service": 115,
-      "unclassified": 866
+      "unclassified": 862
     },
-    "unclassified": 866
+    "unclassified": 862
   },
   "unclassified": [
     {
@@ -2633,11 +2633,6 @@
     {
       "family": "visual",
       "wire_type": "Page",
-      "property": "on_app_lifecycle_state_change"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Page",
       "property": "on_close"
     },
     {
@@ -2678,16 +2673,6 @@
     {
       "family": "visual",
       "wire_type": "Page",
-      "property": "on_platform_brightness_change"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Page",
-      "property": "on_resize"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Page",
       "property": "on_route_change"
     },
     {
@@ -2699,11 +2684,6 @@
       "family": "visual",
       "wire_type": "Page",
       "property": "platform"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Page",
-      "property": "platform_brightness"
     },
     {
       "family": "visual",
@@ -6804,11 +6784,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 527
+              "line": 586
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 535
+              "line": 594
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
@@ -6851,7 +6831,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 534
+              "line": 593
             }
           ]
         },
@@ -10620,7 +10600,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 386
+              "line": 445
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -10663,7 +10643,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 379
+              "line": 438
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
@@ -10706,7 +10686,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 390
+              "line": 449
             }
           ]
         },
@@ -10764,7 +10744,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 383
+              "line": 442
             }
           ]
         },
@@ -10881,7 +10861,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 389
+              "line": 448
             }
           ]
         },
@@ -10890,7 +10870,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 376
+              "line": 435
             }
           ]
         },
@@ -13774,7 +13754,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 205
+              "line": 264
             }
           ]
         },
@@ -13909,7 +13889,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 242
+              "line": 301
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -13938,7 +13918,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 204
+              "line": 263
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/CupertinoControls.swift",
@@ -13951,7 +13931,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 202
+              "line": 261
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletThemeDefaults.swift",
@@ -13994,15 +13974,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 228
+              "line": 287
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 230
+              "line": 289
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 231
+              "line": 290
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
@@ -14071,7 +14051,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 239
+              "line": 298
             }
           ]
         },
@@ -14280,7 +14260,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 208
+              "line": 267
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Support/RufletThemeDefaults.swift",
@@ -46092,7 +46072,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 33
+              "line": 91
             }
           ]
         },
@@ -46187,8 +46167,21 @@
           "evidence": []
         },
         "on_app_lifecycle_state_change": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
+              "line": 79
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
+              "line": 80
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
+              "line": 81
+            }
+          ]
         },
         "on_close": {
           "classification": "unclassified",
@@ -46258,12 +46251,38 @@
           "evidence": []
         },
         "on_platform_brightness_change": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
+              "line": 66
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
+              "line": 67
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
+              "line": 68
+            }
+          ]
         },
         "on_resize": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
+              "line": 57
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
+              "line": 58
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
+              "line": 59
+            }
+          ]
         },
         "on_route_change": {
           "classification": "unclassified",
@@ -46291,8 +46310,13 @@
           "evidence": []
         },
         "platform_brightness": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
+              "line": 65
+            }
+          ]
         },
         "pwa": {
           "classification": "unclassified",
@@ -46341,7 +46365,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 33
+              "line": 91
             }
           ]
         },
@@ -46350,7 +46374,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 43
+              "line": 102
             }
           ]
         },
@@ -47174,7 +47198,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 499
+              "line": 558
             }
           ]
         },
@@ -47231,7 +47255,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 507
+              "line": 566
             }
           ]
         },
@@ -47318,7 +47342,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 514
+              "line": 573
             }
           ]
         },
@@ -47379,7 +47403,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 506
+              "line": 565
             }
           ]
         },
@@ -47847,7 +47871,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 466
+              "line": 525
             }
           ]
         },
@@ -48069,7 +48093,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 468
+              "line": 527
             }
           ]
         },
@@ -53026,7 +53050,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 485
+              "line": 544
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
@@ -53199,7 +53223,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 489
+              "line": 548
             }
           ]
         },
@@ -54393,7 +54417,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 429
+              "line": 488
             }
           ]
         },
@@ -54402,7 +54426,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 430
+              "line": 489
             }
           ]
         },
@@ -54411,7 +54435,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 431
+              "line": 490
             }
           ]
         },
@@ -54420,7 +54444,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 428
+              "line": 487
             }
           ]
         },
@@ -54460,11 +54484,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 410
+              "line": 469
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 413
+              "line": 472
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/ControlView.swift",
@@ -54577,7 +54601,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 416
+              "line": 475
             }
           ]
         },
@@ -66530,7 +66554,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 126
+              "line": 185
             }
           ]
         },
@@ -66591,7 +66615,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 113
+              "line": 172
             }
           ]
         },
@@ -66684,7 +66708,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 177
+              "line": 236
             }
           ]
         },
@@ -66693,7 +66717,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 185
+              "line": 244
             }
           ]
         },
@@ -66723,7 +66747,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 99
+              "line": 158
             }
           ]
         },
@@ -66767,7 +66791,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 111
+              "line": 170
             }
           ]
         },
@@ -66983,7 +67007,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletUI/Controls/ContainerControls.swift",
-              "line": 98
+              "line": 157
             }
           ]
         },
