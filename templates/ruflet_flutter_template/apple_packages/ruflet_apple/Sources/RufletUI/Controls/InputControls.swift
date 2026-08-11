@@ -13,22 +13,31 @@ struct SwitchControlView: View {
   @Environment(\.rufletEvents) private var events
 
   var body: some View {
-    Toggle(isOn: binding) {
-      if let labelID = node.controlID(forKey: "label") {
-        ControlView(id: labelID, axis: .none)
-      } else if let label = node.string("label") {
-        Text(label).rufletTextStyle(RufletTextStyle(node: node, styleKey: "label_text_style"))
-      }
+    HStack(spacing: 0) {
+      if labelPosition == .left { label }
+      Toggle("", isOn: binding)
+        .labelsHidden()
+        .toggleStyle(.switch)
+        .tint(MaterialPalette.color(for: node, property: "active_color"))
+      if labelPosition == .right { label }
     }
-    .toggleStyle(.switch)
-    .tint(MaterialPalette.color(for: node, property: "active_color"))
-    // `label_position: "left"` puts the label before the switch, which is the
-    // platform default; "right" flips it.
-    .environment(
-      \.layoutDirection,
-      node.string("label_position")?.lowercased() == "right" ? .rightToLeft : .leftToRight)
     .modifier(FocusReporter(node: node, events: events))
     .disabled(node.bool("disabled") ?? false)
+  }
+
+  private enum LabelPlacement { case left, right }
+
+  private var labelPosition: LabelPlacement {
+    node.string("label_position")?.lowercased() == "left" ? .left : .right
+  }
+
+  @ViewBuilder
+  private var label: some View {
+    if let labelID = node.controlID(forKey: "label") {
+      ControlView(id: labelID, axis: .none)
+    } else if let value = node.string("label") {
+      Text(value).rufletTextStyle(RufletTextStyle(node: node, styleKey: "label_text_style"))
+    }
   }
 
   private var binding: Binding<Bool> {
@@ -45,23 +54,51 @@ struct CheckboxControlView: View {
 
   var body: some View {
     Button(action: advance) {
-      HStack(spacing: 8) {
-        Image(systemName: symbolName)
-          .foregroundColor(
-            (node.bool("value") ?? false)
-              ? MaterialPalette.color(for: node, property: "active_color", default: .primary)
-              : MaterialPalette.color(for: node, property: "inactive_color", default: .secondary))
-          .font(.system(size: 20))
-        if let labelID = node.controlID(forKey: "label") {
-          ControlView(id: labelID, axis: .none)
-        } else if let label = node.string("label") {
-          Text(label)
-        }
+      HStack(spacing: 0) {
+        if labelPosition == .left { label }
+        checkboxMark
+        if labelPosition == .right { label }
       }
     }
     .buttonStyle(.plain)
     .modifier(FocusReporter(node: node, events: events))
     .disabled(node.bool("disabled") ?? false)
+  }
+
+  private enum LabelPlacement { case left, right }
+
+  private var labelPosition: LabelPlacement {
+    node.string("label_position")?.lowercased() == "left" ? .left : .right
+  }
+
+  @ViewBuilder
+  private var label: some View {
+    if let labelID = node.controlID(forKey: "label") {
+      ControlView(id: labelID, axis: .none)
+    } else if let value = node.string("label") {
+      Text(value).rufletTextStyle(RufletTextStyle(node: node, styleKey: "label_style"))
+    }
+  }
+
+  private var checkboxMark: some View {
+    let checked = node.bool("value") ?? false
+    let fill = checked
+      ? MaterialPalette.color(node.string("fill_color"))
+        ?? MaterialPalette.color(for: node, property: "active_color", default: .accentColor)
+      : Color.clear
+    let check = MaterialPalette.color(node.string("check_color"), default: .white)
+    let side = node.map("border_side")
+    let borderColor = MaterialPalette.color(side?["color"]?.stringValue, default: .secondary)
+    let borderWidth = CGFloat(side?["width"]?.doubleValue ?? 1.5)
+    return ZStack {
+      RoundedRectangle(cornerRadius: 3).fill(fill)
+      RoundedRectangle(cornerRadius: 3).strokeBorder(borderColor, lineWidth: borderWidth)
+      if checked { Image(systemName: "checkmark").font(.system(size: 12, weight: .bold)).foregroundColor(check) }
+      else if node.props["value"]?.isNull == true && node.bool("tristate") == true {
+        Image(systemName: "minus").font(.system(size: 12, weight: .bold)).foregroundColor(check)
+      }
+    }
+    .frame(width: 20, height: 20)
   }
 
   private var symbolName: String {
@@ -101,22 +138,39 @@ struct RadioControlView: View {
 
   var body: some View {
     Button(action: select) {
-      HStack(spacing: 8) {
-        Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
-          .foregroundColor(
-            isSelected
-              ? MaterialPalette.color(for: node, property: "active_color", default: .primary)
-              : MaterialPalette.color(for: node, property: "inactive_color", default: .secondary))
-          .font(.system(size: 20))
-        if let labelID = node.controlID(forKey: "label") {
-          ControlView(id: labelID, axis: .none)
-        } else if let label = node.string("label") {
-          Text(label)
-        }
+      HStack(spacing: 0) {
+        if labelPosition == .left { label }
+        radioMark
+        if labelPosition == .right { label }
       }
     }
     .buttonStyle(.plain)
     .disabled(node.bool("disabled") ?? false)
+  }
+
+  private enum LabelPlacement { case left, right }
+
+  private var labelPosition: LabelPlacement {
+    node.string("label_position")?.lowercased() == "left" ? .left : .right
+  }
+
+  @ViewBuilder
+  private var label: some View {
+    if let labelID = node.controlID(forKey: "label") {
+      ControlView(id: labelID, axis: .none)
+    } else if let value = node.string("label") {
+      Text(value).rufletTextStyle(RufletTextStyle(node: node, styleKey: "label_style"))
+    }
+  }
+
+  private var radioMark: some View {
+    let fill = MaterialPalette.color(node.string("fill_color"))
+      ?? MaterialPalette.color(for: node, property: "active_color", default: .accentColor)
+    return ZStack {
+      Circle().strokeBorder(isSelected ? fill : Color.secondary, lineWidth: 2)
+      if isSelected { Circle().fill(fill).padding(5) }
+    }
+    .frame(width: 20, height: 20)
   }
 
   private var group: ControlNode? {
@@ -148,7 +202,11 @@ struct RadioControlView: View {
   private func select() {
     guard let value = node.string("value") else { return }
     if let group {
-      events.commit(group, value: .string(value))
+      if isSelected && node.bool("toggleable") == true {
+        events.commit(group, value: .string(""))
+      } else {
+        events.commit(group, value: .string(value))
+      }
     } else {
       events.commit(node, key: "selected", value: .bool(true), event: "change")
     }
@@ -193,6 +251,7 @@ struct SliderControlView: View {
     }
     .tint(MaterialPalette.color(for: node, property: "active_color"))
     .modifier(FocusReporter(node: node, events: events))
+    .disabled(node.bool("disabled") ?? false)
   }
 
   private var binding: Binding<Double> {
@@ -222,19 +281,16 @@ struct RangeSliderControlView: View {
     let start = values.start
     let end = values.end
 
-    VStack(spacing: 4) {
-      Slider(
-        value: Binding(
-          get: { start },
-          set: { commit(start: min($0, end), end: end) }),
-        in: minimum...max(maximum, minimum + .ulpOfOne))
-      Slider(
-        value: Binding(
-          get: { end },
-          set: { commit(start: start, end: max($0, start)) }),
-        in: minimum...max(maximum, minimum + .ulpOfOne))
-    }
-    .tint(MaterialPalette.color(for: node, property: "active_color"))
+    FletRangeSlider(
+      start: start,
+      end: end,
+      minimum: minimum,
+      maximum: maximum,
+      divisions: node.int("divisions"),
+      activeColor: MaterialPalette.color(for: node, property: "active_color", default: .accentColor),
+      inactiveColor: MaterialPalette.color(node.string("inactive_color"), default: .secondary.opacity(0.25)),
+      onChange: commit,
+      onEditingChanged: { editing in events.fire(node, editing ? "change_start" : "change_end") })
     .disabled(node.bool("disabled") ?? false)
   }
 
@@ -247,6 +303,57 @@ struct RangeSliderControlView: View {
     events.send(
       node.id, "change",
       .map(["start_value": .double(start), "end_value": .double(end)]))
+  }
+}
+
+private struct FletRangeSlider: View {
+  let start: Double
+  let end: Double
+  let minimum: Double
+  let maximum: Double
+  let divisions: Int?
+  let activeColor: Color
+  let inactiveColor: Color
+  let onChange: (Double, Double) -> Void
+  let onEditingChanged: (Bool) -> Void
+
+  var body: some View {
+    GeometryReader { proxy in
+      let width = max(proxy.size.width - 24, 1)
+      let startX = 12 + width * fraction(start)
+      let endX = 12 + width * fraction(end)
+      ZStack(alignment: .leading) {
+        Capsule().fill(inactiveColor).frame(height: 4).padding(.horizontal, 12)
+        Capsule().fill(activeColor).frame(width: max(endX - startX, 0), height: 4).offset(x: startX)
+        thumb(at: startX) { proposed in onChange(min(snapped(proposed, width: width), end), end) }
+        thumb(at: endX) { proposed in onChange(start, max(snapped(proposed, width: width), start)) }
+      }
+    }
+    .frame(minHeight: 44)
+  }
+
+  private func thumb(at x: CGFloat, changed: @escaping (Double) -> Void) -> some View {
+    Circle()
+      .fill(activeColor)
+      .frame(width: 20, height: 20)
+      .shadow(radius: 1)
+      .offset(x: x - 10)
+      .gesture(
+        DragGesture(minimumDistance: 0)
+          .onChanged { value in
+            onEditingChanged(true)
+            changed(minimum + Double(max(0, value.location.x - 12)) * span / Double(max(1, value.startLocation.x + 1)))
+          }
+          .onEnded { _ in onEditingChanged(false) })
+  }
+
+  private var span: Double { max(maximum - minimum, .ulpOfOne) }
+  private func fraction(_ value: Double) -> CGFloat { CGFloat((value - minimum) / span) }
+  private func snapped(_ x: Double, width: CGFloat) -> Double {
+    let raw = minimum + min(max(x / Double(width), 0), 1) * span
+    guard let divisions, divisions > 0 else { return raw }
+    let step = span / Double(divisions)
+    return minimum + ((raw - minimum) / step).rounded() * step
   }
 }
 

@@ -26,6 +26,16 @@ public final class MotionSensorService: RufletService {
 
   private let sensor: Sensor
   private var running = false
+  private var configuration: Configuration?
+
+  private struct Configuration: Equatable {
+    let enabled: Bool
+    let intervalMilliseconds: Double
+    let reportsReading: Bool
+    let reportsLegacyChange: Bool
+    let reportsError: Bool
+    let cancelOnError: Bool
+  }
 
   #if canImport(CoreMotion) && os(iOS)
     private static let manager = CMMotionManager()
@@ -69,71 +79,110 @@ public final class MotionSensorService: RufletService {
   /// for `on_change`, so sampling begins as soon as the control appears.
   public func activate(node: ControlNode, context: RufletServiceContext) {
     #if canImport(CoreMotion) && os(iOS)
-      start(node: node, context: context)
+      configure(node: node, context: context)
     #endif
   }
 
   #if canImport(CoreMotion) && os(iOS)
-    private func start(node: ControlNode, context: RufletServiceContext) {
-      guard !running else { return }
+    private func configure(node: ControlNode, context: RufletServiceContext) {
+      let next = Configuration(
+        enabled: node.bool("enabled") ?? true,
+        intervalMilliseconds: max(0, node.double("interval") ?? node.double("sampling_rate") ?? 200),
+        reportsReading: node.handlesEvent("reading"),
+        reportsLegacyChange: node.handlesEvent("change"),
+        reportsError: node.handlesEvent("error"),
+        cancelOnError: node.bool("cancel_on_error") ?? true
+      )
+      guard next != configuration else { return }
+      stop()
+      configuration = next
+      guard next.enabled, next.reportsReading || next.reportsLegacyChange || next.reportsError else {
+        return
+      }
+      start(node: node, context: context, configuration: next)
+    }
+
+    private func start(
+      node: ControlNode,
+      context: RufletServiceContext,
+      configuration: Configuration
+    ) {
       running = true
 
       let manager = Self.manager
       // Flet's sensors take a sampling interval in milliseconds.
-      let interval = (node.double("sampling_rate") ?? 200) / 1000
+      let interval = configuration.intervalMilliseconds / 1000
       let id = node.id
       let queue = OperationQueue.main
+
+      let report: (RufletValue) -> Void = { value in
+        if configuration.reportsReading { context.emitEvent(id, "reading", value) }
+        if configuration.reportsLegacyChange { context.emitEvent(id, "change", value) }
+      }
+      let reportError: (Error?) -> Void = { [weak self] error in
+        guard let self else { return }
+        if configuration.reportsError {
+          context.emitEvent(id, "error", .map([
+            "message": .string(error?.localizedDescription ?? "Unknown sensor error")
+          ]))
+        }
+        if configuration.cancelOnError { self.stop() }
+      }
 
       switch sensor {
       case .accelerometer:
         manager.accelerometerUpdateInterval = interval
-        manager.startAccelerometerUpdates(to: queue) { data, _ in
+        manager.startAccelerometerUpdates(to: queue) { data, error in
+          if let error { return reportError(error) }
           guard let data else { return }
-          context.emitEvent(id, "change", Self.vector(data.acceleration))
+          report(Self.vector(data.acceleration, timestamp: data.timestamp))
         }
       case .userAccelerometer:
         manager.deviceMotionUpdateInterval = interval
-        manager.startDeviceMotionUpdates(to: queue) { data, _ in
+        manager.startDeviceMotionUpdates(to: queue) { data, error in
+          if let error { return reportError(error) }
           guard let data else { return }
-          context.emitEvent(id, "change", Self.vector(data.userAcceleration))
+          report(Self.vector(data.userAcceleration, timestamp: data.timestamp))
         }
       case .gyroscope:
         manager.gyroUpdateInterval = interval
-        manager.startGyroUpdates(to: queue) { data, _ in
+        manager.startGyroUpdates(to: queue) { data, error in
+          if let error { return reportError(error) }
           guard let data else { return }
-          context.emitEvent(
-            id, "change",
-            .map([
-              "x": .double(data.rotationRate.x),
-              "y": .double(data.rotationRate.y),
-              "z": .double(data.rotationRate.z)
-            ]))
+          report(.map([
+            "x": .double(data.rotationRate.x),
+            "y": .double(data.rotationRate.y),
+            "z": .double(data.rotationRate.z),
+            "timestamp": .double(data.timestamp)
+          ]))
         }
       case .magnetometer:
         manager.magnetometerUpdateInterval = interval
-        manager.startMagnetometerUpdates(to: queue) { data, _ in
+        manager.startMagnetometerUpdates(to: queue) { data, error in
+          if let error { return reportError(error) }
           guard let data else { return }
-          context.emitEvent(
-            id, "change",
-            .map([
-              "x": .double(data.magneticField.x),
-              "y": .double(data.magneticField.y),
-              "z": .double(data.magneticField.z)
-            ]))
+          report(.map([
+            "x": .double(data.magneticField.x),
+            "y": .double(data.magneticField.y),
+            "z": .double(data.magneticField.z),
+            "timestamp": .double(data.timestamp)
+          ]))
         }
       case .barometer:
-        guard CMAltimeter.isRelativeAltitudeAvailable() else { return }
+        guard CMAltimeter.isRelativeAltitudeAvailable() else {
+          reportError(nil)
+          return
+        }
         let altimeter = CMAltimeter()
         self.altimeter = altimeter
-        altimeter.startRelativeAltitudeUpdates(to: queue) { data, _ in
+        altimeter.startRelativeAltitudeUpdates(to: queue) { data, error in
+          if let error { return reportError(error) }
           guard let data else { return }
-          context.emitEvent(
-            id, "change",
-            .map([
-              // kPa on the wire, matching Flet's barometer payload.
-              "pressure": .double(data.pressure.doubleValue),
-              "relative_altitude": .double(data.relativeAltitude.doubleValue)
-            ]))
+          report(.map([
+            // kPa on the wire, matching Flet's barometer payload.
+            "pressure": .double(data.pressure.doubleValue),
+            "timestamp": .double(ProcessInfo.processInfo.systemUptime)
+          ]))
         }
       }
     }
@@ -151,11 +200,12 @@ public final class MotionSensorService: RufletService {
       }
     }
 
-    private static func vector(_ acceleration: CMAcceleration) -> RufletValue {
+    private static func vector(_ acceleration: CMAcceleration, timestamp: TimeInterval) -> RufletValue {
       .map([
         "x": .double(acceleration.x),
         "y": .double(acceleration.y),
-        "z": .double(acceleration.z)
+        "z": .double(acceleration.z),
+        "timestamp": .double(timestamp)
       ])
     }
   #endif
@@ -177,11 +227,23 @@ public final class MotionSensorService: RufletService {
 
 /// `ShakeDetector` — a shake gesture built on the accelerometer.
 @MainActor
-public final class ShakeDetectorService: RufletService {
+public final class ShakeDetectorService: RufletStreamingService {
   public static let wireType = "ShakeDetector"
 
   private var running = false
   private var lastShake = Date.distantPast
+  private var shakeCount = 0
+  #if canImport(CoreMotion) && os(iOS)
+    private var manager: CMMotionManager?
+  #endif
+  private var configuration: Configuration?
+
+  private struct Configuration: Equatable {
+    let minimumCount: Int
+    let slopMilliseconds: Double
+    let resetMilliseconds: Double
+    let threshold: Double
+  }
 
   public init() {}
 
@@ -197,27 +259,51 @@ public final class ShakeDetectorService: RufletService {
 
   public func activate(node: ControlNode, context: RufletServiceContext) {
     #if canImport(CoreMotion) && os(iOS)
-      guard !running, CMMotionManager().isAccelerometerAvailable else { return }
-      running = true
-
-      // Flet's shake detector takes a g-force threshold and a minimum gap
-      // between reported shakes.
-      let threshold = node.double("shake_threshold_gravity") ?? 2.7
-      let gap = (node.double("min_time_between_shakes") ?? 500) / 1000
-      let id = node.id
+      let next = Configuration(
+        minimumCount: max(1, node.int("minimum_shake_count") ?? 1),
+        slopMilliseconds: max(0, node.double("shake_slop_time_ms") ?? node.double("min_time_between_shakes") ?? 500),
+        resetMilliseconds: max(0, node.double("shake_count_reset_time_ms") ?? 3_000),
+        threshold: node.double("shake_threshold_gravity") ?? 2.7
+      )
+      guard next != configuration else { return }
+      manager?.stopAccelerometerUpdates()
+      running = false
+      shakeCount = 0
+      configuration = next
 
       let manager = CMMotionManager()
+      guard manager.isAccelerometerAvailable else { return }
+      self.manager = manager
+      running = true
+
+      let id = node.id
+
       manager.accelerometerUpdateInterval = 0.05
       manager.startAccelerometerUpdates(to: .main) { [weak self] data, _ in
         guard let self, let data else { return }
         let force = sqrt(
           pow(data.acceleration.x, 2) + pow(data.acceleration.y, 2)
             + pow(data.acceleration.z, 2))
-        guard force > threshold, Date().timeIntervalSince(self.lastShake) > gap else { return }
-        self.lastShake = Date()
-        context.emitEvent(id, "shake", .null)
+        let now = Date()
+        guard force > next.threshold,
+          now.timeIntervalSince(self.lastShake) * 1_000 > next.slopMilliseconds
+        else { return }
+        if now.timeIntervalSince(self.lastShake) * 1_000 > next.resetMilliseconds {
+          self.shakeCount = 0
+        }
+        self.lastShake = now
+        self.shakeCount += 1
+        if self.shakeCount >= next.minimumCount {
+          self.shakeCount = 0
+          context.emitEvent(id, "shake", .null)
+        }
       }
     #endif
   }
-}
 
+  deinit {
+    #if canImport(CoreMotion) && os(iOS)
+      manager?.stopAccelerometerUpdates()
+    #endif
+  }
+}

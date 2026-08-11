@@ -155,8 +155,12 @@ public final class ServiceRegistry {
 
   public func activateStreamingServices(in store: ControlStore, context: RufletServiceContext) {
     for node in store.nodes.values
-    where streamingTypes.contains(node.type.lowercased()) && instances[node.id] == nil {
+    where streamingTypes.contains(node.type.lowercased()) {
       guard let service = service(for: node) as? RufletStreamingService else { continue }
+      // Flet calls a service's `update()` whenever its control properties
+      // change. Re-presenting the current node gives native streaming
+      // services the same lifecycle hook; each service owns the decision to
+      // keep, restart, or stop its subscription from the new configuration.
       service.activate(node: node, context: context)
     }
   }
