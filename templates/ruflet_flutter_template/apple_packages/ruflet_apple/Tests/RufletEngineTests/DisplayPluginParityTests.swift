@@ -39,6 +39,51 @@ final class DisplayPluginParityTests: XCTestCase {
     XCTAssertEqual(capture.wireValue, .null)
   }
 
+  func testCanvasArcUsesFlutterRadiansInsteadOfDrawingAFullOval() {
+    let arc = CanvasControlView.ellipticalArc(
+      in: CGRect(x: 10, y: 20, width: 100, height: 60),
+      startAngle: 0,
+      sweepAngle: .pi / 2,
+      useCenter: false)
+
+    let bounds = arc.boundingRect
+    XCTAssertEqual(bounds.minX, 60, accuracy: 0.001)
+    XCTAssertEqual(bounds.maxX, 110, accuracy: 0.001)
+    XCTAssertEqual(bounds.minY, 50, accuracy: 0.001)
+    XCTAssertEqual(bounds.maxY, 80, accuracy: 0.001)
+  }
+
+  func testCanvasCenteredArcIncludesTheEllipseCenter() {
+    let arc = CanvasControlView.ellipticalArc(
+      in: CGRect(x: 10, y: 20, width: 100, height: 60),
+      startAngle: .pi,
+      sweepAngle: .pi / 2,
+      useCenter: true)
+
+    let bounds = arc.boundingRect
+    XCTAssertEqual(bounds.minX, 10, accuracy: 0.001)
+    XCTAssertEqual(bounds.maxX, 60, accuracy: 0.001)
+    XCTAssertEqual(bounds.minY, 20, accuracy: 0.001)
+    XCTAssertEqual(bounds.maxY, 50, accuracy: 0.001)
+  }
+
+  func testCanvasPathArcHonorsStartAndSweepAngles() {
+    let path = CanvasControlView.path(from: [
+      .map([
+        "_type": .string("Arc"),
+        "x": .double(0),
+        "y": .double(0),
+        "width": .double(80),
+        "height": .double(40),
+        "start_angle": .double(0),
+        "sweep_angle": .double(.pi / 2),
+      ])
+    ])
+
+    XCTAssertEqual(path.boundingRect.width, 40, accuracy: 0.001)
+    XCTAssertEqual(path.boundingRect.height, 20, accuracy: 0.001)
+  }
+
   private func events(_ type: String) -> Set<String> {
     ControlRegistry.builtInDescriptor(for: type)?.supportedEvents ?? []
   }

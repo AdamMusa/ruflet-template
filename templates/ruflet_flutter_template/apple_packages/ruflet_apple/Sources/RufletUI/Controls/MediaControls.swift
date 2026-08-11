@@ -141,11 +141,24 @@ struct CanvasControlView: View {
         ? context.fill(path, with: .color(stroke))
         : context.stroke(path, with: .color(stroke), lineWidth: width)
 
-    case "Oval", "Arc":
+    case "Oval":
       let rect = CGRect(
         x: shape.double("x") ?? 0, y: shape.double("y") ?? 0,
         width: shape.double("width") ?? 0, height: shape.double("height") ?? 0)
       let path = Path(ellipseIn: rect)
+      filled
+        ? context.fill(path, with: .color(stroke))
+        : context.stroke(path, with: .color(stroke), lineWidth: width)
+
+    case "Arc":
+      let rect = CGRect(
+        x: shape.double("x") ?? 0, y: shape.double("y") ?? 0,
+        width: shape.double("width") ?? 0, height: shape.double("height") ?? 0)
+      let path = Self.ellipticalArc(
+        in: rect,
+        startAngle: shape.double("start_angle") ?? 0,
+        sweepAngle: shape.double("sweep_angle") ?? 0,
+        useCenter: shape.bool("use_center") ?? false)
       filled
         ? context.fill(path, with: .color(stroke))
         : context.stroke(path, with: .color(stroke), lineWidth: width)
@@ -197,7 +210,7 @@ struct CanvasControlView: View {
 
   /// Flet's `Path` carries a list of typed elements: `MoveTo`, `LineTo`,
   /// `QuadraticTo`, `CubicTo`, `Arc`, `Oval`, `Rect`, `SubPath` and `Close`.
-  private static func path(from elements: [RufletValue]) -> Path {
+  static func path(from elements: [RufletValue]) -> Path {
     var path = Path()
     for element in elements {
       guard let map = element.mapValue else { continue }
@@ -222,11 +235,15 @@ struct CanvasControlView: View {
           control2: CGPoint(
             x: map["cp2x"]?.doubleValue ?? 0, y: map["cp2y"]?.doubleValue ?? 0))
       case "arc":
-        path.addEllipse(
-          in: CGRect(
-            x: x, y: y,
-            width: map["width"]?.doubleValue ?? 0,
-            height: map["height"]?.doubleValue ?? 0))
+        path.addPath(
+          ellipticalArc(
+            in: CGRect(
+              x: x, y: y,
+              width: map["width"]?.doubleValue ?? 0,
+              height: map["height"]?.doubleValue ?? 0),
+            startAngle: map["start_angle"]?.doubleValue ?? 0,
+            sweepAngle: map["sweep_angle"]?.doubleValue ?? 0,
+            useCenter: false))
       case "oval":
         path.addEllipse(
           in: CGRect(
@@ -244,6 +261,47 @@ struct CanvasControlView: View {
       default:
         continue
       }
+    }
+    return path
+  }
+
+  /// Flutter Canvas angles are radians in the screen coordinate system:
+  /// zero is the positive x-axis and positive sweeps move clockwise. SwiftUI
+  /// has no elliptical-arc primitive, so sample the ellipse without converting
+  /// to the mathematical (y-up) coordinate system. The subdivision count
+  /// scales with the sweep and keeps a full ellipse smooth at native sizes.
+  static func ellipticalArc(
+    in rect: CGRect,
+    startAngle: Double,
+    sweepAngle: Double,
+    useCenter: Bool
+  ) -> Path {
+    var path = Path()
+    guard rect.width != 0, rect.height != 0, sweepAngle != 0 else { return path }
+
+    let center = CGPoint(x: rect.midX, y: rect.midY)
+    let radiusX = rect.width / 2
+    let radiusY = rect.height / 2
+    let segments = max(1, Int(ceil(abs(sweepAngle) / (Double.pi / 32))))
+
+    func point(at angle: Double) -> CGPoint {
+      CGPoint(
+        x: center.x + radiusX * cos(angle),
+        y: center.y + radiusY * sin(angle))
+    }
+
+    if useCenter {
+      path.move(to: center)
+      path.addLine(to: point(at: startAngle))
+    } else {
+      path.move(to: point(at: startAngle))
+    }
+    for index in 1...segments {
+      let progress = Double(index) / Double(segments)
+      path.addLine(to: point(at: startAngle + sweepAngle * progress))
+    }
+    if useCenter {
+      path.closeSubpath()
     }
     return path
   }
