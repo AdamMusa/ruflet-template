@@ -231,8 +231,12 @@ module NativePropertyConsumptionAudit
       line.scan(/\bcall\.argument\(\s*"([^"]+)"\s*\)/) { |match| keys << match[0] }
       line.scan(/\bnode\.(?:handlesEvent|sendEvent)\(\s*"([^"]+)"/) { |match| keys << "on_#{match[0]}" }
       line.scan(/\b(?:context\.)?emitEvent\([^\n]*?"([^"]+)"/) { |match| keys << "on_#{match[0]}" }
+      # `events.fire` is the event sink; `onEvent` is the callback a platform
+      # view reports through instead, its first argument being the event name —
+      # that is how the AppKit pointer monitor raises the secondary and
+      # tertiary buttons. Both wrap, so both are read over a window.
       window = scanned[index, EVENT_CALL_LOOKAHEAD].join(" ")
-      if (event_call = window[/\bevents\.fire\((.*)$/, 1])
+      if (event_call = window[/\b(?:events\.fire|onEvent)\((.*)$/, 1])
         # Stop at the closing paren so a following statement's literals on the
         # same window cannot be attributed to this call.
         event_call[/\A[^)]*/].scan(/"([^"]+)"/) { |match| keys << "on_#{match[0]}" }
@@ -282,7 +286,7 @@ module NativePropertyConsumptionAudit
         # and Modifier constructors made those real reads look unimplemented.
         # Keep this deliberately suffix-scoped so arbitrary framework types do
         # not become evidence for a control.
-        body.scan(/\b([A-Z][A-Za-z0-9_]*)\s*(?:\(|\.)/) do |(dependency)|
+        body.scan(/\b([A-Z][A-Za-z0-9_]*)\s*(?:\(|\.|\{)/) do |(dependency)|
           queue << dependency if type_scopes.key?(dependency)
         end
       end

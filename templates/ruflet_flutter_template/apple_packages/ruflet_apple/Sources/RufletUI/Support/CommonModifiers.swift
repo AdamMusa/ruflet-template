@@ -58,6 +58,9 @@ struct CommonControlModifiers: ViewModifier {
       // Flutter, needs the parent constraints to resolve left+right/top+bottom.
       .modifier(RufletSizeChangeModifier(node: node))
       .modifier(RufletExpandModifier(node: node, axis: axis))
+      // Flutter resolves the cursor from the whole hit-tested stack, so this
+      // sits outside the layout chain rather than in Flet's order.
+      .modifier(RufletMouseCursorModifier(node: node))
   }
 }
 
@@ -66,6 +69,57 @@ struct CommonControlModifiers: ViewModifier {
 /// inventing a different fallback.
 enum RufletBaseControlDefaults {
   static let sizeChangeIntervalMilliseconds = 10
+}
+
+/// `mouse_cursor` — Flutter's `SystemMouseCursors` names against AppKit's
+/// cursors.
+///
+/// Only macOS has a pointer to change. iOS carries the property so one Ruby
+/// app runs on both, and it is inert there, exactly as it is in Flutter.
+struct RufletMouseCursorModifier: ViewModifier {
+  let node: ControlNode
+
+  func body(content: Content) -> some View {
+    #if os(macOS)
+      if let cursor = Self.cursor(node.string("mouse_cursor")) {
+        content.onHover { inside in
+          if inside { cursor.push() } else { NSCursor.pop() }
+        }
+      } else {
+        content
+      }
+    #else
+      content
+    #endif
+  }
+
+  #if os(macOS)
+    /// AppKit has no cursor for several of Flutter's names, and the ones it
+    /// does have it spells differently. A name with no counterpart leaves the
+    /// cursor alone rather than guessing at a lookalike.
+    static func cursor(_ name: String?) -> NSCursor? {
+      switch name?.lowercased() {
+      case "click", "grab": return .openHand
+      case "grabbing", "move", "allscroll": return .closedHand
+      case "text": return .iBeam
+      case "verticaltext": return .iBeamCursorForVerticalLayout
+      case "forbidden", "nodrop": return .operationNotAllowed
+      case "contextmenu": return .contextualMenu
+      case "copy": return .dragCopy
+      case "alias": return .dragLink
+      case "precise", "cell": return .crosshair
+      case "none": return .none
+      case "resizeleftright", "resizecolumn": return .resizeLeftRight
+      case "resizeupdown", "resizerow": return .resizeUpDown
+      case "resizeup": return .resizeUp
+      case "resizedown": return .resizeDown
+      case "resizeleft": return .resizeLeft
+      case "resizeright": return .resizeRight
+      case "disappearing": return .disappearingItem
+      default: return nil
+      }
+    }
+  #endif
 }
 
 private struct TightConstraintFrame: ViewModifier {

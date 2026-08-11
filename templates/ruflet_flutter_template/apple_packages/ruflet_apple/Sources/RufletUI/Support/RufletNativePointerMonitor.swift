@@ -61,7 +61,7 @@
           onEvent("secondary_tap_down", tap)
           onEvent("secondary_long_press_down", tap)
           onEvent("right_pan_start", pointer(event, local: local, global: global))
-          secondaryLongPress = longPressTimer(prefix: "secondary", tap: tap)
+          secondaryLongPress = longPressTimer(for: .secondary, tap: tap)
         case .rightMouseDragged:
           secondaryLongPress?.invalidate()
           let start = secondaryStart ?? local
@@ -91,7 +91,7 @@
           tertiaryStart = local
           onEvent("tertiary_tap_down", tap)
           onEvent("tertiary_long_press_down", tap)
-          tertiaryLongPress = longPressTimer(prefix: "tertiary", tap: tap)
+          tertiaryLongPress = longPressTimer(for: .tertiary, tap: tap)
         case .otherMouseDragged where event.buttonNumber == 2:
           tertiaryLongPress?.invalidate()
           onEvent(
@@ -137,12 +137,24 @@
         }
       }
 
-      private func longPressTimer(prefix: String, tap: RufletValue) -> Timer {
+      enum Button { case secondary, tertiary }
+
+      /// Flet raises `<button>_long_press_start` with the pointer and then the
+      /// bare `<button>_long_press`. The names are spelled out per button
+      /// rather than interpolated, so grepping for an event finds where it is
+      /// raised.
+      private func longPressTimer(for button: Button, tap: RufletValue) -> Timer {
         Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
-          self?.onEvent("\(prefix)_long_press_start", tap)
-          self?.onEvent("\(prefix)_long_press", .null)
-          if prefix == "secondary" { self?.secondaryLongPress = nil }
-          else { self?.tertiaryLongPress = nil }
+          switch button {
+          case .secondary:
+            self?.onEvent("secondary_long_press_start", tap)
+            self?.onEvent("secondary_long_press", .null)
+            self?.secondaryLongPress = nil
+          case .tertiary:
+            self?.onEvent("tertiary_long_press_start", tap)
+            self?.onEvent("tertiary_long_press", .null)
+            self?.tertiaryLongPress = nil
+          }
         }
       }
 
