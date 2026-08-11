@@ -10,11 +10,11 @@
     "flet_types": 212,
     "native_declarations": 210,
     "missing_types": 42,
-    "missing_events": 156,
+    "missing_events": 155,
     "missing_methods": 96,
     "undeclared_gaps": 0,
     "declared_baseline_matches": true,
-    "unresolved_gap_set_sha256": "8571038405ba71cf861a0094857f52307bc8fb913d428aa47d636a0aa0d05c94"
+    "unresolved_gap_set_sha256": "d7a0d976e2198ec2417c35af8ebfe404bd2b65ec3068949142df59f0405ab93a"
   },
   "missing_types": [
     {
@@ -359,14 +359,6 @@
       "wire_type": "AudioRecorder",
       "native_type": "AudioRecorder",
       "event": "state_change",
-      "allowed": true,
-      "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review.",
-      "gap_classification": "initial_api_parity_backlog"
-    },
-    {
-      "wire_type": "AutoComplete",
-      "native_type": "AutoComplete",
-      "event": "change",
       "allowed": true,
       "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review.",
       "gap_classification": "initial_api_parity_backlog"

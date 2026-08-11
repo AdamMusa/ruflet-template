@@ -226,7 +226,7 @@ public enum ControlRegistry {
     add(["Dropdown", "DropdownM2"], .visible, "DropdownControlView", .nativeView,
         events: ["change", "focus"])
     add(["AutoComplete"], .visible, "AutoCompleteControlView", .nativeView,
-        events: ["select"])
+        events: ["change", "select"])
     add(["DatePicker", "TimePicker", "DateRangePicker"], .visible,
         "DateTimePickerControlView", .nativeView, events: ["change", "dismiss"])
 

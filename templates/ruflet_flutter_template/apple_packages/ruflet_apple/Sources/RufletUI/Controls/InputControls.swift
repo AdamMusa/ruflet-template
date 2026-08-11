@@ -730,14 +730,23 @@ struct AutoCompleteControlView: View {
         .textFieldStyle(.plain)
         .padding(8)
         .background(RoundedRectangle(cornerRadius: 8).fill(Color.gray.opacity(0.12)))
+        .onChange(of: query) { value in
+          events.commit(node, value: .string(value))
+        }
 
       if !query.isEmpty {
         ForEach(matches, id: \.id) { suggestion in
           Button {
-            query = suggestion.string("value") ?? ""
-            events.send(
-              node.id, "select",
-              .map(["selection": .string(query)]))
+            let key = suggestion.string("key") ?? suggestion.string("value") ?? ""
+            let value = suggestion.string("value") ?? suggestion.string("key") ?? ""
+            query = key
+            let index = suggestions.firstIndex(where: { $0.id == suggestion.id }) ?? 0
+            events.setLocal(node.id, "_selected_index", .int(Int64(index)))
+            events.update(node.id, ["_selected_index": .int(Int64(index))])
+            events.fire(node, "select", data: .map([
+              "index": .int(Int64(index)),
+              "selection": .map(["key": .string(key), "value": .string(value)]),
+            ]))
           } label: {
             Text(suggestion.string("value") ?? "")
               .frame(maxWidth: .infinity, alignment: .leading)
@@ -748,12 +757,19 @@ struct AutoCompleteControlView: View {
         }
       }
     }
+    .onAppear { query = node.string("value") ?? "" }
+  }
+
+  private var suggestions: [ControlNode] {
+    node.controlIDs(forKey: "suggestions").compactMap { store.node($0) }
   }
 
   private var matches: [ControlNode] {
-    node.controlIDs(forKey: "suggestions")
-      .compactMap { store.node($0) }
-      .filter { ($0.string("value") ?? "").localizedCaseInsensitiveContains(query) }
+    suggestions
+      .filter {
+        ($0.string("key") ?? $0.string("value") ?? "")
+          .localizedCaseInsensitiveContains(query)
+      }
       .prefix(node.int("suggestions_max_height").map { _ in 8 } ?? 8)
       .map { $0 }
   }
