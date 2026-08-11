@@ -85,18 +85,31 @@ struct SemanticsControlView: View {
       }
     }
     .accessibilityLabel(node.string("label") ?? "")
-    .accessibilityHint(node.string("hint") ?? "")
+    .accessibilityHint(node.string("hint_text") ?? "")
     .accessibilityValue(node.string("value") ?? "")
     .accessibilityAddTraits(traits)
     .accessibilityHidden(node.bool("hidden") ?? false)
-    .accessibilityElement(children: node.bool("container") == true ? .contain : .combine)
+    .accessibilityElement(children: childBehavior)
     .accessibilityFocused($accessibilityFocused)
+    .privacySensitive(node.bool("obscured") ?? false)
     .onChange(of: accessibilityFocused) { focused in
       events.fire(
         node,
         focused ? "did_gain_accessibility_focus" : "did_lose_accessibility_focus")
     }
+    .onAppear { if node.bool("focus") == true { accessibilityFocused = true } }
+    .modifier(SemanticsHeading(level: node.int("heading_level")))
+    .modifier(SemanticsStateContent(node: node))
+    .modifier(SemanticsFocusability(focusable: node.bool("focusable")))
     .modifier(SemanticsActions(node: node, events: events))
+  }
+
+  /// `exclude_semantics` drops the subtree's own semantics, which is what
+  /// `.ignore` does; `container` keeps children addressable rather than
+  /// merging them into one element.
+  private var childBehavior: AccessibilityChildBehavior {
+    if node.bool("exclude_semantics") == true { return .ignore }
+    return node.bool("container") == true ? .contain : .combine
   }
 
   private var traits: AccessibilityTraits {
@@ -106,8 +119,96 @@ struct SemanticsControlView: View {
     if node.bool("image") == true { traits.formUnion(.isImage) }
     if node.bool("link") == true { traits.formUnion(.isLink) }
     if node.bool("selected") == true { traits.formUnion(.isSelected) }
-    if node.bool("text_field") == true { traits.formUnion(.isStaticText) }
+    // Ruby sends `textfield`; Flutter's Semantics calls the same flag
+    // `textField`. A read-only field is static text to VoiceOver.
+    if node.bool("textfield") == true {
+      traits.formUnion(node.bool("read_only") == true ? .isStaticText : .isSearchField)
+    }
+    if node.bool("slider") == true { traits.formUnion(.isSelected) }
+    // Flutter's liveRegion asks the screen reader to announce changes.
+    if node.bool("live_region") == true { traits.formUnion(.updatesFrequently) }
     return traits
+  }
+}
+
+/// `heading_level` — Flutter numbers headings 1...6, matching SwiftUI's
+/// `AccessibilityHeadingLevel`. Anything outside that range is unheaded, which
+/// is what Flutter does with a zero level.
+private struct SemanticsHeading: ViewModifier {
+  let level: Int?
+
+  func body(content: Content) -> some View {
+    switch level {
+    case 1: content.accessibilityHeading(.h1)
+    case 2: content.accessibilityHeading(.h2)
+    case 3: content.accessibilityHeading(.h3)
+    case 4: content.accessibilityHeading(.h4)
+    case 5: content.accessibilityHeading(.h5)
+    case 6: content.accessibilityHeading(.h6)
+    default: content
+    }
+  }
+}
+
+/// The state flags Flutter passes to the platform's accessibility node.
+///
+/// UIKit has no separate channel for them, and folding them into
+/// `accessibilityValue` would overwrite the control's own value, so they are
+/// announced as custom content — the API Apple provides for exactly this.
+private struct SemanticsStateContent: ViewModifier {
+  let node: ControlNode
+
+  func body(content: Content) -> some View {
+    var result = AnyView(content)
+    for (label, value) in entries {
+      result = AnyView(result.accessibilityCustomContent(Text(label), Text(value)))
+    }
+    return result
+  }
+
+  private var entries: [(String, String)] {
+    var entries: [(String, String)] = []
+    // `mixed` is Flutter's tristate checkbox, and it outranks `checked`.
+    if node.bool("mixed") == true {
+      entries.append(("Checked", "Mixed"))
+    } else if let checked = node.bool("checked") {
+      entries.append(("Checked", checked ? "Checked" : "Unchecked"))
+    }
+    if let toggled = node.bool("toggled") {
+      entries.append(("Toggled", toggled ? "On" : "Off"))
+    }
+    if let expanded = node.bool("expanded") {
+      entries.append(("Expanded", expanded ? "Expanded" : "Collapsed"))
+    }
+    if node.bool("multiline") == true { entries.append(("Multiline", "Yes")) }
+    if node.bool("read_only") == true { entries.append(("Read only", "Yes")) }
+    if let increased = node.string("increased_value"), !increased.isEmpty {
+      entries.append(("Increased value", increased))
+    }
+    if let decreased = node.string("decreased_value"), !decreased.isEmpty {
+      entries.append(("Decreased value", decreased))
+    }
+    if let current = node.int("current_value_length") {
+      let maximum = node.int("max_value_length")
+      entries.append((
+        "Length", maximum.map { "\(current) of \($0)" } ?? "\(current)"))
+    }
+    return entries
+  }
+}
+
+/// `focusable: false` takes the subtree out of the accessibility focus order.
+/// `.accessibilityRespondsToUserInteraction` is the modifier that expresses
+/// that without also hiding the element from the reader.
+private struct SemanticsFocusability: ViewModifier {
+  let focusable: Bool?
+
+  func body(content: Content) -> some View {
+    if let focusable {
+      content.accessibilityRespondsToUserInteraction(focusable)
+    } else {
+      content
+    }
   }
 }
 
@@ -118,19 +219,46 @@ private struct SemanticsActions: ViewModifier {
   func body(content: Content) -> some View {
     content
       .modifier(SemanticsDefaultAction(node: node, events: events))
+      .modifier(SemanticsGestureActions(node: node, events: events))
       .modifier(SemanticsAdjustActions(node: node, events: events))
       .modifier(SemanticsDismissAction(node: node, events: events))
       .modifier(SemanticsNamedActions(node: node, events: events))
   }
 }
 
+/// Ruby declares this one as `on_tap`, so the event it expects back is `tap`
+/// rather than Flutter's `click`. `on_tap_hint_text` names the activation the
+/// way Flutter's `onTapHint` does; VoiceOver reads a named action's label in
+/// the same place.
 private struct SemanticsDefaultAction: ViewModifier {
   let node: ControlNode
   let events: RufletEventSink
+
   func body(content: Content) -> some View {
-    if node.handlesEvent("click") {
-      content.accessibilityAction(.default) { events.fire(node, "click") }
+    if node.handlesEvent("tap") {
+      if let hint = node.string("on_tap_hint_text"), !hint.isEmpty {
+        content.accessibilityAction(named: Text(hint)) { events.fire(node, "tap") }
+      } else {
+        content.accessibilityAction(.default) { events.fire(node, "tap") }
+      }
     } else { content }
+  }
+}
+
+/// `on_double_tap` and `on_long_press` have no gesture of their own under
+/// VoiceOver, which routes every activation through the rotor, so each is
+/// offered as a named action.
+private struct SemanticsGestureActions: ViewModifier {
+  let node: ControlNode
+  let events: RufletEventSink
+
+  func body(content: Content) -> some View {
+    content
+      .modifier(NamedSemanticsAction(
+        node: node, events: events, event: "double_tap", label: "Double tap"))
+      .modifier(NamedSemanticsAction(
+        node: node, events: events, event: "long_press",
+        label: node.string("on_long_press_hint_text") ?? "Long press"))
   }
 }
 
