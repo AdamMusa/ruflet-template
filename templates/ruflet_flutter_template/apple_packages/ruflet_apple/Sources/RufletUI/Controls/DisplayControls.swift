@@ -97,7 +97,11 @@ struct ImageControlView: View {
   @ViewBuilder
   private var content: some View {
     if let source = node.string("src"), let url = URL(string: source), url.scheme != nil {
-      RemoteImage(url: url, errorContent: node.props["error_content"])
+      RemoteImage(
+        url: url,
+        errorContentID: node.controlID(forKey: "error_content"),
+        onLoad: { events.fire(node, "load") },
+        onError: { message in events.fire(node, "error", data: .string(message)) })
     } else if let base64 = node.string("src_base64"), let data = Data(base64Encoded: base64) {
       PlatformImageView(data: data)
     } else if let name = node.string("src") {
@@ -132,7 +136,9 @@ private struct ImageFit: ViewModifier {
 /// self-contained.
 private struct RemoteImage: View {
   let url: URL
-  let errorContent: RufletValue?
+  let errorContentID: Int?
+  var onLoad: () -> Void = {}
+  var onError: (String) -> Void = { _ in }
 
   @State private var data: Data?
   @State private var failed = false
@@ -142,7 +148,11 @@ private struct RemoteImage: View {
       if let data {
         PlatformImageView(data: data)
       } else if failed {
-        Image(systemName: "photo").foregroundColor(.secondary)
+        if let errorContentID {
+          ControlView(id: errorContentID, axis: .none)
+        } else {
+          Image(systemName: "photo").foregroundColor(.secondary)
+        }
       } else {
         ProgressView()
       }
@@ -152,10 +162,38 @@ private struct RemoteImage: View {
 
   private func load() async {
     do {
-      let (bytes, _) = try await URLSession.shared.data(from: url)
+      let (bytes, response) = try await URLSession.shared.data(from: url)
+      if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+        throw RemoteImageError.httpStatus(http.statusCode)
+      }
+      guard Self.canDecode(bytes) else { throw RemoteImageError.invalidImage }
       data = bytes
+      onLoad()
     } catch {
       failed = true
+      onError(error.localizedDescription)
+    }
+  }
+
+  static func canDecode(_ data: Data) -> Bool {
+    #if canImport(UIKit)
+      return UIImage(data: data) != nil
+    #elseif canImport(AppKit)
+      return NSImage(data: data) != nil
+    #else
+      return false
+    #endif
+  }
+}
+
+private enum RemoteImageError: LocalizedError {
+  case httpStatus(Int)
+  case invalidImage
+
+  var errorDescription: String? {
+    switch self {
+    case .httpStatus(let status): return "Image request failed with HTTP status \(status)."
+    case .invalidImage: return "Image data could not be decoded."
     }
   }
 }
@@ -250,6 +288,7 @@ struct ProgressRingControlView: View {
 /// `CircleAvatar` — an image, initials, or a coloured circle.
 struct CircleAvatarControlView: View {
   let node: ControlNode
+  @Environment(\.rufletEvents) private var events
 
   var body: some View {
     let radius = CGFloat(node.double("radius") ?? 20)
@@ -259,7 +298,10 @@ struct CircleAvatarControlView: View {
       if let source = node.string("foreground_image_src") ?? node.string("background_image_src"),
         let url = URL(string: source), url.scheme != nil
       {
-        RemoteImage(url: url, errorContent: nil)
+        RemoteImage(
+          url: url,
+          errorContentID: nil,
+          onError: { message in events.fire(node, "image_error", data: .string(message)) })
           .aspectRatio(contentMode: .fill)
           .clipShape(Circle())
       } else if let contentID = node.controlID(forKey: "content") {
@@ -311,6 +353,7 @@ struct BadgeControlView: View {
 /// `Markdown` — rendered with the platform's own Markdown support.
 struct MarkdownControlView: View {
   let node: ControlNode
+  @Environment(\.rufletEvents) private var events
 
   var body: some View {
     let source = node.string("value") ?? ""
@@ -320,8 +363,20 @@ struct MarkdownControlView: View {
         options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))
     {
       Text(attributed)
+        .modifier(SelectableText(enabled: node.fletBool("selectable")))
+        .onTapGesture {
+          if node.handlesEvent("tap_text") {
+            events.fire(node, "tap_text", data: .string(source))
+          }
+        }
     } else {
       Text(source)
+        .modifier(SelectableText(enabled: node.fletBool("selectable")))
+        .onTapGesture {
+          if node.handlesEvent("tap_text") {
+            events.fire(node, "tap_text", data: .string(source))
+          }
+        }
     }
   }
 }

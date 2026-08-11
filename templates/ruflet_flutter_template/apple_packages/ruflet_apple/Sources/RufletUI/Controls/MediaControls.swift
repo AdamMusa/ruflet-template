@@ -21,6 +21,7 @@ struct CanvasControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
+  @State private var reportedSize: CGSize = .zero
 
   var body: some View {
     ZStack {
@@ -34,7 +35,23 @@ struct CanvasControlView: View {
         ControlView(id: contentID, axis: .none)
       }
     }
+    .background {
+      GeometryReader { geometry in
+        Color.clear
+          .onAppear { reportResize(geometry.size) }
+          .onChange(of: geometry.size) { reportResize($0) }
+      }
+    }
     .modifier(TapReporter(node: node, events: events))
+  }
+
+  private func reportResize(_ size: CGSize) {
+    guard size != reportedSize else { return }
+    reportedSize = size
+    events.fire(
+      node,
+      "resize",
+      data: .map(["width": .double(size.width), "height": .double(size.height)]))
   }
 
   private func draw(_ shape: ControlNode, in context: inout GraphicsContext, size: CGSize) {
@@ -187,6 +204,7 @@ struct CanvasControlView: View {
 struct ChartControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
+  @Environment(\.rufletEvents) private var events
 
   var body: some View {
     Canvas { context, size in
@@ -207,6 +225,11 @@ struct ChartControlView: View {
       }
     }
     .frame(minHeight: 120)
+    .onTapGesture {
+      if node.fletBool("interactive") || node.type == "PieChart" {
+        events.fire(node, "event", data: .map(["type": .string("tap")]))
+      }
+    }
   }
 
   private struct Point {
