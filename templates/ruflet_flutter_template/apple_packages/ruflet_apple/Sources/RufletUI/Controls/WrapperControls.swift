@@ -1,6 +1,11 @@
 import RufletEngine
 import RufletProtocol
 import SwiftUI
+#if canImport(AppKit)
+  import AppKit
+#elseif canImport(UIKit)
+  import UIKit
+#endif
 
 /// `Screenshot` — captures its content as PNG bytes.
 ///
@@ -68,6 +73,8 @@ struct ScreenshotControlView: View {
 /// reader hears the same thing it would through the Flutter engine.
 struct SemanticsControlView: View {
   let node: ControlNode
+  @Environment(\.rufletEvents) private var events
+  @AccessibilityFocusState private var accessibilityFocused: Bool
 
   var body: some View {
     Group {
@@ -78,10 +85,18 @@ struct SemanticsControlView: View {
       }
     }
     .accessibilityLabel(node.string("label") ?? "")
-    .accessibilityHint(node.string("hint_text") ?? "")
+    .accessibilityHint(node.string("hint") ?? "")
     .accessibilityValue(node.string("value") ?? "")
     .accessibilityAddTraits(traits)
-    .accessibilityHidden(node.bool("excluded") ?? false)
+    .accessibilityHidden(node.bool("hidden") ?? false)
+    .accessibilityElement(children: node.bool("container") == true ? .contain : .combine)
+    .accessibilityFocused($accessibilityFocused)
+    .onChange(of: accessibilityFocused) { focused in
+      events.fire(
+        node,
+        focused ? "did_gain_accessibility_focus" : "did_lose_accessibility_focus")
+    }
+    .modifier(SemanticsActions(node: node, events: events))
   }
 
   private var traits: AccessibilityTraits {
@@ -91,7 +106,94 @@ struct SemanticsControlView: View {
     if node.bool("image") == true { traits.formUnion(.isImage) }
     if node.bool("link") == true { traits.formUnion(.isLink) }
     if node.bool("selected") == true { traits.formUnion(.isSelected) }
+    if node.bool("text_field") == true { traits.formUnion(.isStaticText) }
     return traits
+  }
+}
+
+private struct SemanticsActions: ViewModifier {
+  let node: ControlNode
+  let events: RufletEventSink
+
+  func body(content: Content) -> some View {
+    content
+      .modifier(SemanticsDefaultAction(node: node, events: events))
+      .modifier(SemanticsAdjustActions(node: node, events: events))
+      .modifier(SemanticsDismissAction(node: node, events: events))
+      .modifier(SemanticsNamedActions(node: node, events: events))
+  }
+}
+
+private struct SemanticsDefaultAction: ViewModifier {
+  let node: ControlNode
+  let events: RufletEventSink
+  func body(content: Content) -> some View {
+    if node.handlesEvent("click") {
+      content.accessibilityAction(.default) { events.fire(node, "click") }
+    } else { content }
+  }
+}
+
+private struct SemanticsAdjustActions: ViewModifier {
+  let node: ControlNode
+  let events: RufletEventSink
+  func body(content: Content) -> some View {
+    content.accessibilityAdjustableAction { direction in
+      switch direction {
+      case .increment: events.fire(node, "increase")
+      case .decrement: events.fire(node, "decrease")
+      @unknown default: break
+      }
+    }
+  }
+}
+
+private struct SemanticsDismissAction: ViewModifier {
+  let node: ControlNode
+  let events: RufletEventSink
+  func body(content: Content) -> some View {
+    if node.handlesEvent("dismiss") {
+      content.accessibilityAction(.escape) { events.fire(node, "dismiss") }
+    } else { content }
+  }
+}
+
+private struct SemanticsNamedActions: ViewModifier {
+  let node: ControlNode
+  let events: RufletEventSink
+
+  func body(content: Content) -> some View {
+    content
+      .modifier(NamedSemanticsAction(node: node, events: events, event: "scroll_left", label: "Scroll left"))
+      .modifier(NamedSemanticsAction(node: node, events: events, event: "scroll_right", label: "Scroll right"))
+      .modifier(NamedSemanticsAction(node: node, events: events, event: "scroll_up", label: "Scroll up"))
+      .modifier(NamedSemanticsAction(node: node, events: events, event: "scroll_down", label: "Scroll down"))
+      .modifier(NamedSemanticsAction(node: node, events: events, event: "copy", label: "Copy"))
+      .modifier(NamedSemanticsAction(node: node, events: events, event: "cut", label: "Cut"))
+      .modifier(NamedSemanticsAction(node: node, events: events, event: "paste", label: "Paste"))
+      .modifier(NamedSemanticsAction(
+        node: node, events: events, event: "move_cursor_forward_by_character",
+        label: "Move cursor forward", data: .bool(true)))
+      .modifier(NamedSemanticsAction(
+        node: node, events: events, event: "move_cursor_backward_by_character",
+        label: "Move cursor backward", data: .bool(true)))
+      .modifier(NamedSemanticsAction(
+        node: node, events: events, event: "set_text", label: "Set text",
+        data: .string(node.string("value") ?? "")))
+  }
+}
+
+private struct NamedSemanticsAction: ViewModifier {
+  let node: ControlNode
+  let events: RufletEventSink
+  let event: String
+  let label: String
+  var data: RufletValue = .null
+
+  func body(content: Content) -> some View {
+    if node.handlesEvent(event) {
+      content.accessibilityAction(named: Text(label)) { events.fire(node, event, data: data) }
+    } else { content }
   }
 }
 
@@ -115,6 +217,7 @@ struct MergeSemanticsControlView: View {
 /// `SelectionArea` — makes the text inside it selectable.
 struct SelectionAreaControlView: View {
   let node: ControlNode
+  @Environment(\.rufletEvents) private var events
 
   var body: some View {
     Group {
@@ -125,6 +228,40 @@ struct SelectionAreaControlView: View {
       }
     }
     .textSelection(.enabled)
+    .modifier(SelectionChangeReporter(node: node, events: events))
+  }
+}
+
+private struct SelectionChangeReporter: ViewModifier {
+  let node: ControlNode
+  let events: RufletEventSink
+
+  func body(content: Content) -> some View {
+    #if canImport(AppKit)
+      content.onReceive(
+        NotificationCenter.default.publisher(for: NSTextView.didChangeSelectionNotification)
+      ) { notification in
+        guard let view = notification.object as? NSTextView else { return }
+        let range = view.selectedRange()
+        guard range.location != NSNotFound, range.location + range.length <= view.string.utf16.count else {
+          return
+        }
+        events.fire(
+          node, "change",
+          data: .string((view.string as NSString).substring(with: range)))
+      }
+    #elseif canImport(UIKit)
+      content.onReceive(
+        NotificationCenter.default.publisher(for: UITextView.textDidChangeSelectionNotification)
+      ) { notification in
+        guard let view = notification.object as? UITextView,
+          let range = view.selectedTextRange
+        else { return }
+        events.fire(node, "change", data: .string(view.text(in: range) ?? ""))
+      }
+    #else
+      content
+    #endif
   }
 }
 
@@ -241,6 +378,7 @@ struct HeroControlView: View {
 /// `WindowDragArea` — dragging this region moves the window.
 struct WindowDragAreaControlView: View {
   let node: ControlNode
+  @Environment(\.rufletEvents) private var events
 
   var body: some View {
     Group {
@@ -250,25 +388,60 @@ struct WindowDragAreaControlView: View {
         ControlList(ids: node.childIDs, axis: .vertical)
       }
     }
-    .modifier(WindowDragGesture(enabled: node.bool("maximizable") != false))
+    .modifier(WindowDragGesture(node: node, events: events))
   }
 }
 
 private struct WindowDragGesture: ViewModifier {
-  let enabled: Bool
+  let node: ControlNode
+  let events: RufletEventSink
+  @State private var dragging = false
 
   func body(content: Content) -> some View {
     #if os(macOS)
-      content.gesture(
+      content
+        .simultaneousGesture(
+          TapGesture(count: 2).onEnded {
+            guard node.bool("maximizable") != false, let window = NSApp.keyWindow else { return }
+            let wasMaximized = window.styleMask.contains(.fullScreen)
+              || window.standardWindowButton(.zoomButton)?.state == .on
+            window.performZoom(nil)
+            events.fire(
+              node, "double_tap",
+              data: .string(wasMaximized ? "unmaximize" : "maximize"))
+          })
+        .gesture(
         DragGesture(minimumDistance: 2, coordinateSpace: .global)
-          .onChanged { _ in
+          .onChanged { value in
             // AppKit already knows how to drag a window from an event; asking
             // it is far more robust than moving the frame by hand.
             guard let window = NSApp.keyWindow, let event = NSApp.currentEvent else { return }
+            if !dragging {
+              dragging = true
+              events.fire(
+                node, "drag_start",
+                data: FletInteractionParity.dragStart(
+                  kind: "mouse", local: value.startLocation,
+                  global: value.startLocation,
+                  timestamp: Date().timeIntervalSince1970 * 1_000))
+            }
             window.performDrag(with: event)
+          }
+          .onEnded { value in
+            dragging = false
+            events.fire(
+              node, "drag_end",
+              data: FletInteractionParity.dragEnd(
+                local: value.location, global: value.location,
+                velocity: .zero, primaryVelocity: nil))
           })
     #else
-      content
+      content.simultaneousGesture(
+        TapGesture(count: 2).onEnded {
+          if node.bool("maximizable") != false {
+            events.fire(node, "double_tap", data: .string("maximize"))
+          }
+        })
     #endif
   }
 }

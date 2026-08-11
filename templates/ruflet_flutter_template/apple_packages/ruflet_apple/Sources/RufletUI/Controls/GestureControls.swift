@@ -25,21 +25,222 @@ struct GestureDetectorControlView: View {
       }
     }
     .contentShape(Rectangle())
-    .modifier(TapGestures(node: node, events: events))
+    .modifier(PrimaryGestureReporter(node: node, events: events))
     .modifier(DragGestures(node: node, events: events))
     .modifier(ScaleGestures(node: node, events: events))
-    .modifier(HoverReporter(node: node, events: events))
+    .modifier(MultiTouchReporter(node: node, events: events))
+    .modifier(GestureHoverReporter(node: node, events: events))
+    .modifier(SecondaryPointerReporter(node: node, events: events))
+    .accessibilityHidden(node.bool("exclude_from_semantics") ?? false)
   }
 }
 
-private struct TapGestures: ViewModifier {
+/// SwiftUI exposes two-or-more-finger contact through magnification. For the
+/// Flet multi-touch recognizer this is sufficient to distinguish the short
+/// multi-tap from the one-second multi-long-press without adding a UIKit view
+/// that would steal hit testing from the detector's content.
+private struct MultiTouchReporter: ViewModifier {
   let node: ControlNode
   let events: RufletEventSink
+  @State private var beganAt: Date?
+
+  func body(content: Content) -> some View {
+    if node.handlesEvent("multi_tap") || node.handlesEvent("multi_long_press") {
+      content.simultaneousGesture(
+        MagnificationGesture()
+          .onChanged { _ in
+            if beganAt == nil { beganAt = Date() }
+          }
+          .onEnded { _ in
+            let duration = beganAt.map { Date().timeIntervalSince($0) } ?? 0
+            beganAt = nil
+            if duration >= 1 {
+              events.fire(node, "multi_long_press")
+            } else {
+              // Flet's `ct` is `correctNumberOfTouches`, a boolean despite the
+              // abbreviated name; see MultiTouchGestureRecognizer.
+              events.fire(node, "multi_tap", data: .map(["ct": .bool(true)]))
+            }
+          })
+    } else {
+      content
+    }
+  }
+}
+
+private struct SecondaryPointerReporter: ViewModifier {
+  let node: ControlNode
+  let events: RufletEventSink
+  func body(content: Content) -> some View {
+    #if os(macOS)
+      content.overlay(
+        FletNativePointerMonitor { name, payload in events.fire(node, name, data: payload) }
+          .allowsHitTesting(false)
+      )
+    #else
+      content
+    #endif
+  }
+}
+
+private struct GestureHoverReporter: ViewModifier {
+  let node: ControlNode
+  let events: RufletEventSink
+  @State private var hovering = false
+  @State private var previous = CGPoint.zero
+  @State private var origin = CGPoint.zero
+  @State private var lastReport = Date.distantPast
+
+  func body(content: Content) -> some View {
+    if #available(iOS 16.0, macOS 13.0, *) {
+      content
+        .overlay(GeometryReader { proxy in
+          Color.clear.allowsHitTesting(false)
+            .onAppear { origin = proxy.frame(in: .global).origin }
+            .onChange(of: proxy.frame(in: .global).origin) { origin = $0 }
+        })
+        .onContinuousHover { phase in
+          switch phase {
+          case .active(let local):
+            let global = CGPoint(x: local.x + origin.x, y: local.y + origin.y)
+            let payload: RufletValue = .map([
+              "k": .string("mouse"), "l": FletInteractionParity.point(local),
+              "g": FletInteractionParity.point(global),
+              "ld": FletInteractionParity.point(
+                CGPoint(x: local.x - previous.x, y: local.y - previous.y)),
+            ])
+            if !hovering {
+              hovering = true
+              events.fire(node, "enter", data: payload)
+            }
+            let interval = TimeInterval(node.int("hover_interval") ?? 0) / 1_000
+            if Date().timeIntervalSince(lastReport) >= interval {
+              lastReport = Date()
+              events.fire(node, "hover", data: payload)
+            }
+            previous = local
+          case .ended:
+            hovering = false
+            events.fire(
+              node, "exit",
+              data: .map([
+                "k": .string("mouse"), "l": FletInteractionParity.point(previous),
+                "g": FletInteractionParity.point(
+                  CGPoint(x: previous.x + origin.x, y: previous.y + origin.y)),
+              ]))
+          }
+        }
+    } else {
+      content
+    }
+  }
+}
+
+/// Primary tap and long-press lifecycle. Flet sends pointer detail maps for
+/// down/up/move and reuses the tap-down map for `tap`; a scalar/null payload
+/// here breaks applications which inspect `event.local_position`.
+private struct PrimaryGestureReporter: ViewModifier {
+  let node: ControlNode
+  let events: RufletEventSink
+  @State private var began = false
+  @State private var moved = false
+  @State private var start = CGPoint.zero
+  @State private var previous = CGPoint.zero
+  @State private var globalOrigin = CGPoint.zero
+  @State private var longPressStarted = false
 
   func body(content: Content) -> some View {
     content
-      .modifier(ClickReporter(node: node, events: events))
-      .modifier(LongPressReporter(node: node, events: events))
+      .overlay(
+        GeometryReader { proxy in
+          Color.clear
+            .allowsHitTesting(false)
+            .onAppear { globalOrigin = proxy.frame(in: .global).origin }
+            .onChange(of: proxy.frame(in: .global).origin) { globalOrigin = $0 }
+        }
+      )
+      .simultaneousGesture(
+        DragGesture(minimumDistance: 0)
+          .onChanged { value in
+            let global = CGPoint(
+              x: value.location.x + globalOrigin.x, y: value.location.y + globalOrigin.y)
+            if !began {
+              began = true
+              moved = false
+              start = value.location
+              previous = value.location
+              let payload = FletInteractionParity.tap(
+                kind: "touch", local: value.location, global: global)
+              events.fire(node, "tap_down", data: payload)
+              events.fire(node, "double_tap_down", data: payload)
+              events.fire(node, "long_press_down", data: payload)
+            } else if value.location != previous {
+              let delta = CGPoint(
+                x: value.location.x - previous.x, y: value.location.y - previous.y)
+              let payload: RufletValue = .map([
+                "k": .string("touch"), "l": FletInteractionParity.point(value.location),
+                "g": FletInteractionParity.point(global),
+                "d": FletInteractionParity.point(delta),
+              ])
+              events.fire(node, "tap_move", data: payload)
+              if longPressStarted {
+                events.fire(
+                  node, "long_press_move_update",
+                  data: .map([
+                    "l": FletInteractionParity.point(value.location),
+                    "g": FletInteractionParity.point(global),
+                    "ofo": FletInteractionParity.point(
+                      CGPoint(x: value.location.x - start.x, y: value.location.y - start.y)),
+                    "lofo": FletInteractionParity.point(
+                      CGPoint(x: value.location.x - start.x, y: value.location.y - start.y)),
+                  ]))
+              }
+              previous = value.location
+              moved = hypot(value.location.x - start.x, value.location.y - start.y) > 18
+            }
+          }
+          .onEnded { value in
+            let global = CGPoint(
+              x: value.location.x + globalOrigin.x, y: value.location.y + globalOrigin.y)
+            let payload = FletInteractionParity.tap(
+              kind: "touch", local: value.location, global: global)
+            if moved {
+              events.fire(node, "tap_cancel")
+              events.fire(node, "double_tap_cancel")
+              if !longPressStarted { events.fire(node, "long_press_cancel") }
+            } else {
+              events.fire(node, "tap_up", data: payload)
+              events.fire(node, "tap", data: FletInteractionParity.tap(
+                kind: "touch", local: start,
+                global: CGPoint(x: start.x + globalOrigin.x, y: start.y + globalOrigin.y)))
+            }
+            if longPressStarted {
+              events.fire(node, "long_press_up")
+              events.fire(
+                node, "long_press_end",
+                data: .map([
+                  "l": FletInteractionParity.point(value.location),
+                  "g": FletInteractionParity.point(global),
+                  "v": .map(["x": .double(0), "y": .double(0)]),
+                ]))
+            }
+            began = false
+            longPressStarted = false
+          })
+      .simultaneousGesture(
+        LongPressGesture(
+          minimumDuration: (node.double("long_press_duration") ?? 500) / 1000,
+          maximumDistance: 18
+        ).onEnded { _ in
+          longPressStarted = true
+          let local = previous
+          let global = CGPoint(x: local.x + globalOrigin.x, y: local.y + globalOrigin.y)
+          let payload: RufletValue = .map([
+            "l": FletInteractionParity.point(local), "g": FletInteractionParity.point(global),
+          ])
+          events.fire(node, "long_press_start", data: payload)
+          events.fire(node, "long_press")
+        })
       .modifier(DoubleTapReporter(node: node, events: events))
       .modifier(SecondaryTapReporter(node: node, events: events))
   }
@@ -56,7 +257,7 @@ private struct DoubleTapReporter: ViewModifier {
       // GestureDetector's contract while leaving ordinary single taps and
       // scrolling to the embedded native view.
       content.highPriorityGesture(
-        TapGesture(count: 2).onEnded { events.send(node.id, "double_tap", .null) })
+        TapGesture(count: 2).onEnded { events.fire(node, "double_tap") })
     } else {
       content
     }
@@ -86,49 +287,84 @@ private struct DragGestures: ViewModifier {
   let node: ControlNode
   let events: RufletEventSink
   @State private var dragging = false
+  @State private var previousLocal = CGPoint.zero
+  @State private var previousGlobal = CGPoint.zero
+  @State private var globalOrigin = CGPoint.zero
+  @State private var lastTimestamp = Date.distantPast
+  @State private var axis: LayoutAxis = .none
 
   private var wanted: Bool {
     node.handlesEvent("pan_start") || node.handlesEvent("pan_update")
-      || node.handlesEvent("pan_end") || node.handlesEvent("horizontal_drag_update")
-      || node.handlesEvent("vertical_drag_update")
+      || node.handlesEvent("pan_end") || node.handlesEvent("pan_down")
+      || node.handlesEvent("pan_cancel") || node.handlesEvent("horizontal_drag_down")
+      || node.handlesEvent("horizontal_drag_start") || node.handlesEvent("horizontal_drag_update")
+      || node.handlesEvent("horizontal_drag_end") || node.handlesEvent("horizontal_drag_cancel")
+      || node.handlesEvent("vertical_drag_down") || node.handlesEvent("vertical_drag_start")
+      || node.handlesEvent("vertical_drag_update") || node.handlesEvent("vertical_drag_end")
+      || node.handlesEvent("vertical_drag_cancel")
   }
 
   func body(content: Content) -> some View {
     guard wanted else { return AnyView(content) }
     return AnyView(
-      content.gesture(
+      content
+        .overlay(GeometryReader { proxy in
+          Color.clear.allowsHitTesting(false)
+            .onAppear { globalOrigin = proxy.frame(in: .global).origin }
+            .onChange(of: proxy.frame(in: .global).origin) { globalOrigin = $0 }
+        })
+        .simultaneousGesture(
         DragGesture(minimumDistance: 0)
           .onChanged { value in
+            let now = Date()
+            let global = CGPoint(
+              x: value.location.x + globalOrigin.x, y: value.location.y + globalOrigin.y)
             if !dragging {
               dragging = true
-              events.fire(node, "pan_start", data: payload(value))
+              axis = abs(value.translation.width) >= abs(value.translation.height)
+                ? .horizontal : .vertical
+              previousLocal = value.startLocation
+              previousGlobal = CGPoint(
+                x: value.startLocation.x + globalOrigin.x,
+                y: value.startLocation.y + globalOrigin.y)
+              let down = FletInteractionParity.dragDown(
+                local: value.startLocation, global: previousGlobal)
+              events.fire(node, "pan_down", data: down)
+              events.fire(node, axis == .horizontal ? "horizontal_drag_down" : "vertical_drag_down", data: down)
+              let start = FletInteractionParity.dragStart(
+                kind: "touch", local: value.startLocation, global: previousGlobal,
+                timestamp: now.timeIntervalSince1970 * 1_000)
+              events.fire(node, "pan_start", data: start)
+              events.fire(node, axis == .horizontal ? "horizontal_drag_start" : "vertical_drag_start", data: start)
             }
-            events.fire(node, "pan_update", data: payload(value))
-            events.fire(node, "horizontal_drag_update", data: payload(value))
-            events.fire(node, "vertical_drag_update", data: payload(value))
+            let interval = TimeInterval(node.int("drag_interval") ?? 0) / 1_000
+            guard now.timeIntervalSince(lastTimestamp) >= interval else { return }
+            lastTimestamp = now
+            let primary = axis == .horizontal
+              ? value.location.x - previousLocal.x : value.location.y - previousLocal.y
+            let payload = FletInteractionParity.dragUpdate(
+              local: value.location, global: global, previousLocal: previousLocal,
+              previousGlobal: previousGlobal, primaryDelta: primary,
+              timestamp: now.timeIntervalSince1970 * 1_000)
+            events.fire(node, "pan_update", data: payload)
+            events.fire(node, axis == .horizontal ? "horizontal_drag_update" : "vertical_drag_update", data: payload)
+            previousLocal = value.location
+            previousGlobal = global
           }
           .onEnded { value in
+            let global = CGPoint(
+              x: value.location.x + globalOrigin.x, y: value.location.y + globalOrigin.y)
+            let duration = max(1.0 / 60, Date().timeIntervalSince(lastTimestamp))
+            let velocity = CGVector(
+              dx: (value.predictedEndTranslation.width - value.translation.width) / duration,
+              dy: (value.predictedEndTranslation.height - value.translation.height) / duration)
+            let payload = FletInteractionParity.dragEnd(
+              local: value.location, global: global, velocity: velocity,
+              primaryVelocity: axis == .horizontal ? velocity.dx : velocity.dy)
             dragging = false
-            events.fire(node, "pan_end", data: payload(value))
+            events.fire(node, "pan_end", data: payload)
+            events.fire(node, axis == .horizontal ? "horizontal_drag_end" : "vertical_drag_end", data: payload)
           }))
-  }
-
-  private func payload(_ value: DragGesture.Value) -> RufletValue {
-    .map([
-      "lx": .double(value.location.x),
-      "ly": .double(value.location.y),
-      "gx": .double(value.startLocation.x + value.translation.width),
-      "gy": .double(value.startLocation.y + value.translation.height),
-      "dx": .double(value.translation.width),
-      "dy": .double(value.translation.height),
-      "local_x": .double(value.location.x),
-      "local_y": .double(value.location.y),
-      "global_x": .double(value.startLocation.x + value.translation.width),
-      "global_y": .double(value.startLocation.y + value.translation.height),
-      "delta_x": .double(value.translation.width),
-      "delta_y": .double(value.translation.height),
-      "primary_delta": .double(value.translation.width)
-    ])
   }
 }
 
@@ -137,6 +373,7 @@ private struct ScaleGestures: ViewModifier {
   let node: ControlNode
   let events: RufletEventSink
   @State private var scaling = false
+  @State private var previousFocalPoint = CGPoint.zero
 
   private var wanted: Bool {
     node.handlesEvent("scale_start") || node.handlesEvent("scale_update")
@@ -151,19 +388,22 @@ private struct ScaleGestures: ViewModifier {
           .onChanged { value in
             if !scaling {
               scaling = true
-              events.fire(node, "scale_start", data: .map(["scale": .double(value)]))
+              previousFocalPoint = .zero
+              events.fire(
+                node, "scale_start",
+                data: FletInteractionParity.scaleStart(
+                  local: .zero, global: .zero,
+                  timestamp: Date().timeIntervalSince1970 * 1_000))
             }
             events.fire(
               node, "scale_update",
-              data: .map([
-                "scale": .double(value),
-                "horizontal_scale": .double(value),
-                "vertical_scale": .double(value)
-              ]))
-          }
-          .onEnded { value in
+              data: FletInteractionParity.scaleUpdate(
+                scale: value, local: .zero, global: .zero,
+                previousLocal: previousFocalPoint,
+                timestamp: Date().timeIntervalSince1970 * 1_000))
+          }.onEnded { _ in
             scaling = false
-            events.fire(node, "scale_end", data: .map(["scale": .double(value)]))
+            events.fire(node, "scale_end", data: FletInteractionParity.scaleEnd())
           }))
   }
 }
@@ -229,19 +469,137 @@ struct DragTargetControlView: View {
 struct DismissibleControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
+  @Environment(\.layoutDirection) private var layoutDirection
+  @State private var translation = CGSize.zero
+  @State private var pendingDirection: String?
+  @State private var thresholdReached = false
+  @State private var dismissed = false
+  @State private var measuredSize = CGSize.zero
 
   var body: some View {
-    Group {
-      if let contentID = node.controlID(forKey: "content") {
-        ControlView(id: contentID, axis: .none)
+    ZStack {
+      background(direction: currentDirection)
+      if !dismissed {
+        Group {
+          if let contentID = node.controlID(forKey: "content") {
+            ControlView(id: contentID, axis: .none)
+          }
+        }
+        .offset(translation)
+        .gesture(dismissGesture(size: measuredSize))
       }
     }
-    .swipeActions(edge: .trailing) {
-      Button(role: .destructive) {
-        events.fire(node, "dismiss", data: .map(["direction": .string("endToStart")]))
-      } label: {
-        Label("Dismiss", systemImage: "trash")
+    .background(
+      GeometryReader { proxy in
+        Color.clear
+          .onAppear { measuredSize = proxy.size }
+          .onChange(of: proxy.size) { measuredSize = $0 }
       }
+    )
+    .rufletCommandHandler(node.id) { call, completion in
+      guard call.name == "confirm_dismiss" else {
+        completion(.failure(rufletUnsupported("Dismissible", call)))
+        return
+      }
+      let allow = call.argument("dismiss")?.boolValue ?? false
+      if let direction = pendingDirection {
+        pendingDirection = nil
+        allow ? finishDismiss(direction: direction) : resetDismiss()
+      }
+      completion(.success(.null))
+    }
+  }
+
+  private var currentDirection: String? {
+    FletInteractionParity.dismissDirection(
+      translation: translation, allowed: node.string("dismiss_direction"),
+      layoutDirection: layoutDirection)
+  }
+
+  @ViewBuilder
+  private func background(direction: String?) -> some View {
+    let key = direction == "endToStart" || direction == "up"
+      ? "secondary_background" : "background"
+    if let id = node.controlID(forKey: key) {
+      ControlView(id: id, axis: .none)
+    } else {
+      Color.clear
+    }
+  }
+
+  private func dismissGesture(size: CGSize) -> some Gesture {
+    DragGesture(minimumDistance: 2)
+      .onChanged { value in
+        guard pendingDirection == nil,
+          let direction = FletInteractionParity.dismissDirection(
+            translation: value.translation, allowed: node.string("dismiss_direction"),
+            layoutDirection: layoutDirection)
+        else { return }
+        translation = constrained(value.translation, direction: direction)
+        let extent = direction == "up" || direction == "down" ? size.height : size.width
+        let progress = min(1, magnitude(translation, direction: direction) / max(extent, 1))
+        let threshold = dismissThreshold(for: direction)
+        let reached = progress >= threshold
+        events.fire(
+          node, "update",
+          data: FletInteractionParity.dismissUpdate(
+            direction: direction, progress: progress,
+            previousReached: thresholdReached, reached: reached))
+        thresholdReached = reached
+      }
+      .onEnded { _ in
+        guard let direction = currentDirection, thresholdReached else {
+          resetDismiss()
+          return
+        }
+        if node.handlesEvent("confirm_dismiss") {
+          pendingDirection = direction
+          events.fire(
+            node, "confirm_dismiss", data: .map(["direction": .string(direction)]))
+        } else {
+          finishDismiss(direction: direction)
+        }
+      }
+  }
+
+  private func constrained(_ value: CGSize, direction: String) -> CGSize {
+    switch direction {
+    case "up", "down": return CGSize(width: 0, height: value.height)
+    default: return CGSize(width: value.width, height: 0)
+    }
+  }
+
+  private func magnitude(_ value: CGSize, direction: String) -> CGFloat {
+    direction == "up" || direction == "down" ? abs(value.height) : abs(value.width)
+  }
+
+  private func dismissThreshold(for direction: String) -> Double {
+    guard let values = node.props["dismiss_thresholds"]?.mapValue else { return 0.4 }
+    return values[direction]?.doubleValue ?? 0.4
+  }
+
+  private func finishDismiss(direction: String) {
+    let distance: CGFloat = 2_000
+    let target: CGSize
+    switch direction {
+    case "startToEnd": target = CGSize(width: layoutDirection == .leftToRight ? distance : -distance, height: 0)
+    case "endToStart": target = CGSize(width: layoutDirection == .leftToRight ? -distance : distance, height: 0)
+    case "down": target = CGSize(width: 0, height: distance)
+    default: target = CGSize(width: 0, height: -distance)
+    }
+    let seconds = (node.double("duration") ?? 200) / 1_000
+    withAnimation(.easeOut(duration: seconds)) { translation = target }
+    DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
+      dismissed = true
+      events.fire(node, "resize")
+      events.fire(node, "dismiss", data: .map(["direction": .string(direction)]))
+    }
+  }
+
+  private func resetDismiss() {
+    thresholdReached = false
+    withAnimation(.easeOut(duration: (node.double("duration") ?? 200) / 1_000)) {
+      translation = .zero
     }
   }
 }
@@ -319,16 +677,32 @@ struct InteractiveViewerControlView: View {
 struct KeyboardListenerControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
+  @State private var focused = false
 
   var body: some View {
-    Group {
+    ZStack {
       if let contentID = node.controlID(forKey: "content") {
         ControlView(id: contentID, axis: .none)
       }
+      FletNativeKeyboardListener(
+        focused: $focused,
+        includeSemantics: node.bool("include_semantics") ?? true,
+        onKeyDown: { events.fire(node, "key_down", data: FletInteractionParity.key($0)) },
+        onKeyRepeat: { events.fire(node, "key_repeat", data: FletInteractionParity.key($0)) },
+        onKeyUp: { events.fire(node, "key_up", data: FletInteractionParity.key($0)) }
+      )
+      .frame(width: 1, height: 1)
+      .opacity(0.001)
     }
-    #if os(macOS)
-      .onExitCommand { events.fire(node, "key", data: .map(["key": .string("Escape")])) }
-    #endif
+    .onAppear { focused = node.bool("autofocus") ?? false }
+    .rufletCommandHandler(node.id) { call, completion in
+      guard call.name == "focus" else {
+        completion(.failure(rufletUnsupported("KeyboardListener", call)))
+        return
+      }
+      focused = true
+      completion(.success(.null))
+    }
   }
 }
 
