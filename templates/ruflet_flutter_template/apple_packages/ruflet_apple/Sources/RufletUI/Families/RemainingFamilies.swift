@@ -71,6 +71,11 @@ extension ControlRegistry {
       return AnyView(VideoControlView(node: node))
     case "Map":
       return AnyView(MapControlView(node: node))
+    case "TileLayer", "MarkerLayer", "Marker", "CircleLayer", "CircleMarker",
+      "PolylineLayer", "PolylineMarker", "PolygonLayer", "PolygonMarker",
+      "SimpleAttribution":
+      // MapKit consumes these through the Map parent.
+      return AnyView(EmptyView())
     case "Audio", "AudioRecorder":
       // Services with no visible body; they answer method calls instead.
       return AnyView(EmptyView())

@@ -8,13 +8,13 @@
   },
   "summary": {
     "flet_types": 212,
-    "native_declarations": 191,
-    "missing_types": 49,
-    "missing_events": 161,
+    "native_declarations": 209,
+    "missing_types": 43,
+    "missing_events": 163,
     "missing_methods": 102,
     "undeclared_gaps": 0,
     "declared_baseline_matches": true,
-    "unresolved_gap_set_sha256": "7a9a46ff6c5d2d99ea46a957921801ce85a2443aae2756aeab4b7f3d5a68a9b9"
+    "unresolved_gap_set_sha256": "fb8683e74728308f037e171b0ad09939ea5f47f21cf4cc3da4a25106169723a8"
   },
   "missing_types": [
     {
@@ -32,14 +32,6 @@
       "allowed": true,
       "gap_classification": "ignored_package",
       "reason": "Color-picker extension controls are not exposed by the Ruflet DSL."
-    },
-    {
-      "wire_type": "CircleLayer",
-      "package": "flet_map",
-      "classification": "widget",
-      "allowed": true,
-      "gap_classification": "initial_api_parity_backlog",
-      "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review."
     },
     {
       "wire_type": "ColorPicker",
@@ -82,14 +74,6 @@
       "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review."
     },
     {
-      "wire_type": "MarkerLayer",
-      "package": "flet_map",
-      "classification": "widget",
-      "allowed": true,
-      "gap_classification": "initial_api_parity_backlog",
-      "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review."
-    },
-    {
       "wire_type": "MaterialPicker",
       "package": "flet_color_pickers",
       "classification": "widget",
@@ -114,31 +98,7 @@
       "reason": "Advertising controls are not exposed by the Ruflet DSL."
     },
     {
-      "wire_type": "PolygonLayer",
-      "package": "flet_map",
-      "classification": "widget",
-      "allowed": true,
-      "gap_classification": "initial_api_parity_backlog",
-      "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review."
-    },
-    {
-      "wire_type": "PolylineLayer",
-      "package": "flet_map",
-      "classification": "widget",
-      "allowed": true,
-      "gap_classification": "initial_api_parity_backlog",
-      "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review."
-    },
-    {
       "wire_type": "RichAttribution",
-      "package": "flet_map",
-      "classification": "widget",
-      "allowed": true,
-      "gap_classification": "initial_api_parity_backlog",
-      "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review."
-    },
-    {
-      "wire_type": "SimpleAttribution",
       "package": "flet_map",
       "classification": "widget",
       "allowed": true,
@@ -397,14 +357,6 @@
       "wire_type": "Tester",
       "package": "flet",
       "classification": "service",
-      "allowed": true,
-      "gap_classification": "initial_api_parity_backlog",
-      "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review."
-    },
-    {
-      "wire_type": "TileLayer",
-      "package": "flet_map",
-      "classification": "widget",
       "allowed": true,
       "gap_classification": "initial_api_parity_backlog",
       "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review."
@@ -1508,6 +1460,14 @@
       "gap_classification": "initial_api_parity_backlog"
     },
     {
+      "wire_type": "SimpleAttribution",
+      "native_type": "SimpleAttribution",
+      "event": "click",
+      "allowed": true,
+      "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review.",
+      "gap_classification": "initial_api_parity_backlog"
+    },
+    {
       "wire_type": "SnackBar",
       "native_type": "SnackBar",
       "event": "action",
@@ -1631,6 +1591,14 @@
       "wire_type": "Text",
       "native_type": "Text",
       "event": "tap",
+      "allowed": true,
+      "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review.",
+      "gap_classification": "initial_api_parity_backlog"
+    },
+    {
+      "wire_type": "TileLayer",
+      "native_type": "TileLayer",
+      "event": "image_error",
       "allowed": true,
       "reason": "Exact type/event/method gaps listed in native_renderer_gap_report.json at audit introduction. Any addition or removal changes this fingerprint and requires an explicit conformance review.",
       "gap_classification": "initial_api_parity_backlog"

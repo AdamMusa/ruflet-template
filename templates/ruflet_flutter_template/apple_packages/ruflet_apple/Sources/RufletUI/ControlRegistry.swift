@@ -327,9 +327,13 @@ public enum ControlRegistry {
                   "jump_to", "next", "pause", "play", "play_or_pause", "playlist_add",
                   "playlist_remove", "previous", "seek", "stop"])
     add(["Map"], .visible, "MapControlView", .nativeView,
-        events: ["long_press", "position_change", "tap"],
+        events: ["event", "hover", "init", "long_press", "pointer_cancel", "pointer_down",
+                 "pointer_up", "position_change", "secondary_tap", "tap"],
         methods: ["center_on", "move_to", "reset_rotation", "rotate_from", "zoom_in",
                   "zoom_out", "zoom_to"])
+    add(["TileLayer", "MarkerLayer", "Marker", "CircleLayer", "CircleMarker",
+         "PolylineLayer", "PolylineMarker", "PolygonLayer", "PolygonMarker",
+         "SimpleAttribution"], .structuralChild, "MapKit layer metadata", .metadataOnly)
     add(["Camera"], .visible, "RufletMedia.CameraControlView",
         .optionalBundle("RufletMedia"), events: ["error", "initialized", "picture_taken"])
     add(["Audio", "AudioRecorder"], .service, "RufletMedia service", .serviceOnly)

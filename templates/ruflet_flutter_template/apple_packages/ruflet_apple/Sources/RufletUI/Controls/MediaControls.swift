@@ -985,6 +985,8 @@ final class VideoPlayerModel: ObservableObject {
 struct MapControlView: View {
   let node: ControlNode
   @StateObject private var model = MapModel()
+  @EnvironmentObject private var store: ControlStore
+  @Environment(\.rufletEvents) private var events
 
   var body: some View {
     Group {
@@ -994,7 +996,10 @@ struct MapControlView: View {
         Color.gray.opacity(0.2)
       #endif
     }
-    .onAppear { model.configure(from: node) }
+    .onAppear { model.configure(from: node, store: store, events: events) }
+    .onChange(of: store.revision) { _ in
+      model.configure(from: node, store: store, events: events)
+    }
     .rufletCommandHandler(node.id) { call, completion in
       model.handle(call, completion: completion)
     }
@@ -1004,9 +1009,31 @@ struct MapControlView: View {
 #if canImport(MapKit)
   /// Owns the map view so the camera methods reach the one on screen.
   @MainActor
-  final class MapModel: ObservableObject {
+  final class MapModel: NSObject, ObservableObject, MKMapViewDelegate {
     let view = MKMapView()
-    private var configured = false
+    private var control: ControlNode?
+    private var events = RufletEventSink()
+    private var applyingConfiguration = false
+    private var initialized = false
+    private var circleStyles: [ObjectIdentifier: (fill: String, stroke: String, width: CGFloat)] = [:]
+    private var lineStyles: [ObjectIdentifier: (color: String, width: CGFloat)] = [:]
+    private var polygonStyles: [ObjectIdentifier: (fill: String, stroke: String, width: CGFloat)] = [:]
+
+    override init() {
+      super.init()
+      view.delegate = self
+      #if canImport(UIKit)
+        let tap = UITapGestureRecognizer(target: self, action: #selector(didTap(_:)))
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(didLongPress(_:)))
+        view.addGestureRecognizer(tap)
+        view.addGestureRecognizer(longPress)
+      #elseif canImport(AppKit)
+        let tap = NSClickGestureRecognizer(target: self, action: #selector(didClick(_:)))
+        let longPress = NSPressGestureRecognizer(target: self, action: #selector(didPress(_:)))
+        view.addGestureRecognizer(tap)
+        view.addGestureRecognizer(longPress)
+      #endif
+    }
 
     /// Web-tile zoom levels halve the visible span with each step, which is the
     /// convention Flet's map configuration uses.
@@ -1019,24 +1046,223 @@ struct MapControlView: View {
       log2(360 / max(span.latitudeDelta, 0.0001))
     }
 
-    func configure(from node: ControlNode) {
-      guard !configured else { return }
-      configured = true
+    func configure(from node: ControlNode, store: ControlStore, events: RufletEventSink) {
+      control = node
+      self.events = events
+      applyingConfiguration = true
 
-      let centre = node.map("initial_center")
-      view.setRegion(
-        MKCoordinateRegion(
-          center: CLLocationCoordinate2D(
-            latitude: centre?["latitude"]?.doubleValue ?? 0,
-            longitude: centre?["longitude"]?.doubleValue ?? 0),
-          span: Self.span(forZoom: node.double("initial_zoom") ?? 13)),
-        animated: false)
+      if !initialized {
+        let centre = node.map("initial_center")
+        view.setRegion(
+          MKCoordinateRegion(
+            center: CLLocationCoordinate2D(
+              latitude: centre?["latitude"]?.doubleValue ?? 50.5,
+              longitude: centre?["longitude"]?.doubleValue ?? 30.51),
+            span: Self.span(forZoom: node.double("initial_zoom") ?? 13)),
+          animated: false)
+      }
 
       let interactive = node.bool("interaction_enabled") ?? true
       view.isZoomEnabled = interactive
       view.isScrollEnabled = interactive
       view.isRotateEnabled = interactive
+      view.isPitchEnabled = interactive
+      view.mapType = mapType(node.string("map_type"))
+      view.removeAnnotations(view.annotations)
+      view.removeOverlays(view.overlays)
+      circleStyles.removeAll()
+      lineStyles.removeAll()
+      polygonStyles.removeAll()
+      installLayers(from: node, store: store)
+      applyingConfiguration = false
+      if !initialized {
+        initialized = true
+        events.fire(node, "init")
+      }
     }
+
+    private func mapType(_ value: String?) -> MKMapType {
+      switch value?.lowercased() {
+      case "satellite": return .satellite
+      case "hybrid": return .hybrid
+      case "muted_standard": return .mutedStandard
+      default: return .standard
+      }
+    }
+
+    private func installLayers(from node: ControlNode, store: ControlStore) {
+      let layerIDs = orderedUnique(node.controlIDs(forKey: "layers") + node.childIDs)
+      for layerID in layerIDs {
+        guard let layer = store.node(layerID) else { continue }
+        switch layer.type {
+        case "TileLayer":
+          if let template = layer.string("url_template"), !template.isEmpty {
+            let overlay = MKTileOverlay(urlTemplate: template)
+            overlay.tileSize = CGSize(
+              width: layer.double("tile_size") ?? 256,
+              height: layer.double("tile_size") ?? 256)
+            overlay.minimumZ = layer.int("min_native_zoom") ?? 0
+            overlay.maximumZ = layer.int("max_native_zoom") ?? 19
+            overlay.canReplaceMapContent = layer.bool("replace_map_content") ?? false
+            view.addOverlay(overlay, level: .aboveLabels)
+          }
+        case "MarkerLayer":
+          for id in orderedUnique(layer.controlIDs(forKey: "markers") + layer.childIDs) {
+            guard let marker = store.node(id), let point = coordinate(marker.map("coordinates")) else { continue }
+            let annotation = MKPointAnnotation()
+            annotation.coordinate = point
+            if let contentID = marker.controlID(forKey: "content"), let content = store.node(contentID) {
+              annotation.title = content.string("value") ?? content.string("text")
+            }
+            view.addAnnotation(annotation)
+          }
+        case "CircleLayer":
+          for id in orderedUnique(layer.controlIDs(forKey: "circles") + layer.childIDs) {
+            guard let circle = store.node(id), let point = coordinate(circle.map("coordinates")) else { continue }
+            let radius = circle.double("radius") ?? 10
+            let meters = circle.bool("use_radius_in_meter") == true ? radius : radius * 2
+            let overlay = MKCircle(center: point, radius: meters)
+            circleStyles[ObjectIdentifier(overlay)] = (
+              circle.string("color") ?? "green",
+              circle.string("border_color") ?? "yellow",
+              CGFloat(circle.double("border_stroke_width") ?? 0))
+            view.addOverlay(overlay)
+          }
+        case "PolylineLayer":
+          for id in orderedUnique(layer.controlIDs(forKey: "polylines") + layer.childIDs) {
+            guard let line = store.node(id) else { continue }
+            var coordinates = coordinateList(line.array("coordinates"))
+            guard coordinates.count > 1 else { continue }
+            let overlay = MKPolyline(coordinates: &coordinates, count: coordinates.count)
+            lineStyles[ObjectIdentifier(overlay)] = (
+              line.string("color") ?? "yellow", CGFloat(line.double("stroke_width") ?? 1))
+            view.addOverlay(overlay)
+          }
+        case "PolygonLayer":
+          for id in orderedUnique(layer.controlIDs(forKey: "polygons") + layer.childIDs) {
+            guard let polygon = store.node(id) else { continue }
+            var coordinates = coordinateList(polygon.array("coordinates"))
+            guard coordinates.count > 2 else { continue }
+            let overlay = MKPolygon(coordinates: &coordinates, count: coordinates.count)
+            polygonStyles[ObjectIdentifier(overlay)] = (
+              polygon.string("color") ?? "green",
+              polygon.string("border_color") ?? "green",
+              CGFloat(polygon.double("border_stroke_width") ?? 0))
+            view.addOverlay(overlay)
+          }
+        default:
+          continue
+        }
+      }
+    }
+
+    private func orderedUnique(_ ids: [Int]) -> [Int] {
+      var seen = Set<Int>()
+      return ids.filter { seen.insert($0).inserted }
+    }
+
+    private func coordinate(_ map: [String: RufletValue]?) -> CLLocationCoordinate2D? {
+      guard let latitude = map?["latitude"]?.doubleValue,
+        let longitude = map?["longitude"]?.doubleValue else { return nil }
+      return CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+    }
+
+    private func coordinateList(_ values: [RufletValue]?) -> [CLLocationCoordinate2D] {
+      (values ?? []).compactMap { coordinate($0.mapValue) }
+    }
+
+    private func eventData(at point: CGPoint, coordinate: CLLocationCoordinate2D) -> RufletValue {
+      .map([
+        "coordinates": .map([
+          "latitude": .double(coordinate.latitude),
+          "longitude": .double(coordinate.longitude)
+        ]),
+        "gx": .double(Double(point.x)), "gy": .double(Double(point.y)),
+        "lx": .double(Double(point.x)), "ly": .double(Double(point.y))
+      ])
+    }
+
+    #if canImport(UIKit)
+      @objc private func didTap(_ recognizer: UITapGestureRecognizer) {
+        guard recognizer.state == .ended, let control else { return }
+        let point = recognizer.location(in: view)
+        events.fire(control, "tap", data: eventData(at: point, coordinate: view.convert(point, toCoordinateFrom: view)))
+      }
+
+      @objc private func didLongPress(_ recognizer: UILongPressGestureRecognizer) {
+        guard recognizer.state == .began, let control else { return }
+        let point = recognizer.location(in: view)
+        events.fire(control, "long_press", data: eventData(at: point, coordinate: view.convert(point, toCoordinateFrom: view)))
+      }
+    #elseif canImport(AppKit)
+      @objc private func didClick(_ recognizer: NSClickGestureRecognizer) {
+        guard recognizer.state == .ended, let control else { return }
+        let point = recognizer.location(in: view)
+        events.fire(control, "tap", data: eventData(at: point, coordinate: view.convert(point, toCoordinateFrom: view)))
+      }
+
+      @objc private func didPress(_ recognizer: NSPressGestureRecognizer) {
+        guard recognizer.state == .began, let control else { return }
+        let point = recognizer.location(in: view)
+        events.fire(control, "long_press", data: eventData(at: point, coordinate: view.convert(point, toCoordinateFrom: view)))
+      }
+    #endif
+
+    func mapViewDidChangeVisibleRegion(_ mapView: MKMapView) {
+      guard !applyingConfiguration, let control else { return }
+      let center = mapView.region.center
+      let zoom = Self.zoom(forSpan: mapView.region.span)
+      events.fire(control, "position_change", data: .map([
+        "coordinates": .map([
+          "latitude": .double(center.latitude), "longitude": .double(center.longitude)
+        ]),
+        "has_gesture": .bool(true),
+        "camera": .map([
+          "center": .map([
+            "latitude": .double(center.latitude), "longitude": .double(center.longitude)
+          ]),
+          "zoom": .double(zoom),
+          "rotation": .double(mapView.camera.heading)
+        ])
+      ]))
+    }
+
+    func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+      if let tile = overlay as? MKTileOverlay { return MKTileOverlayRenderer(tileOverlay: tile) }
+      if let circle = overlay as? MKCircle, let style = circleStyles[ObjectIdentifier(circle)] {
+        let renderer = MKCircleRenderer(circle: circle)
+        renderer.fillColor = platformColor(style.fill, opacity: 0.45)
+        renderer.strokeColor = platformColor(style.stroke, opacity: 1)
+        renderer.lineWidth = style.width
+        return renderer
+      }
+      if let line = overlay as? MKPolyline, let style = lineStyles[ObjectIdentifier(line)] {
+        let renderer = MKPolylineRenderer(polyline: line)
+        renderer.strokeColor = platformColor(style.color, opacity: 1)
+        renderer.lineWidth = style.width
+        renderer.lineCap = .round
+        renderer.lineJoin = .round
+        return renderer
+      }
+      if let polygon = overlay as? MKPolygon, let style = polygonStyles[ObjectIdentifier(polygon)] {
+        let renderer = MKPolygonRenderer(polygon: polygon)
+        renderer.fillColor = platformColor(style.fill, opacity: 0.45)
+        renderer.strokeColor = platformColor(style.stroke, opacity: 1)
+        renderer.lineWidth = style.width
+        return renderer
+      }
+      return MKOverlayRenderer(overlay: overlay)
+    }
+
+    #if canImport(UIKit)
+      private func platformColor(_ name: String, opacity: CGFloat) -> UIColor {
+        UIColor(MaterialPalette.color(name, default: .primary).opacity(Double(opacity)))
+      }
+    #elseif canImport(AppKit)
+      private func platformColor(_ name: String, opacity: CGFloat) -> NSColor {
+        NSColor(MaterialPalette.color(name, default: .primary).opacity(Double(opacity)))
+      }
+    #endif
 
     private func coordinate(_ call: RufletMethodCall) -> CLLocationCoordinate2D? {
       let source = call.argument("point") ?? call.args
@@ -1095,6 +1321,7 @@ struct MapControlView: View {
       }
     }
   }
+
 
   private struct MapContainer {
     let model: MapModel
