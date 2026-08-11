@@ -43,6 +43,12 @@ class NativeRendererGapAuditTest < Minitest::Test
     assert_includes @surface.fetch("SimpleAttribution").fetch("events"), "click"
   end
 
+  def test_registry_composed_type_lists_are_expanded()
+    assert_equal "SpinKitControlView", @surface.fetch("SpinKitRotatingPlain").fetch("implementation")
+    assert_equal "SpinKitControlView", @surface.fetch("SpinKitWaveSpinner").fetch("implementation")
+    refute @report.fetch("missing_types").any? { |gap| gap.fetch("wire_type").start_with?("SpinKit") }
+  end
+
   def test_default_and_optional_bundle_services_are_discovered
     assert_includes @surface.fetch("Connectivity").fetch("events"), "change"
     assert_includes @surface.fetch("FilePicker").fetch("methods"), "pick_files"

@@ -65,28 +65,45 @@ module NativeRendererGapAudit
   def string_array(expression, variables = {})
     token = expression&.strip
     return [] unless token
-    return variables.fetch(token, []) unless token.start_with?("[")
+    if token.include?("+")
+      return token.split("+").flat_map { |part| string_array(part, variables) }
+    end
+    unless token.start_with?("[")
+      return variables.fetch(token, variables.fetch(token.split(".").last, []))
+    end
 
     token.scan(/["']([^"']+)["']/).flatten
   end
 
+  def swift_array_variables
+    Dir.glob(File.join(sources_root, "**", "*.swift")).sort.each_with_object({}) do |path, result|
+      source = File.read(path)
+      source.scan(/(?:static\s+)?let\s+(\w+)(?:\s*:\s*(?:Set<)?\[?String\]?>?)?\s*=\s*(\[[^\]]*\])/m) do |name, expression|
+        values = string_array(expression)
+        result[name] = values unless values.empty?
+      end
+    end
+  end
+
   def native_descriptors
     source = File.read(registry_path)
-    set_variables = source.scan(/let\s+(\w+)\s*:\s*Set<String>\s*=\s*(\[[^\]]*\])/m)
-      .to_h { |name, expression| [name, string_array(expression)] }
+    set_variables = swift_array_variables.merge(
+      source.scan(/let\s+(\w+)\s*:\s*Set<String>\s*=\s*(\[[^\]]*\])/m)
+        .to_h { |name, expression| [name, string_array(expression)] }
+    )
     descriptors = {}
     offset = 0
     while (match = source.match(/\badd\s*\(/, offset))
       call = balanced(source, source.index("(", match.begin(0)))
       break unless call
 
-      types_expression = call[/\A\(\s*(\[[^\]]*\])/, 1]
-      classification = call[/\A\(\s*\[[^\]]*\]\s*,\s*\.(\w+)/m, 1]
-      implementation = call[/\A\(\s*\[[^\]]*\]\s*,\s*\.\w+\s*,\s*["']([^"']+)["']/m, 1]
-      rendering = call[/\A\(\s*\[[^\]]*\]\s*,\s*\.\w+\s*,\s*["'][^"']+["']\s*,\s*\.(\w+)/m, 1]
+      types_expression = call[/\A\(\s*(.+?)\s*,\s*\.\w+/m, 1]
+      classification = call[/\A\(\s*.+?\s*,\s*\.(\w+)/m, 1]
+      implementation = call[/\A\(\s*.+?\s*,\s*\.\w+\s*,\s*["']([^"']+)["']/m, 1]
+      rendering = call[/\A\(\s*.+?\s*,\s*\.\w+\s*,\s*["'][^"']+["']\s*,\s*\.(\w+)/m, 1]
       events_expression = call[/\bevents:\s*(\[[^\]]*\]|\w+)/m, 1]
       methods_expression = call[/\bmethods:\s*(\[[^\]]*\]|\w+)/m, 1]
-      string_array(types_expression).each do |wire_type|
+      string_array(types_expression, set_variables).each do |wire_type|
         descriptors[wire_type] = {
           "wire_type" => wire_type,
           "declaration" => "control_descriptor",
