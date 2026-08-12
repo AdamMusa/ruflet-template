@@ -193,6 +193,24 @@ public enum DataTable2SelectionSemantics {
   }
 }
 
+public enum DataTable2RowSemantics {
+  /// DataRow2 explicitly documents that its decoration owns the row boundary;
+  /// DataTable2's divider thickness and bottom-border flag no longer apply.
+  public static func showsTableDivider(
+    row: ControlNode, isLast: Bool, showBottomBorder: Bool
+  ) -> Bool {
+    guard row.props["decoration"]?.mapValue == nil else { return false }
+    return !isLast || showBottomBorder
+  }
+
+  public static func emptyMinimumHeight(table: ControlNode, availableHeight: CGFloat) -> CGFloat {
+    // The heading is still rendered inside the scroll view when fixedTopRows
+    // is zero, so the empty control always receives only the remaining height.
+    let headingHeight = CGFloat(table.double("heading_row_height") ?? 56)
+    return max(availableHeight - headingHeight, 0)
+  }
+}
+
 public enum DataTable2EventPayload {
   /// Flet's `TapDownDetails.toMap()` wire shape (`k`, `l`, `g`).
   public static func tapDown(kind: String, local: CGPoint, global: CGPoint) -> RufletValue {
@@ -287,7 +305,10 @@ public struct DataTable2ControlView: View {
           }
           if rows.isEmpty, let emptyID = node.controlID(forKey: "empty") {
             ControlView(id: emptyID, axis: .vertical)
-              .frame(maxWidth: .infinity, minHeight: max(size.height - 56, 0))
+              .frame(
+                maxWidth: .infinity,
+                minHeight: DataTable2RowSemantics.emptyMinimumHeight(
+                  table: node, availableHeight: size.height))
           }
           Color.clear.frame(height: CGFloat(semantics.bottomMargin ?? 0))
         }
@@ -330,7 +351,11 @@ public struct DataTable2ControlView: View {
         node: row, events: events,
         selectsRowOnTap: row.handlesEvent("select_change") && !row.handlesEvent("tap")))
       .overlay(alignment: .bottom) {
-        if !isLast || semantics.showBottomBorder { horizontalRule }
+        if DataTable2RowSemantics.showsTableDivider(
+          row: row, isLast: isLast, showBottomBorder: semantics.showBottomBorder)
+        {
+          horizontalRule
+        }
       }
   }
 

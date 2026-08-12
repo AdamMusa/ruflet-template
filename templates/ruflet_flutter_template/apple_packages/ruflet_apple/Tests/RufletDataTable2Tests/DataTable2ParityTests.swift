@@ -93,6 +93,41 @@ final class DataTable2ParityTests: XCTestCase {
     XCTAssertEqual(value.height(of: ControlNode(id: 3, type: "DataRow"), fallback: 48), 48)
   }
 
+  func testDecoratedRowsOwnTheirBoundaryAndSuppressTableDividers() {
+    let plain = ControlNode(id: 2, type: "DataRow2")
+    let decorated = ControlNode(id: 3, type: "DataRow2", props: [
+      "decoration": .map(["color": .string("red")]),
+    ])
+
+    XCTAssertTrue(DataTable2RowSemantics.showsTableDivider(
+      row: plain, isLast: false, showBottomBorder: false))
+    XCTAssertFalse(DataTable2RowSemantics.showsTableDivider(
+      row: plain, isLast: true, showBottomBorder: false))
+    XCTAssertTrue(DataTable2RowSemantics.showsTableDivider(
+      row: plain, isLast: true, showBottomBorder: true))
+    XCTAssertFalse(DataTable2RowSemantics.showsTableDivider(
+      row: decorated, isLast: false, showBottomBorder: true))
+  }
+
+  func testEmptyPlaceholderSubtractsActualFixedHeadingHeight() {
+    XCTAssertEqual(
+      DataTable2RowSemantics.emptyMinimumHeight(
+        table: ControlNode(id: 1, type: "DataTable2"), availableHeight: 400),
+      344)
+    XCTAssertEqual(
+      DataTable2RowSemantics.emptyMinimumHeight(
+        table: ControlNode(id: 2, type: "DataTable2", props: [
+          "heading_row_height": .double(72),
+        ]), availableHeight: 400),
+      328)
+    XCTAssertEqual(
+      DataTable2RowSemantics.emptyMinimumHeight(
+        table: ControlNode(id: 3, type: "DataTable2", props: [
+          "fixed_top_rows": .int(0), "heading_row_height": .double(72),
+        ]), availableHeight: 400),
+      328)
+  }
+
   func testExplicitFixedDimensionsArePassedThroughWithoutRendererClamping() {
     let value = DataTable2Semantics(ControlNode(id: 1, type: "DataTable2"))
     XCTAssertEqual(
