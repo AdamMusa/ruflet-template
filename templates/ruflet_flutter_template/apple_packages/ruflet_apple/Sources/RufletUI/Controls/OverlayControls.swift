@@ -240,7 +240,7 @@ enum OverlayDefaults {
   }
 
   static func bottomSheetValidation(_ node: ControlNode, content: ControlNode?) -> String? {
-    RufletRequiredContent.validationError(
+    return RufletRequiredContent.validationError(
       contentID: node.controlID(forKey: "content"), content: content,
       message: bottomSheetMissingContentError)
   }
@@ -270,7 +270,8 @@ enum OverlayDefaults {
   static func snackBarValidation(
     _ node: ControlNode, content: ControlNode?
   ) -> String? {
-    RufletRequiredContent.validationError(
+    if case .string? = node.props["content"] { return nil }
+    return RufletRequiredContent.validationError(
       contentID: node.controlID(forKey: "content"), content: content,
       message: snackBarMissingContentError)
   }
@@ -823,6 +824,8 @@ struct SnackBarControlView: View {
     HStack(spacing: 12) {
       if let contentID = node.controlID(forKey: "content") {
         ControlView(id: contentID, axis: .none)
+      } else if case .string(let content)? = node.props["content"] {
+        Text(content)
       }
       Spacer(minLength: 0)
       if let actionID = node.controlID(forKey: "action") {
