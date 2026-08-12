@@ -1145,9 +1145,13 @@ struct WindowDragAreaControlView: View {
 
 struct WindowDragAreaPresentation {
   static let missingContentError = "WindowDragArea.content must be provided and visible"
+  // Flutter's kDoubleTapTimeout and kDoubleTapSlop.
+  static let doubleTapTimeout: TimeInterval = 0.3
+  static let doubleTapSlop: CGFloat = 100
   let node: ControlNode
   var contentID: Int? { node.controlID(forKey: "content") }
   var maximizable: Bool { node.bool("maximizable") ?? true }
+  var interactionEnabled: Bool { node.bool("disabled") != true }
 
   func validationError(content: ControlNode?) -> String? {
     RufletRequiredContent.validationError(
@@ -1157,55 +1161,128 @@ struct WindowDragAreaPresentation {
   static func doubleTapPayload(wasMaximized: Bool) -> RufletValue {
     .string(wasMaximized ? "unmaximize" : "maximize")
   }
+
+  static func isDoubleTap(
+    previousUpTime: TimeInterval?, previousUpPosition: CGPoint?,
+    currentDownTime: TimeInterval, currentDownPosition: CGPoint
+  ) -> Bool {
+    guard let previousUpTime, let previousUpPosition else { return false }
+    let elapsed = currentDownTime - previousUpTime
+    return elapsed >= 0 && elapsed <= doubleTapTimeout
+      && hypot(
+        currentDownPosition.x - previousUpPosition.x,
+        currentDownPosition.y - previousUpPosition.y) <= doubleTapSlop
+  }
+
+  static func dragStartPayload(
+    local: CGPoint, global: CGPoint, timestamp: TimeInterval
+  ) -> RufletValue {
+    RufletInteractionParity.dragStart(
+      kind: "mouse", local: local, global: global, timestamp: timestamp * 1_000)
+  }
+
+  static func dragEndPayload(
+    local: CGPoint, global: CGPoint, velocity: CGVector
+  ) -> RufletValue {
+    RufletInteractionParity.dragEnd(
+      local: local, global: global, velocity: velocity, primaryVelocity: nil)
+  }
 }
 
 private struct WindowDragGesture: ViewModifier {
   let node: ControlNode
   let events: RufletEventSink
   @State private var dragging = false
+  @State private var previousDragLocation: CGPoint?
+  @State private var previousDragTime: TimeInterval?
+  @State private var dragVelocity: CGVector = .zero
+  @State private var pointerDown = false
+  @State private var lastTapUpTime: TimeInterval?
+  @State private var lastTapUpPosition: CGPoint?
+  @State private var recognizedDoubleTap = false
 
   func body(content: Content) -> some View {
     #if os(macOS)
       content
         .simultaneousGesture(
-          TapGesture(count: 2).onEnded {
-            guard WindowDragAreaPresentation(node: node).maximizable,
-              let window = NSApp.keyWindow
-            else { return }
-            let wasMaximized =
-              window.styleMask.contains(.fullScreen)
-              || window.standardWindowButton(.zoomButton)?.state == .on
-            window.performZoom(nil)
-            events.fire(
-              node, "double_tap",
-              data: WindowDragAreaPresentation.doubleTapPayload(
-                wasMaximized: wasMaximized))
-          }
-        )
-        .gesture(
-          DragGesture(minimumDistance: 2, coordinateSpace: .global)
+          DragGesture(minimumDistance: 0, coordinateSpace: .global)
             .onChanged { value in
+              let presentation = WindowDragAreaPresentation(node: node)
+              guard presentation.interactionEnabled, !pointerDown else { return }
+              pointerDown = true
+              let now = ProcessInfo.processInfo.systemUptime
+              guard presentation.maximizable,
+                WindowDragAreaPresentation.isDoubleTap(
+                  previousUpTime: lastTapUpTime,
+                  previousUpPosition: lastTapUpPosition,
+                  currentDownTime: now,
+                  currentDownPosition: value.startLocation),
+                let window = NSApp.keyWindow
+              else { return }
+              recognizedDoubleTap = true
+              lastTapUpTime = nil
+              lastTapUpPosition = nil
+              let wasMaximized = window.isZoomed
+              window.zoom(nil)
+              events.fire(
+                node, "double_tap",
+                data: WindowDragAreaPresentation.doubleTapPayload(
+                  wasMaximized: wasMaximized))
+            }
+            .onEnded { value in
+              let presentation = WindowDragAreaPresentation(node: node)
+              defer {
+                pointerDown = false
+                recognizedDoubleTap = false
+              }
+              guard presentation.interactionEnabled, presentation.maximizable,
+                !recognizedDoubleTap
+              else { return }
+              lastTapUpTime = ProcessInfo.processInfo.systemUptime
+              lastTapUpPosition = value.location
+            })
+        .gesture(
+          DragGesture(minimumDistance: 2)
+            .onChanged { value in
+              let presentation = WindowDragAreaPresentation(node: node)
+              guard presentation.interactionEnabled else { return }
               // AppKit already knows how to drag a window from an event; asking
               // it is far more robust than moving the frame by hand.
               guard let window = NSApp.keyWindow, let event = NSApp.currentEvent else { return }
+              let now = ProcessInfo.processInfo.systemUptime
+              if let previousDragLocation, let previousDragTime {
+                let elapsed = max(now - previousDragTime, .ulpOfOne)
+                dragVelocity = CGVector(
+                  dx: (value.location.x - previousDragLocation.x) / elapsed,
+                  dy: (value.location.y - previousDragLocation.y) / elapsed)
+              }
+              previousDragLocation = value.location
+              previousDragTime = now
               if !dragging {
                 dragging = true
+                let global = window.convertPoint(toScreen: event.locationInWindow)
                 events.fire(
                   node, "drag_start",
-                  data: RufletInteractionParity.dragStart(
-                    kind: "mouse", local: value.startLocation,
-                    global: value.startLocation,
-                    timestamp: Date().timeIntervalSince1970 * 1_000))
+                  data: WindowDragAreaPresentation.dragStartPayload(
+                    local: value.startLocation, global: global,
+                    timestamp: event.timestamp))
               }
               window.performDrag(with: event)
             }
             .onEnded { value in
+              let presentation = WindowDragAreaPresentation(node: node)
+              guard presentation.interactionEnabled, dragging else { return }
+              let global = NSApp.keyWindow.map {
+                $0.convertPoint(toScreen: NSApp.currentEvent?.locationInWindow ?? .zero)
+              } ?? value.location
               dragging = false
+              previousDragLocation = nil
+              previousDragTime = nil
               events.fire(
                 node, "drag_end",
-                data: RufletInteractionParity.dragEnd(
-                  local: value.location, global: value.location,
-                  velocity: .zero, primaryVelocity: nil))
+                data: WindowDragAreaPresentation.dragEndPayload(
+                  local: value.location, global: global, velocity: dragVelocity))
+              dragVelocity = .zero
             })
     #else
       // iOS has no movable top-level window. Flet's window_manager backend is
