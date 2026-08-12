@@ -1188,8 +1188,10 @@ struct DividerControlView: View {
     // not one logical point.
     let requested = node.double("thickness")
     let thickness = DividerGeometry.thickness(requested, displayScale: displayScale)
-    let color = MaterialPalette.color(
-      for: node, property: "color", default: .gray.opacity(0.3))
+    // Divider has a native Apple equivalent. Preserve the Flet geometry and
+    // explicit DSL color, but use the platform's adaptive separator tone when
+    // color is omitted instead of manufacturing a Material divider color.
+    let color = MaterialPalette.color(node.string("color")) ?? .secondary.opacity(0.35)
     let extent = CGFloat(node.double("height") ?? node.double("width") ?? 16)
     let leading = CGFloat(node.double("leading_indent") ?? 0)
     let trailing = CGFloat(node.double("trailing_indent") ?? 0)
@@ -1228,8 +1230,10 @@ struct PlaceholderControlView: View {
   let node: ControlNode
 
   var body: some View {
-    let color = MaterialPalette.color(node.string("color"), default: Color(
-      red: 69.0 / 255.0, green: 90.0 / 255.0, blue: 100.0 / 255.0))
+    // Placeholder is a debugging surface rather than a Material widget on
+    // Apple. Its omitted stroke follows the native secondary label color;
+    // an explicit Ruflet color still wins.
+    let color = MaterialPalette.color(node.string("color")) ?? .secondary
     ZStack {
       Rectangle().stroke(color, lineWidth: CGFloat(node.double("stroke_width") ?? 2))
       GeometryReader { proxy in
