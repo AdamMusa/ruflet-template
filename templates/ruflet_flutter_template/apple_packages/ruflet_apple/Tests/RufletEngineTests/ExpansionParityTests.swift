@@ -19,6 +19,18 @@ final class ExpansionParityTests: XCTestCase {
 
     XCTAssertNil(ExpansionTilePresentation.validationMessage(ControlNode(
       id: 3, type: "ExpansionTile", props: ["title": .string("Details")])))
+
+    let reference = ControlNode(
+      id: 4, type: "ExpansionTile", props: ["title": .controlRef(40)])
+    XCTAssertEqual(
+      ExpansionTilePresentation.validationMessage(
+        reference, title: ControlNode(
+          id: 40, type: "Text", props: ["visible": .bool(false)])),
+      "ExpansionTile.title must be provided and visible")
+    XCTAssertNil(ExpansionTilePresentation.validationMessage(
+      reference, title: ControlNode(id: 40, type: "Text")))
+    XCTAssertNil(ExpansionTilePresentation.validationMessage(ControlNode(
+      id: 5, type: "ExpansionTile", props: ["title": .string("")])))
   }
 
   func testExpansionTileKeepsPinnedFlutterConstructorAndMaterial3ThemeDefaults() {

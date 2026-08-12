@@ -932,6 +932,7 @@ private struct PagedTabStyle: ViewModifier {
 /// `ListTile` — leading, title/subtitle, trailing.
 struct ListTileControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
   @Environment(\.openURL) private var openURL
   @StateObject private var tileClicks = RufletListTileClickNotifier()
@@ -941,7 +942,9 @@ struct ListTileControlView: View {
 
   @ViewBuilder
   var body: some View {
-    if let validationMessage = ListTilePresentation.validationMessage(node) {
+    if let validationMessage = ListTilePresentation.validationMessage(
+      node, title: node.controlID(forKey: "title").flatMap(store.node))
+    {
       Text(validationMessage).foregroundColor(.red)
     } else if node.type == "CupertinoListTile" {
       cupertinoTile
@@ -1300,9 +1303,14 @@ struct ListTilePresentation {
     return materialVisualProperties.contains { node.props[$0] != nil }
   }
 
-  static func validationMessage(_ node: ControlNode) -> String? {
+  static func validationMessage(_ node: ControlNode, title: ControlNode? = nil) -> String? {
     guard node.type == "CupertinoListTile" else { return nil }
-    let hasTitle = node.controlID(forKey: "title") != nil || node.string("title") != nil
+    let hasTitle: Bool
+    if node.controlID(forKey: "title") != nil {
+      hasTitle = RufletRequiredContent.isVisible(title)
+    } else {
+      hasTitle = node.props["title"]?.stringValue != nil
+    }
     return hasTitle ? nil : "CupertinoListTile.title must be provided and visible"
   }
 
@@ -1437,11 +1445,14 @@ struct CupertinoListTilePresentation {
 /// `ExpansionTile` — a disclosure row that keeps its state on the Ruby side.
 struct ExpansionTileControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
 
   @ViewBuilder
   var body: some View {
-    if let message = ExpansionTilePresentation.validationMessage(node) {
+    if let message = ExpansionTilePresentation.validationMessage(
+      node, title: node.controlID(forKey: "title").flatMap(store.node))
+    {
       Text(message).font(.caption).foregroundStyle(.red)
     } else {
       nativeTile
@@ -1524,8 +1535,14 @@ enum ExpansionCrossAxisAlignment: String {
 struct ExpansionTilePresentation {
   let node: ControlNode
 
-  static func validationMessage(_ node: ControlNode) -> String? {
-    let hasTitle = node.controlID(forKey: "title") != nil || !(node.string("title") ?? "").isEmpty
+  static func validationMessage(_ node: ControlNode, title: ControlNode? = nil) -> String? {
+    let hasTitle: Bool
+    if node.controlID(forKey: "title") != nil {
+      hasTitle = RufletRequiredContent.isVisible(title)
+    } else {
+      // `buildTextOrWidget` turns even an empty String into a Text widget.
+      hasTitle = node.props["title"]?.stringValue != nil
+    }
     if !hasTitle { return "ExpansionTile.title must be provided and visible" }
     if node.string("expanded_cross_axis_alignment")?.lowercased() == "baseline" {
       return "CrossAxisAlignment.BASELINE is not supported since the expanded controls are aligned in a column, not a row. Try aligning the controls differently."

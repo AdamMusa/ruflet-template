@@ -343,6 +343,17 @@ final class CollectionParityTests: XCTestCase {
       "CupertinoListTile.title must be provided and visible")
     XCTAssertNil(ListTilePresentation.validationMessage(ControlNode(
       id: 2, type: "CupertinoListTile", props: ["title": .string("Settings")])))
+    let reference = ControlNode(
+      id: 4, type: "CupertinoListTile", props: ["title": .controlRef(40)])
+    XCTAssertEqual(
+      ListTilePresentation.validationMessage(
+        reference, title: ControlNode(
+          id: 40, type: "Text", props: ["visible": .bool(false)])),
+      "CupertinoListTile.title must be provided and visible")
+    XCTAssertNil(ListTilePresentation.validationMessage(
+      reference, title: ControlNode(id: 40, type: "Text")))
+    XCTAssertNil(ListTilePresentation.validationMessage(ControlNode(
+      id: 5, type: "CupertinoListTile", props: ["title": .string("")])))
     XCTAssertNil(ListTilePresentation.validationMessage(ControlNode(id: 3, type: "ListTile")))
   }
 
