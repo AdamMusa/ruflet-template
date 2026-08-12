@@ -1074,10 +1074,6 @@ struct ListTilePresentation {
   }
 
   static func validationMessage(_ node: ControlNode) -> String? {
-    validationMessage(node, contentIsVisible: node.controlID(forKey: "content") != nil)
-  }
-
-  static func validationMessage(_ node: ControlNode, contentIsVisible: Bool) -> String? {
     guard node.type == "CupertinoListTile" else { return nil }
     let hasTitle = node.controlID(forKey: "title") != nil || node.string("title") != nil
     return hasTitle ? nil : "CupertinoListTile.title must be provided and visible"
