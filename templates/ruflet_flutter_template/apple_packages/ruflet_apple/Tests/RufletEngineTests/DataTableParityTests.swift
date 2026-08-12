@@ -3,23 +3,20 @@ import XCTest
 @testable import RufletUI
 
 final class DataTableParityTests: XCTestCase {
-  func testDataTableUsesPinnedFletAndFlutterDefaults() {
-    let values = CollectionDefaults.dataTable(ControlNode(id: 1, type: "DataTable"))
+  func testStylelessDataTableLeavesAppleGeometryUnspecified() {
+    let values = DataTablePresentation.nativeMetrics(ControlNode(id: 1, type: "DataTable"))
 
-    XCTAssertEqual(values.columnSpacing, 56)
-    XCTAssertEqual(values.horizontalMargin, 24)
-    XCTAssertEqual(values.headingRowHeight, 56)
-    XCTAssertEqual(values.dataRowMinHeight, 48)
-    XCTAssertEqual(values.dataRowMaxHeight, 48)
-    XCTAssertEqual(values.dividerThickness, 1)
-    XCTAssertFalse(values.showBottomBorder)
-    XCTAssertFalse(values.showCheckboxColumn)
-    XCTAssertEqual(values.checkboxMarginStart, 24)
-    XCTAssertEqual(values.checkboxMarginEnd, 12)
+    XCTAssertNil(values.columnSpacing)
+    XCTAssertNil(values.horizontalMargin)
+    XCTAssertNil(values.headingRowHeight)
+    XCTAssertNil(values.dataRowMinHeight)
+    XCTAssertNil(values.dataRowMaxHeight)
+    XCTAssertNil(values.dividerThickness)
+    XCTAssertNil(values.checkboxHorizontalMargin)
   }
 
   func testDataTableExplicitMetricsAndCheckboxMarginOverrideDefaults() {
-    let values = CollectionDefaults.dataTable(ControlNode(
+    let node = ControlNode(
       id: 1, type: "DataTable", props: [
         "column_spacing": .double(18),
         "horizontal_margin": .double(30),
@@ -30,7 +27,9 @@ final class DataTableParityTests: XCTestCase {
         "show_bottom_border": .bool(true),
         "show_checkbox_column": .bool(true),
         "checkbox_horizontal_margin": .double(9),
-      ]))
+      ])
+    let values = CollectionDefaults.dataTable(node)
+    let native = DataTablePresentation.nativeMetrics(node)
 
     XCTAssertEqual(values.columnSpacing, 18)
     XCTAssertEqual(values.horizontalMargin, 30)
@@ -42,9 +41,16 @@ final class DataTableParityTests: XCTestCase {
     XCTAssertTrue(values.showCheckboxColumn)
     XCTAssertEqual(values.checkboxMarginStart, 9)
     XCTAssertEqual(values.checkboxMarginEnd, 9)
+    XCTAssertEqual(native.columnSpacing, 18)
+    XCTAssertEqual(native.horizontalMargin, 30)
+    XCTAssertEqual(native.headingRowHeight, 61)
+    XCTAssertEqual(native.dataRowMinHeight, 37)
+    XCTAssertEqual(native.dataRowMaxHeight, 73)
+    XCTAssertEqual(native.dividerThickness, 2.5)
+    XCTAssertEqual(native.checkboxHorizontalMargin, 9)
   }
 
-  func testCellPaddingMatchesFlutterDataTableGeometry() {
+  func testLegacyIOS15FallbackRetainsFletDataTableGeometry() {
     let values = CollectionDefaults.dataTable(ControlNode(id: 1, type: "DataTable"))
 
     let firstWithoutCheckbox = values.cellPadding(

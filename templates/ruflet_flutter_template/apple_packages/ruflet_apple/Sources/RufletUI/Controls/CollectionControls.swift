@@ -1617,6 +1617,90 @@ struct DataTableControlView: View {
     let showsCheckboxes = metrics.showCheckboxColumn
       && rows.contains(where: { $0.handlesEvent("select_change") })
 
+    if #available(iOS 16.0, macOS 13.0, *) {
+      nativeDataTable(columns: columns, rows: rows, showsCheckboxes: showsCheckboxes)
+    } else {
+      legacyDataTable(columns: columns, rows: rows, metrics: metrics,
+        showsCheckboxes: showsCheckboxes)
+    }
+  }
+
+  /// SwiftUI does not expose a type-erased `TableColumn`, so Ruflet's dynamic
+  /// protocol columns use the native `Grid` layout primitive. Omitted spacing,
+  /// sizing, controls and separators remain nil/native; only DSL values are
+  /// applied here.
+  @available(iOS 16.0, macOS 13.0, *)
+  private func nativeDataTable(
+    columns: [ControlNode], rows: [ControlNode], showsCheckboxes: Bool
+  ) -> some View {
+    let nativeMetrics = DataTablePresentation.nativeMetrics(node)
+    return ScrollView(.horizontal, showsIndicators: true) {
+      Grid(
+        alignment: .leading,
+        horizontalSpacing: nativeMetrics.columnSpacing.map { CGFloat($0) },
+        verticalSpacing: nil
+      ) {
+        GridRow {
+          if showsCheckboxes {
+            nativeSelectAllToggle(rows)
+              .modifier(NativeDataTableCheckboxMargin(node: node))
+          }
+          ForEach(Array(columns.enumerated()), id: \.element.id) { index, column in
+            nativeHeaderCell(column, index: index)
+              .gridColumnAlignment(headingHorizontalAlignment(column))
+              .modifier(NativeDataTableCellPadding(
+                node: node, column: index, columnCount: columns.count,
+                checkboxVisible: showsCheckboxes))
+          }
+        }
+        .frame(height: nativeMetrics.headingRowHeight.map { CGFloat($0) })
+        .background(headingBackground)
+        .rufletTextStyle(RufletTextStyle(node: node, styleKey: "heading_text_style"))
+
+        nativeDivider
+
+        ForEach(Array(rows.enumerated()), id: \.element.id) { rowIndex, row in
+          GridRow {
+            if showsCheckboxes {
+              nativeRowSelectionToggle(row)
+                .modifier(NativeDataTableCheckboxMargin(node: node))
+            }
+            ForEach(Array(row.controlIDs(forKey: "cells").enumerated()), id: \.element) {
+              index, cellID in
+              cellContent(cellID, row: row, numeric: columns.indices.contains(index)
+                && columns[index].bool("numeric") == true)
+                .gridColumnAlignment(columns.indices.contains(index)
+                  && columns[index].bool("numeric") == true ? .trailing : .leading)
+                .modifier(NativeDataTableCellPadding(
+                  node: node, column: index, columnCount: columns.count,
+                  checkboxVisible: showsCheckboxes))
+            }
+          }
+          .frame(
+            minHeight: nativeMetrics.dataRowMinHeight.map { CGFloat($0) },
+            maxHeight: nativeMetrics.dataRowMaxHeight.map { CGFloat($0) })
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .rufletTextStyle(RufletTextStyle(node: node, styleKey: "data_text_style"))
+          .background(rowBackground(row))
+          .overlay(alignment: .bottom) { horizontalRule }
+          .contentShape(Rectangle())
+
+          if rowIndex < rows.count - 1 || node.bool("show_bottom_border") == true {
+            nativeDivider
+          }
+        }
+      }
+      .background { tableBackground }
+      .overlay { tableBorder }
+      .modifier(DataTableClip(
+        behavior: node.string("clip_behavior") ?? "none", radii: tableRadii))
+    }
+  }
+
+  private func legacyDataTable(
+    columns: [ControlNode], rows: [ControlNode], metrics: CollectionDefaults.DataTableValues,
+    showsCheckboxes: Bool
+  ) -> some View {
     ScrollView(.horizontal, showsIndicators: true) {
       VStack(alignment: .leading, spacing: 0) {
         HStack(spacing: 0) {
@@ -1702,6 +1786,77 @@ struct DataTableControlView: View {
     }
   }
 
+  @available(iOS 16.0, macOS 13.0, *)
+  private func nativeSelectAllToggle(_ rows: [ControlNode]) -> some View {
+    let selectable = selectableRows(rows)
+    let allSelected = !selectable.isEmpty
+      && selectable.allSatisfy { $0.bool("selected") == true }
+    return Toggle("Select all", isOn: Binding(
+      get: { allSelected },
+      set: { _ in selectAll(rows) }
+    ))
+    .labelsHidden()
+    .disabled(!node.handlesEvent("select_all") && selectable.isEmpty)
+  }
+
+  @available(iOS 16.0, macOS 13.0, *)
+  private func nativeRowSelectionToggle(_ row: ControlNode) -> some View {
+    Toggle("Select row", isOn: Binding(
+      get: { row.bool("selected") ?? false },
+      set: { selectRow(row, selected: $0) }
+    ))
+    .labelsHidden()
+    .disabled(!row.handlesEvent("select_change"))
+  }
+
+  @available(iOS 16.0, macOS 13.0, *)
+  @ViewBuilder
+  private var nativeDivider: some View {
+    if node.double("divider_thickness") != 0 {
+      Divider()
+        .gridCellUnsizedAxes(.horizontal)
+        .modifier(NativeDataTableDivider(node: node))
+    }
+  }
+
+  @available(iOS 16.0, macOS 13.0, *)
+  @ViewBuilder
+  private func nativeHeaderCell(_ column: ControlNode, index: Int) -> some View {
+    if column.handlesEvent("sort") {
+      Button {
+        sort(column, index: index)
+      } label: {
+        HStack {
+          if column.bool("numeric") == true { nativeSortIndicator(index) }
+          columnLabel(column)
+          if column.bool("numeric") != true { nativeSortIndicator(index) }
+        }
+      }
+      .help(DataTablePresentation.tooltipMessage(column) ?? "")
+    } else {
+      columnLabel(column)
+        .help(DataTablePresentation.tooltipMessage(column) ?? "")
+    }
+  }
+
+  @available(iOS 16.0, macOS 13.0, *)
+  @ViewBuilder
+  private func columnLabel(_ column: ControlNode) -> some View {
+    if let labelID = column.controlID(forKey: "label") {
+      ControlView(id: labelID, axis: .none)
+    } else {
+      Text(column.string("label") ?? "")
+    }
+  }
+
+  @available(iOS 16.0, macOS 13.0, *)
+  @ViewBuilder
+  private func nativeSortIndicator(_ index: Int) -> some View {
+    if node.int("sort_column_index") == index {
+      Image(systemName: (node.bool("sort_ascending") ?? false) ? "chevron.up" : "chevron.down")
+    }
+  }
+
   private var tableDivider: some View {
     Rectangle()
       .fill(MaterialPalette.color(for: node, property: "divider_color", default: .clear))
@@ -1711,12 +1866,7 @@ struct DataTableControlView: View {
   @ViewBuilder
   private func headerCell(_ column: ControlNode, index: Int) -> some View {
     Button {
-      let ascending = DataTablePresentation.nextSortAscending(
-        sortedColumn: node.int("sort_column_index"), tappedColumn: index,
-        currentlyAscending: node.bool("sort_ascending") ?? false)
-      events.fire(
-        column, "sort",
-        data: .map(["ci": .int(Int64(index)), "asc": .bool(ascending)]))
+      sort(column, index: index)
     } label: {
       HStack(spacing: 4) {
         if column.bool("numeric") == true, column.handlesEvent("sort") {
@@ -1735,6 +1885,15 @@ struct DataTableControlView: View {
     .buttonStyle(.plain)
     .help(DataTablePresentation.tooltipMessage(column) ?? "")
     .disabled(!column.handlesEvent("sort"))
+  }
+
+  private func sort(_ column: ControlNode, index: Int) {
+    let ascending = DataTablePresentation.nextSortAscending(
+      sortedColumn: node.int("sort_column_index"), tappedColumn: index,
+      currentlyAscending: node.bool("sort_ascending") ?? false)
+    events.fire(
+      column, "sort",
+      data: .map(["ci": .int(Int64(index)), "asc": .bool(ascending)]))
   }
 
   @ViewBuilder
@@ -1792,8 +1951,9 @@ struct DataTableControlView: View {
     if let table = MaterialPalette.color(stateful: node.props["data_row_color"], in: states) {
       return table
     }
-    // Flutter's selected default is primary at 8%; unselected is transparent.
-    return selected ? MaterialPalette.color("primary", default: .clear).opacity(0.08) : .clear
+    // With no DSL colour, the native row and Toggle supply Apple selection
+    // appearance. Do not manufacture Flutter's Material primary overlay here.
+    return .clear
   }
 
   /// `horizontal_lines` and `vertical_lines` are BorderSides drawn between
@@ -1843,6 +2003,15 @@ struct DataTableControlView: View {
     }
   }
 
+  private func headingHorizontalAlignment(_ column: ControlNode) -> HorizontalAlignment {
+    let numeric = column.bool("numeric") == true
+    switch column.string("heading_row_alignment")?.lowercased().replacingOccurrences(of: "_", with: "") {
+    case "center", "spacearound", "spacebetween", "spaceevenly": return .center
+    case "end": return numeric ? .leading : .trailing
+    default: return numeric ? .trailing : .leading
+    }
+  }
+
   private func sortArrow(_ index: Int) -> some View {
     let sorted = node.int("sort_column_index") == index
     return Image(systemName: "arrow.up")
@@ -1872,6 +2041,30 @@ struct DataTableControlView: View {
 }
 
 enum DataTablePresentation {
+  struct NativeMetrics: Equatable {
+    let columnSpacing: Double?
+    let horizontalMargin: Double?
+    let headingRowHeight: Double?
+    let dataRowMinHeight: Double?
+    let dataRowMaxHeight: Double?
+    let dividerThickness: Double?
+    let checkboxHorizontalMargin: Double?
+  }
+
+  /// Values stay optional intentionally: nil means SwiftUI chooses the Apple
+  /// platform default. This is the native equivalent of Flet constructor
+  /// omission and prevents Material metrics leaking into every Ruflet app.
+  static func nativeMetrics(_ node: ControlNode) -> NativeMetrics {
+    NativeMetrics(
+      columnSpacing: node.double("column_spacing"),
+      horizontalMargin: node.double("horizontal_margin"),
+      headingRowHeight: node.double("heading_row_height"),
+      dataRowMinHeight: node.double("data_row_min_height"),
+      dataRowMaxHeight: node.double("data_row_max_height"),
+      dividerThickness: node.double("divider_thickness"),
+      checkboxHorizontalMargin: node.double("checkbox_horizontal_margin"))
+  }
+
   static func tooltipMessage(_ column: ControlNode) -> String? {
     column.string("tooltip") ?? column.map("tooltip")?["message"]?.stringValue
   }
@@ -1909,6 +2102,48 @@ private struct DataTableClip: ViewModifier {
   func body(content: Content) -> some View {
     if behavior.lowercased() == "none" { content }
     else { content.clipShape(RufletRoundedRectangle(radii: radii)) }
+  }
+}
+
+private struct NativeDataTableCellPadding: ViewModifier {
+  let node: ControlNode
+  let column: Int
+  let columnCount: Int
+  let checkboxVisible: Bool
+
+  func body(content: Content) -> some View {
+    let margin = node.double("horizontal_margin").map { CGFloat($0) }
+    content
+      .padding(.leading, !checkboxVisible && column == 0 ? margin : nil)
+      .padding(.trailing, column == columnCount - 1 ? margin : nil)
+  }
+}
+
+private struct NativeDataTableCheckboxMargin: ViewModifier {
+  let node: ControlNode
+
+  func body(content: Content) -> some View {
+    let checkboxMargin = node.double("checkbox_horizontal_margin").map { CGFloat($0) }
+    let outerMargin = node.double("horizontal_margin").map { CGFloat($0) }
+    content
+      .padding(.leading, checkboxMargin ?? outerMargin)
+      .padding(.trailing, checkboxMargin)
+  }
+}
+
+private struct NativeDataTableDivider: ViewModifier {
+  let node: ControlNode
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    let thickness = node.double("divider_thickness").map { CGFloat($0) }
+    if let color = MaterialPalette.color(node.string("divider_color")) {
+      content
+        .frame(height: thickness)
+        .overlay(color)
+    } else {
+      content.frame(height: thickness)
+    }
   }
 }
 
