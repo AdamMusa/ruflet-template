@@ -784,6 +784,10 @@ enum RufletImageLayoutSemantics {
   static func constrainsOmittedFit(hasExplicitSize: Bool) -> Bool {
     hasExplicitSize
   }
+
+  static func clipsExplicitBounds(_ node: ControlNode) -> Bool {
+    node.type == "Image" && (node.props["width"] != nil || node.props["height"] != nil)
+  }
 }
 
 /// Loads a remote image without a third-party dependency, so the package stays

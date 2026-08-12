@@ -10,6 +10,13 @@ final class DisplayParityTests: XCTestCase {
   func testExplicitImageSizeConstrainsOmittedFit() {
     XCTAssertTrue(RufletImageLayoutSemantics.constrainsOmittedFit(hasExplicitSize: true))
     XCTAssertFalse(RufletImageLayoutSemantics.constrainsOmittedFit(hasExplicitSize: false))
+    XCTAssertTrue(
+      RufletImageLayoutSemantics.clipsExplicitBounds(
+        node("Image", ["width": .double(28), "height": .double(28)])))
+    XCTAssertFalse(RufletImageLayoutSemantics.clipsExplicitBounds(node("Image")))
+    XCTAssertFalse(
+      RufletImageLayoutSemantics.clipsExplicitBounds(
+        node("Container", ["width": .double(28), "height": .double(28)])))
   }
 
   private func node(_ type: String, _ props: [String: RufletValue] = [:]) -> ControlNode {

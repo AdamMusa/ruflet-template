@@ -48,6 +48,12 @@ struct CommonControlModifiers: ViewModifier {
       .modifier(RufletTooltipModifier(node: node))
       .modifier(RufletDirectionalityModifier(node: node))
       .modifier(RufletFixedSizeModifier(node: node))
+      // Flutter's RenderImage cannot paint outside its tight width/height.
+      // SwiftUI's asynchronous image stack can retain the bitmap's intrinsic
+      // paint bounds after the outer frame changes (most visibly in AppBar
+      // titles), so clip only explicitly-sized Image controls at that same
+      // point in the layout pipeline.
+      .modifier(RufletExplicitImageBounds(node: node))
       .modifier(RufletRotationModifier(node: node))
       .modifier(RufletScaleModifier(node: node))
       .modifier(RufletOffsetModifier(node: node))
@@ -62,6 +68,19 @@ struct CommonControlModifiers: ViewModifier {
       // Flutter resolves the cursor from the whole hit-tested stack, so this
       // sits outside the layout chain rather than in Flet's order.
       .modifier(RufletMouseCursorModifier(node: node))
+  }
+}
+
+private struct RufletExplicitImageBounds: ViewModifier {
+  let node: ControlNode
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if RufletImageLayoutSemantics.clipsExplicitBounds(node) {
+      content.clipped()
+    } else {
+      content
+    }
   }
 }
 
