@@ -1181,7 +1181,8 @@ struct NavigationDrawerControlView: View {
 
   private var drawerControls: [Int] {
     let explicit = node.controlIDs(forKey: "controls")
-    return explicit.isEmpty ? node.childIDs : explicit
+    return NavigationDrawerVisibleControls.ids(
+      explicit.isEmpty ? node.childIDs : explicit, in: store.nodes)
   }
 
   /// Flutter's NavigationDrawer selected index counts destinations, not
@@ -1208,6 +1209,16 @@ struct NavigationDrawerControlView: View {
         size: 24,
         color: nil)
     }
+  }
+}
+
+/// Flet's `children("controls")` filters invisible drawer destinations and
+/// arbitrary interleaved controls before NavigationDrawer assigns indices.
+/// Keeping that filtering at the parent ensures selection counts only the
+/// visible destination sequence while headings/dividers remain supported.
+enum NavigationDrawerVisibleControls {
+  static func ids(_ ids: [Int], in nodes: [Int: ControlNode]) -> [Int] {
+    ids.filter { nodes[$0]?.bool("visible") != false }
   }
 }
 
