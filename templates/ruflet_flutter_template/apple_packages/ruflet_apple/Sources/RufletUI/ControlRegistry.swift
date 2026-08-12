@@ -240,7 +240,10 @@ public enum ControlRegistry {
     add(["AutofillGroup"], .visible, "AutofillGroupControlView", .nativeView)
     add(["BrowserContextMenu"], .service, "BrowserContextMenuService", .serviceOnly,
         methods: ["disable_menu", "enable_menu"])
-    add(["RufletApp"], .visible, "RufletAppControlView", .nativeView,
+    // Current Ruflet clients emit `RufletApp`; older self-contained runtimes
+    // used Flet's original `FletApp` wire name. Both describe the same nested
+    // application contract, so Apple accepts both at the renderer boundary.
+    add(["RufletApp", "FletApp"], .visible, "RufletAppControlView", .nativeView,
         events: ["animation_end", "error", "size_change"])
 
     // Display controls.

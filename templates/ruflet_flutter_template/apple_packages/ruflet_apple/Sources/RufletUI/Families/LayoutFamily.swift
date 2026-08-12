@@ -37,7 +37,7 @@ extension ControlRegistry {
       return AnyView(PageletControlView(node: node))
     case "AnimatedSwitcher":
       return AnyView(AnimatedSwitcherControlView(node: node))
-    case "RufletApp":
+    case "RufletApp", "FletApp":
       return AnyView(RufletAppControlView(node: node))
     case "Hero":
       return AnyView(HeroControlView(node: node))

@@ -1841,8 +1841,15 @@ struct DropdownControlView: View {
         .buttonStyle(.plain)
       }
     } else {
-      Button {
-        menuPresented = true
+      Menu {
+        ForEach(matching(options), id: \.id) { option in
+          Button {
+            select(option)
+          } label: {
+            optionMenuLabel(option)
+          }
+          .disabled((node.bool("disabled") ?? false) || (option.bool("disabled") ?? false))
+        }
       } label: {
         HStack {
           RufletFormFieldSlot(node: node, key: "leading_icon")
@@ -2045,6 +2052,22 @@ struct DropdownControlView: View {
     } else {
       Text(option.string("text") ?? option.string("key") ?? "")
     }
+  }
+
+  @ViewBuilder
+  private func optionMenuLabel(_ option: ControlNode) -> some View {
+    // Menu is an Apple-owned primitive. Its semantic title must remain
+    // available even when the Flet option supplies custom control slots.
+    HStack {
+      if let leadingID = option.controlID(forKey: "leading_icon") {
+        ControlView(id: leadingID, axis: .none)
+      }
+      optionLabel(option)
+      if let trailingID = option.controlID(forKey: "trailing_icon") {
+        ControlView(id: trailingID, axis: .none)
+      }
+    }
+    .accessibilityLabel(option.string("text") ?? option.string("key") ?? "")
   }
 }
 

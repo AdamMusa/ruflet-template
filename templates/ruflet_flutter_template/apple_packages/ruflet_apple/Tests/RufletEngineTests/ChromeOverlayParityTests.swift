@@ -4,6 +4,17 @@ import RufletProtocol
 import XCTest
 
 final class ChromeOverlayParityTests: XCTestCase {
+  func testMaterialPickersUseNativeAppleSheetPresentation() {
+    XCTAssertTrue(RufletOverlaySemantics.usesNativePickerSheet(
+      ControlNode(id: 1, type: "DatePicker")))
+    XCTAssertTrue(RufletOverlaySemantics.usesNativePickerSheet(
+      ControlNode(id: 2, type: "DateRangePicker")))
+    XCTAssertTrue(RufletOverlaySemantics.usesNativePickerSheet(
+      ControlNode(id: 3, type: "TimePicker")))
+    XCTAssertFalse(RufletOverlaySemantics.usesNativePickerSheet(
+      ControlNode(id: 4, type: "AlertDialog")))
+  }
+
   func testNativeChromeConsumesPinnedFletAndFlutterDefaults() {
     let appBar = ChromeDefaults.appBar(ControlNode(id: 1, type: "AppBar"))
     XCTAssertEqual(appBar.toolbarHeight, 56)

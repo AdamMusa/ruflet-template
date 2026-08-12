@@ -14,13 +14,16 @@ final class RufletAppControlTests: XCTestCase {
         pageURL: URL(string: "ws://127.0.0.1:8550/ws")!)?.absoluteString,
       "ws://127.0.0.1:8550/ws")
   }
-  func testRufletAppIsTheOnlyNativeApplicationWireName() {
+  func testRufletAppAcceptsTheLegacySelfContainedWireName() {
     let canonical = ControlRegistry.descriptor(for: "RufletApp")
+    let legacy = ControlRegistry.descriptor(for: "FletApp")
 
     XCTAssertEqual(canonical?.classification, .visible)
     XCTAssertEqual(canonical?.implementation, "RufletAppControlView")
     XCTAssertTrue(canonical?.supportedEvents.contains("error") == true)
-    XCTAssertNil(ControlRegistry.descriptor(for: "FletApp"))
+    XCTAssertEqual(legacy?.classification, .visible)
+    XCTAssertEqual(legacy?.implementation, "RufletAppControlView")
+    XCTAssertEqual(legacy?.supportedEvents, canonical?.supportedEvents)
   }
 
   func testNestedAppInheritsParentEndpointWhenURLIsOmitted() {
