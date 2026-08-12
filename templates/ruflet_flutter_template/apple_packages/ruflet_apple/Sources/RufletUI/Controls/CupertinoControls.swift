@@ -1,6 +1,11 @@
 import RufletEngine
 import RufletProtocol
 import SwiftUI
+#if canImport(UIKit)
+  import UIKit
+#elseif canImport(AppKit)
+  import AppKit
+#endif
 
 /// The Cupertino family.
 ///
@@ -723,46 +728,58 @@ struct CupertinoTextFieldControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
   @State private var focused = false
-  @State private var hovering = false
   @State private var selection = NSRange(location: 0, length: 0)
   @State private var revealed = false
+  @State private var observedValue = ""
 
-  private var styling: RufletFieldStyling {
-    RufletFieldStyling(node: node, focused: focused, hovering: hovering)
+  private var presentation: RufletCupertinoTextFieldPresentation {
+    RufletCupertinoTextFieldPresentation(
+      node: node, focused: focused, revealedPassword: revealed)
   }
 
   var body: some View {
-    HStack(alignment: styling.verticalAlignment, spacing: 6) {
-      overlay(key: "prefix_icon", mode: node.string("prefix_visibility_mode"))
-        .modifier(CupertinoSlotConstraints(value: node.props["prefix_icon_size_constraints"]))
-      overlay(key: "prefix", mode: node.string("prefix_visibility_mode"), styleKey: "prefix_style")
+    HStack(alignment: presentation.verticalAlignment, spacing: 0) {
+      if presentation.showsPrefix {
+        RufletFormFieldSlot(node: node, key: "prefix")
+      }
       field
-      overlay(key: "suffix", mode: node.string("suffix_visibility_mode"), styleKey: "suffix_style")
-      overlay(key: "suffix_icon", mode: node.string("suffix_visibility_mode"))
-        .modifier(CupertinoSlotConstraints(value: node.props["suffix_icon_size_constraints"]))
-      revealButton
-      clearButton
+      suffixAttachment
     }
-    .padding(styling.contentPadding)
+    .textFieldStyle(.plain)
+    .padding(presentation.padding)
+    .frame(width: presentation.defaultWidth)
     .frame(
-      maxWidth: styling.fitsParent ? .infinity : nil,
-      maxHeight: styling.fitsParent ? .infinity : nil)
+      maxWidth: presentation.fitsParent ? .infinity : nil,
+      maxHeight: presentation.fitsParent ? .infinity : nil)
     .background(fieldDecoration)
     .overlay(borderStroke)
-    .modifier(ChromeClipModifier(behavior: styling.clipBehavior))
+    .modifier(ChromeClipModifier(behavior: presentation.clipBehavior))
     .modifier(CupertinoFieldShadows(value: node.props["shadows"]))
-    .onHover { hovering = $0 }
-    .modifier(RufletFormFieldDecoration(node: node))
+    .environment(\.layoutDirection, node.bool("rtl") == true ? .rightToLeft : .leftToRight)
+    .disabled(node.bool("disabled") == true)
     .onAppear {
-      focused = node.bool("autofocus") == true
-      selection = RufletTextSelection.explicit(on: node)
+      observedValue = presentation.value
+      focused = node.string("blur") == nil
+        && (presentation.autofocus || node.string("focus") != nil)
+      selection = presentation.initialSelection
     }
     .onChange(of: focused) { events.fire(node, $0 ? "focus" : "blur") }
-    .onChange(of: selection) { RufletTextSelection.report($0, on: node, to: events) }
+    .onChange(of: selection) {
+      RufletCupertinoTextFieldEvents.selection($0, on: node, to: events)
+    }
+    .onChange(of: node.string("value")) { value in
+      let value = value ?? ""
+      guard observedValue != value else { return }
+      observedValue = value
+      selection = node.map("selection") == nil
+        ? NSRange(location: value.utf16.count, length: 0)
+        : RufletTextSelection.explicit(on: node)
+    }
+    .onChange(of: node.string("focus")) { if $0 != nil { focused = true } }
+    .onChange(of: node.string("blur")) { if $0 != nil { focused = false } }
     .rufletCommandHandler(node.id) { call, completion in
       switch call.name {
       case "focus": focused = true; completion(.success(.null))
-      case "blur": focused = false; completion(.success(.null))
       default: completion(.failure(rufletUnsupported(node.type, call)))
       }
     }
@@ -772,28 +789,53 @@ struct CupertinoTextFieldControlView: View {
   private var field: some View {
     // An adaptive TextField arrives here carrying Material's names, so Flet
     // falls back to the label when there is no placeholder.
-    let placeholder = node.string("placeholder_text") ?? node.string("label") ?? ""
-    let obscure = node.bool("password") == true && !revealed
-    if styling.isMultiline {
-      TextEditor(text: binding)
-        .rufletTextStyle(styling.textStyle)
-        .lineLimit(styling.maxLines)
-        .frame(minHeight: CGFloat(styling.minLines * 20))
-        .padding(styling.scrollPadding)
+    let placeholder = presentation.placeholder
+    if presentation.isMultiline {
+      #if canImport(UIKit) || canImport(AppKit)
+        RufletNativeMultilineTextInput(
+          text: binding,
+          focused: $focused,
+          selection: $selection,
+          traits: presentation.traits,
+          submitOnReturn: presentation.shiftEnter,
+          onTap: { events.fire(node, "click") },
+          onTapOutside: { events.fire(node, "tap_outside") },
+          onSubmit: { events.fire(node, "submit") })
+          .frame(
+            minHeight: presentation.minimumHeight,
+            maxHeight: presentation.maximumHeight)
+          .modifier(
+            CupertinoPlaceholder(
+              node: node, text: placeholder,
+              showing: binding.wrappedValue.isEmpty, multiline: true))
+      #else
+        TextEditor(text: binding)
+          .rufletTextStyle(presentation.textStyle)
+          .lineLimit(presentation.maxLines)
+          .frame(
+            minHeight: presentation.minimumHeight,
+            maxHeight: presentation.maximumHeight)
+          .modifier(
+            CupertinoPlaceholder(
+              node: node, text: placeholder,
+              showing: binding.wrappedValue.isEmpty, multiline: true))
+      #endif
     } else {
       #if canImport(UIKit) || canImport(AppKit)
         RufletNativeTextInput(
           text: binding,
           focused: $focused,
           selection: $selection,
-          placeholder: placeholder,
-          secure: obscure,
-          traits: styling.traits,
+          placeholder: presentation.drawsCustomPlaceholder ? "" : placeholder,
+          secure: presentation.obscuresText,
+          traits: presentation.traits,
           onTap: { events.fire(node, "click") },
           onTapOutside: { events.fire(node, "tap_outside") },
           onSubmit: { events.fire(node, "submit", data: .string($0)) })
           .modifier(
-            CupertinoPlaceholder(node: node, showing: binding.wrappedValue.isEmpty))
+            CupertinoPlaceholder(
+              node: node, text: placeholder,
+              showing: binding.wrappedValue.isEmpty, multiline: false))
       #else
         TextField(placeholder, text: binding)
           .onSubmit { events.fire(node, "submit", data: .string(binding.wrappedValue)) }
@@ -805,83 +847,354 @@ struct CupertinoTextFieldControlView: View {
   /// or an image stands in for the fill when Ruby supplies one.
   @ViewBuilder
   private var fieldDecoration: some View {
-    let shape = RoundedRectangle(cornerRadius: styling.cornerRadius)
-    if let gradient = GradientProps.linear(node.props["gradient"]) {
-      shape.fill(gradient)
-    } else if let source = node.string("image").flatMap({ URL(string: $0) }),
-      source.scheme != nil
-    {
-      AsyncImage(url: source) { image in
-        image.resizable().scaledToFill()
-      } placeholder: {
-        shape.fill(styling.background(default: .gray.opacity(0.12)))
+    GeometryReader { geometry in
+      let shape = RufletRoundedRectangle(radii: presentation.cornerRadii)
+      ZStack {
+        shape.fill(presentation.backgroundColor)
+        if let gradient = RufletGradientSpec(node.props["gradient"]) {
+          shape.fill(gradient.shapeStyle(size: geometry.size))
+        }
+        if let image = RufletDecorationImageSpec(node.props["image"]) {
+          CupertinoTextFieldDecorationImage(spec: image)
+            .blendMode(ControlProps.blendMode(node.string("blend_mode")))
+            .clipShape(shape)
+        }
       }
-      .clipShape(shape)
-      .blendMode(ControlProps.blendMode(node.string("blend_mode")))
-    } else {
-      shape.fill(styling.background(default: .gray.opacity(0.12)))
-    }
-  }
-
-  /// Flutter's `OverlayVisibilityMode`, which decides whether the clear button
-  /// and the prefix and suffix slots are shown against the editing state.
-  private func shows(_ mode: String?, default fallback: Bool) -> Bool {
-    switch mode?.lowercased().replacingOccurrences(of: "_", with: "") {
-    case "never": return false
-    case "editing": return focused
-    case "notediting": return !focused
-    case "always": return true
-    default: return fallback
     }
   }
 
   @ViewBuilder
-  private func overlay(key: String, mode: String?, styleKey: String? = nil) -> some View {
-    if shows(mode, default: true) {
-      RufletFormFieldSlot(node: node, key: key, styleKey: styleKey)
+  private var suffixAttachment: some View {
+    switch presentation.suffixAttachment {
+    case .suffix:
+      if presentation.hasRevealSuffix {
+        revealButton
+      } else {
+        RufletFormFieldSlot(node: node, key: "suffix")
+      }
+    case .clear:
+      clearButton
+    case .none:
+      EmptyView()
     }
   }
 
-  /// `clear_button_visibility_mode` defaults to never, the way
-  /// CupertinoTextField's own does.
-  @ViewBuilder
   private var clearButton: some View {
-    if shows(node.string("clear_button_visibility_mode"), default: false),
-      !(node.string("value") ?? "").isEmpty {
-      Button {
-        events.commit(node, value: .string(""))
-      } label: {
-        Image(systemName: "xmark.circle.fill").foregroundColor(.secondary)
-      }
-      .buttonStyle(.plain)
-      .accessibilityLabel(node.string("clear_button_semantics_label") ?? "Clear")
+    Button {
+      observedValue = ""
+      RufletCupertinoTextFieldEvents.change("", on: node, to: events)
+    } label: {
+      Image(systemName: "xmark.circle.fill")
+        .font(.system(size: RufletCupertinoTextFieldDefaults.clearButtonSize))
+        .foregroundColor(.secondary.opacity(0.45))
     }
+    .buttonStyle(.plain)
+    .padding(.horizontal, RufletCupertinoTextFieldDefaults.clearButtonHorizontalPadding)
+    .accessibilityLabel(presentation.clearButtonSemanticsLabel)
   }
 
-  @ViewBuilder
   private var revealButton: some View {
-    if node.bool("password") == true, node.bool("can_reveal_password") == true {
-      Button {
-        revealed.toggle()
-      } label: {
-        Image(systemName: revealed ? "eye.slash" : "eye").foregroundColor(.secondary)
-      }
-      .buttonStyle(.plain)
+    Button {
+      revealed.toggle()
+    } label: {
+      Image(systemName: revealed ? "eye.slash" : "eye").foregroundColor(.secondary)
     }
+    .buttonStyle(.plain)
+    .padding(.trailing, RufletCupertinoTextFieldDefaults.revealTrailingPadding)
   }
 
   private var binding: Binding<String> {
     Binding(
       get: { node.string("value") ?? "" },
-      set: { events.commit(node, value: .string($0)) })
+      set: {
+        observedValue = $0
+        RufletCupertinoTextFieldEvents.change($0, on: node, to: events)
+      })
   }
 
   @ViewBuilder
   private var borderStroke: some View {
-    if styling.drawsBorder {
-      RoundedRectangle(cornerRadius: styling.cornerRadius)
-        .strokeBorder(
-          styling.borderColor(default: .clear), lineWidth: styling.borderWidth)
+    if let border = presentation.border {
+      CupertinoTextFieldBorderLayer(border: border, radii: presentation.cornerRadii)
+    }
+  }
+}
+
+enum RufletCupertinoOverlayVisibility: Equatable {
+  case never, editing, notEditing, always
+
+  init(_ value: String?, default fallback: Self) {
+    switch value?.lowercased().replacingOccurrences(of: "_", with: "") {
+    case "never": self = .never
+    case "editing": self = .editing
+    case "notediting": self = .notEditing
+    case "always": self = .always
+    default: self = fallback
+    }
+  }
+
+  func shows(hasText: Bool) -> Bool {
+    switch self {
+    case .never: return false
+    case .editing: return hasText
+    case .notEditing: return !hasText
+    case .always: return true
+    }
+  }
+}
+
+enum RufletCupertinoTextFieldSuffixAttachment: Equatable {
+  case none, suffix, clear
+}
+
+/// Values resolved by Flet 0.80.5 before constructing CupertinoTextField.
+/// Keeping these independent of SwiftUI makes omission and attachment
+/// precedence testable without relying on platform screenshots.
+struct RufletCupertinoTextFieldPresentation {
+  let node: ControlNode
+  let focused: Bool
+  let revealedPassword: Bool
+
+  var value: String { node.string("value") ?? "" }
+  var autofocus: Bool { node.bool("autofocus") ?? false }
+  var shiftEnter: Bool { node.bool("shift_enter") ?? false }
+  var isMultiline: Bool { node.bool("multiline") == true || shiftEnter }
+  var minLines: Int { node.int("min_lines") ?? 1 }
+  var maxLines: Int? { node.int("max_lines") ?? (isMultiline ? nil : 1) }
+  var fitsParent: Bool { node.bool("fit_parent_size") ?? false }
+  var clipBehavior: String { node.string("clip_behavior") ?? "hardEdge" }
+  var obscuresText: Bool { node.bool("password") == true && !revealedPassword }
+  var hasRevealSuffix: Bool {
+    node.bool("password") == true && node.bool("can_reveal_password") == true
+  }
+
+  var placeholder: String {
+    node.string("placeholder_text") ?? node.string("label") ?? ""
+  }
+  var drawsCustomPlaceholder: Bool {
+    node.map("placeholder_style") != nil || node.map("label_style") != nil
+  }
+  var clearButtonSemanticsLabel: String {
+    node.string("clear_button_semantics_label") ?? "Clear"
+  }
+
+  var padding: EdgeInsets {
+    ControlProps.edgeInsets(node.props["padding"])
+      ?? EdgeInsets(
+        top: RufletCupertinoTextFieldDefaults.padding,
+        leading: RufletCupertinoTextFieldDefaults.padding,
+        bottom: RufletCupertinoTextFieldDefaults.padding,
+        trailing: RufletCupertinoTextFieldDefaults.padding)
+  }
+
+  var scrollPadding: EdgeInsets {
+    ControlProps.edgeInsets(node.props["scroll_padding"])
+      ?? EdgeInsets(
+        top: RufletCupertinoTextFieldDefaults.scrollPadding,
+        leading: RufletCupertinoTextFieldDefaults.scrollPadding,
+        bottom: RufletCupertinoTextFieldDefaults.scrollPadding,
+        trailing: RufletCupertinoTextFieldDefaults.scrollPadding)
+  }
+
+  var defaultWidth: CGFloat? {
+    guard node.double("width") == nil else { return nil }
+    guard !Self.hasExpand(node) else { return nil }
+    return RufletCupertinoTextFieldDefaults.defaultWidth
+  }
+
+  var textStyle: RufletTextStyle {
+    var style = RufletTextStyle(node: node, styleKey: "text_style")
+    if let size = node.double("text_size") { style.size = CGFloat(size) }
+    let resting = MaterialPalette.color(node.string("color"))
+    let active = MaterialPalette.color(node.string("focused_color"))
+    if let color = focused ? (active ?? resting) : resting { style.color = color }
+    return style
+  }
+
+  var traits: RufletTextInputTraits {
+    var traits = RufletTextInputTraits(node: node)
+    if isMultiline { traits.keyboardType = "multiline" }
+    if node.bool("rtl") == true {
+      switch traits.textAlign {
+      case nil, "start": traits.textAlign = "right"
+      case "end": traits.textAlign = "left"
+      default: break
+      }
+    }
+    traits.textColor = textStyle.color
+    traits.fontSize = textStyle.size
+    traits.caretScrollPadding = scrollPadding
+    traits.cursorRadius = ControlProps.cornerRadius(node.props["cursor_radius"])
+      ?? RufletCupertinoTextFieldDefaults.cursorRadius
+    return traits
+  }
+
+  var lineHeight: CGFloat { traits.lineHeight ?? RufletCupertinoTextFieldDefaults.lineHeight }
+  var minimumHeight: CGFloat? {
+    fitsParent ? nil : CGFloat(minLines) * lineHeight
+  }
+  var maximumHeight: CGFloat? {
+    guard !fitsParent, let maxLines else { return nil }
+    return CGFloat(maxLines) * lineHeight
+  }
+
+  var initialSelection: NSRange {
+    guard node.map("selection") != nil else {
+      return NSRange(location: value.utf16.count, length: 0)
+    }
+    return RufletTextSelection.explicit(on: node)
+  }
+
+  var prefixMode: RufletCupertinoOverlayVisibility {
+    RufletCupertinoOverlayVisibility(
+      node.string("prefix_visibility_mode"), default: .always)
+  }
+  var suffixMode: RufletCupertinoOverlayVisibility {
+    RufletCupertinoOverlayVisibility(
+      node.string("suffix_visibility_mode"), default: .always)
+  }
+  var clearMode: RufletCupertinoOverlayVisibility {
+    RufletCupertinoOverlayVisibility(
+      node.string("clear_button_visibility_mode"), default: .never)
+  }
+  var showsPrefix: Bool {
+    node.props["prefix"] != nil && prefixMode.shows(hasText: !value.isEmpty)
+  }
+  var suffixAttachment: RufletCupertinoTextFieldSuffixAttachment {
+    let hasSuffix = hasRevealSuffix || node.props["suffix"] != nil
+    if hasSuffix, suffixMode.shows(hasText: !value.isEmpty) { return .suffix }
+    if clearMode.shows(hasText: !value.isEmpty) { return .clear }
+    return .none
+  }
+
+  var verticalAlignment: VerticalAlignment {
+    switch node.double("text_vertical_align") {
+    case .some(let value) where value <= -0.5: return .top
+    case .some(let value) where value >= 0.5: return .bottom
+    default: return .center
+    }
+  }
+
+  var cornerRadii: RufletCornerRadii {
+    if node.string("border")?.lowercased() == "underline" {
+      return RufletCornerRadii(uniform: 0)
+    }
+    return ControlProps.cornerRadii(node.props["border_radius"])
+      ?? RufletCornerRadii(uniform: RufletCupertinoTextFieldDefaults.cornerRadius)
+  }
+
+  var border: RufletBorder? {
+    if let explicit = ControlProps.borderSides(node.props["border"]) { return explicit }
+    let side = RufletBorderSide(
+      color: MaterialPalette.color(node.string("border_color"), default: .black),
+      width: CGFloat(node.double("border_width") ?? 1))
+    switch node.string("border")?.lowercased() ?? "outline" {
+    case "none": return nil
+    case "underline": return RufletBorder(top: nil, right: nil, bottom: side, left: nil)
+    default: return RufletBorder(top: side, right: side, bottom: side, left: side)
+    }
+  }
+
+  var backgroundColor: Color {
+    MaterialPalette.color(node.string("bgcolor"))
+      ?? RufletCupertinoTextFieldDefaults.backgroundColor
+  }
+
+  private static func hasExpand(_ node: ControlNode) -> Bool {
+    guard let expand = node.props["expand"] else { return false }
+    return expand.boolValue == true || (expand.intValue ?? 0) > 0
+  }
+}
+
+enum RufletCupertinoTextFieldDefaults {
+  static let padding: CGFloat = 7
+  static let scrollPadding: CGFloat = 20
+  static let defaultWidth: CGFloat = 300
+  static let cornerRadius: CGFloat = 5
+  static let cursorRadius: CGFloat = 2
+  static let lineHeight: CGFloat = 20
+  static let clearButtonSize: CGFloat = 18
+  static let clearButtonHorizontalPadding: CGFloat = 6
+  static let revealTrailingPadding: CGFloat = 15
+
+  static var backgroundColor: Color {
+    #if canImport(UIKit)
+      return Color(uiColor: .systemBackground)
+    #elseif canImport(AppKit)
+      return Color(nsColor: .textBackgroundColor)
+    #else
+      return .white
+    #endif
+  }
+}
+
+enum RufletCupertinoTextFieldEvents {
+  static func change(_ value: String, on node: ControlNode, to events: RufletEventSink) {
+    let wire = RufletValue.string(value)
+    events.setLocal(node.id, "value", wire)
+    events.update(node.id, ["value": wire])
+    if node.bool("on_change") == true || node.handlesEvent("change") {
+      events.fire(node, "change", data: wire)
+    }
+  }
+
+  static func selection(_ range: NSRange, on node: ControlNode, to events: RufletEventSink) {
+    guard node.bool("on_selection_change") == true || node.handlesEvent("selection_change") else {
+      return
+    }
+    RufletTextSelection.report(range, on: node, to: events)
+  }
+}
+
+private struct CupertinoTextFieldBorderLayer: View {
+  let border: RufletBorder
+  let radii: RufletCornerRadii
+
+  var body: some View {
+    GeometryReader { geometry in
+      ZStack {
+        if let top = border.top {
+          top.color.frame(width: geometry.size.width, height: top.width)
+            .position(x: geometry.size.width / 2, y: top.width / 2)
+        }
+        if let right = border.right {
+          right.color.frame(width: right.width, height: geometry.size.height)
+            .position(x: geometry.size.width - right.width / 2, y: geometry.size.height / 2)
+        }
+        if let bottom = border.bottom {
+          bottom.color.frame(width: geometry.size.width, height: bottom.width)
+            .position(x: geometry.size.width / 2, y: geometry.size.height - bottom.width / 2)
+        }
+        if let left = border.left {
+          left.color.frame(width: left.width, height: geometry.size.height)
+            .position(x: left.width / 2, y: geometry.size.height / 2)
+        }
+      }
+      .clipShape(RufletRoundedRectangle(radii: radii))
+    }
+    .allowsHitTesting(false)
+  }
+}
+
+private struct CupertinoTextFieldDecorationImage: View {
+  let spec: RufletDecorationImageSpec
+
+  @ViewBuilder
+  var body: some View {
+    switch spec.source {
+    case .binary(let data):
+      PlatformImageView(data: data, repeatMode: spec.repeatMode, interpolation: spec.interpolation)
+        .opacity(spec.opacity)
+    case .remote(let url):
+      AsyncImage(url: url) { image in
+        image.resizable(resizingMode: spec.repeatMode.swiftUI).interpolation(spec.interpolation)
+      } placeholder: { Color.clear }
+      .opacity(spec.opacity)
+    case .asset(let name):
+      Image(name).resizable(resizingMode: spec.repeatMode.swiftUI)
+        .interpolation(spec.interpolation).opacity(spec.opacity)
+    case .empty, .invalid, .missing:
+      Color.clear
     }
   }
 }
@@ -891,38 +1204,22 @@ struct CupertinoTextFieldControlView: View {
 /// field.
 private struct CupertinoPlaceholder: ViewModifier {
   let node: ControlNode
+  let text: String
   let showing: Bool
+  let multiline: Bool
 
   func body(content: Content) -> some View {
-    guard node.map("placeholder_style") != nil || node.map("hint_style") != nil
-      || node.int("hint_max_lines") != nil
+    guard node.map("placeholder_style") != nil || node.map("label_style") != nil
     else { return AnyView(content) }
-    let text = node.string("placeholder_text") ?? node.string("hint_text") ?? ""
-    let styleKey = node.map("placeholder_style") != nil ? "placeholder_style" : "hint_style"
-    let duration = (node.double("hint_fade_duration") ?? 0) / 1_000
+    let styleKey = node.map("placeholder_style") != nil ? "placeholder_style" : "label_style"
     return AnyView(
-      content.overlay(alignment: .leading) {
+      content.overlay(alignment: multiline ? .topLeading : .leading) {
         Text(text)
-          .lineLimit(node.int("hint_max_lines"))
+          .lineLimit(multiline ? nil : 1)
           .rufletTextStyle(RufletTextStyle(node: node, styleKey: styleKey))
           .opacity(showing ? 1 : 0)
-          .animation(.easeInOut(duration: duration), value: showing)
           .allowsHitTesting(false)
       })
-  }
-}
-
-private struct CupertinoSlotConstraints: ViewModifier {
-  let value: RufletValue?
-
-  func body(content: Content) -> some View {
-    if let constraints = ControlProps.sizeConstraints(value) {
-      content.frame(
-        minWidth: constraints.minWidth, maxWidth: constraints.maxWidth,
-        minHeight: constraints.minHeight, maxHeight: constraints.maxHeight)
-    } else {
-      content
-    }
   }
 }
 
