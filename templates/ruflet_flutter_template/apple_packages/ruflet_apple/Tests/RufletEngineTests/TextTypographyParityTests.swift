@@ -4,6 +4,13 @@ import RufletProtocol
 import XCTest
 
 final class TextTypographyParityTests: XCTestCase {
+  func testUnstyledTextStartsAtMaterialBodyMedium() {
+    let style = RufletTextStyle.forText(node: ControlNode(id: 1, type: "Text"))
+    XCTAssertEqual(style.materialThemeMetric?.size, 14)
+    XCTAssertEqual(style.materialThemeMetric?.lineHeight, 20)
+    XCTAssertEqual(style.swiftUILineSpacing, 6)
+  }
+
   func testMaterialThreeTextThemeMetricsRemainDistinct() {
     let expected: [(String, CGFloat, CGFloat)] = [
       ("display_large", 57, 64), ("display_medium", 45, 52),
@@ -45,6 +52,30 @@ final class TextTypographyParityTests: XCTestCase {
     XCTAssertEqual(style.size, 20)
     XCTAssertEqual(style.lineHeight, 1.5)
     XCTAssertEqual(style.swiftUILineSpacing, 10)
+  }
+
+  func testTextStyleRefinesThemeBeforeTopLevelShorthands() {
+    let style = RufletTextStyle.forText(node: ControlNode(
+      id: 1, type: "Text",
+      props: [
+        "theme_style": .string("display_large"),
+        "style": .map(["size": .double(30), "weight": .string("w500")]),
+        "size": .double(20),
+        "weight": .string("w700"),
+      ]))
+    XCTAssertEqual(style.materialThemeMetric?.size, 57)
+    XCTAssertEqual(style.size, 20)
+    XCTAssertEqual(style.weight, .bold)
+  }
+
+  func testFontFamilyFallbackDoesNotReplaceFletFontFamily() {
+    // Flet 0.80.5 exposes this Python property but its TextControl does not
+    // pass it to Flutter TextStyle. Treating the first fallback as the primary
+    // face would therefore diverge from the pinned renderer.
+    let style = RufletTextStyle.forText(node: ControlNode(
+      id: 1, type: "Text",
+      props: ["font_family_fallback": .array([.string("Fallback")])]))
+    XCTAssertNil(style.fontFamily)
   }
 
   func testUnknownThemeRoleDoesNotInventTypography() {

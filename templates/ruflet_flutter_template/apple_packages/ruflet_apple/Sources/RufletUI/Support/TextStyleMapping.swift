@@ -45,22 +45,60 @@ public struct RufletTextStyle {
   /// the two: the theme style is the base, `style` refines it, and the
   /// top-level `size`, `weight`, `italic`, `font_family`, `color` and
   /// `bgcolor` override whatever the map set.
-  static func forText(node: ControlNode) -> RufletTextStyle {
-    var style = RufletTextStyle(node: node, styleKey: "style")
-    if let theme = node.string("theme_style") { style.applyThemeStyle(theme) }
+  static func forText(node: ControlNode, hasSpans: Bool = false) -> RufletTextStyle {
+    // Material's DefaultTextStyle is bodyMedium. Flutter merges the optional
+    // theme role first, then the TextStyle map, and finally Text's shorthand
+    // properties. Starting at bodyMedium is important: an unstyled Flet Text
+    // is 14/20, not SwiftUI's 17-point body font.
+    var style = RufletTextStyle()
+    style.applyThemeStyle(node.string("theme_style") ?? "body_medium")
+    if let map = node.map("style") {
+      style.merge(RufletTextStyle(map: map))
+    }
     if let size = node.double("size") { style.size = CGFloat(size) }
     if let weight = node.string("weight") { style.weight = fontWeight(weight) }
     if node.bool("italic") == true { style.italic = true }
-    if let family = node.string("font_family")
-      ?? node.array("font_family_fallback")?.first?.stringValue
-    {
+    if let family = node.string("font_family") {
       style.fontFamily = family
     }
-    if let color = MaterialPalette.color(node.string("color")) { style.color = color }
+    if let color = MaterialPalette.color(node.string("color")) {
+      style.color = color
+    } else if hasSpans {
+      // This surprising branch is literal Flet 0.80.5 behavior: Text.copyWith
+      // replaces even style.color with DefaultTextStyle.color when spans exist.
+      style.color = MaterialPalette.color("onsurface")
+    }
     if let background = MaterialPalette.color(node.string("bgcolor")) {
       style.backgroundColor = background
     }
     return style
+  }
+
+  /// Applies a child TextSpan's partial TextStyle over its inherited style.
+  /// Flutter's TextSpan style is inheriting; an unstyled child must never
+  /// reset a 57-point parent to Apple's default body font.
+  mutating func merge(_ overlay: RufletTextStyle) {
+    if let value = overlay.size { size = value }
+    if let value = overlay.weight { weight = value }
+    if overlay.italic { italic = true }
+    if let value = overlay.color { color = value }
+    if let value = overlay.backgroundColor { backgroundColor = value }
+    if let value = overlay.fontFamily { fontFamily = value }
+    if let value = overlay.letterSpacing { letterSpacing = value }
+    if let value = overlay.lineHeight { lineHeight = value }
+    if !overlay.decoration.isEmpty { decoration = overlay.decoration }
+    if let value = overlay.materialThemeMetric {
+      materialThemeMetric = value
+      themeStyle = value.nativeAnchor
+    } else if let value = overlay.themeStyle {
+      themeStyle = value
+    }
+  }
+
+  func merging(_ overlay: RufletTextStyle) -> RufletTextStyle {
+    var result = self
+    result.merge(overlay)
+    return result
   }
 
   /// Flutter's `TextTheme` slots, which Flet passes through by name.

@@ -14,37 +14,36 @@ struct TextControlView: View {
   @Environment(\.openURL) private var openURL
 
   var body: some View {
-    let style = RufletTextStyle.forText(node: node)
-
-    renderedText(style: style)
-      .multilineTextAlignment(alignment)
-      .lineLimit(lineLimit)
-      .truncationMode(truncation)
-      .lineSpacing(style.swiftUILineSpacing)
-      .fixedSize(horizontal: node.bool("no_wrap") == true, vertical: false)
-      .frame(maxWidth: node.double("max_width").map { CGFloat($0) })
-      .background(style.backgroundColor)
-      .modifier(TextSelectionCursor(node: node))
-      .modifier(TapReporter(node: node, events: events))
-  }
-
-  /// Flutter's `TextOverflow`. `ellipsis` is also carried as its own boolean,
-  /// which Flet treats as the same request.
-  private var truncation: Text.TruncationMode {
-    if node.bool("ellipsis") == true { return .tail }
-    switch node.string("overflow")?.lowercased() {
-    case "ellipsis": return .tail
-    case "fade", "clip", "visible": return .tail
-    default: return .tail
-    }
-  }
-
-  @ViewBuilder
-  private func renderedText(style: RufletTextStyle) -> some View {
     let document = RufletRichTextDocument(
       value: node.string("value") ?? "",
       spanIDs: node.controlIDs(forKey: "spans"),
       resolve: store.node)
+    let presentation = RufletTextPresentation(node: node)
+    let style = RufletTextStyle.forText(node: node, hasSpans: !document.runs.isEmpty)
+
+    renderedText(style: style, document: document)
+      .multilineTextAlignment(alignment)
+      .lineLimit(presentation.maxLines)
+      .truncationMode(presentation.truncationMode)
+      .lineSpacing(style.swiftUILineSpacing)
+      // Flet passes no_wrap only to Text.softWrap. SelectableText has no
+      // softWrap argument at all, so selectable paragraphs must keep wrapping.
+      .fixedSize(horizontal: presentation.usesUnwrappedLayout, vertical: false)
+      .frame(maxWidth: node.double("max_width").map { CGFloat($0) })
+      .background(style.backgroundColor)
+      .modifier(TextSelectionCursor(node: node))
+      .modifier(SelectableTextTapReporter(node: node, events: events))
+      .modifier(TextOverflowClip(mode: presentation.overflow))
+      .modifier(
+        TextSemanticLabel(
+          value: document.accessibilityLabel(
+            rootLabel: node.props["semantics_label"]?.stringValue)))
+  }
+
+  @ViewBuilder
+  private func renderedText(
+    style: RufletTextStyle, document: RufletRichTextDocument
+  ) -> some View {
     let attributed = document.attributedString(rootStyle: style)
     if node.bool("selectable") == true || document.runs.contains(where: \.tracksPointer) {
       RufletSelectableRichText(
@@ -85,12 +84,63 @@ struct TextControlView: View {
     }
   }
 
-  /// `max_lines` caps the run; `no_wrap` is Flutter's single-line shorthand.
-  private var lineLimit: Int? {
-    if node.bool("no_wrap") == true { return 1 }
-    return node.int("max_lines")
+}
+
+enum RufletTextOverflow: String, Equatable {
+  case clip, fade, ellipsis, visible
+}
+
+/// Source-derived Text/SelectableText constructor choices. Keeping them as a
+/// value also makes it impossible for SwiftUI layout convenience to silently
+/// turn no_wrap into maxLines=1, which Flutter does not do.
+struct RufletTextPresentation: Equatable {
+  let selectable: Bool
+  let noWrap: Bool
+  let maxLines: Int?
+  let overflow: RufletTextOverflow
+
+  init(node: ControlNode) {
+    selectable = node.bool("selectable") == true
+    noWrap = node.bool("no_wrap") == true
+    maxLines = node.int("max_lines")
+    if node.bool("ellipsis") == true {
+      overflow = .ellipsis
+    } else {
+      overflow = RufletTextOverflow(rawValue: node.string("overflow")?.lowercased() ?? "") ?? .clip
+    }
   }
 
+  var usesUnwrappedLayout: Bool { !selectable && noWrap }
+  var truncationMode: Text.TruncationMode { .tail }
+}
+
+private struct SelectableTextTapReporter: ViewModifier {
+  let node: ControlNode
+  let events: RufletEventSink
+
+  func body(content: Content) -> some View {
+    if node.bool("selectable") == true {
+      content.modifier(TapReporter(node: node, events: events))
+    } else {
+      content
+    }
+  }
+}
+
+private struct TextOverflowClip: ViewModifier {
+  let mode: RufletTextOverflow
+
+  func body(content: Content) -> some View {
+    if mode == .clip { content.clipped() } else { content }
+  }
+}
+
+private struct TextSemanticLabel: ViewModifier {
+  let value: String?
+
+  func body(content: Content) -> some View {
+    if let value { content.accessibilityLabel(Text(value)) } else { content }
+  }
 }
 
 /// `enable_interactive_selection: false` takes selection away even from a
@@ -115,13 +165,12 @@ private struct TextSelectionCursor: ViewModifier {
   let node: ControlNode
 
   func body(content: Content) -> some View {
-    guard node.bool("show_selection_cursor") == true else { return AnyView(content) }
-    let width = CGFloat(node.double("selection_cursor_width") ?? 2)
+    guard node.bool("selectable") == true,
+      node.bool("show_selection_cursor") == true
+    else { return AnyView(content) }
     return AnyView(
       content
-        .tint(MaterialPalette.color(node.string("selection_cursor_color")))
-        .frame(minHeight: node.double("selection_cursor_height").map { CGFloat($0) })
-        .padding(.trailing, width))
+        .tint(MaterialPalette.color(node.string("selection_cursor_color"))))
   }
 }
 

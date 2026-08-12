@@ -37,6 +37,82 @@ final class DisplayParityTests: XCTestCase {
     XCTAssertNil(RufletSpanLink.id(from: URL(string: "https://example.test")!))
   }
 
+  func testTextSpanStylesInheritRootAndParentTypography() {
+    let parent = ControlNode(
+      id: 2, type: "TextSpan",
+      props: [
+        "style": .map(["size": .double(30)]),
+        "spans": .array([.controlRef(3)]),
+      ])
+    let child = ControlNode(
+      id: 3, type: "TextSpan",
+      props: ["text": .string("child"), "style": .map(["weight": .string("bold")])])
+    let nodes = [2: parent, 3: child]
+    let document = RufletRichTextDocument(
+      value: "", spanIDs: [2], resolve: { nodes[$0] })
+    let root = RufletTextStyle.forText(node: node("Text"))
+
+    let childStyle = document.runs.first { $0.node.id == 3 }?.resolvedStyle(inheriting: root)
+    XCTAssertEqual(childStyle?.size, 30)
+    XCTAssertEqual(childStyle?.weight, .bold)
+    XCTAssertEqual(childStyle?.materialThemeMetric?.size, 14)
+  }
+
+  func testTextSpanSemanticsLabelsAndSpellOutInheritanceMatchFlutter() {
+    let parent = ControlNode(
+      id: 2, type: "TextSpan",
+      props: [
+        "text": .string("PIN "), "semantics_label": .string("security code "),
+        "spell_out": .bool(true), "spans": .array([.controlRef(3), .controlRef(4)]),
+      ])
+    let inherited = ControlNode(id: 3, type: "TextSpan", props: ["text": .string("12")])
+    let cleared = ControlNode(
+      id: 4, type: "TextSpan",
+      props: ["text": .string(" ok"), "spell_out": .bool(false)])
+    let nodes = [2: parent, 3: inherited, 4: cleared]
+    let document = RufletRichTextDocument(
+      value: "Root ", spanIDs: [2], resolve: { nodes[$0] })
+
+    XCTAssertEqual(document.semanticString, "Root security code 12 ok")
+    XCTAssertEqual(document.accessibilityLabel(rootLabel: nil), "Root security code 12 ok")
+    XCTAssertEqual(document.accessibilityLabel(rootLabel: "All content"), "All content")
+    XCTAssertTrue(document.runs.first { $0.node.id == 3 }?.spellsOutCharacters == true)
+    XCTAssertTrue(document.runs.first { $0.node.id == 4 }?.spellsOutCharacters == false)
+  }
+
+  func testTextWithoutAlternativeSemanticsPreservesNativeAccessibility() {
+    let span = ControlNode(id: 2, type: "TextSpan", props: ["text": .string("world")])
+    let document = RufletRichTextDocument(
+      value: "hello ", spanIDs: [2], resolve: { _ in span })
+    XCTAssertNil(document.accessibilityLabel(rootLabel: nil))
+    XCTAssertEqual(document.accessibilityLabel(rootLabel: ""), "")
+  }
+
+  func testTextPresentationKeepsNoWrapSeparateFromMaxLines() {
+    let plain = RufletTextPresentation(node: node(
+      "Text", ["no_wrap": .bool(true), "overflow": .string("visible")]))
+    XCTAssertTrue(plain.usesUnwrappedLayout)
+    XCTAssertNil(plain.maxLines)
+    XCTAssertEqual(plain.overflow, .visible)
+
+    let selectable = RufletTextPresentation(node: node(
+      "Text",
+      [
+        "selectable": .bool(true), "no_wrap": .bool(true),
+        "max_lines": .int(2), "overflow": .string("ellipsis"),
+      ]))
+    XCTAssertFalse(selectable.usesUnwrappedLayout)
+    XCTAssertEqual(selectable.maxLines, 2)
+    XCTAssertEqual(selectable.overflow, .ellipsis)
+  }
+
+  func testTextPresentationUsesFletClipDefault() {
+    let presentation = RufletTextPresentation(node: node("Text"))
+    XCTAssertFalse(presentation.selectable)
+    XCTAssertFalse(presentation.noWrap)
+    XCTAssertEqual(presentation.overflow, .clip)
+  }
+
   func testTextSelectionPayloadMatchesPinnedFletMap() {
     XCTAssertEqual(
       RufletRichTextDocument.textSelectionData(
