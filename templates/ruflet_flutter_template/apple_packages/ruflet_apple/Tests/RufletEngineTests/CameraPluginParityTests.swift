@@ -42,6 +42,24 @@ final class CameraPluginParityTests: XCTestCase {
     XCTAssertEqual(options.imageFormatGroup, "bgra8888")
   }
 
+  func testInitializationIntegersMatchPinnedFletParseInt() {
+    let call = RufletMethodCall(
+      controlID: 1, callID: "initialize", name: "initialize",
+      args: .map([
+        "description": cameraDescription,
+        "fps": .string(" 30 "),
+        "video_bitrate": .double(2_000_000),
+        "audio_bitrate": .bool(true),
+      ]))
+    let options = CameraInitializationOptions(call)
+
+    XCTAssertEqual(options.fps, 30)
+    XCTAssertNil(options.videoBitrate)
+    XCTAssertNil(options.audioBitrate)
+    XCTAssertNil(CameraWireSemantics.parseInt(.string("24.0")))
+    XCTAssertNil(CameraWireSemantics.parseInt(.controlRef(24)))
+  }
+
   func testCameraEnumsFollowFlutterCameraNamesAndNullParserBehavior() {
     XCTAssertEqual(CameraWireSemantics.flashMode("off"), "off")
     XCTAssertEqual(CameraWireSemantics.flashMode("auto"), "auto")

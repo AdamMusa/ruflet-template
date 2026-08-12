@@ -69,9 +69,9 @@ struct CameraInitializationOptions: Equatable {
     description = call.argument("description")
     resolutionPreset = call.argument("resolution_preset")?.stringValue ?? "max"
     enableAudio = call.argument("enable_audio")?.boolValue ?? true
-    fps = call.argument("fps")?.intValue.map { Int($0) }
-    videoBitrate = call.argument("video_bitrate")?.intValue.map { Int($0) }
-    audioBitrate = call.argument("audio_bitrate")?.intValue.map { Int($0) }
+    fps = CameraWireSemantics.parseInt(call.argument("fps"))
+    videoBitrate = CameraWireSemantics.parseInt(call.argument("video_bitrate"))
+    audioBitrate = CameraWireSemantics.parseInt(call.argument("audio_bitrate"))
     imageFormatGroup = call.argument("image_format_group")?.stringValue ?? "unknown"
   }
 
@@ -82,6 +82,17 @@ struct CameraInitializationOptions: Equatable {
 
 enum CameraWireSemantics {
   static let previewEnabled = true
+
+  /// Exact subset of Flet's `parseInt`: integers pass through and decimal
+  /// strings are parsed, while doubles and booleans do not get coerced.
+  static func parseInt(_ value: RufletValue?) -> Int? {
+    switch value {
+    case .int(let value): return Int(exactly: value)
+    case .string(let value):
+      return Int(value.trimmingCharacters(in: .whitespacesAndNewlines))
+    default: return nil
+    }
+  }
 
   static func resolutionPreset(_ value: String?) -> String {
     switch value?.lowercased() {
