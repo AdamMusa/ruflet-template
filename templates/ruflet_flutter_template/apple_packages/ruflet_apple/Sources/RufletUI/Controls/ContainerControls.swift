@@ -212,9 +212,7 @@ struct PageControlView: View {
                     \.rufletNavigationContext,
                     navigationContext(page: presentationPage, viewID: viewID))
                   .environment(\.rufletHeroProvidesGeometry, isActive)
-                  .opacity(isActive ? 1 : 0)
-                  .allowsHitTesting(isActive)
-                  .accessibilityHidden(!isActive)
+                  .modifier(RufletOffstageRouteModifier(isActive: isActive))
                   .zIndex(isActive ? 1 : 0)
               }
             }
@@ -288,6 +286,32 @@ struct PageControlView: View {
     events.setLocal(node.id, "route", .string(route))
     events.update(node.id, ["route": .string(route)])
     events.send(node.id, "route_change", .map(["route": .string(route)]))
+  }
+}
+
+/// Flutter's offstage Navigator routes remain mounted for state and Hero
+/// geometry, but none of their semantics descendants are exposed. Merely
+/// applying `accessibilityHidden` to a SwiftUI ancestor is insufficient for
+/// UIKit/AppKit representables such as Ruflet's native text fields: their
+/// platform accessibility elements can remain queryable. Replacing the
+/// inactive branch's accessibility representation closes that native escape
+/// hatch while preserving its layout tree for matched geometry.
+private struct RufletOffstageRouteModifier: ViewModifier {
+  let isActive: Bool
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if isActive {
+      content
+    } else {
+      content
+        .opacity(0)
+        .allowsHitTesting(false)
+        .disabled(true)
+        .accessibilityElement(children: .ignore)
+        .accessibilityHidden(true)
+        .accessibilityRepresentation { EmptyView() }
+    }
   }
 }
 

@@ -120,14 +120,14 @@ public enum IconMapping {
   public static func symbol(forMaterialName rawName: String) -> String {
     let name = canonical(rawName)
     if let mapped = table[name], isAvailable(mapped) { return mapped }
-    if let fallback = unavailableSymbolFallbacks[name], isAvailable(fallback) { return fallback }
+    if let fallback = availableFallback(for: name) { return fallback }
 
     // Variants share a base icon: ADD_OUTLINED, ADD_ROUNDED, ADD_SHARP all
     // mean ADD, and Apple has no equivalent distinction.
     for suffix in ["_outlined", "_rounded", "_sharp"] where name.hasSuffix(suffix) {
       let base = String(name.dropLast(suffix.count))
       if let mapped = table[base], isAvailable(mapped) { return mapped }
-      if let fallback = unavailableSymbolFallbacks[base], isAvailable(fallback) { return fallback }
+      if let fallback = availableFallback(for: base) { return fallback }
     }
 
     // Flet intentionally sends the same Material icon name on every platform.
@@ -571,12 +571,17 @@ public enum IconMapping {
   /// Semantic fallbacks for symbols introduced after Ruflet's deployment
   /// floor. A current Apple OS should show the closest native meaning; older
   /// systems still receive a visible native icon rather than a blank image.
-  private static let unavailableSymbolFallbacks: [String: String] = [
+  private static let unavailableSymbolFallbacks: [String: [String]] = [
     // SF Symbols has no rocket on Ruflet's supported Apple deployment floor.
-    // An aircraft taking off preserves Material's launch meaning; paperplane
-    // means send and was visibly wrong for Ruby's `rocket_launch` token.
-    "rocket_launch": "airplane",
+    // Prefer Apple's takeoff artwork where available; a plain aircraft keeps
+    // the icon visible on the oldest supported systems. Paperplane means send
+    // and was visibly wrong for Ruby's `rocket_launch` token.
+    "rocket_launch": ["airplane.departure", "airplane"],
   ]
+
+  private static func availableFallback(for materialName: String) -> String? {
+    unavailableSymbolFallbacks[materialName]?.first(where: isAvailable)
+  }
 }
 
 /// Registers and exposes the exact font shipped with the pinned Flutter SDK.

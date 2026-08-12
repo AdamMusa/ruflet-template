@@ -123,7 +123,7 @@ final class IconMappingTests: XCTestCase {
 
   func testRubyMaterialNamesResolveToTheirNativeAppleMeaning() {
     XCTAssertEqual(IconMapping.symbol(forMaterialName: "home"), "house")
-    XCTAssertEqual(IconMapping.symbol(forMaterialName: "rocket_launch"), "airplane")
+    XCTAssertEqual(IconMapping.symbol(forMaterialName: "rocket_launch"), "airplane.departure")
     XCTAssertEqual(IconMapping.symbol(forMaterialName: "account_circle"), "person.crop.circle")
     XCTAssertEqual(IconMapping.symbol(forMaterialName: "chevron_right"), "chevron.right")
     XCTAssertEqual(
