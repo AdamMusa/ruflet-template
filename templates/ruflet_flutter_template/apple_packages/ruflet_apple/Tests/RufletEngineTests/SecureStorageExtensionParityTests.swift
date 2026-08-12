@@ -45,7 +45,7 @@ final class SecureStorageExtensionParityTests: XCTestCase {
       "is_persistent": .bool(true),
       "auth_ui_behavior": .string("fail"),
       "access_control_flags": .array([
-        .string("user_presence"), .string("device_passcode"),
+        .string("userPresence"), .string("DEVICEPASSCODE"), .string("user_presence"),
       ]),
       "uses_data_protection_keychain": .bool(false),
     ]))
@@ -64,8 +64,28 @@ final class SecureStorageExtensionParityTests: XCTestCase {
     XCTAssertEqual(options.resultLimit, 4)
     XCTAssertTrue(options.shouldReturnPersistentReference)
     XCTAssertEqual(options.authenticationUIBehavior, "fail")
-    XCTAssertEqual(options.accessControlFlags, ["user_presence", "device_passcode"])
+    XCTAssertEqual(options.accessControlFlags, ["userPresence", "devicePasscode"])
     XCTAssertFalse(options.usesDataProtectionKeychain)
+  }
+
+  func testKeychainQueryMatchesPinnedDarwinDefaultsAndOptionShapes() {
+    let service = SecureStorageService()
+    let defaults = service.baseQuery(options: AppleSecureStorageOptions(nil))
+    XCTAssertEqual(
+      defaults[kSecAttrService as String] as? String,
+      "flutter_secure_storage_service")
+    XCTAssertEqual(defaults[kSecAttrSynchronizable as String] as? Bool, false)
+    XCTAssertEqual(
+      defaults[kSecAttrAccessible as String] as? String,
+      kSecAttrAccessibleWhenUnlocked as String)
+
+    let options = AppleSecureStorageOptions(.map([
+      "result_limit": .int(8),
+      "auth_ui_behavior": .string("require_auth"),
+    ]))
+    let query = service.baseQuery(options: options)
+    XCTAssertEqual(query[kSecMatchLimit as String] as? String, kSecMatchLimitAll as String)
+    XCTAssertEqual(query[kSecUseAuthenticationUI as String] as? String, "require_auth")
   }
 
   func testMethodOptionsOverrideControlOptionsOnlyWhenPresent() {
@@ -110,5 +130,36 @@ final class SecureStorageExtensionParityTests: XCTestCase {
 
     let availability = try invoke(service, "get_availability")?.get()
     XCTAssertNotNil(availability?.boolValue)
+  }
+
+  func testDualSynchronizableLookupAndDeleteStatusReductionMatchesDarwin() throws {
+    XCTAssertTrue(try SecureStorageService.containsResult(
+      synchronized: errSecSuccess, local: errSecItemNotFound).get())
+    XCTAssertTrue(try SecureStorageService.containsResult(
+      synchronized: errSecItemNotFound, local: errSecSuccess).get())
+    XCTAssertFalse(try SecureStorageService.containsResult(
+      synchronized: errSecItemNotFound, local: errSecItemNotFound).get())
+    XCTAssertThrowsError(try SecureStorageService.containsResult(
+      synchronized: errSecAuthFailed, local: errSecItemNotFound).get())
+    XCTAssertThrowsError(try SecureStorageService.containsResult(
+      synchronized: errSecAuthFailed, local: errSecSuccess).get())
+
+    XCTAssertEqual(try SecureStorageService.deleteResult(
+      synchronized: errSecSuccess, local: errSecAuthFailed).get(), .null)
+    XCTAssertEqual(try SecureStorageService.deleteResult(
+      synchronized: errSecItemNotFound, local: errSecItemNotFound).get(), .null)
+    XCTAssertThrowsError(try SecureStorageService.deleteResult(
+      synchronized: errSecAuthFailed, local: errSecItemNotFound).get())
+  }
+
+  func testOnlyPinnedFletMethodsAreAcceptedAndStringArgumentsAreStrict() {
+    let service = SecureStorageService()
+    for alias in ["write", "read", "read_all", "delete", "delete_all"] {
+      XCTAssertThrowsError(try invoke(service, alias)?.get())
+    }
+    XCTAssertThrowsError(try invoke(
+      service, "set", args: .map(["key": .int(1), "value": .string("value")]))?.get())
+    XCTAssertThrowsError(try invoke(
+      service, "get", args: .map(["key": .bool(true)]))?.get())
   }
 }

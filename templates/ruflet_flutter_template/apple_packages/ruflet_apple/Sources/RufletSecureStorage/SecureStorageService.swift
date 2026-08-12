@@ -32,7 +32,7 @@ struct AppleSecureStorageOptions: Equatable {
   init(_ value: RufletValue?) {
     guard let map = value?.mapValue else { return }
     accountName = map["account_name"]?.stringValue
-    groupID = map["group_id"]?.stringValue ?? map["groupId"]?.stringValue
+    groupID = map["group_id"]?.stringValue
     accessibility = map["accessibility"]?.stringValue ?? "unlocked"
     synchronizable = map["synchronizable"]?.boolValue ?? false
     label = map["label"]?.stringValue
@@ -45,8 +45,7 @@ struct AppleSecureStorageOptions: Equatable {
     resultLimit = map["result_limit"]?.intValue
     shouldReturnPersistentReference = map["is_persistent"]?.boolValue ?? false
     authenticationUIBehavior = map["auth_ui_behavior"]?.stringValue
-    accessControlFlags = map["access_control_flags"]?.arrayValue?
-      .compactMap(\.stringValue) ?? []
+    accessControlFlags = Self.accessControlFlags(map["access_control_flags"])
     usesDataProtectionKeychain = map["uses_data_protection_keychain"]?.boolValue ?? true
   }
 
@@ -55,6 +54,17 @@ struct AppleSecureStorageOptions: Equatable {
     guard let raw = value?.stringValue else { return nil }
     return ISO8601DateFormatter().date(from: raw)
   }
+
+  private static func accessControlFlags(_ value: RufletValue?) -> [String] {
+    let names = [
+      "devicePasscode", "biometryAny", "biometryCurrentSet", "userPresence",
+      "watch", "or", "and", "applicationPassword", "privateKeyUsage",
+    ]
+    return value?.arrayValue?.compactMap { value in
+      guard case .string(let candidate) = value else { return nil }
+      return names.first { $0.caseInsensitiveCompare(candidate) == .orderedSame }
+    } ?? []
+  }
 }
 
 /// `SecureStorage` — the Keychain.
@@ -62,7 +72,7 @@ struct AppleSecureStorageOptions: Equatable {
 public final class SecureStorageService: RufletStreamingService {
   public static let wireType = "SecureStorage"
 
-  private let service = Bundle.main.bundleIdentifier ?? "com.izeesoft.ruflet"
+  private let service = "flutter_secure_storage_service"
   private var targetID: Int?
   private var context: RufletServiceContext?
   private var control: ControlNode?
@@ -107,21 +117,28 @@ public final class SecureStorageService: RufletStreamingService {
   ) {
     let options = resolvedAppleOptions(for: call, node: node)
     switch call.name {
-    case "set", "write":
-      guard let key = call.argument("key")?.stringValue,
-        let value = call.argument("value")?.stringValue
+    case "set":
+      guard case .string(let key)? = call.argument("key"),
+        case .string(let value)? = call.argument("value")
       else {
         return completion(
           .failure(RufletServiceError.invalidArguments("key and value are required")))
       }
       var attributes = query(key: key, options: options)
-      SecItemDelete(attributes as CFDictionary)
+      if case .success(true) = containsKey(key: key, options: options) {
+        let update = [kSecValueData as String: Data(value.utf8)]
+        let status = SecItemUpdate(attributes as CFDictionary, update as CFDictionary)
+        if status == errSecSuccess {
+          return completion(.success(.null))
+        }
+        _ = delete(key: key, options: options)
+      }
       attributes[kSecValueData as String] = Data(value.utf8)
       let status = SecItemAdd(attributes as CFDictionary, nil)
       completion(Self.voidMutationResult(status: status, missingIsSuccess: false))
 
-    case "get", "read":
-      guard let key = call.argument("key")?.stringValue else {
+    case "get":
+      guard case .string(let key)? = call.argument("key") else {
         return completion(.failure(RufletServiceError.invalidArguments("key is required")))
       }
       var attributes = query(key: key, options: options)
@@ -138,27 +155,21 @@ public final class SecureStorageService: RufletStreamingService {
       completion(.success(.string(String(decoding: data, as: UTF8.self))))
 
     case "contains_key":
-      guard let key = call.argument("key")?.stringValue else {
+      guard case .string(let key)? = call.argument("key") else {
         return completion(.failure(RufletServiceError.invalidArguments("key is required")))
       }
-      let status = SecItemCopyMatching(query(key: key, options: options) as CFDictionary, nil)
-      if status == errSecItemNotFound { return completion(.success(.bool(false))) }
-      status == errSecSuccess
-        ? completion(.success(.bool(true)))
-        : completion(.failure(RufletServiceError.failed("Keychain error \(status)")))
+      completion(containsKey(key: key, options: options).map(RufletValue.bool))
 
-    case "remove", "delete":
-      guard let key = call.argument("key")?.stringValue else {
+    case "remove":
+      guard case .string(let key)? = call.argument("key") else {
         return completion(.failure(RufletServiceError.invalidArguments("key is required")))
       }
-      let status = SecItemDelete(query(key: key, options: options) as CFDictionary)
-      completion(Self.voidMutationResult(status: status, missingIsSuccess: true))
+      completion(delete(key: key, options: options))
 
-    case "clear", "delete_all":
-      let status = SecItemDelete(baseQuery(options: options) as CFDictionary)
-      completion(Self.voidMutationResult(status: status, missingIsSuccess: true))
+    case "clear":
+      completion(delete(key: nil, options: options))
 
-    case "get_all", "read_all":
+    case "get_all":
       var query = baseQuery(options: options)
       query.merge([
         kSecReturnAttributes as String: true,
@@ -192,19 +203,32 @@ public final class SecureStorageService: RufletStreamingService {
     }
   }
 
-  private func query(key: String, options: AppleSecureStorageOptions) -> [String: Any] {
-    var query = baseQuery(options: options)
+  func query(
+    key: String,
+    options: AppleSecureStorageOptions,
+    synchronizable: Bool? = nil,
+    includeAccessProtection: Bool = true
+  ) -> [String: Any] {
+    var query = baseQuery(
+      options: options,
+      synchronizable: synchronizable,
+      includeAccessProtection: includeAccessProtection)
     query[kSecAttrAccount as String] = key
     return query
   }
 
-  private func baseQuery(options: AppleSecureStorageOptions) -> [String: Any] {
+  func baseQuery(
+    options: AppleSecureStorageOptions,
+    synchronizable: Bool? = nil,
+    includeAccessProtection: Bool = true
+  ) -> [String: Any] {
     var query: [String: Any] = [
       kSecClass as String: kSecClassGenericPassword,
       kSecAttrService as String: options.accountName ?? service
     ]
-    if let group = options.groupID { query[kSecAttrAccessGroup as String] = group }
-    if options.synchronizable { query[kSecAttrSynchronizable as String] = kCFBooleanTrue }
+    #if os(iOS)
+      if let group = options.groupID { query[kSecAttrAccessGroup as String] = group }
+    #endif
     if let label = options.label { query[kSecAttrLabel as String] = label }
     if let description = options.itemDescription {
       query[kSecAttrDescription as String] = description
@@ -217,29 +241,68 @@ public final class SecureStorageService: RufletStreamingService {
       query[kSecAttrModificationDate as String] = modified
     }
     if let limit = options.resultLimit {
-      query[kSecMatchLimit as String] = limit == 1 ? kSecMatchLimitOne : limit
+      query[kSecMatchLimit as String] = limit == 1 ? kSecMatchLimitOne : kSecMatchLimitAll
     }
     if options.shouldReturnPersistentReference {
       query[kSecReturnPersistentRef as String] = true
     }
     if let behavior = options.authenticationUIBehavior,
-      let value = Self.authenticationUI(behavior)
+      !behavior.isEmpty
     {
-      query[kSecUseAuthenticationUI as String] = value
+      query[kSecUseAuthenticationUI as String] = behavior
     }
     #if os(macOS)
       if #available(macOS 10.15, *) {
         query[kSecUseDataProtectionKeychain as String] = options.usesDataProtectionKeychain
       }
     #endif
-    let protection = Self.accessibility(options.accessibility)
-    let flags = Self.accessControlFlags(options.accessControlFlags)
-    if flags.isEmpty {
-      query[kSecAttrAccessible as String] = protection
-    } else if let access = SecAccessControlCreateWithFlags(nil, protection, flags, nil) {
-      query[kSecAttrAccessControl as String] = access
+    if includeAccessProtection {
+      let protection = Self.accessibility(options.accessibility)
+      let flags = Self.accessControlFlags(options.accessControlFlags)
+      if flags.isEmpty {
+        query[kSecAttrAccessible as String] = protection
+        query[kSecAttrSynchronizable as String] = synchronizable ?? options.synchronizable
+      } else if let access = SecAccessControlCreateWithFlags(nil, protection, flags, nil) {
+        query[kSecAttrAccessControl as String] = access
+      }
+    } else {
+      query[kSecAttrSynchronizable as String] = synchronizable ?? options.synchronizable
     }
     return query
+  }
+
+  private func containsKey(
+    key: String, options: AppleSecureStorageOptions
+  ) -> Result<Bool, Error> {
+    let synchronized = SecItemCopyMatching(
+      query(key: key, options: options, synchronizable: true) as CFDictionary, nil)
+    if synchronized == errSecSuccess { return .success(true) }
+    if synchronized != errSecItemNotFound {
+      return .failure(RufletServiceError.failed("Keychain error \(synchronized)"))
+    }
+    let local = SecItemCopyMatching(
+      query(key: key, options: options, synchronizable: false) as CFDictionary, nil)
+    return Self.containsResult(synchronized: synchronized, local: local)
+  }
+
+  private func delete(
+    key: String?, options: AppleSecureStorageOptions
+  ) -> Result<RufletValue, Error> {
+    func status(synchronizable: Bool) -> OSStatus {
+      let attributes: [String: Any]
+      if let key {
+        attributes = query(
+          key: key, options: options, synchronizable: synchronizable,
+          includeAccessProtection: false)
+      } else {
+        attributes = baseQuery(
+          options: options, synchronizable: synchronizable,
+          includeAccessProtection: false)
+      }
+      return SecItemDelete(attributes as CFDictionary)
+    }
+    return Self.deleteResult(synchronized: status(synchronizable: true),
+                             local: status(synchronizable: false))
   }
 
   func resolvedAppleOptions(
@@ -258,18 +321,18 @@ public final class SecureStorageService: RufletStreamingService {
   }
 
   private static func accessibility(_ name: String) -> CFString {
-    switch name.lowercased().replacingOccurrences(of: "_", with: "") {
+    switch name.lowercased() {
     case "passcode": return kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly
-    case "unlockedthisdevice": return kSecAttrAccessibleWhenUnlockedThisDeviceOnly
-    case "firstunlock": return kSecAttrAccessibleAfterFirstUnlock
-    case "firstunlockthisdevice": return kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+    case "unlocked_this_device": return kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+    case "first_unlock": return kSecAttrAccessibleAfterFirstUnlock
+    case "first_unlock_this_device": return kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
     default: return kSecAttrAccessibleWhenUnlocked
     }
   }
 
   private static func accessControlFlags(_ names: [String]) -> SecAccessControlCreateFlags {
     names.reduce(into: SecAccessControlCreateFlags()) { flags, name in
-      switch name.lowercased().replacingOccurrences(of: "_", with: "") {
+      switch name.lowercased() {
       case "userpresence": flags.insert(.userPresence)
       case "biometryany": flags.insert(.biometryAny)
       case "biometrycurrentset": flags.insert(.biometryCurrentSet)
@@ -280,15 +343,6 @@ public final class SecureStorageService: RufletStreamingService {
       case "applicationpassword": flags.insert(.applicationPassword)
       default: break
       }
-    }
-  }
-
-  private static func authenticationUI(_ name: String) -> CFString? {
-    switch name.lowercased().replacingOccurrences(of: "_", with: "") {
-    case "allow": return kSecUseAuthenticationUIAllow
-    case "fail": return kSecUseAuthenticationUIFail
-    case "skip": return kSecUseAuthenticationUISkip
-    default: return nil
     }
   }
 
@@ -309,6 +363,30 @@ public final class SecureStorageService: RufletStreamingService {
     if status == errSecSuccess || (missingIsSuccess && status == errSecItemNotFound) {
       return .success(.null)
     }
+    return .failure(RufletServiceError.failed("Keychain error \(status)"))
+  }
+
+  static func containsResult(
+    synchronized: OSStatus, local: OSStatus
+  ) -> Result<Bool, Error> {
+    if synchronized == errSecSuccess { return .success(true) }
+    if synchronized != errSecItemNotFound {
+      return .failure(RufletServiceError.failed("Keychain error \(synchronized)"))
+    }
+    if local == errSecSuccess { return .success(true) }
+    if local == errSecItemNotFound { return .success(false) }
+    return .failure(RufletServiceError.failed("Keychain error \(local)"))
+  }
+
+  static func deleteResult(
+    synchronized: OSStatus, local: OSStatus
+  ) -> Result<RufletValue, Error> {
+    if synchronized == errSecSuccess || local == errSecSuccess
+      || (synchronized == errSecItemNotFound && local == errSecItemNotFound)
+    {
+      return .success(.null)
+    }
+    let status = synchronized != errSecItemNotFound ? synchronized : local
     return .failure(RufletServiceError.failed("Keychain error \(status)"))
   }
 
