@@ -1,6 +1,7 @@
 import Foundation
 import RufletEngine
 import RufletProtocol
+import RufletUI
 import SwiftUI
 
 #if canImport(MapKit)

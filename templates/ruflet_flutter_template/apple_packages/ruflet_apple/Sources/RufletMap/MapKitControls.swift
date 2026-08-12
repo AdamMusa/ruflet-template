@@ -3,6 +3,7 @@ import Foundation
 import MapKit
 import RufletEngine
 import RufletProtocol
+import RufletUI
 import SwiftUI
 
 #if canImport(UIKit)
