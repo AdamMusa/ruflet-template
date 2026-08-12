@@ -924,27 +924,34 @@ struct DismissibleControlView: View {
   @ViewBuilder
   private var dismissibleBody: some View {
     if let contentID = visibleContentID {
-      ZStack {
-        background(direction: currentDirection)
-        if !dismissed {
-          ControlView(id: contentID, axis: .none)
-            .offset(translation)
-            .gesture(dismissGesture(size: measuredSize))
+      if let message = RufletDismissibleDefaults.backgroundValidationMessage(
+        backgroundIsVisible: visibleBackgroundID != nil,
+        secondaryBackgroundIsVisible: visibleSecondaryBackgroundID != nil)
+      {
+        Text(message).foregroundColor(.red)
+      } else {
+        ZStack {
+          background(direction: currentDirection)
+          if !dismissed {
+            ControlView(id: contentID, axis: .none)
+              .offset(translation)
+              .gesture(dismissGesture(size: measuredSize))
+          }
         }
+        .frame(
+          width: collapsing && ["up", "down"].contains(dismissedDirection ?? "") ? 0 : nil,
+          height: collapsing && !["up", "down"].contains(dismissedDirection ?? "") ? 0 : nil)
+        .background(
+          GeometryReader { proxy in
+            Color.clear
+              .onAppear { measuredSize = proxy.size }
+              .onChange(of: proxy.size) {
+                measuredSize = $0
+                if collapsing { events.fire(node, "resize") }
+              }
+          }
+        )
       }
-      .frame(
-        width: collapsing && ["up", "down"].contains(dismissedDirection ?? "") ? 0 : nil,
-        height: collapsing && !["up", "down"].contains(dismissedDirection ?? "") ? 0 : nil)
-      .background(
-        GeometryReader { proxy in
-          Color.clear
-            .onAppear { measuredSize = proxy.size }
-            .onChange(of: proxy.size) {
-              measuredSize = $0
-              if collapsing { events.fire(node, "resize") }
-            }
-        }
-      )
     } else {
       Text(RufletDismissibleDefaults.missingContentError)
         .foregroundColor(.red)
@@ -954,6 +961,20 @@ struct DismissibleControlView: View {
   private var visibleContentID: Int? {
     guard let id = node.controlID(forKey: "content"),
       let content = store.node(id), content.bool("visible") != false
+    else { return nil }
+    return id
+  }
+
+  private var visibleBackgroundID: Int? {
+    visibleSlotID("background")
+  }
+
+  private var visibleSecondaryBackgroundID: Int? {
+    visibleSlotID("secondary_background")
+  }
+
+  private func visibleSlotID(_ key: String) -> Int? {
+    guard let id = node.controlID(forKey: key), store.node(id)?.bool("visible") != false
     else { return nil }
     return id
   }
@@ -969,9 +990,9 @@ struct DismissibleControlView: View {
   @ViewBuilder
   private func background(direction: String?) -> some View {
     let secondary = direction == "endToStart" || direction == "up"
-    if secondary, let id = node.controlID(forKey: "secondary_background") {
+    if secondary, let id = visibleSecondaryBackgroundID {
       ControlView(id: id, axis: .none)
-    } else if !secondary, let id = node.controlID(forKey: "background") {
+    } else if let id = visibleBackgroundID {
       ControlView(id: id, axis: .none)
     } else {
       Color.clear
@@ -1081,6 +1102,14 @@ struct DismissibleControlView: View {
 /// are actually consumed instead of silently discarded.
 enum RufletDismissibleDefaults {
   static let missingContentError = "Dismissible.content must be visible"
+  static let secondaryBackgroundError =
+    "Dismissible.secondary_background can only be specified if background is also specified/visible"
+
+  static func backgroundValidationMessage(
+    backgroundIsVisible: Bool, secondaryBackgroundIsVisible: Bool
+  ) -> String? {
+    secondaryBackgroundIsVisible && !backgroundIsVisible ? secondaryBackgroundError : nil
+  }
 
   static func movementDuration(_ node: ControlNode) -> Double {
     max(node.double("duration") ?? node.double("movement_duration") ?? 200, 0)
