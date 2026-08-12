@@ -53,7 +53,7 @@ public struct DataTable2Semantics: Equatable {
   }
 
   public func width(of column: ControlNode, mediumWidth: CGFloat) -> CGFloat {
-    if let fixed = column.double("fixed_width") { return CGFloat(max(fixed, 0)) }
+    if let fixed = column.double("fixed_width") { return CGFloat(fixed) }
     switch size(of: column) {
     case .small: return mediumWidth * CGFloat(smallRatio)
     case .medium: return mediumWidth
@@ -62,7 +62,173 @@ public struct DataTable2Semantics: Equatable {
   }
 
   public func height(of row: ControlNode, fallback: CGFloat) -> CGFloat {
-    CGFloat(max(row.double("specific_row_height") ?? Double(fallback), 0))
+    CGFloat(row.double("specific_row_height") ?? Double(fallback))
+  }
+}
+
+/// The width algorithm from `data_table_2` 2.6.0's
+/// `_calculateDataColumnSizes`. Widths include the cell's leading/trailing
+/// padding, just as Flutter table column widths do; treating `column_spacing`
+/// as an HStack gap changes both fixed-column boundaries and min-width
+/// scrolling.
+public struct DataTable2LayoutMetrics: Equatable {
+  public struct FixedPartition: Equatable {
+    public let checkboxIsFixed: Bool
+    public let fixedDataColumnCount: Int
+
+    public init(checkboxIsFixed: Bool, fixedDataColumnCount: Int) {
+      self.checkboxIsFixed = checkboxIsFixed
+      self.fixedDataColumnCount = fixedDataColumnCount
+    }
+  }
+
+  public static let materialCheckboxWidth: CGFloat = 18
+
+  public let horizontalMargin: CGFloat
+  public let checkboxHorizontalMargin: CGFloat?
+  public let columnSpacing: CGFloat
+  public let minWidth: CGFloat?
+  public let smallRatio: CGFloat
+  public let largeRatio: CGFloat
+
+  public init(_ node: ControlNode) {
+    horizontalMargin = CGFloat(node.double("horizontal_margin") ?? 24)
+    checkboxHorizontalMargin = node.double("checkbox_horizontal_margin").map { CGFloat($0) }
+    columnSpacing = CGFloat(node.double("column_spacing") ?? 56)
+    minWidth = node.double("min_width").map { CGFloat($0) }
+    smallRatio = CGFloat(node.double("sm_ratio") ?? 0.67)
+    largeRatio = CGFloat(node.double("lm_ratio") ?? 1.2)
+  }
+
+  public func checkboxWidth(visible: Bool) -> CGFloat {
+    guard visible else { return 0 }
+    let margin = checkboxHorizontalMargin ?? horizontalMargin
+    return margin + Self.materialCheckboxWidth + margin / 2
+  }
+
+  public func cellPadding(columnIndex: Int, columnCount: Int, checkboxVisible: Bool)
+    -> (leading: CGFloat, trailing: CGFloat)
+  {
+    let leading = columnIndex == 0
+      ? (checkboxVisible ? horizontalMargin / 2 : horizontalMargin)
+      : columnSpacing / 2
+    let trailing = columnIndex == columnCount - 1 ? horizontalMargin : columnSpacing / 2
+    return (leading, trailing)
+  }
+
+  public func columnWidths(
+    availableWidth: CGFloat, columns: [ControlNode], checkboxVisible: Bool
+  ) -> [CGFloat] {
+    guard !columns.isEmpty else { return [] }
+    let checkbox = checkboxWidth(visible: checkboxVisible)
+    var available = max(availableWidth, minWidth ?? availableWidth)
+    available -= checkbox
+    available -= horizontalMargin
+    available -= checkboxVisible ? horizontalMargin / 2 : horizontalMargin
+
+    let base = available / CGFloat(columns.count)
+    let fixedTotal = columns.compactMap { $0.double("fixed_width") }.reduce(0, +)
+    let flexibleAvailable = max(0, available - CGFloat(fixedTotal))
+    var calculatedFlexible: CGFloat = 0
+    var widths = columns.map { column -> CGFloat in
+      if let fixed = column.double("fixed_width") { return CGFloat(fixed) }
+      let size = column.string("size")?.lowercased() ?? "s"
+      let width = base * (size == "l" ? largeRatio : size == "m" ? 1 : smallRatio)
+      calculatedFlexible += width
+      return width
+    }
+
+    if calculatedFlexible != 0 {
+      let scale = flexibleAvailable / calculatedFlexible
+      for index in widths.indices where columns[index].double("fixed_width") == nil {
+        widths[index] *= scale
+      }
+    }
+
+    if widths.count == 1 {
+      widths[0] = max(
+        0, widths[0] + horizontalMargin + (checkboxVisible ? horizontalMargin / 2 : horizontalMargin))
+    } else {
+      widths[0] = max(
+        0, widths[0] + (checkboxVisible ? horizontalMargin / 2 : horizontalMargin))
+      widths[widths.count - 1] = max(0, widths[widths.count - 1] + horizontalMargin)
+    }
+    return widths
+  }
+
+  /// `data_table_2` counts the checkbox as the first fixed column. It also
+  /// disables all sticky columns when there are no data rows, even though the
+  /// heading remains visible.
+  public func fixedPartition(
+    columnCount: Int, rowsAreEmpty: Bool, checkboxDeclared: Bool,
+    checkboxVisible: Bool, fixedLeftColumns: Int
+  ) -> FixedPartition {
+    let actualFixed = rowsAreEmpty
+      ? 0
+      : min(max(fixedLeftColumns, 0), columnCount + (checkboxDeclared ? 1 : 0))
+    let checkboxIsFixed = checkboxVisible && actualFixed > 0
+    return FixedPartition(
+      checkboxIsFixed: checkboxIsFixed,
+      fixedDataColumnCount: min(
+        columnCount, max(actualFixed - (checkboxIsFixed ? 1 : 0), 0)))
+  }
+}
+
+public enum DataTable2SelectionSemantics {
+  /// Mirrors `_handleSelectAll`: an indeterminate heading checkbox selects
+  /// all rows; only an entirely selected table clears them.
+  public static func nextSelectAllValue(rows: [ControlNode]) -> Bool {
+    let selectable = rows.filter { $0.handlesEvent("select_change") }
+    let allSelected = !selectable.isEmpty && selectable.allSatisfy { $0.bool("selected") == true }
+    return !allSelected
+  }
+
+  public static func fallbackRowChanges(rows: [ControlNode], selected: Bool)
+    -> [(id: Int, selected: Bool)]
+  {
+    rows.compactMap { row in
+      guard row.handlesEvent("select_change"), row.bool("selected") != selected else { return nil }
+      return (row.id, selected)
+    }
+  }
+}
+
+public enum DataTable2EventPayload {
+  /// Flet's `TapDownDetails.toMap()` wire shape (`k`, `l`, `g`).
+  public static func tapDown(kind: String, local: CGPoint, global: CGPoint) -> RufletValue {
+    .map([
+      "k": .string(kind),
+      "l": .map(["x": .double(Double(local.x)), "y": .double(Double(local.y))]),
+      "g": .map(["x": .double(Double(global.x)), "y": .double(Double(global.y))]),
+    ])
+  }
+}
+
+public enum DataTable2ColumnSemantics {
+  public static func tooltipMessage(_ column: ControlNode) -> String? {
+    if let value = column.string("tooltip") { return value }
+    return column.map("tooltip")?["message"]?.stringValue
+  }
+
+  public static func sortArrowSymbol(_ table: ControlNode) -> String {
+    IconMapping.symbol(for: table.props["sort_arrow_icon"]) ?? "arrow.up"
+  }
+
+  /// The vendored adapter's fallback is intentionally 150 microseconds (not
+  /// data_table_2's constructor default of 150 milliseconds).
+  public static func sortArrowDurationSeconds(_ table: ControlNode) -> Double {
+    guard let value = table.props["sort_arrow_animation_duration"], !value.isNull else {
+      return 150 / 1_000_000
+    }
+    // Flet's `parseDuration` treats a bare number as milliseconds.
+    if let number = value.doubleValue { return number / 1_000 }
+    guard let fields = value.mapValue else { return 150 / 1_000_000 }
+    return Double(fields["days"]?.intValue ?? 0) * 86_400
+      + Double(fields["hours"]?.intValue ?? 0) * 3_600
+      + Double(fields["minutes"]?.intValue ?? 0) * 60
+      + Double(fields["seconds"]?.intValue ?? 0)
+      + Double(fields["milliseconds"]?.intValue ?? 0) / 1_000
+      + Double(fields["microseconds"]?.intValue ?? 0) / 1_000_000
   }
 }
 
@@ -84,70 +250,64 @@ public struct DataTable2ControlView: View {
     let columns = childNodes("columns")
     let rows = childNodes("rows")
     let semantics = DataTable2Semantics(node)
+    let layout = DataTable2LayoutMetrics(node)
+    let checkboxVisible = showsCheckboxes(rows, semantics)
+    let checkboxWidth = layout.checkboxWidth(visible: checkboxVisible)
+    let widths = layout.columnWidths(
+      availableWidth: size.width, columns: columns, checkboxVisible: checkboxVisible)
+    let fixedDataRows = Array(rows.prefix(max(semantics.fixedTopRows - 1, 0)))
+    let scrollingRows = Array(rows.dropFirst(fixedDataRows.count))
 
-    if rows.isEmpty, let emptyID = node.controlID(forKey: "empty") {
-      ControlView(id: emptyID, axis: .none)
-    } else {
-      let checkboxWidth: CGFloat = showsCheckboxes(rows, semantics)
-        ? 48 + 2 * CGFloat(node.double("checkbox_horizontal_margin") ?? 0) : 0
-      let spacing = CGFloat(node.double("column_spacing") ?? 56)
-      let horizontalMargin = CGFloat(node.double("horizontal_margin") ?? 24)
-      let available = max(
-        CGFloat(semantics.minWidth ?? 0),
-        size.width - 2 * horizontalMargin - checkboxWidth)
-      let mediumWidth = mediumColumnWidth(
-        columns: columns, semantics: semantics, available: available, spacing: spacing)
-      let fixedDataRows = Array(rows.prefix(max(semantics.fixedTopRows - 1, 0)))
-      let scrollingRows = Array(rows.dropFirst(fixedDataRows.count))
+    VStack(alignment: .leading, spacing: 0) {
+      if semantics.fixedTopRows > 0 {
+        headingRow(
+          columns: columns, semantics: semantics, widths: widths,
+          checkboxWidth: checkboxWidth, checkboxVisible: checkboxVisible)
+      }
 
-      VStack(alignment: .leading, spacing: 0) {
-        if semantics.fixedTopRows > 0 {
-          headingRow(
-            columns: columns, semantics: semantics, mediumWidth: mediumWidth,
-            spacing: spacing, checkboxWidth: checkboxWidth)
-        }
+      ForEach(fixedDataRows, id: \.id) { row in
+        dataRow(
+          row, columns: columns, semantics: semantics, widths: widths,
+          checkboxWidth: checkboxWidth, checkboxVisible: checkboxVisible,
+          isLast: row.id == rows.last?.id)
+      }
 
-        ForEach(fixedDataRows, id: \.id) { row in
-          dataRow(
-            row, columns: columns, semantics: semantics,
-            mediumWidth: mediumWidth, spacing: spacing, checkboxWidth: checkboxWidth,
-            isLast: row.id == rows.last?.id)
-        }
-
-        ScrollView(.vertical, showsIndicators: semantics.visibleVerticalScrollbar ?? true) {
-          VStack(alignment: .leading, spacing: 0) {
-            if semantics.fixedTopRows == 0 {
-              headingRow(
-                columns: columns, semantics: semantics, mediumWidth: mediumWidth,
-                spacing: spacing, checkboxWidth: checkboxWidth)
-            }
-            ForEach(scrollingRows, id: \.id) { row in
-              dataRow(
-                row, columns: columns, semantics: semantics,
-                mediumWidth: mediumWidth, spacing: spacing, checkboxWidth: checkboxWidth,
-                isLast: row.id == rows.last?.id)
-            }
-            Color.clear.frame(height: CGFloat(semantics.bottomMargin ?? 0))
+      ScrollView(.vertical, showsIndicators: semantics.visibleVerticalScrollbar ?? true) {
+        VStack(alignment: .leading, spacing: 0) {
+          if semantics.fixedTopRows == 0 {
+            headingRow(
+              columns: columns, semantics: semantics, widths: widths,
+              checkboxWidth: checkboxWidth, checkboxVisible: checkboxVisible)
           }
+          ForEach(scrollingRows, id: \.id) { row in
+            dataRow(
+              row, columns: columns, semantics: semantics, widths: widths,
+              checkboxWidth: checkboxWidth, checkboxVisible: checkboxVisible,
+              isLast: row.id == rows.last?.id)
+          }
+          if rows.isEmpty, let emptyID = node.controlID(forKey: "empty") {
+            ControlView(id: emptyID, axis: .vertical)
+              .frame(maxWidth: .infinity, minHeight: max(size.height - 56, 0))
+          }
+          Color.clear.frame(height: CGFloat(semantics.bottomMargin ?? 0))
         }
       }
-      .frame(minWidth: CGFloat(semantics.minWidth ?? 0), alignment: .leading)
-      .padding(.horizontal, horizontalMargin)
-      .background(tableBackground)
-      .overlay { tableBorder }
-      .modifier(DataTable2ClipModifier(
-        behavior: semantics.clipBehavior,
-        radius: ControlProps.cornerRadius(node.props["border_radius"]) ?? 0))
     }
+    .frame(minWidth: CGFloat(semantics.minWidth ?? 0), alignment: .leading)
+    .background(tableBackground)
+    .overlay { tableBorder }
+    .modifier(DataTable2ClipModifier(
+      behavior: semantics.clipBehavior,
+      radius: ControlProps.cornerRadius(node.props["border_radius"]) ?? 0))
   }
 
   private func headingRow(
     columns: [ControlNode], semantics: DataTable2Semantics,
-    mediumWidth: CGFloat, spacing: CGFloat, checkboxWidth: CGFloat
+    widths: [CGFloat], checkboxWidth: CGFloat, checkboxVisible: Bool
   ) -> some View {
     tableRow(
       columns: columns, row: nil, semantics: semantics,
-      mediumWidth: mediumWidth, spacing: spacing, checkboxWidth: checkboxWidth)
+      widths: widths, checkboxWidth: checkboxWidth, checkboxVisible: checkboxVisible)
       .frame(height: CGFloat(node.double("heading_row_height") ?? 56))
       .background(headingBackground)
       .rufletTextStyle(RufletTextStyle(map: node.map("heading_text_style") ?? [:]))
@@ -156,17 +316,19 @@ public struct DataTable2ControlView: View {
 
   private func dataRow(
     _ row: ControlNode, columns: [ControlNode], semantics: DataTable2Semantics,
-    mediumWidth: CGFloat, spacing: CGFloat, checkboxWidth: CGFloat, isLast: Bool
+    widths: [CGFloat], checkboxWidth: CGFloat, checkboxVisible: Bool, isLast: Bool
   ) -> some View {
     tableRow(
       columns: columns, row: row, semantics: semantics,
-      mediumWidth: mediumWidth, spacing: spacing, checkboxWidth: checkboxWidth)
+      widths: widths, checkboxWidth: checkboxWidth, checkboxVisible: checkboxVisible)
       .frame(height: semantics.height(
         of: row, fallback: CGFloat(node.double("data_row_height") ?? 48)))
       .background(rowBackground(row))
       .rufletTextStyle(RufletTextStyle(map: node.map("data_text_style") ?? [:]))
       .contentShape(Rectangle())
-      .modifier(DataTable2InteractionReporter(node: row, events: events))
+      .modifier(DataTable2InteractionReporter(
+        node: row, events: events,
+        selectsRowOnTap: row.handlesEvent("select_change") && !row.handlesEvent("tap")))
       .overlay(alignment: .bottom) {
         if !isLast || semantics.showBottomBorder { horizontalRule }
       }
@@ -175,45 +337,61 @@ public struct DataTable2ControlView: View {
   @ViewBuilder
   private func tableRow(
     columns: [ControlNode], row: ControlNode?, semantics: DataTable2Semantics,
-    mediumWidth: CGFloat, spacing: CGFloat, checkboxWidth: CGFloat
+    widths: [CGFloat], checkboxWidth: CGFloat, checkboxVisible: Bool
   ) -> some View {
-    let fixedCount = min(semantics.fixedLeftColumns, columns.count)
-    let fixed = Array(columns.prefix(fixedCount))
-    let scrolling = Array(columns.dropFirst(fixedCount))
+    let partition = DataTable2LayoutMetrics(node).fixedPartition(
+      columnCount: columns.count, rowsAreEmpty: childNodes("rows").isEmpty,
+      checkboxDeclared: semantics.showCheckboxColumn, checkboxVisible: checkboxVisible,
+      fixedLeftColumns: semantics.fixedLeftColumns)
+    let checkboxIsFixed = partition.checkboxIsFixed
+    let fixedDataCount = partition.fixedDataColumnCount
+    let fixed = Array(columns.prefix(fixedDataCount))
+    let scrolling = Array(columns.dropFirst(fixedDataCount))
 
     HStack(spacing: 0) {
-      if checkboxWidth > 0 {
+      if checkboxIsFixed {
         checkbox(row: row, semantics: semantics)
           .frame(width: checkboxWidth, alignment: checkboxAlignment)
           .background(fixedColor(row: row, corner: true))
       }
       columnsView(
         fixed, row: row, semantics: semantics,
-        mediumWidth: mediumWidth, spacing: spacing)
+        widths: widths, checkboxVisible: checkboxVisible)
         .background(fixedColor(row: row, corner: false))
 
       ScrollView(.horizontal, showsIndicators: semantics.visibleHorizontalScrollbar ?? true) {
-        columnsView(
-          scrolling, row: row, semantics: semantics,
-          mediumWidth: mediumWidth, spacing: spacing)
+        HStack(spacing: 0) {
+          if checkboxVisible && !checkboxIsFixed {
+            checkbox(row: row, semantics: semantics)
+              .frame(width: checkboxWidth, alignment: checkboxAlignment)
+          }
+          columnsView(
+            scrolling, row: row, semantics: semantics,
+            widths: widths, checkboxVisible: checkboxVisible)
+        }
       }
     }
   }
 
   private func columnsView(
     _ columns: [ControlNode], row: ControlNode?, semantics: DataTable2Semantics,
-    mediumWidth: CGFloat, spacing: CGFloat
+    widths: [CGFloat], checkboxVisible: Bool
   ) -> some View {
-    HStack(spacing: spacing) {
+    HStack(spacing: 0) {
       ForEach(columns, id: \.id) { column in
+        let index = allColumnIndex(column)
+        let padding = DataTable2LayoutMetrics(node).cellPadding(
+          columnIndex: index, columnCount: widths.count, checkboxVisible: checkboxVisible)
         Group {
           if let row {
-            cell(row: row, columnIndex: allColumnIndex(column))
+            cell(row: row, columnIndex: index)
           } else {
-            header(column, index: allColumnIndex(column))
+            header(column, index: index)
           }
         }
-        .frame(width: semantics.width(of: column, mediumWidth: mediumWidth))
+        .padding(.leading, padding.leading)
+        .padding(.trailing, padding.trailing)
+        .frame(width: widths.indices.contains(index) ? widths[index] : 0)
         .overlay(alignment: .trailing) { verticalRule }
       }
     }
@@ -238,7 +416,7 @@ public struct DataTable2ControlView: View {
       .frame(maxWidth: .infinity, alignment: headingAlignment(column))
     }
     .buttonStyle(.plain)
-    .help(column.string("tooltip") ?? "")
+    .help(DataTable2ColumnSemantics.tooltipMessage(column) ?? "")
     .disabled(!column.handlesEvent("sort"))
   }
 
@@ -280,20 +458,45 @@ public struct DataTable2ControlView: View {
       .disabled(!row.handlesEvent("select_change"))
     } else if semantics.showHeadingCheckbox {
       Button { selectAll() } label: {
-        Image(systemName: allSelected ? "checkmark.square.fill" : "square")
+        Image(systemName: headingCheckboxSymbol)
       }
       .buttonStyle(.plain)
-      .disabled(!node.handlesEvent("select_all"))
+      // DataTable2 falls back to invoking each selectable row when an
+      // explicit `onSelectAll` callback is absent.
+      .disabled(!node.handlesEvent("select_all") && selectableRows.isEmpty)
     }
   }
 
   private func selectAll() {
-    events.fire(node, "select_all", data: .bool(!allSelected))
+    let selected = DataTable2SelectionSemantics.nextSelectAllValue(rows: childNodes("rows"))
+    if node.handlesEvent("select_all") {
+      events.fire(node, "select_all", data: .bool(selected))
+      return
+    }
+    for change in DataTable2SelectionSemantics.fallbackRowChanges(
+      rows: childNodes("rows"), selected: selected)
+    {
+      guard let row = store.node(change.id) else { continue }
+      events.setLocal(row.id, "selected", .bool(change.selected))
+      events.fire(row, "select_change", data: .bool(change.selected))
+    }
   }
 
   private var allSelected: Bool {
-    let rows = childNodes("rows")
-    return !rows.isEmpty && rows.allSatisfy { $0.bool("selected") ?? false }
+    !selectableRows.isEmpty && selectableRows.allSatisfy { $0.bool("selected") ?? false }
+  }
+
+  private var someSelected: Bool {
+    selectableRows.contains { $0.bool("selected") == true } && !allSelected
+  }
+
+  private var selectableRows: [ControlNode] {
+    childNodes("rows").filter { $0.handlesEvent("select_change") }
+  }
+
+  private var headingCheckboxSymbol: String {
+    if someSelected { return "minus.square.fill" }
+    return allSelected ? "checkmark.square.fill" : "square"
   }
 
   private func showsCheckboxes(_ rows: [ControlNode], _ semantics: DataTable2Semantics) -> Bool {
@@ -306,23 +509,6 @@ public struct DataTable2ControlView: View {
 
   private func allColumnIndex(_ column: ControlNode) -> Int {
     childNodes("columns").firstIndex { $0.id == column.id } ?? 0
-  }
-
-  private func mediumColumnWidth(
-    columns: [ControlNode], semantics: DataTable2Semantics,
-    available: CGFloat, spacing: CGFloat
-  ) -> CGFloat {
-    let flexible = columns.filter { $0.double("fixed_width") == nil }
-    let fixed = columns.compactMap { $0.double("fixed_width") }.reduce(0, +)
-    let factors = flexible.reduce(0.0) { partial, column in
-      switch semantics.size(of: column) {
-      case .small: return partial + semantics.smallRatio
-      case .medium: return partial + 1
-      case .large: return partial + semantics.largeRatio
-      }
-    }
-    let gaps = spacing * CGFloat(max(columns.count - 1, 0))
-    return max((available - CGFloat(fixed) - gaps) / CGFloat(max(factors, 1)), 1)
   }
 
   private var checkboxAlignment: Alignment {
@@ -338,17 +524,13 @@ public struct DataTable2ControlView: View {
   }
 
   private var sortArrowName: String {
-    let requested = node.string("sort_arrow_icon")?.lowercased() ?? "arrow_upward"
-    if requested.contains("down") { return "arrow.down" }
-    if requested.contains("left") { return "arrow.left" }
-    if requested.contains("right") { return "arrow.right" }
-    return "arrow.up"
+    DataTable2ColumnSemantics.sortArrowSymbol(node)
   }
 
   private var sortArrowAnimation: Animation? {
-    let microseconds = node.double("sort_arrow_animation_duration") ?? 150
-    guard microseconds > 0 else { return nil }
-    return .easeInOut(duration: microseconds / 1_000_000)
+    let seconds = DataTable2ColumnSemantics.sortArrowDurationSeconds(node)
+    guard seconds > 0 else { return nil }
+    return .easeInOut(duration: seconds)
   }
 
   private func rowColor(_ row: ControlNode) -> Color {
@@ -463,28 +645,36 @@ private struct DataTable2ClipModifier: ViewModifier {
 private struct DataTable2InteractionReporter: ViewModifier {
   let node: ControlNode
   let events: RufletEventSink
-  @State private var pointerOrigin: CGPoint?
+  var selectsRowOnTap = false
 
   func body(content: Content) -> some View {
     content
-      .onTapGesture(count: 2) { events.fire(node, "double_tap") }
-      .onTapGesture(count: 1) { events.fire(node, "tap") }
-      .onLongPressGesture { events.fire(node, "long_press") }
-      .simultaneousGesture(
-        DragGesture(minimumDistance: 0, coordinateSpace: .local)
-          .onChanged { value in
-            guard pointerOrigin == nil else { return }
-            pointerOrigin = value.startLocation
-            events.fire(node, "tap_down", data: Self.tapPayload(value.startLocation))
+      .modifier(DataTable2OptionalTap(
+        enabled: node.handlesEvent("tap") || selectsRowOnTap,
+        count: 1,
+        action: {
+          if node.handlesEvent("tap") {
+            events.fire(node, "tap")
+          } else if selectsRowOnTap {
+            let selected = !(node.bool("selected") ?? false)
+            events.setLocal(node.id, "selected", .bool(selected))
+            events.fire(node, "select_change", data: .bool(selected))
           }
-          .onEnded { value in
-            defer { pointerOrigin = nil }
-            guard let origin = pointerOrigin else { return }
-            if hypot(value.location.x - origin.x, value.location.y - origin.y) > 18 {
-              events.fire(node, "tap_cancel")
-            }
-          })
-      .background(secondaryPointerMonitor)
+        }))
+      .modifier(DataTable2OptionalTap(
+        enabled: node.handlesEvent("double_tap"), count: 2,
+        action: { events.fire(node, "double_tap") }))
+      .modifier(DataTable2OptionalLongPress(
+        enabled: node.handlesEvent("long_press"),
+        action: { events.fire(node, "long_press") }))
+      .modifier(DataTable2OptionalTapDown(
+        node: node, events: events,
+        enabled: node.handlesEvent("tap_down") || node.handlesEvent("tap_cancel")))
+      .background {
+        if node.handlesEvent("secondary_tap") || node.handlesEvent("secondary_tap_down") {
+          secondaryPointerMonitor
+        }
+      }
   }
 
   @ViewBuilder private var secondaryPointerMonitor: some View {
@@ -497,11 +687,55 @@ private struct DataTable2InteractionReporter: ViewModifier {
     #endif
   }
 
-  private static func tapPayload(_ point: CGPoint) -> RufletValue {
-    .map([
-      "local_x": .double(Double(point.x)), "local_y": .double(Double(point.y)),
-      "kind": .string("touch"),
-    ])
+}
+
+private struct DataTable2OptionalTap: ViewModifier {
+  let enabled: Bool
+  let count: Int
+  let action: () -> Void
+
+  @ViewBuilder func body(content: Content) -> some View {
+    if enabled { content.onTapGesture(count: count, perform: action) } else { content }
+  }
+}
+
+private struct DataTable2OptionalLongPress: ViewModifier {
+  let enabled: Bool
+  let action: () -> Void
+
+  @ViewBuilder func body(content: Content) -> some View {
+    if enabled { content.onLongPressGesture(perform: action) } else { content }
+  }
+}
+
+private struct DataTable2OptionalTapDown: ViewModifier {
+  let node: ControlNode
+  let events: RufletEventSink
+  let enabled: Bool
+  @State private var pointerOrigin: CGPoint?
+
+  @ViewBuilder func body(content: Content) -> some View {
+    if enabled {
+      content.simultaneousGesture(
+        DragGesture(minimumDistance: 0, coordinateSpace: .local)
+          .onChanged { value in
+            guard pointerOrigin == nil else { return }
+            pointerOrigin = value.startLocation
+            if node.handlesEvent("tap_down") {
+              events.fire(node, "tap_down", data: DataTable2EventPayload.tapDown(
+                kind: "touch", local: value.startLocation, global: value.startLocation))
+            }
+          }
+          .onEnded { value in
+            defer { pointerOrigin = nil }
+            guard node.handlesEvent("tap_cancel"), let origin = pointerOrigin else { return }
+            if hypot(value.location.x - origin.x, value.location.y - origin.y) > 18 {
+              events.fire(node, "tap_cancel")
+            }
+          })
+    } else {
+      content
+    }
   }
 }
 
@@ -541,10 +775,8 @@ private struct DataTable2InteractionReporter: ViewModifier {
         guard let window, event.window === window else { return }
         let point = convert(event.locationInWindow, from: nil)
         guard bounds.contains(point) else { return }
-        let payload: RufletValue = .map([
-          "local_x": .double(Double(point.x)), "local_y": .double(Double(point.y)),
-          "kind": .string("mouse"),
-        ])
+        let payload = DataTable2EventPayload.tapDown(
+          kind: "mouse", local: point, global: event.locationInWindow)
         switch event.type {
         case .rightMouseDown:
           start = point
