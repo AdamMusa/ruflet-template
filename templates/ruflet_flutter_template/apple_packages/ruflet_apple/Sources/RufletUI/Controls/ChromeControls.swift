@@ -245,6 +245,7 @@ struct AppBarControlView: View {
 /// `BottomAppBar` — the same idea anchored to the bottom.
 struct BottomAppBarControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletScaffoldHost) private var scaffold
 
   var body: some View {
@@ -268,7 +269,9 @@ struct BottomAppBarControlView: View {
     shape: BottomAppBarHostShape, metrics: ChromeDefaults.BottomAppBarValues
   ) -> some View {
     HStack {
-      if let contentID = node.controlID(forKey: "content") {
+      if let contentID = RufletBottomAppBarSlots.visibleContentID(
+        node.controlID(forKey: "content"), visibilityForID: visibilityForID)
+      {
         ControlView(id: contentID, axis: .none)
       }
     }
@@ -283,6 +286,19 @@ struct BottomAppBarControlView: View {
           color: AppleChromeAppearance.color(node.string("shadow_color"), fallback: .clear),
           radius: metrics.elevation > 0 ? metrics.elevation : 0,
           y: metrics.elevation > 0 ? metrics.elevation / 2 : 0))
+  }
+
+  private func visibilityForID(_ id: Int) -> Bool? {
+    store.node(id).map { $0.bool("visible") != false }
+  }
+}
+
+enum RufletBottomAppBarSlots {
+  static func visibleContentID(
+    _ id: Int?, visibilityForID: (Int) -> Bool?
+  ) -> Int? {
+    guard let id, visibilityForID(id) != false else { return nil }
+    return id
   }
 }
 
