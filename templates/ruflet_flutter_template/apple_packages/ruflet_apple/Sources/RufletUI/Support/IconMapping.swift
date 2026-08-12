@@ -1,6 +1,7 @@
 import RufletEngine
 import RufletProtocol
 import SwiftUI
+import CoreText
 
 #if canImport(UIKit)
   import UIKit
@@ -8,11 +9,12 @@ import SwiftUI
   import AppKit
 #endif
 
-/// Resolves a Ruflet icon value to an SF Symbol.
+/// Resolves a Ruflet icon value to its native rendering source.
 ///
 /// Icons arrive as integers in distinct Material and Cupertino codepoint
-/// ranges. The renderer restores that family and resolves both catalogs to SF
-/// Symbols, preserving the one Ruflet icon API while using native Apple art.
+/// ranges. Material controls retain Flutter's actual Material Icons glyphs;
+/// explicit Cupertino controls retain Apple's SF Symbols. This distinction is
+/// part of Flet's design contract even when both controls run on iOS.
 public enum IconMapping {
   public enum Family: Equatable, Sendable {
     case material
@@ -20,6 +22,11 @@ public enum IconMapping {
   }
 
   public static let placeholderSymbol = "questionmark.square.dashed"
+
+  public enum Rendering: Equatable, Sendable {
+    case materialGlyph(codepoint: Int, name: String)
+    case systemSymbol(String)
+  }
 
   /// The same platform-family policy used by Ruflet's icon search. Keeping it
   /// next to resolution prevents an Apple host from accidentally presenting
@@ -45,6 +52,32 @@ public enum IconMapping {
     case .material: return symbol(forMaterialName: name)
     case .cupertino: return symbol(forCupertinoName: name)
     }
+  }
+
+  /// Resolves the family without collapsing Material art into SF Symbols.
+  public static func rendering(for value: RufletValue?) -> Rendering? {
+    guard let value, !value.isNull else { return nil }
+    if let wireCodepoint = value.intValue,
+      let descriptor = MaterialIconNames.descriptor(forCodepoint: wireCodepoint)
+    {
+      switch descriptor.family {
+      case .material:
+        guard let codepoint = MaterialIconGlyphs.codepoint(
+          forWireCodepoint: wireCodepoint) else { return nil }
+        return .materialGlyph(codepoint: codepoint, name: descriptor.name)
+      case .cupertino:
+        return .systemSymbol(symbol(forCupertinoName: descriptor.name))
+      }
+    }
+
+    guard let rawName = value.stringValue else { return nil }
+    if rawName.lowercased().hasPrefix("cupertinoicons.") {
+      return .systemSymbol(symbol(forCupertinoName: rawName))
+    }
+    if let codepoint = MaterialIconGlyphs.codepoint(forName: rawName) {
+      return .materialGlyph(codepoint: codepoint, name: rawName.uppercased())
+    }
+    return .systemSymbol(symbol(forMaterialName: rawName))
   }
 
   /// The symbol for an icon prop, or nil when the value is empty.
@@ -438,18 +471,93 @@ public enum IconMapping {
   ]
 }
 
-/// Renders an icon prop the way every icon-bearing control needs it.
-struct RufletIcon: View {
-  let value: RufletValue?
-  var size: CGFloat?
-  var color: Color?
+/// Registers and exposes the exact font shipped with the pinned Flutter SDK.
+/// Registration is process-idempotent and remains internal to RufletUI's
+/// resource bundle, so an application does not have to edit Info.plist.
+enum MaterialIconsFont {
+  static let registrationSucceeded: Bool = {
+    guard let url = Bundle.module.url(
+      forResource: "MaterialIcons-Regular", withExtension: "otf") else { return false }
+    var error: Unmanaged<CFError>?
+    let registered = CTFontManagerRegisterFontsForURL(url as CFURL, .process, &error)
+    if registered { return true }
+    // CoreText reports alreadyRegistered when another Ruflet view initialized
+    // the font first; the named font being constructible is authoritative.
+    let font = CTFontCreateWithName(
+      MaterialIconGlyphs.postScriptName as CFString, 16, nil)
+    return CTFontCopyPostScriptName(font) as String == MaterialIconGlyphs.postScriptName
+  }()
 
-  var body: some View {
-    if let symbol = IconMapping.symbol(for: value) {
+  static func font(size: CGFloat) -> Font {
+    _ = registrationSucceeded
+    return .custom(MaterialIconGlyphs.postScriptName, size: size)
+  }
+
+  static func glyphString(codepoint: Int) -> String? {
+    UnicodeScalar(codepoint).map(String.init)
+  }
+}
+
+/// Renders an icon prop the way every icon-bearing control needs it.
+public struct RufletIcon: View {
+  public let value: RufletValue?
+  public var size: CGFloat?
+  public var color: Color?
+  var symbolWeight: Font.Weight?
+  var filled: Bool
+  @Environment(\.layoutDirection) private var layoutDirection
+
+  public init(value: RufletValue?, size: CGFloat? = nil, color: Color? = nil) {
+    self.value = value
+    self.size = size
+    self.color = color
+    symbolWeight = nil
+    filled = false
+  }
+
+  init(
+    value: RufletValue?, size: CGFloat?, color: Color?,
+    symbolWeight: Font.Weight?, filled: Bool
+  ) {
+    self.value = value
+    self.size = size
+    self.color = color
+    self.symbolWeight = symbolWeight
+    self.filled = filled
+  }
+
+  public var body: some View {
+    switch IconMapping.rendering(for: value) {
+    case .materialGlyph(let codepoint, let name):
+      if let glyph = MaterialIconsFont.glyphString(codepoint: codepoint) {
+        Text(glyph)
+          .font(MaterialIconsFont.font(size: size ?? 24))
+          .lineLimit(1)
+          .frame(width: size ?? 24, height: size ?? 24, alignment: .center)
+          .scaleEffect(
+            x: layoutDirection == .rightToLeft
+              && MaterialIconGlyphs.matchesTextDirection(name: name) ? -1 : 1,
+            y: 1)
+          .modifier(ExplicitIconColor(color: color))
+          .accessibilityHidden(true)
+      }
+    case .systemSymbol(let symbol):
       Image(systemName: symbol)
-        .font(size.map { Font.system(size: $0) })
+        .font(size.map { Font.system(size: $0, weight: symbolWeight ?? .regular) })
+        .modifier(IconSymbolFill(filled: filled))
         .modifier(ExplicitIconColor(color: color))
+    case nil:
+      EmptyView()
     }
+  }
+}
+
+private struct IconSymbolFill: ViewModifier {
+  let filled: Bool
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if filled { content.symbolVariant(.fill) } else { content }
   }
 }
 

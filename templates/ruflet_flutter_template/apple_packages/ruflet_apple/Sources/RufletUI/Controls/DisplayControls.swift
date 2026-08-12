@@ -153,35 +153,33 @@ struct IconControlView: View {
     let glyph = RufletIconGlyph(node: node)
 
     symbol(glyph)
-      .modifier(IconFillAxis(filled: glyph.isFilled))
-      // Material's opsz axis; SF Symbols express the same idea as the glyph's
-      // own point size, so it scales the resolved symbol.
+      // SwiftUI exposes optical sizing through the glyph's point size; the
+      // exact Material font still owns the named icon's outline.
       .modifier(IconOpticalSize(value: node.double("optical_size")))
       .modifier(IconShadows(value: node.props["shadows"]))
       .modifier(IconBlendMode(name: node.string("blend_mode")))
       .modifier(TapReporter(node: node, events: events))
   }
 
-  /// `RufletIcon` builds its font from the size alone, and SwiftUI's
-  /// `fontWeight` cannot reach an image whose font is already set further in,
-  /// so an icon carrying the wght or GRAD axis is drawn from the same resolved
-  /// SF Symbol with the weight folded into its font.
+  /// Material values retain the bundled Flutter font. Cupertino values retain
+  /// native SF Symbols, where the expressible weight/grade axes are folded
+  /// into the native symbol font.
   @ViewBuilder
   private func symbol(_ glyph: RufletIconGlyph) -> some View {
     let value = node.props["name"] ?? node.props["icon"]
     let color = MaterialPalette.color(node.string("color"))
-    if let weight = glyph.symbolWeight, let name = IconMapping.symbol(for: value) {
-      Image(systemName: name)
-        .font(.system(size: glyph.scaledSize(textScale: textScale), weight: weight))
-        .modifier(IconGlyphColor(color: color))
-    } else {
-      RufletIcon(value: value, size: glyph.scaledSize(textScale: textScale), color: color)
-    }
+    RufletIcon(
+      value: value,
+      size: glyph.scaledSize(textScale: textScale),
+      color: color,
+      symbolWeight: glyph.symbolWeight,
+      filled: glyph.isFilled)
   }
 }
 
-/// The Material Symbols axes an `Icon` carries, resolved onto what SF Symbols
-/// can express.
+/// The icon axes Flet carries. Flutter's static MaterialIcons-Regular font
+/// ignores unsupported variation axes; native Cupertino symbols can express
+/// the discrete weight ladder below.
 struct RufletIconGlyph: Equatable {
   let size: CGFloat
   let appliesTextScaling: Bool
@@ -229,22 +227,6 @@ struct RufletIconGlyph: Equatable {
   private static let weightLadder: [Font.Weight] = [
     .ultraLight, .thin, .light, .regular, .medium, .semibold, .bold, .heavy, .black
   ]
-}
-
-/// Material's FILL axis picks between the outlined and filled cuts of a glyph,
-/// which is exactly SF Symbols' fill variant. An icon that asked for neither
-/// keeps the platform's own outlined rendering.
-private struct IconFillAxis: ViewModifier {
-  let filled: Bool
-
-  @ViewBuilder
-  func body(content: Content) -> some View {
-    if filled {
-      content.symbolVariant(.fill)
-    } else {
-      content
-    }
-  }
 }
 
 /// Passing nil to `foregroundColor` clears the inherited style, so an omitted

@@ -56,18 +56,25 @@ struct ButtonControlView: View {
   @Environment(\.rufletEvents) private var events
   @Environment(\.openURL) private var openURL
 
+  @ViewBuilder
   var body: some View {
-    NativeButtonPresentation(node: node, variant: variant) {
-      Button(action: activate) {
-        label
+    if let message = ButtonPresentation.validationMessage(node, variant: variant) {
+      Text(message).font(.caption).foregroundStyle(.red)
+    } else if variant.isIconButton, node.bool("adaptive") == true {
+      CupertinoButtonControlView(node: node)
+    } else {
+      NativeButtonPresentation(node: node, variant: variant) {
+        Button(action: activate) {
+          label
+        }
       }
+      .modifier(FocusReporter(node: node, events: events))
+      .modifier(LongPressReporter(node: node, events: events))
+      .modifier(HoverReporter(node: node, events: events))
+      .modifier(VisualDensityPadding(value: node.props["visual_density"]))
+      .modifier(TapFeedback(enabled: node.bool("enable_feedback") != false))
+      .disabled(node.bool("disabled") ?? false)
     }
-    .modifier(FocusReporter(node: node, events: events))
-    .modifier(LongPressReporter(node: node, events: events))
-    .modifier(HoverReporter(node: node, events: events))
-    .modifier(VisualDensityPadding(value: node.props["visual_density"]))
-    .modifier(TapFeedback(enabled: node.bool("enable_feedback") != false))
-    .disabled(node.bool("disabled") ?? false)
   }
 
   /// `url` opens directly, the way Flet's buttons do, *and* still reports the
@@ -103,11 +110,14 @@ struct ButtonControlView: View {
     let icon = node.props["icon"]
 
     if variant.isIconButton {
-      if icon != nil || node.props["selected_icon"] != nil {
+      let chosenIcon = selected ? (node.props["selected_icon"] ?? icon) : icon
+      if let chosenID = chosenIcon?.controlID {
+        ControlView(id: chosenID, axis: .none)
+      } else if chosenIcon != nil {
         // A selected icon button swaps both its glyph and its colour, which is
         // what Material's isSelected does.
         RufletIcon(
-          value: selected ? (node.props["selected_icon"] ?? icon) : icon,
+          value: chosenIcon,
           size: iconSize,
           color: IconButtonPresentation(node: node).foreground)
       } else if let contentID = node.controlID(forKey: "content") {
@@ -148,6 +158,158 @@ struct ButtonControlView: View {
   }
 }
 
+/// Keeps Flutter constructor defaults distinct from Flet's explicit-style
+/// defaults. `parseButtonStyle(nil)` returns nil; `parseButtonStyle({})`
+/// returns the common primary/surface style.
+struct ButtonPresentation {
+  let node: ControlNode
+  let variant: ButtonVariant
+
+  var style: [String: RufletValue]? {
+    node.internals["style"]?.mapValue ?? node.props["style"]?.mapValue
+  }
+  var hasExplicitStyle: Bool { style != nil }
+
+  static func validationMessage(_ node: ControlNode, variant: ButtonVariant) -> String? {
+    if variant == .floatingAction,
+      node.props["icon"] == nil && node.props["content"] == nil
+    {
+      return "FloatingActionButton has nothing to display. Provide at minimum one of these: icon, content"
+    }
+    if variant.isIconButton {
+      let visible = node.controlID(forKey: "content") != nil
+        || !(node.string("content") ?? "").isEmpty
+      if node.props["icon"] == nil && !visible {
+        return "IconButton must have either icon or a visible content specified."
+      }
+    } else if variant != .floatingAction,
+      node.props["icon"] != nil && node.props["content"] == nil
+    {
+      return "Error displaying Button: \"icon\" must be specified together with \"content\""
+    }
+    return nil
+  }
+
+  var foregroundToken: String {
+    if hasExplicitStyle {
+      return style?["color"]?.stringValue ?? node.string("color") ?? "primary"
+    }
+    switch variant {
+    case .filled: return "onprimary"
+    case .filledTonal: return "onsecondarycontainer"
+    default: return "primary"
+    }
+  }
+
+  var backgroundToken: String {
+    if hasExplicitStyle {
+      return style?["bgcolor"]?.stringValue ?? node.string("bgcolor") ?? "surface"
+    }
+    switch variant {
+    case .elevated: return "surfacecontainerlow"
+    case .filled: return "primary"
+    case .filledTonal: return "secondarycontainer"
+    default: return "transparent"
+    }
+  }
+
+  var padding: EdgeInsets {
+    let states = node.widgetStates()
+    if let value = RufletWidgetStateProperty.resolve(style?["padding"], in: states),
+      let parsed = ControlProps.edgeInsets(value) { return parsed }
+    if hasExplicitStyle { return EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8) }
+    if variant == .text { return EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12) }
+    return EdgeInsets(top: 0, leading: 24, bottom: 0, trailing: 24)
+  }
+
+  var minimumSize: ControlProps.SizeConstraints {
+    if let value = style?["minimum_size"], let parsed = ControlProps.sizeConstraints(value) {
+      return parsed
+    }
+    return .init(minWidth: 64, minHeight: 40)
+  }
+
+  var fixedSize: ControlProps.SizeConstraints? {
+    style?["fixed_size"].flatMap(ControlProps.sizeConstraints)
+  }
+
+  var maximumSize: ControlProps.SizeConstraints? {
+    style?["maximum_size"].flatMap(ControlProps.sizeConstraints)
+  }
+
+  var elevation: Double {
+    if let explicit = RufletWidgetStateProperty.resolve(
+      style?["elevation"], in: node.widgetStates())?.doubleValue { return explicit }
+    if hasExplicitStyle { return node.double("elevation") ?? 1 }
+    return variant == .elevated ? 1 : 0
+  }
+
+  var radius: CGFloat {
+    if let value = style?["shape"]?.mapValue?["radius"],
+      let parsed = ControlProps.cornerRadius(value) { return parsed }
+    return 20
+  }
+
+  var alignment: Alignment {
+    ControlProps.alignment(style?["alignment"]) ?? .center
+  }
+
+  var textStyle: RufletTextStyle {
+    RufletTextStyle(map: style?["text_style"]?.mapValue ?? [:])
+  }
+
+  func elevation(state: RufletWidgetState?) -> Double {
+    var states = node.widgetStates()
+    if let state { states.insert(state) }
+    if let value = RufletWidgetStateProperty.resolve(style?["elevation"], in: states)?.doubleValue {
+      return value
+    }
+    if hasExplicitStyle { return node.double("elevation") ?? 1 }
+    if variant == .elevated, state == .hovered { return 3 }
+    return variant == .elevated ? 1 : 0
+  }
+
+  func border(state: RufletWidgetState?) -> (Color, CGFloat)? {
+    var states = node.widgetStates()
+    if let state { states.insert(state) }
+    if let explicit = ControlProps.statefulBorderSide(style?["side"], in: states) {
+      return (explicit.color ?? .clear, explicit.width)
+    }
+    guard variant == .outlined else { return nil }
+    if node.bool("disabled") == true {
+      return (MaterialPalette.color("onsurface,0.12", default: .clear), 1)
+    }
+    return (MaterialPalette.color(state == .focused ? "primary" : "outline", default: .clear), 1)
+  }
+
+  func color(_ key: String, state: RufletWidgetState? = nil) -> Color? {
+    var states = node.widgetStates()
+    if let state { states.insert(state) }
+    if let explicit = style?[key] {
+      return MaterialPalette.color(stateful: explicit, in: states)
+    }
+    if hasExplicitStyle {
+      if key == "color" { return MaterialPalette.color(foregroundToken) }
+      if key == "bgcolor" { return MaterialPalette.color(backgroundToken) }
+      if key == "overlay_color", state != nil { return MaterialPalette.color("primary,0.08") }
+    }
+    if key == "color" {
+      if node.bool("disabled") == true { return MaterialPalette.color("onsurface,0.38") }
+      return MaterialPalette.color(foregroundToken)
+    }
+    if key == "bgcolor" {
+      if node.bool("disabled") == true,
+        variant == .elevated || variant == .filled || variant == .filledTonal
+      { return MaterialPalette.color("onsurface,0.12") }
+      return MaterialPalette.color(backgroundToken)
+    }
+    if key == "overlay_color", let state {
+      return MaterialPalette.color("\(foregroundToken),\(state == .hovered ? "0.08" : "0.10")")
+    }
+    return nil
+  }
+}
+
 /// Uses Apple's button families and only applies colours when Ruby explicitly
 /// supplied them. Omitted values therefore inherit the platform appearance.
 private struct NativeButtonPresentation<Content: View>: View {
@@ -157,18 +319,12 @@ private struct NativeButtonPresentation<Content: View>: View {
 
   @ViewBuilder
   var body: some View {
-    let fill = MaterialPalette.color(for: node, property: "bgcolor")
-    let foreground = MaterialPalette.color(for: node, property: "color")
     switch variant {
     case .filled, .filledTonal, .outlined, .text, .elevated:
       content()
         .buttonStyle(
           RufletMaterialButtonStyle(
-            foreground: foreground,
-            background: fill,
-            overlay: MaterialPalette.color(for: node, property: "overlay_color"),
-            shadow: MaterialPalette.color(for: node, property: "shadow_color"),
-            elevation: node.double("elevation") ?? RufletThemeDefaults.materialButtonElevation))
+            presentation: ButtonPresentation(node: node, variant: variant)))
     case .floatingAction:
       let geometry = FloatingActionPresentation(node: node)
       content()
@@ -211,14 +367,22 @@ private struct NativeButtonPresentation<Content: View>: View {
 struct IconButtonPresentation {
   let node: ControlNode
 
+  private var style: [String: RufletValue]? {
+    node.internals["style"]?.mapValue ?? node.props["style"]?.mapValue
+  }
+
   static func palette(for node: ControlNode) -> RufletThemeDefaults.IconButtonPalette {
     var palette = RufletThemeDefaults.iconButtonPalette(
       control: node.type,
       selected: node.bool("selected"),
       disabled: node.bool("disabled") == true)
-    if node.internals["style"]?.mapValue != nil, node.bool("disabled") != true {
+    if (node.internals["style"]?.mapValue ?? node.props["style"]?.mapValue) != nil,
+      node.bool("disabled") != true
+    {
       palette.foreground = RufletThemeDefaults.colorToken(control: node.type, property: "color")
         ?? palette.foreground
+      palette.background = "transparent"
+      palette.outline = nil
     }
     return palette
   }
@@ -236,17 +400,23 @@ struct IconButtonPresentation {
       return onColor
     }
     return MaterialPalette.color(node.string("icon_color"))
+      ?? MaterialPalette.color(style?["icon_color"]?.stringValue)
+      ?? MaterialPalette.color(style?["color"]?.stringValue)
       ?? MaterialPalette.color(palette.foreground)
   }
 
   var background: Color? {
-    MaterialPalette.color(node.string("bgcolor")) ?? MaterialPalette.color(palette.background)
+    MaterialPalette.color(style?["bgcolor"]?.stringValue)
+      ?? MaterialPalette.color(node.string("bgcolor"))
+      ?? MaterialPalette.color(palette.background)
   }
 
   var outline: Color? { MaterialPalette.color(palette.outline) }
 
   var padding: EdgeInsets {
-    ControlProps.edgeInsets(node.props["padding"]) ?? RufletThemeDefaults.materialIconButtonPadding
+    ControlProps.edgeInsets(node.props["padding"])
+      ?? ControlProps.edgeInsets(style?["padding"])
+      ?? RufletThemeDefaults.materialIconButtonPadding
   }
 
   var alignment: Alignment {
@@ -278,9 +448,9 @@ struct FloatingActionPresentation {
   var isExtended: Bool { node.props["icon"] != nil && node.props["content"] != nil }
 
   var side: CGFloat {
-    isMini
+    isExtended ? RufletThemeDefaults.floatingActionButtonSize : (isMini
       ? RufletThemeDefaults.floatingActionButtonMiniSize
-      : RufletThemeDefaults.floatingActionButtonSize
+      : RufletThemeDefaults.floatingActionButtonSize)
   }
 
   var width: CGFloat? { isExtended ? nil : side }
@@ -292,6 +462,7 @@ struct FloatingActionPresentation {
 
   var radius: CGFloat {
     if let explicit = ControlProps.cornerRadius(node.map("shape")?["radius"]) { return explicit }
+    if isExtended { return height / 2 }
     return isMini
       ? RufletThemeDefaults.floatingActionButtonMiniRadius
       : RufletThemeDefaults.floatingActionButtonRadius
@@ -344,27 +515,49 @@ struct FloatingActionPresentation {
 /// Material presentation instead of letting each SwiftUI style invent a
 /// different platform fallback.
 private struct RufletMaterialButtonStyle: ButtonStyle {
-  let foreground: Color?
-  let background: Color?
-  let overlay: Color?
-  let shadow: Color?
-  let elevation: Double
+  let presentation: ButtonPresentation
+  @State private var hovering = false
 
   func makeBody(configuration: Configuration) -> some View {
+    let p = presentation
+    let fixed = p.fixedSize
+    let maximum = p.maximumSize
+    let shape = RoundedRectangle(cornerRadius: p.radius)
+    let activeState: RufletWidgetState? = configuration.isPressed ? .pressed : (hovering ? .hovered : nil)
+    let elevation = p.elevation(state: activeState)
+    let border = p.border(state: activeState)
     configuration.label
-      .padding(RufletThemeDefaults.materialButtonPadding)
-      .frame(minHeight: RufletThemeDefaults.minimumInteractiveDimension)
-      .foregroundColor(foreground)
-      .background(background ?? .clear, in: Capsule())
+      .rufletTextStyle(p.textStyle)
+      .padding(p.padding)
+      .frame(
+        minWidth: fixed?.minWidth ?? p.minimumSize.minWidth,
+        maxWidth: fixed?.maxWidth ?? maximum?.maxWidth,
+        minHeight: fixed?.minHeight ?? p.minimumSize.minHeight,
+        maxHeight: fixed?.maxHeight ?? maximum?.maxHeight,
+        alignment: p.alignment)
+      .foregroundColor(p.color("color", state: configuration.isPressed ? .pressed : (hovering ? .hovered : nil)))
+      .background(
+        p.color("bgcolor", state: configuration.isPressed ? .pressed : (hovering ? .hovered : nil)) ?? .clear,
+        in: shape)
       .overlay {
-        if configuration.isPressed {
-          Capsule().fill(overlay ?? .clear)
+        if configuration.isPressed || hovering {
+          shape.fill(
+            p.color("overlay_color", state: configuration.isPressed ? .pressed : .hovered)
+              ?? .clear)
+        }
+      }
+      .overlay {
+        if let border {
+          shape.strokeBorder(border.0, lineWidth: border.1)
         }
       }
       .shadow(
-        color: elevation > 0 ? (shadow ?? .clear) : .clear,
+        color: elevation > 0
+          ? (MaterialPalette.color(p.style?["shadow_color"]?.stringValue) ?? .black.opacity(0.2))
+          : .clear,
         radius: CGFloat(max(elevation, 0)), y: CGFloat(max(elevation, 0) / 2))
-      .contentShape(Capsule())
+      .contentShape(shape)
+      .onHover { hovering = $0 }
   }
 }
 
@@ -509,6 +702,7 @@ struct ChipControlView: View {
           deleteIcon
         }
         .buttonStyle(.plain)
+        .disabled(node.bool("disabled") == true)
         .help(ChipPresentation.deleteTooltip(node) ?? "")
         .modifier(ChipSlotConstraints(value: node.props["delete_icon_size_constraints"]))
       }
@@ -736,36 +930,39 @@ struct SegmentedButtonControlView: View {
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
 
+  @ViewBuilder
   var body: some View {
     let segments = node.controlIDs(forKey: "segments").compactMap { store.node($0) }
     let selected = selectedValues
-
-    stack(spacing: 0) {
-      ForEach(segments, id: \.id) { segment in
-        let value = segment.string("value") ?? ""
-        Button {
-          toggle(value: value, selected: selected)
-        } label: {
-          segmentLabel(segment, chosen: selected.contains(value))
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 7)
-            .background(
-              selected.contains(value)
-                ? MaterialPalette.color(for: node, property: "selected_color", default: .clear)
-                : MaterialPalette.color(for: node, property: "bgcolor", default: .clear))
+    if let message = SegmentedButtonPresentation.validationMessage(
+      segmentCount: segments.count, selected: selectedValuesInWireOrder, node: node)
+    {
+      Text(message).font(.caption).foregroundStyle(.red)
+    } else {
+      stack(spacing: 0) {
+        ForEach(segments, id: \.id) { segment in
+          let value = segment.string("value") ?? ""
+          let isSelected = selected.contains(value)
+          Button {
+            toggle(value: value, selected: selected)
+          } label: {
+            segmentLabel(segment, chosen: isSelected)
+              .frame(maxWidth: .infinity)
+              .padding(.vertical, 7)
+              .foregroundColor(SegmentedButtonPresentation(node: node).foreground(
+                selected: isSelected, disabled: segment.bool("disabled") == true))
+              .background(SegmentedButtonPresentation(node: node).background(selected: isSelected))
+          }
+          .buttonStyle(.plain)
+          .disabled(node.bool("disabled") == true || segment.bool("disabled") == true)
+          .help(segment.bool("disabled") == true ? "" : (segment.string("tooltip") ?? ""))
         }
-        .buttonStyle(.plain)
-        .disabled(node.bool("disabled") == true || segment.bool("disabled") == true)
-        .help(segment.bool("disabled") == true ? "" : (segment.string("tooltip") ?? ""))
       }
+      .background(Capsule().fill(Color.clear))
+      .overlay(Capsule().strokeBorder(SegmentedButtonPresentation(node: node).border))
+      .disabled(node.bool("disabled") ?? false)
+      .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets())
     }
-    .background(
-      Capsule().fill(MaterialPalette.color(for: node, property: "bgcolor", default: .clear)))
-    .overlay(
-      Capsule().strokeBorder(
-        MaterialPalette.color(for: node, property: "border_color", default: .clear)))
-    .disabled(node.bool("disabled") ?? false)
-    .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets())
   }
 
   @ViewBuilder
@@ -774,7 +971,9 @@ struct SegmentedButtonControlView: View {
       // `show_selected_icon` puts a tick — or `selected_icon` — before the
       // label of a chosen segment, the way Material's does.
       if chosen, node.bool("show_selected_icon") != false {
-        if node.props["selected_icon"] != nil {
+        if let iconID = node.controlID(forKey: "selected_icon") {
+          ControlView(id: iconID, axis: .none)
+        } else if node.props["selected_icon"] != nil {
           RufletIcon(value: node.props["selected_icon"], size: 14, color: nil)
         } else {
           Image(systemName: "checkmark").font(.caption)
@@ -805,7 +1004,11 @@ struct SegmentedButtonControlView: View {
   }
 
   private var selectedValues: Set<String> {
-    Set((node.array("selected") ?? []).compactMap(\.stringValue))
+    Set(selectedValuesInWireOrder)
+  }
+
+  private var selectedValuesInWireOrder: [String] {
+    (node.array("selected") ?? []).compactMap(\.stringValue)
   }
 
   /// `allow_multiple_selection` decides whether a tap adds to or replaces the
@@ -820,9 +1023,70 @@ struct SegmentedButtonControlView: View {
         next.insert(value)
       }
     } else {
-      next = [value]
+      if next.contains(value), node.bool("allow_empty_selection") == true {
+        next.removeAll()
+      } else {
+        next = [value]
+      }
     }
-    let payload = RufletValue.array(next.sorted().map(RufletValue.string))
+    let retained = selectedValuesInWireOrder.filter(next.contains)
+    let appended = next.filter { !retained.contains($0) }
+    let payload = RufletValue.array((retained + appended).map(RufletValue.string))
     events.commit(node, key: "selected", value: payload, event: "change")
+  }
+}
+
+struct SegmentedButtonPresentation {
+  let node: ControlNode
+
+  private var style: [String: RufletValue]? {
+    node.internals["style"]?.mapValue ?? node.props["style"]?.mapValue
+  }
+
+  static func validationMessage(
+    segmentCount: Int, selected: [String], node: ControlNode
+  ) -> String? {
+    if segmentCount == 0 {
+      return "SegmentedButton.segments must be contain at least one visible segment"
+    }
+    let allowEmpty = node.bool("allow_empty_selection") == true
+    let multiple = node.bool("allow_multiple_selection") == true
+    if selected.isEmpty && !allowEmpty {
+      return "SegmentedButton.selected must contain at least one value because allow_empty_selection=False"
+    }
+    if !multiple && selected.count != 1 && !allowEmpty {
+      return "SegmentedButton.selected must contain exactly one value because allow_multiple_selection=False"
+    }
+    if multiple && selected.count > segmentCount {
+      return "The length of SegmentedButton.selected must be less than or equal to the number of visible segments"
+    }
+    return nil
+  }
+
+  func foreground(selected: Bool, disabled: Bool) -> Color {
+    if let value = style?["color"] {
+      var states: Set<RufletWidgetState> = selected ? [.selected] : []
+      if disabled || node.bool("disabled") == true { states.insert(.disabled) }
+      return MaterialPalette.color(stateful: value, in: states) ?? .primary
+    }
+    if disabled || node.bool("disabled") == true {
+      return MaterialPalette.color("onsurface,0.38", default: .primary)
+    }
+    return MaterialPalette.color(selected ? "onsecondarycontainer" : "onsurface", default: .primary)
+  }
+
+  func background(selected: Bool) -> Color {
+    if let value = style?["bgcolor"] {
+      return MaterialPalette.color(stateful: value, in: selected ? [.selected] : []) ?? .clear
+    }
+    return MaterialPalette.color(selected ? "secondarycontainer" : "transparent", default: .clear)
+  }
+
+  var border: Color {
+    if let side = style?["side"]?.mapValue {
+      return MaterialPalette.color(side["color"]?.stringValue, default: .clear)
+    }
+    return MaterialPalette.color(
+      node.bool("disabled") == true ? "onsurface,0.12" : "outline", default: .clear)
   }
 }

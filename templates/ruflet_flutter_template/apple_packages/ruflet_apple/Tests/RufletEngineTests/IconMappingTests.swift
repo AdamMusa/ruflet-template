@@ -1,6 +1,8 @@
 import XCTest
+import CoreText
 
 @testable import RufletUI
+import RufletProtocol
 
 final class IconMappingTests: XCTestCase {
   /// Static and thumbnail icons exercised across Ruflet Explorer's 65 gallery
@@ -28,6 +30,54 @@ final class IconMappingTests: XCTestCase {
     XCTAssertEqual(
       MaterialIconNames.descriptor(forCodepoint: MaterialIconNames.cupertinoFirstCodepoint)?.family,
       .cupertino)
+  }
+
+  func testEveryMaterialCatalogEntryHasTheExactFlutterGlyphCodepoint() {
+    XCTAssertEqual(MaterialIconGlyphs.codepoints.count, MaterialIconNames.material.count)
+    XCTAssertEqual(MaterialIconGlyphs.codepoint(forName: "ABC"), 0xf04b6)
+    XCTAssertEqual(MaterialIconGlyphs.codepoint(forName: "HOME"), 0xe318)
+    XCTAssertEqual(MaterialIconGlyphs.codepoint(forName: "HOME_OUTLINED"), 0xf107)
+    XCTAssertTrue(MaterialIconGlyphs.matchesTextDirection(name: "ARROW_BACK"))
+    XCTAssertFalse(MaterialIconGlyphs.matchesTextDirection(name: "HOME"))
+    XCTAssertTrue(MaterialIconGlyphs.codepoints.allSatisfy { UnicodeScalar($0) != nil })
+  }
+
+  func testMaterialWireIconsRemainMaterialAndCupertinoIconsRemainNative() {
+    XCTAssertEqual(
+      IconMapping.rendering(for: .int(Int64(MaterialIconNames.firstCodepoint))),
+      .materialGlyph(codepoint: 0xf04b6, name: "ABC"))
+    guard case .systemSymbol(let symbol) = IconMapping.rendering(
+      for: .int(Int64(MaterialIconNames.cupertinoFirstCodepoint)))
+    else { return XCTFail("Cupertino wire icon did not resolve to an SF Symbol") }
+    XCTAssertTrue(IconMapping.nativeSymbolExists(symbol))
+  }
+
+  func testBundledMaterialFontRegistersAndContainsFlutterGlyphs() {
+    XCTAssertTrue(MaterialIconsFont.registrationSucceeded)
+    let font = CTFontCreateWithName(MaterialIconGlyphs.postScriptName as CFString, 24, nil)
+    XCTAssertEqual(CTFontCopyPostScriptName(font) as String, MaterialIconGlyphs.postScriptName)
+
+    var character = UniChar(0xe318) // Icons.home
+    var glyph = CGGlyph()
+    XCTAssertTrue(CTFontGetGlyphsForCharacters(font, &character, &glyph, 1))
+    XCTAssertNotEqual(glyph, 0)
+
+    for (index, codepoint) in MaterialIconGlyphs.codepoints.enumerated() {
+      guard let scalar = UnicodeScalar(codepoint) else {
+        return XCTFail("Invalid scalar for \(MaterialIconNames.material[index])")
+      }
+      let characters = Array(String(scalar).utf16)
+      var glyphs = Array(repeating: CGGlyph(), count: characters.count)
+      let mapped = characters.withUnsafeBufferPointer { characterBuffer in
+        glyphs.withUnsafeMutableBufferPointer { glyphBuffer in
+          CTFontGetGlyphsForCharacters(
+            font, characterBuffer.baseAddress!, glyphBuffer.baseAddress!, characters.count)
+        }
+      }
+      XCTAssertTrue(
+        mapped && glyphs.contains(where: { $0 != 0 }),
+        "Font has no glyph for \(MaterialIconNames.material[index]) (U+\(String(codepoint, radix: 16)))")
+    }
   }
 
   func testCupertinoNamesResolveToNativeSymbols() {

@@ -3,13 +3,53 @@ import XCTest
 @testable import RufletUI
 
 final class MaterialButtonParityTests: XCTestCase {
-  func testButtonVariantsUsePinnedFletStyleDefaults() {
-    for type in ["Button", "FilledButton", "FilledTonalButton", "OutlinedButton", "TextButton"] {
-      let node = ControlNode(id: 1, type: type)
-      XCTAssertEqual(RufletThemeDefaults.resolvedColorToken(for: node, property: "color"), "primary")
-      XCTAssertEqual(RufletThemeDefaults.resolvedColorToken(for: node, property: "bgcolor"), "surface")
-      XCTAssertEqual(RufletThemeDefaults.resolvedColorToken(for: node, property: "overlay_color"), "primary,0.08")
+  func testStylelessButtonsKeepTheirFlutterConstructorDefaults() {
+    let expected: [(String, String, String, Double)] = [
+      ("Button", "primary", "surfacecontainerlow", 1),
+      ("FilledButton", "onprimary", "primary", 0),
+      ("FilledTonalButton", "onsecondarycontainer", "secondarycontainer", 0),
+      ("OutlinedButton", "primary", "transparent", 0),
+      ("TextButton", "primary", "transparent", 0),
+    ]
+    for (type, foreground, background, elevation) in expected {
+      let presentation = ButtonPresentation(
+        node: ControlNode(id: 1, type: type), variant: ButtonVariant(wireType: type))
+      XCTAssertFalse(presentation.hasExplicitStyle, type)
+      XCTAssertEqual(presentation.foregroundToken, foreground, type)
+      XCTAssertEqual(presentation.backgroundToken, background, type)
+      XCTAssertEqual(presentation.elevation, elevation, type)
+      XCTAssertEqual(presentation.minimumSize.minWidth, 64, type)
+      XCTAssertEqual(presentation.minimumSize.minHeight, 40, type)
     }
+  }
+
+  func testExplicitEmptyStyleUsesFletParseButtonStyleDefaults() {
+    for type in ["Button", "FilledButton", "FilledTonalButton", "OutlinedButton", "TextButton"] {
+      let presentation = ButtonPresentation(
+        node: ControlNode(id: 1, type: type, internals: ["style": .map([:])]),
+        variant: ButtonVariant(wireType: type))
+      XCTAssertTrue(presentation.hasExplicitStyle, type)
+      XCTAssertEqual(presentation.foregroundToken, "primary", type)
+      XCTAssertEqual(presentation.backgroundToken, "surface", type)
+      XCTAssertEqual(presentation.elevation, 1, type)
+      XCTAssertEqual(presentation.padding.leading, 8, type)
+    }
+  }
+
+  func testButtonStyleCarriesFletSizeAndShapeProperties() {
+    let presentation = ButtonPresentation(
+      node: ControlNode(id: 1, type: "Button", internals: ["style": .map([
+        "minimum_size": .map(["min_width": .double(80), "min_height": .double(44)]),
+        "maximum_size": .map(["max_width": .double(180)]),
+        "shape": .map(["radius": .double(7)]),
+        "padding": .double(6),
+      ])]),
+      variant: .elevated)
+    XCTAssertEqual(presentation.minimumSize.minWidth, 80)
+    XCTAssertEqual(presentation.minimumSize.minHeight, 44)
+    XCTAssertEqual(presentation.maximumSize?.maxWidth, 180)
+    XCTAssertEqual(presentation.radius, 7)
+    XCTAssertEqual(presentation.padding.leading, 6)
   }
 
   func testIconButtonVariantPalettesMatchMaterial3States() {
@@ -30,6 +70,32 @@ final class MaterialButtonParityTests: XCTestCase {
     XCTAssertEqual(normal.radius, 16)
     XCTAssertEqual(mini.side, 40)
     XCTAssertEqual(mini.radius, 12)
+  }
+
+  func testSegmentedButtonImplementsFletValidationOrder() {
+    let empty = ControlNode(id: 1, type: "SegmentedButton")
+    XCTAssertEqual(
+      SegmentedButtonPresentation.validationMessage(segmentCount: 0, selected: [], node: empty),
+      "SegmentedButton.segments must be contain at least one visible segment")
+
+    XCTAssertEqual(
+      SegmentedButtonPresentation.validationMessage(
+        segmentCount: 2, selected: [], node: ControlNode(id: 2, type: "SegmentedButton")),
+      "SegmentedButton.selected must contain at least one value because allow_empty_selection=False")
+
+    XCTAssertEqual(
+      SegmentedButtonPresentation.validationMessage(
+        segmentCount: 2, selected: ["a", "b"],
+        node: ControlNode(id: 3, type: "SegmentedButton")),
+      "SegmentedButton.selected must contain exactly one value because allow_multiple_selection=False")
+
+    XCTAssertEqual(
+      SegmentedButtonPresentation.validationMessage(
+        segmentCount: 1, selected: ["a", "b"],
+        node: ControlNode(id: 4, type: "SegmentedButton", props: [
+          "allow_multiple_selection": .bool(true),
+        ])),
+      "The length of SegmentedButton.selected must be less than or equal to the number of visible segments")
   }
 
   func testChipResolvesRufletAndFletDeleteTooltipNames() {

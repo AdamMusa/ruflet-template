@@ -58,7 +58,8 @@ let package = Package(
     .target(name: "RufletEngine", dependencies: ["RufletProtocol"]),
     .target(
       name: "RufletUI",
-      dependencies: ["RufletEngine", "RufletProtocol", "MaterialColorUtilities"]),
+      dependencies: ["RufletEngine", "RufletProtocol", "MaterialColorUtilities"],
+      resources: [.process("Resources")]),
     .target(name: "RufletApple", dependencies: ["RufletUI", "RufletEngine", "RufletProtocol"]),
 
     .target(name: "RufletMotion", dependencies: ["RufletEngine", "RufletProtocol"]),

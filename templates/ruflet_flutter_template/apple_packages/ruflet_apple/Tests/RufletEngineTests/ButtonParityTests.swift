@@ -126,7 +126,7 @@ final class ButtonParityTests: XCTestCase {
     let styled = IconButtonPresentation.palette(
       for: node("FilledIconButton", internals: ["style": .map(["padding": .double(4)])]))
     XCTAssertEqual(styled.foreground, "primary")
-    XCTAssertEqual(styled.background, "primary", "a style must not move the container")
+    XCTAssertEqual(styled.background, "transparent")
   }
 
   func testDisabledStyledIconButtonKeepsTheDisabledForeground() {
@@ -212,9 +212,32 @@ final class ButtonParityTests: XCTestCase {
 
     XCTAssertNil(both.width, "the extended button grows with its label")
     XCTAssertEqual(both.height, 56)
+    XCTAssertEqual(both.radius, 28, "FloatingActionButton.extended uses a StadiumBorder")
     XCTAssertEqual(both.padding.leading, 16)
     XCTAssertEqual(both.padding.trailing, 20)
     XCTAssertEqual(iconOnly.padding.leading, 0)
+  }
+
+  func testExtendedFloatingActionButtonIgnoresMiniLikeFlutterConstructor() {
+    let extended = FloatingActionPresentation(node: node(
+      "FloatingActionButton",
+      ["icon": .string("add"), "content": .string("New"), "mini": .bool(true)]))
+    XCTAssertTrue(extended.isExtended)
+    XCTAssertEqual(extended.height, 56)
+    XCTAssertEqual(extended.radius, 28)
+  }
+
+  func testFletButtonValidationMessagesArePreserved() {
+    XCTAssertEqual(
+      ButtonPresentation.validationMessage(node("IconButton"), variant: .icon),
+      "IconButton must have either icon or a visible content specified.")
+    XCTAssertEqual(
+      ButtonPresentation.validationMessage(node("FloatingActionButton"), variant: .floatingAction),
+      "FloatingActionButton has nothing to display. Provide at minimum one of these: icon, content")
+    XCTAssertEqual(
+      ButtonPresentation.validationMessage(
+        node("Button", ["icon": .string("add")]), variant: .elevated),
+      "Error displaying Button: \"icon\" must be specified together with \"content\"")
   }
 
   func testFloatingActionButtonShapeOverridesTheDefaultCorner() {

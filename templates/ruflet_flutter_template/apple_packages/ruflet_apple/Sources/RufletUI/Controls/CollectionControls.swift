@@ -1305,13 +1305,16 @@ struct TabBarControlView: View {
   @ViewBuilder
   private func tabLabel(_ tab: ControlNode) -> some View {
     let label = tab.string("label") ?? tab.string("text")
-    let symbol = IconMapping.symbol(for: tab.props["icon"])
-    if let label, let symbol {
-      Label(label, systemImage: symbol).labelStyle(.titleAndIcon)
+    let icon = tab.props["icon"]
+    if let label, let icon, !icon.isNull {
+      HStack(spacing: 8) {
+        RufletIcon(value: icon, size: 18)
+        Text(label)
+      }
     } else if let label {
       Text(label)
-    } else if let symbol {
-      Image(systemName: symbol)
+    } else if let icon, !icon.isNull {
+      RufletIcon(value: icon, size: 18)
     } else if let labelID = tab.controlID(forKey: "label") {
       ControlView(id: labelID, axis: .none)
     }
