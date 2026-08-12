@@ -283,23 +283,6 @@ private struct AutoScrollToEnd: ViewModifier {
   }
 }
 
-/// `overlay_color` is the wash Material paints over a pressed tab.
-private struct TabOverlayColor: ViewModifier {
-  let color: Color?
-  @State private var pressed = false
-
-  func body(content: Content) -> some View {
-    guard let color else { return AnyView(content) }
-    return AnyView(
-      content
-        .background(pressed ? color : .clear)
-        .simultaneousGesture(
-          DragGesture(minimumDistance: 0)
-            .onChanged { _ in pressed = true }
-            .onEnded { _ in pressed = false }))
-  }
-}
-
 /// `auto_scroll` keeps the end of a list in view as rows arrive, and
 /// `scroll_interval` throttles what the list reports while it moves.
 private struct CollectionAutoScroll: ViewModifier {
@@ -590,11 +573,14 @@ struct ListTileControlView: View {
   }
 
   private var nativeTileContents: some View {
-    HStack {
+    let presentation = ListTilePresentation(node: node)
+    return HStack {
       if let leadingID = node.controlID(forKey: "leading") {
         ControlView(id: leadingID, axis: .none)
+          .modifier(OptionalListTileTextStyle(style: presentation.leadingTrailingTextStyle))
       } else if node.props["leading"] != nil {
         RufletIcon(value: node.props["leading"])
+          .modifier(OptionalListTileTextStyle(style: presentation.leadingTrailingTextStyle))
       }
 
       VStack(alignment: .leading) {
@@ -613,8 +599,10 @@ struct ListTileControlView: View {
 
       if let trailingID = node.controlID(forKey: "trailing") {
         ControlView(id: trailingID, axis: .none)
+          .modifier(OptionalListTileTextStyle(style: presentation.leadingTrailingTextStyle))
       } else if node.props["trailing"] != nil {
         RufletIcon(value: node.props["trailing"])
+          .modifier(OptionalListTileTextStyle(style: presentation.leadingTrailingTextStyle))
       }
     }
     .contentShape(Rectangle())
@@ -888,7 +876,7 @@ struct ListTilePresentation {
       "visual_density", "title_alignment", "shape", "bgcolor", "focus_color",
       "hover_color", "splash_color", "selected", "selected_color",
       "selected_tile_color", "text_color", "icon_color", "title_text_style",
-      "subtitle_text_style", "leading_and_trailing_text_style", "enable_feedback",
+      "subtitle_text_style", "enable_feedback",
     ]
     return materialVisualProperties.contains { node.props[$0] != nil }
   }
@@ -1362,20 +1350,101 @@ private extension EnvironmentValues {
   }
 }
 
-enum TabBarPresentation {
-  /// Material-only strip properties have no Apple constructor equivalent.
-  /// Their explicit presence keeps the protocol-faithful custom renderer;
-  /// otherwise SwiftUI's segmented Picker supplies platform defaults.
-  static func usesNativeAppearance(_ node: ControlNode) -> Bool {
-    let materialStripProperties = [
-      "scrollable", "indicator", "indicator_color", "indicator_thickness",
-      "indicator_size", "indicator_animation", "divider_color", "divider_height",
-      "label_color", "unselected_label_color", "label_text_style",
-      "unselected_label_text_style", "label_padding", "padding", "overlay_color",
-      "splash_border_radius", "tab_alignment", "secondary", "enable_feedback",
-    ]
-    return !materialStripProperties.contains { node.props[$0] != nil }
+struct TabsPresentation {
+  let node: ControlNode
+  static let moveDefaultCurveToken = "easeIn"
+
+  var length: Int { node.int("length") ?? 0 }
+  var rawSelectedIndex: Int { node.int("selected_index") ?? 0 }
+  var selectedIndex: Int {
+    CollectionParity.normalizedIndex(rawSelectedIndex, count: length)
   }
+  var animationDuration: TimeInterval {
+    max(node.double("animation_duration") ?? 100, 0) / 1_000
+  }
+
+  static func validationMessage(_ node: ControlNode) -> String? {
+    let length = node.int("length") ?? 0
+    let selected = node.int("selected_index") ?? 0
+    if length < 0 {
+      return "length must be greater than or equal to 0, got \(length)"
+    }
+    if !(-length <= selected && selected < length) {
+      return "selected_index out of range: got \(selected), expected in range [-\(length), \(length - 1)]"
+    }
+    if node.controlID(forKey: "content") == nil {
+      return "Tabs.content must be provided and visible"
+    }
+    return nil
+  }
+
+  static func moveValidationMessage(index: Int, length: Int) -> String? {
+    guard -length <= index && index < length else {
+      return "index out of range: got \(index), expected in range [-\(length), \(length - 1)]"
+    }
+    return nil
+  }
+}
+
+struct TabPresentation {
+  let node: ControlNode
+
+  var hasLabel: Bool {
+    node.string("label") != nil || node.string("text") != nil
+      || node.controlID(forKey: "label") != nil
+  }
+  var hasIcon: Bool {
+    (node.props["icon"] != nil && node.props["icon"]?.isNull == false)
+      || node.controlID(forKey: "icon") != nil
+  }
+  var height: CGFloat { CollectionDefaults.tabHeight(node) }
+  var iconMargin: EdgeInsets {
+    ControlProps.edgeInsets(node.props["icon_margin"])
+      ?? EdgeInsets(top: 0, leading: 0, bottom: 2, trailing: 0)
+  }
+
+  static func validationMessage(_ node: ControlNode) -> String? {
+    guard node.type == "Tab" else { return nil }
+    let values = TabPresentation(node: node)
+    return values.hasLabel || values.hasIcon
+      ? nil : "Tab must have at least label or icon property set"
+  }
+}
+
+struct TabBarPresentation {
+  let node: ControlNode
+  static let ancestorError = "TabBar must be used within a Tabs control"
+
+  var values: CollectionDefaults.TabBarValues { CollectionDefaults.tabBar(node) }
+
+  /// All TabBars use Apple's native selector. Material-only properties remain
+  /// in `values` for source parity and are translated only where SwiftUI has a
+  /// corresponding modifier; they never opt into a handwritten strip.
+  static func usesNativeAppearance(_: ControlNode) -> Bool { true }
+
+  static func validationMessage(_ node: ControlNode) -> String? {
+    let values = CollectionDefaults.tabBar(node)
+    if node.map("indicator") == nil && values.indicatorThickness <= 0 {
+      return "indicator_thickness must be strictly greater than zero if indicator is None, got \(values.indicatorThickness)"
+    }
+    guard node.props["tab_alignment"] != nil else { return nil }
+    let valid = values.scrollable
+      ? ["start", "startoffset", "center"] : ["center", "fill"]
+    if !valid.contains(values.tabAlignmentToken.lowercased()) {
+      let names = values.scrollable
+        ? "TabAlignment.START, TabAlignment.START_OFFSET, TabAlignment.CENTER"
+        : "TabAlignment.CENTER, TabAlignment.FILL"
+      return "If scrollable is \(values.scrollable ? "True" : "False"), tab_alignment must be one of: \(names)."
+    }
+    return nil
+  }
+}
+
+struct TabBarViewPresentation {
+  let node: ControlNode
+  static let ancestorError = "TabBarView must be used within a Tabs control"
+  var clipBehaviorToken: String { node.string("clip_behavior") ?? "hardEdge" }
+  var viewportFraction: Double { node.double("viewport_fraction") ?? 1 }
 }
 
 /// `Tabs` owns the selection controller. Its content owns the actual TabBar
@@ -1387,12 +1456,14 @@ struct TabsControlView: View {
 
   init(node: ControlNode) {
     self.node = node
-    _selectedIndex = State(initialValue: node.int("selected_index") ?? 0)
+    _selectedIndex = State(initialValue: TabsPresentation(node: node).selectedIndex)
   }
 
   var body: some View {
     Group {
-      if let contentID = node.controlID(forKey: "content") {
+      if let message = TabsPresentation.validationMessage(node) {
+        Text(message).font(.caption).foregroundStyle(.red)
+      } else if let contentID = node.controlID(forKey: "content") {
         ControlView(id: contentID, axis: .vertical)
       } else {
         EmptyView()
@@ -1400,19 +1471,33 @@ struct TabsControlView: View {
     }
     .environment(\.rufletTabSelection, Binding(
       get: { selectedIndex },
-      set: { selectedIndex = CollectionParity.normalizedIndex($0, count: node.int("length") ?? 0) }))
-    // The bar and its pages cross-fade over the duration Ruby names.
-    .animation(
-      .easeInOut(duration: max(node.double("animation_duration") ?? 300, 0) / 1_000),
-      value: selectedIndex)
+      set: { move(to: $0, curve: "ease", duration: TabsPresentation(node: node).animationDuration) }))
     .onChange(of: selectedIndex) { value in
       events.setLocal(node.id, "selected_index", .int(Int64(value)))
       events.fire(node, "change", data: .int(Int64(value)))
     }
     .onChange(of: node.int("selected_index") ?? 0) { value in
-      selectedIndex = CollectionParity.normalizedIndex(value, count: node.int("length") ?? 0)
+      move(to: value, curve: "ease", duration: TabsPresentation(node: node).animationDuration)
+    }
+    .onChange(of: node.int("length") ?? 0) { _ in
+      // Flet recreates its TabController when length changes and preserves the
+      // current mounted index, clamped to the new range.
+      let preserved = CollectionParity.normalizedIndex(
+        selectedIndex, count: node.int("length") ?? 0)
+      guard preserved != selectedIndex else { return }
+      selectedIndex = preserved
+      events.setLocal(node.id, "selected_index", .int(Int64(preserved)))
+      events.update(node.id, ["selected_index": .int(Int64(preserved))])
     }
     .rufletCommandHandler(node.id, handler: handleCommand)
+  }
+
+  private func move(to index: Int, curve: String, duration: TimeInterval) {
+    let resolved = CollectionParity.normalizedIndex(index, count: node.int("length") ?? 0)
+    guard resolved != selectedIndex else { return }
+    withAnimation(RufletCurve.animation(curve, duration: duration)) {
+      selectedIndex = resolved
+    }
   }
 
   private func handleCommand(
@@ -1425,7 +1510,16 @@ struct TabsControlView: View {
     guard let index = call.argument("index")?.intValue else {
       return completion(.failure(RufletServiceError.invalidArguments("index is required")))
     }
-    selectedIndex = CollectionParity.normalizedIndex(index, count: node.int("length") ?? 0)
+    let length = node.int("length") ?? 0
+    if let message = TabsPresentation.moveValidationMessage(index: index, length: length) {
+      return completion(.failure(RufletServiceError.invalidArguments(message)))
+    }
+    let curve = call.argument("curve")?.stringValue
+      ?? TabsPresentation.moveDefaultCurveToken
+    let duration = max(
+      call.argument("duration")?.doubleValue ?? node.double("animation_duration") ?? 100,
+      0) / 1_000
+    move(to: index, curve: curve, duration: duration)
     completion(.success(.null))
   }
 }
@@ -1441,177 +1535,117 @@ struct TabBarControlView: View {
     let tabs = node.controlIDs(forKey: "tabs").compactMap { store.node($0) }
 
     Group {
-      if TabBarPresentation.usesNativeAppearance(node) {
-        nativePicker(tabs)
+      if selection == nil {
+        Text(TabBarPresentation.ancestorError).font(.caption).foregroundStyle(.red)
+      } else if let message = TabBarPresentation.validationMessage(node) {
+        Text(message).font(.caption).foregroundStyle(.red)
       } else {
-        legacyMaterialBar(tabs)
+        nativePicker(tabs)
       }
     }
     .disabled(node.bool("disabled") == true)
-    .rufletCommandHandler(node.id, handler: handleCommand)
   }
 
-  /// A styleless Flet TabBar maps to Apple's platform tab selector. Explicit
-  /// Material indicator/strip properties still opt into the protocol-faithful
-  /// custom route below.
+  /// A Flet TabBar maps to Apple's native selector for every property set.
+  /// Scrollability, padding, alignment, feedback, tab heights and slots have
+  /// native translations. Material indicator/divider/ripple semantics remain
+  /// modelled by `TabBarValues` where SwiftUI exposes no equivalent hook.
+  @ViewBuilder
   private func nativePicker(_ tabs: [ControlNode]) -> some View {
+    let values = CollectionDefaults.tabBar(node)
+    if values.scrollable {
+      ScrollView(.horizontal, showsIndicators: false) {
+        picker(tabs, values: values).fixedSize(horizontal: true, vertical: false)
+      }
+      .padding(values.padding)
+      .frame(maxWidth: .infinity, alignment: values.nativeAlignment)
+    } else {
+      picker(tabs, values: values)
+        .padding(values.padding)
+        .frame(maxWidth: .infinity, alignment: values.nativeAlignment)
+    }
+  }
+
+  private func picker(
+    _ tabs: [ControlNode], values: CollectionDefaults.TabBarValues
+  ) -> some View {
     Picker("", selection: Binding(
       get: { selection?.wrappedValue ?? 0 },
       set: { index in
-        selection?.wrappedValue = CollectionParity.normalizedIndex(index, count: tabs.count)
+        let resolved = CollectionParity.normalizedIndex(index, count: tabs.count)
+        selection?.wrappedValue = resolved
         events.fire(node, "click", data: .int(Int64(index)))
-      }
-    )) {
-      ForEach(Array(tabs.enumerated()), id: \.element.id) { index, tab in
-        tabLabel(tab)
-          .tag(index)
-          .onHover { hovering in
-            events.fire(
-              node, "hover",
-              data: .map(["hovering": .bool(hovering), "index": .int(Int64(index))]))
-          }
-      }
-    }
-    .labelsHidden()
-    .pickerStyle(.segmented)
-  }
-
-  private func legacyMaterialBar(_ tabs: [ControlNode]) -> some View {
-    let metrics = CollectionDefaults.tabBar(node)
-    let scrollable = metrics.scrollable
-    return Group {
-      if scrollable {
-        ScrollView(.horizontal, showsIndicators: false) { strip(tabs) }
-      } else {
-        strip(tabs).frame(maxWidth: .infinity)
-      }
-    }
-    .overlay(alignment: .bottom) {
-      Rectangle()
-        .fill(MaterialPalette.color(node.string("divider_color"), default: .clear))
-        .frame(height: metrics.dividerHeight)
-    }
-    .padding(metrics.padding)
-    .frame(maxWidth: .infinity, alignment: stripAlignment)
-    .overlay(alignment: .bottomLeading) {
-      GeometryReader { proxy in
-        indicator(width: proxy.size.width / CGFloat(max(node.controlIDs(forKey: "tabs").count, 1)))
-          .offset(
-            x: proxy.size.width / CGFloat(max(node.controlIDs(forKey: "tabs").count, 1))
-              * CGFloat(selection?.wrappedValue ?? 0),
-            y: proxy.size.height - 2)
-          .animation(indicatorAnimation, value: selection?.wrappedValue)
-      }
-      .allowsHitTesting(false)
-    }
-    .modifier(
-      TabOverlayColor(color: MaterialPalette.color(node.string("overlay_color"))))
-    .modifier(TapFeedback(enabled: node.bool("enable_feedback") != false))
-  }
-
-  /// `tab_alignment` places the strip when it does not fill its width;
-  /// `secondary` is Material's quieter bar, which drops the pill indicator.
-  /// A selected tab takes `label_text_style`, the rest take the unselected
-  /// one; Material keeps them separate rather than dimming a single style.
-  private func labelStyle(selected: Bool) -> RufletTextStyle {
-    guard selected else {
-      return RufletTextStyle(node: node, styleKey: "unselected_label_text_style")
-    }
-    return RufletTextStyle(node: node, styleKey: "label_text_style")
-  }
-
-  /// The indicator under the selected tab. `indicator` is a full BoxDecoration
-  /// when Ruby supplies one; otherwise the colour and weight draw the bar,
-  /// sized to the label or the whole tab.
-  @ViewBuilder
-  private func indicator(width: CGFloat) -> some View {
-    let decoration = node.map("indicator")
-    let color = MaterialPalette.color(
-      decoration?["color"]?.stringValue ?? node.string("indicator_color"),
-      default: .accentColor)
-    let height = CGFloat(node.double("indicator_thickness") ?? 2)
-    if node.bool("secondary") == true {
-      // Material's secondary bar spans the tab rather than hugging the label.
-      Rectangle().fill(color).frame(height: height)
-    } else {
-      RoundedRectangle(
-        cornerRadius: ControlProps.cornerRadius(node.props["splash_border_radius"]) ?? height / 2)
-        .fill(color)
-        .frame(
-          width: node.string("indicator_size")?.lowercased() == "tab" ? width : nil,
-          height: height)
-    }
-  }
-
-  private var indicatorAnimation: Animation? {
-    rufletAnimation(node.props["indicator_animation"])
-  }
-
-  private var stripAlignment: Alignment {
-    switch node.string("tab_alignment")?.lowercased() {
-    case "start", "startoffset": return .leading
-    case "center": return .center
-    case "fill": return .center
-    default: return .leading
-    }
-  }
-
-  private func strip(_ tabs: [ControlNode]) -> some View {
-    let metrics = CollectionDefaults.tabBar(node)
-    return HStack(spacing: 0) {
-      ForEach(Array(tabs.enumerated()), id: \.element.id) { index, tab in
-        Button {
-          selection?.wrappedValue = index
-          events.fire(node, "click", data: .int(Int64(index)))
-        } label: {
+      })) {
+        ForEach(Array(tabs.enumerated()), id: \.element.id) { index, tab in
           tabLabel(tab)
             .foregroundColor(MaterialPalette.color(
               index == selection?.wrappedValue
-                ? node.string("label_color") : node.string("unselected_label_color"),
-              default: index == selection?.wrappedValue ? .accentColor : .secondary))
-            .rufletTextStyle(labelStyle(selected: index == selection?.wrappedValue))
-            .padding(metrics.labelPadding)
+                ? values.labelColorToken : values.unselectedLabelColorToken))
+            .rufletTextStyle(labelStyle(
+              selected: index == selection?.wrappedValue, values: values))
+            .padding(values.labelPadding)
             .frame(minHeight: CollectionDefaults.tabHeight(tab))
-        }
-        .buttonStyle(.plain)
-        .onHover { hovering in
-          events.fire(
-            node, "hover",
-            data: .map(["hovering": .bool(hovering), "index": .int(Int64(index))]))
+            .tag(index)
+            .onHover { hovering in
+              events.fire(
+                node, "hover",
+                data: .map(["hovering": .bool(hovering), "index": .int(Int64(index))]))
+            }
         }
       }
-    }
+      .labelsHidden()
+      .pickerStyle(.segmented)
+      .modifier(TapFeedback(enabled: values.enableFeedback))
   }
 
-  private func handleCommand(
-    _ call: RufletMethodCall,
-    completion: @escaping RufletMethodCompletion
-  ) {
-    guard call.name == "move_to" else {
-      return completion(.failure(rufletUnsupported("TabBar", call)))
+  private func labelStyle(
+    selected: Bool, values: CollectionDefaults.TabBarValues
+  ) -> RufletTextStyle {
+    let key = selected ? "label_text_style" : "unselected_label_text_style"
+    var style = RufletTextStyle(node: node, styleKey: key)
+    if node.map(key) == nil {
+      style.themeStyle = RufletTextStyle.themeTextStyle(
+        selected ? values.labelTextStyleToken : values.unselectedLabelTextStyleToken)
     }
-    guard let index = call.argument("index")?.intValue, let selection else {
-      return completion(.failure(RufletServiceError.invalidArguments("index is required")))
-    }
-    selection.wrappedValue = index
-    completion(.success(.null))
+    return style
   }
 
   @ViewBuilder
   private func tabLabel(_ tab: ControlNode) -> some View {
-    let label = tab.string("label") ?? tab.string("text")
-    let icon = tab.props["icon"]
-    if let label, let icon, !icon.isNull {
-      HStack(spacing: 8) {
-        RufletIcon(value: icon, size: CollectionDefaults.tabIconSize)
-        Text(label)
+    let presentation = TabPresentation(node: tab)
+    if tab.type != "Tab" {
+      // Flet wraps arbitrary controls in a Flutter `Tab(child:)` so that the
+      // native tab selector still owns sizing, selection and interaction.
+      ControlView(id: tab.id, axis: .none)
+    } else if let message = TabPresentation.validationMessage(tab) {
+      Text(message).font(.caption).foregroundStyle(.red)
+    } else if presentation.hasIcon && presentation.hasLabel {
+      VStack(spacing: 0) {
+        tabIcon(tab).padding(presentation.iconMargin)
+        tabText(tab)
       }
-    } else if let label {
-      Text(label)
-    } else if let icon, !icon.isNull {
-      RufletIcon(value: icon, size: CollectionDefaults.tabIconSize)
-    } else if let labelID = tab.controlID(forKey: "label") {
+    } else if presentation.hasLabel {
+      tabText(tab)
+    } else if presentation.hasIcon {
+      tabIcon(tab)
+    }
+  }
+
+  @ViewBuilder
+  private func tabText(_ tab: ControlNode) -> some View {
+    if let labelID = tab.controlID(forKey: "label") {
       ControlView(id: labelID, axis: .none)
+    } else if let label = tab.string("label") ?? tab.string("text") {
+      Text(label).lineLimit(1)
+    }
+  }
+
+  @ViewBuilder
+  private func tabIcon(_ tab: ControlNode) -> some View {
+    if let iconID = tab.controlID(forKey: "icon") {
+      ControlView(id: iconID, axis: .none)
+    } else if let icon = tab.props["icon"], !icon.isNull {
+      RufletIcon(value: icon, size: CollectionDefaults.tabIconSize)
     }
   }
 }
@@ -1621,30 +1655,33 @@ struct TabBarViewControlView: View {
   let node: ControlNode
   @Environment(\.rufletTabSelection) private var selection
 
+  @ViewBuilder
   var body: some View {
-    let selected = selection?.wrappedValue ?? 0
     let children = node.childIDs
-    if children.indices.contains(selected) {
-      ControlView(id: children[selected], axis: .vertical)
-        // `viewport_fraction` is how much of the width one page occupies;
-        // anything under one leaves its neighbours peeking in.
-        .modifier(ViewportFraction(value: node.double("viewport_fraction")))
+    let presentation = TabBarViewPresentation(node: node)
+    if let selection {
+      #if os(iOS)
+        TabView(selection: selection) {
+          ForEach(Array(children.enumerated()), id: \.element) { index, child in
+            ControlView(id: child, axis: .vertical)
+              .modifier(ViewportFraction(value: presentation.viewportFraction))
+              .tag(index)
+          }
+        }
+        .tabViewStyle(.page(indexDisplayMode: .never))
+        .modifier(ChromeClipModifier(behavior: presentation.clipBehaviorToken))
+      #else
+        let selected = selection.wrappedValue
+        if children.indices.contains(selected) {
+          ControlView(id: children[selected], axis: .vertical)
+            .modifier(ViewportFraction(value: presentation.viewportFraction))
+            .modifier(ChromeClipModifier(behavior: presentation.clipBehaviorToken))
+        }
+      #endif
+    } else {
+      Text(TabBarViewPresentation.ancestorError)
+        .font(.caption).foregroundStyle(.red)
     }
-    EmptyView().rufletCommandHandler(node.id, handler: handleCommand)
-  }
-
-  private func handleCommand(
-    _ call: RufletMethodCall,
-    completion: @escaping RufletMethodCompletion
-  ) {
-    guard call.name == "move_to" else {
-      return completion(.failure(rufletUnsupported("TabBarView", call)))
-    }
-    guard let index = call.argument("index")?.intValue, let selection else {
-      return completion(.failure(RufletServiceError.invalidArguments("index is required")))
-    }
-    selection.wrappedValue = index
-    completion(.success(.null))
   }
 }
 
@@ -2313,10 +2350,31 @@ enum CollectionDefaults {
 
   struct TabBarValues {
     let scrollable: Bool
+    let secondary: Bool
     let indicatorThickness: CGFloat
+    let effectiveIndicatorThickness: CGFloat
+    let indicatorSizeToken: String
+    let indicatorAnimationToken: String
+    let indicatorPadding: EdgeInsets
+    let indicatorColorToken: String
     let dividerHeight: CGFloat
+    let dividerColorToken: String
+    let showsDivider: Bool
+    let labelColorToken: String
+    let unselectedLabelColorToken: String
+    let labelTextStyleToken: String
+    let unselectedLabelTextStyleToken: String
     let padding: EdgeInsets
     let labelPadding: EdgeInsets
+    let tabAlignmentToken: String
+    let enableFeedback: Bool
+
+    var nativeAlignment: Alignment {
+      switch tabAlignmentToken.lowercased() {
+      case "center", "fill": return .center
+      default: return .leading
+      }
+    }
   }
 
   struct DataTableValues {
@@ -2408,19 +2466,55 @@ enum CollectionDefaults {
   }
 
   static func tabBar(_ node: ControlNode) -> TabBarValues {
-    TabBarValues(
-      scrollable: node.bool("scrollable") ?? true,
-      indicatorThickness: CGFloat(node.double("indicator_thickness") ?? 2),
-      dividerHeight: CGFloat(node.double("divider_height")
-        ?? Double(RufletThemeDefaults.tabBarDividerHeight)),
+    let scrollable = node.bool("scrollable") ?? true
+    let secondary = node.bool("secondary") ?? false
+    let indicatorSize = node.string("indicator_size")?.lowercased()
+      ?? (secondary ? "tab" : "label")
+    let requestedThickness = CGFloat(node.double("indicator_thickness") ?? 2)
+    let effectiveThickness: CGFloat
+    if node.map("indicator") != nil {
+      effectiveThickness = requestedThickness
+    } else if secondary {
+      effectiveThickness = max(requestedThickness, 2)
+    } else {
+      effectiveThickness = max(requestedThickness, indicatorSize == "label" ? 3 : 2)
+    }
+    let dividerHeight = CGFloat(node.double("divider_height")
+      ?? Double(RufletThemeDefaults.tabBarDividerHeight))
+    let dividerColor = node.string("divider_color") ?? "outlinevariant"
+    return TabBarValues(
+      scrollable: scrollable,
+      secondary: secondary,
+      indicatorThickness: requestedThickness,
+      effectiveIndicatorThickness: effectiveThickness,
+      indicatorSizeToken: indicatorSize,
+      indicatorAnimationToken: node.string("indicator_animation")?.lowercased()
+        ?? (indicatorSize == "label" ? "elastic" : "linear"),
+      indicatorPadding: ControlProps.edgeInsets(node.props["indicator_padding"])
+        ?? EdgeInsets(),
+      indicatorColorToken: node.string("indicator_color") ?? "primary",
+      dividerHeight: dividerHeight,
+      dividerColorToken: dividerColor,
+      showsDivider: dividerHeight > 0 && dividerColor.lowercased() != "transparent",
+      labelColorToken: node.string("label_color") ?? (secondary ? "onsurface" : "primary"),
+      unselectedLabelColorToken: node.string("unselected_label_color")
+        ?? "onsurfacevariant",
+      labelTextStyleToken: node.map("label_text_style")?["theme_style"]?.stringValue
+        ?? "titlesmall",
+      unselectedLabelTextStyleToken:
+        node.map("unselected_label_text_style")?["theme_style"]?.stringValue ?? "titlesmall",
       padding: ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets(),
       labelPadding: ControlProps.edgeInsets(node.props["label_padding"])
-        ?? RufletThemeDefaults.tabBarLabelPadding)
+        ?? RufletThemeDefaults.tabBarLabelPadding,
+      tabAlignmentToken: node.string("tab_alignment")
+        ?? (scrollable ? "startOffset" : "fill"),
+      enableFeedback: node.bool("enable_feedback") ?? true)
   }
 
   static func tabHeight(_ tab: ControlNode) -> CGFloat {
     if let height = tab.double("height") { return CGFloat(height) }
-    let hasIcon = tab.props["icon"] != nil || tab.controlID(forKey: "icon") != nil
+    let hasIcon = (tab.props["icon"] != nil && tab.props["icon"]?.isNull == false)
+      || tab.controlID(forKey: "icon") != nil
     let hasLabel = tab.string("label") != nil || tab.string("text") != nil
       || tab.controlID(forKey: "label") != nil
     return hasIcon && hasLabel

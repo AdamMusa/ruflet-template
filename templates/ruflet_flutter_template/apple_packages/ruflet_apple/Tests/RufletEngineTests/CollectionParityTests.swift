@@ -39,7 +39,21 @@ final class CollectionParityTests: XCTestCase {
 
     let tabs = CollectionDefaults.tabBar(ControlNode(id: 4, type: "TabBar"))
     XCTAssertTrue(tabs.scrollable)
+    XCTAssertFalse(tabs.secondary)
     XCTAssertEqual(tabs.indicatorThickness, 2)
+    XCTAssertEqual(tabs.effectiveIndicatorThickness, 3)
+    XCTAssertEqual(tabs.indicatorSizeToken, "label")
+    XCTAssertEqual(tabs.indicatorAnimationToken, "elastic")
+    XCTAssertEqual(tabs.indicatorColorToken, "primary")
+    XCTAssertEqual(tabs.dividerColorToken, "outlinevariant")
+    XCTAssertEqual(tabs.dividerHeight, 1)
+    XCTAssertTrue(tabs.showsDivider)
+    XCTAssertEqual(tabs.labelColorToken, "primary")
+    XCTAssertEqual(tabs.unselectedLabelColorToken, "onsurfacevariant")
+    XCTAssertEqual(tabs.labelTextStyleToken, "titlesmall")
+    XCTAssertEqual(tabs.unselectedLabelTextStyleToken, "titlesmall")
+    XCTAssertEqual(tabs.tabAlignmentToken, "startOffset")
+    XCTAssertTrue(tabs.enableFeedback)
 
     let table = CollectionDefaults.dataTable(ControlNode(id: 5, type: "DataTable"))
     XCTAssertEqual(table.columnSpacing, 56)
@@ -231,7 +245,26 @@ final class CollectionParityTests: XCTestCase {
         "title": .string("Settings"),
         "subtitle": .string("Application preferences"),
         "leading": .string("settings"),
-      ])).requiresCustomRendering)
+    ])).requiresCustomRendering)
+  }
+
+  func testNativeListTilePreservesLeadingAndTrailingTextStyle() {
+    let tile = ListTilePresentation(node: ControlNode(
+      id: 1, type: "ListTile", props: [
+        "title": .string("Settings"),
+        "leading": .string("settings"),
+        "trailing": .string("chevron_right"),
+        "leading_and_trailing_text_style": .map([
+          "size": .double(21), "weight": .string("bold"),
+        ]),
+      ]))
+
+    // This semantic style is representable by native SwiftUI content and must
+    // not force the handwritten Material row. Both control and icon/string
+    // slots receive the same parsed style in `nativeTileContents`.
+    XCTAssertFalse(tile.requiresCustomRendering)
+    XCTAssertEqual(tile.leadingTrailingTextStyle?.size, 21)
+    XCTAssertEqual(tile.leadingTrailingTextStyle?.weight, .bold)
   }
 
   func testExplicitMaterialListTileVisualsPreserveCustomRoute() {
@@ -333,22 +366,188 @@ final class CollectionParityTests: XCTestCase {
     XCTAssertEqual(CollectionParity.normalizedIndex(99, count: 4), 3)
   }
 
-  func testStylelessTabBarUsesNativeAppleAppearance() {
-    XCTAssertTrue(TabBarPresentation.usesNativeAppearance(ControlNode(
-      id: 1, type: "TabBar")))
-    XCTAssertEqual(CollectionDefaults.tabIconSize, 24)
+  func testTabsKeepPinnedFletControllerDefaultsAndValidation() {
+    let defaults = TabsPresentation(node: ControlNode(
+      id: 1, type: "Tabs", props: [
+        "length": .int(3), "selected_index": .int(-1), "content": .controlRef(9)
+      ]))
+    XCTAssertEqual(defaults.length, 3)
+    XCTAssertEqual(defaults.rawSelectedIndex, -1)
+    XCTAssertEqual(defaults.selectedIndex, 2)
+    XCTAssertEqual(defaults.animationDuration, 0.1)
+    XCTAssertEqual(TabsPresentation.moveDefaultCurveToken, "easeIn")
+    XCTAssertNil(TabsPresentation.validationMessage(defaults.node))
+
+    XCTAssertEqual(
+      TabsPresentation.validationMessage(ControlNode(
+        id: 2, type: "Tabs", props: [
+          "length": .int(-1), "selected_index": .int(0), "content": .controlRef(9)
+        ])),
+      "length must be greater than or equal to 0, got -1")
+    XCTAssertEqual(
+      TabsPresentation.validationMessage(ControlNode(
+        id: 3, type: "Tabs", props: [
+          "length": .int(3), "selected_index": .int(3), "content": .controlRef(9)
+        ])),
+      "selected_index out of range: got 3, expected in range [-3, 2]")
+    XCTAssertEqual(
+      TabsPresentation.validationMessage(ControlNode(
+        id: 4, type: "Tabs", props: ["length": .int(2)])),
+      "Tabs.content must be provided and visible")
+    XCTAssertNil(TabsPresentation.moveValidationMessage(index: -1, length: 3))
+    XCTAssertEqual(
+      TabsPresentation.moveValidationMessage(index: 3, length: 3),
+      "index out of range: got 3, expected in range [-3, 2]")
   }
 
-  func testExplicitMaterialTabStripPropertiesPreserveCustomRoute() {
+  func testEveryTabBarPropertyKeepsNativeAppleAppearance() {
+    XCTAssertTrue(TabBarPresentation.usesNativeAppearance(ControlNode(
+      id: 1, type: "TabBar")))
+    XCTAssertEqual(
+      TabBarPresentation.ancestorError,
+      "TabBar must be used within a Tabs control")
+    XCTAssertEqual(
+      TabBarViewPresentation.ancestorError,
+      "TabBarView must be used within a Tabs control")
+    XCTAssertEqual(CollectionDefaults.tabIconSize, 24)
     for property in [
-      "scrollable", "indicator_color", "indicator_thickness", "divider_color",
-      "label_color", "label_text_style", "padding", "tab_alignment", "secondary",
+      "scrollable", "indicator", "indicator_color", "indicator_thickness",
+      "indicator_size", "indicator_animation", "divider_color", "divider_height",
+      "label_color", "unselected_label_color", "label_text_style",
+      "unselected_label_text_style", "label_padding", "padding", "overlay_color",
+      "splash_border_radius", "tab_alignment", "secondary", "enable_feedback",
     ] {
-      let value: RufletValue = property == "secondary" || property == "scrollable"
-        ? .bool(true) : .string("explicit")
-      XCTAssertFalse(TabBarPresentation.usesNativeAppearance(ControlNode(
+      let value: RufletValue
+      switch property {
+      case "secondary", "scrollable", "enable_feedback": value = .bool(true)
+      case "indicator_thickness", "divider_height": value = .double(4)
+      case "indicator", "label_text_style", "unselected_label_text_style":
+        value = .map([:])
+      default: value = .string("explicit")
+      }
+      XCTAssertTrue(TabBarPresentation.usesNativeAppearance(ControlNode(
         id: 1, type: "TabBar", props: [property: value])), property)
     }
+  }
+
+  func testTabBarMaterial3SemanticDefaultsTrackPrimaryAndSecondaryConstructors() {
+    let primary = CollectionDefaults.tabBar(ControlNode(id: 1, type: "TabBar"))
+    XCTAssertEqual(primary.indicatorSizeToken, "label")
+    XCTAssertEqual(primary.indicatorAnimationToken, "elastic")
+    XCTAssertEqual(primary.effectiveIndicatorThickness, 3)
+    XCTAssertEqual(primary.labelColorToken, "primary")
+    XCTAssertEqual(primary.tabAlignmentToken, "startOffset")
+    XCTAssertTrue(primary.showsDivider)
+
+    let secondary = CollectionDefaults.tabBar(ControlNode(
+      id: 2, type: "TabBar", props: [
+        "secondary": .bool(true), "scrollable": .bool(false)
+      ]))
+    XCTAssertTrue(secondary.secondary)
+    XCTAssertEqual(secondary.indicatorSizeToken, "tab")
+    XCTAssertEqual(secondary.indicatorAnimationToken, "linear")
+    XCTAssertEqual(secondary.effectiveIndicatorThickness, 2)
+    XCTAssertEqual(secondary.labelColorToken, "onsurface")
+    XCTAssertEqual(secondary.tabAlignmentToken, "fill")
+    XCTAssertTrue(secondary.showsDivider)
+  }
+
+  func testTabBarExplicitSemanticsOverrideEveryPinnedDefault() {
+    let values = CollectionDefaults.tabBar(ControlNode(
+      id: 1, type: "TabBar", props: [
+        "scrollable": .bool(false), "secondary": .bool(true),
+        "indicator_thickness": .double(5), "indicator_size": .string("label"),
+        "indicator_animation": .string("linear"),
+        "indicator_padding": .map([
+          "top": .double(1), "left": .double(2),
+          "bottom": .double(3), "right": .double(4)
+        ]),
+        "indicator_color": .string("red"), "divider_height": .double(6),
+        "divider_color": .string("blue"), "label_color": .string("green"),
+        "unselected_label_color": .string("amber"),
+        "label_text_style": .map(["theme_style": .string("bodyLarge")]),
+        "unselected_label_text_style": .map(["theme_style": .string("bodySmall")]),
+        "tab_alignment": .string("center"), "enable_feedback": .bool(false),
+      ]))
+    XCTAssertFalse(values.scrollable)
+    XCTAssertTrue(values.secondary)
+    XCTAssertEqual(values.indicatorThickness, 5)
+    XCTAssertEqual(values.effectiveIndicatorThickness, 5)
+    XCTAssertEqual(values.indicatorSizeToken, "label")
+    XCTAssertEqual(values.indicatorAnimationToken, "linear")
+    XCTAssertEqual(values.indicatorPadding.top, 1)
+    XCTAssertEqual(values.indicatorPadding.leading, 2)
+    XCTAssertEqual(values.indicatorPadding.bottom, 3)
+    XCTAssertEqual(values.indicatorPadding.trailing, 4)
+    XCTAssertEqual(values.indicatorColorToken, "red")
+    XCTAssertEqual(values.dividerHeight, 6)
+    XCTAssertEqual(values.dividerColorToken, "blue")
+    XCTAssertEqual(values.labelColorToken, "green")
+    XCTAssertEqual(values.unselectedLabelColorToken, "amber")
+    XCTAssertEqual(values.labelTextStyleToken, "bodyLarge")
+    XCTAssertEqual(values.unselectedLabelTextStyleToken, "bodySmall")
+    XCTAssertEqual(values.tabAlignmentToken, "center")
+    XCTAssertFalse(values.enableFeedback)
+  }
+
+  func testTabBarAndTabImplementFletValidationMessages() {
+    XCTAssertEqual(
+      TabBarPresentation.validationMessage(ControlNode(
+        id: 1, type: "TabBar", props: ["indicator_thickness": .double(0)])),
+      "indicator_thickness must be strictly greater than zero if indicator is None, got 0.0")
+    XCTAssertNil(TabBarPresentation.validationMessage(ControlNode(
+      id: 2, type: "TabBar", props: [
+        "indicator": .map([:]), "indicator_thickness": .double(0)
+      ])))
+    XCTAssertEqual(
+      TabBarPresentation.validationMessage(ControlNode(
+        id: 3, type: "TabBar", props: ["tab_alignment": .string("fill")])),
+      "If scrollable is True, tab_alignment must be one of: TabAlignment.START, TabAlignment.START_OFFSET, TabAlignment.CENTER.")
+    XCTAssertEqual(
+      TabBarPresentation.validationMessage(ControlNode(
+        id: 4, type: "TabBar", props: [
+          "scrollable": .bool(false), "tab_alignment": .string("start")
+        ])),
+      "If scrollable is False, tab_alignment must be one of: TabAlignment.CENTER, TabAlignment.FILL.")
+    XCTAssertEqual(
+      TabPresentation.validationMessage(ControlNode(id: 5, type: "Tab")),
+      "Tab must have at least label or icon property set")
+    XCTAssertNil(TabPresentation.validationMessage(ControlNode(
+      id: 6, type: "Tab", props: ["icon": .string("settings")])))
+    XCTAssertNil(TabPresentation.validationMessage(ControlNode(
+      id: 7, type: "Text", props: ["value": .string("Custom tab")])))
+  }
+
+  func testTabAndTabBarViewKeepFlutterConstructorDefaults() {
+    let textTab = TabPresentation(node: ControlNode(
+      id: 1, type: "Tab", props: ["label": .string("Files")]))
+    XCTAssertEqual(textTab.height, 46)
+    XCTAssertEqual(textTab.iconMargin.bottom, 2)
+
+    let combined = TabPresentation(node: ControlNode(
+      id: 2, type: "Tab", props: [
+        "label": .string("Files"), "icon": .string("folder")
+      ]))
+    XCTAssertEqual(combined.height, 72)
+
+    let explicit = TabPresentation(node: ControlNode(
+      id: 3, type: "Tab", props: [
+        "label": .string("Files"), "icon": .string("folder"),
+        "height": .double(80),
+        "icon_margin": .map(["bottom": .double(9)])
+      ]))
+    XCTAssertEqual(explicit.height, 80)
+    XCTAssertEqual(explicit.iconMargin.bottom, 9)
+
+    let view = TabBarViewPresentation(node: ControlNode(id: 4, type: "TabBarView"))
+    XCTAssertEqual(view.clipBehaviorToken, "hardEdge")
+    XCTAssertEqual(view.viewportFraction, 1)
+    let customView = TabBarViewPresentation(node: ControlNode(
+      id: 5, type: "TabBarView", props: [
+        "clip_behavior": .string("none"), "viewport_fraction": .double(0.75)
+      ]))
+    XCTAssertEqual(customView.clipBehaviorToken, "none")
+    XCTAssertEqual(customView.viewportFraction, 0.75)
   }
 
   func testPageCommandsClampToMountedPageRange() {
