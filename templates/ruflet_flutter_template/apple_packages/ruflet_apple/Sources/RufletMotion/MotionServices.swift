@@ -331,19 +331,15 @@ public final class ShakeDetectorService: RufletStreamingService {
   public static let wireType = "ShakeDetector"
 
   private var running = false
-  private var lastShake = Date.distantPast
-  private var shakeCount = 0
+  private var detectorState = FletShakeDetectorSemantics.State(
+    timestampMilliseconds: FletShakeDetectorSemantics.nowMilliseconds(), count: 0)
   #if canImport(CoreMotion) && os(iOS)
     private var manager: CMMotionManager?
   #endif
-  private var configuration: Configuration?
-
-  private struct Configuration: Equatable {
-    let minimumCount: Int
-    let slopMilliseconds: Double
-    let resetMilliseconds: Double
-    let threshold: Double
-  }
+  // Flet initializes these fields to the same defaults before its first
+  // `update()`. Consequently the listener starts only when configuration
+  // changes; preserving that lifecycle is important for source parity.
+  private var configuration = FletShakeDetectorSemantics.Configuration.defaults
 
   public init() {}
 
@@ -359,16 +355,15 @@ public final class ShakeDetectorService: RufletStreamingService {
 
   public func activate(node: ControlNode, context: RufletServiceContext) {
     #if canImport(CoreMotion) && os(iOS)
-      let next = Configuration(
-        minimumCount: max(1, node.int("minimum_shake_count") ?? 1),
-        slopMilliseconds: max(0, node.double("shake_slop_time_ms") ?? node.double("min_time_between_shakes") ?? 500),
-        resetMilliseconds: max(0, node.double("shake_count_reset_time_ms") ?? 3_000),
+      let next = FletShakeDetectorSemantics.Configuration(
+        minimumCount: node.int("minimum_shake_count") ?? 1,
+        slopMilliseconds: node.int("shake_slop_time_ms") ?? 500,
+        resetMilliseconds: node.int("shake_count_reset_time_ms") ?? 3_000,
         threshold: node.double("shake_threshold_gravity") ?? 2.7
       )
       guard next != configuration else { return }
       manager?.stopAccelerometerUpdates()
       running = false
-      shakeCount = 0
       configuration = next
 
       let manager = CMMotionManager()
@@ -378,23 +373,16 @@ public final class ShakeDetectorService: RufletStreamingService {
 
       let id = node.id
 
-      manager.accelerometerUpdateInterval = 0.05
+      // sensors_plus uses SensorInterval.normalInterval (200 ms).
+      manager.accelerometerUpdateInterval = 0.2
       manager.startAccelerometerUpdates(to: .main) { [weak self] data, _ in
         guard let self, let data else { return }
-        let force = sqrt(
-          pow(data.acceleration.x, 2) + pow(data.acceleration.y, 2)
-            + pow(data.acceleration.z, 2))
-        let now = Date()
-        guard force > next.threshold,
-          now.timeIntervalSince(self.lastShake) * 1_000 > next.slopMilliseconds
-        else { return }
-        if now.timeIntervalSince(self.lastShake) * 1_000 > next.resetMilliseconds {
-          self.shakeCount = 0
-        }
-        self.lastShake = now
-        self.shakeCount += 1
-        if self.shakeCount >= next.minimumCount {
-          self.shakeCount = 0
+        if FletShakeDetectorSemantics.consume(
+          x: data.acceleration.x, y: data.acceleration.y, z: data.acceleration.z,
+          nowMilliseconds: FletShakeDetectorSemantics.nowMilliseconds(),
+          configuration: next, state: &self.detectorState),
+          context.store.node(id)?.handlesEvent("shake") == true
+        {
           context.emitEvent(id, "shake", .null)
         }
       }
@@ -405,5 +393,70 @@ public final class ShakeDetectorService: RufletStreamingService {
     #if canImport(CoreMotion) && os(iOS)
       manager?.stopAccelerometerUpdates()
     #endif
+  }
+}
+
+public enum FletShakeDetectorSemantics {
+  public static let sensorsPlusGravity = 9.81
+  public static let detectorGravity = 9.80665
+  public static let samplingIntervalSeconds = 0.2
+
+  public struct Configuration: Equatable {
+    public let minimumCount: Int
+    public let slopMilliseconds: Int
+    public let resetMilliseconds: Int
+    public let threshold: Double
+
+    public init(
+      minimumCount: Int, slopMilliseconds: Int, resetMilliseconds: Int, threshold: Double
+    ) {
+      self.minimumCount = minimumCount
+      self.slopMilliseconds = slopMilliseconds
+      self.resetMilliseconds = resetMilliseconds
+      self.threshold = threshold
+    }
+
+    public static let defaults = Configuration(
+      minimumCount: 1, slopMilliseconds: 500, resetMilliseconds: 3_000, threshold: 2.7)
+  }
+
+  public struct State: Equatable {
+    public var timestampMilliseconds: Int64
+    public var count: Int
+
+    public init(timestampMilliseconds: Int64, count: Int) {
+      self.timestampMilliseconds = timestampMilliseconds
+      self.count = count
+    }
+  }
+
+  public static func nowMilliseconds(_ date: Date = Date()) -> Int64 {
+    Int64(date.timeIntervalSince1970 * 1_000)
+  }
+
+  /// Applies the pinned Flet shake algorithm to a raw Core Motion acceleration
+  /// sample. sensors_plus first flips axes and converts g to m/s²; signs cancel
+  /// in the vector magnitude, but its 9.81/9.80665 scale remains observable.
+  @discardableResult
+  public static func consume(
+    x: Double, y: Double, z: Double,
+    nowMilliseconds: Int64,
+    configuration: Configuration,
+    state: inout State
+  ) -> Bool {
+    let scale = sensorsPlusGravity / detectorGravity
+    let force = sqrt(x * x + y * y + z * z) * scale
+    guard force > configuration.threshold else { return false }
+
+    if state.timestampMilliseconds + Int64(configuration.slopMilliseconds) > nowMilliseconds {
+      return false
+    }
+    if state.timestampMilliseconds + Int64(configuration.resetMilliseconds) < nowMilliseconds {
+      state.count = 0
+    }
+
+    state.timestampMilliseconds = nowMilliseconds
+    state.count += 1
+    return state.count >= configuration.minimumCount
   }
 }
