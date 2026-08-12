@@ -7,6 +7,19 @@ import SwiftUI
 
 @MainActor
 final class CodeEditorParityTests: XCTestCase {
+  func testFoldAtLineArgumentMatchesPinnedFletParseIntContract() {
+    XCTAssertEqual(CodeEditorCommandArguments.foldLine(.int(7)), 7)
+    XCTAssertEqual(CodeEditorCommandArguments.foldLine(.string("-3")), -3)
+    XCTAssertEqual(CodeEditorCommandArguments.foldLine(.string(" 12 ")), 12)
+
+    XCTAssertNil(CodeEditorCommandArguments.foldLine(nil))
+    XCTAssertNil(CodeEditorCommandArguments.foldLine(.null))
+    XCTAssertNil(CodeEditorCommandArguments.foldLine(.string("line-zero")))
+    XCTAssertNil(CodeEditorCommandArguments.foldLine(.double(0)))
+    XCTAssertNil(CodeEditorCommandArguments.foldLine(.bool(false)))
+    XCTAssertNil(CodeEditorCommandArguments.foldLine(.controlRef(0)))
+  }
+
   func testFoldProjectionPreservesSourceAndCanBeRemovedLosslessly() {
     let source = "def greet\n  puts 'hello'\nend\ngreet"
     let region = CodeFoldProjection.blockRegion(in: source, startingAt: 0)

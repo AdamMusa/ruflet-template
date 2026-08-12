@@ -114,6 +114,22 @@ enum CodeEditorValueEvents {
   }
 }
 
+enum CodeEditorCommandArguments {
+  /// Mirrors Flet's `parseInt(args["line_number"])`: only an integer or a
+  /// decimal string is accepted. In particular, RufletValue's permissive
+  /// `intValue` conversion must not turn booleans or doubles into line zero.
+  static func foldLine(_ value: RufletValue?) -> Int? {
+    switch value {
+    case .int(let value):
+      return Int(exactly: value)
+    case .string(let value):
+      return Int(value.trimmingCharacters(in: .whitespacesAndNewlines))
+    default:
+      return nil
+    }
+  }
+}
+
 enum CodeEditorSelection {
   static func range(from value: RufletValue?, text: String) -> NSRange {
     guard let map = value?.mapValue,

@@ -62,7 +62,9 @@ struct CodeEditorControlView: View {
           if !configuration.disabled { nativeFocused = true }
           completion(.success(.null))
         case "fold_at":
-          toggleFold(at: call.argument("line_number")?.intValue ?? 0)
+          if let line = CodeEditorCommandArguments.foldLine(call.argument("line_number")) {
+            toggleFold(at: line)
+          }
           completion(.success(.null))
         case "fold_comment_at_line_zero":
           folds = CodeFoldProjection.leadingCommentRegion(in: source).map { [$0] } ?? []
@@ -111,7 +113,9 @@ struct CodeEditorControlView: View {
         if !configuration.disabled { focused = true }
         completion(.success(.null))
       case "fold_at":
-        toggleFold(at: call.argument("line_number")?.intValue ?? 0)
+        if let line = CodeEditorCommandArguments.foldLine(call.argument("line_number")) {
+          toggleFold(at: line)
+        }
         completion(.success(.null))
       case "fold_comment_at_line_zero":
         folds = CodeFoldProjection.leadingCommentRegion(in: source).map { [$0] } ?? []
