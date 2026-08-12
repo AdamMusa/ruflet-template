@@ -463,6 +463,10 @@ public enum ControlRegistry {
       wireType: "SimpleAttribution", classification: .structuralChild,
       implementation: "MapAttributionView", rendering: .metadataOnly,
       supportedEvents: ["click"])
+    result["richattribution"] = ControlDescriptor(
+      wireType: "RichAttribution", classification: .structuralChild,
+      implementation: "MapRichAttributionView", rendering: .metadataOnly,
+      supportedEvents: ["click"])
     result["textsourceattribution"] = ControlDescriptor(
       wireType: "TextSourceAttribution", classification: .structuralChild,
       implementation: "MapRichAttributionView", rendering: .metadataOnly,

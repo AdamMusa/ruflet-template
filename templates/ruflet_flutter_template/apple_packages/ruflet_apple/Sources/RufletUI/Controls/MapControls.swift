@@ -48,6 +48,23 @@ struct MapControlSemantics {
   static let initialZoom = 13.0
   static let initialRotation = 0.0
   static let animationDurationMilliseconds = 500.0
+  static let backgroundColor = "grey300"
+
+  enum InteractiveFlag {
+    static let drag = 1 << 0
+    static let flingAnimation = 1 << 1
+    static let pinchMove = 1 << 2
+    static let pinchZoom = 1 << 3
+    static let doubleTapZoom = 1 << 4
+    static let doubleTapDragZoom = 1 << 5
+    static let scrollWheelZoom = 1 << 6
+    static let rotate = 1 << 7
+    static let all = 255
+
+    static func contains(_ flags: Int, _ values: Int...) -> Bool {
+      values.contains { flags & $0 != 0 }
+    }
+  }
 
   static func coordinate(_ value: RufletValue?) -> Coordinate? {
     guard let map = value?.mapValue else { return nil }
@@ -106,6 +123,9 @@ struct MapTileConfiguration: Equatable {
   var tms = false
   var retinaMode = false
   var additionalOptions: [String: String] = [:]
+  var tileBounds: (corner1: MapControlSemantics.Coordinate, corner2: MapControlSemantics.Coordinate)?
+  var displayOpacity = 0.0
+  var displayDuration = 0.1
 
   init(node: ControlNode) {
     urlTemplate = node.string("url_template")
@@ -122,6 +142,22 @@ struct MapTileConfiguration: Equatable {
     zoomOffset = node.double("zoom_offset") ?? 0
     tms = node.bool("enable_tms") ?? false
     retinaMode = node.bool("enable_retina_mode") ?? false
+    if let bounds = node.map("tile_bounds"),
+      let corner1 = MapControlSemantics.coordinate(bounds["corner_1"]),
+      let corner2 = MapControlSemantics.coordinate(bounds["corner_2"])
+    {
+      tileBounds = (corner1, corner2)
+    }
+    if let display = node.map("display_mode") {
+      if display["_type"]?.stringValue?.lowercased() == "instantaneous" {
+        displayOpacity = display["opacity"]?.doubleValue ?? 1
+        displayDuration = 0
+      } else {
+        // An explicitly supplied FadeIn follows parseTileDisplay's defaults.
+        displayOpacity = display["start_opacity"]?.doubleValue ?? 1
+        displayDuration = max(display["duration"]?.doubleValue ?? 100, 0) / 1_000
+      }
+    }
     additionalOptions = node.map("additional_options")?.reduce(into: [:]) { result, item in
       if let value = item.value.stringValue { result[item.key] = value }
     } ?? [:]
@@ -142,6 +178,34 @@ struct MapTileConfiguration: Equatable {
       value = value.replacingOccurrences(of: "{\(key)}", with: replacement)
     }
     return URL(string: value)
+  }
+
+  func contains(pathX x: Int, y: Int, z: Int) -> Bool {
+    guard let tileBounds else { return true }
+    let count = pow(2.0, Double(z))
+    let longitude = (Double(x) + 0.5) / count * 360 - 180
+    let mercator = .pi * (1 - 2 * (Double(y) + 0.5) / count)
+    let latitude = atan(sinh(mercator)) * 180 / .pi
+    let minLatitude = min(tileBounds.corner1.latitude, tileBounds.corner2.latitude)
+    let maxLatitude = max(tileBounds.corner1.latitude, tileBounds.corner2.latitude)
+    let minLongitude = min(tileBounds.corner1.longitude, tileBounds.corner2.longitude)
+    let maxLongitude = max(tileBounds.corner1.longitude, tileBounds.corner2.longitude)
+    return (minLatitude...maxLatitude).contains(latitude)
+      && (minLongitude...maxLongitude).contains(longitude)
+  }
+
+  static func == (lhs: MapTileConfiguration, rhs: MapTileConfiguration) -> Bool {
+    lhs.urlTemplate == rhs.urlTemplate && lhs.fallbackURL == rhs.fallbackURL
+      && lhs.subdomains == rhs.subdomains && lhs.tileSize == rhs.tileSize
+      && lhs.userAgent == rhs.userAgent && lhs.minNativeZoom == rhs.minNativeZoom
+      && lhs.maxNativeZoom == rhs.maxNativeZoom && lhs.maxZoom == rhs.maxZoom
+      && lhs.zoomReverse == rhs.zoomReverse && lhs.zoomOffset == rhs.zoomOffset
+      && lhs.tms == rhs.tms && lhs.retinaMode == rhs.retinaMode
+      && lhs.additionalOptions == rhs.additionalOptions
+      && lhs.tileBounds?.corner1 == rhs.tileBounds?.corner1
+      && lhs.tileBounds?.corner2 == rhs.tileBounds?.corner2
+      && lhs.displayOpacity == rhs.displayOpacity
+      && lhs.displayDuration == rhs.displayDuration
   }
 }
 

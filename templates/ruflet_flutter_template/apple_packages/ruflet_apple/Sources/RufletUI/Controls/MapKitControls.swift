@@ -97,6 +97,9 @@ private struct PolylineMapStyle {
   var borderColor: String
   var width: CGFloat
   var borderWidth: CGFloat
+  var gradientColors: [String]
+  var colorStops: [CGFloat]
+  var usesMeterWidth: Bool
   var dash: [CGFloat]?
   var cap: CGLineCap
   var join: CGLineJoin
@@ -184,15 +187,23 @@ final class MapModel: NSObject, ObservableObject, MKMapViewDelegate {
 
   private func applyInteraction(_ node: ControlNode) {
     let flags = node.map("interaction_configuration")?["flags"]?.intValue
-    let enabled = flags != 0 // absent is InteractiveFlag.all in Flet
-    view.isScrollEnabled = enabled
-    view.isZoomEnabled = enabled
-    view.isRotateEnabled = enabled
-    view.isPitchEnabled = enabled
+      ?? MapControlSemantics.InteractiveFlag.all
+    view.isScrollEnabled = MapControlSemantics.InteractiveFlag.contains(
+      flags, MapControlSemantics.InteractiveFlag.drag,
+      MapControlSemantics.InteractiveFlag.pinchMove)
+    view.isZoomEnabled = MapControlSemantics.InteractiveFlag.contains(
+      flags, MapControlSemantics.InteractiveFlag.pinchZoom,
+      MapControlSemantics.InteractiveFlag.doubleTapZoom,
+      MapControlSemantics.InteractiveFlag.doubleTapDragZoom,
+      MapControlSemantics.InteractiveFlag.scrollWheelZoom)
+    view.isRotateEnabled = MapControlSemantics.InteractiveFlag.contains(
+      flags, MapControlSemantics.InteractiveFlag.rotate)
+    view.isPitchEnabled = false
   }
 
   private func applyBackground(_ node: ControlNode) {
-    guard let name = node.string("bgcolor"), let color = MaterialPalette.color(name) else { return }
+    guard let color = MaterialPalette.color(
+      node.string("bgcolor") ?? MapControlSemantics.backgroundColor) else { return }
     #if canImport(UIKit)
       view.backgroundColor = UIColor(color)
     #elseif canImport(AppKit)
@@ -303,12 +314,29 @@ final class MapModel: NSObject, ObservableObject, MKMapViewDelegate {
       guard let line = store.node(id), line.type == "PolylineMarker" else { continue }
       var coordinates = MapControlSemantics.coordinates(line.props["coordinates"]).map(\.native)
       guard coordinates.count > 1 else { continue }
+      let width = CGFloat(line.double("stroke_width") ?? 1)
+      let borderWidth = CGFloat(line.double("border_stroke_width") ?? 0)
+      if borderWidth > 0 {
+        let borderOverlay = MKPolyline(coordinates: &coordinates, count: coordinates.count)
+        lineStyles[ObjectIdentifier(borderOverlay)] = PolylineMapStyle(
+          color: line.string("border_color") ?? "yellow",
+          borderColor: line.string("border_color") ?? "yellow",
+          width: width + borderWidth * 2, borderWidth: 0,
+          gradientColors: [], colorStops: [], usesMeterWidth: false,
+          dash: dashPattern(line.props["stroke_pattern"]),
+          cap: lineCap(line.string("stroke_cap")), join: lineJoin(line.string("stroke_join")))
+        view.addOverlay(borderOverlay)
+      }
       let overlay = MKPolyline(coordinates: &coordinates, count: coordinates.count)
       lineStyles[ObjectIdentifier(overlay)] = PolylineMapStyle(
         color: line.string("color") ?? "yellow",
         borderColor: line.string("border_color") ?? "yellow",
-        width: CGFloat(line.double("stroke_width") ?? 1),
-        borderWidth: CGFloat(line.double("border_stroke_width") ?? 0),
+        width: width, borderWidth: borderWidth,
+        gradientColors: line.array("gradient_colors")?.compactMap(\.stringValue) ?? [],
+        colorStops: line.array("colors_stop")?.compactMap { value in
+          value.doubleValue.map { CGFloat($0) }
+        } ?? [],
+        usesMeterWidth: line.bool("use_stroke_width_in_meter") ?? false,
         dash: dashPattern(line.props["stroke_pattern"]),
         cap: lineCap(line.string("stroke_cap")), join: lineJoin(line.string("stroke_join")))
       view.addOverlay(overlay)
@@ -441,6 +469,24 @@ final class MapModel: NSObject, ObservableObject, MKMapViewDelegate {
   }
 
   func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
+    if let tile = overlay as? FletTileOverlay {
+      let renderer = MKTileOverlayRenderer(tileOverlay: tile)
+      renderer.alpha = tile.configuration.displayOpacity
+      if tile.configuration.displayDuration > 0 {
+        let duration = tile.configuration.displayDuration
+        DispatchQueue.main.async {
+          #if canImport(UIKit)
+            UIView.animate(withDuration: duration) { renderer.alpha = 1 }
+          #elseif canImport(AppKit)
+            NSAnimationContext.runAnimationGroup { context in
+              context.duration = duration
+              renderer.alpha = 1
+            }
+          #endif
+        }
+      }
+      return renderer
+    }
     if let tile = overlay as? MKTileOverlay { return MKTileOverlayRenderer(tileOverlay: tile) }
     if let circle = overlay as? MKCircle, let style = circleStyles[ObjectIdentifier(circle)] {
       let renderer = MKCircleRenderer(circle: circle)
@@ -450,9 +496,21 @@ final class MapModel: NSObject, ObservableObject, MKMapViewDelegate {
       return renderer
     }
     if let line = overlay as? MKPolyline, let style = lineStyles[ObjectIdentifier(line)] {
-      let renderer = MKPolylineRenderer(polyline: line)
-      renderer.strokeColor = platformColor(style.color)
-      renderer.lineWidth = style.width
+      let renderer: MKPolylineRenderer
+      if style.gradientColors.count > 1 {
+        let gradient = MKGradientPolylineRenderer(polyline: line)
+        let colors = style.gradientColors.map(platformColor)
+        let locations = style.colorStops.count == colors.count
+          ? style.colorStops : (0..<colors.count).map { CGFloat($0) / CGFloat(colors.count - 1) }
+        gradient.setColors(colors, locations: locations)
+        renderer = gradient
+      } else {
+        let plain = MKPolylineRenderer(polyline: line)
+        plain.strokeColor = platformColor(style.color)
+        renderer = plain
+      }
+      renderer.lineWidth = style.usesMeterWidth
+        ? meterWidthInPoints(style.width, overlay: line, mapView: mapView) : style.width
       renderer.lineCap = style.cap
       renderer.lineJoin = style.join
       renderer.lineDashPattern = style.dash?.map { NSNumber(value: Double($0)) }
@@ -476,6 +534,15 @@ final class MapModel: NSObject, ObservableObject, MKMapViewDelegate {
     let y: CGFloat = annotation.alignment.vertical == .top ? annotation.size.height / 2
       : annotation.alignment.vertical == .bottom ? -annotation.size.height / 2 : 0
     return CGPoint(x: x, y: y)
+  }
+
+  private func meterWidthInPoints(
+    _ meters: CGFloat, overlay: MKPolyline, mapView: MKMapView
+  ) -> CGFloat {
+    let coordinate = MKMapPoint(
+      x: overlay.boundingMapRect.midX, y: overlay.boundingMapRect.midY).coordinate
+    let onePointInMeters = screenRadiusInMeters(1, at: coordinate)
+    return onePointInMeters > 0 ? meters / CGFloat(onePointInMeters) : meters
   }
 
   func handle(_ call: RufletMethodCall, completion: @escaping RufletMethodCompletion) {
@@ -630,6 +697,7 @@ final class MapModel: NSObject, ObservableObject, MKMapViewDelegate {
 #endif
 
 private final class FletTileOverlay: MKTileOverlay {
+  private static let cache = NSCache<NSURL, NSData>()
   let configuration: MapTileConfiguration
   var onError: ((String) -> Void)?
 
@@ -644,8 +712,14 @@ private final class FletTileOverlay: MKTileOverlay {
 
   override func loadTile(at path: MKTileOverlayPath,
     result: @escaping (Data?, (any Error)?) -> Void) {
+    guard configuration.contains(pathX: path.x, y: path.y, z: path.z) else {
+      result(nil, nil); return
+    }
     guard let url = configuration.url(pathX: path.x, y: path.y, z: path.z) else {
       result(nil, URLError(.badURL)); return
+    }
+    if let data = Self.cache.object(forKey: url as NSURL) {
+      result(data as Data, nil); return
     }
     load(url: url,
       fallback: configuration.url(pathX: path.x, y: path.y, z: path.z, fallback: true),
@@ -659,6 +733,7 @@ private final class FletTileOverlay: MKTileOverlay {
     URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
       let status = (response as? HTTPURLResponse)?.statusCode ?? 200
       if let data, error == nil, (200..<300).contains(status) {
+        Self.cache.setObject(data as NSData, forKey: url as NSURL)
         result(data, nil)
       } else if let fallback, fallback != url {
         self?.load(url: fallback, fallback: nil, result: result)

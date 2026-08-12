@@ -29,7 +29,10 @@ final class MapPluginParityTests: XCTestCase {
       try XCTUnwrap(ControlRegistry.builtInDescriptor(for: "ImageSourceAttribution"))
         .supportedEvents,
       ["click"])
-    XCTAssertNotNil(ControlRegistry.builtInDescriptor(for: "RichAttribution"))
+    XCTAssertEqual(
+      try XCTUnwrap(ControlRegistry.builtInDescriptor(for: "RichAttribution"))
+        .supportedEvents,
+      ["click"])
   }
 
   func testMapUsesPinnedFletCameraDefaults() {
@@ -39,6 +42,15 @@ final class MapPluginParityTests: XCTestCase {
     XCTAssertEqual(MapControlSemantics.initialZoom, 13)
     XCTAssertEqual(MapControlSemantics.initialRotation, 0)
     XCTAssertEqual(MapControlSemantics.animationDurationMilliseconds, 500)
+    XCTAssertEqual(MapControlSemantics.backgroundColor, "grey300")
+  }
+
+  func testInteractionFlagsMatchFlutterMapBitContract() {
+    typealias Flags = MapControlSemantics.InteractiveFlag
+    XCTAssertEqual(Flags.all, 255)
+    XCTAssertTrue(Flags.contains(Flags.drag, Flags.drag))
+    XCTAssertFalse(Flags.contains(Flags.drag, Flags.rotate, Flags.pinchZoom))
+    XCTAssertTrue(Flags.contains(Flags.all, Flags.rotate, Flags.scrollWheelZoom))
   }
 
   func testCoordinateParserMatchesFletMissingComponentFallbacks() {
@@ -89,6 +101,8 @@ final class MapPluginParityTests: XCTestCase {
     XCTAssertFalse(defaults.zoomReverse)
     XCTAssertEqual(defaults.zoomOffset, 0)
     XCTAssertFalse(defaults.tms)
+    XCTAssertEqual(defaults.displayOpacity, 0)
+    XCTAssertEqual(defaults.displayDuration, 0.1)
 
     let configured = MapTileConfiguration(node: ControlNode(
       id: 2, type: "TileLayer", props: [
@@ -115,5 +129,22 @@ final class MapPluginParityTests: XCTestCase {
     XCTAssertEqual(
       configured.url(pathX: 0, y: 2, z: 4)?.absoluteString,
       "https://tiles.test/7/125")
+  }
+
+  func testTileBoundsAndDisplayModeUseFlutterMapSemantics() {
+    let configured = MapTileConfiguration(node: ControlNode(
+      id: 4, type: "TileLayer", props: [
+        "tile_bounds": .map([
+          "corner_1": .map(["latitude": .double(-10), "longitude": .double(-10)]),
+          "corner_2": .map(["latitude": .double(10), "longitude": .double(10)]),
+        ]),
+        "display_mode": .map([
+          "_type": .string("instantaneous"), "opacity": .double(0.7),
+        ]),
+      ]))
+    XCTAssertTrue(configured.contains(pathX: 0, y: 0, z: 0))
+    XCTAssertFalse(configured.contains(pathX: 0, y: 0, z: 1))
+    XCTAssertEqual(configured.displayOpacity, 0.7)
+    XCTAssertEqual(configured.displayDuration, 0)
   }
 }
