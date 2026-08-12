@@ -729,10 +729,23 @@ private struct DecorationModifier: ViewModifier {
 private struct ControlStateModifier: ViewModifier {
   let node: ControlNode
 
+  @ViewBuilder
   func body(content: Content) -> some View {
-    content
-      .disabled(node.bool("disabled") ?? false)
-      .accessibilityLabel(node.string("semantics_label") ?? "")
+    let disabled = content.disabled(node.bool("disabled") ?? false)
+    if let label = RufletControlStateSemantics.label(for: node) {
+      disabled.accessibilityLabel(label)
+    } else {
+      // An omitted label must leave the native control's accessibility tree
+      // alone. Applying an empty label here erases the label supplied by
+      // Button, Toggle, Picker and the platform text-input bridges.
+      disabled
+    }
+  }
+}
+
+enum RufletControlStateSemantics {
+  static func label(for node: ControlNode) -> String? {
+    node.props["semantics_label"]?.stringValue
   }
 }
 

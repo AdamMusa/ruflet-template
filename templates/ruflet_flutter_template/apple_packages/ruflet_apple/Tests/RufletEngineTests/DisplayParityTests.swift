@@ -384,11 +384,13 @@ final class DisplayParityTests: XCTestCase {
     XCTAssertNil(RufletLinearProgressMetrics(node: node("ProgressBar")).value)
   }
 
-  func testProgressBarStopIndicatorUsesThePrimaryRoleUnlessColoured() {
-    XCTAssertEqual(
+  func testDisplayColorsRemainNativeUnlessExplicitlyColoured() {
+    XCTAssertNil(
       RufletThemeDefaults.resolvedDisplayColorToken(
-        for: node("ProgressBar"), property: "stop_indicator_color"),
-      "primary")
+        for: node("ProgressBar"), property: "stop_indicator_color"))
+    XCTAssertNil(
+      RufletThemeDefaults.resolvedDisplayColorToken(
+        for: node("Markdown"), property: "link_color"))
     XCTAssertEqual(
       RufletThemeDefaults.resolvedDisplayColorToken(
         for: node("ProgressBar", ["stop_indicator_color": .string("green")]),
@@ -667,14 +669,14 @@ final class DisplayParityTests: XCTestCase {
 
   // MARK: - Markdown style sheet
 
-  /// `MarkdownStyleSheet.fromTheme` supplies these when Ruby sent no sheet, and
-  /// an explicit sheet replaces them one key at a time.
-  func testMarkdownStyleSheetFallsBackToTheFlutterThemeSheet() {
+  /// Layout values follow the wire while concrete type sizes follow the native
+  /// Apple font metrics. An explicit sheet still replaces keys one at a time.
+  func testMarkdownStyleSheetUsesNativeAppleTypeMetrics() {
     let plain = RufletMarkdownStyleSheet(node: node("Markdown"))
     XCTAssertEqual(plain.blockSpacing, 8)
     XCTAssertEqual(plain.listIndent, 24)
     XCTAssertEqual(plain.ruleThickness, 5)
-    XCTAssertEqual(plain.codeFontSize, 14 * 0.85)
+    XCTAssertEqual(plain.codeFontSize, RufletThemeDefaults.markdownBodyFontSize)
 
     let styled = RufletMarkdownStyleSheet(
       node: node(
@@ -688,7 +690,7 @@ final class DisplayParityTests: XCTestCase {
   /// multiplies whatever size `latex_style` asked for.
   func testMarkdownLatexScaleFactorMultipliesTheLatexTextSize() {
     let plain = RufletMarkdownStyleSheet(node: node("Markdown"))
-    XCTAssertEqual(plain.latexFontSize, 14)
+    XCTAssertEqual(plain.latexFontSize, RufletThemeDefaults.markdownBodyFontSize)
 
     let scaled = RufletMarkdownStyleSheet(
       node: node(

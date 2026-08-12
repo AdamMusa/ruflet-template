@@ -1666,8 +1666,7 @@ struct RufletMarkdownDocument: Equatable {
   }
 }
 
-/// Flutter's `MarkdownStyleSheet`, resolved from `md_style_sheet` over
-/// `MarkdownStyleSheet.fromTheme`.
+/// Flet's Markdown wire style, resolved over Apple-native omitted defaults.
 ///
 /// `code_style_sheet` is the separate sheet Flet hands its code builder, which
 /// is why the code block's own padding, decoration and text style are read
@@ -1706,7 +1705,7 @@ struct RufletMarkdownStyleSheet {
 
     extensions = RufletMarkdownExtensionSet(node.string("extension_set"))
 
-    // The type ramp `MarkdownStyleSheet.fromTheme` reads out of `TextTheme`.
+    // Flet style roles are mapped onto the native Apple typography ramp.
     paragraph = Self.style(sheet, "p_text_style", theme: "bodyMedium")
     headings = [
       Self.style(sheet, "h1_text_style", theme: "headlineSmall"),
@@ -1747,7 +1746,7 @@ struct RufletMarkdownStyleSheet {
       ?? Self.decorationColor(codeSheet, "codeblock_decoration")
       ?? MaterialPalette.color(
         RufletThemeDefaults.resolvedDisplayColorToken(for: node, property: "codeblock_color"),
-        default: .clear)
+        default: .secondary.opacity(0.08))
     codeBlockRadius = Self.decorationRadius(codeSheet, "codeblock_decoration")
       ?? RufletThemeDefaults.markdownCodeblockRadius
 
@@ -1756,7 +1755,7 @@ struct RufletMarkdownStyleSheet {
     blockquoteBackground = Self.decorationColor(sheet, "blockquote_decoration")
       ?? MaterialPalette.color(
         RufletThemeDefaults.resolvedDisplayColorToken(for: node, property: "blockquote_color"),
-        default: .clear)
+        default: .secondary.opacity(0.08))
     blockquoteRadius = Self.decorationRadius(sheet, "blockquote_decoration")
       ?? RufletThemeDefaults.markdownBlockquoteRadius
 
@@ -1764,7 +1763,7 @@ struct RufletMarkdownStyleSheet {
     // which is the whole rule once it is drawn on its own.
     let divider = MaterialPalette.color(
       RufletThemeDefaults.resolvedDisplayColorToken(for: node, property: "divider_color"),
-      default: .clear)
+      default: .secondary.opacity(0.35))
     ruleColor = Self.borderColor(sheet, "horizontal_rule_decoration") ?? divider
     ruleThickness = Self.borderWidth(sheet, "horizontal_rule_decoration")
       ?? RufletThemeDefaults.markdownRuleThickness

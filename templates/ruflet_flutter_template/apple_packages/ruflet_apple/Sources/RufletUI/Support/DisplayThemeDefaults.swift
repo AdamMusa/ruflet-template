@@ -1,51 +1,29 @@
 import RufletEngine
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 
-/// The Material and Flutter constants the display family resolves from
-/// `ThemeData` rather than from the wire.
+/// Wire defaults and layout constants used by the display family.
 ///
-/// These sit beside `RufletThemeDefaults` instead of inside it so Icon, Image,
-/// CircleAvatar, the two progress indicators and Markdown can be ported
-/// without touching the table every other control family shares.
+/// Visual properties omitted by the DSL intentionally have no token here:
+/// native Apple controls and semantic colors own their defaults.
 extension RufletThemeDefaults {
 
   // MARK: - Colour roles
 
-  /// Roles Flet never puts on the wire because the Flutter widget resolves
-  /// them from the theme itself.
+  /// Returns only a renderer-owned token. Apple display controls currently
+  /// own no implicit wire color tokens; explicit values are resolved by
+  /// `resolvedDisplayColorToken` below.
   static func displayColorToken(control: String, property: String) -> String? {
-    switch (control, property) {
-    // Flutter's CircleAvatar under Material 3 fills with the primary container
-    // and writes its initials in the matching `on` role.
-    case ("CircleAvatar", "bgcolor"):
-      return "primarycontainer"
-    case ("CircleAvatar", "color"):
-      return "onprimarycontainer"
-
-    // `_LinearProgressIndicatorDefaultsM3.stopIndicatorColor`.
-    case ("ProgressBar", "stop_indicator_color"):
-      return "primary"
-
-    // `MarkdownStyleSheet.fromTheme` paints links Material blue, quotes on a
-    // blue-100 card, and takes the rule and table borders from the theme's
-    // divider colour. `theme.cardColor` is `surfaceContainerLow` under M3.
-    case ("Markdown", "link_color"):
-      return "blue"
-    case ("Markdown", "blockquote_color"):
-      return "blue100"
-    case ("Markdown", "codeblock_color"):
-      return "surfacecontainerlow"
-    case ("Markdown", "divider_color"):
-      return "outlinevariant"
-
-    default:
-      return nil
-    }
+    nil
   }
 
-  /// The explicit wire colour when Ruby supplied one, otherwise the pinned
-  /// Flutter role above. Tests compare tokens rather than platform `Color`s,
-  /// which is why resolution stops at the string.
+  /// The explicit wire colour when Ruby supplied one, otherwise a renderer
+  /// token if this platform ever needs one. Resolution stops at the string so
+  /// named DSL colors remain source-of-truth values.
   static func resolvedDisplayColorToken(for node: ControlNode, property: String) -> String? {
     if let explicit = node.props[property]?.stringValue,
       !explicit.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -100,11 +78,19 @@ extension RufletThemeDefaults {
   static let markdownTablePadding = EdgeInsets(top: 0, leading: 0, bottom: 4, trailing: 0)
   static let markdownTableCellPadding = EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
 
-  /// Material's `bodyMedium` is 14pt, and `fromTheme` renders code at 85% of
-  /// it. Both numbers are needed because the code block is drawn with an
-  /// explicit monospaced face rather than a font family name.
-  static let markdownBodyFontSize: CGFloat = 14
-  static let markdownCodeFontScale: CGFloat = 0.85
+  /// The Markdown renderer needs a concrete point size for LaTeX and code.
+  /// Follow Dynamic Type's native body/callout face instead of pinning the
+  /// Material `bodyMedium` size into the Apple renderer.
+  static var markdownBodyFontSize: CGFloat {
+    #if canImport(UIKit)
+    UIFont.preferredFont(forTextStyle: .callout).pointSize
+    #elseif canImport(AppKit)
+    NSFont.systemFontSize
+    #else
+    14
+    #endif
+  }
+  static let markdownCodeFontScale: CGFloat = 1
 
   /// `LatexElementBuilder` leaves its scale factor at 1 when Flet sends none.
   static let markdownLatexScaleFactor: CGFloat = 1

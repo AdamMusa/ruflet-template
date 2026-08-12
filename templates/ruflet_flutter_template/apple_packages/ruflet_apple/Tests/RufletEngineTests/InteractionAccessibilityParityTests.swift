@@ -1,9 +1,26 @@
 import CoreGraphics
+import RufletEngine
 import RufletProtocol
 @testable import RufletUI
 import XCTest
 
 final class InteractionAccessibilityParityTests: XCTestCase {
+  private func node(_ type: String = "Text", _ props: [String: RufletValue] = [:]) -> ControlNode {
+    ControlNode(id: 1, type: type, props: props)
+  }
+
+  func testOmittedSharedSemanticLabelPreservesTheNativeAccessibilityLabel() {
+    XCTAssertNil(RufletControlStateSemantics.label(for: node()))
+    XCTAssertEqual(
+      RufletControlStateSemantics.label(
+        for: node("Text", ["semantics_label": .string("")])),
+      "")
+    XCTAssertEqual(
+      RufletControlStateSemantics.label(
+        for: node("Text", ["semantics_label": .string("Account balance")])),
+      "Account balance")
+  }
+
   func testGesturePayloadsUseVendoredFletCompactKeys() {
     XCTAssertEqual(
       RufletInteractionParity.tap(
