@@ -401,7 +401,7 @@ public enum IconMapping {
     "home": "house", "home_filled": "house.fill",
 
     // Actions
-    "search": "magnifyingglass", "settings": "gearshape", "tune": "slider.horizontal.3",
+    "search": "magnifyingglass", "settings": "gearshape.fill", "tune": "slider.horizontal.3",
     "filter_list": "line.3.horizontal.decrease", "filter_alt": "line.3.horizontal.decrease.circle",
     "sort": "arrow.up.arrow.down", "refresh": "arrow.clockwise",
     "sync": "arrow.triangle.2.circlepath",
@@ -552,7 +552,7 @@ public enum IconMapping {
     "local_fire_department": "flame.fill", "restaurant": "fork.knife",
     "local_cafe": "cup.and.saucer.fill", "fitness_center": "dumbbell.fill",
     "sports_esports": "gamecontroller.fill", "emoji_events": "trophy.fill",
-    "auto_awesome": "sparkles", "animation": "circle.grid.cross.fill",
+    "auto_awesome": "sparkles", "animation": "atom",
     "rocket_launch": "rocket.fill",
     "psychology": "brain", "gavel": "hammer",
     "qr_code": "qrcode", "qr_code_scanner": "qrcode.viewfinder",
@@ -575,7 +575,7 @@ public enum IconMapping {
     // SF Symbols has no rocket on Ruflet's supported Apple deployment floor.
     // An aircraft taking off preserves Material's launch meaning; paperplane
     // means send and was visibly wrong for Ruby's `rocket_launch` token.
-    "rocket_launch": "airplane.departure",
+    "rocket_launch": "airplane",
   ]
 }
 
