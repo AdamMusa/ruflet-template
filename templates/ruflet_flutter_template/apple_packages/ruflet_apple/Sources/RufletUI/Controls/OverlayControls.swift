@@ -258,9 +258,9 @@ enum OverlayDefaults {
       actionOverflowThreshold: node.double("action_overflow_threshold") ?? 0.25)
   }
 
-  static func bannerContentPadding(_ node: ControlNode) -> EdgeInsets {
+  static func bannerContentPadding(_ node: ControlNode, visibleActionCount: Int? = nil) -> EdgeInsets {
     if let explicit = ControlProps.edgeInsets(node.props["content_padding"]) { return explicit }
-    let singleRow = node.controlIDs(forKey: "actions").count == 1
+    let singleRow = (visibleActionCount ?? node.controlIDs(forKey: "actions").count) == 1
       && node.bool("force_actions_below") != true
     return singleRow
       ? EdgeInsets(top: 2, leading: 16, bottom: 0, trailing: 0)
@@ -279,6 +279,9 @@ enum OverlayDefaults {
   static func bannerValidation(
     _ node: ControlNode, content: ControlNode?, visibleActionCount: Int
   ) -> String? {
+    if case .string? = node.props["content"] {
+      return visibleActionCount > 0 ? nil : bannerMissingActionsError
+    }
     if let error = RufletRequiredContent.validationError(
       contentID: node.controlID(forKey: "content"), content: content,
       message: bannerMissingContentError)
@@ -904,11 +907,8 @@ struct BannerControlView: View {
   @ViewBuilder
   var body: some View {
     let contentID = node.controlID(forKey: "content")
-    let visibleActionCount = node.controlIDs(forKey: "actions").reduce(into: 0) { count, id in
-      if RufletRequiredContent.isVisible(store.node(id)) { count += 1 }
-    }
     if let validation = OverlayDefaults.bannerValidation(
-      node, content: contentID.flatMap(store.node), visibleActionCount: visibleActionCount)
+      node, content: contentID.flatMap(store.node), visibleActionCount: visibleActionIDs.count)
     {
       Text(validation).font(.caption).foregroundStyle(.red)
     } else {
@@ -917,7 +917,7 @@ struct BannerControlView: View {
   }
 
   private var banner: some View {
-    let singleRow = node.controlIDs(forKey: "actions").count == 1
+    let singleRow = visibleActionIDs.count == 1
       && node.bool("force_actions_below") != true
     let elevation = CGFloat(node.double("elevation") ?? 0)
     return VStack(spacing: 0) {
@@ -930,7 +930,8 @@ struct BannerControlView: View {
         bannerContent
         if singleRow { actionBar }
       }
-      .padding(OverlayDefaults.bannerContentPadding(node))
+      .padding(OverlayDefaults.bannerContentPadding(
+        node, visibleActionCount: visibleActionIDs.count))
       if !singleRow { actionBar }
       if elevation == 0 {
         Rectangle()
@@ -958,16 +959,33 @@ struct BannerControlView: View {
       ControlView(id: contentID, axis: .none)
         .rufletTextStyle(RufletTextStyle(node: node, styleKey: "content_text_style"))
         .frame(maxWidth: .infinity, alignment: .leading)
+    } else if case .string(let content)? = node.props["content"] {
+      Text(content)
+        .rufletTextStyle(RufletTextStyle(node: node, styleKey: "content_text_style"))
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
   }
 
   private var actionBar: some View {
     HStack(spacing: 8) {
       Spacer(minLength: 0)
-      ControlList(ids: node.controlIDs(forKey: "actions"), axis: .horizontal)
+      ControlList(ids: visibleActionIDs, axis: .horizontal)
     }
     .padding(.horizontal, 8)
     .frame(minHeight: CGFloat(node.double("min_action_bar_height") ?? 52))
+  }
+
+  private var visibleActionIDs: [Int] {
+    BannerSlots.visibleActionIDs(
+      node, visibilityForID: { id in store.node(id).map { $0.bool("visible") != false } })
+  }
+}
+
+enum BannerSlots {
+  static func visibleActionIDs(
+    _ node: ControlNode, visibilityForID: (Int) -> Bool?
+  ) -> [Int] {
+    node.controlIDs(forKey: "actions").filter { visibilityForID($0) == true }
   }
 }
 
