@@ -330,12 +330,28 @@ public final class ControlStore: ObservableObject {
   /// it agrees, sends back a patch carrying the same value — which lands here
   /// as a no-op. When Ruby's handler decides otherwise, its patch wins.
   public func setLocalProperty(_ id: Int, key: String, value: RufletValue) {
-    let previousNodes = nodes
     guard var node = nodes[id] else { return }
     guard node.props[key] != value else { return }
+
+    // Local native edits change a scalar on one already-materialized node.
+    // Running the full patch finalizer here copied the entire node dictionary,
+    // walked inheritance, and garbage-collected the whole tree for every
+    // keystroke. That made holding Backspace visibly lag in large apps.
+    // Only disabled/adaptive can affect descendants; preserve the full pass
+    // for those rare inherited properties and keep ordinary input O(1).
+    if key == "disabled" || key == "adaptive" {
+      let previousNodes = nodes
+      node.props[key] = value
+      nodes[id] = node
+      _ = finishApply(touched: [id], previousNodes: previousNodes)
+      return
+    }
+
     node.props[key] = value
     nodes[id] = node
-    _ = finishApply(touched: [id], previousNodes: previousNodes)
+    lastChangedIDs = [id]
+    revision &+= 1
+    objectWillChange.send()
   }
 
   public func reset() {

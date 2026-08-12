@@ -163,6 +163,18 @@ final class ControlPatchParityTests: XCTestCase {
     XCTAssertTrue(store.lastChangedIDs.isEmpty)
   }
 
+  func testLocalScalarEditInvalidatesOnlyItsControl() {
+    let store = pageStore(controls: [text(100, "before"), text(101, "other")])
+    let revision = store.revision
+
+    store.setLocalProperty(100, key: "value", value: .string("after"))
+
+    XCTAssertEqual(store.node(100)?.string("value"), "after")
+    XCTAssertEqual(store.node(101)?.string("value"), "other")
+    XCTAssertEqual(store.lastChangedIDs, [100])
+    XCTAssertEqual(store.revision, revision + 1)
+  }
+
   func testMalformedPatchIsRejectedAtomically() {
     let store = pageStore(controls: [text(100, "A")])
     let before = store.nodes
