@@ -934,26 +934,28 @@ private struct CupertinoCheckboxSelectionView: View {
 
   @ViewBuilder
   private func mark(_ presentation: CupertinoCheckboxPresentation) -> some View {
-    let image = Image(systemName: presentation.symbolName)
-      .font(.system(size: CupertinoCheckboxPresentation.visualSize, weight: .semibold))
-      .frame(
-        width: CupertinoCheckboxPresentation.visualSize,
-        height: CupertinoCheckboxPresentation.visualSize)
-      .background(
+    ZStack {
+      if presentation.value == false {
+        // The empty `square` SF Symbol can disappear under palette rendering
+        // because it has only one layer. A native rounded outline preserves
+        // Cupertino's adaptive inactive colour on light and dark surfaces.
         RoundedRectangle(cornerRadius: presentation.cornerRadius, style: .continuous)
-          .stroke(
-            presentation.focused ? presentation.focusColor : .clear,
-            lineWidth: CupertinoCheckboxPresentation.focusOutlineWidth))
-    if presentation.value == false {
-      // `square` is a single-layer SF Symbol. Palette rendering uses the first
-      // colour only, which is the check colour and made an unchecked box white
-      // on a white surface. The outline owns the inactive colour instead.
-      image.foregroundColor(presentation.fillColor)
-    } else {
-      image
-        .symbolRenderingMode(.palette)
-        .foregroundStyle(presentation.markColor, presentation.fillColor)
+          .stroke(presentation.fillColor, lineWidth: 1.5)
+      } else {
+        Image(systemName: presentation.symbolName)
+          .symbolRenderingMode(.palette)
+          .foregroundStyle(presentation.markColor, presentation.fillColor)
+          .font(.system(size: CupertinoCheckboxPresentation.visualSize, weight: .semibold))
+      }
     }
+    .frame(
+      width: CupertinoCheckboxPresentation.visualSize,
+      height: CupertinoCheckboxPresentation.visualSize)
+    .background(
+      RoundedRectangle(cornerRadius: presentation.cornerRadius, style: .continuous)
+        .stroke(
+          presentation.focused ? presentation.focusColor : .clear,
+          lineWidth: CupertinoCheckboxPresentation.focusOutlineWidth))
   }
 
   private func advance() {
@@ -1090,24 +1092,23 @@ private struct CupertinoRadioSelectionView: View {
   }
   @ViewBuilder
   private func mark(_ presentation: CupertinoRadioPresentation) -> some View {
-    let image = Image(systemName: presentation.symbolName)
-      .font(.system(size: CupertinoRadioPresentation.visualSize, weight: .semibold))
-      .frame(
-        width: CupertinoRadioPresentation.visualSize,
-        height: CupertinoRadioPresentation.visualSize)
-      .background(
-        Circle().stroke(
-          presentation.focused ? presentation.focusColor : .clear,
-          lineWidth: CupertinoRadioPresentation.focusOutlineWidth))
-    if presentation.selected {
-      image
-        .symbolRenderingMode(.palette)
-        .foregroundStyle(presentation.innerColor, presentation.outerColor)
-    } else {
-      // Like `square`, the unselected `circle` is one layer and must take the
-      // inactive outer-ring colour rather than the selected inner-dot colour.
-      image.foregroundColor(presentation.outerColor)
+    ZStack {
+      if presentation.selected {
+        Image(systemName: presentation.symbolName)
+          .symbolRenderingMode(.palette)
+          .foregroundStyle(presentation.innerColor, presentation.outerColor)
+          .font(.system(size: CupertinoRadioPresentation.visualSize, weight: .semibold))
+      } else {
+        Circle().stroke(presentation.outerColor, lineWidth: 1.5)
+      }
     }
+    .frame(
+      width: CupertinoRadioPresentation.visualSize,
+      height: CupertinoRadioPresentation.visualSize)
+    .background(
+      Circle().stroke(
+        presentation.focused ? presentation.focusColor : .clear,
+        lineWidth: CupertinoRadioPresentation.focusOutlineWidth))
   }
 
   private func select(_ presentation: CupertinoRadioPresentation, toggleIfSelected: Bool) {
