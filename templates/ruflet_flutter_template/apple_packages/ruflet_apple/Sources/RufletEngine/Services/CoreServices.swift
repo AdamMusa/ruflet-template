@@ -378,8 +378,10 @@ public final class PageService: RufletStreamingService {
       #endif
 
     case "take_screenshot":
-      completion(.failure(RufletServiceError.platformUnsupported(
-        type: node?.type ?? "Page", method: call.name, platform: Self.platformName)))
+      // The mounted Page view claims this method and returns PNG bytes. If no
+      // Page boundary is mounted, Flet's `_rootKey.currentContext` is null and
+      // the method resolves to null rather than raising an unsupported error.
+      completion(.success(.null))
 
     case "confirm_pop":
       guard let node else {
