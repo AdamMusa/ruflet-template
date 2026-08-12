@@ -892,17 +892,28 @@ struct SafeAreaControlView: View {
   let node: ControlNode
 
   var body: some View {
-    Group {
-      if let contentID = node.controlID(forKey: "content") {
-        ControlView(id: contentID, axis: .none)
-      } else {
-        ControlList(ids: node.childIDs, axis: .vertical)
+    GeometryReader { geometry in
+      let padding = SafeAreaInsetMath.resolved(
+        safeArea: geometry.safeAreaInsets,
+        minimum: ControlProps.edgeInsets(node.props["minimum_padding"]) ?? EdgeInsets(),
+        left: node.bool("avoid_intrusions_left") != false,
+        top: node.bool("avoid_intrusions_top") != false,
+        right: node.bool("avoid_intrusions_right") != false,
+        bottom: node.bool("avoid_intrusions_bottom") != false)
+      Group {
+        if let contentID = node.controlID(forKey: "content") {
+          ControlView(id: contentID, axis: .none)
+        } else {
+          ControlList(ids: node.childIDs, axis: .vertical)
+        }
       }
+      .padding(padding)
+      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
-    .padding(ControlProps.edgeInsets(node.props["minimum_padding"]) ?? EdgeInsets())
-    // SwiftUI already applies the active safe area. Match Flet's property
-    // names so a control can explicitly opt an edge out of that protection.
-    .modifier(SafeAreaEdges(node: node))
+    // Flutter's SafeArea occupies the full incoming box and consumes the
+    // selected MediaQuery padding itself. Do the same rather than stacking
+    // SwiftUI's implicit safe area and `minimum` additively.
+    .ignoresSafeArea(.container)
     // `maintain_bottom_view_padding` keeps the bottom inset while the
     // keyboard is up rather than letting it collapse.
     .modifier(
@@ -910,16 +921,16 @@ struct SafeAreaControlView: View {
   }
 }
 
-private struct SafeAreaEdges: ViewModifier {
-  let node: ControlNode
-
-  func body(content: Content) -> some View {
-    var ignored: Edge.Set = []
-    if node.bool("avoid_intrusions_top") == false { ignored.insert(.top) }
-    if node.bool("avoid_intrusions_bottom") == false { ignored.insert(.bottom) }
-    if node.bool("avoid_intrusions_left") == false { ignored.insert(.leading) }
-    if node.bool("avoid_intrusions_right") == false { ignored.insert(.trailing) }
-    return content.edgesIgnoringSafeArea(ignored)
+enum SafeAreaInsetMath {
+  static func resolved(
+    safeArea: EdgeInsets, minimum: EdgeInsets,
+    left: Bool, top: Bool, right: Bool, bottom: Bool
+  ) -> EdgeInsets {
+    EdgeInsets(
+      top: max(top ? safeArea.top : 0, minimum.top),
+      leading: max(left ? safeArea.leading : 0, minimum.leading),
+      bottom: max(bottom ? safeArea.bottom : 0, minimum.bottom),
+      trailing: max(right ? safeArea.trailing : 0, minimum.trailing))
   }
 }
 
@@ -927,9 +938,13 @@ private struct SafeAreaEdges: ViewModifier {
 struct DividerControlView: View {
   let node: ControlNode
   let isVertical: Bool
+  @Environment(\.displayScale) private var displayScale
 
   var body: some View {
-    let thickness = CGFloat(node.double("thickness") ?? 1)
+    // Flutter's omitted/zero BorderSide width is a one-device-pixel hairline,
+    // not one logical point.
+    let requested = node.double("thickness")
+    let thickness = DividerGeometry.thickness(requested, displayScale: displayScale)
     let color = MaterialPalette.color(
       for: node, property: "color", default: .gray.opacity(0.3))
     let extent = CGFloat(node.double("height") ?? node.double("width") ?? 16)
@@ -945,6 +960,13 @@ struct DividerControlView: View {
       .frame(
         width: isVertical ? extent : nil,
         height: isVertical ? nil : extent)
+  }
+}
+
+enum DividerGeometry {
+  static func thickness(_ requested: Double?, displayScale: CGFloat) -> CGFloat {
+    guard let requested, requested > 0 else { return 1 / max(displayScale, 1) }
+    return CGFloat(requested)
   }
 }
 

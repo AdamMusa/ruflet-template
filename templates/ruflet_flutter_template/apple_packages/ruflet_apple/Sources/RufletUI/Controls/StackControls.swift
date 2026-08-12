@@ -339,7 +339,10 @@ struct ScrollableStack: ViewModifier {
   @StateObject private var nativeDriver = RufletNativeScrollDriver()
   @State private var viewportExtent: CGFloat = 0
   @State private var previousPixels: CGFloat = 0
-  @State private var lastScrollReport = Date.distantPast
+  @State private var lastScrollReports: [String: Date] = [:]
+  @State private var hasScrollSample = false
+  @State private var scrollEndToken = UUID()
+  @State private var isScrolling = false
 
   func body(content: Content) -> some View {
     if scrolls {
@@ -371,22 +374,27 @@ struct ScrollableStack: ViewModifier {
         // `on_scroll` subscription. Always publish the real body offset.
         scaffold?.reportScroll(sourceID: node.id, offset: max(0, sample.pixels))
         guard node.handlesEvent("scroll") else { return }
-        // `scroll_interval` throttles the stream the way Flet throttles its
-        // own; zero reports every sample.
-        let interval = TimeInterval(node.int("scroll_interval") ?? 10) / 1_000
-        guard Date().timeIntervalSince(lastScrollReport) >= interval else { return }
-        lastScrollReport = Date()
         let pixels = max(0, sample.pixels)
         let delta = pixels - previousPixels
+        guard hasScrollSample else {
+          hasScrollSample = true
+          previousPixels = pixels
+          return
+        }
+        guard abs(delta) > 0.001 else { return }
+        if !isScrolling {
+          isScrolling = true
+          reportScroll(type: "start", sample: sample, pixels: pixels)
+        }
+        reportScroll(type: "update", sample: sample, pixels: pixels, delta: delta)
         previousPixels = pixels
-        events.fire(node, "scroll", data: .map([
-          "pixels": .double(Double(pixels)),
-          "min_scroll_extent": .double(0),
-          "max_scroll_extent": .double(Double(max(0, sample.contentExtent - viewportExtent))),
-          "viewport_dimension": .double(Double(viewportExtent)),
-          "event_type": .string("update"),
-          "scroll_delta": .double(Double(delta)),
-        ]))
+        let token = UUID()
+        scrollEndToken = token
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+          guard scrollEndToken == token else { return }
+          isScrolling = false
+          reportScroll(type: "end", sample: sample, pixels: pixels)
+        }
       }
       // `auto_scroll` keeps the end in view as children arrive, which is what
       // Flet's auto-scrolling controller does.
@@ -433,6 +441,24 @@ struct ScrollableStack: ViewModifier {
         || candidate.props["key"]?.intValue.map(String.init) == name
     })?.id
   }
+
+  private func reportScroll(
+    type: String, sample: StackScrollSample, pixels: CGFloat, delta: CGFloat? = nil
+  ) {
+    let now = Date()
+    let interval = TimeInterval(node.int("scroll_interval") ?? 10) / 1_000
+    if let previous = lastScrollReports[type], now.timeIntervalSince(previous) <= interval { return }
+    lastScrollReports[type] = now
+    var data: [String: RufletValue] = [
+      "pixels": .double(Double(pixels)),
+      "min_scroll_extent": .double(0),
+      "max_scroll_extent": .double(Double(max(0, sample.contentExtent - viewportExtent))),
+      "viewport_dimension": .double(Double(viewportExtent)),
+      "event_type": .string(type),
+    ]
+    if let delta { data["scroll_delta"] = .double(Double(delta)) }
+    events.fire(node, "scroll", data: .map(data))
+  }
 }
 
 private struct StackScrollSample: Equatable {
@@ -462,31 +488,31 @@ struct StackControlView: View {
   @EnvironmentObject private var store: ControlStore
 
   var body: some View {
-    let alignment = ControlProps.alignment(node.props["alignment"]) ?? .topLeading
+    let alignment = ControlProps.continuousAlignment(node.props["alignment"]) ?? .topLeft
 
-    ZStack(alignment: alignment) {
+    ZStack {
       ForEach(node.childIDs, id: \.self) { childID in
         if let child = store.node(childID), isPositioned(child) {
           PositionedChild(node: child, alignment: alignment)
         } else {
-          ControlView(id: childID, axis: .none)
+          RufletStackAlignedChild(alignment: alignment, fit: stackFit) {
+            ControlView(id: childID, axis: .none)
+          }
             // `fit: expand` makes every non-positioned child fill the stack;
             // `passthrough` leaves the constraints alone.
-            .frame(
-              maxWidth: expandsChildren ? .infinity : nil,
-              maxHeight: expandsChildren ? .infinity : nil)
         }
       }
     }
     .modifier(StackClip(behavior: node.rufletString("clip_behavior")))
   }
 
-  private var expandsChildren: Bool {
-    node.string("fit")?.lowercased() == "expand"
+  private var stackFit: RufletStackFit {
+    RufletStackFit(rawValue: node.string("fit")?.lowercased() ?? "loose") ?? .loose
   }
 
   private func isPositioned(_ child: ControlNode) -> Bool {
-    ["left", "top", "right", "bottom"].contains { child.props[$0]?.doubleValue != nil }
+    child.props["animate_position"] != nil
+      || ["left", "top", "right", "bottom"].contains { child.props[$0]?.doubleValue != nil }
   }
 }
 
@@ -497,15 +523,74 @@ private struct StackClip: ViewModifier {
   }
 }
 
+/// Gives every loose Stack child the Stack's bounds and positions its own
+/// intrinsic box with Flutter's continuous Alignment(x, y) formula.
+private struct RufletStackAlignedChild<Content: View>: View {
+  let alignment: RufletAlignment
+  let fit: RufletStackFit
+  @ViewBuilder let content: () -> Content
+
+  var body: some View {
+    if #available(iOS 16.0, macOS 13.0, *) {
+      RufletStackAlignmentLayout(alignment: alignment, fit: fit) { content() }
+    } else {
+      content().frame(
+        maxWidth: fit == .expand ? .infinity : nil,
+        maxHeight: fit == .expand ? .infinity : nil,
+        alignment: .center)
+    }
+  }
+}
+
+@available(iOS 16.0, macOS 13.0, *)
+private struct RufletStackAlignmentLayout: Layout {
+  let alignment: RufletAlignment
+  let fit: RufletStackFit
+
+  func sizeThatFits(
+    proposal: ProposedViewSize, subviews: Subviews, cache: inout Void
+  ) -> CGSize {
+    guard let child = subviews.first else { return .zero }
+    let intrinsic = child.sizeThatFits(fit == .loose ? .unspecified : proposal)
+    return CGSize(
+      width: proposal.width.flatMap { $0.isFinite ? max($0, 0) : nil } ?? intrinsic.width,
+      height: proposal.height.flatMap { $0.isFinite ? max($0, 0) : nil } ?? intrinsic.height)
+  }
+
+  func placeSubviews(
+    in bounds: CGRect, proposal: ProposedViewSize,
+    subviews: Subviews, cache: inout Void
+  ) {
+    guard let child = subviews.first else { return }
+    let size: CGSize
+    switch fit {
+    case .expand: size = bounds.size
+    case .passthrough:
+      size = child.sizeThatFits(ProposedViewSize(width: bounds.width, height: bounds.height))
+    case .loose: size = child.sizeThatFits(.unspecified)
+    }
+    let origin = RufletGeometry.alignedOrigin(
+      alignment: alignment, containerSize: bounds.size, childSize: size)
+    child.place(
+      at: CGPoint(x: bounds.minX + origin.x, y: bounds.minY + origin.y),
+      anchor: .topLeading,
+      proposal: ProposedViewSize(width: size.width, height: size.height))
+  }
+}
+
+private enum RufletStackFit: String { case loose, expand, passthrough }
+
 /// A stack child that placed itself.
 private struct PositionedChild: View {
   let node: ControlNode
-  let alignment: Alignment
+  let alignment: RufletAlignment
 
   @ViewBuilder
   var body: some View {
-    let left = node.double("left")
-    let top = node.double("top")
+    let animated = node.props["animate_position"] != nil
+    let hasInsets = ["left", "top", "right", "bottom"].contains { node.double($0) != nil }
+    let left = node.double("left") ?? (animated && !hasInsets ? 0 : nil)
+    let top = node.double("top") ?? (animated && !hasInsets ? 0 : nil)
     let right = node.double("right")
     let bottom = node.double("bottom")
 
@@ -525,9 +610,7 @@ private struct PositionedChild: View {
       ControlView(id: node.id, axis: .none)
         .frame(
           maxWidth: .infinity, maxHeight: .infinity,
-          alignment: Alignment(
-            horizontal: left != nil ? .leading : (right != nil ? .trailing : alignment.horizontal),
-            vertical: top != nil ? .top : (bottom != nil ? .bottom : alignment.vertical))
+          alignment: .center
         )
         .offset(
           x: left.map { CGFloat($0) } ?? -(right.map { CGFloat($0) } ?? 0),
@@ -548,7 +631,7 @@ private struct RufletPositionedLayout: Layout {
   let top: CGFloat?
   let right: CGFloat?
   let bottom: CGFloat?
-  let alignment: Alignment
+  let alignment: RufletAlignment
 
   func sizeThatFits(
     proposal: ProposedViewSize, subviews: Subviews, cache: inout Void
@@ -605,13 +688,13 @@ enum PositionedConstraintMath {
   static func origin(
     container: CGSize, child: CGSize,
     left: CGFloat?, top: CGFloat?, right: CGFloat?, bottom: CGFloat?,
-    alignment: Alignment
+    alignment: RufletAlignment
   ) -> CGPoint {
     CGPoint(
       x: left ?? right.map { container.width - $0 - child.width }
-        ?? alignedOffset(available: container.width - child.width, alignment: alignment.horizontal),
+        ?? alignedOffset(available: container.width - child.width, alignment: alignment.x),
       y: top ?? bottom.map { container.height - $0 - child.height }
-        ?? alignedOffset(available: container.height - child.height, alignment: alignment.vertical))
+        ?? alignedOffset(available: container.height - child.height, alignment: alignment.y))
   }
 
   private static func finite(_ value: CGFloat?) -> CGFloat? {
@@ -619,20 +702,8 @@ enum PositionedConstraintMath {
     return max(value, 0)
   }
 
-  private static func alignedOffset(
-    available: CGFloat, alignment: HorizontalAlignment
-  ) -> CGFloat {
-    if alignment == .leading { return 0 }
-    if alignment == .trailing { return available }
-    return available / 2
-  }
-
-  private static func alignedOffset(
-    available: CGFloat, alignment: VerticalAlignment
-  ) -> CGFloat {
-    if alignment == .top { return 0 }
-    if alignment == .bottom { return available }
-    return available / 2
+  private static func alignedOffset(available: CGFloat, alignment: Double) -> CGFloat {
+    available * CGFloat((alignment + 1) / 2)
   }
 }
 
@@ -643,6 +714,7 @@ enum PositionedConstraintMath {
 struct ResponsiveRowControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
+  @State private var viewWidth: CGFloat = 0
 
   @ViewBuilder
   var body: some View {
@@ -653,6 +725,7 @@ struct ResponsiveRowControlView: View {
         spacing: node.props["spacing"],
         runSpacing: node.props["run_spacing"],
         breakpoints: ResponsiveGridMath.breakpoints(node.props["breakpoints"]),
+        breakpointWidth: viewWidth > 0 ? viewWidth : nil,
         alignment: node.string("alignment") ?? "start",
         verticalAlignment: node.string("vertical_alignment") ?? "start"
       ) {
@@ -668,6 +741,9 @@ struct ResponsiveRowControlView: View {
       // width. Claiming that proposal here prevents an intrinsic-width parent
       // Column from collapsing the whole 12-column grid to a narrow strip.
       .frame(maxWidth: .infinity, alignment: .leading)
+      .background(RufletViewportWidthReader { width in
+        if abs(viewWidth - width) > 0.5 { viewWidth = width }
+      })
     } else {
       VStack(alignment: .leading, spacing: 10) {
         ForEach(node.childIDs, id: \.self) { id in
@@ -679,6 +755,29 @@ struct ResponsiveRowControlView: View {
     }
   }
 }
+
+#if canImport(UIKit)
+private struct RufletViewportWidthReader: UIViewRepresentable {
+  let update: (CGFloat) -> Void
+  func makeUIView(context: Context) -> UIView { UIView(frame: .zero) }
+  func updateUIView(_ view: UIView, context: Context) {
+    DispatchQueue.main.async { update(view.window?.bounds.width ?? 0) }
+  }
+}
+#elseif canImport(AppKit)
+private struct RufletViewportWidthReader: NSViewRepresentable {
+  let update: (CGFloat) -> Void
+  func makeNSView(context: Context) -> NSView { NSView(frame: .zero) }
+  func updateNSView(_ view: NSView, context: Context) {
+    DispatchQueue.main.async { update(view.window?.contentView?.bounds.width ?? 0) }
+  }
+}
+#else
+private struct RufletViewportWidthReader: View {
+  let update: (CGFloat) -> Void
+  var body: some View { Color.clear }
+}
+#endif
 
 enum ResponsiveGridMath {
   static let childLayoutAxis: LayoutAxis = .tightHorizontal
@@ -758,6 +857,7 @@ private struct ResponsiveGridLayout: Layout {
   let spacing: RufletValue?
   let runSpacing: RufletValue?
   let breakpoints: [String: Double]
+  let breakpointWidth: CGFloat?
   let alignment: String
   let verticalAlignment: String
 
@@ -766,6 +866,8 @@ private struct ResponsiveGridLayout: Layout {
     let sizes: [CGSize]
     let width: CGFloat
     let height: CGFloat
+    let baselines: [CGFloat]
+    let baselineAbove: CGFloat
   }
 
   func sizeThatFits(
@@ -794,9 +896,10 @@ private struct ResponsiveGridLayout: Layout {
         let index = line.indices[position]
         let size = line.sizes[position]
         let verticalOffset: CGFloat
-        switch verticalAlignment.lowercased() {
+        switch verticalAlignment.lowercased().replacingOccurrences(of: "_", with: "") {
         case "center": verticalOffset = (line.height - size.height) / 2
         case "end": verticalOffset = line.height - size.height
+        case "baseline": verticalOffset = line.baselineAbove - line.baselines[position]
         default: verticalOffset = 0
         }
         subviews[index].place(
@@ -811,26 +914,27 @@ private struct ResponsiveGridLayout: Layout {
   private func resolved(width: CGFloat, subviews: Subviews)
     -> (lines: [Line], spacing: CGFloat, runSpacing: CGFloat)
   {
+    let responsiveWidth = breakpointWidth ?? width
     let columnCount = max(
       ResponsiveGridMath.value(
-        columns, default: 12, width: width, breakpoints: breakpoints), 1)
+        columns, default: 12, width: responsiveWidth, breakpoints: breakpoints), 1)
     let gridGap = CGFloat(
       ResponsiveGridMath.value(
-        spacing, default: 10, width: width, breakpoints: breakpoints))
+        spacing, default: 10, width: responsiveWidth, breakpoints: breakpoints))
     let placementGap = gridGap - 0.1
     let runGap = CGFloat(
       ResponsiveGridMath.value(
-        runSpacing, default: 10, width: width,
+        runSpacing, default: 10, width: responsiveWidth,
         breakpoints: ResponsiveGridMath.defaultBreakpoints))
     let resolvedSpans = subviews.indices.map { index in
       max(
         ResponsiveGridMath.value(
           index < spans.count ? spans[index] : nil,
-          default: 12, width: width, breakpoints: breakpoints), 0)
+          default: 12, width: responsiveWidth, breakpoints: breakpoints), 0)
     }
     let lineIndices = ResponsiveGridMath.lines(spans: resolvedSpans, columns: columnCount)
     let lines = lineIndices.map { indices -> Line in
-      let sizes = indices.map { index -> CGSize in
+      var sizes = indices.map { index -> CGSize in
         let itemWidth = ResponsiveGridMath.itemWidth(
           span: resolvedSpans[index], columns: columnCount, total: width, spacing: gridGap)
         let measured = subviews[index].sizeThatFits(
@@ -842,11 +946,28 @@ private struct ResponsiveGridLayout: Layout {
         return ResponsiveGridMath.constrainedItemSize(
           width: itemWidth, measured: measured)
       }
+      var baselines = indices.indices.map { position -> CGFloat in
+        let index = indices[position]
+        let dimensions = subviews[index].dimensions(
+          in: ProposedViewSize(width: sizes[position].width, height: sizes[position].height))
+        let baseline = dimensions[.firstTextBaseline]
+        return baseline.isFinite ? baseline : sizes[position].height
+      }
+      var baselineAbove = baselines.max() ?? 0
+      var lineHeight = sizes.map(\.height).max() ?? 0
+      if verticalAlignment.lowercased() == "baseline" {
+        let below = sizes.indices.map { max(sizes[$0].height - baselines[$0], 0) }.max() ?? 0
+        lineHeight = baselineAbove + below
+      } else if verticalAlignment.lowercased() == "stretch" {
+        sizes = sizes.map { CGSize(width: $0.width, height: lineHeight) }
+        baselines = sizes.map(\.height)
+        baselineAbove = lineHeight
+      }
       return Line(
         indices: indices, sizes: sizes,
         width: sizes.reduce(0) { $0 + $1.width }
           + placementGap * CGFloat(max(sizes.count - 1, 0)),
-        height: sizes.map(\.height).max() ?? 0)
+        height: lineHeight, baselines: baselines, baselineAbove: baselineAbove)
     }
     return (lines, placementGap, runGap)
   }

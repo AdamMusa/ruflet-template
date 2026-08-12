@@ -94,7 +94,9 @@ struct RufletFlexLayout: Layout {
 
     for index in subviews.indices {
       let size = result.sizes[index]
-      let crossOffset = crossOrigin(container: result.cross, child: cross(size))
+      let crossOffset = crossAlignment == .baseline
+        ? result.baselineAbove - result.baselines[index]
+        : crossOrigin(container: result.cross, child: cross(size))
       let point = axis == .horizontal
         ? CGPoint(x: bounds.minX + cursor, y: bounds.minY + crossOffset)
         : CGPoint(x: bounds.minX + crossOffset, y: bounds.minY + cursor)
@@ -145,10 +147,24 @@ struct RufletFlexLayout: Layout {
       }
     }
 
+    let baselines = subviews.indices.map { index -> CGFloat in
+      guard crossAlignment == .baseline, axis == .horizontal else { return cross(sizes[index]) }
+      let dimensions = subviews[index].dimensions(
+        in: ProposedViewSize(width: sizes[index].width, height: sizes[index].height))
+      let baseline = dimensions[.firstTextBaseline]
+      return baseline.isFinite ? baseline : sizes[index].height
+    }
+    let baselineAbove = baselines.max() ?? 0
+    let baselineBelow = sizes.indices.map {
+      max(cross(sizes[$0]) - baselines[$0], 0)
+    }.max() ?? 0
     let usedMain = sizes.reduce(0) { $0 + main($1) } + baseSpacing
     let mainSize = !tight ? (finiteMain ?? usedMain) : usedMain
-    let crossSize = sizes.map(cross).max() ?? 0
-    return Result(main: mainSize, cross: proposedCross ?? crossSize, sizes: sizes)
+    let measuredCross = crossAlignment == .baseline && axis == .horizontal
+      ? baselineAbove + baselineBelow : (sizes.map(cross).max() ?? 0)
+    return Result(
+      main: mainSize, cross: proposedCross ?? measuredCross, sizes: sizes,
+      baselines: baselines, baselineAbove: baselineAbove)
   }
 
   private func distributionOffsets(remaining: CGFloat, count: Int) -> (leading: CGFloat, between: CGFloat) {
@@ -182,5 +198,7 @@ struct RufletFlexLayout: Layout {
     let main: CGFloat
     let cross: CGFloat
     var sizes: [CGSize]
+    let baselines: [CGFloat]
+    let baselineAbove: CGFloat
   }
 }

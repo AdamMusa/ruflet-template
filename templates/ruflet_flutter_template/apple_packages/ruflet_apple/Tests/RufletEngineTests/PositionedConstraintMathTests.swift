@@ -21,7 +21,7 @@ final class PositionedConstraintMathTests: XCTestCase {
     let origin = PositionedConstraintMath.origin(
       container: CGSize(width: 300, height: 200), child: child,
       left: nil, top: nil, right: 25, bottom: 12,
-      alignment: .topLeading)
+      alignment: .topLeft)
 
     XCTAssertEqual(child, CGSize(width: 40, height: 30))
     XCTAssertEqual(origin, CGPoint(x: 235, y: 158))
