@@ -6,14 +6,25 @@ import RufletProtocol
 import GoogleMobileAds
 #endif
 
+/// Lifecycle decisions inherited from Flet's pinned `InterstitialAdService`.
+///
+/// The Dart service starts loading in `init()` and does not override `update()`,
+/// so later control-property patches must not start another request. A newly
+/// created service instance still gets its own initial load.
+public enum FletInterstitialAdSemantics {
+  public static func shouldLoad(hasInitialized: Bool) -> Bool {
+    !hasInitialized
+  }
+}
+
 @MainActor
 public final class InterstitialAdService: NSObject, RufletStreamingService {
   public static let wireType = "InterstitialAd"
 
   private var eventNode: ControlNode?
   private var eventContext: RufletServiceContext?
-  private var loadedConfiguration: Configuration?
   private var loadingConfiguration: Configuration?
+  private var hasInitialized = false
 
   #if os(iOS)
   // The pinned Flet service holds a static InterstitialAd reference, so a
@@ -26,11 +37,9 @@ public final class InterstitialAdService: NSObject, RufletStreamingService {
   public func activate(node: ControlNode, context: RufletServiceContext) {
     eventNode = node
     eventContext = context
-    let configuration = Configuration(node: node)
-    guard configuration != loadedConfiguration, configuration != loadingConfiguration else {
-      return
-    }
-    load(configuration)
+    guard FletInterstitialAdSemantics.shouldLoad(hasInitialized: hasInitialized) else { return }
+    hasInitialized = true
+    load(Configuration(node: node))
   }
 
   public func invoke(
@@ -77,7 +86,6 @@ public final class InterstitialAdService: NSObject, RufletStreamingService {
         guard let ad else { return }
         ad.fullScreenContentDelegate = self
         Self.loadedAd = ad
-        self.loadedConfiguration = configuration
         self.fire("load")
       }
     }

@@ -80,6 +80,11 @@ final class RufletAdsContractTests: XCTestCase {
         "currency_code": "USD",
       ]))
   }
+
+  func testInterstitialLoadsOnlyDuringPinnedServiceInitialization() {
+    XCTAssertTrue(FletInterstitialAdSemantics.shouldLoad(hasInitialized: false))
+    XCTAssertFalse(FletInterstitialAdSemantics.shouldLoad(hasInitialized: true))
+  }
 }
 
 @MainActor
