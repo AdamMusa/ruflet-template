@@ -112,6 +112,7 @@ public struct AudioRecorderConfiguration: Equatable, Sendable {
   private static let androidAudioSources = [
     "defaultsource": "defaultSource", "mic": "mic", "voiceuplink": "voiceUplink",
     "voicedownlink": "voiceDownlink", "voicecall": "voiceCall",
+    "voicerecognition": "voiceRecognition", "remotesubmix": "remoteSubMix",
     "voicecommunication": "voiceCommunication", "voiceperformance": "voicePerformance",
     "camcorder": "camcorder", "unprocessed": "unprocessed",
   ]
@@ -134,8 +135,7 @@ public struct AudioRecorderConfiguration: Equatable, Sendable {
   }
 
   private static func normalized(_ value: String) -> String {
-    value.replacingOccurrences(of: "_", with: "").replacingOccurrences(of: "-", with: "")
-      .lowercased()
+    value.lowercased()
   }
 }
 

@@ -81,8 +81,7 @@ public final class AudioRecorderService: RufletService {
             withIntermediateDirectories: true)
           let encoder = configuration.encoder.lowercased()
           guard Self.isSupportedEncoder(encoder), let format = Self.formatID(for: encoder) else {
-            completion(.success(.bool(false)))
-            return
+            throw RufletServiceError.failed("Failed to start recording: \(encoder) not supported")
           }
           if recorder != nil {
             recorder?.stop()
@@ -117,9 +116,11 @@ public final class AudioRecorderService: RufletService {
               try AVAudioSession.sharedInstance().setPreferredInput(input)
             }
           #endif
-          guard recorder.prepareToRecord(), recorder.record() else {
-            throw RufletServiceError.failed("The audio recorder could not start")
-          }
+          // record_ios reports a successful start once AVAudioRecorder was
+          // created; it intentionally does not reinterpret these advisory
+          // booleans as a different Flet result shape.
+          _ = recorder.prepareToRecord()
+          _ = recorder.record()
           self.recorder = recorder
           outputPath = path
           paused = false
@@ -137,9 +138,11 @@ public final class AudioRecorderService: RufletService {
         recorder = nil
         stopStream(flush: true)
         paused = false
-        emitState("stopped")
         outputPath = nil
         completion(.success(path.map { RufletValue.string($0) } ?? .null))
+        // record completes stop() with the path before publishing its stopped
+        // state on the recorder state stream.
+        emitState("stopped")
 
       case "cancel_recording":
         recorder?.stop()
@@ -161,7 +164,7 @@ public final class AudioRecorderService: RufletService {
 
       case "resume_recording":
         if let recorder, paused {
-          recorder.record()
+          _ = recorder.record()
           paused = false
           emitState("recording")
         }
@@ -176,13 +179,27 @@ public final class AudioRecorderService: RufletService {
 
       case "get_input_devices":
         #if os(iOS)
-          let inputs = AVAudioSession.sharedInstance().availableInputs ?? []
-          completion(.success(.map(Dictionary(uniqueKeysWithValues: inputs.map {
-            ($0.uid, RufletValue.string($0.portName))
-          }))))
+          do {
+            let session = AVAudioSession.sharedInstance()
+            #if compiler(>=6.2)
+              let bluetooth: AVAudioSession.CategoryOptions = .allowBluetoothHFP
+            #else
+              let bluetooth: AVAudioSession.CategoryOptions = .allowBluetooth
+            #endif
+            try session.setCategory(
+              .playAndRecord, options: [.defaultToSpeaker, bluetooth])
+            let inputs = session.availableInputs ?? []
+            completion(.success(.map(Dictionary(uniqueKeysWithValues: inputs.map {
+              ($0.uid, RufletValue.string($0.portName))
+            }))))
+          } catch {
+            completion(.failure(RufletServiceError.failed(
+              "Failed to list inputs: \(error.localizedDescription)")))
+          }
         #else
           let devices = AVCaptureDevice.DiscoverySession(
-            deviceTypes: [.builtInMicrophone], mediaType: .audio, position: .unspecified
+            deviceTypes: [.builtInMicrophone, .externalUnknown],
+            mediaType: .audio, position: .unspecified
           ).devices
           completion(.success(.map(Dictionary(uniqueKeysWithValues: devices.map {
             ($0.uniqueID, RufletValue.string($0.localizedName))
@@ -199,29 +216,14 @@ public final class AudioRecorderService: RufletService {
         completion(.success(.bool(Self.isSupportedEncoder(encoder))) )
 
       case "has_permission":
-        #if os(iOS)
-          switch AVAudioSession.sharedInstance().recordPermission {
-          case .granted:
-            completion(.success(.bool(true)))
-          case .denied:
-            completion(.success(.bool(false)))
-          case .undetermined:
-            AVAudioSession.sharedInstance().requestRecordPermission { granted in
-              Task { @MainActor in completion(.success(.bool(granted))) }
-            }
-          @unknown default:
-            completion(.success(.bool(false)))
+        let status = AVCaptureDevice.authorizationStatus(for: .audio)
+        if status == .notDetermined {
+          AVCaptureDevice.requestAccess(for: .audio) { granted in
+            Task { @MainActor in completion(.success(.bool(granted))) }
           }
-        #else
-          let status = AVCaptureDevice.authorizationStatus(for: .audio)
-          if status == .notDetermined {
-            AVCaptureDevice.requestAccess(for: .audio) { granted in
-              Task { @MainActor in completion(.success(.bool(granted))) }
-            }
-          } else {
-            completion(.success(.bool(status == .authorized)))
-          }
-        #endif
+        } else {
+          completion(.success(.bool(status == .authorized)))
+        }
 
       default:
         completion(
@@ -278,12 +280,17 @@ public final class AudioRecorderService: RufletService {
   }
 
   #if canImport(AVFoundation)
-    private static func formatID(for encoder: String) -> AudioFormatID? {
+    static func formatID(for encoder: String) -> AudioFormatID? {
       switch encoder.replacingOccurrences(of: "-", with: "_").lowercased() {
       case "wav", "pcm16bits": return kAudioFormatLinearPCM
       case "aaclc", "aac_lc": return kAudioFormatMPEG4AAC
       case "aache", "aac_he": return kAudioFormatMPEG4AAC_HE_V2
-      case "aaceld", "aac_eld": return kAudioFormatMPEG4AAC_ELD_V2
+      case "aaceld", "aac_eld":
+        #if os(macOS)
+          return kAudioFormatMPEG4AAC_ELD
+        #else
+          return kAudioFormatMPEG4AAC_ELD_V2
+        #endif
       case "amrnb", "amr_nb": return kAudioFormatAMR
       case "amrwb", "amr_wb": return kAudioFormatAMR_WB
       case "opus": return kAudioFormatOpus
@@ -297,17 +304,23 @@ public final class AudioRecorderService: RufletService {
     /// identifiers exist on Apple platforms but the pinned plug-in deliberately
     /// reports them as unsupported because its recording pipeline cannot
     /// guarantee conversion for those formats.
-    private static func isSupportedEncoder(_ encoder: String) -> Bool {
+    static func isSupportedEncoder(_ encoder: String) -> Bool {
       switch encoder.replacingOccurrences(of: "-", with: "_").lowercased() {
-      case "wav", "pcm16bits", "aaclc", "aac_lc", "aaceld", "aac_eld", "opus", "flac":
+      case "wav", "pcm16bits", "aaclc", "aac_lc", "aaceld", "aac_eld", "flac":
         return true
+      case "opus":
+        #if os(iOS)
+          return true
+        #else
+          return false
+        #endif
       default:
         return false
       }
     }
 
-    private static func parsedEncoder(_ value: String) -> String? {
-      switch value.replacingOccurrences(of: "_", with: "").lowercased() {
+    static func parsedEncoder(_ value: String) -> String? {
+      switch value.lowercased() {
       case "aaclc": return "aacLc"
       case "aaceld": return "aacEld"
       case "aache": return "aacHe"

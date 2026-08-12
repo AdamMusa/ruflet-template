@@ -23,7 +23,7 @@ public enum RufletAudioRecorder: RufletExtension {
         guard permission == "microphone" else { return false }
         AVCaptureDevice.requestAccess(for: .audio) { granted in
           Task { @MainActor in
-            completion(granted ? "granted" : "permanently_denied")
+            completion(granted ? "granted" : "permanentlyDenied")
           }
         }
         return true
@@ -36,7 +36,9 @@ public enum RufletAudioRecorder: RufletExtension {
       switch status {
       case .authorized: return "granted"
       case .notDetermined: return "denied"
-      default: return "permanently_denied"
+      case .restricted: return "restricted"
+      case .denied: return "permanentlyDenied"
+      @unknown default: return "denied"
       }
     }
   #endif
