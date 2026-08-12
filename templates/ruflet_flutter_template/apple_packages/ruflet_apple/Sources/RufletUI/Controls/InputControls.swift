@@ -1717,7 +1717,9 @@ private struct SearchBarHint: ViewModifier {
   }
 }
 
-/// `Dropdown` / `DropdownM2` — a native `Picker` over the control's options.
+/// Flet's Material `DropdownMenu` contract, rendered with Apple text and
+/// popover primitives. The numeric/theme values below remain Flutter's: using
+/// a native primitive does not make omitted wire values mean Apple defaults.
 struct DropdownControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
@@ -1730,12 +1732,12 @@ struct DropdownControlView: View {
     let options = optionNodes
 
     fieldContent(options)
-    .padding(contentPadding)
+    .padding(DropdownMenuDefaults.contentPadding(node))
     .background(RoundedRectangle(cornerRadius: fieldRadius).fill(fieldBackground))
     .overlay(borderStroke)
     // DropdownMenu.width sizes the field. `menu_width` belongs only to the
     // popup surface and must never resize the field itself.
-    .frame(width: DropdownMenuDefaults.fieldWidth(node))
+    .modifier(DropdownFieldWidth(node: node))
     .modifier(RufletFormFieldDecoration(node: node))
     .disabled(node.bool("disabled") == true)
     .popover(isPresented: $menuPresented, attachmentAnchor: .rect(.bounds)) {
@@ -1769,7 +1771,7 @@ struct DropdownControlView: View {
           selection: $selection,
           placeholder: node.string("hint_text") ?? "",
           secure: false,
-          nativeChrome: DropdownMenuDefaults.usesNativeChrome(node),
+          nativeChrome: false,
           traits: dropdownTraits,
           onTap: {
             // DropdownMenu opens from its field even when it is editable; the
@@ -1789,27 +1791,17 @@ struct DropdownControlView: View {
         .buttonStyle(.plain)
       }
     } else {
-      Menu {
-        ForEach(options, id: \.id) { option in
-          Button {
-            select(option)
-          } label: {
-            optionLabel(option)
-          }
-          .disabled(option.bool("disabled") == true)
-          .modifier(MaterialOptionButtonStyle(value: option.props["style"]))
-        }
+      Button {
+        menuPresented = true
       } label: {
         HStack {
           RufletFormFieldSlot(node: node, key: "leading_icon")
-          Text(selectedText)
-          if node.controlID(forKey: "trailing_icon") != nil
-            || node.controlID(forKey: "selected_trailing_icon") != nil
-          {
-            trailingIcon
-          }
+          Text(selectedText).rufletTextStyle(fieldTextStyle)
+          Spacer(minLength: 8)
+          trailingIcon
         }
       }
+      .buttonStyle(.plain)
     }
   }
 
@@ -1835,7 +1827,10 @@ struct DropdownControlView: View {
                 ControlView(id: trailingID, axis: .none)
               }
             }
+            .padding(.horizontal, DropdownMenuDefaults.optionHorizontalPadding)
+            .frame(minHeight: DropdownMenuDefaults.optionMinimumHeight)
             .frame(maxWidth: .infinity, alignment: .leading)
+            .rufletTextStyle(DropdownMenuDefaults.optionTextStyle(option, parent: node))
           }
           .buttonStyle(.plain)
           .disabled((node.bool("disabled") ?? false) || (option.bool("disabled") ?? false))
@@ -1843,11 +1838,19 @@ struct DropdownControlView: View {
         }
       }
     }
-    .frame(width: DropdownMenuDefaults.menuWidth(node))
-    .frame(maxHeight: DropdownMenuDefaults.menuHeight(node))
-    .modifier(MenuSurfaceStyle(value: node.props["menu_style"]))
-    .background(MaterialPalette.color(node.string("bgcolor"), default: .clear))
-    .shadow(radius: node.props["elevation"] == nil ? 0 : CGFloat(node.double("elevation") ?? 0))
+    .padding(.vertical, DropdownMenuDefaults.menuVerticalPadding(node))
+    .modifier(DropdownPopupGeometry(node: node))
+    .background(
+      RoundedRectangle(cornerRadius: DropdownMenuDefaults.menuCornerRadius(node))
+        .fill(DropdownMenuDefaults.menuBackground(node)))
+    .overlay(
+      RoundedRectangle(cornerRadius: DropdownMenuDefaults.menuCornerRadius(node))
+        .strokeBorder(
+          DropdownMenuDefaults.menuBorderColor(node),
+          lineWidth: DropdownMenuDefaults.menuBorderWidth(node)))
+    .shadow(
+      color: DropdownMenuDefaults.menuShadowColor(node),
+      radius: DropdownMenuDefaults.menuElevation(node))
   }
 
   /// Flet shows `selected_trailing_icon` while the menu is open and
@@ -1862,10 +1865,6 @@ struct DropdownControlView: View {
     }
   }
 
-  private var contentPadding: EdgeInsets {
-    ControlProps.edgeInsets(node.props["content_padding"]) ?? EdgeInsets()
-  }
-
   /// A Material 3 dropdown can be typed into. `editable` opens the field,
   /// and the search and filter switches decide what typing does to the list.
   private var isEditable: Bool { node.bool("editable") == true }
@@ -1874,6 +1873,9 @@ struct DropdownControlView: View {
   /// when Ruby asked for it.
   private var dropdownTraits: RufletTextInputTraits {
     var traits = RufletTextInputTraits(node: node)
+    let style = DropdownMenuDefaults.textStyle(node, disabled: node.bool("disabled") == true)
+    traits.fontSize = style.size
+    traits.textColor = style.color
     traits.readOnly = !isEditable
     traits.canRequestFocus = isEditable && node.bool("can_request_focus") != false
     return traits
@@ -1897,27 +1899,31 @@ struct DropdownControlView: View {
 
   private var fieldBackground: Color {
     guard node.bool("filled") == true else { return .clear }
-    return MaterialPalette.color(node.string("fill_color"), default: .clear)
+    return MaterialPalette.color(node.string("fill_color") ?? "surfacecontainerhighest",
+                                 default: .clear)
   }
 
   private var fieldRadius: CGFloat {
-    ControlProps.cornerRadius(node.props["border_radius"]) ?? 0
+    DropdownMenuDefaults.fieldCornerRadius(node)
   }
-
-  private var hasExplicitFieldChrome: Bool { !DropdownMenuDefaults.usesNativeChrome(node) }
 
   @ViewBuilder
   private var borderStroke: some View {
-    if hasExplicitFieldChrome, node.string("border")?.lowercased() != "none" {
+    if DropdownMenuDefaults.borderKind(node) == .outline {
       RoundedRectangle(cornerRadius: fieldRadius)
         .strokeBorder(
-          MaterialPalette.color(
-            node.string(focused ? "focused_border_color" : "border_color"),
-            default: focused ? .accentColor : .primary),
-          lineWidth: CGFloat(
-            node.double(focused ? "focused_border_width" : "border_width")
-              ?? (focused ? 2 : 1)))
+          DropdownMenuDefaults.borderColor(node, focused: focused),
+          lineWidth: DropdownMenuDefaults.borderWidth(node, focused: focused))
+    } else if DropdownMenuDefaults.borderKind(node) == .underline {
+      Rectangle()
+        .fill(DropdownMenuDefaults.borderColor(node, focused: focused))
+        .frame(height: DropdownMenuDefaults.borderWidth(node, focused: focused))
+        .frame(maxHeight: .infinity, alignment: .bottom)
     }
+  }
+
+  private var fieldTextStyle: RufletTextStyle {
+    DropdownMenuDefaults.textStyle(node, disabled: node.bool("disabled") == true)
   }
 
   private var dropdownText: Binding<String> {
@@ -1997,13 +2003,16 @@ struct DropdownControlView: View {
 /// from field geometry is important: Flet forwards `width` to DropdownMenu's
 /// field and `menu_width` to MenuStyle.fixedSize.
 enum DropdownMenuDefaults {
-  static func usesNativeChrome(_ node: ControlNode) -> Bool {
-    node.props["border"] == nil && node.props["border_radius"] == nil
-      && node.props["border_color"] == nil && node.props["border_width"] == nil
-      && node.props["focused_border_color"] == nil
-      && node.props["focused_border_width"] == nil && node.props["fill_color"] == nil
-      && node.props["filled"] == nil
-  }
+  enum BorderKind: String { case outline, underline, none }
+
+  static let minimumMenuWidth: CGFloat = 112
+  static let optionHorizontalPadding: CGFloat = 12
+  static let optionMinimumHeight: CGFloat = 48
+  static let defaultTextSize: CGFloat = 16
+  static let defaultMenuElevation: CGFloat = 3
+  static let defaultMenuCornerRadius: CGFloat = 4
+  static let defaultMenuVerticalPadding: CGFloat = 8
+  static let defaultOptionTextSize: CGFloat = 14
 
   static func filtersOptions(_ node: ControlNode) -> Bool {
     node.bool("enable_filter") == true
@@ -2023,6 +2032,193 @@ enum DropdownMenuDefaults {
 
   static func menuHeight(_ node: ControlNode) -> CGFloat? {
     node.double("menu_height").map { CGFloat($0) }
+  }
+
+  static func effectiveMenuWidth(_ node: ControlNode) -> CGFloat? {
+    if let menuWidth = menuWidth(node) { return menuWidth }
+    if let fixed = menuStyleSize(node, key: "fixed_size")?.width { return fixed }
+    return fieldWidth(node)
+  }
+
+  static func effectiveMenuHeight(_ node: ControlNode) -> CGFloat? {
+    if let height = menuHeight(node) { return height }
+    return menuStyleSize(node, key: "fixed_size")?.height
+      ?? menuStyleSize(node, key: "max_size")?.height
+  }
+
+  static func minimumStyledWidth(_ node: ControlNode) -> CGFloat {
+    menuStyleSize(node, key: "min_size")?.width ?? minimumMenuWidth
+  }
+
+  static func maximumStyledWidth(_ node: ControlNode) -> CGFloat? {
+    menuStyleSize(node, key: "max_size")?.width
+  }
+
+  static func borderKind(_ node: ControlNode) -> BorderKind {
+    BorderKind(rawValue: node.string("border")?.lowercased() ?? "outline") ?? .outline
+  }
+
+  static func fieldCornerRadius(_ node: ControlNode) -> CGFloat {
+    guard borderKind(node) == .outline else { return 0 }
+    return ControlProps.cornerRadius(node.props["border_radius"]) ?? 4
+  }
+
+  static func borderWidth(_ node: ControlNode, focused: Bool) -> CGFloat {
+    if node.double("border_width") == 0 { return 0 }
+    if focused {
+      return CGFloat(node.double("focused_border_width") ?? node.double("border_width") ?? 2)
+    }
+    return CGFloat(node.double("border_width") ?? 1)
+  }
+
+  static func borderColor(_ node: ControlNode, focused: Bool) -> Color {
+    if focused {
+      return MaterialPalette.color(
+        node.string("focused_border_color") ?? node.string("border_color") ?? "primary",
+        default: .primary)
+    }
+    // Flet constructs a literal black BorderSide when all border props are omitted.
+    return MaterialPalette.color(node.string("border_color") ?? "#000000", default: .black)
+  }
+
+  static func contentPadding(_ node: ControlNode) -> EdgeInsets {
+    if let explicit = ControlProps.edgeInsets(node.props["content_padding"]) { return explicit }
+    let dense = node.bool("dense") == true
+    switch borderKind(node) {
+    case .outline:
+      return dense
+        ? EdgeInsets(top: 16, leading: 12, bottom: 8, trailing: 12)
+        : EdgeInsets(top: 20, leading: 12, bottom: 12, trailing: 12)
+    case .underline, .none:
+      if node.bool("filled") == true {
+        return dense
+          ? EdgeInsets(top: 4, leading: 12, bottom: 4, trailing: 12)
+          : EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12)
+      }
+      return dense
+        ? EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)
+        : EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0)
+    }
+  }
+
+  static func textStyle(_ node: ControlNode, disabled: Bool) -> RufletTextStyle {
+    var style = RufletTextStyle(node: node, styleKey: "text_style")
+    if style.size == nil { style.size = CGFloat(node.double("text_size") ?? 16) }
+    if style.color == nil {
+      style.color = MaterialPalette.color(disabled ? "onsurface,0.38" : "onsurface")
+    }
+    return style
+  }
+
+  static func optionTextStyle(_ option: ControlNode, parent: ControlNode) -> RufletTextStyle {
+    var style = RufletTextStyle(node: option, styleKey: "text_style")
+    if style.size == nil { style.size = defaultOptionTextSize }
+    if style.color == nil {
+      style.color = MaterialPalette.color(
+        option.bool("disabled") == true || parent.bool("disabled") == true
+          ? "onsurface,0.38" : "onsurface")
+    }
+    return style
+  }
+
+  static func menuBackground(_ node: ControlNode) -> Color {
+    let states = node.widgetStates()
+    if let explicit = MaterialPalette.color(stateful: node.props["bgcolor"], in: states) {
+      return explicit
+    }
+    if let style = node.map("menu_style"),
+      let explicit = MaterialPalette.color(stateful: style["bgcolor"], in: states)
+    {
+      return explicit
+    }
+    return MaterialPalette.color("surfacecontainer", default: .clear)
+  }
+
+  static func menuElevation(_ node: ControlNode) -> CGFloat {
+    let states = node.widgetStates()
+    if let explicit = ControlProps.statefulDouble(node.props["elevation"], in: states) {
+      return explicit
+    }
+    if let style = node.map("menu_style"),
+      let explicit = ControlProps.statefulDouble(style["elevation"], in: states)
+    {
+      return explicit
+    }
+    return defaultMenuElevation
+  }
+
+  static func menuCornerRadius(_ node: ControlNode) -> CGFloat {
+    guard let style = node.map("menu_style") else { return defaultMenuCornerRadius }
+    return ControlProps.cornerRadius(style["shape"]?.mapValue?["radius"])
+      ?? defaultMenuCornerRadius
+  }
+
+  static func menuVerticalPadding(_ node: ControlNode) -> CGFloat {
+    guard let style = node.map("menu_style"),
+      let padding = ControlProps.edgeInsets(
+        RufletWidgetStateProperty.resolve(style["padding"], in: node.widgetStates()))
+    else { return defaultMenuVerticalPadding }
+    return max(padding.top, padding.bottom)
+  }
+
+  static func menuShadowColor(_ node: ControlNode) -> Color {
+    guard let style = node.map("menu_style") else {
+      return MaterialPalette.color("shadow", default: .black).opacity(0.2)
+    }
+    return MaterialPalette.color(
+      stateful: style["shadow_color"], in: node.widgetStates())
+      ?? MaterialPalette.color("shadow", default: .black).opacity(0.2)
+  }
+
+  static func menuBorderWidth(_ node: ControlNode) -> CGFloat {
+    guard let side = node.map("menu_style")?["side"] else { return 0 }
+    let resolved = RufletWidgetStateProperty.resolve(side, in: node.widgetStates())
+    return CGFloat(resolved?.mapValue?["width"]?.doubleValue ?? 0)
+  }
+
+  static func menuBorderColor(_ node: ControlNode) -> Color {
+    guard let side = node.map("menu_style")?["side"] else { return .clear }
+    let resolved = RufletWidgetStateProperty.resolve(side, in: node.widgetStates())
+    return MaterialPalette.color(resolved?.mapValue?["color"]?.stringValue, default: .clear)
+  }
+
+  private static func menuStyleSize(_ node: ControlNode, key: String) -> CGSize? {
+    guard let value = node.map("menu_style")?[key],
+      let resolved = RufletWidgetStateProperty.resolve(value, in: node.widgetStates()),
+      let map = resolved.mapValue,
+      let width = map["width"]?.doubleValue,
+      let height = map["height"]?.doubleValue
+    else { return nil }
+    return CGSize(width: width, height: height)
+  }
+}
+
+private struct DropdownFieldWidth: ViewModifier {
+  let node: ControlNode
+  func body(content: Content) -> some View {
+    if let width = DropdownMenuDefaults.fieldWidth(node) {
+      content.frame(width: width)
+    } else if (node.int("expand") ?? 0) > 0 {
+      content.frame(maxWidth: .infinity)
+    } else {
+      content.frame(minWidth: DropdownMenuDefaults.minimumMenuWidth)
+    }
+  }
+}
+
+private struct DropdownPopupGeometry: ViewModifier {
+  let node: ControlNode
+  func body(content: Content) -> some View {
+    let width = DropdownMenuDefaults.effectiveMenuWidth(node)
+    let height = DropdownMenuDefaults.effectiveMenuHeight(node)
+    if let width {
+      content.frame(width: width).frame(
+        maxWidth: DropdownMenuDefaults.maximumStyledWidth(node), maxHeight: height)
+    } else {
+      content.frame(
+        minWidth: DropdownMenuDefaults.minimumStyledWidth(node),
+        maxWidth: DropdownMenuDefaults.maximumStyledWidth(node), maxHeight: height)
+    }
   }
 }
 
@@ -2067,21 +2263,15 @@ struct DropdownM2ControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
+  @Environment(\.colorScheme) private var colorScheme
   @FocusState private var focused: Bool
+  @State private var menuPresented = false
 
   var body: some View {
-    Menu {
-      ForEach(optionNodes, id: \.id) { option in
-        Button {
-          select(option)
-        } label: {
-          optionLabel(option)
-            .frame(
-              maxWidth: node.bool("options_fill_horizontally") == true ? .infinity : nil,
-              minHeight: node.double("item_height").map { CGFloat($0) })
-        }
-        .disabled(option.bool("disabled") ?? false)
-      }
+    Button {
+      focused = true
+      events.fire(node, "click")
+      menuPresented = true
     } label: {
       HStack(spacing: 8) {
         RufletFormFieldSlot(node: node, key: "icon")
@@ -2093,29 +2283,64 @@ struct DropdownM2ControlView: View {
         RufletFormFieldSlot(node: node, key: "suffix_icon")
         selectIcon
       }
+      .rufletTextStyle(DropdownM2Defaults.textStyle(node, focused: focused))
       .contentShape(Rectangle())
-      .padding(contentPadding)
+      .padding(DropdownM2Defaults.buttonPadding(node))
+      .padding(DropdownM2Defaults.decorationContentPadding(node))
       .background(
         RoundedRectangle(cornerRadius: cornerRadius).fill(fieldBackground))
       .overlay(borderStroke)
     }
-    .modifier(FixedMenuOrder())
-    .frame(maxHeight: node.double("max_menu_height").map { CGFloat($0) })
+    .buttonStyle(.plain)
+    .modifier(DropdownM2FieldWidth(node: node))
     .focused($focused)
-    .simultaneousGesture(TapGesture().onEnded { events.fire(node, "click") })
     .modifier(TapFeedback(enabled: node.bool("enable_feedback") != false))
     .modifier(RufletFormFieldDecoration(node: node))
-    .shadow(radius: CGFloat(node.double("elevation") ?? 0))
     .disabled(node.bool("disabled") ?? false)
+    .popover(isPresented: $menuPresented, attachmentAnchor: .rect(.bounds)) {
+      dropdownPopup
+    }
     .onAppear { focused = node.bool("autofocus") == true }
     .onChange(of: focused) { events.fire(node, $0 ? "focus" : "blur") }
     .rufletCommandHandler(node.id) { call, completion in
-      switch call.name {
-      case "focus": focused = true; completion(.success(.null))
-      case "blur": focused = false; completion(.success(.null))
-      default: completion(.failure(rufletUnsupported(node.type, call)))
+      guard call.name == "focus" else {
+        completion(.failure(rufletUnsupported(node.type, call))); return
+      }
+      focused = true
+      completion(.success(.null))
+    }
+  }
+
+  private var dropdownPopup: some View {
+    ScrollView {
+      LazyVStack(alignment: .leading, spacing: 0) {
+        ForEach(optionNodes, id: \.id) { option in
+          Button {
+            select(option)
+            menuPresented = false
+          } label: {
+            optionLabel(option)
+              .frame(
+                maxWidth: DropdownM2Defaults.optionsFillHorizontally(node) ? .infinity : nil,
+                alignment: DropdownM2Defaults.alignment(option))
+              .padding(.horizontal, DropdownM2Defaults.optionHorizontalPadding)
+              .frame(minHeight: DropdownM2Defaults.itemHeight(node))
+              .frame(maxWidth: .infinity, alignment: DropdownM2Defaults.alignment(option))
+              .rufletTextStyle(DropdownM2Defaults.optionTextStyle(
+                option, parent: node, focused: focused))
+          }
+          .buttonStyle(.plain)
+          .disabled(option.bool("disabled") ?? false)
+        }
       }
     }
+    .modifier(DropdownM2PopupGeometry(node: node))
+    .background(
+      RoundedRectangle(cornerRadius: DropdownM2Defaults.popupCornerRadius(node))
+        .fill(DropdownM2Defaults.popupBackground(node)))
+    .shadow(
+      color: MaterialPalette.color("shadow", default: .black).opacity(0.2),
+      radius: DropdownM2Defaults.elevation(node))
   }
 
   @ViewBuilder
@@ -2125,7 +2350,7 @@ struct DropdownM2ControlView: View {
       ControlView(id: iconID, axis: .none)
     } else {
       Image(systemName: "chevron.down")
-        .font(.system(size: CGFloat(node.double("select_icon_size") ?? 13)))
+        .font(.system(size: DropdownM2Defaults.selectIconSize(node)))
         .foregroundColor(selectIconColor(disabled: disabled))
     }
   }
@@ -2139,10 +2364,20 @@ struct DropdownM2ControlView: View {
   }
 
   private func selectIconColor(disabled: Bool) -> Color {
-    guard disabled else {
-      return MaterialPalette.color(node.string("select_icon_enabled_color"), default: .primary)
+    if disabled {
+      if let explicit = MaterialPalette.color(node.string("select_icon_disabled_color")) {
+        return explicit
+      }
+      return colorScheme == .dark
+        ? MaterialPalette.color("white10", default: .secondary.opacity(0.1))
+        : MaterialPalette.color("grey400", default: .secondary)
     }
-    return MaterialPalette.color(node.string("select_icon_disabled_color"), default: .secondary)
+    if let explicit = MaterialPalette.color(node.string("select_icon_enabled_color")) {
+      return explicit
+    }
+    return colorScheme == .dark
+      ? MaterialPalette.color("white70", default: .secondary.opacity(0.7))
+      : MaterialPalette.color("grey700", default: .secondary)
   }
 
   private var hintStyle: RufletTextStyle {
@@ -2152,46 +2387,36 @@ struct DropdownM2ControlView: View {
   }
 
   private var cornerRadius: CGFloat {
-    ControlProps.cornerRadius(node.props["border_radius"]) ?? 8
-  }
-
-  private var contentPadding: EdgeInsets {
-    if let explicit = ControlProps.edgeInsets(node.props["content_padding"]) { return explicit }
-    if node.bool("collapsed") == true { return EdgeInsets() }
-    let inset: CGFloat = node.bool("dense") == true ? 4 : 8
-    return EdgeInsets(top: inset, leading: inset, bottom: inset, trailing: inset)
+    DropdownM2Defaults.fieldCornerRadius(node)
   }
 
   private var fieldBackground: Color {
-    if let focused = MaterialPalette.color(node.string("focused_bgcolor")) { return focused }
-    if node.bool("filled") == true {
-      return MaterialPalette.color(node.string("fill_color"), default: .gray.opacity(0.12))
-    }
-    return MaterialPalette.color(node.string("fill_color"), default: .clear)
+    DropdownM2Defaults.fieldBackground(node, focused: focused)
   }
 
   @ViewBuilder
   private var borderStroke: some View {
-    if node.string("border")?.lowercased() != "none" {
+    if DropdownM2Defaults.borderKind(node) == .outline {
       RoundedRectangle(cornerRadius: cornerRadius)
         .strokeBorder(
-          MaterialPalette.color(node.string("border_color"), default: .secondary.opacity(0.4)),
-          lineWidth: CGFloat(node.double("border_width") ?? 1))
+          DropdownM2Defaults.borderColor(node, focused: focused),
+          lineWidth: DropdownM2Defaults.borderWidth(node, focused: focused))
+    } else if DropdownM2Defaults.borderKind(node) == .underline {
+      Rectangle()
+        .fill(DropdownM2Defaults.borderColor(node, focused: focused))
+        .frame(height: DropdownM2Defaults.borderWidth(node, focused: focused))
+        .frame(maxHeight: .infinity, alignment: .bottom)
     }
   }
 
   private func select(_ option: ControlNode) {
     let value = option.string("key") ?? option.string("text") ?? String(option.id)
-    events.setLocal(node.id, "value", .string(value))
-    events.update(node.id, ["value": .string(value)])
-    events.fire(option, "click")
-    events.fire(node, "change", data: .string(value))
+    RufletDropdownM2Events.select(value: value, option: option, on: node, to: events)
   }
 
   private var optionNodes: [ControlNode] {
-    let ids = node.controlIDs(forKey: "options") + node.childIDs
-    var seen = Set<Int>()
-    return ids.filter { seen.insert($0).inserted }.compactMap { store.node($0) }
+    node.controlIDs(forKey: "options").compactMap { store.node($0) }
+      .filter { $0.string("key") != nil || $0.string("text") != nil }
   }
 
   @ViewBuilder
@@ -2221,6 +2446,181 @@ struct DropdownM2ControlView: View {
   }
 }
 
+/// Source-derived defaults for Flet's legacy `DropdownM2`, which wraps
+/// Flutter's `DropdownButtonFormField`. These values remain the Material
+/// constructor contract even though the visible popup is an Apple popover.
+enum DropdownM2Defaults {
+  enum BorderKind: String { case outline, underline, none }
+
+  static let defaultWidth: CGFloat = 300
+  static let optionHorizontalPadding: CGFloat = 16
+  static let minimumItemHeight: CGFloat = 48
+  static let defaultSelectIconSize: CGFloat = 24
+  static let defaultElevation: CGFloat = 8
+
+  static func optionsFillHorizontally(_ node: ControlNode) -> Bool {
+    node.bool("options_fill_horizontally") ?? true
+  }
+
+  static func itemHeight(_ node: ControlNode) -> CGFloat {
+    CGFloat(node.double("item_height") ?? Double(minimumItemHeight))
+  }
+
+  static func selectIconSize(_ node: ControlNode) -> CGFloat {
+    CGFloat(node.double("select_icon_size") ?? Double(defaultSelectIconSize))
+  }
+
+  static func elevation(_ node: ControlNode) -> CGFloat {
+    CGFloat(node.double("elevation") ?? Double(defaultElevation))
+  }
+
+  static func optionsFillWidth(_ node: ControlNode) -> CGFloat? {
+    node.double("width").map { CGFloat($0) }
+  }
+
+  static func popupMaxHeight(_ node: ControlNode) -> CGFloat? {
+    node.double("max_menu_height").map { CGFloat($0) }
+  }
+
+  static func popupCornerRadius(_ node: ControlNode) -> CGFloat {
+    ControlProps.cornerRadius(node.props["border_radius"]) ?? 0
+  }
+
+  static func popupBackground(_ node: ControlNode) -> Color {
+    MaterialPalette.color(node.string("bgcolor") ?? "surface", default: .clear)
+  }
+
+  static func buttonPadding(_ node: ControlNode) -> EdgeInsets {
+    ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets()
+  }
+
+  static func borderKind(_ node: ControlNode) -> BorderKind {
+    BorderKind(rawValue: node.string("border")?.lowercased() ?? "outline") ?? .outline
+  }
+
+  static func decorationContentPadding(_ node: ControlNode) -> EdgeInsets {
+    if node.bool("collapsed") == true { return EdgeInsets() }
+    if let explicit = ControlProps.edgeInsets(node.props["content_padding"]) { return explicit }
+    let dense = node.bool("dense") == true
+    switch borderKind(node) {
+    case .outline:
+      return dense
+        ? EdgeInsets(top: 16, leading: 12, bottom: 8, trailing: 12)
+        : EdgeInsets(top: 20, leading: 12, bottom: 12, trailing: 12)
+    case .underline, .none:
+      if node.bool("filled") == true {
+        return dense
+          ? EdgeInsets(top: 4, leading: 12, bottom: 4, trailing: 12)
+          : EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12)
+      }
+      return dense
+        ? EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)
+        : EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0)
+    }
+  }
+
+  static func fieldCornerRadius(_ node: ControlNode) -> CGFloat {
+    guard borderKind(node) == .outline else { return 0 }
+    return ControlProps.cornerRadius(node.props["border_radius"]) ?? 4
+  }
+
+  static func borderWidth(_ node: ControlNode, focused: Bool) -> CGFloat {
+    if node.double("border_width") == 0 { return 0 }
+    if focused {
+      return CGFloat(node.double("focused_border_width") ?? node.double("border_width") ?? 2)
+    }
+    return CGFloat(node.double("border_width") ?? 1)
+  }
+
+  static func borderColor(_ node: ControlNode, focused: Bool) -> Color {
+    if focused {
+      return MaterialPalette.color(
+        node.string("focused_border_color") ?? node.string("border_color") ?? "primary",
+        default: .primary)
+    }
+    return MaterialPalette.color(node.string("border_color") ?? "#000000", default: .black)
+  }
+
+  static func fieldBackground(_ node: ControlNode, focused: Bool) -> Color {
+    guard node.bool("filled") == true else { return .clear }
+    let name = node.string("fill_color")
+      ?? (focused ? node.string("focused_bgcolor") : nil)
+      ?? node.string("bgcolor")
+      ?? "surfacecontainerhighest"
+    return MaterialPalette.color(name, default: .clear)
+  }
+
+  static func textStyle(_ node: ControlNode, focused: Bool) -> RufletTextStyle {
+    var style = RufletTextStyle(node: node, styleKey: "text_style")
+    if let size = node.double("text_size") { style.size = CGFloat(size) }
+    if let explicit = node.string("color") {
+      style.color = MaterialPalette.color(explicit)
+    } else if focused, let explicit = node.string("focused_color") {
+      style.color = MaterialPalette.color(explicit)
+    }
+    if style.color == nil { style.color = MaterialPalette.color("onsurface") }
+    return style
+  }
+
+  static func optionTextStyle(
+    _ option: ControlNode, parent: ControlNode, focused: Bool
+  ) -> RufletTextStyle {
+    var style = RufletTextStyle(node: option, styleKey: "text_style")
+    let parentStyle = textStyle(parent, focused: focused)
+    if style.size == nil { style.size = parentStyle.size }
+    if style.color == nil {
+      style.color = option.bool("disabled") == true
+        ? MaterialPalette.color("onsurface,0.38") : parentStyle.color
+    }
+    return style
+  }
+
+  static func alignment(_ option: ControlNode) -> Alignment {
+    ControlProps.alignment(option.props["alignment"]) ?? .leading
+  }
+}
+
+private struct DropdownM2FieldWidth: ViewModifier {
+  let node: ControlNode
+
+  func body(content: Content) -> some View {
+    if let width = node.double("width") {
+      content.frame(width: CGFloat(width))
+    } else if (node.int("expand") ?? 0) > 0 {
+      content.frame(maxWidth: .infinity)
+    } else {
+      content.frame(idealWidth: DropdownM2Defaults.defaultWidth)
+    }
+  }
+}
+
+private struct DropdownM2PopupGeometry: ViewModifier {
+  let node: ControlNode
+
+  func body(content: Content) -> some View {
+    let width = DropdownM2Defaults.optionsFillWidth(node)
+      ?? ((node.int("expand") ?? 0) > 0 ? nil : DropdownM2Defaults.defaultWidth)
+    if let width {
+      content.frame(width: width).frame(maxHeight: DropdownM2Defaults.popupMaxHeight(node))
+    } else {
+      content.frame(maxHeight: DropdownM2Defaults.popupMaxHeight(node))
+    }
+  }
+}
+
+enum RufletDropdownM2Events {
+  static func select(
+    value: String, option: ControlNode, on node: ControlNode, to events: RufletEventSink
+  ) {
+    // DropdownMenuItem.onTap runs before DropdownButton.onChanged.
+    events.fire(option, "click")
+    let wire = RufletValue.string(value)
+    events.setLocal(node.id, "value", wire)
+    events.update(node.id, ["value": wire])
+    events.fire(node, "change", data: wire)
+  }
+}
+
 /// `AutoComplete` — a field with a filtered suggestion list underneath.
 struct AutoCompleteControlView: View {
   let node: ControlNode
@@ -2240,8 +2640,8 @@ struct AutoCompleteControlView: View {
           selection: $selection,
           placeholder: "",
           secure: false,
-          nativeChrome: true,
-          traits: RufletTextInputTraits(node: node),
+          nativeChrome: false,
+          traits: inputTraits,
           onTap: { suggestionsPresented = !query.isEmpty && !matches.isEmpty },
           onTapOutside: {},
           onSubmit: { _ in
@@ -2251,6 +2651,12 @@ struct AutoCompleteControlView: View {
         TextField("", text: queryBinding)
       #endif
     }
+    .padding(RufletAutoCompleteDefaults.fieldContentPadding)
+    .overlay(alignment: .bottom) {
+      Rectangle()
+        .fill(RufletAutoCompleteDefaults.fieldBorderColor(focused: focused))
+        .frame(height: RufletAutoCompleteDefaults.fieldBorderWidth(focused: focused))
+    }
     .popover(isPresented: $suggestionsPresented, attachmentAnchor: .rect(.bounds)) {
       ScrollView {
         LazyVStack(alignment: .leading, spacing: 0) {
@@ -2259,13 +2665,18 @@ struct AutoCompleteControlView: View {
               select(match)
             } label: {
               Text(match.suggestion.value)
+                .rufletTextStyle(RufletAutoCompleteDefaults.optionTextStyle)
+                .padding(RufletAutoCompleteDefaults.optionPadding)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
           }
         }
       }
-      // Flet's optionsMaxHeight defaults to 200 logical pixels.
-      .frame(maxHeight: CGFloat(node.double("suggestions_max_height") ?? 200))
+      .frame(maxHeight: RufletAutoCompleteDefaults.suggestionsMaxHeight(node))
+      .background(RufletAutoCompleteDefaults.popupBackground)
+      .shadow(
+        color: RufletAutoCompleteDefaults.popupShadowColor,
+        radius: RufletAutoCompleteDefaults.popupElevation)
     }
     .onAppear { synchronizeFromWire() }
     .onChange(of: node.string("value")) { _ in synchronizeFromWire() }
@@ -2280,6 +2691,13 @@ struct AutoCompleteControlView: View {
         RufletAutoCompleteEvents.change(value, on: node, to: events)
         suggestionsPresented = !value.isEmpty && !matches.isEmpty
       })
+  }
+
+  private var inputTraits: RufletTextInputTraits {
+    var traits = RufletTextInputTraits(node: node)
+    traits.fontSize = RufletAutoCompleteDefaults.fieldTextSize
+    traits.textColor = MaterialPalette.color("onsurface")
+    return traits
   }
 
   private var suggestions: [RufletAutoCompleteSuggestion] {
@@ -2316,6 +2734,43 @@ struct AutoCompleteControlView: View {
     guard value != query else { return }
     query = value
     selection = NSRange(location: value.utf16.count, length: 0)
+  }
+}
+
+/// Exact defaults used by Flutter's Material `Autocomplete`. The editable
+/// primitive remains UIKit/AppKit, while its constructor-level field and
+/// popup semantics stay identical to the Flet engine.
+enum RufletAutoCompleteDefaults {
+  static let defaultSuggestionsMaxHeight: CGFloat = 200
+  static let popupElevation: CGFloat = 4
+  static let fieldTextSize: CGFloat = 16
+  static let optionTextSize: CGFloat = 14
+  static let optionPadding = EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16)
+  static let fieldContentPadding = EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0)
+
+  static func suggestionsMaxHeight(_ node: ControlNode) -> CGFloat {
+    CGFloat(node.double("suggestions_max_height") ?? Double(defaultSuggestionsMaxHeight))
+  }
+
+  static func fieldBorderWidth(focused: Bool) -> CGFloat { focused ? 2 : 1 }
+
+  static func fieldBorderColor(focused: Bool) -> Color {
+    MaterialPalette.color(focused ? "primary" : "onsurfacevariant", default: .secondary)
+  }
+
+  static var popupBackground: Color {
+    MaterialPalette.color("surface", default: .clear)
+  }
+
+  static var popupShadowColor: Color {
+    MaterialPalette.color("shadow", default: .black).opacity(0.2)
+  }
+
+  static var optionTextStyle: RufletTextStyle {
+    var style = RufletTextStyle()
+    style.size = optionTextSize
+    style.color = MaterialPalette.color("onsurface")
+    return style
   }
 }
 

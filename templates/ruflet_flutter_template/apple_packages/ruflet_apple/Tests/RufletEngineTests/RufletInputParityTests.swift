@@ -117,16 +117,20 @@ final class RufletInputParityTests: XCTestCase {
     XCTAssertEqual(DropdownMenuDefaults.menuHeight(explicit), 280)
   }
 
-  func testSearchAndDropdownOmittedDecorationUseNativeAppleChrome() {
+  func testSearchUsesNativeChromeWhileDropdownPreservesFletDecorationDefaults() {
     XCTAssertTrue(RufletSearchBarDefaults.usesNativeChrome(
       ControlNode(id: 1, type: "SearchBar")))
     XCTAssertFalse(RufletSearchBarDefaults.usesNativeChrome(ControlNode(
       id: 2, type: "SearchBar", props: ["bar_bgcolor": .string("#ffffff")])))
 
-    XCTAssertTrue(DropdownMenuDefaults.usesNativeChrome(
-      ControlNode(id: 3, type: "Dropdown")))
-    XCTAssertFalse(DropdownMenuDefaults.usesNativeChrome(ControlNode(
-      id: 4, type: "Dropdown", props: ["border": .string("outline")])))
+    let dropdown = ControlNode(id: 3, type: "Dropdown")
+    XCTAssertEqual(DropdownMenuDefaults.borderKind(dropdown), .outline)
+    XCTAssertEqual(DropdownMenuDefaults.fieldCornerRadius(dropdown), 4)
+    XCTAssertEqual(DropdownMenuDefaults.borderWidth(dropdown, focused: false), 1)
+    XCTAssertEqual(DropdownMenuDefaults.borderWidth(dropdown, focused: true), 2)
+    XCTAssertEqual(DropdownMenuDefaults.defaultTextSize, 16)
+    XCTAssertEqual(DropdownMenuDefaults.defaultMenuElevation, 3)
+    XCTAssertEqual(DropdownMenuDefaults.defaultMenuCornerRadius, 4)
   }
 
   func testDropdownDefaultsKeepSearchAndFilteringDistinct() {
@@ -139,6 +143,65 @@ final class RufletInputParityTests: XCTestCase {
       props: ["enable_filter": .bool(true), "enable_search": .bool(false)])
     XCTAssertTrue(DropdownMenuDefaults.filtersOptions(explicit))
     XCTAssertFalse(DropdownMenuDefaults.searchesOptions(explicit))
+  }
+
+  func testDropdownMenuKeepsPinnedFlutterGeometryAndTypographyDefaults() {
+    let node = ControlNode(id: 1, type: "Dropdown")
+    XCTAssertEqual(DropdownMenuDefaults.minimumMenuWidth, 112)
+    XCTAssertEqual(DropdownMenuDefaults.optionHorizontalPadding, 12)
+    XCTAssertEqual(DropdownMenuDefaults.optionMinimumHeight, 48)
+    XCTAssertEqual(DropdownMenuDefaults.defaultTextSize, 16)
+    XCTAssertEqual(DropdownMenuDefaults.menuVerticalPadding(node), 8)
+    let padding = DropdownMenuDefaults.contentPadding(node)
+    XCTAssertEqual(padding.top, 20)
+    XCTAssertEqual(padding.leading, 12)
+    XCTAssertEqual(padding.bottom, 12)
+    XCTAssertEqual(padding.trailing, 12)
+
+    let styled = ControlNode(id: 2, type: "Dropdown", props: [
+      "menu_style": .map([
+        "min_size": .map(["width": .double(140), "height": .double(20)]),
+        "max_size": .map(["width": .double(360), "height": .double(280)]),
+        "fixed_size": .map(["width": .double(240), "height": .double(180)]),
+      ])
+    ])
+    XCTAssertEqual(DropdownMenuDefaults.effectiveMenuWidth(styled), 240)
+    XCTAssertEqual(DropdownMenuDefaults.effectiveMenuHeight(styled), 180)
+    XCTAssertEqual(DropdownMenuDefaults.minimumStyledWidth(styled), 140)
+    XCTAssertEqual(DropdownMenuDefaults.maximumStyledWidth(styled), 360)
+  }
+
+  func testDropdownM2KeepsLegacyConstructorDefaults() {
+    let node = ControlNode(id: 1, type: "DropdownM2")
+    XCTAssertEqual(DropdownM2Defaults.defaultWidth, 300)
+    XCTAssertEqual(DropdownM2Defaults.optionHorizontalPadding, 16)
+    XCTAssertEqual(DropdownM2Defaults.itemHeight(node), 48)
+    XCTAssertEqual(DropdownM2Defaults.selectIconSize(node), 24)
+    XCTAssertEqual(DropdownM2Defaults.elevation(node), 8)
+    XCTAssertTrue(DropdownM2Defaults.optionsFillHorizontally(node))
+    XCTAssertEqual(DropdownM2Defaults.fieldCornerRadius(node), 4)
+    let padding = DropdownM2Defaults.decorationContentPadding(node)
+    XCTAssertEqual(padding.top, 20)
+    XCTAssertEqual(padding.leading, 12)
+    XCTAssertEqual(padding.bottom, 12)
+    XCTAssertEqual(padding.trailing, 12)
+  }
+
+  func testDropdownM2OptionClickPrecedesParentValueChange() {
+    let option = ControlNode(id: 3, type: "DropdownOption", props: ["on_click": .bool(true)])
+    let node = ControlNode(id: 2, type: "DropdownM2", props: ["on_change": .bool(true)])
+    var calls: [String] = []
+    let sink = RufletEventSink(
+      send: { control, name, data in
+        calls.append("event:\(control):\(name):\(data.stringValue ?? "")")
+      },
+      setLocal: { _, key, value in calls.append("local:\(key):\(value.stringValue ?? "")") },
+      update: { _, props in calls.append("update:\(props.keys.sorted().joined(separator: ","))") })
+
+    RufletDropdownM2Events.select(value: "ruby", option: option, on: node, to: sink)
+    XCTAssertEqual(calls, [
+      "event:3:click:", "local:value:ruby", "update:value", "event:2:change:ruby",
+    ])
   }
 
   func testDropdownSelectionFollowsControllerThenSelectionOrdering() {
@@ -241,6 +304,20 @@ final class RufletInputParityTests: XCTestCase {
     XCTAssertEqual(
       suggestion.wireValue,
       .map(["key": .string("nyc"), "value": .string("New York")]))
+  }
+
+  func testAutoCompleteKeepsFlutterFieldAndPopupDefaults() {
+    let node = ControlNode(id: 1, type: "AutoComplete")
+    XCTAssertEqual(RufletAutoCompleteDefaults.suggestionsMaxHeight(node), 200)
+    XCTAssertEqual(RufletAutoCompleteDefaults.popupElevation, 4)
+    XCTAssertEqual(RufletAutoCompleteDefaults.fieldTextSize, 16)
+    XCTAssertEqual(RufletAutoCompleteDefaults.optionTextSize, 14)
+    XCTAssertEqual(RufletAutoCompleteDefaults.optionPadding.top, 16)
+    XCTAssertEqual(RufletAutoCompleteDefaults.optionPadding.leading, 16)
+    XCTAssertEqual(RufletAutoCompleteDefaults.fieldContentPadding.top, 8)
+    XCTAssertEqual(RufletAutoCompleteDefaults.fieldContentPadding.leading, 0)
+    XCTAssertEqual(RufletAutoCompleteDefaults.fieldBorderWidth(focused: false), 1)
+    XCTAssertEqual(RufletAutoCompleteDefaults.fieldBorderWidth(focused: true), 2)
   }
 
   func testAutoCompleteChangeMatchesControllerWireOrdering() {
