@@ -20,7 +20,7 @@ struct TextControlView: View {
       .multilineTextAlignment(alignment)
       .lineLimit(lineLimit)
       .truncationMode(truncation)
-      .lineSpacing(style.lineHeight ?? 0)
+      .lineSpacing(style.swiftUILineSpacing)
       .fixedSize(horizontal: node.bool("no_wrap") == true, vertical: false)
       .frame(maxWidth: node.double("max_width").map { CGFloat($0) })
       .background(style.backgroundColor)

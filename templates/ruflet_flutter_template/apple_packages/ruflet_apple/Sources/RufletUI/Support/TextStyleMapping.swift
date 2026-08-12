@@ -18,6 +18,14 @@ public struct RufletTextStyle {
   public var lineHeight: CGFloat?
   public var decoration: TextDecoration = []
   public var themeStyle: Font.TextStyle?
+  var materialThemeMetric: MaterialTextThemeMetric?
+
+  struct MaterialTextThemeMetric: Equatable {
+    let size: CGFloat
+    let lineHeight: CGFloat
+    let weight: Font.Weight
+    let nativeAnchor: Font.TextStyle
+  }
 
   public struct TextDecoration: OptionSet {
     public let rawValue: Int
@@ -39,7 +47,7 @@ public struct RufletTextStyle {
   /// `bgcolor` override whatever the map set.
   static func forText(node: ControlNode) -> RufletTextStyle {
     var style = RufletTextStyle(node: node, styleKey: "style")
-    if let theme = node.string("theme_style") { style.themeStyle = themeTextStyle(theme) }
+    if let theme = node.string("theme_style") { style.applyThemeStyle(theme) }
     if let size = node.double("size") { style.size = CGFloat(size) }
     if let weight = node.string("weight") { style.weight = fontWeight(weight) }
     if node.bool("italic") == true { style.italic = true }
@@ -57,20 +65,38 @@ public struct RufletTextStyle {
 
   /// Flutter's `TextTheme` slots, which Flet passes through by name.
   static func themeTextStyle(_ name: String) -> Font.TextStyle? {
+    materialMetric(name)?.nativeAnchor
+  }
+
+  /// Flutter 3's generated Material 3 type scale. These are semantic values
+  /// resolved by `ThemeData.textTheme`; using a native SwiftUI font does not
+  /// permit collapsing distinct Flet roles onto one Apple point size.
+  static func materialMetric(_ name: String) -> MaterialTextThemeMetric? {
+    let regular = Font.Weight.regular
+    let medium = Font.Weight.medium
     switch name.lowercased().replacingOccurrences(of: "_", with: "") {
-    case "displaylarge", "displaymedium", "displaysmall": return .largeTitle
-    case "headlinelarge": return .title
-    case "headlinemedium": return .title2
-    case "headlinesmall": return .title3
-    case "titlelarge": return .title3
-    case "titlemedium", "titlesmall": return .headline
-    case "bodylarge": return .body
-    case "bodymedium": return .callout
-    case "bodysmall": return .footnote
-    case "labellarge", "labelmedium": return .caption
-    case "labelsmall": return .caption2
+    case "displaylarge": return .init(size: 57, lineHeight: 64, weight: regular, nativeAnchor: .largeTitle)
+    case "displaymedium": return .init(size: 45, lineHeight: 52, weight: regular, nativeAnchor: .largeTitle)
+    case "displaysmall": return .init(size: 36, lineHeight: 44, weight: regular, nativeAnchor: .largeTitle)
+    case "headlinelarge": return .init(size: 32, lineHeight: 40, weight: regular, nativeAnchor: .title)
+    case "headlinemedium": return .init(size: 28, lineHeight: 36, weight: regular, nativeAnchor: .title2)
+    case "headlinesmall": return .init(size: 24, lineHeight: 32, weight: regular, nativeAnchor: .title3)
+    case "titlelarge": return .init(size: 22, lineHeight: 28, weight: regular, nativeAnchor: .title3)
+    case "titlemedium": return .init(size: 16, lineHeight: 24, weight: medium, nativeAnchor: .headline)
+    case "titlesmall": return .init(size: 14, lineHeight: 20, weight: medium, nativeAnchor: .subheadline)
+    case "bodylarge": return .init(size: 16, lineHeight: 24, weight: regular, nativeAnchor: .body)
+    case "bodymedium": return .init(size: 14, lineHeight: 20, weight: regular, nativeAnchor: .callout)
+    case "bodysmall": return .init(size: 12, lineHeight: 16, weight: regular, nativeAnchor: .footnote)
+    case "labellarge": return .init(size: 14, lineHeight: 20, weight: medium, nativeAnchor: .caption)
+    case "labelmedium": return .init(size: 12, lineHeight: 16, weight: medium, nativeAnchor: .caption)
+    case "labelsmall": return .init(size: 11, lineHeight: 16, weight: medium, nativeAnchor: .caption2)
     default: return nil
     }
+  }
+
+  private mutating func applyThemeStyle(_ name: String) {
+    materialThemeMetric = Self.materialMetric(name)
+    themeStyle = materialThemeMetric?.nativeAnchor
   }
 
   static func fontWeight(_ name: String) -> Font.Weight? {
@@ -111,11 +137,11 @@ public struct RufletTextStyle {
     }
     if let value = map["font_family"]?.stringValue { fontFamily = value }
     if let value = map["letter_spacing"]?.doubleValue { letterSpacing = CGFloat(value) }
-    if let value = map["height"]?.doubleValue, map["size"] != nil { lineHeight = CGFloat(value) }
+    if let value = map["height"]?.doubleValue { lineHeight = CGFloat(value) }
     if let value = map["decoration"]?.intValue {
       decoration = TextDecoration(rawValue: value)
     }
-    if let value = map["theme_style"]?.stringValue { themeStyle = Self.themeStyle(value) }
+    if let value = map["theme_style"]?.stringValue { applyThemeStyle(value) }
   }
 
   /// Flet weights are Flutter's `w100`…`w900` plus `bold`/`normal`.
@@ -137,20 +163,7 @@ public struct RufletTextStyle {
   /// Flet's `TextThemeStyle`, mapped onto the platform's type ramp so text
   /// scales with the user's Dynamic Type setting.
   static func themeStyle(_ raw: String) -> Font.TextStyle? {
-    switch raw.lowercased().replacingOccurrences(of: "_", with: "") {
-    case "displaylarge", "displaymedium": return .largeTitle
-    case "displaysmall", "headlinelarge": return .title
-    case "headlinemedium": return .title2
-    case "headlinesmall", "titlelarge": return .title3
-    case "titlemedium": return .headline
-    case "titlesmall": return .subheadline
-    case "bodylarge": return .body
-    case "bodymedium": return .callout
-    case "bodysmall": return .footnote
-    case "labellarge", "labelmedium": return .caption
-    case "labelsmall": return .caption2
-    default: return nil
-    }
+    materialMetric(raw)?.nativeAnchor
   }
 
   /// The resolved font: an explicit size wins, otherwise the theme ramp, and
@@ -159,6 +172,10 @@ public struct RufletTextStyle {
     var base: Font
     if let size {
       base = fontFamily.map { Font.custom($0, size: size) } ?? Font.system(size: size)
+    } else if let metric = materialThemeMetric {
+      base = fontFamily.map {
+        Font.custom($0, size: metric.size, relativeTo: metric.nativeAnchor)
+      } ?? Font.system(size: metric.size, weight: metric.weight)
     } else if let themeStyle {
       base = fontFamily.map { Font.custom($0, size: Self.pointSize(themeStyle), relativeTo: themeStyle) }
         ?? Font.system(themeStyle)
@@ -168,6 +185,21 @@ public struct RufletTextStyle {
     if let weight { base = base.weight(weight) }
     if italic { base = base.italic() }
     return base
+  }
+
+  /// SwiftUI's `lineSpacing` is the extra leading between nominal font boxes;
+  /// Flutter's `height` is a multiplier and Material TextTheme supplies an
+  /// absolute line height. Convert both forms without confusing either value
+  /// for raw extra spacing.
+  var swiftUILineSpacing: CGFloat {
+    let baseSize = size ?? materialThemeMetric?.size
+    if let multiplier = lineHeight, let baseSize {
+      return max(0, baseSize * multiplier - baseSize)
+    }
+    if let metric = materialThemeMetric {
+      return max(0, metric.lineHeight - metric.size)
+    }
+    return 0
   }
 
   /// Nominal point sizes for the type ramp, needed when a custom family has to
