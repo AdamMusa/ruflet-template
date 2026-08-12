@@ -7,6 +7,9 @@ import SwiftUI
   import AVFoundation
   import CoreImage
 #endif
+#if canImport(UIKit)
+  import UIKit
+#endif
 
 /// `Camera` — a live preview plus the capture methods.
 ///
@@ -22,8 +25,11 @@ public struct CameraControlView: View {
   public var body: some View {
     Group {
       #if canImport(AVFoundation) && !targetEnvironment(simulator)
-        if model.isInitialized && (node.bool("preview_enabled") ?? true) {
+        if model.isInitialized
+          && (node.bool("preview_enabled") ?? CameraWireSemantics.previewEnabled)
+        {
           CameraPreview(model: model)
+            .aspectRatio(model.previewAspectRatio, contentMode: .fit)
             .overlay {
               if let contentID = node.controlID(forKey: "content") {
                 ControlView(id: contentID, axis: .none)
@@ -47,9 +53,66 @@ public struct CameraControlView: View {
   }
 }
 
+/// Source-owned Camera defaults and wire parsing from the pinned Flet camera
+/// plug-in. Keeping these values outside the AVFoundation adapter prevents an
+/// Apple API default from silently changing the cross-platform contract.
+struct CameraInitializationOptions: Equatable {
+  let description: RufletValue?
+  let resolutionPreset: String
+  let enableAudio: Bool
+  let fps: Int?
+  let videoBitrate: Int?
+  let audioBitrate: Int?
+  let imageFormatGroup: String
+
+  init(_ call: RufletMethodCall) {
+    description = call.argument("description")
+    resolutionPreset = call.argument("resolution_preset")?.stringValue ?? "max"
+    enableAudio = call.argument("enable_audio")?.boolValue ?? true
+    fps = call.argument("fps")?.intValue.map { Int($0) }
+    videoBitrate = call.argument("video_bitrate")?.intValue.map { Int($0) }
+    audioBitrate = call.argument("audio_bitrate")?.intValue.map { Int($0) }
+    imageFormatGroup = call.argument("image_format_group")?.stringValue ?? "unknown"
+  }
+
+  /// AVFoundation chooses codecs from the active outputs rather than accepting
+  /// the camera plug-in's Android-style constructor bitrate parameters.
+  static let avFoundationUnsupportedProperties = ["audio_bitrate", "video_bitrate"]
+}
+
+enum CameraWireSemantics {
+  static let previewEnabled = true
+
+  static func flashMode(_ value: String?) -> String? {
+    guard let value else { return nil }
+    switch value.lowercased() {
+    case "off", "auto", "always", "torch": return value.lowercased()
+    default: return nil
+    }
+  }
+
+  static func focusMode(_ value: String?) -> String? {
+    guard let value = value?.lowercased(), value == "auto" || value == "locked" else {
+      return nil
+    }
+    return value
+  }
+
+  static func exposureMode(_ value: String?) -> String? { focusMode(value) }
+
+  static func orientation(_ value: String?) -> String? {
+    guard let value = value?.lowercased() else { return nil }
+    switch value {
+    case "portrait_up", "portrait_down", "landscape_left", "landscape_right": return value
+    default: return nil
+    }
+  }
+}
+
 @MainActor
 final class CameraModel: NSObject, ObservableObject {
   @Published private(set) var isInitialized = false
+  @Published private(set) var previewAspectRatio: CGFloat?
   #if canImport(AVFoundation)
     let session = AVCaptureSession()
     private let photoOutput = AVCapturePhotoOutput()
@@ -63,11 +126,16 @@ final class CameraModel: NSObject, ObservableObject {
     private var streamingImages = false
     private var captureOrientationLocked = false
     private var recordingPaused = false
-    private var flashMode: AVCaptureDevice.FlashMode = .auto
+    private var flashModeName = "auto"
     private var lastDescription: RufletValue?
     private var lastEnableAudio = true
     private var lastResolutionPreset: String?
     private var lastFPS: Int?
+    private var lastImageFormatGroup = "unknown"
+    private var lockedCaptureOrientation: String?
+    private var recordingOrientation: String?
+    private var previewPauseOrientation: String?
+    private var errorDescription: String?
     private var control: ControlNode?
     private var events = RufletEventSink()
   #endif
@@ -109,7 +177,7 @@ final class CameraModel: NSObject, ObservableObject {
         ?? description?["id"]?.stringValue
       let wantsFront = description?["lens_direction"]?.stringValue?.lowercased() == "front"
       let devices = AVCaptureDevice.DiscoverySession(
-        deviceTypes: [.builtInWideAngleCamera],
+        deviceTypes: Self.cameraDeviceTypes,
         mediaType: .video,
         position: wantsFront ? .front : .back
       ).devices
@@ -125,6 +193,7 @@ final class CameraModel: NSObject, ObservableObject {
         throw RufletServiceError.unavailable("The selected camera cannot be attached")
       }
       session.addInput(input)
+      updatePreviewAspectRatio(device)
       if let fps, fps > 0,
         device.activeFormat.videoSupportedFrameRateRanges.contains(where: {
           $0.minFrameRate <= Double(fps) && Double(fps) <= $0.maxFrameRate
@@ -157,6 +226,32 @@ final class CameraModel: NSObject, ObservableObject {
       default: return .photo
       }
     }
+
+    private static var cameraDeviceTypes: [AVCaptureDevice.DeviceType] {
+      #if os(iOS)
+        var types: [AVCaptureDevice.DeviceType] = [
+          .builtInWideAngleCamera, .builtInTelephotoCamera,
+        ]
+        if #available(iOS 13.0, *) {
+          types.append(.builtInUltraWideCamera)
+        }
+        return types
+      #else
+        if #available(macOS 14.0, *) {
+          return [.builtInWideAngleCamera, .external]
+        }
+        return [.builtInWideAngleCamera]
+      #endif
+    }
+
+    private func updatePreviewAspectRatio(_ device: AVCaptureDevice) {
+      let dimensions = CMVideoFormatDescriptionGetDimensions(device.activeFormat.formatDescription)
+      guard dimensions.width > 0, dimensions.height > 0 else {
+        previewAspectRatio = nil
+        return
+      }
+      previewAspectRatio = CGFloat(dimensions.width) / CGFloat(dimensions.height)
+    }
   #endif
 
   func handle(
@@ -169,45 +264,45 @@ final class CameraModel: NSObject, ObservableObject {
       switch call.name {
       case "get_available_cameras", "get_cameras", "available_cameras":
         let devices = AVCaptureDevice.DiscoverySession(
-          deviceTypes: [.builtInWideAngleCamera],
+          deviceTypes: Self.cameraDeviceTypes,
           mediaType: .video,
           position: .unspecified
         ).devices
         completion(.success(.array(devices.map { device in
           .map([
             "name": .string(device.uniqueID),
-            "lens_direction": .string(device.position == .front ? "front" : "back"),
-            "sensor_orientation": .int(device.position == .front ? 270 : 90),
-            "lens_type": .string("wide")
+            "lens_direction": .string(Self.lensDirection(device)),
+            "sensor_orientation": .int(90),
+            "lens_type": .string(Self.lensType(device))
           ])
         })))
       case "initialize":
         #if targetEnvironment(simulator)
           completion(.failure(RufletServiceError.unavailable("No camera on this simulator")))
         #else
-          do {
-            control = node
-            self.events = events
-            lastDescription = call.argument("description")
-            guard let description = lastDescription,
-              Self.isCameraDescription(description)
-            else {
-              throw RufletServiceError.invalidArguments(
-                "Camera description is required for initialization.")
+          let options = CameraInitializationOptions(call)
+          guard let description = options.description,
+            Self.isCameraDescription(description)
+          else {
+            completion(.failure(RufletServiceError.invalidArguments(
+              "Camera description is required for initialization.")))
+            return
+          }
+          let reinitialize = configured || session.isRunning
+          if reinitialize {
+            let captureSession = session
+            Task { [weak self] in
+              if captureSession.isRunning {
+                await Task.detached { captureSession.stopRunning() }.value
+              }
+              self?.initialize(
+                options, description: description, node: node, events: events,
+                completion: completion)
             }
-            lastEnableAudio = call.argument("enable_audio")?.boolValue ?? true
-            lastResolutionPreset = call.argument("resolution_preset")?.stringValue
-            lastFPS = call.argument("fps")?.intValue.map { Int($0) }
-            try configure(
-              node: node,
-              description: description,
-              enableAudio: lastEnableAudio,
-              resolutionPreset: lastResolutionPreset,
-              fps: lastFPS)
-            startSession(completion: completion)
-          } catch {
-            configured = false
-            completion(.failure(error))
+          } else {
+            initialize(
+              options, description: description, node: node, events: events,
+              completion: completion)
           }
         #endif
       case "take_picture", "capture":
@@ -225,12 +320,20 @@ final class CameraModel: NSObject, ObservableObject {
         pendingCapture = completion
         emitState(takingPicture: true)
         let settings = AVCapturePhotoSettings()
-        if videoDevice?.hasFlash == true { settings.flashMode = flashMode }
+        if videoDevice?.hasFlash == true {
+          switch flashModeName {
+          case "always": settings.flashMode = .on
+          case "auto": settings.flashMode = .auto
+          default: settings.flashMode = .off
+          }
+        }
         photoOutput.capturePhoto(with: settings, delegate: self)
         #endif
       case "pause_preview":
+        previewPauseOrientation = currentDeviceOrientation
         pauseSession(completion: completion)
       case "resume_preview":
+        previewPauseOrientation = nil
         startSession(completion: completion)
       case "get_min_zoom_level":
         withVideoDevice(completion) { _ in .double(1) }
@@ -266,8 +369,11 @@ final class CameraModel: NSObject, ObservableObject {
         }
         configureDevice(call, completion: completion) { device in
           let zoom = call.argument("zoom")!.doubleValue!
-          device.videoZoomFactor = min(
-            max(CGFloat(zoom), 1), device.activeFormat.videoMaxZoomFactor)
+          guard zoom >= 1, CGFloat(zoom) <= device.activeFormat.videoMaxZoomFactor else {
+            throw RufletServiceError.invalidArguments(
+              "The provided zoom was outside the supported range for this device.")
+          }
+          device.videoZoomFactor = CGFloat(zoom)
           return .null
         }
         #else
@@ -284,6 +390,13 @@ final class CameraModel: NSObject, ObservableObject {
             "Camera is not initialized. Call initialize first.")))
           return
         }
+        guard offset >= Double(device.minExposureTargetBias),
+          offset <= Double(device.maxExposureTargetBias)
+        else {
+          completion(.failure(RufletServiceError.invalidArguments(
+            "The provided exposure offset was outside the supported range for this device.")))
+          return
+        }
         do {
           try device.lockForConfiguration()
           device.setExposureTargetBias(Float(offset)) { _ in
@@ -298,26 +411,33 @@ final class CameraModel: NSObject, ObservableObject {
         completion(.failure(Self.platformUnsupported(call.name)))
         #endif
       case "set_flash_mode":
-        guard let value = call.argument("mode")?.stringValue?.lowercased(),
-          ["off", "on", "auto", "torch"].contains(value)
-        else {
+        guard let value = CameraWireSemantics.flashMode(call.argument("mode")?.stringValue) else {
           completion(.success(.null))
           return
         }
         configureDevice(call, completion: completion) { device in
-          let mode: AVCaptureDevice.FlashMode = value == "on" || value == "torch"
-            ? .on : (value == "auto" ? .auto : .off)
-          guard device.isFlashModeSupported(mode) else {
-            throw RufletServiceError.unavailable("The selected flash mode is unavailable")
+          if device.hasTorch {
+            if value == "torch" {
+              guard device.isTorchModeSupported(.on) else {
+                throw RufletServiceError.unavailable("The selected torch mode is unavailable")
+              }
+              device.torchMode = .on
+            } else if device.torchMode != .off {
+              device.torchMode = .off
+            }
           }
-          device.flashMode = mode
-          self.flashMode = mode
+          if value != "torch" {
+            let mode: AVCaptureDevice.FlashMode = value == "always"
+              ? .on : (value == "auto" ? .auto : .off)
+            guard !device.hasFlash || device.isFlashModeSupported(mode) else {
+              throw RufletServiceError.unavailable("The selected flash mode is unavailable")
+            }
+          }
+          self.flashModeName = value
           return .null
         }
       case "set_focus_mode":
-        guard let value = call.argument("mode")?.stringValue?.lowercased(),
-          ["auto", "locked"].contains(value)
-        else {
+        guard let value = CameraWireSemantics.focusMode(call.argument("mode")?.stringValue) else {
           completion(.success(.null))
           return
         }
@@ -330,9 +450,7 @@ final class CameraModel: NSObject, ObservableObject {
           return .null
         }
       case "set_exposure_mode":
-        guard let value = call.argument("mode")?.stringValue?.lowercased(),
-          ["auto", "locked"].contains(value)
-        else {
+        guard let value = CameraWireSemantics.exposureMode(call.argument("mode")?.stringValue) else {
           completion(.success(.null))
           return
         }
@@ -351,9 +469,13 @@ final class CameraModel: NSObject, ObservableObject {
           let y = value?["dy"]?.doubleValue ?? value?["y"]?.doubleValue
           // camera_avfoundation accepts null to reset the metering point. Its
           // native reset target is the center of the sensor.
-          let point = CGPoint(
-            x: min(max(x ?? 0.5, 0), 1),
-            y: min(max(y ?? 0.5, 0), 1))
+          guard (x == nil && y == nil)
+            || ((0...1).contains(x ?? -1) && (0...1).contains(y ?? -1))
+          else {
+            throw RufletServiceError.invalidArguments(
+              "Camera metering points must be normalized between zero and one.")
+          }
+          let point = CGPoint(x: x ?? 0.5, y: y ?? 0.5)
           if call.name == "set_focus_point" {
             guard device.isFocusPointOfInterestSupported else {
               throw RufletServiceError.unavailable("Focus points are unavailable")
@@ -368,17 +490,22 @@ final class CameraModel: NSObject, ObservableObject {
           return .null
         }
       case "lock_capture_orientation":
+        let orientation = CameraWireSemantics.orientation(
+          call.argument("orientation")?.stringValue) ?? currentDeviceOrientation
         captureOrientationLocked = true
-        applyOrientation(call.argument("orientation")?.stringValue)
+        lockedCaptureOrientation = orientation
+        applyOrientation(orientation)
         emitState()
         completion(.success(.null))
       case "unlock_capture_orientation":
         captureOrientationLocked = false
+        lockedCaptureOrientation = nil
         emitState()
         completion(.success(.null))
       case "prepare_for_video_recording":
         completion(.success(.null))
       case "start_video_recording":
+        recordingOrientation = lockedCaptureOrientation ?? currentDeviceOrientation
         startVideoRecording(completion: completion)
       case "pause_video_recording":
         if #available(iOS 18.0, macOS 15.0, *) {
@@ -429,6 +556,7 @@ final class CameraModel: NSObject, ObservableObject {
           do {
             self.resetConfiguration()
             self.lastDescription = description
+            self.errorDescription = nil
             try self.configure(
               node: node, description: self.lastDescription,
               enableAudio: self.lastEnableAudio, resolutionPreset: self.lastResolutionPreset,
@@ -439,7 +567,12 @@ final class CameraModel: NSObject, ObservableObject {
             self.isInitialized = !wasRunning || session.isRunning
             self.emitState()
             completion(.success(.null))
-          } catch { completion(.failure(error)) }
+          } catch {
+            self.resetConfiguration()
+            self.errorDescription = error.localizedDescription
+            self.emitState()
+            completion(.failure(error))
+          }
         }
       case "start", "resume":
         startSession(completion: completion)
@@ -474,9 +607,71 @@ final class CameraModel: NSObject, ObservableObject {
       .platformUnsupported(type: "Camera", method: method, platform: "macOS")
     }
 
+    private static func lensDirection(_ device: AVCaptureDevice) -> String {
+      switch device.position {
+      case .front: return "front"
+      case .back: return "back"
+      default: return "external"
+      }
+    }
+
+    private static func lensType(_ device: AVCaptureDevice) -> String {
+      #if os(iOS)
+        switch device.deviceType {
+        case .builtInTelephotoCamera: return "telephoto"
+        case .builtInUltraWideCamera: return "ultraWide"
+        default: return "wide"
+        }
+      #else
+        return "unknown"
+      #endif
+    }
+
+    private var currentDeviceOrientation: String {
+      #if canImport(UIKit)
+        switch UIDevice.current.orientation {
+        case .portraitUpsideDown: return "portrait_down"
+        case .landscapeLeft: return "landscape_left"
+        case .landscapeRight: return "landscape_right"
+        default: return "portrait_up"
+        }
+      #else
+        return "portrait_up"
+      #endif
+    }
+
     private var videoDevice: AVCaptureDevice? {
       session.inputs.compactMap { $0 as? AVCaptureDeviceInput }
         .first(where: { $0.device.hasMediaType(.video) })?.device
+    }
+
+    private func initialize(
+      _ options: CameraInitializationOptions,
+      description: RufletValue,
+      node: ControlNode,
+      events: RufletEventSink,
+      completion: @escaping RufletMethodCompletion
+    ) {
+      if configured { resetConfiguration() }
+      control = node
+      self.events = events
+      lastDescription = description
+      lastEnableAudio = options.enableAudio
+      lastResolutionPreset = options.resolutionPreset
+      lastFPS = options.fps
+      lastImageFormatGroup = options.imageFormatGroup.lowercased()
+      errorDescription = nil
+      do {
+        try configure(
+          node: node, description: description, enableAudio: lastEnableAudio,
+          resolutionPreset: lastResolutionPreset, fps: lastFPS)
+        startSession(completion: completion)
+      } catch {
+        resetConfiguration()
+        errorDescription = error.localizedDescription
+        emitState()
+        completion(.failure(error))
+      }
     }
 
     private func startSession(completion: @escaping RufletMethodCompletion) {
@@ -495,8 +690,16 @@ final class CameraModel: NSObject, ObservableObject {
         await Task.detached { session.startRunning() }.value
         guard let self else { return }
         self.isInitialized = session.isRunning
-        self.emitState()
-        completion(.success(.null))
+        if session.isRunning {
+          self.errorDescription = nil
+          self.emitState()
+          completion(.success(.null))
+        } else {
+          let error = RufletServiceError.unavailable("The camera capture session did not start")
+          self.errorDescription = error.localizedDescription
+          self.emitState()
+          completion(.failure(error))
+        }
       }
     }
 
@@ -551,6 +754,10 @@ final class CameraModel: NSObject, ObservableObject {
       configured = false
       streamingImages = false
       isInitialized = false
+      previewAspectRatio = nil
+      previewPauseOrientation = nil
+      lockedCaptureOrientation = nil
+      recordingOrientation = nil
     }
 
     private func applyOrientation(_ name: String?) {
@@ -600,9 +807,15 @@ final class CameraModel: NSObject, ObservableObject {
       }
       guard !streamingImages else { return completion(.success(.null)) }
       videoOutput.alwaysDiscardsLateVideoFrames = true
-      videoOutput.videoSettings = [
-        kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
-      ]
+      let pixelFormat: OSType
+      switch lastImageFormatGroup {
+      case "bgra8888": pixelFormat = kCVPixelFormatType_32BGRA
+      case "yuv420": pixelFormat = kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
+      default:
+        pixelFormat = videoOutput.availableVideoPixelFormatTypes.first
+          ?? kCVPixelFormatType_32BGRA
+      }
+      videoOutput.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: pixelFormat]
       videoOutput.setSampleBufferDelegate(self, queue: videoQueue)
       session.beginConfiguration()
       if session.canAddOutput(videoOutput) { session.addOutput(videoOutput) }
@@ -639,21 +852,30 @@ final class CameraModel: NSObject, ObservableObject {
         "is_streaming_images": .bool(streamingImages),
         "is_preview_paused": .bool(!session.isRunning),
         "is_capture_orientation_locked": .bool(captureOrientationLocked),
-        "has_error": .bool(false)
+        "has_error": .bool(errorDescription != nil)
       ]
+      if let lockedCaptureOrientation {
+        state["locked_capture_orientation"] = .string(lockedCaptureOrientation)
+      }
+      if let recordingOrientation {
+        state["recording_orientation"] = .string(recordingOrientation)
+      }
+      if let previewPauseOrientation {
+        state["preview_pause_orientation"] = .string(previewPauseOrientation)
+      }
+      if let errorDescription { state["error_description"] = .string(errorDescription) }
       if let device {
         let dimensions = CMVideoFormatDescriptionGetDimensions(device.activeFormat.formatDescription)
         let width = Double(dimensions.width)
         let height = Double(dimensions.height)
         state["description"] = .map([
           "name": .string(device.uniqueID),
-          "lens_direction": .string(device.position == .front ? "front" : "back"),
-          "sensor_orientation": .int(device.position == .front ? 270 : 90),
-          "lens_type": .string("wide")
+          "lens_direction": .string(Self.lensDirection(device)),
+          "sensor_orientation": .int(90),
+          "lens_type": .string(Self.lensType(device))
         ])
-        state["device_orientation"] = .string("portrait_up")
-        let flashName = flashMode == .on ? "on" : (flashMode == .off ? "off" : "auto")
-        state["flash_mode"] = .string(flashName)
+        state["device_orientation"] = .string(currentDeviceOrientation)
+        state["flash_mode"] = .string(flashModeName)
         state["exposure_mode"] = .string(
           device.exposureMode == .continuousAutoExposure ? "auto" : "locked")
         state["focus_mode"] = .string(
@@ -745,15 +967,32 @@ final class CameraModel: NSObject, ObservableObject {
       ) else { return }
       let width = CVPixelBufferGetWidth(imageBuffer)
       let height = CVPixelBufferGetHeight(imageBuffer)
+      let pixelFormat = CVPixelBufferGetPixelFormatType(imageBuffer)
+      let formatName: String
+      switch pixelFormat {
+      case kCVPixelFormatType_32BGRA: formatName = "bgra8888"
+      case kCVPixelFormatType_420YpCbCr8BiPlanarFullRange,
+        kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange:
+        formatName = "yuv420"
+      default: formatName = "unknown"
+      }
       Task { @MainActor [data] in
         guard let control = self.control else { return }
-        self.events.fire(control, "stream_image", data: .map([
+        var payload: [String: RufletValue] = [
           "width": .int(Int64(width)),
           "height": .int(Int64(height)),
-          "format": .string("bgra8888"),
+          "format": .string(formatName),
           "encoded_format": .string("jpeg"),
           "bytes": .binary([UInt8](data))
-        ]))
+        ]
+        #if os(iOS)
+          if let device = self.videoDevice {
+            payload["lens_aperture"] = .double(Double(device.lensAperture))
+            payload["sensor_exposure_time"] = .double(CMTimeGetSeconds(device.exposureDuration))
+            payload["sensor_sensitivity"] = .double(Double(device.iso))
+          }
+        #endif
+        self.events.fire(control, "stream_image", data: .map(payload))
       }
     }
   }
@@ -775,7 +1014,7 @@ final class CameraModel: NSObject, ObservableObject {
         func makeUIView(context: Context) -> CameraPreviewView {
           let view = CameraPreviewView()
           view.previewLayer.session = model.session
-          view.previewLayer.videoGravity = .resizeAspectFill
+          view.previewLayer.videoGravity = .resizeAspect
           return view
         }
         func updateUIView(_ view: CameraPreviewView, context: Context) {}
@@ -786,7 +1025,7 @@ final class CameraModel: NSObject, ObservableObject {
           let view = NSView()
           view.wantsLayer = true
           let preview = AVCaptureVideoPreviewLayer(session: model.session)
-          preview.videoGravity = .resizeAspectFill
+          preview.videoGravity = .resizeAspect
           preview.frame = view.bounds
           preview.autoresizingMask = [.layerWidthSizable, .layerHeightSizable]
           view.layer = preview
