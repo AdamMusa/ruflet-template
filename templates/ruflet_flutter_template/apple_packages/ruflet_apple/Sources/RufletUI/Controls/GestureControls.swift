@@ -1561,6 +1561,7 @@ private struct DefaultActionEmphasis: ViewModifier {
 struct DialogActionControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
+  @EnvironmentObject private var store: ControlStore
 
   @ViewBuilder
   var body: some View {
@@ -1596,12 +1597,13 @@ struct DialogActionControlView: View {
   }
 
   private var cupertinoAction: some View {
-    Button {
-      guard node.bool("disabled") != true else { return }
-      events.fire(node, "click")
+    let presentation = CupertinoDialogActionPresentation(
+      node: node, visibilityForID: { store.node($0)?.bool("visible") })
+    return Button {
+      CupertinoDialogActionPresentation.activate(node, through: events)
     } label: {
       HStack(spacing: 8) {
-        actionContent
+        actionContent(presentation)
         if node.type == "CupertinoContextMenuAction",
            let icon = node.props["trailing_icon"]
         {
@@ -1621,13 +1623,13 @@ struct DialogActionControlView: View {
   }
 
   @ViewBuilder
-  private var actionContent: some View {
-    if let contentID = node.controlID(forKey: "content") {
+  private func actionContent(_ presentation: CupertinoDialogActionPresentation) -> some View {
+    if let contentID = presentation.contentID {
       ControlView(id: contentID, axis: .none)
-    } else if let content = node.string("content") {
+    } else if let content = presentation.text {
       Text(content).lineLimit(node.type == "CupertinoContextMenuAction" ? 1 : nil)
     } else {
-      Text("content must be provided").foregroundColor(.red)
+      Text(presentation.missingContentError).foregroundColor(.red)
     }
   }
 
@@ -1655,5 +1657,55 @@ struct DialogActionControlView: View {
 
   private var actionFontSize: CGFloat {
     node.type == "CupertinoContextMenuAction" ? 16 : 17
+  }
+}
+
+struct CupertinoDialogActionPresentation: Equatable {
+  static let dialogMissingContentError =
+    "CupertinoDialogAction.content must be a string or visible Control"
+  static let sheetMissingContentError =
+    "CupertinoActionSheetAction.content must be a string or visible Control"
+  static let contextMenuMissingContentError =
+    "content (string or visible Control) must be provided"
+
+  let type: String
+  let contentID: Int?
+  let text: String?
+  let isDefault: Bool
+  let isDestructive: Bool
+  let disabled: Bool
+
+  init(node: ControlNode, visibilityForID: (Int) -> Bool? = { _ in nil }) {
+    type = node.type
+    if let id = node.controlID(forKey: "content"), visibilityForID(id) != false {
+      contentID = id
+      text = nil
+    } else if case .string(let value) = node.props["content"] {
+      contentID = nil
+      text = value
+    } else {
+      contentID = nil
+      text = nil
+    }
+    isDefault = node.bool("default") ?? false
+    isDestructive = node.bool("destructive") ?? false
+    disabled = node.bool("disabled") ?? false
+  }
+
+  var missingContentError: String {
+    switch type {
+    case "CupertinoDialogAction": return Self.dialogMissingContentError
+    case "CupertinoActionSheetAction": return Self.sheetMissingContentError
+    default: return Self.contextMenuMissingContentError
+    }
+  }
+
+  var validationError: String? {
+    contentID == nil && text == nil ? missingContentError : nil
+  }
+
+  static func activate(_ node: ControlNode, through events: RufletEventSink) {
+    guard node.bool("disabled") != true else { return }
+    events.fire(node, "click")
   }
 }
