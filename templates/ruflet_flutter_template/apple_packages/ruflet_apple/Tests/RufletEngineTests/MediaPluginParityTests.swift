@@ -171,6 +171,52 @@ final class MediaPluginParityTests: XCTestCase {
       defaultVolume.configure(from: ControlNode(id: 3, type: "Video"), events: events)
       XCTAssertEqual(defaultVolume.player.volume, 1, accuracy: 0.0001)
     }
+
+    func testVideoNativeFullscreenEntryMirrorsPinnedFletProperties() {
+      let node = ControlNode(
+        id: 12, type: "Video", props: ["on_enter_fullscreen": .bool(true)])
+      var local: [(String, RufletValue)] = []
+      var updates: [[String: RufletValue]] = []
+      var emitted: [String] = []
+      let events = RufletEventSink(
+        send: { _, name, _ in emitted.append(name) },
+        setLocal: { _, key, value in local.append((key, value)) },
+        update: { _, props in updates.append(props) })
+
+      VideoFullscreenState.didEnter(node, events: events)
+
+      XCTAssertEqual(local.map { $0.0 }, ["_fullscreen", "fullscreen"])
+      XCTAssertEqual(local.map { $0.1 }, [.bool(true), .bool(true)])
+      XCTAssertEqual(updates, [["fullscreen": .bool(true)]])
+      XCTAssertEqual(emitted, ["enter_fullscreen"])
+    }
+
+    func testVideoProgrammaticFullscreenAndNativeExitMirrorPinnedFlet() {
+      let node = ControlNode(
+        id: 13, type: "Video",
+        props: [
+          "fullscreen": .bool(true),
+          "on_enter_fullscreen": .bool(true),
+          "on_exit_fullscreen": .bool(true),
+        ])
+      var local: [(String, RufletValue)] = []
+      var updates: [[String: RufletValue]] = []
+      var emitted: [String] = []
+      let events = RufletEventSink(
+        send: { _, name, _ in emitted.append(name) },
+        setLocal: { _, key, value in local.append((key, value)) },
+        update: { _, props in updates.append(props) })
+
+      VideoFullscreenState.didEnter(node, events: events)
+      XCTAssertEqual(local.map { $0.0 }, ["_fullscreen"])
+      XCTAssertTrue(updates.isEmpty)
+
+      VideoFullscreenState.didExit(node, events: events)
+      XCTAssertEqual(local.map { $0.0 }, ["_fullscreen", "_fullscreen", "fullscreen"])
+      XCTAssertEqual(local.map { $0.1 }, [.bool(true), .bool(false), .bool(false)])
+      XCTAssertEqual(updates, [["fullscreen": .bool(false)]])
+      XCTAssertEqual(emitted, ["enter_fullscreen", "exit_fullscreen"])
+    }
   #endif
 
   @MainActor

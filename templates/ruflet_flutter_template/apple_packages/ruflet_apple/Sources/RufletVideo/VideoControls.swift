@@ -626,6 +626,36 @@ struct VideoMediaSource: Equatable {
   }
 }
 
+/// Mirrors flet_video's `_handleEnterFullscreen` / `_handleExitFullscreen`.
+///
+/// `_fullscreen` records the native player's actual state and stays local to
+/// the renderer. `fullscreen` is also pushed back when a native interaction
+/// changes it, so the Python/Ruby control does not immediately ask the player
+/// to re-enter the state the user just left.
+enum VideoFullscreenState {
+  static func didEnter(_ node: ControlNode, events: RufletEventSink) {
+    synchronize(true, node: node, events: events)
+    events.fire(node, "enter_fullscreen")
+  }
+
+  static func didExit(_ node: ControlNode, events: RufletEventSink) {
+    synchronize(false, node: node, events: events)
+    events.fire(node, "exit_fullscreen")
+  }
+
+  private static func synchronize(
+    _ fullscreen: Bool,
+    node: ControlNode,
+    events: RufletEventSink
+  ) {
+    let value = RufletValue.bool(fullscreen)
+    events.setLocal(node.id, "_fullscreen", value)
+    guard (node.bool("fullscreen") ?? false) != fullscreen else { return }
+    events.setLocal(node.id, "fullscreen", value)
+    events.update(node.id, ["fullscreen": value])
+  }
+}
+
 #if canImport(AVKit)
   /// `AVPlayerViewController` is the UIKit player; AppKit has `AVPlayerView`.
   /// Neither is a SwiftUI view, so each platform gets its own representable.
@@ -647,8 +677,11 @@ struct VideoMediaSource: Equatable {
         var events: RufletEventSink?
 
         func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
-          if let node, let events { events.fire(node, "exit_fullscreen") }
+          // A programmatic exit clears this before dismissing. Only a native
+          // dismissal (for example the player's Done button) owns this path.
+          guard fullscreenController != nil else { return }
           fullscreenController = nil
+          if let node, let events { VideoFullscreenState.didExit(node, events: events) }
         }
       }
 
@@ -681,13 +714,13 @@ struct VideoMediaSource: Equatable {
             fullscreenController.presentationController?.delegate = context.coordinator
             context.coordinator.fullscreenController = fullscreenController
             presenter.present(fullscreenController, animated: true) {
-              events.fire(node, "enter_fullscreen")
+              VideoFullscreenState.didEnter(node, events: events)
             }
           }
         } else if !fullscreen, let fullscreenController = context.coordinator.fullscreenController {
-          events.fire(node, "exit_fullscreen")
-          fullscreenController.dismiss(animated: true)
           context.coordinator.fullscreenController = nil
+          VideoFullscreenState.didExit(node, events: events)
+          fullscreenController.dismiss(animated: true)
         }
       }
 
