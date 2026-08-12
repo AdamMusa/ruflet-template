@@ -41,7 +41,7 @@ struct DialogPresenter: ViewModifier {
       ZStack {
         // `modal` keeps the barrier from dismissing, and `barrier_color`
         // paints it — both are the dialog's own properties in Flet.
-        MaterialPalette.color(dialog.string("barrier_color"), default: .black.opacity(0.54))
+        AppleChromeAppearance.color(dialog.string("barrier_color"), fallback: .black.opacity(0.3))
           .ignoresSafeArea()
           .onTapGesture {
             guard RufletOverlaySemantics.allowsBarrierDismiss(dialog) else { return }
@@ -92,7 +92,7 @@ struct DialogPresenter: ViewModifier {
     guard let appBarID = host.controlID(forKey: "appbar"), let appBar = store.node(appBarID) else {
       return 0
     }
-    return RufletThemeDefaults.appBarHeight(appBar)
+    return ChromeDefaults.appBar(appBar).toolbarHeight
   }
 
   @ViewBuilder
@@ -116,8 +116,21 @@ struct DialogPresenter: ViewModifier {
 /// Keeping them explicit prevents Apple platform defaults from silently
 /// changing Flet's design-family and dismissal contracts.
 enum RufletOverlaySemantics {
+  /// This package is the Apple renderer, so an omitted `adaptive` flag still
+  /// resolves to native Apple presentation. The flag remains on the wire for
+  /// cross-platform clients; it is not a request for Material visuals here.
+  static func usesNativeAppleDialog(_ node: ControlNode) -> Bool { true }
+
   static func usesCupertinoDialog(_ node: ControlNode) -> Bool {
     node.type == "CupertinoAlertDialog" || node.bool("adaptive") == true
+  }
+
+  static func hasExplicitDialogAppearance(_ node: ControlNode) -> Bool {
+    [
+      "alignment", "bgcolor", "shape", "elevation", "shadow_color", "clip_behavior",
+      "inset_padding", "icon_padding", "title_padding", "content_padding",
+      "actions_padding", "action_button_padding", "actions_alignment",
+    ].contains { node.props[$0] != nil }
   }
 
   static func allowsBarrierDismiss(_ node: ControlNode) -> Bool {
@@ -138,9 +151,9 @@ enum RufletOverlaySemantics {
   }
 }
 
-/// Constructor values copied from Flet 0.80.5 and Flutter 3.41.2. Keeping
-/// them here makes the renderer's fallback contract testable and prevents a
-/// platform framework update from silently changing a Ruflet application.
+/// Native Apple presentation defaults. Explicit DSL values remain the source
+/// of truth; omitted appearance values inherit Apple geometry instead of
+/// silently importing Flutter Material theme constants.
 enum OverlayDefaults {
   struct DialogValues: Equatable {
     let radius: CGFloat
@@ -153,7 +166,7 @@ enum OverlayDefaults {
   struct SheetValues: Equatable {
     let radius: CGFloat
     let elevation: CGFloat
-    let maximumWidth: CGFloat
+    let maximumWidth: CGFloat?
     let dragHandleWidth: CGFloat
     let dragHandleHeight: CGFloat
     let useSafeArea: Bool
@@ -172,35 +185,33 @@ enum OverlayDefaults {
 
   static func dialog(_ node: ControlNode) -> DialogValues {
     DialogValues(
-      radius: ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? 28,
-      elevation: CGFloat(node.double("elevation") ?? 6),
+      radius: ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? 14,
+      elevation: CGFloat(node.double("elevation") ?? 0),
       inset: ControlProps.edgeInsets(node.props["inset_padding"])
-        ?? EdgeInsets(top: 24, leading: 40, bottom: 24, trailing: 40),
-      // Flet supplies this value to AlertDialog, so it intentionally wins
-      // over Flutter's otherwise slightly different Material 3 fallback.
+        ?? EdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 20),
       content: ControlProps.edgeInsets(node.props["content_padding"])
-        ?? EdgeInsets(top: 20, leading: 24, bottom: 24, trailing: 24),
+        ?? EdgeInsets(top: 8, leading: 20, bottom: 20, trailing: 20),
       actions: ControlProps.edgeInsets(node.props["actions_padding"])
-        ?? EdgeInsets(top: 0, leading: 24, bottom: 24, trailing: 24))
+        ?? EdgeInsets(top: 0, leading: 8, bottom: 8, trailing: 8))
   }
 
   static func sheet(_ node: ControlNode) -> SheetValues {
     SheetValues(
-      radius: ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? 28,
-      elevation: CGFloat(node.double("elevation") ?? 1), maximumWidth: 640,
-      dragHandleWidth: 32, dragHandleHeight: 4,
+      radius: ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? 16,
+      elevation: CGFloat(node.double("elevation") ?? 0),
+      maximumWidth: nil,
+      dragHandleWidth: 36, dragHandleHeight: 5,
       useSafeArea: node.bool("use_safe_area") != false,
       dismissible: node.bool("dismissible") != false)
   }
 
   static func snackBar(_ node: ControlNode) -> SnackBarValues {
-    let floating = node.string("behavior")?.lowercased() == "floating"
     return SnackBarValues(
-      elevation: CGFloat(node.double("elevation") ?? 6),
-      radius: ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? (floating ? 4 : 0),
-      horizontalPadding: floating ? 16 : 24,
+      elevation: CGFloat(node.double("elevation") ?? 0),
+      radius: ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? 12,
+      horizontalPadding: 16,
       inset: ControlProps.edgeInsets(node.props["margin"])
-        ?? EdgeInsets(top: 5, leading: 15, bottom: 10, trailing: 15),
+        ?? EdgeInsets(top: 12, leading: 12, bottom: 12, trailing: 12),
       durationMilliseconds: node.double("duration") ?? 4000,
       dismissDirection: node.string("dismiss_direction")?.lowercased() ?? "down",
       actionOverflowThreshold: node.double("action_overflow_threshold") ?? 0.25)
@@ -208,11 +219,7 @@ enum OverlayDefaults {
 
   static func bannerContentPadding(_ node: ControlNode) -> EdgeInsets {
     if let explicit = ControlProps.edgeInsets(node.props["content_padding"]) { return explicit }
-    let singleRow = node.controlIDs(forKey: "actions").count == 1
-      && node.bool("force_actions_below") != true
-    return singleRow
-      ? EdgeInsets(top: 2, leading: 16, bottom: 0, trailing: 0)
-      : EdgeInsets(top: 24, leading: 16, bottom: 4, trailing: 16)
+    return EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)
   }
 }
 
@@ -221,23 +228,24 @@ struct AlertDialogControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
-  @Environment(\.colorScheme) private var colorScheme
 
   @ViewBuilder
   var body: some View {
-    if RufletOverlaySemantics.usesCupertinoDialog(node)
-        && !RufletCupertinoPresentationDefaults.hasAlertContent(node)
+    if !hasAlertContent
     {
-      Text("CupertinoAlertDialog has nothing to display. Provide title, content, or actions.")
+      Text("AlertDialog has nothing to display. Provide icon, title, content, or actions.")
         .foregroundColor(.red)
-    } else if RufletOverlaySemantics.usesCupertinoDialog(node) {
+    } else if RufletOverlaySemantics.usesNativeAppleDialog(node)
+        && (node.type == "CupertinoAlertDialog"
+          || !RufletOverlaySemantics.hasExplicitDialogAppearance(node))
+    {
       appleAlert
     } else {
-      materialDialog
+      styledDialog
     }
   }
 
-  private var materialDialog: some View {
+  private var styledDialog: some View {
     let defaults = OverlayDefaults.dialog(node)
     let hasTitle = node.controlID(forKey: "title") != nil
     let hasContent = node.controlID(forKey: "content") != nil
@@ -245,7 +253,7 @@ struct AlertDialogControlView: View {
       if node.controlID(forKey: "icon") != nil {
         RufletFormFieldSlot(node: node, key: "icon")
           .foregroundColor(MaterialPalette.color(node.string("icon_color"), default:
-            MaterialPalette.color("secondary", default: .secondary)))
+            .secondary))
           .frame(maxWidth: .infinity)
           .padding(ControlProps.edgeInsets(node.props["icon_padding"]) ?? EdgeInsets(
             top: 24, leading: 24, bottom: hasTitle ? 16 : (hasContent ? 0 : 24), trailing: 24))
@@ -277,9 +285,7 @@ struct AlertDialogControlView: View {
       RoundedRectangle(cornerRadius: defaults.radius)
         .fill(MaterialPalette.color(node.string("bgcolor"), default: dialogSurface)))
     .shadow(
-      // Material 3's generated DialogTheme uses a transparent shadow. An
-      // explicit Flet shadow_color still opts into a native shadow.
-      color: MaterialPalette.color(node.string("shadow_color"), default: .clear),
+      color: AppleChromeAppearance.color(node.string("shadow_color"), fallback: .clear),
       radius: defaults.elevation)
     .padding(defaults.inset)
     .modifier(DialogClip(radius: defaults.radius, behavior: node.string("clip_behavior") ?? "none"))
@@ -312,6 +318,14 @@ struct AlertDialogControlView: View {
 
   private var appleAlert: some View {
     VStack(spacing: 0) {
+      if let iconID = node.controlID(forKey: "icon") {
+        ControlView(id: iconID, axis: .none)
+          .foregroundColor(AppleChromeAppearance.color(
+            node.string("icon_color"), fallback: .accentColor))
+          .frame(maxWidth: .infinity)
+          .padding(ControlProps.edgeInsets(node.props["icon_padding"])
+            ?? EdgeInsets(top: 18, leading: 20, bottom: 4, trailing: 20))
+      }
       if node.props["title"] != nil {
         appleTextOrWidget("title")
           .font(.system(size: 17, weight: .semibold))
@@ -355,13 +369,18 @@ struct AlertDialogControlView: View {
     .frame(width: 270)
     .background {
       RoundedRectangle(cornerRadius: 14, style: .continuous)
-        .fill(.ultraThinMaterial)
-        .overlay(
-          RoundedRectangle(cornerRadius: 14, style: .continuous)
-            .fill(cupertinoDialogSurface))
+        .fill(.regularMaterial)
+        .overlay {
+          if node.props["bgcolor"] != nil {
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+              .fill(AppleChromeAppearance.color(node.string("bgcolor"), fallback: .clear))
+          }
+        }
     }
     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-    .shadow(color: .black.opacity(0.2), radius: 18, y: 8)
+    .shadow(
+      color: AppleChromeAppearance.color(node.string("shadow_color"), fallback: .clear),
+      radius: CGFloat(node.double("elevation") ?? 0))
   }
 
   @ViewBuilder
@@ -381,8 +400,7 @@ struct AlertDialogControlView: View {
           ? .semibold : .regular))
       .foregroundColor(
         RufletCupertinoPresentationDefaults.isDestructiveAction(action)
-          ? MaterialPalette.color("error", default: .red)
-          : MaterialPalette.color("primary", default: .primary))
+          ? .red : .accentColor)
       .frame(maxWidth: .infinity, maxHeight: .infinity)
       .disabled(action.bool("disabled") ?? false)
     }
@@ -408,20 +426,13 @@ struct AlertDialogControlView: View {
     }
   }
 
-  private var cupertinoDialogSurface: Color {
-    colorScheme == .dark
-      ? Color(.sRGB, red: 45 / 255, green: 45 / 255, blue: 45 / 255, opacity: 204 / 255)
-      : Color(.sRGB, red: 242 / 255, green: 242 / 255, blue: 242 / 255, opacity: 204 / 255)
+  private var hasAlertContent: Bool {
+    node.controlID(forKey: "icon") != nil
+      || RufletCupertinoPresentationDefaults.hasAlertContent(node)
   }
 
   private var dialogSurface: Color {
-    #if canImport(UIKit)
-      return MaterialPalette.color("surfacecontainerhigh", default: Color(UIColor.systemBackground))
-    #elseif canImport(AppKit)
-      return MaterialPalette.color("surfacecontainerhigh", default: Color(NSColor.windowBackgroundColor))
-    #else
-      return .white
-    #endif
+    AppleChromeAppearance.barSurface
   }
 }
 
@@ -461,20 +472,18 @@ struct BottomSheetControlView: View {
     if node.type == "CupertinoBottomSheet" {
       cupertinoSheet
     } else {
-      materialSheet
+      nativeSheet
     }
   }
 
-  private var materialSheet: some View {
+  private var nativeSheet: some View {
     let defaults = OverlayDefaults.sheet(node)
     let content = VStack(spacing: 0) {
       if node.bool("show_drag_handle") == true {
         Capsule()
-          .fill(MaterialPalette.color("onsurfacevariant", default: Color.secondary))
+          .fill(Color.secondary)
           .frame(width: defaults.dragHandleWidth, height: defaults.dragHandleHeight)
-          // Flutter reserves the minimum interactive dimension when showing
-          // the handle, even though the painted handle itself is only 32x4.
-          .frame(height: 48)
+          .frame(height: 44)
       }
       if let contentID = node.controlID(forKey: "content") {
         ControlView(id: contentID, axis: .vertical)
@@ -537,13 +546,7 @@ struct BottomSheetControlView: View {
   ]
 
   private var sheetSurface: Color {
-    #if canImport(UIKit)
-      return MaterialPalette.color("surfacecontainerlow", default: Color(UIColor.systemBackground))
-    #elseif canImport(AppKit)
-      return MaterialPalette.color("surfacecontainerlow", default: Color(NSColor.windowBackgroundColor))
-    #else
-      return .white
-    #endif
+    AppleChromeAppearance.barSurface
   }
 
   private var cupertinoSheetSurface: Color {
@@ -638,7 +641,7 @@ struct SnackBarControlView: View {
         } label: {
           Image(systemName: "xmark")
             .foregroundColor(
-              MaterialPalette.color(node.string("close_icon_color"), default: .white))
+              AppleChromeAppearance.color(node.string("close_icon_color"), fallback: .secondary))
         }
         .buttonStyle(.plain)
       }
@@ -650,16 +653,23 @@ struct SnackBarControlView: View {
         trailing: node.controlID(forKey: "action") != nil
           || node.string("action") != nil || node.bool("show_close_icon") == true
           ? 0 : defaults.horizontalPadding))
-    .background(
-      MaterialPalette.color(
-        node.string("bgcolor"), default: MaterialPalette.color("inversesurface", default: .black)),
-      in: RoundedRectangle(cornerRadius: defaults.radius))
+    .background {
+      RoundedRectangle(cornerRadius: defaults.radius, style: .continuous)
+        .fill(.regularMaterial)
+        .overlay {
+          if node.props["bgcolor"] != nil {
+            RoundedRectangle(cornerRadius: defaults.radius, style: .continuous)
+              .fill(AppleChromeAppearance.color(node.string("bgcolor"), fallback: .clear))
+          }
+        }
+    }
     .modifier(ChromeClipModifier(behavior: node.string("clip_behavior") ?? "hardEdge"))
-    .shadow(color: .black.opacity(0.2), radius: defaults.elevation)
+    .shadow(
+      color: AppleChromeAppearance.color(node.string("shadow_color"), fallback: .clear),
+      radius: defaults.elevation)
     .frame(width: floating ? node.double("width").map { CGFloat($0) } : nil)
-    .foregroundColor(MaterialPalette.color("oninversesurface", default: .white))
-    // `behavior: floating` lifts the bar off the edge; `fixed` sits flush.
-    .padding(floating ? floatingInsets(defaults) : EdgeInsets())
+    .foregroundColor(.primary)
+    .padding(floating ? floatingInsets(defaults) : defaults.inset)
     .modifier(SnackBarSwipe(node: node, events: events))
     // Flutter's SnackBar invokes `onVisible` when the presentation becomes
     // visible. The action click stays on SnackBarAction when it is a control;
@@ -714,16 +724,16 @@ struct BannerControlView: View {
       if !singleRow { actionBar }
       if elevation == 0 {
         Rectangle()
-          .fill(MaterialPalette.color(node.string("divider_color"), default:
-            MaterialPalette.color("outlinevariant", default: .secondary.opacity(0.25))))
+          .fill(AppleChromeAppearance.color(
+            node.string("divider_color"), fallback: AppleChromeAppearance.separator))
           .frame(height: 1)
       }
     }
     .frame(maxWidth: .infinity)
-    .background(MaterialPalette.color(node.string("bgcolor"), default:
-      MaterialPalette.color("surfacecontainerlow", default: .white)))
+    .background(AppleChromeAppearance.color(
+      node.string("bgcolor"), fallback: AppleChromeAppearance.barSurface))
     .shadow(
-      color: MaterialPalette.color(node.string("shadow_color"), default: .clear),
+      color: AppleChromeAppearance.color(node.string("shadow_color"), fallback: .clear),
       radius: elevation)
     .padding(ControlProps.edgeInsets(node.props["margin"])
       ?? EdgeInsets(top: 0, leading: 0, bottom: elevation > 0 ? 10 : 0, trailing: 0))
@@ -745,7 +755,7 @@ struct BannerControlView: View {
       ControlList(ids: node.controlIDs(forKey: "actions"), axis: .horizontal)
     }
     .padding(.horizontal, 8)
-    .frame(minHeight: CGFloat(node.double("min_action_bar_height") ?? 52))
+    .frame(minHeight: CGFloat(node.double("min_action_bar_height") ?? 44))
   }
 }
 

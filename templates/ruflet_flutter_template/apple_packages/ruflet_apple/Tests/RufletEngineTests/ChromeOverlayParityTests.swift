@@ -4,42 +4,42 @@ import RufletProtocol
 import XCTest
 
 final class ChromeOverlayParityTests: XCTestCase {
-  func testMaterialChromeUsesPinnedFletAndFlutterConstructorDefaults() {
+  func testAppleChromeUsesNativeDefaultsWhenDSLDoesNotStyleIt() {
     let appBar = ChromeDefaults.appBar(ControlNode(id: 1, type: "AppBar"))
-    XCTAssertEqual(appBar.toolbarHeight, 56)
+    XCTAssertEqual(appBar.toolbarHeight, 44)
     XCTAssertEqual(appBar.toolbarOpacity, 1)
-    XCTAssertEqual(appBar.titleSpacing, 16)
-    XCTAssertEqual(appBar.leadingWidth, 56)
-    XCTAssertEqual(appBar.scrolledUnderElevation, 3)
+    XCTAssertEqual(appBar.titleSpacing, 8)
+    XCTAssertEqual(appBar.leadingWidth, 44)
+    XCTAssertEqual(appBar.scrolledUnderElevation, 0)
     XCTAssertFalse(appBar.excludeHeaderSemantics)
     XCTAssertFalse(appBar.forceMaterialTransparency)
 
     let bottom = ChromeDefaults.bottomAppBar(ControlNode(id: 2, type: "BottomAppBar"))
-    XCTAssertEqual(bottom.notchMargin, 4)
-    XCTAssertEqual(bottom.height, 80)
-    XCTAssertEqual(bottom.elevation, 3)
-    XCTAssertEqual(bottom.padding.top, 12)
-    XCTAssertEqual(bottom.padding.leading, 16)
+    XCTAssertEqual(bottom.notchMargin, 0)
+    XCTAssertEqual(bottom.height, 44)
+    XCTAssertEqual(bottom.elevation, 0)
+    XCTAssertEqual(bottom.padding.top, 0)
+    XCTAssertEqual(bottom.padding.leading, 8)
 
     let navigation = ChromeDefaults.navigationBar(ControlNode(id: 3, type: "NavigationBar"))
-    XCTAssertEqual(navigation.height, 80)
-    XCTAssertEqual(navigation.elevation, 3)
-    XCTAssertEqual(navigation.labelPadding.top, 4)
+    XCTAssertEqual(navigation.height, 49)
+    XCTAssertEqual(navigation.elevation, 0)
+    XCTAssertEqual(navigation.labelPadding.top, 2)
     XCTAssertEqual(navigation.labelPadding.bottom, 0)
     XCTAssertTrue(navigation.showsLabel(selected: false))
 
     let rail = ChromeDefaults.navigationRail(ControlNode(id: 4, type: "NavigationRail"))
-    XCTAssertEqual(rail.minWidth, 80)
-    XCTAssertEqual(rail.minExtendedWidth, 256)
+    XCTAssertEqual(rail.minWidth, 64)
+    XCTAssertEqual(rail.minExtendedWidth, 220)
     XCTAssertEqual(rail.groupAlignment, -1)
-    XCTAssertTrue(rail.useIndicator)
+    XCTAssertFalse(rail.useIndicator)
     XCTAssertTrue(rail.showsLabel(extended: false, selected: false))
   }
 
   func testBottomAppBarNotchParsesFletNotchedShapeContract() {
     let absent = ChromeDefaults.bottomAppBarNotch(ControlNode(id: 1, type: "BottomAppBar"))
-    XCTAssertEqual(absent.kind, .automatic)
-    XCTAssertEqual(absent.margin, 4)
+    XCTAssertEqual(absent.kind, .none)
+    XCTAssertEqual(absent.margin, 0)
 
     let circular = ChromeDefaults.bottomAppBarNotch(ControlNode(
       id: 2, type: "BottomAppBar",
@@ -55,25 +55,6 @@ final class ChromeOverlayParityTests: XCTestCase {
       id: 3, type: "BottomAppBar",
       props: ["shape": .map(["_type": .string("auto")])]))
     XCTAssertEqual(automatic.kind, .automatic)
-  }
-
-  func testNavigationMaterialThreeStatePalettesMatchFlutterDefaults() {
-    XCTAssertEqual(
-      ChromeDefaults.navigationBarItemPalette(selected: true, disabled: false),
-      .init(iconToken: "onsecondarycontainer", labelToken: "onsurface"))
-    XCTAssertEqual(
-      ChromeDefaults.navigationBarItemPalette(selected: false, disabled: false),
-      .init(iconToken: "onsurfacevariant", labelToken: "onsurfacevariant"))
-    XCTAssertEqual(
-      ChromeDefaults.navigationBarItemPalette(selected: true, disabled: true),
-      .init(iconToken: "onsurfacevariant,0.38", labelToken: "onsurfacevariant,0.38"))
-
-    XCTAssertEqual(
-      ChromeDefaults.navigationRailItemPalette(selected: true, disabled: true),
-      .init(iconToken: "onsurface,0.38", labelToken: "onsurface,0.38"))
-    XCTAssertEqual(
-      ChromeDefaults.navigationDrawerItemPalette(selected: true, disabled: false),
-      .init(iconToken: "onsecondarycontainer", labelToken: "onsecondarycontainer"))
   }
 
   func testBottomAppBarRoundedClipAndExplicitValuesPreserveFletProps() {
@@ -112,13 +93,13 @@ final class ChromeOverlayParityTests: XCTestCase {
     }
   }
 
-  func testNavigationDrawerUsesFlutterMaterialThreeGeometry() {
+  func testNavigationDrawerUsesNativeAppleRowGeometry() {
     let values = ChromeDefaults.navigationDrawer(ControlNode(id: 6, type: "NavigationDrawer"))
-    XCTAssertEqual(values.elevation, 1)
-    XCTAssertEqual(values.tilePadding.leading, 12)
-    XCTAssertEqual(values.tileHeight, 56)
-    XCTAssertEqual(values.indicatorWidth, 336)
-    XCTAssertEqual(values.indicatorHeight, 56)
+    XCTAssertEqual(values.elevation, 0)
+    XCTAssertEqual(values.tilePadding.leading, 8)
+    XCTAssertEqual(values.tileHeight, 44)
+    XCTAssertNil(values.indicatorWidth)
+    XCTAssertEqual(values.indicatorHeight, 44)
   }
 
   func testPageNavigationUsesFletViewPopAndConfirmProtocols() {
@@ -292,7 +273,7 @@ final class ChromeOverlayParityTests: XCTestCase {
     }
   }
 
-  func testAlertDialogOnlyUsesCupertinoDesignWhenExplicitOrAdaptive() {
+  func testAlertDialogPreservesAdaptiveWireFlagButAlwaysUsesNativeApplePresentation() {
     let material = ControlNode(id: 70, type: "AlertDialog")
     let adaptive = ControlNode(
       id: 71, type: "AlertDialog", props: ["adaptive": .bool(true)])
@@ -301,6 +282,9 @@ final class ChromeOverlayParityTests: XCTestCase {
     XCTAssertFalse(RufletOverlaySemantics.usesCupertinoDialog(material))
     XCTAssertTrue(RufletOverlaySemantics.usesCupertinoDialog(adaptive))
     XCTAssertTrue(RufletOverlaySemantics.usesCupertinoDialog(cupertino))
+    XCTAssertTrue(RufletOverlaySemantics.usesNativeAppleDialog(material))
+    XCTAssertTrue(RufletOverlaySemantics.usesNativeAppleDialog(adaptive))
+    XCTAssertTrue(RufletOverlaySemantics.usesNativeAppleDialog(cupertino))
   }
 
   func testOverlayBarrierDismissalUsesTheControlsOwnFletFlag() {
@@ -325,15 +309,15 @@ final class ChromeOverlayParityTests: XCTestCase {
         ControlNode(id: 85, type: "CupertinoBottomSheet", props: ["modal": .bool(true)])))
   }
 
-  func testDialogDefaultsTranslateFletAndFlutterMaterialThreeConstructors() {
+  func testDialogDefaultsUseNativeAppleGeometryAndPreserveExplicitDSLValues() {
     let defaults = OverlayDefaults.dialog(ControlNode(id: 100, type: "AlertDialog"))
-    XCTAssertEqual(defaults.radius, 28)
-    XCTAssertEqual(defaults.elevation, 6)
-    XCTAssertEqual(defaults.inset.leading, 40)
-    XCTAssertEqual(defaults.inset.top, 24)
-    XCTAssertEqual(defaults.content.leading, 24)
-    XCTAssertEqual(defaults.content.top, 20)
-    XCTAssertEqual(defaults.actions.bottom, 24)
+    XCTAssertEqual(defaults.radius, 14)
+    XCTAssertEqual(defaults.elevation, 0)
+    XCTAssertEqual(defaults.inset.leading, 20)
+    XCTAssertEqual(defaults.inset.top, 20)
+    XCTAssertEqual(defaults.content.leading, 20)
+    XCTAssertEqual(defaults.content.top, 8)
+    XCTAssertEqual(defaults.actions.bottom, 8)
 
     let explicit = OverlayDefaults.dialog(ControlNode(
       id: 101, type: "AlertDialog",
@@ -342,13 +326,13 @@ final class ChromeOverlayParityTests: XCTestCase {
     XCTAssertEqual(explicit.inset.leading, 7)
   }
 
-  func testBottomSheetDefaultsMatchFlutterMaterialThreeAndFletFlags() {
+  func testBottomSheetDefaultsUseNativeAppleSurfaceAndFletFlags() {
     let defaults = OverlayDefaults.sheet(ControlNode(id: 110, type: "BottomSheet"))
-    XCTAssertEqual(defaults.radius, 28)
-    XCTAssertEqual(defaults.elevation, 1)
-    XCTAssertEqual(defaults.maximumWidth, 640)
-    XCTAssertEqual(defaults.dragHandleWidth, 32)
-    XCTAssertEqual(defaults.dragHandleHeight, 4)
+    XCTAssertEqual(defaults.radius, 16)
+    XCTAssertEqual(defaults.elevation, 0)
+    XCTAssertNil(defaults.maximumWidth)
+    XCTAssertEqual(defaults.dragHandleWidth, 36)
+    XCTAssertEqual(defaults.dragHandleHeight, 5)
     XCTAssertTrue(defaults.useSafeArea)
     XCTAssertTrue(defaults.dismissible)
 
@@ -359,40 +343,40 @@ final class ChromeOverlayParityTests: XCTestCase {
     XCTAssertFalse(explicit.dismissible)
   }
 
-  func testSnackBarDefaultsRespectFixedFloatingAndExplicitWidthRules() {
+  func testSnackBarDefaultsUseNativeAppleToastGeometry() {
     let fixed = OverlayDefaults.snackBar(ControlNode(id: 120, type: "SnackBar"))
-    XCTAssertEqual(fixed.elevation, 6)
-    XCTAssertEqual(fixed.radius, 0)
-    XCTAssertEqual(fixed.horizontalPadding, 24)
+    XCTAssertEqual(fixed.elevation, 0)
+    XCTAssertEqual(fixed.radius, 12)
+    XCTAssertEqual(fixed.horizontalPadding, 16)
     XCTAssertEqual(fixed.durationMilliseconds, 4000)
     XCTAssertEqual(fixed.dismissDirection, "down")
     XCTAssertEqual(fixed.actionOverflowThreshold, 0.25)
 
     let floating = OverlayDefaults.snackBar(ControlNode(
       id: 121, type: "SnackBar", props: ["behavior": .string("floating")]))
-    XCTAssertEqual(floating.radius, 4)
+    XCTAssertEqual(floating.radius, 12)
     XCTAssertEqual(floating.horizontalPadding, 16)
-    XCTAssertEqual(floating.inset.leading, 15)
-    XCTAssertEqual(floating.inset.top, 5)
-    XCTAssertEqual(floating.inset.bottom, 10)
+    XCTAssertEqual(floating.inset.leading, 12)
+    XCTAssertEqual(floating.inset.top, 12)
+    XCTAssertEqual(floating.inset.bottom, 12)
   }
 
-  func testBannerPaddingUsesFlutterSingleAndMultiActionGeometry() {
+  func testBannerPaddingUsesNativeAppleInsetsRegardlessOfActionCount() {
     let single = ControlNode(
       id: 130, type: "Banner", props: ["actions": .array([.controlRef(1)])])
     let singlePadding = OverlayDefaults.bannerContentPadding(single)
     XCTAssertEqual(singlePadding.leading, 16)
-    XCTAssertEqual(singlePadding.top, 2)
-    XCTAssertEqual(singlePadding.trailing, 0)
+    XCTAssertEqual(singlePadding.top, 12)
+    XCTAssertEqual(singlePadding.trailing, 16)
 
     let multi = ControlNode(
       id: 131, type: "Banner",
       props: ["actions": .array([.controlRef(1), .controlRef(2)])])
     let multiPadding = OverlayDefaults.bannerContentPadding(multi)
     XCTAssertEqual(multiPadding.leading, 16)
-    XCTAssertEqual(multiPadding.top, 24)
+    XCTAssertEqual(multiPadding.top, 12)
     XCTAssertEqual(multiPadding.trailing, 16)
-    XCTAssertEqual(multiPadding.bottom, 4)
+    XCTAssertEqual(multiPadding.bottom, 12)
   }
 
   func testOverlayDismissUpdatesOpenBeforeSendingDismiss() {
