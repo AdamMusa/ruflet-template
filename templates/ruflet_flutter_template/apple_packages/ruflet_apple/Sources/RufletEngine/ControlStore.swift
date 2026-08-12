@@ -351,14 +351,12 @@ public final class ControlStore: ObservableObject {
     nodes[id] = node
     lastChangedIDs = [id]
     revision &+= 1
-    objectWillChange.send()
   }
 
   public func reset() {
     nodes.removeAll()
     lastChangedIDs = []
     revision &+= 1
-    objectWillChange.send()
   }
 
   // MARK: - Materialization
@@ -481,7 +479,6 @@ public final class ControlStore: ObservableObject {
       previousNodes[$0] != nodes[$0]
     })
     revision &+= 1
-    objectWillChange.send()
     return true
   }
 

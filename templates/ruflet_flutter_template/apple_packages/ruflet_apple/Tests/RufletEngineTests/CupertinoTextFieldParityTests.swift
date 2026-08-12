@@ -135,6 +135,27 @@ final class CupertinoTextFieldParityTests: XCTestCase {
     XCTAssertEqual(selected.initialSelection, NSRange(location: 1, length: 3))
   }
 
+  func testContentPaddingAndFocusedBorderUseCupertinoFieldProperties() {
+    let resting = RufletCupertinoTextFieldPresentation(
+      node: node([
+        "padding": .int(99),
+        "content_padding": .map([
+          "left": .int(14), "right": .int(13), "top": .int(12), "bottom": .int(11),
+        ]),
+        "border_width": .double(1),
+        "focused_border_width": .double(2),
+      ]), focused: false, revealedPassword: false)
+    XCTAssertEqual(resting.padding.leading, 14)
+    XCTAssertEqual(resting.padding.trailing, 13)
+    XCTAssertEqual(resting.padding.top, 12)
+    XCTAssertEqual(resting.padding.bottom, 11)
+    XCTAssertEqual(resting.border?.top?.width, 1)
+
+    let focused = RufletCupertinoTextFieldPresentation(
+      node: resting.node, focused: true, revealedPassword: false)
+    XCTAssertEqual(focused.border?.top?.width, 2)
+  }
+
   func testUserEditUpdatesValueBeforeOptionalChangeEvent() {
     let field = node(["on_change": .bool(true)])
     var calls: [String] = []

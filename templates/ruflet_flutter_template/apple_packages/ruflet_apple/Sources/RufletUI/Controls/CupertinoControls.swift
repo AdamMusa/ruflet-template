@@ -1161,6 +1161,12 @@ struct CupertinoTextFieldControlView: View {
   @State private var selection = NSRange(location: 0, length: 0)
   @State private var revealed = false
   @State private var observedValue = ""
+  @State private var localValue: String
+
+  init(node: ControlNode) {
+    self.node = node
+    _localValue = State(initialValue: node.string("value") ?? "")
+  }
 
   private var presentation: RufletCupertinoTextFieldPresentation {
     RufletCupertinoTextFieldPresentation(
@@ -1189,6 +1195,7 @@ struct CupertinoTextFieldControlView: View {
     .disabled(node.bool("disabled") == true)
     .onAppear {
       observedValue = presentation.value
+      localValue = presentation.value
       focused = node.string("blur") == nil
         && (presentation.autofocus || node.string("focus") != nil)
       selection = presentation.initialSelection
@@ -1201,6 +1208,7 @@ struct CupertinoTextFieldControlView: View {
       let value = value ?? ""
       guard observedValue != value else { return }
       observedValue = value
+      localValue = value
       selection = node.map("selection") == nil
         ? NSRange(location: value.utf16.count, length: 0)
         : RufletTextSelection.explicit(on: node)
@@ -1312,6 +1320,7 @@ struct CupertinoTextFieldControlView: View {
   private var clearButton: some View {
     Button {
       observedValue = ""
+      localValue = ""
       RufletCupertinoTextFieldEvents.change("", on: node, to: events)
     } label: {
       Image(systemName: "xmark.circle.fill")
@@ -1335,8 +1344,9 @@ struct CupertinoTextFieldControlView: View {
 
   private var binding: Binding<String> {
     Binding(
-      get: { node.string("value") ?? "" },
+      get: { localValue },
       set: {
+        localValue = $0
         observedValue = $0
         RufletCupertinoTextFieldEvents.change($0, on: node, to: events)
       })
@@ -1409,7 +1419,7 @@ struct RufletCupertinoTextFieldPresentation {
   }
 
   var padding: EdgeInsets {
-    ControlProps.edgeInsets(node.props["padding"])
+    ControlProps.edgeInsets(node.props["content_padding"])
       ?? EdgeInsets(
         top: RufletCupertinoTextFieldDefaults.padding,
         leading: RufletCupertinoTextFieldDefaults.padding,
@@ -1516,8 +1526,13 @@ struct RufletCupertinoTextFieldPresentation {
   var border: RufletBorder? {
     if let explicit = ControlProps.borderSides(node.props["border"]) { return explicit }
     let side = RufletBorderSide(
-      color: MaterialPalette.color(node.string("border_color"), default: .black),
-      width: CGFloat(node.double("border_width") ?? 1))
+      color: MaterialPalette.color(
+        focused ? (node.string("focused_border_color") ?? node.string("border_color"))
+          : node.string("border_color"),
+        default: .black),
+      width: CGFloat(
+        focused ? (node.double("focused_border_width") ?? node.double("border_width") ?? 1)
+          : (node.double("border_width") ?? 1)))
     switch node.string("border")?.lowercased() ?? "outline" {
     case "none": return nil
     case "underline": return RufletBorder(top: nil, right: nil, bottom: side, left: nil)
@@ -1526,7 +1541,9 @@ struct RufletCupertinoTextFieldPresentation {
   }
 
   var backgroundColor: Color {
-    MaterialPalette.color(node.string("bgcolor"))
+    MaterialPalette.color(
+      focused ? (node.string("focused_bgcolor") ?? node.string("bgcolor"))
+        : node.string("bgcolor"))
       ?? RufletCupertinoTextFieldDefaults.backgroundColor
   }
 
