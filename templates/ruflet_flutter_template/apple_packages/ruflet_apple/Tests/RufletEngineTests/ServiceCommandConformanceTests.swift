@@ -219,6 +219,28 @@ final class ServiceCommandConformanceTests: XCTestCase {
     XCTAssertNotNil(values?.first?.stringValue)
   }
 
+  func testDeviceServiceWireSemanticsMatchVendoredFletAdapters() {
+    XCTAssertEqual(
+      FletDeviceServiceSemantics.connectivityNames(
+        wifi: true, mobile: true, ethernet: false, vpn: false, satisfied: true),
+      ["wifi", "mobile"])
+    XCTAssertEqual(
+      FletDeviceServiceSemantics.connectivityNames(
+        wifi: false, mobile: false, ethernet: false, vpn: false, satisfied: false),
+      ["none"])
+    XCTAssertEqual(
+      FletDeviceServiceSemantics.connectivityNames(
+        wifi: false, mobile: false, ethernet: false, vpn: false, satisfied: true),
+      ["other"])
+
+    XCTAssertEqual(
+      try? FletDeviceServiceSemantics.requiredBool(.bool(false), name: "value"), false)
+    XCTAssertThrowsError(try FletDeviceServiceSemantics.requiredBool(nil, name: "value"))
+    XCTAssertEqual(try? FletDeviceServiceSemantics.validatedBrightness(.double(0.5)), 0.5)
+    XCTAssertThrowsError(try FletDeviceServiceSemantics.validatedBrightness(.double(-0.1)))
+    XCTAssertThrowsError(try FletDeviceServiceSemantics.validatedBrightness(.double(1.1)))
+  }
+
   @MainActor
   func testCoreServiceWireShapesMatchVendoredFletAdapters() {
     XCTAssertEqual(FletCoreServiceSemantics.nullableString(nil), .null)

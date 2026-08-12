@@ -14,6 +14,44 @@ import RufletProtocol
   import IOKit.ps
 #endif
 
+/// Pure Flet wire conversions for device services. Keeping this separate from
+/// Apple framework objects lets the translated contract tests exercise result
+/// shapes and argument validation deterministically.
+public enum FletDeviceServiceSemantics {
+  public static func connectivityNames(
+    wifi: Bool,
+    mobile: Bool,
+    ethernet: Bool,
+    vpn: Bool,
+    satisfied: Bool
+  ) -> [String] {
+    guard satisfied else { return ["none"] }
+    var values: [String] = []
+    if wifi { values.append("wifi") }
+    if mobile { values.append("mobile") }
+    if ethernet { values.append("ethernet") }
+    if vpn { values.append("vpn") }
+    return values.isEmpty ? ["other"] : values
+  }
+
+  public static func requiredBool(_ value: RufletValue?, name: String) throws -> Bool {
+    guard let value = value?.boolValue else {
+      throw RufletServiceError.invalidArguments("\(name) is required")
+    }
+    return value
+  }
+
+  public static func validatedBrightness(_ value: RufletValue?) throws -> Double {
+    guard let value = value?.doubleValue else {
+      throw RufletServiceError.invalidArguments("value is required")
+    }
+    guard (0...1).contains(value) else {
+      throw RufletServiceError.invalidArguments("value must be between 0 and 1")
+    }
+    return value
+  }
+}
+
 /// `Battery` — level, charging state and low-power mode.
 @MainActor
 public final class BatteryService: RufletStreamingService {
@@ -25,7 +63,10 @@ public final class BatteryService: RufletStreamingService {
   public init() {}
 
   public func activate(node: ControlNode, context: RufletServiceContext) {
-    guard node.handlesEvent("state_change") else { return }
+    guard node.handlesEvent("state_change") else {
+      stopListening()
+      return
+    }
     targetID = node.id
     emitEvent = context.emitEvent
     #if os(iOS)
@@ -94,6 +135,16 @@ public final class BatteryService: RufletStreamingService {
     #endif
   }
 
+  private func stopListening() {
+    if let stateObserver { NotificationCenter.default.removeObserver(stateObserver) }
+    stateObserver = nil
+    targetID = nil
+    emitEvent = nil
+    #if os(iOS)
+      UIDevice.current.isBatteryMonitoringEnabled = false
+    #endif
+  }
+
   #if os(iOS)
     private static func stateName(_ state: UIDevice.BatteryState) -> String {
       switch state {
@@ -133,16 +184,22 @@ public final class ConnectivityService: RufletStreamingService {
   public static let wireType = "Connectivity"
 
   #if canImport(Network)
-    private let monitor = NWPathMonitor()
+    private var monitor = NWPathMonitor()
     private var monitoring = false
-    private var current = "none"
+    private var current = ["none"]
+    private var targetID: Int?
+    private var emitEvent: ((_ target: Int, _ name: String, _ data: RufletValue) -> Void)?
   #endif
 
   public init() {}
 
   public func activate(node: ControlNode, context: RufletServiceContext) {
     #if canImport(Network)
-      startMonitoring(node: node, context: context)
+      if node.handlesEvent("change") {
+        startMonitoring(node: node, context: context)
+      } else {
+        stopMonitoring()
+      }
     #endif
   }
 
@@ -156,7 +213,7 @@ public final class ConnectivityService: RufletStreamingService {
       startMonitoring(node: node, context: context)
       switch call.name {
       case "get_connectivity":
-        completion(.success(.array([.string(current)])))
+        completion(.success(.array(current.map(RufletValue.string))))
       default:
         completion(
           .failure(
@@ -171,29 +228,42 @@ public final class ConnectivityService: RufletStreamingService {
     /// Starts on first use and pushes `change` the way Flet's connectivity
     /// service does, so a Ruby `on_change` handler fires without polling.
     private func startMonitoring(node: ControlNode?, context: RufletServiceContext) {
-      guard !monitoring, let node else { return }
+      guard let node else { return }
+      targetID = node.id
+      emitEvent = context.emitEvent
+      guard !monitoring else { return }
       monitoring = true
-      let id = node.id
       monitor.pathUpdateHandler = { [weak self] path in
-        let kind = Self.describe(path)
+        let values = Self.describe(path)
         Task { @MainActor in
-          guard let self, kind != self.current else { return }
-          self.current = kind
-          context.emitEvent(id, "change", .map([
-            "connectivity": .array([.string(kind)])
+          guard let self, values != self.current else { return }
+          self.current = values
+          guard let targetID = self.targetID, let emitEvent = self.emitEvent else { return }
+          emitEvent(targetID, "change", .map([
+            "connectivity": .array(values.map(RufletValue.string))
           ]))
         }
       }
       monitor.start(queue: DispatchQueue(label: "com.izeesoft.ruflet.connectivity"))
     }
 
-    private nonisolated static func describe(_ path: NWPath) -> String {
-      guard path.status == .satisfied else { return "none" }
-      if path.usesInterfaceType(.wifi) { return "wifi" }
-      if path.usesInterfaceType(.cellular) { return "mobile" }
-      if path.usesInterfaceType(.wiredEthernet) { return "ethernet" }
-      if path.usesInterfaceType(.other) { return "vpn" }
-      return "other"
+    private func stopMonitoring() {
+      guard monitoring else { return }
+      monitor.cancel()
+      // NWPathMonitor instances cannot be restarted after cancellation.
+      monitor = NWPathMonitor()
+      monitoring = false
+      targetID = nil
+      emitEvent = nil
+    }
+
+    private nonisolated static func describe(_ path: NWPath) -> [String] {
+      FletDeviceServiceSemantics.connectivityNames(
+        wifi: path.usesInterfaceType(.wifi),
+        mobile: path.usesInterfaceType(.cellular),
+        ethernet: path.usesInterfaceType(.wiredEthernet),
+        vpn: path.usesInterfaceType(.other),
+        satisfied: path.status == .satisfied)
     }
   #endif
 }
@@ -254,17 +324,21 @@ public final class ScreenBrightnessService: RufletStreamingService {
         completion(
           .success(.double(applicationBrightness ?? Double(UIScreen.main.brightness))))
       case "set_application_screen_brightness", "set_system_screen_brightness":
-        guard let value = call.argument("value")?.doubleValue else {
-          return completion(.failure(RufletServiceError.invalidArguments("value is required")))
+        let value: Double
+        do {
+          value = try FletDeviceServiceSemantics.validatedBrightness(call.argument("value"))
+        } catch {
+          return completion(.failure(error))
         }
-        if systemBrightnessAtStart == nil {
-          systemBrightnessAtStart = Double(UIScreen.main.brightness)
-        }
-        applicationBrightness = value
-        UIScreen.main.brightness = CGFloat(min(max(value, 0), 1))
         if call.name == "set_application_screen_brightness" {
+          if systemBrightnessAtStart == nil {
+            systemBrightnessAtStart = Double(UIScreen.main.brightness)
+          }
+          applicationBrightness = value
+          UIScreen.main.brightness = CGFloat(value)
           emitApplicationBrightness(value)
         } else {
+          UIScreen.main.brightness = CGFloat(value)
           emitSystemBrightness(value)
         }
         completion(.success(.null))
@@ -278,12 +352,22 @@ public final class ScreenBrightnessService: RufletStreamingService {
       case "is_animate":
         completion(.success(.bool(animate)))
       case "set_animate":
-        animate = call.argument("value")?.boolValue ?? true
+        do {
+          animate = try FletDeviceServiceSemantics.requiredBool(
+            call.argument("value"), name: "value")
+        } catch {
+          return completion(.failure(error))
+        }
         completion(.success(.null))
       case "is_auto_reset":
         completion(.success(.bool(autoReset)))
       case "set_auto_reset":
-        autoReset = call.argument("value")?.boolValue ?? true
+        do {
+          autoReset = try FletDeviceServiceSemantics.requiredBool(
+            call.argument("value"), name: "value")
+        } catch {
+          return completion(.failure(error))
+        }
         completion(.success(.null))
       default:
         completion(
