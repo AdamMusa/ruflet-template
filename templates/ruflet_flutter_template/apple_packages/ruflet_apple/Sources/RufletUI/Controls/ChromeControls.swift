@@ -249,7 +249,22 @@ struct NavigationBarControlView: View {
     let destinations = node.controlIDs(forKey: "destinations").compactMap { store.node($0) }
     let selected = node.int("selected_index") ?? 0
 
-    return HStack(spacing: 0) {
+    return Group {
+      if let message = ChromeDefaults.navigationBarValidation(
+        destinationCount: destinations.count, selectedIndex: selected)
+      {
+        ChromeNavigationValidationView(message: message)
+      } else {
+        navigationBar(destinations: destinations, selected: selected, metrics: metrics)
+      }
+    }
+    .frame(height: metrics.height)
+  }
+
+  private func navigationBar(
+    destinations: [ControlNode], selected: Int, metrics: ChromeDefaults.NavigationBarValues
+  ) -> some View {
+    HStack(spacing: 0) {
       ForEach(Array(destinations.enumerated()), id: \.element.id) { index, destination in
         let isSelected = index == selected
         let isDisabled = (node.bool("disabled") ?? false) || (destination.bool("disabled") ?? false)
@@ -263,9 +278,8 @@ struct NavigationBarControlView: View {
                   selected: isSelected, disabled: isDisabled).iconToken))
               .frame(minWidth: 64, minHeight: 32)
               .background(destinationIndicator(active: isSelected))
-            if metrics.showsLabel(selected: isSelected),
-              let label = destination.string("label") {
-              Text(label)
+            if metrics.showsLabel(selected: isSelected) {
+              Text(destination.string("label") ?? "")
                 .font(.system(size: 12, weight: .medium))
                 .foregroundColor(MaterialPalette.color(
                   ChromeDefaults.navigationBarItemPalette(
@@ -281,6 +295,7 @@ struct NavigationBarControlView: View {
         .modifier(NavigationOverlayTint(node: node, selected: isSelected, disabled: isDisabled))
         .modifier(NavigationDestinationHelpModifier(
           text: isDisabled ? nil : destination.string("tooltip") ?? destination.string("label")))
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
       }
     }
     .frame(height: metrics.height)
@@ -378,6 +393,24 @@ struct NavigationRailControlView: View {
     let selected = node.int("selected_index")
     let extended = node.bool("extended") ?? false
 
+    Group {
+      if let message = ChromeDefaults.navigationRailValidation(
+        destinationCount: destinations.count, selectedIndex: selected,
+        minWidth: metrics.minWidth, minExtendedWidth: metrics.minExtendedWidth,
+        groupAlignment: metrics.groupAlignment)
+      {
+        ChromeNavigationValidationView(message: message)
+      } else {
+        navigationRail(
+          destinations: destinations, selected: selected, extended: extended, metrics: metrics)
+      }
+    }
+  }
+
+  private func navigationRail(
+    destinations: [ControlNode], selected: Int?, extended: Bool,
+    metrics: ChromeDefaults.NavigationRailValues
+  ) -> some View {
     VStack(spacing: 0) {
       if let leadingID = node.controlID(forKey: "leading") {
         ControlView(id: leadingID, axis: .none)
@@ -423,6 +456,7 @@ struct NavigationRailControlView: View {
             }
             .buttonStyle(.plain)
             .disabled(isDisabled)
+            .accessibilityAddTraits(isSelected ? .isSelected : [])
           }
           if let trailingID = node.controlID(forKey: "trailing") {
             ControlView(id: trailingID, axis: .none)
@@ -432,6 +466,7 @@ struct NavigationRailControlView: View {
       .frame(maxHeight: .infinity)
     }
     .frame(width: extended ? metrics.minExtendedWidth : metrics.minWidth)
+    .frame(height: node.double("height").map { CGFloat($0) })
     .background(MaterialPalette.color(node.string("bgcolor") ?? "surface"))
     .shadow(
       color: .black.opacity(0.2), radius: metrics.elevation > 0 ? metrics.elevation : 0,
@@ -633,6 +668,40 @@ enum ChromeDefaults {
     let tileHeight: CGFloat
     let indicatorWidth: CGFloat
     let indicatorHeight: CGFloat
+  }
+
+  static func navigationBarValidation(
+    destinationCount: Int, selectedIndex: Int
+  ) -> String? {
+    guard destinationCount >= 2 else {
+      return "NavigationBar.destinations requires at least two destinations"
+    }
+    guard (0..<destinationCount).contains(selectedIndex) else {
+      return "NavigationBar.selected_index must reference a destination"
+    }
+    return nil
+  }
+
+  static func navigationRailValidation(
+    destinationCount: Int, selectedIndex: Int?, minWidth: CGFloat,
+    minExtendedWidth: CGFloat, groupAlignment: Double
+  ) -> String? {
+    if let selectedIndex, !(0..<destinationCount).contains(selectedIndex) {
+      return "NavigationRail.selected_index must be nil or reference a destination"
+    }
+    guard minWidth > 0 else { return "NavigationRail.min_width must be greater than zero" }
+    guard minExtendedWidth >= minWidth else {
+      return "NavigationRail.min_extended_width must be at least min_width"
+    }
+    guard (-1...1).contains(groupAlignment) else {
+      return "NavigationRail.group_alignment must be between -1 and 1"
+    }
+    return nil
+  }
+
+  static func validatedDrawerSelection(_ selectedIndex: Int?, destinationCount: Int) -> Int? {
+    guard let selectedIndex, (0..<destinationCount).contains(selectedIndex) else { return nil }
+    return selectedIndex
   }
 
   static func appBar(_ node: ControlNode) -> AppBarValues {
@@ -898,12 +967,16 @@ struct NavigationDrawerControlView: View {
   @Environment(\.rufletEvents) private var events
 
   var body: some View {
-    let selected = node.int("selected_index") ?? 0
     let controls = drawerControls
+    let selected = ChromeDefaults.validatedDrawerSelection(
+      node.int("selected_index"),
+      destinationCount: controls.reduce(into: 0) { count, childID in
+        if store.node(childID)?.type == "NavigationDrawerDestination" { count += 1 }
+      })
     let metrics = ChromeDefaults.navigationDrawer(node)
 
     ScrollView {
-      VStack(alignment: .leading, spacing: 2) {
+      VStack(alignment: .leading, spacing: 0) {
         ForEach(Array(controls.enumerated()), id: \.element) { childIndex, childID in
           if let child = store.node(childID), child.type == "NavigationDrawerDestination" {
             destinationRow(
@@ -915,7 +988,6 @@ struct NavigationDrawerControlView: View {
           }
         }
       }
-      .padding(.vertical, 16)
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     .background(MaterialPalette.color(node.string("bgcolor") ?? "surfacecontainerlow"))
@@ -934,13 +1006,13 @@ struct NavigationDrawerControlView: View {
       events.commit(node, key: "selected_index", value: .int(Int64(index)))
     } label: {
       HStack(spacing: 12) {
-        Color.clear.frame(width: 4)
+        Color.clear.frame(width: 16)
         let palette = ChromeDefaults.navigationDrawerItemPalette(
           selected: active, disabled: disabled)
         drawerDestinationIcon(destination, selected: active)
           .foregroundColor(MaterialPalette.color(palette.iconToken))
         Text(destination.string("label") ?? "")
-          .font(.body)
+          .font(.system(size: 14, weight: .medium))
           .foregroundColor(MaterialPalette.color(palette.labelToken))
         Spacer(minLength: 0)
       }
@@ -967,6 +1039,7 @@ struct NavigationDrawerControlView: View {
     .buttonStyle(.plain)
     .disabled(disabled)
     .padding(metrics.tilePadding)
+    .accessibilityAddTraits(active ? .isSelected : [])
   }
 
   private var drawerControls: [Int] {
@@ -998,5 +1071,17 @@ struct NavigationDrawerControlView: View {
         size: 24,
         color: nil)
     }
+  }
+}
+
+private struct ChromeNavigationValidationView: View {
+  let message: String
+
+  var body: some View {
+    Text(message)
+      .font(.caption)
+      .foregroundColor(.red)
+      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+      .accessibilityLabel(message)
   }
 }
