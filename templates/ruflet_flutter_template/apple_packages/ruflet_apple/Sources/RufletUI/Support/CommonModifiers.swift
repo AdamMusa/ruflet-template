@@ -88,7 +88,8 @@ struct RufletBadgeModifier: ViewModifier {
         content.overlay(alignment: alignment(badge)) {
           RufletBadgeMarker(badge: badge)
             .offset(RufletBadgeSemantics.markerOffset(
-              badge, layoutDirection: layoutDirection))
+              badge, layoutDirection: layoutDirection,
+              labelPresent: RufletBadgeSemantics.hasVisibleLabel(badge, in: store.nodes)))
         }
       } else {
         content
@@ -120,6 +121,7 @@ struct RufletBadgeModifier: ViewModifier {
 struct RufletBadgeMarker: View {
   var badge: ControlNode?
   var fallbackLabel: String?
+  @EnvironmentObject private var store: ControlStore
 
   init(badge: ControlNode? = nil, fallbackLabel: String? = nil) {
     self.badge = badge
@@ -128,7 +130,7 @@ struct RufletBadgeMarker: View {
 
   @ViewBuilder
   var body: some View {
-    if let labelID = badge?.controlID(forKey: "label") {
+    if let labelID = visibleLabelID {
       labelled(AnyView(ControlView(id: labelID, axis: .none)))
     } else if let text = badge?.string("label") ?? fallbackLabel {
       labelled(AnyView(Text(text)))
@@ -137,6 +139,10 @@ struct RufletBadgeMarker: View {
         .fill(backgroundColor)
         .frame(width: smallSize, height: smallSize)
     }
+  }
+
+  private var visibleLabelID: Int? {
+    RufletBadgeSemantics.visibleLabelID(badge, in: store.nodes)
   }
 
   private func labelled(_ content: AnyView) -> some View {
@@ -184,6 +190,21 @@ enum RufletBadgeSemantics {
     badge.controlID(forKey: "label") != nil || badge.string("label") != nil
   }
 
+  static func hasVisibleLabel(
+    _ badge: ControlNode, in nodes: [Int: ControlNode]
+  ) -> Bool {
+    visibleLabelID(badge, in: nodes) != nil || badge.string("label") != nil
+  }
+
+  static func visibleLabelID(
+    _ badge: ControlNode?, in nodes: [Int: ControlNode]
+  ) -> Int? {
+    guard let id = badge?.controlID(forKey: "label"),
+      nodes[id]?.bool("visible") != false
+    else { return nil }
+    return id
+  }
+
   static func backgroundColor(_ badge: ControlNode?) -> String {
     nonEmpty(badge?.string("bgcolor")) ?? "error"
   }
@@ -196,9 +217,9 @@ enum RufletBadgeSemantics {
   /// render object pins the dot at the aligned corner with `Offset.zero`;
   /// only a labelled badge consumes the caller/default offset.
   static func markerOffset(
-    _ badge: ControlNode?, layoutDirection: LayoutDirection
+    _ badge: ControlNode?, layoutDirection: LayoutDirection, labelPresent: Bool? = nil
   ) -> CGSize {
-    guard badge.map({ hasLabel($0) }) ?? true else { return .zero }
+    guard labelPresent ?? badge.map({ hasLabel($0) }) ?? true else { return .zero }
     return labelOffset(badge, layoutDirection: layoutDirection)
   }
 
