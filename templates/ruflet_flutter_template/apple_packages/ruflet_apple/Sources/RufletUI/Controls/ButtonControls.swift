@@ -754,6 +754,13 @@ struct ChipControlView: View {
       .modifier(NativeChipButtonStyle(selected: selected))
       .modifier(OptionalTint(color: ChipPresentation.background(node)))
       .modifier(OptionalForeground(color: ChipPresentation.foreground(node)))
+      .modifier(ChipNativeShadow(
+        color: ChipPresentation.shadowColor(node, selected: selected),
+        elevation: ChipPresentation.elevation(node)))
+      .animation(ChipPresentation.animation(node, phase: .select), value: selected)
+      .animation(
+        ChipPresentation.animation(node, phase: .enable),
+        value: node.bool("disabled") == true)
       .allowsHitTesting(interactive && node.bool("disabled") != true)
       .accessibilityAddTraits(interactive ? .isButton : [])
 
@@ -766,6 +773,8 @@ struct ChipControlView: View {
         .buttonStyle(.borderless)
         .help(ChipPresentation.deleteTooltip(node) ?? "")
         .modifier(ChipSlotConstraints(value: node.props["delete_icon_size_constraints"]))
+        .transition(.opacity.animation(
+          ChipPresentation.animation(node, phase: .deleteDrawer) ?? .default))
       }
     }
     .controlSize(.small)
@@ -784,6 +793,8 @@ struct ChipControlView: View {
       } else if let leadingID = node.controlID(forKey: "leading") {
         ControlView(id: leadingID, axis: .none)
           .modifier(ChipSlotConstraints(value: node.props["leading_size_constraints"]))
+          .transition(.opacity.animation(
+            ChipPresentation.animation(node, phase: .leadingDrawer) ?? .default))
       }
       label
         .padding(ChipPresentation.labelPadding(node))
@@ -933,6 +944,33 @@ enum ChipPresentation {
   static func deleteTooltip(_ node: ControlNode) -> String? {
     node.string("delete_icon_tooltip") ?? node.string("delete_button_tooltip")
   }
+
+  static func elevation(_ node: ControlNode, pressed: Bool = false) -> CGFloat? {
+    let key = pressed ? "elevation_on_click" : "elevation"
+    return node.double(key).map { CGFloat($0) }
+  }
+
+  static func shadowColor(_ node: ControlNode, selected: Bool) -> Color? {
+    MaterialPalette.color(
+      selected
+        ? (node.string("selected_shadow_color") ?? node.string("shadow_color"))
+        : node.string("shadow_color"))
+  }
+
+  static func animation(_ node: ControlNode, phase: ChipAnimationPhase) -> Animation? {
+    let property: String
+    switch phase {
+    case .enable: property = "enable_animation_style"
+    case .select: property = "select_animation_style"
+    case .leadingDrawer: property = "leading_drawer_animation_style"
+    case .deleteDrawer: property = "delete_drawer_animation_style"
+    }
+    return rufletAnimation(node.props[property] ?? node.internals[property])
+  }
+}
+
+enum ChipAnimationPhase: CaseIterable {
+  case enable, select, leadingDrawer, deleteDrawer
 }
 
 private struct NativeChipButtonStyle: ViewModifier {
@@ -944,6 +982,21 @@ private struct NativeChipButtonStyle: ViewModifier {
       content.buttonStyle(.borderedProminent)
     } else {
       content.buttonStyle(.bordered)
+    }
+  }
+}
+
+private struct ChipNativeShadow: ViewModifier {
+  let color: Color?
+  let elevation: CGFloat?
+
+  func body(content: Content) -> some View {
+    if let elevation, elevation > 0 {
+      content.shadow(
+        color: color ?? .black.opacity(0.25),
+        radius: max(elevation / 2, 0.5), y: elevation / 2)
+    } else {
+      content
     }
   }
 }

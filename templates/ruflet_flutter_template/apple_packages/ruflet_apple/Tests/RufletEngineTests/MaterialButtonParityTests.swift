@@ -267,6 +267,33 @@ final class MaterialButtonParityTests: XCTestCase {
     XCTAssertEqual(ChipPresentation.borderColorToken(selected), "transparent")
   }
 
+  func testChipConsumesEveryPinnedAnimationElevationAndShadowProperty() {
+    let node = ControlNode(
+      id: 9, type: "Chip",
+      props: [
+        "elevation": .double(2),
+        "elevation_on_click": .double(6),
+        "shadow_color": .string("black"),
+        "selected_shadow_color": .string("red"),
+        "enable_animation_style": .map([
+          "duration": .double(120), "curve": .string("easeIn")]),
+        "select_animation_style": .map([
+          "duration": .double(180), "curve": .string("easeOut")]),
+        "leading_drawer_animation_style": .map([
+          "duration": .double(90), "curve": .string("linear")]),
+        "delete_drawer_animation_style": .map([
+          "duration": .double(70), "curve": .string("linear")]),
+      ])
+
+    XCTAssertEqual(ChipPresentation.elevation(node), 2)
+    XCTAssertEqual(ChipPresentation.elevation(node, pressed: true), 6)
+    XCTAssertNotNil(ChipPresentation.shadowColor(node, selected: false))
+    XCTAssertNotNil(ChipPresentation.shadowColor(node, selected: true))
+    for phase in ChipAnimationPhase.allCases {
+      XCTAssertNotNil(ChipPresentation.animation(node, phase: phase), "\(phase)")
+    }
+  }
+
   func testSegmentedButtonRetainsFlutterAndFletStyleDefaults() {
     XCTAssertEqual(SegmentedButtonPresentation.defaultMinimumHeight, 40)
     XCTAssertEqual(SegmentedButtonPresentation.defaultIconSize, 18)
