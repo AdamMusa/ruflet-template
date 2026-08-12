@@ -17,6 +17,13 @@ final class PageLifecycleParityTests: XCTestCase {
       .map(["state": .string("pause")]))
   }
 
+  func testRestartIsEmittedOnlyWhenReturningFromPause() {
+    XCTAssertEqual(FletPageLifecycleSemantics.foregroundStates(wasPaused: false), [.show])
+    XCTAssertEqual(
+      FletPageLifecycleSemantics.foregroundStates(wasPaused: true),
+      [.show, .restart])
+  }
+
   func testPageDescriptorDeclaresTheNativeLifecycleEvent() {
     XCTAssertTrue(
       ControlRegistry.descriptor(for: "Page")?.supportedEvents

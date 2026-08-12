@@ -88,6 +88,13 @@ public enum FletPageLifecycleSemantics {
   public static func payload(_ state: State) -> RufletValue {
     .map(["state": .string(state.rawValue)])
   }
+
+  /// Flutter's AppLifecycleListener emits `restart` only after an app that
+  /// reached `pause` returns to the foreground. A fresh launch or a temporary
+  /// inactive transition must not synthesize it.
+  public static func foregroundStates(wasPaused: Bool) -> [State] {
+    wasPaused ? [.show, .restart] : [.show]
+  }
 }
 
 /// The directory mapping used by Flet's pinned `path_provider_foundation`
@@ -223,6 +230,7 @@ public final class PageService: RufletStreamingService {
   private var context: RufletServiceContext?
   private var localeObserver: NSObjectProtocol?
   private var lifecycleObservers: [NSObjectProtocol] = []
+  private var wasPaused = false
   #if canImport(AppKit)
     private var keyboardMonitor: Any?
   #endif
@@ -241,14 +249,19 @@ public final class PageService: RufletStreamingService {
       installLifecycleObservers()
     }
 
-    if node.handlesEvent("locale_change"), localeObserver == nil {
-      localeObserver = NotificationCenter.default.addObserver(
-        forName: NSLocale.currentLocaleDidChangeNotification,
-        object: nil,
-        queue: .main
-      ) { [weak self] _ in
-        Task { @MainActor in self?.reportLocales() }
+    if node.handlesEvent("locale_change") {
+      if localeObserver == nil {
+        localeObserver = NotificationCenter.default.addObserver(
+          forName: NSLocale.currentLocaleDidChangeNotification,
+          object: nil,
+          queue: .main
+        ) { [weak self] _ in
+          Task { @MainActor in self?.reportLocales() }
+        }
       }
+    } else if let localeObserver {
+      NotificationCenter.default.removeObserver(localeObserver)
+      self.localeObserver = nil
     }
 
     #if canImport(AppKit)
@@ -257,6 +270,9 @@ public final class PageService: RufletStreamingService {
           Task { @MainActor in self?.reportKey(event) }
           return event
         }
+      } else if !node.handlesEvent("keyboard_event"), let keyboardMonitor {
+        NSEvent.removeMonitor(keyboardMonitor)
+        self.keyboardMonitor = nil
       }
     #endif
     #if canImport(GameController) && !os(macOS)
@@ -318,10 +334,26 @@ public final class PageService: RufletStreamingService {
     }
 
     #if canImport(UIKit)
-      observe(UIApplication.willEnterForegroundNotification, .show)
+      lifecycleObservers.append(NotificationCenter.default.addObserver(
+        forName: UIApplication.willEnterForegroundNotification, object: nil, queue: .main
+      ) { [weak self] _ in
+        Task { @MainActor in
+          guard let self else { return }
+          let states = FletPageLifecycleSemantics.foregroundStates(wasPaused: self.wasPaused)
+          self.wasPaused = false
+          for state in states { self.reportLifecycle(state) }
+        }
+      })
       observe(UIApplication.didBecomeActiveNotification, .resume)
       observe(UIApplication.willResignActiveNotification, .inactive)
-      observe(UIApplication.didEnterBackgroundNotification, .pause)
+      lifecycleObservers.append(NotificationCenter.default.addObserver(
+        forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: .main
+      ) { [weak self] _ in
+        Task { @MainActor in
+          self?.wasPaused = true
+          self?.reportLifecycle(.pause)
+        }
+      })
       observe(UIApplication.willTerminateNotification, .detach)
     #elseif canImport(AppKit)
       observe(NSApplication.didUnhideNotification, .show)
