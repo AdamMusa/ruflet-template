@@ -1,4 +1,5 @@
 import RufletEngine
+import RufletProtocol
 import RufletUI
 import SwiftUI
 
@@ -28,19 +29,71 @@ struct RufletSpinKitConfiguration: Equatable {
   let itemCount: Int
   let waveType: String
 
+  var frameWidth: CGFloat {
+    switch variant {
+    case "wave", "piano_wave": return size * 1.25
+    case "three_bounce", "three_in_out": return size * 2
+    default: return size
+    }
+  }
+  var frameHeight: CGFloat { size }
+
+  var effectiveLineWidth: CGFloat {
+    lineWidth ?? (variant == "spinning_lines" ? 2 : 7)
+  }
+  var effectiveBorderWidth: CGFloat { borderWidth ?? 6 }
+
   init(node: ControlNode) {
     variant = Self.variant(node)
     size = CGFloat(node.double("size") ?? 50)
     // The generated global contract has a 1200ms fallback for this property,
     // but Flet applies duration defaults per SpinKit constructor. Inspect the
     // explicit wire property before selecting that constructor default.
-    let durationMilliseconds = node.props["duration"]?.doubleValue
-      ?? (node.type == "RufletSpinKit" ? 1200 : Self.defaultDurationMilliseconds(for: variant))
-    duration = durationMilliseconds / 1000
+    let fallback = node.type == "RufletSpinKit"
+      ? 1200
+      : Self.defaultDurationMilliseconds(for: variant)
+    duration = Self.durationSeconds(node.props["duration"], defaultMilliseconds: fallback)
     lineWidth = node.double("line_width").map { CGFloat($0) }
     borderWidth = node.double("border_width").map { CGFloat($0) }
-    itemCount = node.int("item_count") ?? 5
-    waveType = node.string("wave_type")?.lowercased() ?? "start"
+    // Flet forwards item_count only to Wave and PianoWave. Both Flutter
+    // constructors require at least two items; clamp malformed wire input so
+    // the native renderer remains deterministic instead of trapping.
+    itemCount = max(node.int("item_count") ?? 5, 2)
+    switch node.string("wave_type")?.lowercased() {
+    case "end": waveType = "end"
+    case "center": waveType = "center"
+    default: waveType = "start"
+    }
+  }
+
+  /// Mirrors Flet's `getInt` for the generic control and `getDuration` for
+  /// individual controls. Scalar durations are milliseconds, extension type
+  /// 3 carries microseconds, and component maps are summed as a Dart Duration.
+  static func durationSeconds(
+    _ value: RufletValue?,
+    defaultMilliseconds: Double
+  ) -> TimeInterval {
+    guard let value, !value.isNull else { return defaultMilliseconds / 1_000 }
+    if case .int(let milliseconds) = value { return Double(milliseconds) / 1_000 }
+    if case .string(let raw) = value { return Double(Int64(raw) ?? 0) / 1_000 }
+    if case .extended(type: 3, let microseconds) = value {
+      return Double(Int64(microseconds) ?? 0) / 1_000_000
+    }
+    guard let map = value.mapValue else { return 0 }
+    func integer(_ key: String) -> Int64 {
+      switch map[key] {
+      case .int(let value): return value
+      case .string(let value): return Int64(value) ?? 0
+      default: return 0
+      }
+    }
+    let microseconds = integer("microseconds")
+      + 1_000 * integer("milliseconds")
+      + 1_000_000 * integer("seconds")
+      + 60_000_000 * integer("minutes")
+      + 3_600_000_000 * integer("hours")
+      + 86_400_000_000 * integer("days")
+    return Double(microseconds) / 1_000_000
   }
 
   private static func variant(_ node: ControlNode) -> String {
@@ -97,6 +150,42 @@ struct RufletSpinKitConfiguration: Equatable {
   }
 }
 
+/// Pure animation math shared by the native views and focused parity tests.
+enum SpinKitAnimationSemantics {
+  static func phase(elapsed: TimeInterval, duration: TimeInterval) -> Double {
+    guard duration.isFinite, duration > 0 else { return 0 }
+    let value = (elapsed / duration).truncatingRemainder(dividingBy: 1)
+    return value < 0 ? value + 1 : value
+  }
+
+  static func waveDelays(count: Int, type: String) -> [Double] {
+    let count = max(count, 2)
+    let half = count / 2
+    let odd = count.isMultiple(of: 2) == false
+    switch type {
+    case "end":
+      let leading = (0..<half).map { -1 + Double($0) * 0.1 + 0.1 }.reversed()
+      let trailing = (0..<half).map { -1 - Double($0) * 0.1 - (odd ? 0.1 : 0) }
+      return Array(leading) + (odd ? [-1] : []) + trailing
+    case "center":
+      let halfDelays = (0..<half).map { -1 + Double($0) * 0.2 + 0.2 }
+      return Array(halfDelays.reversed()) + (odd ? [-1] : []) + halfDelays
+    default:
+      let leading = (0..<half).map { -1 - Double($0) * 0.1 - 0.1 }.reversed()
+      let trailing = (0..<half).map { -1 + Double($0) * 0.1 + (odd ? 0.1 : 0) }
+      return Array(leading) + (odd ? [-1] : []) + trailing
+    }
+  }
+
+  /// flutter_spinkit's DelayTween applies a half-cycle tween after wrapping
+  /// its signed delay into the repeating controller interval.
+  static func delayedPulse(_ phase: Double, delay: Double) -> CGFloat {
+    let shifted = (phase - delay).truncatingRemainder(dividingBy: 1)
+    let normalized = shifted < 0 ? shifted + 1 : shifted
+    return CGFloat((sin(normalized * .pi * 2 - .pi / 2) + 1) / 2)
+  }
+}
+
 /// Native SwiftUI implementations of the flet_spinkit variants Ruflet exposes.
 struct SpinKitControlView: View {
   let node: ControlNode
@@ -105,10 +194,11 @@ struct SpinKitControlView: View {
     let configuration = RufletSpinKitConfiguration(node: node)
     TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { timeline in
       let seconds = timeline.date.timeIntervalSinceReferenceDate
-      let phase = configuration.duration > 0 ? seconds / configuration.duration : 0
+      let phase = SpinKitAnimationSemantics.phase(
+        elapsed: seconds, duration: configuration.duration)
       glyph(phase: phase, configuration: configuration)
     }
-    .frame(width: configuration.size, height: configuration.size)
+    .frame(width: configuration.frameWidth, height: configuration.frameHeight)
     .accessibilityHidden(true)
   }
 
@@ -146,61 +236,83 @@ struct SpinKitControlView: View {
         .rotation3DEffect(.degrees(rotatingCircleTurn(phase, first: true)), axis: (x: 1, y: 0, z: 0))
         .rotation3DEffect(.degrees(rotatingCircleTurn(phase, first: false)), axis: (x: 0, y: 1, z: 0))
     case "rotating_plain":
-      RoundedRectangle(cornerRadius: size * 0.05)
+      Rectangle()
         .fill(color)
-        .frame(width: size * 0.72, height: size * 0.72)
-        .rotation3DEffect(.degrees(phase * 360), axis: (x: 1, y: 1, z: 0))
+        .frame(width: size, height: size)
+        .rotation3DEffect(.degrees(rotatingCircleTurn(phase, first: true)), axis: (x: 1, y: 0, z: 0))
+        .rotation3DEffect(.degrees(rotatingCircleTurn(phase, first: false)), axis: (x: 0, y: 1, z: 0))
     case "double_bounce":
-      ZStack {
-        pulseCircle(phase: phase, offset: 0)
-        pulseCircle(phase: phase, offset: 0.5)
-      }
-    case "wave", "piano_wave", "spinning_lines":
-      bars(phase: phase, configuration: configuration)
-    case "wandering_cubes", "dancing_square":
+      doubleBounce(phase: phase)
+    case "wave":
+      waveBars(phase: phase, configuration: configuration, horizontal: false)
+    case "piano_wave":
+      // Flet forwards item_count, but deliberately leaves the constructor's
+      // PianoWave type at `start`; wave_type belongs only to SpinKitWave.
+      waveBars(phase: phase, configuration: configuration, horizontal: true)
+    case "spinning_lines":
+      spinningLines(phase: phase, configuration: configuration)
+    case "wandering_cubes":
       wanderingSquares(phase: phase)
+    case "dancing_square":
+      dancingSquares(phase: phase)
     case "fading_four":
-      orbitingDots(count: 4, phase: phase, fading: true)
+      fadingFour(phase: phase)
     case "fading_cube":
-      foldingTiles(phase: phase, fading: true)
+      fadingCube(phase: phase)
     case "pulse":
-      pulseCircle(phase: phase, offset: 0)
+      pulse(phase: phase)
     case "chasing_dots":
-      orbitingDots(count: 2, phase: phase, fading: false)
-    case "three_bounce", "three_in_out":
-      bouncingDots(phase: phase)
-    case "circle", "fading_circle", "spinning_circle":
-      orbitingDots(count: 12, phase: phase, fading: true)
-    case "cube_grid", "fading_grid", "pulsing_grid":
-      grid(phase: phase)
+      chasingDots(phase: phase)
+    case "three_bounce":
+      threeBounce(phase: phase)
+    case "three_in_out":
+      threeInOut(phase: phase)
+    case "circle":
+      radialDots(phase: phase, mode: .scale)
+    case "fading_circle":
+      radialDots(phase: phase, mode: .fade)
+    case "spinning_circle":
+      radialDots(phase: phase, mode: .spin)
+    case "cube_grid":
+      grid(phase: phase, mode: .cube)
+    case "fading_grid":
+      grid(phase: phase, mode: .fade)
+    case "pulsing_grid":
+      grid(phase: phase, mode: .pulse)
     case "folding_cube":
       foldingTiles(phase: phase, fading: false)
     case "pumping_heart":
-      Image(systemName: "heart.fill")
-        .resizable()
-        .scaledToFit()
-        .foregroundColor(color)
-        .scaleEffect(0.78 + 0.2 * waveValue(phase * 2))
-    case "hour_glass", "pouring_hour_glass", "pouring_hour_glass_refined":
-      Image(systemName: "hourglass")
-        .resizable()
-        .scaledToFit()
-        .foregroundColor(color)
-        .rotationEffect(.degrees(floor(phase * 2) * 180))
-        .animation(.easeInOut(duration: 0.35), value: floor(phase * 2))
+      SpinKitHeartShape()
+        .fill(color)
+        .padding(size * 0.04)
+        .scaleEffect(0.8 + 0.2 * waveValue(phase))
+    case "hour_glass":
+      hourGlass(phase: phase, pouring: false, refined: false)
+    case "pouring_hour_glass":
+      hourGlass(phase: phase, pouring: true, refined: false)
+    case "pouring_hour_glass_refined":
+      hourGlass(phase: phase, pouring: true, refined: true)
     case "ripple":
       ripple(phase: phase, configuration: configuration)
     case "dual_ring":
       rings(phase: phase, dual: true, configuration: configuration)
-    case "ring", "wave_spinner":
+    case "ring":
       rings(phase: phase, dual: false, configuration: configuration)
+    case "wave_spinner":
+      waveSpinner(phase: phase)
     case "square_circle":
-      RoundedRectangle(cornerRadius: size * (0.1 + 0.4 * waveValue(phase)))
+      RoundedRectangle(cornerRadius: size * 0.5 * waveValue(phase))
         .fill(color)
-        .frame(width: size * 0.72, height: size * 0.72)
-        .rotationEffect(.degrees(phase * 180))
+        .frame(width: size * 0.75, height: size * 0.75)
+        .rotationEffect(.degrees(phase * 90))
     default:
-      rings(phase: phase, dual: false, configuration: configuration)
+      // Unknown Ruflet variants become an unknown `SpinKit*` case in the
+      // pinned Dart switch, whose fallback is SpinKitRotatingCircle.
+      Circle()
+        .fill(color)
+        .frame(width: size, height: size)
+        .rotation3DEffect(.degrees(rotatingCircleTurn(phase, first: true)), axis: (x: 1, y: 0, z: 0))
+        .rotation3DEffect(.degrees(rotatingCircleTurn(phase, first: false)), axis: (x: 0, y: 1, z: 0))
     }
   }
 
@@ -208,54 +320,166 @@ struct SpinKitControlView: View {
     CGFloat((sin(value * .pi * 2) + 1) / 2)
   }
 
-  private func pulseCircle(phase: Double, offset: Double) -> some View {
-    let value = waveValue(phase + offset)
-    return Circle()
-      .fill(color)
-      .scaleEffect(0.3 + 0.7 * value)
-      .opacity(0.3 + 0.7 * Double(1 - value))
+  private func delayedValue(_ phase: Double, index: Int, delay: Double = 0.1) -> CGFloat {
+    SpinKitAnimationSemantics.delayedPulse(phase, delay: -Double(index) * delay)
   }
 
-  private func bars(phase: Double, configuration: RufletSpinKitConfiguration) -> some View {
-    let size = configuration.size
-    let count = max(configuration.itemCount, 1)
-    let phaseDirection = configuration.waveType == "end" ? -1.0 : 1.0
-    return HStack(alignment: .center, spacing: size * 0.06) {
-      ForEach(0..<count, id: \.self) { index in
-        RoundedRectangle(cornerRadius: size * 0.03)
+  private func doubleBounce(phase: Double) -> some View {
+    ZStack {
+      ForEach(0..<2, id: \.self) { index in
+        let value = waveValue(phase + Double(index) * 0.5)
+        Circle()
           .fill(color)
-          .frame(
-            width: max(size * 0.04, size * 0.67 / CGFloat(count)),
-            height: size * (0.28 + 0.65 * waveValue(
-              phase - phaseDirection * Double(index) * 0.11)))
+          .frame(width: size, height: size)
+          .scaleEffect(value)
+          .opacity(0.6)
       }
     }
   }
 
-  private func bouncingDots(phase: Double) -> some View {
-    HStack(spacing: size * 0.1) {
+  private func pulse(phase: Double) -> some View {
+    let value = waveValue(phase * 0.5)
+    return Circle()
+      .fill(color)
+      .frame(width: size, height: size)
+      .scaleEffect(value)
+      .opacity(1 - Double(value))
+  }
+
+  private func waveBars(
+    phase: Double,
+    configuration: RufletSpinKitConfiguration,
+    horizontal: Bool
+  ) -> some View {
+    let count = configuration.itemCount
+    let delays = SpinKitAnimationSemantics.waveDelays(
+      count: count, type: horizontal ? "start" : configuration.waveType)
+    return HStack(spacing: 0) {
+      ForEach(0..<count, id: \.self) { index in
+        let base = 0.4 + 0.6 * SpinKitAnimationSemantics.delayedPulse(
+          phase, delay: delays[index])
+        let value = horizontal ? base * 0.8 : base
+        Rectangle()
+          .fill(color)
+          .frame(width: configuration.size / CGFloat(count), height: configuration.size)
+          .scaleEffect(x: horizontal ? value : 1, y: horizontal ? 1 : value)
+      }
+    }
+    .frame(width: configuration.frameWidth, height: configuration.size)
+  }
+
+  private func spinningLines(
+    phase: Double,
+    configuration: RufletSpinKitConfiguration
+  ) -> some View {
+    ZStack {
+      ForEach(0..<5, id: \.self) { index in
+        Capsule()
+          .fill(color.opacity(0.3 + 0.7 * Double(delayedValue(phase, index: index, delay: 0.2))))
+          .frame(width: configuration.effectiveLineWidth, height: configuration.size * 0.32)
+          .offset(y: -configuration.size * 0.28)
+          .rotationEffect(.degrees(Double(index) * 72))
+      }
+    }
+    .rotationEffect(.degrees(phase * 360))
+  }
+
+  private func chasingDots(phase: Double) -> some View {
+    ZStack {
+      ForEach(0..<2, id: \.self) { index in
+        Circle()
+          .fill(color)
+          .frame(width: size * 0.6, height: size * 0.6)
+          .scaleEffect(index == 0 ? waveValue(phase) : 1 - waveValue(phase))
+          .offset(y: index == 0 ? -size * 0.2 : size * 0.2)
+      }
+    }
+    .rotationEffect(.degrees(phase * 360))
+  }
+
+  private func threeBounce(phase: Double) -> some View {
+    HStack(spacing: size * 0.08) {
       ForEach(0..<3, id: \.self) { index in
         Circle()
           .fill(color)
-          .frame(width: size * 0.24, height: size * 0.24)
-          .scaleEffect(0.45 + 0.55 * waveValue(phase - Double(index) * 0.16))
+          .frame(width: size * 0.5, height: size * 0.5)
+          .scaleEffect(delayedValue(phase, index: index, delay: 0.16))
+      }
+    }
+    .frame(width: size * 2, height: size)
+  }
+
+  private func threeInOut(phase: Double) -> some View {
+    HStack(spacing: 0) {
+      ForEach(0..<4, id: \.self) { index in
+        let value = delayedValue(phase, index: index, delay: 0.12)
+        Circle()
+          .fill(color)
+          .frame(width: size * 0.5, height: size * 0.5)
+          .scaleEffect(index == 0 || index == 3 ? value : 1)
+          .opacity(index == 0 || index == 3 ? Double(value) : 1)
+      }
+    }
+    .frame(width: size * 2, height: size)
+  }
+
+  private func fadingFour(phase: Double) -> some View {
+    ZStack {
+      ForEach(0..<4, id: \.self) { index in
+        Circle()
+          .fill(color)
+          .frame(width: size * 0.25, height: size * 0.25)
+          .offset(x: size * 0.25, y: size * 0.25)
+          .rotationEffect(.degrees(Double(index) * 90))
+          .opacity(Double(delayedValue(phase, index: index, delay: 0.3)))
       }
     }
   }
 
-  private func orbitingDots(count: Int, phase: Double, fading: Bool) -> some View {
-    return ZStack {
-      ForEach(0..<count, id: \.self) { index in
-        let step = Double(index) / Double(count)
-        Circle()
+  private func fadingCube(phase: Double) -> some View {
+    ZStack {
+      ForEach(0..<4, id: \.self) { index in
+        Rectangle()
           .fill(color)
-          .frame(width: size * (count <= 4 ? 0.25 : 0.13), height: size * (count <= 4 ? 0.25 : 0.13))
-          .offset(y: -size * 0.34)
-          .rotationEffect(.degrees(step * 360 + (fading ? 0 : phase * 360)))
-          .opacity(fading ? 0.2 + 0.8 * Double(waveValue(phase - step)) : 1)
+          .frame(width: size * 0.5, height: size * 0.5)
+          .offset(x: size * 0.25, y: size * 0.25)
+          .rotationEffect(.degrees(Double(index) * 90))
+          .opacity(Double(delayedValue(phase, index: index, delay: 0.3)))
       }
     }
-    .rotationEffect(.degrees(fading ? phase * 80 : 0))
+    .rotationEffect(.degrees(-45))
+    .scaleEffect(0.78)
+  }
+
+  private enum RadialDotMode { case scale, fade, spin }
+
+  private func radialDots(phase: Double, mode: RadialDotMode) -> some View {
+    ZStack {
+      ForEach(0..<12, id: \.self) { index in
+        let value = delayedValue(phase, index: index, delay: 1.0 / 12.0)
+        Circle()
+          .fill(color)
+          .frame(width: size * 0.15, height: size * 0.15)
+          .scaleEffect(mode == .scale ? value : (mode == .spin ? 0.45 + 0.55 * value : 1))
+          .opacity(mode == .fade ? Double(value) : 1)
+          .offset(y: -size * 0.4)
+          .rotationEffect(.degrees(Double(index) * 30))
+      }
+    }
+    .rotationEffect(.degrees(mode == .spin ? phase * 360 : 0))
+  }
+
+  private func dancingSquares(phase: Double) -> some View {
+    ZStack {
+      ForEach(0..<12, id: \.self) { index in
+        Rectangle()
+          .fill(color)
+          .frame(width: size * 0.15, height: size * 0.15)
+          .scaleEffect(delayedValue(phase, index: index, delay: 1.0 / 12.0))
+          .offset(y: -size * 0.42)
+          .rotationEffect(.degrees(Double(index) * 30))
+      }
+    }
   }
 
   private func wanderingSquares(phase: Double) -> some View {
@@ -271,18 +495,49 @@ struct SpinKitControlView: View {
     }
   }
 
-  private func grid(phase: Double) -> some View {
+  private enum GridMode { case cube, fade, pulse }
+
+  private func grid(phase: Double, mode: GridMode) -> some View {
     ZStack {
       ForEach(0..<9, id: \.self) { index in
         let row = index / 3
         let column = index % 3
-        RoundedRectangle(cornerRadius: size * 0.025)
+        let delay: Double = index == 4 ? 0.25 : (index.isMultiple(of: 2) ? 0.75 : 0.5)
+        let value = SpinKitAnimationSemantics.delayedPulse(phase, delay: delay)
+        RoundedRectangle(cornerRadius: mode == .pulse ? size * 0.125 : 0)
           .fill(color)
-          .frame(width: size * 0.2, height: size * 0.2)
-          .offset(x: CGFloat(column - 1) * size * 0.25, y: CGFloat(row - 1) * size * 0.25)
-          .scaleEffect(0.35 + 0.65 * waveValue(phase - Double(index) * 0.07))
+          .frame(width: size * 0.25, height: size * 0.25)
+          .offset(x: CGFloat(column - 1) * size * 0.35, y: CGFloat(row - 1) * size * 0.35)
+          .scaleEffect(mode == .fade ? 1 : value)
+          .opacity(mode == .fade ? Double(value) : 1)
       }
     }
+  }
+
+  private func hourGlass(phase: Double, pouring: Bool, refined: Bool) -> some View {
+    ZStack {
+      SpinKitHourGlassShape()
+        .stroke(color, style: StrokeStyle(lineWidth: refined ? 2 : 3, lineJoin: .round))
+      SpinKitHourGlassSandShape(progress: CGFloat(phase), pouring: pouring)
+        .fill(color)
+    }
+    .padding(size * 0.12)
+    .rotationEffect(.degrees(phase * 180))
+  }
+
+  private func waveSpinner(phase: Double) -> some View {
+    ZStack {
+      Circle()
+        .stroke(color.opacity(0.41), lineWidth: max(1, size * 0.06))
+      SpinKitWaveShape(phase: CGFloat(phase))
+        .fill(color.opacity(0.41))
+        .clipShape(Circle().inset(by: size * 0.08))
+      Circle()
+        .trim(from: 0, to: 0.28)
+        .stroke(color, style: StrokeStyle(lineWidth: max(1, size * 0.08), lineCap: .round))
+        .rotationEffect(.degrees(phase * 360))
+    }
+    .padding(size * 0.08)
   }
 
   private func foldingTiles(phase: Double, fading: Bool) -> some View {
@@ -308,7 +563,7 @@ struct SpinKitControlView: View {
     configuration: RufletSpinKitConfiguration
   ) -> some View {
     let size = configuration.size
-    let width = configuration.lineWidth ?? 7
+    let width = configuration.effectiveLineWidth
     return ZStack {
       Circle()
         .trim(from: 0.08, to: dual ? 0.46 : 0.78)
@@ -324,7 +579,7 @@ struct SpinKitControlView: View {
   }
 
   private func ripple(phase: Double, configuration: RufletSpinKitConfiguration) -> some View {
-    let width = configuration.borderWidth ?? 6
+    let width = configuration.effectiveBorderWidth
     return ZStack {
       ForEach(0..<2, id: \.self) { index in
         let progress = (phase + Double(index) * 0.5).truncatingRemainder(dividingBy: 1)
@@ -333,5 +588,104 @@ struct SpinKitControlView: View {
           .scaleEffect(0.15 + progress * 0.85)
       }
     }
+  }
+}
+
+private struct SpinKitHeartShape: Shape {
+  func path(in rect: CGRect) -> Path {
+    var path = Path()
+    path.move(to: CGPoint(x: rect.midX, y: rect.maxY * 0.92))
+    path.addCurve(
+      to: CGPoint(x: rect.minX + rect.width * 0.08, y: rect.height * 0.36),
+      control1: CGPoint(x: rect.width * 0.36, y: rect.height * 0.72),
+      control2: CGPoint(x: rect.width * 0.08, y: rect.height * 0.58))
+    path.addCurve(
+      to: CGPoint(x: rect.midX, y: rect.height * 0.22),
+      control1: CGPoint(x: rect.width * 0.08, y: rect.height * 0.08),
+      control2: CGPoint(x: rect.width * 0.36, y: rect.height * 0.04))
+    path.addCurve(
+      to: CGPoint(x: rect.maxX - rect.width * 0.08, y: rect.height * 0.36),
+      control1: CGPoint(x: rect.width * 0.64, y: rect.height * 0.04),
+      control2: CGPoint(x: rect.width * 0.92, y: rect.height * 0.08))
+    path.addCurve(
+      to: CGPoint(x: rect.midX, y: rect.maxY * 0.92),
+      control1: CGPoint(x: rect.width * 0.92, y: rect.height * 0.58),
+      control2: CGPoint(x: rect.width * 0.64, y: rect.height * 0.72))
+    path.closeSubpath()
+    return path
+  }
+}
+
+private struct SpinKitHourGlassShape: Shape {
+  func path(in rect: CGRect) -> Path {
+    var path = Path()
+    path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+    path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+    path.addCurve(
+      to: CGPoint(x: rect.midX, y: rect.midY),
+      control1: CGPoint(x: rect.maxX, y: rect.height * 0.25),
+      control2: CGPoint(x: rect.width * 0.62, y: rect.height * 0.42))
+    path.addCurve(
+      to: CGPoint(x: rect.maxX, y: rect.maxY),
+      control1: CGPoint(x: rect.width * 0.62, y: rect.height * 0.58),
+      control2: CGPoint(x: rect.maxX, y: rect.height * 0.75))
+    path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+    path.addCurve(
+      to: CGPoint(x: rect.midX, y: rect.midY),
+      control1: CGPoint(x: rect.minX, y: rect.height * 0.75),
+      control2: CGPoint(x: rect.width * 0.38, y: rect.height * 0.58))
+    path.addCurve(
+      to: CGPoint(x: rect.minX, y: rect.minY),
+      control1: CGPoint(x: rect.width * 0.38, y: rect.height * 0.42),
+      control2: CGPoint(x: rect.minX, y: rect.height * 0.25))
+    path.closeSubpath()
+    return path
+  }
+}
+
+private struct SpinKitHourGlassSandShape: Shape {
+  let progress: CGFloat
+  let pouring: Bool
+
+  func path(in rect: CGRect) -> Path {
+    let progress = min(max(progress, 0), 1)
+    var path = Path()
+    let upperY = rect.minY + rect.height * (0.12 + progress * 0.3)
+    path.move(to: CGPoint(x: rect.width * 0.16, y: upperY))
+    path.addLine(to: CGPoint(x: rect.width * 0.84, y: upperY))
+    path.addLine(to: CGPoint(x: rect.midX, y: rect.midY))
+    path.closeSubpath()
+    let lowerY = rect.maxY - rect.height * (0.08 + progress * 0.35)
+    path.move(to: CGPoint(x: rect.midX, y: lowerY))
+    path.addLine(to: CGPoint(x: rect.width * 0.86, y: rect.maxY - rect.height * 0.08))
+    path.addLine(to: CGPoint(x: rect.width * 0.14, y: rect.maxY - rect.height * 0.08))
+    path.closeSubpath()
+    if pouring {
+      path.addRect(CGRect(
+        x: rect.midX - max(0.5, rect.width * 0.015), y: rect.midY,
+        width: max(1, rect.width * 0.03), height: max(0, lowerY - rect.midY)))
+    }
+    return path
+  }
+}
+
+private struct SpinKitWaveShape: Shape {
+  let phase: CGFloat
+
+  func path(in rect: CGRect) -> Path {
+    var path = Path()
+    let steps = 40
+    path.move(to: CGPoint(x: rect.minX, y: rect.maxY))
+    for step in 0...steps {
+      let fraction = CGFloat(step) / CGFloat(steps)
+      let x = rect.minX + rect.width * fraction
+      let angle = Double(fraction * 2 + phase) * .pi * 2
+      let y = rect.midY + CGFloat(sin(angle)) * rect.height * 0.12
+        + (phase - 0.5) * rect.height * 0.25
+      path.addLine(to: CGPoint(x: x, y: y))
+    }
+    path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+    path.closeSubpath()
+    return path
   }
 }
