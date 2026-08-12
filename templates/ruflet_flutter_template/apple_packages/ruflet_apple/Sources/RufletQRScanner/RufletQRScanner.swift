@@ -6,49 +6,34 @@ import SwiftUI
   import AVFoundation
 #endif
 
-/// Audio playback and Ruflet's QR scanner extension.
-///
-/// Legacy applications may keep linking this product for `Audio` and
-/// `QrcodeScanner`. Flet's camera, recorder and flashlight packages are
-/// independent products and deliberately are not dependencies of this module.
-///
-/// ```swift
-/// RufletAppView(extensions: [RufletMedia.self])
-/// ```
+/// Native Apple implementation of Ruflet's QR scanner extension package.
 @MainActor
-public enum RufletMedia: RufletExtension {
+public enum RufletQRScanner: RufletExtension {
   public static func register(in registry: ServiceRegistry) {
-    registry.registerNamed("Audio") { AudioService() }
-    // Flet services receive `update()` whenever their wire properties change.
-    // Audio owns a persistent player, so it needs the same lifecycle hook for
-    // source, volume, balance, rate and release-mode updates made after mount.
-    registry.markStreaming(["Audio"])
-
-    let qrDescriptor = ControlDescriptor(
+    let descriptor = ControlDescriptor(
       wireType: "QrcodeScanner", classification: .visible,
-      implementation: "RufletMedia.QRScannerControlView", rendering: .nativeView,
+      implementation: "RufletQRScanner.QRScannerControlView", rendering: .nativeView,
       supportedEvents: ["detect", "error"],
       supportedMethods: ["reset_zoom_scale", "set_zoom_scale", "start", "stop",
                          "switch_camera", "toggle_torch"])
-    ControlRegistry.register(descriptor: qrDescriptor) { node, _ in
+    ControlRegistry.register(descriptor: descriptor) { node, _ in
       AnyView(QRScannerControlView(node: node))
     }
     ControlRegistry.register(
       descriptor: ControlDescriptor(
         wireType: "qrcode_scanner", classification: .visible,
-        implementation: qrDescriptor.implementation, rendering: .nativeView,
-        supportedEvents: qrDescriptor.supportedEvents,
-        supportedMethods: qrDescriptor.supportedMethods)
+        implementation: descriptor.implementation, rendering: .nativeView,
+        supportedEvents: descriptor.supportedEvents,
+        supportedMethods: descriptor.supportedMethods)
     ) { node, _ in
       AnyView(QRScannerControlView(node: node))
     }
 
     #if canImport(AVFoundation)
       RufletPermissions.installProbe { permission in
-        switch permission {
-        case "camera": return describe(AVCaptureDevice.authorizationStatus(for: .video))
-        default: return nil
-        }
+        permission == "camera"
+          ? describe(AVCaptureDevice.authorizationStatus(for: .video))
+          : nil
       }
       RufletPermissions.installRequest { permission, completion in
         guard permission == "camera" else { return false }

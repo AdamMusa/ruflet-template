@@ -85,7 +85,7 @@ extension ControlRegistry {
       // link it; this case is the fallback for one that does not.
       return AnyView(MissingBundleControlView(node: node, bundle: "RufletCamera"))
     case "QrcodeScanner", "qrcode_scanner":
-      return AnyView(MissingBundleControlView(node: node, bundle: "RufletMedia"))
+      return AnyView(MissingBundleControlView(node: node, bundle: "RufletQRScanner"))
     case "Arc", "Circle", "Color", "Fill", "Line", "Oval", "Path", "Points", "Rect", "Shadow":
       // Canvas shapes, drawn by their Canvas parent.
       return AnyView(EmptyView())

@@ -224,8 +224,8 @@ public final class RufletSession: ObservableObject {
       return
     }
 
-    // Naming the module turns "it failed" into "link RufletMedia", which is
-    // the actual fix whenever an optional service is missing.
+    // Naming the product turns "it failed" into "link RufletAudio", for
+    // example, which is the actual fix when an optional service is missing.
     if let bundle = ServiceRegistry.bundleProviding(node.type) {
       reply(
         callID: callID,

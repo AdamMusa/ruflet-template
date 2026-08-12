@@ -1,5 +1,5 @@
 import RufletEngine
-@testable import RufletMedia
+@testable import RufletQRScanner
 import RufletProtocol
 @testable import RufletUI
 import Vision
@@ -106,8 +106,8 @@ final class QRScannerPluginParityTests: XCTestCase {
     let legacy = try XCTUnwrap(ControlRegistry.builtInDescriptor(for: "qrcode_scanner"))
     XCTAssertEqual(normalized.classification, .visible)
     XCTAssertEqual(legacy.classification, .visible)
-    XCTAssertEqual(normalized.rendering, .optionalBundle("RufletMedia"))
-    XCTAssertEqual(legacy.rendering, .optionalBundle("RufletMedia"))
+    XCTAssertEqual(normalized.rendering, .optionalBundle("RufletQRScanner"))
+    XCTAssertEqual(legacy.rendering, .optionalBundle("RufletQRScanner"))
   }
 
   func testConfigurationUsesPinnedMobileScannerDefaults() {
@@ -140,11 +140,11 @@ final class QRScannerPluginParityTests: XCTestCase {
 
   @MainActor
   func testMediaBundleReplacesBothFallbacksWithNativeViews() {
-    RufletMedia.register(in: ServiceRegistry())
+    RufletQRScanner.register(in: ServiceRegistry())
     XCTAssertEqual(ControlRegistry.descriptor(for: "QrcodeScanner")?.rendering, .nativeView)
     XCTAssertEqual(ControlRegistry.descriptor(for: "qrcode_scanner")?.rendering, .nativeView)
     XCTAssertEqual(
       ControlRegistry.descriptor(for: "QrcodeScanner")?.implementation,
-      "RufletMedia.QRScannerControlView")
+      "RufletQRScanner.QRScannerControlView")
   }
 }

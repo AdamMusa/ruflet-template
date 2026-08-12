@@ -54,7 +54,7 @@ extension ServiceRegistry {
     case "geolocator":
       return "RufletLocation"
     case "audio":
-      return "RufletMedia"
+      return "RufletAudio"
     case "audiorecorder":
       return "RufletAudioRecorder"
     case "camera":

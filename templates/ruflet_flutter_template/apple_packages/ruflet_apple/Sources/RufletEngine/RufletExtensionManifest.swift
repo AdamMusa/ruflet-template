@@ -28,7 +28,7 @@ public enum RufletExtensionManifest {
   /// Update `status` when a dedicated Swift product lands; do not collapse
   /// entries into a catch-all target because that would relink unrelated SDKs.
   public static let packages: [RufletExtensionPackage] = [
-    .init(fletPackage: "flet_audio", swiftProduct: "RufletAudio", status: .pending),
+    .init(fletPackage: "flet_audio", swiftProduct: "RufletAudio", status: .available),
     .init(fletPackage: "flet_audio_recorder", swiftProduct: "RufletAudioRecorder", status: .available),
     .init(fletPackage: "flet_camera", swiftProduct: "RufletCamera", status: .available),
     .init(fletPackage: "flet_charts", swiftProduct: "RufletCharts", status: .available),
@@ -43,6 +43,6 @@ public enum RufletExtensionManifest {
     .init(fletPackage: "flet_spinkit", swiftProduct: "RufletSpinKit", status: .available),
     .init(fletPackage: "flet_video", swiftProduct: "RufletVideo", status: .pending),
     .init(fletPackage: "flet_webview", swiftProduct: "RufletWebView", status: .pending),
-    .init(fletPackage: "ruflet_qrcode_scanner", swiftProduct: "RufletQRScanner", status: .pending),
+    .init(fletPackage: "ruflet_qrcode_scanner", swiftProduct: "RufletQRScanner", status: .available),
   ]
 }

@@ -1,8 +1,8 @@
 import RufletEngine
+import RufletAudio
 import RufletAudioRecorder
 import RufletCamera
 import RufletFlashlight
-import RufletMedia
 import RufletProtocol
 import XCTest
 
@@ -41,7 +41,7 @@ final class ServiceCommandConformanceTests: XCTestCase {
   func testCoreAndOptionalBundlesCoverAdvertisedServiceAndHostTypes() {
     let registry = ServiceRegistry()
     registry.registerDefaults()
-    RufletMedia.register(in: registry)
+    RufletAudio.register(in: registry)
     RufletAudioRecorder.register(in: registry)
     RufletCamera.register(in: registry)
     RufletFlashlight.register(in: registry)

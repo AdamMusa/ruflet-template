@@ -1,7 +1,9 @@
 import RufletEngine
+import RufletAudio
 import RufletAudioRecorder
 import RufletCamera
 import RufletFlashlight
+import RufletQRScanner
 import RufletProtocol
 @testable import RufletUI
 import XCTest
@@ -67,6 +69,14 @@ final class RufletExtensionArchitectureTests: XCTestCase {
 
   @MainActor
   func testCaptureExtensionsRegisterOnlyTheirOwnFletBoundary() {
+    let audio = ServiceRegistry()
+    audio.register(extension: RufletAudio.self)
+    XCTAssertTrue(audio.hasExtension("RufletAudio"))
+    XCTAssertTrue(audio.handles("Audio"))
+    XCTAssertFalse(audio.handles("AudioRecorder"))
+    XCTAssertFalse(audio.handles("Camera"))
+    XCTAssertFalse(audio.handles("Flashlight"))
+
     let recorder = ServiceRegistry()
     recorder.register(extension: RufletAudioRecorder.self)
     XCTAssertTrue(recorder.hasExtension("RufletAudioRecorder"))
@@ -92,14 +102,33 @@ final class RufletExtensionArchitectureTests: XCTestCase {
     XCTAssertFalse(flashlight.handles("Camera"))
   }
 
+  @MainActor
+  func testQRScannerExtensionOwnsOnlyItsVisualControlBoundary() {
+    XCTAssertEqual(
+      ControlRegistry.builtInDescriptor(for: "QrcodeScanner")?.rendering,
+      .optionalBundle("RufletQRScanner"))
+
+    let registry = ServiceRegistry()
+    registry.register(extension: RufletQRScanner.self)
+    XCTAssertTrue(registry.hasExtension("RufletQRScanner"))
+    XCTAssertFalse(registry.handles("Audio"))
+    XCTAssertEqual(
+      ControlRegistry.descriptor(for: "QrcodeScanner")?.rendering, .nativeView)
+    XCTAssertEqual(
+      ControlRegistry.descriptor(for: "qrcode_scanner")?.implementation,
+      "RufletQRScanner.QRScannerControlView")
+  }
+
   func testCaptureExtensionManifestEntriesAreAvailable() {
     let packages = Dictionary(
       uniqueKeysWithValues: RufletExtensionManifest.packages.map {
         ($0.fletPackage, $0)
       })
     XCTAssertEqual(packages["flet_audio_recorder"]?.status, .available)
+    XCTAssertEqual(packages["flet_audio"]?.status, .available)
     XCTAssertEqual(packages["flet_camera"]?.status, .available)
     XCTAssertEqual(packages["flet_flashlight"]?.status, .available)
+    XCTAssertEqual(packages["ruflet_qrcode_scanner"]?.status, .available)
   }
 
   @MainActor
@@ -116,7 +145,7 @@ final class RufletExtensionArchitectureTests: XCTestCase {
       "RufletCamera.CameraControlView")
     XCTAssertEqual(
       ControlRegistry.builtInDescriptor(for: "QrcodeScanner")?.rendering,
-      .optionalBundle("RufletMedia"))
+      .optionalBundle("RufletQRScanner"))
   }
 
   func testMissingServiceErrorsNameTheDedicatedProducts() {
@@ -124,6 +153,6 @@ final class RufletExtensionArchitectureTests: XCTestCase {
       ServiceRegistry.bundleProviding("AudioRecorder"), "RufletAudioRecorder")
     XCTAssertEqual(ServiceRegistry.bundleProviding("Camera"), "RufletCamera")
     XCTAssertEqual(ServiceRegistry.bundleProviding("Flashlight"), "RufletFlashlight")
-    XCTAssertEqual(ServiceRegistry.bundleProviding("Audio"), "RufletMedia")
+    XCTAssertEqual(ServiceRegistry.bundleProviding("Audio"), "RufletAudio")
   }
 }
