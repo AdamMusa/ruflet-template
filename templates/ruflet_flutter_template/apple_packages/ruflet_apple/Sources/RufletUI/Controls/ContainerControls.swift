@@ -43,20 +43,6 @@ private struct FullscreenDialogPresentation: ViewModifier {
   }
 }
 
-/// The border an outlined card draws in place of a shadow.
-private struct CardOutline: ViewModifier {
-  let radius: CGFloat
-  let variant: String
-  let onForeground: Bool
-  let color: Color
-
-  func body(content: Content) -> some View {
-    guard variant == "outlined" else { return AnyView(content) }
-    let border = RoundedRectangle(cornerRadius: radius).strokeBorder(color, lineWidth: 1)
-    return AnyView(onForeground ? AnyView(content.overlay(border)) : AnyView(content.background(border)))
-  }
-}
-
 /// `ink` paints Material's touch ripple inside the container's own shape.
 private struct ContainerInk: ViewModifier {
   let node: ControlNode
@@ -887,48 +873,245 @@ private struct AlignedChildSizeKey: PreferenceKey {
   static func reduce(value: inout CGSize, nextValue: () -> CGSize) { value = nextValue() }
 }
 
-/// `Card` — a raised surface around a single child.
+enum RufletCardVariant: String, Equatable {
+  case elevated
+  case filled
+  case outlined
+
+  init(_ value: String?) {
+    self = RufletCardVariant(rawValue: value?.lowercased() ?? "") ?? .elevated
+  }
+}
+
+enum RufletCardShapeKind: String, Equatable {
+  case roundedRectangle = "roundedrectangle"
+  case stadium
+  case circle
+  case beveledRectangle = "beveledrectangle"
+  case continuousRectangle = "continuousrectangle"
+}
+
+/// Values Card obtains from Flutter's constructor and Material 3 defaults.
+/// Flet forwards optional wire fields unchanged, so resolving the nil cases is
+/// native-renderer work rather than Ruby DSL policy.
+struct RufletCardMetrics: Equatable {
+  let variant: RufletCardVariant
+  let fillToken: String
+  let shadowToken: String
+  let elevation: CGFloat
+  let margin: EdgeInsets
+  let shapeKind: RufletCardShapeKind
+  let shapeWasParsed: Bool
+  let radii: RufletCornerRadii
+  let eccentricity: CGFloat
+  let outlineToken: String?
+  let outlineWidth: CGFloat
+  let outlineStrokeAlign: CGFloat
+  let clipBehavior: String
+  let semanticContainer: Bool
+  let showBorderOnForeground: Bool
+
+  init(node: ControlNode) {
+    variant = RufletCardVariant(node.string("variant"))
+    fillToken = node.string("bgcolor") ?? Self.defaultFill(variant)
+    shadowToken = node.string("shadow_color") ?? "shadow"
+    elevation = CGFloat(node.double("elevation") ?? (variant == .elevated ? 1 : 0))
+    margin = ControlProps.edgeInsets(node.props["margin"])
+      ?? EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4)
+    clipBehavior = node.string("clip_behavior") ?? "none"
+    semanticContainer = node.bool("semantic_container") != false
+    showBorderOnForeground = node.bool("show_border_on_foreground") != false
+
+    let shape = node.map("shape")
+    let parsedKind = RufletCardShapeKind(
+      rawValue: shape?["_type"]?.stringValue?.lowercased() ?? "")
+    shapeWasParsed = parsedKind != nil
+    shapeKind = parsedKind ?? .roundedRectangle
+    radii = shapeWasParsed
+      ? (ControlProps.cornerRadii(shape?["radius"]) ?? RufletCornerRadii(uniform: 0))
+      : RufletCornerRadii(uniform: 12)
+    eccentricity = CGFloat(shape?["eccentricity"]?.doubleValue ?? 0)
+
+    if shapeWasParsed, let side = shape?["side"]?.mapValue,
+      side["style"]?.stringValue?.lowercased() != "none"
+    {
+      outlineToken = side["color"]?.stringValue ?? "black"
+      outlineWidth = CGFloat(side["width"]?.doubleValue ?? 1)
+      outlineStrokeAlign = CGFloat(side["stroke_align"]?.doubleValue ?? -1)
+    } else if !shapeWasParsed, variant == .outlined {
+      outlineToken = "outlinevariant"
+      outlineWidth = 1
+      outlineStrokeAlign = -1
+    } else {
+      outlineToken = nil
+      outlineWidth = 0
+      outlineStrokeAlign = -1
+    }
+  }
+
+  /// Compatibility for callers/tests interested in the uniform Material
+  /// default. Rendering uses all four values from `radii`.
+  var radius: CGFloat { radii.maximum }
+
+  private static func defaultFill(_ variant: RufletCardVariant) -> String {
+    switch variant {
+    case .elevated: return "surfacecontainerlow"
+    case .filled: return "surfacecontainerhighest"
+    case .outlined: return "surface"
+    }
+  }
+}
+
+/// ShapeBorder subset accepted by Flet's `parseShape`. All five names retain
+/// their native outline, fill and clipping geometry instead of collapsing to
+/// whichever corner happened to be largest.
+struct RufletCardShape: Shape {
+  let kind: RufletCardShapeKind
+  let radii: RufletCornerRadii
+  let eccentricity: CGFloat
+
+  func path(in rect: CGRect) -> Path {
+    switch kind {
+    case .circle:
+      let adjusted: CGRect
+      if eccentricity == 0 || rect.width == rect.height {
+        let side = min(rect.width, rect.height)
+        adjusted = CGRect(
+          x: rect.midX - side / 2, y: rect.midY - side / 2,
+          width: side, height: side)
+      } else if rect.width < rect.height {
+        let delta = (1 - eccentricity) * (rect.height - rect.width) / 2
+        adjusted = rect.insetBy(dx: 0, dy: delta)
+      } else {
+        let delta = (1 - eccentricity) * (rect.width - rect.height) / 2
+        adjusted = rect.insetBy(dx: delta, dy: 0)
+      }
+      return Path(ellipseIn: adjusted)
+    case .stadium:
+      return RoundedRectangle(cornerRadius: min(rect.width, rect.height) / 2).path(in: rect)
+    case .beveledRectangle:
+      let scale = cornerScale(in: rect)
+      let tl = radii.topLeft * scale
+      let tr = radii.topRight * scale
+      let bl = radii.bottomLeft * scale
+      let br = radii.bottomRight * scale
+      var path = Path()
+      path.move(to: CGPoint(x: rect.minX + tl, y: rect.minY))
+      path.addLine(to: CGPoint(x: rect.maxX - tr, y: rect.minY))
+      path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY + tr))
+      path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - br))
+      path.addLine(to: CGPoint(x: rect.maxX - br, y: rect.maxY))
+      path.addLine(to: CGPoint(x: rect.minX + bl, y: rect.maxY))
+      path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY - bl))
+      path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + tl))
+      path.closeSubpath()
+      return path
+    case .continuousRectangle:
+      // Flutter's continuous corner has a softer cubic transition than a
+      // rounded rectangle. SwiftUI's continuous corner style is its native
+      // equivalent on Apple platforms.
+      if radii.topLeft == radii.topRight,
+        radii.topLeft == radii.bottomLeft,
+        radii.topLeft == radii.bottomRight
+      {
+        return RoundedRectangle(cornerRadius: radii.topLeft, style: .continuous).path(in: rect)
+      }
+      return RufletRoundedRectangle(radii: radii).path(in: rect)
+    case .roundedRectangle:
+      return RufletRoundedRectangle(radii: radii).path(in: rect)
+    }
+  }
+
+  private func cornerScale(in rect: CGRect) -> CGFloat {
+    func ratio(_ extent: CGFloat, _ sum: CGFloat) -> CGFloat {
+      sum > 0 ? extent / sum : 1
+    }
+    return min(
+      1,
+      ratio(rect.width, radii.topLeft + radii.topRight),
+      ratio(rect.width, radii.bottomLeft + radii.bottomRight),
+      ratio(rect.height, radii.topLeft + radii.bottomLeft),
+      ratio(rect.height, radii.topRight + radii.bottomRight))
+  }
+}
+
+private struct CardClip: ViewModifier {
+  let metrics: RufletCardMetrics
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if metrics.clipBehavior.lowercased() == "none" {
+      content
+    } else {
+      content.clipShape(
+        RufletCardShape(
+          kind: metrics.shapeKind, radii: metrics.radii,
+          eccentricity: metrics.eccentricity))
+    }
+  }
+}
+
+private struct CardBorderLayer: View {
+  let shape: RufletCardShape
+  let color: Color
+  let width: CGFloat
+  let strokeAlign: CGFloat
+
+  @ViewBuilder
+  var body: some View {
+    if strokeAlign <= -1 {
+      // BorderSide.strokeAlignInside is Flet's parser default. Doubling a
+      // centred SwiftUI stroke then clipping its outer half retains the full
+      // requested width on the inside, matching Flutter's stroke inset.
+      shape.stroke(color, lineWidth: width * 2).clipShape(shape)
+    } else {
+      shape.stroke(color, lineWidth: width)
+    }
+  }
+}
+
+/// `Card` — Flet's elevated, filled and outlined Material surfaces.
 struct CardControlView: View {
   let node: ControlNode
 
   var body: some View {
-    let radius = ControlProps.cornerRadius(node.props["shape"]) ?? 12
+    let metrics = RufletCardMetrics(node: node)
+    let shape = RufletCardShape(
+      kind: metrics.shapeKind, radii: metrics.radii,
+      eccentricity: metrics.eccentricity)
+    let outline = MaterialPalette.color(metrics.outlineToken, default: .clear)
 
-    Group {
-      if let contentID = node.controlID(forKey: "content") {
-        ControlView(id: contentID, axis: .none)
+    ZStack {
+      shape
+        .fill(MaterialPalette.color(metrics.fillToken, default: .clear))
+        .shadow(
+          color: MaterialPalette.color(metrics.shadowToken, default: .black).opacity(0.2),
+          radius: metrics.elevation)
+      if metrics.outlineWidth > 0, !metrics.showBorderOnForeground {
+        CardBorderLayer(
+          shape: shape, color: outline, width: metrics.outlineWidth,
+          strokeAlign: metrics.outlineStrokeAlign)
+      }
+      Group {
+        if let contentID = node.controlID(forKey: "content") {
+          ControlView(id: contentID, axis: .none)
+        }
+      }
+      .modifier(CardClip(metrics: metrics))
+      if metrics.outlineWidth > 0, metrics.showBorderOnForeground {
+        CardBorderLayer(
+          shape: shape, color: outline, width: metrics.outlineWidth,
+          strokeAlign: metrics.outlineStrokeAlign)
       }
     }
-    .padding(ControlProps.edgeInsets(node.props["margin"]) ?? EdgeInsets())
-    .background(
-      RoundedRectangle(cornerRadius: radius)
-        .fill(MaterialPalette.color(node.string("bgcolor"), default: cardSurface))
-        .shadow(
-          color: MaterialPalette.color(
-            node.string("shadow_color"), default: .black.opacity(0.2)),
-          radius: CGFloat(node.double("elevation") ?? 1)))
-    // An outlined card draws its border instead of a shadow; a filled one
-    // draws neither. `show_border_on_foreground` puts that border over the
-    // content rather than behind it.
-    .modifier(
-      CardOutline(
-        radius: radius,
-        variant: node.string("variant")?.lowercased() ?? "elevated",
-        onForeground: node.bool("show_border_on_foreground") != false,
-        color: MaterialPalette.color(node.string("border_color"), default: .secondary.opacity(0.4))))
+    // Card.margin belongs to the Material widget itself. LayoutControl then
+    // applies the shared margin wrapper too unless Ruby marks it skipped,
+    // exactly mirroring the Flet control tree rather than painting the margin
+    // inside the card's fill.
+    .padding(metrics.margin)
     // Flutter's `semanticContainer` decides whether the card is one element
     // to a screen reader or a group of them.
-    .accessibilityElement(children: node.bool("semantic_container") == false ? .contain : .combine)
-  }
-
-  private var cardSurface: Color {
-    #if canImport(UIKit)
-      return Color(UIColor.secondarySystemBackground)
-    #elseif canImport(AppKit)
-      return Color(NSColor.controlBackgroundColor)
-    #else
-      return .gray.opacity(0.1)
-    #endif
+    .accessibilityElement(children: metrics.semanticContainer ? .combine : .contain)
   }
 }
 
