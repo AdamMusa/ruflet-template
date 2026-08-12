@@ -1292,6 +1292,7 @@ enum SubmenuButtonSlots {
 /// `MenuItemButton` — one row of a menu.
 struct MenuItemButtonControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
   @Environment(\.dismiss) private var dismiss
   @FocusState private var focused: Bool
@@ -1317,16 +1318,15 @@ struct MenuItemButtonControlView: View {
       // `overflow_axis` is the direction the item's content runs when it does
       // not fit; Flutter lays a menu item out along it.
       menuItemStack(spacing: 8) {
-        if let leadingID = node.controlID(forKey: "leading") {
+        if let leadingID = visibleSlotID("leading") {
           ControlView(id: leadingID, axis: .none)
         }
-        if let contentID = node.controlID(forKey: "content") {
+        if let contentID = visibleSlotID("content") {
           ControlView(id: contentID, axis: .none)
-        } else {
-          Text(node.string("content") ?? node.string("text") ?? "")
+        } else if case .string(let content)? = node.props["content"] {
+          Text(content)
         }
-        if let trailingID = node.controlID(forKey: "trailing_icon")
-          ?? node.controlID(forKey: "trailing") {
+        if let trailingID = visibleSlotID("trailing_icon") {
           ControlView(id: trailingID, axis: .none)
         }
       }
@@ -1354,6 +1354,21 @@ struct MenuItemButtonControlView: View {
     .onChange(of: focused) { isFocused in
       events.fire(node, isFocused ? "focus" : "blur")
     }
+  }
+
+  private func visibleSlotID(_ key: String) -> Int? {
+    MenuItemButtonSlots.visibleControlID(
+      node, key: key,
+      visibilityForID: { id in store.node(id).map { $0.bool("visible") != false } })
+  }
+}
+
+enum MenuItemButtonSlots {
+  static func visibleControlID(
+    _ node: ControlNode, key: String, visibilityForID: (Int) -> Bool?
+  ) -> Int? {
+    guard let id = node.controlID(forKey: key), visibilityForID(id) == true else { return nil }
+    return id
   }
 }
 
