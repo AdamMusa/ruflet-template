@@ -56,6 +56,25 @@ final class MediaPluginParityTests: XCTestCase {
     // than the generated Python control contract.
     XCTAssertEqual(node.bool("resume_upon_entering_foreground_mode") ?? false, false)
     XCTAssertEqual(node.rufletBool("wakelock"), true)
+
+    let options = VideoPresentationOptions(node)
+    XCTAssertEqual(options.title, "flet-video")
+    XCTAssertFalse(options.muted)
+    XCTAssertNil(options.volume)
+    XCTAssertNil(options.pitch)
+    XCTAssertNil(options.playbackRate)
+    XCTAssertNil(options.shufflePlaylist)
+    XCTAssertTrue(options.showControls)
+    XCTAssertNil(options.playlistMode)
+    XCTAssertFalse(options.fullscreen)
+    XCTAssertTrue(options.wakelock)
+    XCTAssertTrue(options.pausesInBackground)
+    XCTAssertFalse(options.resumesInForeground)
+    XCTAssertEqual(options.alignment, "center")
+    XCTAssertEqual(options.fit, "contain")
+    XCTAssertEqual(options.filterQuality, "low")
+    XCTAssertEqual(options.fillColor, "black")
+    XCTAssertFalse(options.autoplay)
   }
 
   func testVideoMediaParsesFletResourceAndHeaders() throws {
@@ -66,6 +85,71 @@ final class MediaPluginParityTests: XCTestCase {
     ])))
     XCTAssertEqual(source.resource, "https://example.test/movie.mp4")
     XCTAssertEqual(source.httpHeaders, ["Authorization": "Bearer token"])
+  }
+
+  func testVideoControllerConfigurationPreservesFletContractAndClassifiesMPVBoundary() {
+    let options = VideoControllerOptions(.map([
+      "output_driver": .string("gpu-next"),
+      "hardware_decoding_api": .string("videotoolbox"),
+      "enable_hardware_acceleration": .bool(false),
+      "width": .int(640), "height": .int(360), "scale": .double(2),
+      "mpv_properties": .map(["cache": .bool(true), "demuxer-max-bytes": .int(42)]),
+    ]))
+    XCTAssertEqual(options.outputDriver, "gpu-next")
+    XCTAssertEqual(options.hardwareDecodingAPI, "videotoolbox")
+    XCTAssertFalse(options.enablesHardwareAcceleration)
+    XCTAssertEqual(options.width, 640)
+    XCTAssertEqual(options.height, 360)
+    XCTAssertEqual(options.scale, 2)
+    XCTAssertEqual(options.mpvProperties["cache"], "yes")
+    XCTAssertTrue(options.avFoundationUnsupportedKeys.isSuperset(of: [
+      "output_driver", "hardware_decoding_api", "enable_hardware_acceleration",
+      "width", "height", "scale", "mpv_properties.cache",
+    ]))
+  }
+
+  func testVideoSubtitleDefaultsAndTrackParsingMatchPinnedFlet() {
+    let defaults = VideoSubtitleConfiguration(nil)
+    XCTAssertTrue(defaults.visible)
+    XCTAssertEqual(defaults.scale, 1)
+    XCTAssertEqual(defaults.alignment, "center")
+    XCTAssertEqual(defaults.padding.leading, 16)
+    XCTAssertEqual(defaults.padding.bottom, 24)
+
+    XCTAssertEqual(VideoSubtitleTrack(.map(["src": .string("auto")])), .automatic)
+    XCTAssertEqual(VideoSubtitleTrack(.map(["src": .string("none")])), .none)
+    XCTAssertEqual(
+      VideoSubtitleTrack(.map(["src": .string("WEBVTT\n\n00:01.000 --> 00:02.000\nHello")])),
+      .external("WEBVTT\n\n00:01.000 --> 00:02.000\nHello"))
+  }
+
+  func testExternalSubtitleParserSupportsFletRawSRTAndWebVTT() throws {
+    let cues = VideoSubtitleCue.parse("""
+      WEBVTT
+
+      00:00:01.250 --> 00:00:03.500
+      <b>Hello</b>
+
+      2
+      00:04,000 --> 00:05,250
+      World
+      """)
+    XCTAssertEqual(cues.count, 2)
+    XCTAssertEqual(cues[0], VideoSubtitleCue(start: 1.25, end: 3.5, text: "Hello"))
+    XCTAssertEqual(cues[1], VideoSubtitleCue(start: 4, end: 5.25, text: "World"))
+  }
+
+  func testAudioOptionsValidatePinnedFletRangesAndDocumentApplePanBoundary() {
+    let options = AudioPlaybackOptions(ControlNode(id: 4, type: "Audio", props: [
+      "autoplay": .bool(true), "volume": .double(2), "balance": .double(-0.5),
+      "playback_rate": .double(1.25), "release_mode": .string("loop"),
+    ]))
+    XCTAssertTrue(options.autoplay)
+    XCTAssertEqual(options.volume, 1)
+    XCTAssertEqual(options.balance, -0.5)
+    XCTAssertEqual(options.playbackRate, 1.25)
+    XCTAssertEqual(options.releaseMode, "loop")
+    XCTAssertEqual(AudioPlaybackOptions.avFoundationUnsupportedProperties, ["balance"])
   }
 
   #if canImport(AVKit)

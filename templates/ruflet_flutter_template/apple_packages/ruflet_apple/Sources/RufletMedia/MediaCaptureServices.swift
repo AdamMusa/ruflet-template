@@ -13,6 +13,28 @@ import RufletProtocol
 #endif
 
 /// `Audio` — playback of a single source, driven entirely by method calls.
+struct AudioPlaybackOptions: Equatable {
+  let autoplay: Bool
+  let volume: Double
+  let balance: Double
+  let playbackRate: Double
+  let releaseMode: String?
+
+  init(_ node: ControlNode) {
+    autoplay = node.bool("autoplay") ?? false
+    let requestedVolume = node.double("volume") ?? 1
+    volume = (0...1).contains(requestedVolume) ? requestedVolume : 1
+    let requestedBalance = node.double("balance") ?? 0
+    balance = (-1...1).contains(requestedBalance) ? requestedBalance : 0
+    playbackRate = node.double("playback_rate") ?? 1
+    releaseMode = node.string("release_mode")?.lowercased()
+  }
+
+  /// audioplayers_darwin 6.4.0 accepts `setBalance` but its Apple backend
+  /// implements it as a no-op. AVPlayer likewise has no stereo-pan property.
+  static let avFoundationUnsupportedProperties: Set<String> = ["balance"]
+}
+
 @MainActor
 public final class AudioService: RufletStreamingService {
   public static let wireType = "Audio"
@@ -48,6 +70,10 @@ public final class AudioService: RufletStreamingService {
       switch call.name {
       case "play", "resume":
         ensurePlayer(node: node, context: context)
+        guard player != nil else {
+          completion(.failure(RufletServiceError.failed("Audio must have \"src\" specified.")))
+          return
+        }
         if call.name == "play", let milliseconds = call.argument("position")?.doubleValue {
           guard let player else {
             completion(.success(.null))
@@ -74,15 +100,18 @@ public final class AudioService: RufletStreamingService {
         emit("state_change", .map(["state": .string("paused")]))
         completion(.success(.null))
 
-      case "release", "stop":
+      case "release":
         player?.pause()
         player?.seek(to: .zero)
-        emit("state_change", .map(["state": .string("stopped")]))
-        if call.name == "release" { releasePlayer() }
+        emit("state_change", .map(["state": .string("disposed")]))
+        releasePlayer()
         completion(.success(.null))
 
       case "seek":
-        let milliseconds = call.argument("position")?.doubleValue ?? 0
+        guard let milliseconds = call.argument("position")?.doubleValue else {
+          completion(.success(.null))
+          return
+        }
         guard let player else {
           completion(.success(.null))
           return
@@ -157,9 +186,9 @@ public final class AudioService: RufletStreamingService {
       }
 
       guard let player else { return }
-      let volume = node.double("volume") ?? 1
-      if (0...1).contains(volume) { player.volume = Float(volume) }
-      playbackRate = Float(node.double("playback_rate") ?? 1)
+      let options = AudioPlaybackOptions(node)
+      player.volume = Float(options.volume)
+      playbackRate = Float(options.playbackRate)
       if player.rate != 0 { player.rate = playbackRate }
       // Keep parity with audioplayers_darwin 6.4.0: Flet forwards balance,
       // while the pinned Apple backend explicitly treats setBalance as a
@@ -170,6 +199,7 @@ public final class AudioService: RufletStreamingService {
       // property update must not unexpectedly resume audio the user paused.
       if sourceChanged, node.bool("autoplay") == true {
         player.playImmediately(atRate: playbackRate)
+        emit("state_change", .map(["state": .string("playing")]))
       }
     }
 

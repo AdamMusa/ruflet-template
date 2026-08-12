@@ -14,6 +14,9 @@ import SwiftUI
 #if canImport(AVKit)
   import AVKit
 #endif
+#if canImport(MediaPlayer)
+  import MediaPlayer
+#endif
 #if canImport(MapKit)
   import MapKit
 #endif
@@ -1875,6 +1878,161 @@ struct WebViewControlView: View {
 ///
 /// The player lives in a `@StateObject` rather than being rebuilt each pass,
 /// because `video.play` has to reach the same `AVPlayer` the user is watching.
+struct VideoSubtitleConfiguration: Equatable {
+  var visible = true
+  var scale: CGFloat = 1
+  var alignment = "center"
+  var padding = EdgeInsets(top: 0, leading: 16, bottom: 24, trailing: 16)
+  var style = RufletTextStyle(map: [
+    "size": .double(32), "height": .double(1.4), "color": .string("#ffffffff"),
+    "bgcolor": .string("#aa000000"), "weight": .string("normal"),
+  ])
+
+  init(_ value: RufletValue?) {
+    guard let map = value?.mapValue else { return }
+    visible = map["visible"]?.boolValue ?? true
+    scale = CGFloat(map["text_scale_factor"]?.doubleValue ?? 1)
+    alignment = map["text_align"]?.stringValue ?? "center"
+    padding = ControlProps.edgeInsets(map["padding"])
+      ?? EdgeInsets(top: 0, leading: 16, bottom: 24, trailing: 16)
+    if let textStyle = map["text_style"]?.mapValue { style = RufletTextStyle(map: textStyle) }
+  }
+
+  static func == (lhs: Self, rhs: Self) -> Bool {
+    lhs.visible == rhs.visible && lhs.scale == rhs.scale && lhs.alignment == rhs.alignment
+      && lhs.padding == rhs.padding
+  }
+}
+
+enum VideoSubtitleTrack: Equatable {
+  case automatic
+  case none
+  case external(String)
+
+  init?(_ value: RufletValue?) {
+    guard let map = value?.mapValue, let source = map["src"]?.stringValue else { return nil }
+    switch source.lowercased() {
+    case "auto": self = .automatic
+    case "none": self = .none
+    default: self = .external(source)
+    }
+  }
+}
+
+struct VideoSubtitleCue: Equatable {
+  let start: TimeInterval
+  let end: TimeInterval
+  let text: String
+
+  static func parse(_ source: String) -> [Self] {
+    source.replacingOccurrences(of: "\r\n", with: "\n")
+      .components(separatedBy: "\n\n")
+      .compactMap { block in
+        let lines = block.split(separator: "\n", omittingEmptySubsequences: true).map(String.init)
+        guard let timingIndex = lines.firstIndex(where: { $0.contains("-->") }) else { return nil }
+        let endpoints = lines[timingIndex].components(separatedBy: "-->")
+        guard endpoints.count == 2,
+          let start = parseTime(endpoints[0]), let end = parseTime(endpoints[1]), end >= start
+        else { return nil }
+        let text = lines.dropFirst(timingIndex + 1)
+          .joined(separator: "\n")
+          .replacingOccurrences(of: #"<[^>]+>"#, with: "", options: .regularExpression)
+        return text.isEmpty ? nil : Self(start: start, end: end, text: text)
+      }
+  }
+
+  private static func parseTime(_ raw: String) -> TimeInterval? {
+    let token = raw.trimmingCharacters(in: .whitespaces).split(separator: " ").first.map(String.init)
+      ?? ""
+    let parts = token.replacingOccurrences(of: ",", with: ".").split(separator: ":")
+    guard parts.count >= 2, let seconds = Double(parts.last ?? "") else { return nil }
+    let minutes = Double(parts[parts.count - 2]) ?? 0
+    let hours = parts.count > 2 ? (Double(parts[parts.count - 3]) ?? 0) : 0
+    return hours * 3600 + minutes * 60 + seconds
+  }
+}
+
+struct VideoControllerOptions: Equatable {
+  let outputDriver: String?
+  let hardwareDecodingAPI: String?
+  let enablesHardwareAcceleration: Bool
+  let width: Int?
+  let height: Int?
+  let scale: Double
+  let mpvProperties: [String: String]
+
+  init(_ value: RufletValue?) {
+    let map = value?.mapValue ?? [:]
+    outputDriver = map["output_driver"]?.stringValue
+    hardwareDecodingAPI = map["hardware_decoding_api"]?.stringValue
+    enablesHardwareAcceleration = map["enable_hardware_acceleration"]?.boolValue ?? true
+    width = map["width"]?.intValue
+    height = map["height"]?.intValue
+    scale = map["scale"]?.doubleValue ?? 1
+    mpvProperties = map["mpv_properties"]?.mapValue?.reduce(into: [:]) { result, entry in
+      if let string = entry.value.stringValue { result[entry.key] = string }
+      else if let boolean = entry.value.boolValue { result[entry.key] = boolean ? "yes" : "no" }
+      else if let number = entry.value.doubleValue { result[entry.key] = String(number) }
+    } ?? [:]
+  }
+
+  /// These settings configure media_kit's MPV backend. AVFoundation owns its
+  /// decoder/output selection and exposes no equivalent knobs; retaining the
+  /// parsed values makes that platform boundary explicit instead of silently
+  /// pretending to apply them.
+  var avFoundationUnsupportedKeys: Set<String> {
+    var keys = Set(mpvProperties.keys.map { "mpv_properties.\($0)" })
+    if outputDriver != nil { keys.insert("output_driver") }
+    if hardwareDecodingAPI != nil { keys.insert("hardware_decoding_api") }
+    if width != nil { keys.insert("width") }
+    if height != nil { keys.insert("height") }
+    if scale != 1 { keys.insert("scale") }
+    if !enablesHardwareAcceleration { keys.insert("enable_hardware_acceleration") }
+    return keys
+  }
+}
+
+struct VideoPresentationOptions: Equatable {
+  let title: String
+  let muted: Bool
+  let volume: Double?
+  let pitch: Double?
+  let playbackRate: Double?
+  let shufflePlaylist: Bool?
+  let showControls: Bool
+  let playlistMode: String?
+  let fullscreen: Bool
+  let wakelock: Bool
+  let pausesInBackground: Bool
+  let resumesInForeground: Bool
+  let alignment: String
+  let fit: String
+  let filterQuality: String
+  let fillColor: String
+  let autoplay: Bool
+
+  init(_ node: ControlNode) {
+    title = node.string("title") ?? "flet-video"
+    muted = node.bool("muted") ?? false
+    let requestedVolume = node.double("volume")
+    volume = requestedVolume.flatMap { (0...100).contains($0) ? $0 : nil }
+    pitch = node.double("pitch")
+    playbackRate = node.double("playback_rate")
+    shufflePlaylist = node.bool("shuffle_playlist")
+    showControls = node.bool("show_controls") ?? true
+    playlistMode = node.string("playlist_mode")
+    fullscreen = node.bool("fullscreen") ?? false
+    wakelock = node.bool("wakelock") ?? true
+    pausesInBackground = node.bool("pause_upon_entering_background_mode") ?? true
+    resumesInForeground = node.bool("resume_upon_entering_foreground_mode") ?? false
+    alignment = node.string("alignment") ?? "center"
+    fit = node.string("fit") ?? "contain"
+    filterQuality = node.string("filter_quality") ?? "low"
+    fillColor = node.string("fill_color") ?? "black"
+    autoplay = node.bool("autoplay") ?? false
+  }
+}
+
 struct VideoControlView: View {
   let node: ControlNode
   @StateObject private var model = VideoPlayerModel()
@@ -1884,13 +2042,24 @@ struct VideoControlView: View {
   var body: some View {
     Group {
       #if canImport(AVKit)
-        PlayerView(
+        ZStack(alignment: .bottom) {
+          PlayerView(
           model: model,
           showsControls: node.bool("show_controls") ?? true,
           fit: node.string("fit"),
+          filterQuality: node.string("filter_quality") ?? "low",
           fullscreen: node.bool("fullscreen") ?? false,
           node: node,
           events: events)
+          if model.subtitleConfiguration.visible, !model.subtitleText.isEmpty {
+            Text(model.subtitleText)
+              .rufletTextStyle(model.subtitleConfiguration.style)
+              .multilineTextAlignment(model.subtitleConfiguration.alignment == "start" ? .leading
+                : model.subtitleConfiguration.alignment == "end" ? .trailing : .center)
+              .scaleEffect(model.subtitleConfiguration.scale)
+              .padding(model.subtitleConfiguration.padding)
+          }
+        }
         .background(MaterialPalette.color(node.string("fill_color"), default: .black))
       #else
         Color.black
@@ -1916,11 +2085,19 @@ final class VideoPlayerModel: ObservableObject {
   private var playlist: [VideoMediaSource] = []
   private var index = 0
   private var configured = false
+  private var didEmitLoaded = false
   private var playbackRate: Float = 1
   private var completionObserver: Any?
+  private var subtitleTimeObserver: Any?
   #if canImport(AVKit)
     private var itemStatusObserver: NSKeyValueObservation?
   #endif
+  @Published private(set) var subtitleText = ""
+  @Published private(set) var subtitleConfiguration = VideoSubtitleConfiguration(nil)
+  private(set) var controllerOptions = VideoControllerOptions(nil)
+  private(set) var avFoundationUnsupportedProperties: Set<String> = []
+  private var subtitleTrack: VideoSubtitleTrack?
+  private var subtitleCues: [VideoSubtitleCue] = []
   /// Held rather than captured: the notification closure is `@Sendable` and
   /// neither the node nor the sink is.
   private var node: ControlNode?
@@ -1940,12 +2117,28 @@ final class VideoPlayerModel: ObservableObject {
       playbackRate = newPlaybackRate
       self.node = node
       self.events = events
+      subtitleConfiguration = VideoSubtitleConfiguration(node.props["subtitle_configuration"])
+      controllerOptions = VideoControllerOptions(node.props["configuration"])
+      let presentation = VideoPresentationOptions(node)
+      avFoundationUnsupportedProperties = controllerOptions.avFoundationUnsupportedKeys
+      if node.double("pitch") != nil { avFoundationUnsupportedProperties.insert("pitch") }
+      if presentation.alignment.lowercased() != "center" {
+        avFoundationUnsupportedProperties.insert("alignment")
+      }
+      if !["contain", "cover", "fill"].contains(presentation.fit.lowercased()) {
+        avFoundationUnsupportedProperties.insert("fit.\(presentation.fit)")
+      }
+      let newSubtitleTrack = VideoSubtitleTrack(node.props["subtitle_track"])
+      let subtitleChanged = newSubtitleTrack != subtitleTrack
+      subtitleTrack = newSubtitleTrack
       let sourcesChanged = sources != playlist || !configured
       if sourcesChanged {
         playlist = sources
         index = min(index, max(sources.count - 1, 0))
         configured = true
         load(at: index)
+      } else if subtitleChanged {
+        applySubtitleTrack()
       }
 
       // media_kit supports independent pitch. AVPlayer does not expose a pitch
@@ -2026,6 +2219,7 @@ final class VideoPlayerModel: ObservableObject {
           options: ["AVURLAssetHTTPHeaderFieldsKey": source.httpHeaders])
       }
       let item = AVPlayerItem(asset: asset)
+      applyTitle(to: item)
       if let completionObserver { NotificationCenter.default.removeObserver(completionObserver) }
       completionObserver = NotificationCenter.default.addObserver(
         forName: .AVPlayerItemDidPlayToEndTime, object: item, queue: .main
@@ -2037,7 +2231,12 @@ final class VideoPlayerModel: ObservableObject {
           guard let self, let node = self.node, let events = self.events else { return }
           switch item.status {
           case .readyToPlay:
-            events.fire(node, "loaded")
+            if !self.didEmitLoaded {
+              self.didEmitLoaded = true
+              events.fire(node, "loaded")
+            }
+            events.fire(node, "complete", data: .bool(false))
+            self.applySubtitleTrack()
           case .failed:
             events.fire(
               node, "error",
@@ -2048,6 +2247,73 @@ final class VideoPlayerModel: ObservableObject {
         }
       }
       player.replaceCurrentItem(with: item)
+      installSubtitleTimeObserverIfNeeded()
+    }
+
+    private func applyTitle(to item: AVPlayerItem) {
+      let title = node?.string("title") ?? "flet-video"
+      #if canImport(MediaPlayer)
+        var information = MPNowPlayingInfoCenter.default().nowPlayingInfo ?? [:]
+        information[MPMediaItemPropertyTitle] = title
+        MPNowPlayingInfoCenter.default().nowPlayingInfo = information
+      #else
+        avFoundationUnsupportedProperties.insert("title")
+      #endif
+    }
+
+    private func installSubtitleTimeObserverIfNeeded() {
+      guard subtitleTimeObserver == nil else { return }
+      subtitleTimeObserver = player.addPeriodicTimeObserver(
+        forInterval: CMTime(seconds: 0.1, preferredTimescale: 600), queue: .main
+      ) { [weak self] time in
+        Task { @MainActor in self?.updateSubtitle(at: time.seconds) }
+      }
+    }
+
+    private func applySubtitleTrack() {
+      subtitleText = ""
+      subtitleCues = []
+      guard let item = player.currentItem else { return }
+      switch subtitleTrack {
+      case .automatic, nil:
+        player.appliesMediaSelectionCriteriaAutomatically = true
+      case .some(.none):
+        player.appliesMediaSelectionCriteriaAutomatically = false
+        Task { @MainActor in
+          if let group = try? await item.asset.loadMediaSelectionGroup(
+            for: .legible)
+          {
+            item.select(nil, in: group)
+          }
+        }
+      case .external(let source):
+        player.appliesMediaSelectionCriteriaAutomatically = false
+        loadExternalSubtitle(source)
+      }
+    }
+
+    private func loadExternalSubtitle(_ source: String) {
+      if let url = URL(string: source), let scheme = url.scheme,
+        scheme == "http" || scheme == "https"
+      {
+        URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
+          guard let data, let contents = String(data: data, encoding: .utf8) else { return }
+          Task { @MainActor in self?.subtitleCues = VideoSubtitleCue.parse(contents) }
+        }.resume()
+      } else if FileManager.default.fileExists(atPath: source),
+        let contents = try? String(contentsOfFile: source, encoding: .utf8)
+      {
+        subtitleCues = VideoSubtitleCue.parse(contents)
+      } else {
+        // Flet treats a non-URL, non-file value as raw subtitle contents.
+        subtitleCues = VideoSubtitleCue.parse(source)
+      }
+    }
+
+    private func updateSubtitle(at seconds: TimeInterval) {
+      guard seconds.isFinite else { return }
+      subtitleText = subtitleCues.first(where: { $0.start <= seconds && seconds <= $0.end })?.text
+        ?? ""
     }
 
     private var positionMilliseconds: Int64? {
@@ -2177,6 +2443,11 @@ final class VideoPlayerModel: ObservableObject {
 
   deinit {
     if let completionObserver { NotificationCenter.default.removeObserver(completionObserver) }
+    if let subtitleTimeObserver {
+      #if canImport(AVKit)
+        player.removeTimeObserver(subtitleTimeObserver)
+      #endif
+    }
     itemStatusObserver?.invalidate()
   }
 }
@@ -2219,6 +2490,7 @@ struct VideoMediaSource: Equatable {
     let model: VideoPlayerModel
     let showsControls: Bool
     let fit: String?
+    let filterQuality: String
     let fullscreen: Bool
     let node: ControlNode
     let events: RufletEventSink
@@ -2279,6 +2551,13 @@ struct VideoMediaSource: Equatable {
       private func configure(_ controller: AVPlayerViewController) {
         controller.showsPlaybackControls = showsControls
         controller.videoGravity = videoGravity
+        controller.view.layer.magnificationFilter = layerFilter
+        controller.view.layer.minificationFilter = layerFilter
+      }
+
+      private var layerFilter: CALayerContentsFilter {
+        filterQuality.lowercased() == "none" ? .nearest
+          : filterQuality.lowercased() == "high" ? .trilinear : .linear
       }
 
       private var videoGravity: AVLayerVideoGravity {
@@ -2293,13 +2572,23 @@ struct VideoMediaSource: Equatable {
     extension PlayerView: NSViewRepresentable {
       func makeNSView(context: Context) -> AVPlayerView {
         let view = AVPlayerView()
+        view.wantsLayer = true
         view.player = model.player
         view.controlsStyle = showsControls ? .inline : .none
+        view.layer?.magnificationFilter = layerFilter
+        view.layer?.minificationFilter = layerFilter
         return view
       }
       func updateNSView(_ view: AVPlayerView, context: Context) {
         view.player = model.player
         view.controlsStyle = showsControls ? .inline : .none
+        view.layer?.magnificationFilter = layerFilter
+        view.layer?.minificationFilter = layerFilter
+      }
+
+      private var layerFilter: CALayerContentsFilter {
+        filterQuality.lowercased() == "none" ? .nearest
+          : filterQuality.lowercased() == "high" ? .trilinear : .linear
       }
     }
   #endif
