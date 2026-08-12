@@ -4,11 +4,11 @@ import SwiftUI
 
 /// Optional native renderer for Flet's `Rive` extension control.
 ///
-/// Register this bundle through `RufletAppView(services:)`; applications that
+/// Register this extension through `RufletAppView(extensions:)`; applications that
 /// do not use Rive neither link nor initialize the Rive runtime.
 @MainActor
-public enum RufletRive: RufletServiceBundle {
-  public static let bundleName = "RufletRive"
+public enum RufletRive: RufletExtension {
+  public static let extensionName = "RufletRive"
 
   public static func register(in _: ServiceRegistry) {
     ControlRegistry.register(
