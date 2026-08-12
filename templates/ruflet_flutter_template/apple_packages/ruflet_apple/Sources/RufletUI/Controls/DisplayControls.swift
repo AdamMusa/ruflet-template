@@ -18,6 +18,7 @@ struct TextControlView: View {
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
   @Environment(\.openURL) private var openURL
+  @Environment(\.rufletSelectionAreaChange) private var selectionAreaChange
 
   var body: some View {
     let document = RufletRichTextDocument(
@@ -51,9 +52,12 @@ struct TextControlView: View {
     style: RufletTextStyle, document: RufletRichTextDocument
   ) -> some View {
     let attributed = document.attributedString(rootStyle: style)
-    if node.bool("selectable") == true || document.runs.contains(where: \.tracksPointer) {
+    if node.bool("selectable") == true || selectionAreaChange != nil
+      || document.runs.contains(where: \.tracksPointer)
+    {
       RufletSelectableRichText(
         node: node, document: document, attributed: attributed, events: events,
+        selectionAreaChange: selectionAreaChange,
         activate: activateSpan, hover: hoverSpan)
     } else {
       Text(attributed)
@@ -2483,9 +2487,10 @@ private struct MarkdownBlockView: View {
   ) -> some View {
     let attributed = RufletMarkdownInline.attributed(
       text, extensions: sheet.extensions, sheet: sheet, baseStyle: style, literal: literal)
-    if node.bool("selectable") == true {
+    if node.bool("selectable") == true || selectionAreaChange != nil {
       RufletSelectableMarkdownText(
         node: node, source: text, attributed: attributed, events: events,
+        selectionAreaChange: selectionAreaChange,
         activate: { openURL($0) }, tapText: { events.fire(node, "tap_text") })
     } else {
       Text(attributed)
@@ -2508,6 +2513,7 @@ private struct MarkdownBlockView: View {
 
   @Environment(\.rufletEvents) private var events
   @Environment(\.openURL) private var openURL
+  @Environment(\.rufletSelectionAreaChange) private var selectionAreaChange
 }
 
 /// A block-level markdown image, which is where `image_error_content` lands.

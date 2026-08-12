@@ -510,49 +510,36 @@ struct SelectionAreaControlView: View {
     if let contentID = node.controlID(forKey: "content") {
       ControlView(id: contentID, axis: .none)
         .textSelection(.enabled)
-        .modifier(SelectionChangeReporter(node: node, events: events))
+        .environment(\.rufletSelectionAreaChange) { selection in
+          events.fire(node, "change", data: RufletSelectionAreaPayload.data(selection))
+        }
     } else {
       RufletWrapperError("SelectionArea.content must be provided and visible")
     }
   }
 }
 
-private struct SelectionChangeReporter: ViewModifier {
-  let node: ControlNode
-  let events: RufletEventSink
+enum RufletSelectionAreaPayload {
+  static func selection(in source: String, range: NSRange) -> String? {
+    guard range.location != NSNotFound, range.length > 0,
+      range.location >= 0, NSMaxRange(range) <= source.utf16.count
+    else { return nil }
+    return (source as NSString).substring(with: range)
+  }
 
-  func body(content: Content) -> some View {
-    #if canImport(AppKit)
-      content.onReceive(
-        NotificationCenter.default.publisher(for: NSTextView.didChangeSelectionNotification)
-      ) { notification in
-        guard let view = notification.object as? NSTextView else { return }
-        let range = view.selectedRange()
-        guard range.location != NSNotFound, range.location + range.length <= view.string.utf16.count
-        else {
-          return
-        }
-        events.fire(
-          node, "change",
-          data: .string((view.string as NSString).substring(with: range)))
-      }
-    #elseif canImport(UIKit)
-      // AppKit posts a notification whenever a selection moves; UIKit posts
-      // none — `textViewDidChangeSelection` is a delegate callback, and the
-      // text views here belong to whatever control is being wrapped. Text
-      // change is the only public signal, so a selection that moves without
-      // the text changing is not reported on iOS.
-      content.onReceive(
-        NotificationCenter.default.publisher(for: UITextView.textDidChangeNotification)
-      ) { notification in
-        guard let view = notification.object as? UITextView,
-          let range = view.selectedTextRange
-        else { return }
-        events.fire(node, "change", data: .string(view.text(in: range) ?? ""))
-      }
-    #else
-      content
-    #endif
+  static func data(_ selection: String?) -> RufletValue {
+    selection.map(RufletValue.string) ?? .null
+  }
+}
+
+private struct RufletSelectionAreaChangeKey: EnvironmentKey {
+  static let defaultValue: ((String?) -> Void)? = nil
+}
+
+extension EnvironmentValues {
+  var rufletSelectionAreaChange: ((String?) -> Void)? {
+    get { self[RufletSelectionAreaChangeKey.self] }
+    set { self[RufletSelectionAreaChangeKey.self] = newValue }
   }
 }
 

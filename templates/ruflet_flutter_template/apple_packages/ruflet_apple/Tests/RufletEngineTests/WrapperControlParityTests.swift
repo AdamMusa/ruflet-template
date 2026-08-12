@@ -75,6 +75,25 @@ final class WrapperControlParityTests: XCTestCase {
       props: ["transition_on_user_gestures": .bool(true)])))
   }
 
+  func testSelectionAreaEmitsFletsNullablePlainTextPayload() {
+    let source = "A 👋 selection"
+    XCTAssertEqual(
+      RufletSelectionAreaPayload.selection(
+        in: source, range: NSRange(location: 2, length: 2)),
+      "👋")
+    XCTAssertNil(
+      RufletSelectionAreaPayload.selection(
+        in: source, range: NSRange(location: 4, length: 0)))
+    XCTAssertNil(
+      RufletSelectionAreaPayload.selection(
+        in: source, range: NSRange(location: NSNotFound, length: 0)))
+    XCTAssertNil(
+      RufletSelectionAreaPayload.selection(
+        in: source, range: NSRange(location: 0, length: source.utf16.count + 1)))
+    XCTAssertEqual(RufletSelectionAreaPayload.data("selection"), .string("selection"))
+    XCTAssertEqual(RufletSelectionAreaPayload.data(nil), .null)
+  }
+
   private func wrapperGradient(_ type: String) -> RufletValue {
     .map([
       "_type": .string(type),

@@ -201,6 +201,7 @@ struct RufletSelectableRichText: View {
   let document: RufletRichTextDocument
   let attributed: AttributedString
   let events: RufletEventSink
+  let selectionAreaChange: ((String?) -> Void)?
   let activate: (Int) -> Void
   let hover: (Int, Bool) -> Void
 
@@ -208,11 +209,13 @@ struct RufletSelectableRichText: View {
     #if canImport(UIKit)
       RufletUIKitRichText(
         node: node, document: document, attributed: attributed,
-        events: events, activate: activate, hover: hover)
+        events: events, selectionAreaChange: selectionAreaChange,
+        activate: activate, hover: hover)
     #elseif canImport(AppKit)
       RufletAppKitRichText(
         node: node, document: document, attributed: attributed,
-        events: events, activate: activate, hover: hover)
+        events: events, selectionAreaChange: selectionAreaChange,
+        activate: activate, hover: hover)
     #else
       Text(attributed).textSelection(.enabled)
     #endif
@@ -227,6 +230,7 @@ struct RufletSelectableMarkdownText: View {
   let source: String
   let attributed: AttributedString
   let events: RufletEventSink
+  let selectionAreaChange: ((String?) -> Void)?
   let activate: (URL) -> Void
   let tapText: () -> Void
 
@@ -234,10 +238,12 @@ struct RufletSelectableMarkdownText: View {
     #if canImport(UIKit)
       RufletUIKitMarkdownText(
         node: node, source: source, attributed: attributed, events: events,
+        selectionAreaChange: selectionAreaChange,
         activate: activate, tapText: tapText)
     #elseif canImport(AppKit)
       RufletAppKitMarkdownText(
         node: node, source: source, attributed: attributed, events: events,
+        selectionAreaChange: selectionAreaChange,
         activate: activate, tapText: tapText)
     #else
       Text(attributed).textSelection(.enabled).onTapGesture(perform: tapText)
@@ -281,6 +287,7 @@ struct RufletSelectableMarkdownText: View {
     let document: RufletRichTextDocument
     let attributed: AttributedString
     let events: RufletEventSink
+    let selectionAreaChange: ((String?) -> Void)?
     let activate: (Int) -> Void
     let hover: (Int, Bool) -> Void
 
@@ -308,9 +315,9 @@ struct RufletSelectableMarkdownText: View {
       let rendered = NSAttributedString(attributed)
       if !view.attributedText.isEqual(to: rendered) { view.attributedText = rendered }
       let presentation = RufletTextPresentation(node: node)
-      view.isSelectable = presentation.selectable
-        && node.bool("enable_interactive_selection") != false
-      view.isUserInteractionEnabled = presentation.selectable || !document.runs.isEmpty
+      view.isSelectable = selectionAreaChange != nil
+        || (presentation.selectable && node.bool("enable_interactive_selection") != false)
+      view.isUserInteractionEnabled = view.isSelectable || !document.runs.isEmpty
       view.textAlignment = Self.textAlignment(node.string("text_align"))
       view.textContainer.maximumNumberOfLines = presentation.maxLines ?? 0
       view.textContainer.lineBreakMode = Self.lineBreakMode(presentation.overflow)
@@ -346,12 +353,16 @@ struct RufletSelectableMarkdownText: View {
       init(parent: RufletUIKitRichText) { self.parent = parent }
 
       func textViewDidChangeSelection(_ textView: UITextView) {
-        guard parent.node.bool("selectable") == true else { return }
-        parent.events.fire(
-          parent.node, "selection_change",
-          data: RufletRichTextDocument.textSelectionData(
-            rootValue: parent.node.string("value") ?? "",
-            range: textView.selectedRange))
+        if parent.node.bool("selectable") == true {
+          parent.events.fire(
+            parent.node, "selection_change",
+            data: RufletRichTextDocument.textSelectionData(
+              rootValue: parent.node.string("value") ?? "",
+              range: textView.selectedRange))
+        }
+        parent.selectionAreaChange?(
+          RufletSelectionAreaPayload.selection(
+            in: textView.text ?? "", range: textView.selectedRange))
       }
 
       func textView(
@@ -406,6 +417,7 @@ struct RufletSelectableMarkdownText: View {
     let source: String
     let attributed: AttributedString
     let events: RufletEventSink
+    let selectionAreaChange: ((String?) -> Void)?
     let activate: (URL) -> Void
     let tapText: () -> Void
 
@@ -431,7 +443,7 @@ struct RufletSelectableMarkdownText: View {
       context.coordinator.parent = self
       let rendered = NSAttributedString(attributed)
       if !view.attributedText.isEqual(to: rendered) { view.attributedText = rendered }
-      view.isSelectable = node.bool("selectable") == true
+      view.isSelectable = node.bool("selectable") == true || selectionAreaChange != nil
       view.isUserInteractionEnabled = true
     }
 
@@ -440,11 +452,15 @@ struct RufletSelectableMarkdownText: View {
       init(parent: RufletUIKitMarkdownText) { self.parent = parent }
 
       func textViewDidChangeSelection(_ textView: UITextView) {
-        guard parent.node.bool("selectable") == true else { return }
-        parent.events.fire(
-          parent.node, "selection_change",
-          data: RufletRichTextDocument.markdownSelectionData(
-            source: parent.source, range: textView.selectedRange))
+        if parent.node.bool("selectable") == true {
+          parent.events.fire(
+            parent.node, "selection_change",
+            data: RufletRichTextDocument.markdownSelectionData(
+              source: parent.source, range: textView.selectedRange))
+        }
+        parent.selectionAreaChange?(
+          RufletSelectionAreaPayload.selection(
+            in: textView.text ?? "", range: textView.selectedRange))
       }
 
       func textView(
@@ -529,6 +545,7 @@ struct RufletSelectableMarkdownText: View {
     let document: RufletRichTextDocument
     let attributed: AttributedString
     let events: RufletEventSink
+    let selectionAreaChange: ((String?) -> Void)?
     let activate: (Int) -> Void
     let hover: (Int, Bool) -> Void
 
@@ -556,8 +573,8 @@ struct RufletSelectableMarkdownText: View {
         view.textStorage?.setAttributedString(rendered)
       }
       let presentation = RufletTextPresentation(node: node)
-      view.isSelectable = presentation.selectable
-        && node.bool("enable_interactive_selection") != false
+      view.isSelectable = selectionAreaChange != nil
+        || (presentation.selectable && node.bool("enable_interactive_selection") != false)
       view.alignment = Self.textAlignment(node.string("text_align"))
       view.textContainer?.maximumNumberOfLines = presentation.maxLines ?? 0
       view.textContainer?.lineBreakMode = Self.lineBreakMode(presentation.overflow)
@@ -612,13 +629,17 @@ struct RufletSelectableMarkdownText: View {
       }
 
       func textViewDidChangeSelection(_ notification: Notification) {
-        guard parent.node.bool("selectable") == true else { return }
         guard let view = notification.object as? NSTextView else { return }
-        parent.events.fire(
-          parent.node, "selection_change",
-          data: RufletRichTextDocument.textSelectionData(
-            rootValue: parent.node.string("value") ?? "",
-            range: view.selectedRange()))
+        if parent.node.bool("selectable") == true {
+          parent.events.fire(
+            parent.node, "selection_change",
+            data: RufletRichTextDocument.textSelectionData(
+              rootValue: parent.node.string("value") ?? "",
+              range: view.selectedRange()))
+        }
+        parent.selectionAreaChange?(
+          RufletSelectionAreaPayload.selection(
+            in: view.string, range: view.selectedRange()))
       }
 
       func textView(
@@ -637,6 +658,7 @@ struct RufletSelectableMarkdownText: View {
     let source: String
     let attributed: AttributedString
     let events: RufletEventSink
+    let selectionAreaChange: ((String?) -> Void)?
     let activate: (URL) -> Void
     let tapText: () -> Void
 
@@ -663,7 +685,7 @@ struct RufletSelectableMarkdownText: View {
       if !view.attributedString().isEqual(to: rendered) {
         view.textStorage?.setAttributedString(rendered)
       }
-      view.isSelectable = node.bool("selectable") == true
+      view.isSelectable = node.bool("selectable") == true || selectionAreaChange != nil
     }
 
     final class Coordinator: NSObject, NSTextViewDelegate {
@@ -671,13 +693,16 @@ struct RufletSelectableMarkdownText: View {
       init(parent: RufletAppKitMarkdownText) { self.parent = parent }
 
       func textViewDidChangeSelection(_ notification: Notification) {
-        guard parent.node.bool("selectable") == true,
-          let view = notification.object as? NSTextView
-        else { return }
-        parent.events.fire(
-          parent.node, "selection_change",
-          data: RufletRichTextDocument.markdownSelectionData(
-            source: parent.source, range: view.selectedRange()))
+        guard let view = notification.object as? NSTextView else { return }
+        if parent.node.bool("selectable") == true {
+          parent.events.fire(
+            parent.node, "selection_change",
+            data: RufletRichTextDocument.markdownSelectionData(
+              source: parent.source, range: view.selectedRange()))
+        }
+        parent.selectionAreaChange?(
+          RufletSelectionAreaPayload.selection(
+            in: view.string, range: view.selectedRange()))
       }
 
       func textView(
