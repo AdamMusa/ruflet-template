@@ -45,11 +45,20 @@ public enum FletTesterSemantics {
     switch value {
     case nil, .null: return nil
     case .int(let value): return Double(value)
-    case .double(let value): return value.isFinite ? Double(Int(value)) : nil
+    // Flet's parseDuration routes every numeric value through parseInt. Dart
+    // doubles stringify with a decimal point (including integral doubles), so
+    // int.tryParse rejects them and the parser's zero default wins.
+    case .double: return 0
     case .extended(type: 3, let microseconds):
       return Double(microseconds).map { $0 / 1_000 }
     case .map(let values):
-      func integer(_ key: String) -> Double { Double(values[key]?.intValue ?? 0) }
+      func integer(_ key: String) -> Double {
+        switch values[key] {
+        case .int(let value): return Double(value)
+        case .string(let value): return Double(Int(value) ?? 0)
+        default: return 0
+        }
+      }
       return
         86_400_000 * integer("days") + 3_600_000 * integer("hours")
         + 60_000 * integer("minutes") + 1_000 * integer("seconds")

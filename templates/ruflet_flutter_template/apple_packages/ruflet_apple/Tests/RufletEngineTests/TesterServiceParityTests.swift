@@ -52,7 +52,14 @@ final class TesterServiceParityTests: XCTestCase {
   }
 
   func testDurationOffsetKeyAndFinderWireSemantics() throws {
-    XCTAssertEqual(FletTesterSemantics.durationMilliseconds(.double(16.9)), 16)
+    XCTAssertEqual(FletTesterSemantics.durationMilliseconds(.double(16.9)), 0)
+    XCTAssertEqual(FletTesterSemantics.durationMilliseconds(.double(16)), 0)
+    XCTAssertEqual(
+      FletTesterSemantics.durationMilliseconds(.map([
+        "seconds": .double(2.9),
+        "milliseconds": .string("15"),
+        "microseconds": .bool(true),
+      ])), 15)
     XCTAssertEqual(
       FletTesterSemantics.durationMilliseconds(.extended(type: 3, string: "16500")), 16.5)
     XCTAssertEqual(
