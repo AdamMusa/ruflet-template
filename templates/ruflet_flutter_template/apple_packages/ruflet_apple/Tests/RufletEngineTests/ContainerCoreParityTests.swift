@@ -10,6 +10,32 @@ final class ContainerCoreParityTests: XCTestCase {
     ControlNode(id: 1, type: "Container", props: props)
   }
 
+  func testAnimatedSwitcherKeepsPinnedFletConstructorDefaultsAndOverrides() {
+    let defaults = AnimatedSwitcherPresentation(node: ControlNode(
+      id: 8, type: "AnimatedSwitcher"))
+    XCTAssertEqual(defaults.duration, 1)
+    XCTAssertEqual(defaults.reverseDuration, 1)
+    XCTAssertEqual(defaults.switchInCurve, "linear")
+    XCTAssertEqual(defaults.switchOutCurve, "linear")
+    XCTAssertEqual(defaults.transition, "fade")
+    XCTAssertEqual(
+      AnimatedSwitcherPresentation.missingContentError,
+      "AnimatedSwitcher.content must be provided and visible")
+
+    let explicit = AnimatedSwitcherPresentation(node: ControlNode(
+      id: 9, type: "AnimatedSwitcher", props: [
+        "duration": .double(250), "reverse_duration": .double(500),
+        "switch_in_curve": .string("easeIn"),
+        "switch_out_curve": .string("easeOut"),
+        "transition": .string("rotation"),
+      ]))
+    XCTAssertEqual(explicit.duration, 0.25)
+    XCTAssertEqual(explicit.reverseDuration, 0.5)
+    XCTAssertEqual(explicit.switchInCurve, "easeIn")
+    XCTAssertEqual(explicit.switchOutCurve, "easeOut")
+    XCTAssertEqual(explicit.transition, "rotation")
+  }
+
   func testOmittedContainerPropertiesStayAbsentAndUseFletClipDefault() {
     let semantics = RufletContainerSemantics(node: node())
     XCTAssertNil(semantics.padding)

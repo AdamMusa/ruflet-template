@@ -1871,21 +1871,28 @@ struct PageletControlView: View {
 struct AnimatedSwitcherControlView: View {
   let node: ControlNode
 
+  private var presentation: AnimatedSwitcherPresentation {
+    AnimatedSwitcherPresentation(node: node)
+  }
+
+  @ViewBuilder
   var body: some View {
-    Group {
-      if let contentID = node.controlID(forKey: "content") {
-        ControlView(id: contentID, axis: .none)
-          .id(contentID)
-          .transition(transition)
-      }
+    if let contentID = node.controlID(forKey: "content") {
+      ControlView(id: contentID, axis: .none)
+        .id(contentID)
+        .transition(transition)
+        .animation(switchAnimation, value: contentID)
+    } else {
+      Text(AnimatedSwitcherPresentation.missingContentError)
+        .font(.caption)
+        .foregroundStyle(.red)
     }
-    .animation(switchAnimation, value: node.controlID(forKey: "content"))
   }
 
   /// Flet's `AnimatedSwitcherTransition`. Flutter's default is a cross-fade,
   /// and the scale and rotation forms pair with it rather than replace it.
   private var transition: AnyTransition {
-    switch node.string("transition")?.lowercased() {
+    switch presentation.transition {
     case "scale":
       return .asymmetric(
         insertion: .scale.combined(with: .opacity),
@@ -1904,14 +1911,24 @@ struct AnimatedSwitcherControlView: View {
   /// animation to the transition, so the incoming pair wins and the outgoing
   /// duration stands in when only it was given.
   private var switchAnimation: Animation {
-    let forward = node.double("duration") ?? 300
-    let backward = node.double("reverse_duration") ?? forward
-    // SwiftUI applies one animation to a transition rather than one per
-    // direction, so the longer of the two is what the switch is given.
-    let seconds = max(forward, backward) / 1_000
-    let name = node.string("switch_in_curve") ?? node.string("switch_out_curve")
+    // SwiftUI applies one animation to a transition rather than independent
+    // incoming/outgoing curves; preserve both exact Flet durations in the
+    // semantic model and use the longer live transition window.
+    let seconds = max(presentation.duration, presentation.reverseDuration)
+    let name = presentation.switchInCurve
     return RufletCurve.animation(name, duration: seconds)
   }
+}
+
+struct AnimatedSwitcherPresentation {
+  static let missingContentError = "AnimatedSwitcher.content must be provided and visible"
+
+  let node: ControlNode
+  var duration: Double { (node.double("duration") ?? 1_000) / 1_000 }
+  var reverseDuration: Double { (node.double("reverse_duration") ?? 1_000) / 1_000 }
+  var switchInCurve: String { node.string("switch_in_curve") ?? "linear" }
+  var switchOutCurve: String { node.string("switch_out_curve") ?? "linear" }
+  var transition: String { node.string("transition")?.lowercased() ?? "fade" }
 }
 
 /// A wrapper with no Apple-side behaviour of its own: render the content.
