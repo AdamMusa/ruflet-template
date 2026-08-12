@@ -33,6 +33,7 @@ let package = Package(
     .library(name: "RufletVideo", targets: ["RufletVideo"]),
     .library(name: "RufletWebView", targets: ["RufletWebView"]),
     .library(name: "RufletCodeEditor", targets: ["RufletCodeEditor"]),
+    .library(name: "RufletColorPickers", targets: ["RufletColorPickers"]),
     .library(name: "RufletSpinKit", targets: ["RufletSpinKit"]),
 
     // Available separately for hosts that want the wire layer or the control
@@ -103,6 +104,9 @@ let package = Package(
       name: "RufletCodeEditor",
       dependencies: ["RufletUI", "RufletEngine", "RufletProtocol"]),
     .target(
+      name: "RufletColorPickers",
+      dependencies: ["RufletUI", "RufletEngine", "RufletProtocol"]),
+    .target(
       name: "RufletSpinKit",
       dependencies: ["RufletUI", "RufletEngine", "RufletProtocol"]),
 
@@ -124,5 +128,8 @@ let package = Package(
       dependencies: ["RufletCodeEditor", "RufletUI", "RufletEngine", "RufletProtocol"]),
     .testTarget(
       name: "RufletSpinKitTests",
-      dependencies: ["RufletSpinKit", "RufletUI", "RufletEngine", "RufletProtocol"])
+      dependencies: ["RufletSpinKit", "RufletUI", "RufletEngine", "RufletProtocol"]),
+    .testTarget(
+      name: "RufletColorPickersTests",
+      dependencies: ["RufletColorPickers", "RufletUI", "RufletEngine", "RufletProtocol"])
   ])

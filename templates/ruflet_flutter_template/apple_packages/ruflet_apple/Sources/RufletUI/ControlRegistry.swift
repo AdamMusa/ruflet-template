@@ -255,6 +255,17 @@ public enum ControlRegistry {
     add(["CircleAvatar"], .visible, "CircleAvatarControlView", .nativeView,
         events: ["image_error"])
     add(["Badge"], .visible, "BadgeControlView", .nativeView)
+    add(["ColorPicker"], .visible, "RufletColorPickers.RufletColorPickerControlView",
+        .optionalBundle("RufletColorPickers"),
+        events: ["color_change", "history_change", "hsv_color_change"])
+    add(["HueRingPicker", "SlidePicker", "BlockPicker"], .visible,
+        "RufletColorPickers.RufletColorPickerControlView",
+        .optionalBundle("RufletColorPickers"), events: ["color_change"])
+    add(["MaterialPicker"], .visible, "RufletColorPickers.RufletColorPickerControlView",
+        .optionalBundle("RufletColorPickers"), events: ["color_change", "primary_change"])
+    add(["MultipleChoiceBlockPicker"], .visible,
+        "RufletColorPickers.RufletColorPickerControlView",
+        .optionalBundle("RufletColorPickers"), events: ["colors_change"])
     add(["Markdown"], .visible, "MarkdownControlView", .nativeView,
         events: ["selection_change", "tap_link", "tap_text"])
 

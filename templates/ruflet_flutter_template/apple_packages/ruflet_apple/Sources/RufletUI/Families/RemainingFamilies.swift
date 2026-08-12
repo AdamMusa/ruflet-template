@@ -63,6 +63,9 @@ extension ControlRegistry {
     switch node.type {
     case "Canvas":
       return AnyView(CanvasControlView(node: node))
+    case "ColorPicker", "HueRingPicker", "SlidePicker", "MaterialPicker", "BlockPicker",
+      "MultipleChoiceBlockPicker":
+      return AnyView(MissingBundleControlView(node: node, bundle: "RufletColorPickers"))
     case "Map":
       return AnyView(MissingBundleControlView(node: node, bundle: "RufletMap"))
     case "TileLayer", "MarkerLayer", "Marker", "CircleLayer", "CircleMarker",
