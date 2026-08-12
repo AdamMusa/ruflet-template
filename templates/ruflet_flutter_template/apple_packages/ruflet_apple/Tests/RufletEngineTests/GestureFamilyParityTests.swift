@@ -15,6 +15,17 @@ final class GestureFamilyParityTests: XCTestCase {
     XCTAssertEqual(RufletGestureParity.interactiveScaleFactor, 200)
   }
 
+  func testGestureDetectorRequiresAHandlerButNotContent() {
+    XCTAssertEqual(
+      RufletGestureDetectorSemantics.validationError(
+        ControlNode(id: 1, type: "GestureDetector")),
+      "GestureDetector should have at least one event handler defined")
+    XCTAssertNil(RufletGestureDetectorSemantics.validationError(ControlNode(
+      id: 2, type: "GestureDetector", props: ["on_tap": .bool(true)])))
+    XCTAssertNil(RufletGestureDetectorSemantics.validationError(ControlNode(
+      id: 3, type: "GestureDetector", props: ["mouse_cursor": .string("click")])))
+  }
+
   func testDismissibleUsesPinnedFletDurationsAndRufletAliases() {
     let omitted = ControlNode(id: 1, type: "Dismissible")
     XCTAssertEqual(RufletDismissibleDefaults.movementDuration(omitted), 200)

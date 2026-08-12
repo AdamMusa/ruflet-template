@@ -63,6 +63,14 @@ struct GestureDetectorControlView: View {
   @Environment(\.rufletEvents) private var events
 
   var body: some View {
+    if let error = RufletGestureDetectorSemantics.validationError(node) {
+      Text(error).font(.caption).foregroundStyle(.red)
+    } else {
+      detector
+    }
+  }
+
+  private var detector: some View {
     Group {
       if let contentID = node.controlID(forKey: "content") {
         ControlView(id: contentID, axis: .none)
@@ -83,6 +91,18 @@ struct GestureDetectorControlView: View {
     .modifier(SecondaryPointerReporter(node: node, events: events))
     .modifier(GestureTrackpadScale(node: node, events: events))
     .accessibilityHidden(node.bool("exclude_from_semantics") ?? false)
+  }
+}
+
+enum RufletGestureDetectorSemantics {
+  static let missingHandlerError =
+    "GestureDetector should have at least one event handler defined"
+
+  static func validationError(_ node: ControlNode) -> String? {
+    let events = ControlRegistry.builtInDescriptor(for: "GestureDetector")?.supportedEvents ?? []
+    let hasEvent = events.contains { node.handlesEvent($0) }
+    let hasCursor = !(node.string("mouse_cursor") ?? "").isEmpty
+    return hasEvent || hasCursor ? nil : missingHandlerError
   }
 }
 
