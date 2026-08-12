@@ -337,7 +337,9 @@ public struct RufletColorPickerControlView: View {
         .shadow(color: item.swiftUIColor.opacity(0.8), radius: 5, x: 1, y: 2)
         .overlay {
           if selected {
-            Image(systemName: "checkmark").bold().foregroundStyle(item.contrastingText)
+            Image(systemName: "checkmark")
+              .font(.body.weight(.bold))
+              .foregroundStyle(item.contrastingText)
           }
         }
     }
@@ -875,7 +877,7 @@ private struct HexColorField: View {
   var body: some View {
     TextField("#AARRGGBB", text: $text, onCommit: commit)
       .textFieldStyle(.roundedBorder)
-      .monospaced()
+      .font(.system(.body, design: .monospaced))
       .onAppear { text = color.hexARGB }
       .onChange(of: color) { text = $0.hexARGB }
   }
