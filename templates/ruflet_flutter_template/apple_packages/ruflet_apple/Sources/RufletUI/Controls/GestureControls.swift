@@ -1611,7 +1611,7 @@ struct DialogActionControlView: View {
       if let contentID = node.controlID(forKey: "content") {
         ControlView(id: contentID, axis: .none)
       } else {
-        Text(node.string("text") ?? node.string("label") ?? "")
+        Text(SnackBarActionPresentation(node: node).label)
       }
     }
     .foregroundColor(
@@ -1622,7 +1622,7 @@ struct DialogActionControlView: View {
     // view is iOS 16, and this package ships to iOS 15, so the weight goes on
     // the font itself.
     .modifier(DefaultActionEmphasis(emphasised: node.bool("default") == true))
-    .disabled(node.bool("disabled") ?? false)
+    .disabled(SnackBarActionPresentation(node: node).isDisabled)
   }
 
   private var cupertinoAction: some View {
@@ -1686,6 +1686,20 @@ struct DialogActionControlView: View {
 
   private var actionFontSize: CGFloat {
     node.type == "CupertinoContextMenuAction" ? 16 : 17
+  }
+}
+
+struct SnackBarActionPresentation: Equatable {
+  let node: ControlNode
+
+  var label: String {
+    node.string("text") ?? node.string("label") ?? (node.type == "SnackBarAction" ? "Action" : "")
+  }
+
+  /// Pinned `SnackBarControl` creates a `SnackBarAction` with a non-null
+  /// callback regardless of the structural action control's disabled flag.
+  var isDisabled: Bool {
+    node.type == "SnackBarAction" ? false : (node.bool("disabled") ?? false)
   }
 }
 
