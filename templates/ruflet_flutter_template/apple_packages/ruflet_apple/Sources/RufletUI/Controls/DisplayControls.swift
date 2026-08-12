@@ -205,7 +205,6 @@ private struct SelectableText: ViewModifier {
 /// weight because Apple has no separate axis for it.
 struct IconControlView: View {
   let node: ControlNode
-  @Environment(\.rufletEvents) private var events
   @ScaledMetric(relativeTo: .body) private var textScale: CGFloat = 1
 
   var body: some View {
@@ -217,7 +216,7 @@ struct IconControlView: View {
       .modifier(IconOpticalSize(value: node.double("optical_size")))
       .modifier(IconShadows(value: node.props["shadows"]))
       .modifier(IconBlendMode(name: node.string("blend_mode")))
-      .modifier(TapReporter(node: node, events: events))
+      .modifier(IconSemanticLabel(value: glyph.semanticsLabel))
   }
 
   /// Material values retain the bundled Flutter font. Cupertino values retain
@@ -236,6 +235,17 @@ struct IconControlView: View {
   }
 }
 
+/// Icon has no pointer events of its own in pinned Flet. Its one accessibility
+/// property is the native icon semantic label; when omitted, the platform may
+/// continue to infer a label from the resolved symbol.
+private struct IconSemanticLabel: ViewModifier {
+  let value: String?
+
+  func body(content: Content) -> some View {
+    if let value { content.accessibilityLabel(Text(value)) } else { content }
+  }
+}
+
 /// The icon axes Flet carries. Flutter's static MaterialIcons-Regular font
 /// ignores unsupported variation axes; native Cupertino symbols can express
 /// the discrete weight ladder below.
@@ -245,6 +255,7 @@ struct RufletIconGlyph: Equatable {
   let fill: Double?
   let weight: Double?
   let grade: Double?
+  let semanticsLabel: String?
 
   init(node: ControlNode) {
     size = node.double("size").map { CGFloat($0) } ?? RufletThemeDefaults.materialIconButtonSize
@@ -252,6 +263,7 @@ struct RufletIconGlyph: Equatable {
     fill = node.double("fill")
     weight = node.double("weight")
     grade = node.double("grade")
+    semanticsLabel = node.string("semantics_label")
   }
 
   /// Flutter multiplies the icon's size by the ambient text scaler only when

@@ -295,6 +295,16 @@ final class DisplayParityTests: XCTestCase {
     XCTAssertEqual(scaling.scaledSize(textScale: 1.5), 30)
   }
 
+  func testIconUsesSourceExactEventlessAccessibilityContract() {
+    XCTAssertEqual(ControlRegistry.descriptor(for: "Icon")?.supportedEvents, [])
+    XCTAssertNil(ControlRegistry.descriptor(for: "Icon")?.supportedMethods.first)
+
+    let labelled = RufletIconGlyph(
+      node: node("Icon", ["semantics_label": .string("Add item")]))
+    XCTAssertEqual(labelled.semanticsLabel, "Add item")
+    XCTAssertNil(RufletIconGlyph(node: node("Icon")).semanticsLabel)
+  }
+
   /// Material's FILL axis is continuous but SF Symbols only has the outlined
   /// and filled cuts, so the midpoint is where the glyph swaps.
   func testIconFillAxisResolvesToTheFilledVariantPastTheMidpoint() {
