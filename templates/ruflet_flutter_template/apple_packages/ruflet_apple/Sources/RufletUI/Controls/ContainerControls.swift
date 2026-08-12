@@ -1152,24 +1152,27 @@ private struct NativeCardClip: ViewModifier {
 struct SafeAreaControlView: View {
   let node: ControlNode
 
+  @ViewBuilder
   var body: some View {
+    if let contentID = node.controlID(forKey: "content") {
+      safeArea(contentID: contentID)
+    } else {
+      RufletContainerError(SafeAreaInsetMath.missingContentError)
+    }
+  }
+
+  private func safeArea(contentID: Int) -> some View {
     GeometryReader { geometry in
       let padding = SafeAreaInsetMath.resolved(
         safeArea: geometry.safeAreaInsets,
         minimum: ControlProps.edgeInsets(node.props["minimum_padding"]) ?? EdgeInsets(),
-        left: node.bool("avoid_intrusions_left") != false,
-        top: node.bool("avoid_intrusions_top") != false,
-        right: node.bool("avoid_intrusions_right") != false,
-        bottom: node.bool("avoid_intrusions_bottom") != false)
-      Group {
-        if let contentID = node.controlID(forKey: "content") {
-          ControlView(id: contentID, axis: .none)
-        } else {
-          ControlList(ids: node.childIDs, axis: .vertical)
-        }
-      }
-      .padding(padding)
-      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        left: node.rufletBool("avoid_intrusions_left"),
+        top: node.rufletBool("avoid_intrusions_top"),
+        right: node.rufletBool("avoid_intrusions_right"),
+        bottom: node.rufletBool("avoid_intrusions_bottom"))
+      ControlView(id: contentID, axis: .none)
+        .padding(padding)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
     // Flutter's SafeArea occupies the full incoming box and consumes the
     // selected MediaQuery padding itself. Do the same rather than stacking
@@ -1178,11 +1181,13 @@ struct SafeAreaControlView: View {
     // `maintain_bottom_view_padding` keeps the bottom inset while the
     // keyboard is up rather than letting it collapse.
     .modifier(
-      MaintainBottomInset(enabled: node.bool("maintain_bottom_view_padding") == true))
+      MaintainBottomInset(enabled: node.rufletBool("maintain_bottom_view_padding")))
   }
 }
 
 enum SafeAreaInsetMath {
+  static let missingContentError = "SafeArea.content must be provided and visible"
+
   static func resolved(
     safeArea: EdgeInsets, minimum: EdgeInsets,
     left: Bool, top: Bool, right: Bool, bottom: Bool
@@ -1202,31 +1207,56 @@ struct DividerControlView: View {
   @Environment(\.displayScale) private var displayScale
 
   var body: some View {
-    // Flutter's omitted/zero BorderSide width is a one-device-pixel hairline,
-    // not one logical point.
-    let requested = node.double("thickness")
-    let thickness = DividerGeometry.thickness(requested, displayScale: displayScale)
-    let color = MaterialPalette.color(
-      for: node, property: "color", default: .gray.opacity(0.3))
-    let extent = CGFloat(node.double("height") ?? node.double("width") ?? 16)
-    let leading = CGFloat(node.double("leading_indent") ?? 0)
-    let trailing = CGFloat(node.double("trailing_indent") ?? 0)
+    let metrics = DividerGeometry.metrics(
+      node: node, isVertical: isVertical, displayScale: displayScale)
+    let color = MaterialPalette.color(metrics.colorToken, default: .clear)
 
     DividerLine(color: color, radii: ControlProps.cornerRadii(node.props["radius"]))
       .frame(
-        width: isVertical ? thickness : nil,
-        height: isVertical ? nil : thickness)
-      .padding(isVertical ? .top : .leading, leading)
-      .padding(isVertical ? .bottom : .trailing, trailing)
+        width: isVertical ? metrics.thickness : nil,
+        height: isVertical ? nil : metrics.thickness
+      )
+      .padding(isVertical ? .top : .leading, metrics.leadingIndent)
+      .padding(isVertical ? .bottom : .trailing, metrics.trailingIndent)
       .frame(
-        width: isVertical ? extent : nil,
-        height: isVertical ? nil : extent)
+        width: isVertical ? metrics.extent : nil,
+        height: isVertical ? nil : metrics.extent)
   }
 }
 
 enum DividerGeometry {
+  struct Metrics: Equatable {
+    let extent: CGFloat
+    let thickness: CGFloat
+    let leadingIndent: CGFloat
+    let trailingIndent: CGFloat
+    let colorToken: String
+  }
+
+  /// Flutter 3.38.7's Material-3 divider defaults: 16 logical points of
+  /// space, a 1-point line, zero indents and colorScheme.outlineVariant.
+  /// An *explicit* zero thickness remains a one-device-pixel hairline.
+  static func metrics(
+    node: ControlNode, isVertical: Bool, displayScale: CGFloat
+  ) -> Metrics {
+    Metrics(
+      extent: nonNegative(node.double(isVertical ? "width" : "height")) ?? 16,
+      thickness: thickness(node.double("thickness"), displayScale: displayScale),
+      leadingIndent: nonNegative(node.double("leading_indent")) ?? 0,
+      trailingIndent: nonNegative(node.double("trailing_indent")) ?? 0,
+      colorToken: node.string("color") ?? "outlinevariant")
+  }
+
   static func thickness(_ requested: Double?, displayScale: CGFloat) -> CGFloat {
-    guard let requested, requested > 0 else { return 1 / max(displayScale, 1) }
+    guard let requested else { return 1 }
+    assert(requested >= 0, "Divider thickness must be non-negative")
+    if requested == 0 { return 1 / max(displayScale, 1) }
+    return CGFloat(requested)
+  }
+
+  private static func nonNegative(_ requested: Double?) -> CGFloat? {
+    guard let requested else { return nil }
+    assert(requested >= 0, "Divider dimensions and indents must be non-negative")
     return CGFloat(requested)
   }
 }
@@ -1236,8 +1266,11 @@ private struct DividerLine: View {
   let radii: RufletCornerRadii?
 
   @ViewBuilder var body: some View {
-    if let radii { RufletRoundedRectangle(radii: radii).fill(color) }
-    else { Rectangle().fill(color) }
+    if let radii {
+      RufletRoundedRectangle(radii: radii).fill(color)
+    } else {
+      Rectangle().fill(color)
+    }
   }
 }
 
@@ -1246,19 +1279,13 @@ struct PlaceholderControlView: View {
   let node: ControlNode
 
   var body: some View {
-    let color = MaterialPalette.color(node.string("color"), default: Color(
-      red: 69.0 / 255.0, green: 90.0 / 255.0, blue: 100.0 / 255.0))
+    let metrics = PlaceholderGeometry.metrics(node)
+    let color = MaterialPalette.color(metrics.colorToken, default: .clear)
     ZStack {
-      Rectangle().stroke(color, lineWidth: CGFloat(node.double("stroke_width") ?? 2))
-      GeometryReader { proxy in
-        Path { path in
-          path.move(to: .zero)
-          path.addLine(to: CGPoint(x: proxy.size.width, y: proxy.size.height))
-          path.move(to: CGPoint(x: proxy.size.width, y: 0))
-          path.addLine(to: CGPoint(x: 0, y: proxy.size.height))
-        }
-        .stroke(color, lineWidth: CGFloat(node.double("stroke_width") ?? 2))
-      }
+      PlaceholderMark(color: color, strokeWidth: metrics.strokeWidth)
+        // Flutter's CustomPainter returns false from hitTest; the mark must
+        // never steal gestures from the optional child.
+        .allowsHitTesting(false)
       // Flutter's Placeholder can hold a child, and falls back to its own
       // size only where the layout leaves it unconstrained.
       if let contentID = node.controlID(forKey: "content") {
@@ -1266,8 +1293,50 @@ struct PlaceholderControlView: View {
       }
     }
     .frame(
-      idealWidth: CGFloat(node.rufletDouble("fallback_width")),
-      idealHeight: CGFloat(node.rufletDouble("fallback_height")))
+      idealWidth: metrics.fallbackWidth,
+      idealHeight: metrics.fallbackHeight)
+  }
+}
+
+enum PlaceholderGeometry {
+  struct Metrics: Equatable {
+    let fallbackWidth: CGFloat
+    let fallbackHeight: CGFloat
+    let strokeWidth: CGFloat
+    let colorToken: String
+  }
+
+  static func metrics(_ node: ControlNode) -> Metrics {
+    Metrics(
+      fallbackWidth: CGFloat(node.rufletDouble("fallback_width")),
+      fallbackHeight: CGFloat(node.rufletDouble("fallback_height")),
+      strokeWidth: CGFloat(node.rufletDouble("stroke_width")),
+      colorToken: node.string("color") ?? "#ff455a64")
+  }
+}
+
+private struct PlaceholderMark: View {
+  let color: Color
+  let strokeWidth: CGFloat
+
+  var body: some View {
+    Canvas { context, size in
+      var path = Path()
+      path.addRect(CGRect(origin: .zero, size: size))
+      path.move(to: CGPoint(x: size.width, y: 0))
+      path.addLine(to: CGPoint(x: 0, y: size.height))
+      path.move(to: .zero)
+      path.addLine(to: CGPoint(x: size.width, y: size.height))
+      context.stroke(path, with: .color(color), lineWidth: strokeWidth)
+    }
+  }
+}
+
+private struct RufletContainerError: View {
+  let message: String
+  init(_ message: String) { self.message = message }
+  var body: some View {
+    Text(message).font(.caption).foregroundStyle(.red)
   }
 }
 
@@ -1276,7 +1345,7 @@ struct RotatedBoxControlView: View {
   let node: ControlNode
 
   var body: some View {
-    let turns = node.int("quarter_turns") ?? 0
+    let turns = RotatedQuarterTurnMath.quarterTurns(node)
     if #available(iOS 16.0, macOS 13.0, *) {
       RotatedQuarterTurnLayout(quarterTurns: turns) {
         Group {
@@ -1298,6 +1367,7 @@ struct RotatedBoxControlView: View {
 }
 
 enum RotatedQuarterTurnMath {
+  static func quarterTurns(_ node: ControlNode) -> Int { node.int("quarter_turns") ?? 0 }
   static func normalized(_ turns: Int) -> Int { ((turns % 4) + 4) % 4 }
   static func swapsAxes(_ turns: Int) -> Bool { normalized(turns) % 2 == 1 }
   static func outputSize(_ child: CGSize, quarterTurns: Int) -> CGSize {
@@ -1312,7 +1382,8 @@ private struct RotatedQuarterTurnLayout: Layout {
     proposal: ProposedViewSize, subviews: Subviews, cache: inout Void
   ) -> CGSize {
     guard let child = subviews.first else { return .zero }
-    let childProposal = RotatedQuarterTurnMath.swapsAxes(quarterTurns)
+    let childProposal =
+      RotatedQuarterTurnMath.swapsAxes(quarterTurns)
       ? ProposedViewSize(width: proposal.height, height: proposal.width) : proposal
     return RotatedQuarterTurnMath.outputSize(
       child.sizeThatFits(childProposal), quarterTurns: quarterTurns)
@@ -1322,7 +1393,8 @@ private struct RotatedQuarterTurnLayout: Layout {
     subviews: Subviews, cache: inout Void
   ) {
     guard let child = subviews.first else { return }
-    let childSize = RotatedQuarterTurnMath.swapsAxes(quarterTurns)
+    let childSize =
+      RotatedQuarterTurnMath.swapsAxes(quarterTurns)
       ? CGSize(width: bounds.height, height: bounds.width) : bounds.size
     child.place(
       at: CGPoint(x: bounds.midX, y: bounds.midY), anchor: .center,

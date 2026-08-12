@@ -27,8 +27,8 @@ final class LayoutPrimitiveResidualParityTests: XCTestCase {
     XCTAssertEqual(resolved.trailing, 8)
   }
 
-  func testDividerOmittedAndZeroThicknessAreDevicePixelHairlines() {
-    XCTAssertEqual(DividerGeometry.thickness(nil, displayScale: 3), 1 / 3, accuracy: 0.001)
+  func testDividerOmittedThicknessIsOnePointAndExplicitZeroIsAHairline() {
+    XCTAssertEqual(DividerGeometry.thickness(nil, displayScale: 3), 1, accuracy: 0.001)
     XCTAssertEqual(DividerGeometry.thickness(0, displayScale: 2), 0.5, accuracy: 0.001)
     XCTAssertEqual(DividerGeometry.thickness(2, displayScale: 3), 2)
   }
