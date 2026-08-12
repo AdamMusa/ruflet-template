@@ -252,7 +252,13 @@ module FletControlContract
 
   def events(source)
     triggered = source.scan(/\.triggerEvent\(\s*["']([^"']+)["']/).flatten
-    enabled = source.scan(/\.getBool\(\s*["']on_([^"']+)["']/).flatten
+    # `on_*` flags read from a child/sibling control describe that child's
+    # event contract, not the renderer currently being inventoried. Page, for
+    # example, inspects its top View's `on_confirm_pop`. Only the registered
+    # renderer's own control can contribute an enabled event here.
+    enabled = source.scan(
+      /(?:\bcontrol|\bwidget\.control)\.getBool\(\s*["']on_([^"']+)["']/
+    ).flatten
     (triggered + enabled).uniq.sort
   end
 

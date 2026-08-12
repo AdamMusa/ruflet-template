@@ -3878,7 +3878,6 @@
         }
       },
       "events": [
-        "confirm_pop",
         "keyboard_event",
         "locale_change"
       ],

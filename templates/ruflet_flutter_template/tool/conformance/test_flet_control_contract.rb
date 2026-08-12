@@ -73,6 +73,8 @@ class FletControlContractTest < Minitest::Test
     assert_empty @controls.fetch("TabBarView").fetch("methods")
     assert_empty @controls.fetch("Tab").fetch("events")
     assert_empty @controls.fetch("Tab").fetch("methods")
+    refute_includes @controls.fetch("Page").fetch("events"), "confirm_pop"
+    assert_includes @controls.fetch("View").fetch("events"), "confirm_pop"
   end
 
   def test_every_vendored_flet_extension_has_an_available_swift_product
