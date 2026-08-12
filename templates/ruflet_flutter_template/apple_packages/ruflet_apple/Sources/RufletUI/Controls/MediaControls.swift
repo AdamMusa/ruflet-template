@@ -24,7 +24,9 @@ struct CanvasControlView: View {
   @State private var reportedSize: CGSize = .zero
   @State private var lastResizeReport = Date.distantPast
   @State private var capture = CanvasCaptureBuffer()
+  @StateObject private var imageCache = CanvasImageCache()
   @Environment(\.displayScale) private var displayScale
+  @Environment(\.rufletServerURL) private var serverURL
 
   private var shapeIDs: [Int] {
     orderedUnique(node.controlIDs(forKey: "shapes") + node.childIDs)
@@ -39,7 +41,7 @@ struct CanvasControlView: View {
           draw(shape, in: &context, size: size)
         }
       } symbols: {
-        canvasImageSymbols
+        canvasSymbols
       }
       if let contentID = node.controlID(forKey: "content") {
         ControlView(id: contentID, axis: .none)
@@ -54,6 +56,9 @@ struct CanvasControlView: View {
     }
     .modifier(TapReporter(node: node, events: events))
     .rufletCommandHandler(node.id, handler: handleCommand)
+    .task(id: store.revision) {
+      await imageCache.load(imageShapes, relativeTo: serverURL)
+    }
   }
 
   private func reportResize(_ size: CGSize) {
@@ -86,18 +91,28 @@ struct CanvasControlView: View {
         completion(.failure(RufletServiceError.unavailable("Canvas capture requires iOS 16 or macOS 13")))
         return
       }
-      let renderer = ImageRenderer(content: captureSurface.frame(width: reportedSize.width, height: reportedSize.height))
-      renderer.scale = call.argument("pixel_ratio")?.doubleValue ?? displayScale
-      #if canImport(UIKit)
-      capture.store(renderer.uiImage?.pngData(), logicalSize: reportedSize)
-      #elseif canImport(AppKit)
-        if let image = renderer.nsImage,
-           let tiff = image.tiffRepresentation,
-           let bitmap = NSBitmapImageRep(data: tiff) {
-          capture.store(bitmap.representation(using: .png, properties: [:]), logicalSize: reportedSize)
-        }
-      #endif
-      completion(.success(.null))
+      let pixelRatio = call.argument("pixel_ratio")?.doubleValue ?? displayScale
+      Task { @MainActor in
+        // Flet waits for all pending Canvas Image loads before recording the
+        // picture. ImageRenderer must receive the same settled symbol tree.
+        await imageCache.load(imageShapes, relativeTo: serverURL)
+        let renderer = ImageRenderer(
+          content: captureSurface.frame(
+            width: reportedSize.width, height: reportedSize.height))
+        renderer.scale = pixelRatio
+        #if canImport(UIKit)
+          capture.store(renderer.uiImage?.pngData(), logicalSize: reportedSize)
+        #elseif canImport(AppKit)
+          if let image = renderer.nsImage,
+             let tiff = image.tiffRepresentation,
+             let bitmap = NSBitmapImageRep(data: tiff) {
+            capture.store(
+              bitmap.representation(using: .png, properties: [:]),
+              logicalSize: reportedSize)
+          }
+        #endif
+        completion(.success(.null))
+      }
     case "get_capture":
       completion(.success(capture.wireValue))
     case "clear_capture":
@@ -117,7 +132,7 @@ struct CanvasControlView: View {
           draw(shape, in: &context, size: size)
         }
       } symbols: {
-        canvasImageSymbols
+        canvasSymbols
       }
     }
     .environmentObject(store)
@@ -133,13 +148,23 @@ struct CanvasControlView: View {
   }
 
   @ViewBuilder
-  private var canvasImageSymbols: some View {
+  private var canvasSymbols: some View {
     ForEach(shapeIDs, id: \.self) { shapeID in
-      if let shape = store.node(shapeID), shape.type == "Image" {
-        CanvasShapeImageView(node: shape)
-          .tag(shapeID)
+      if let shape = store.node(shapeID) {
+        if shape.type == "Image" {
+          CanvasShapeImageView(
+            node: shape, settledData: imageCache.data(for: shape), serverURL: serverURL)
+            .tag(shapeID)
+        } else if shape.type == "Text" {
+          CanvasShapeTextView(node: shape, store: store)
+            .tag(shapeID)
+        }
       }
     }
+  }
+
+  private var imageShapes: [ControlNode] {
+    shapeIDs.compactMap(store.node).filter { $0.type == "Image" }
   }
 
   private func draw(_ shape: ControlNode, in context: inout GraphicsContext, size: CGSize) {
@@ -246,12 +271,13 @@ struct CanvasControlView: View {
 
     case "Image":
       guard let symbol = context.resolveSymbol(id: shape.id) else { break }
-      let width = CGFloat(shape.double("width") ?? symbol.size.width)
-      let height = CGFloat(shape.double("height") ?? symbol.size.height)
+      let rect = CanvasImageLayout.destination(
+        x: CGFloat(shape.double("x") ?? 0), y: CGFloat(shape.double("y") ?? 0),
+        width: shape.double("width").map { CGFloat($0) },
+        height: shape.double("height").map { CGFloat($0) },
+        intrinsic: symbol.size)
       paint.draw(
-        symbol, in: CGRect(
-          x: CGFloat(shape.double("x") ?? 0), y: CGFloat(shape.double("y") ?? 0),
-          width: width, height: height), context: &context)
+        symbol, in: rect, context: &context)
 
     default:
       RufletLog.debug("Canvas shape `\(shape.type)` is not drawn by the Apple engine")
@@ -259,22 +285,12 @@ struct CanvasControlView: View {
   }
 
   private func drawText(_ shape: ControlNode, in context: inout GraphicsContext) {
-    let style = shape.map("style") ?? [:]
-    var text = Text(shape.string("value") ?? "")
-      .foregroundColor(MaterialPalette.color(style["color"]?.stringValue, default: .primary))
-    if let size = style["size"]?.doubleValue { text = text.font(.system(size: CGFloat(size))) }
-    if style["weight"]?.stringValue?.lowercased().contains("bold") == true {
-      text = text.fontWeight(.bold)
-    }
-    let alignment = ControlProps.continuousAlignment(shape.props["alignment"]) ?? .topLeft
-    let anchor = UnitPoint(
-      x: (alignment.x + 1) / 2,
-      y: (alignment.y + 1) / 2)
+    guard let symbol = context.resolveSymbol(id: shape.id) else { return }
+    let layout = CanvasTextLayout(node: shape)
     var transformed = context
-    let point = CGPoint(x: shape.double("x") ?? 0, y: shape.double("y") ?? 0)
-    transformed.translateBy(x: point.x, y: point.y)
-    transformed.rotate(by: .radians(shape.double("rotate") ?? 0))
-    transformed.draw(text, at: .zero, anchor: anchor)
+    transformed.translateBy(x: layout.point.x, y: layout.point.y)
+    transformed.rotate(by: .radians(layout.rotation))
+    transformed.draw(symbol, at: .zero, anchor: layout.anchor)
   }
 
   private func orderedUnique(_ ids: [Int]) -> [Int] {
@@ -305,7 +321,9 @@ struct CanvasControlView: View {
         let end = CGPoint(x: x, y: y)
         let control = CGPoint(
           x: map["cp1x"]?.doubleValue ?? 0, y: map["cp1y"]?.doubleValue ?? 0)
-        let weight = map["w"]?.doubleValue ?? 1
+        // The pinned buildPath calls parseDouble(w, 0), not the mathematical
+        // quadratic default of one.
+        let weight = map["w"]?.doubleValue ?? 0
         if abs(weight - 1) < .ulpOfOne {
           path.addQuadCurve(to: end, control: control)
         } else {
@@ -491,6 +509,67 @@ struct CanvasCaptureBuffer: Equatable {
   }
 }
 
+/// TextPainter inputs retained independently from SwiftUI. The symbol view
+/// performs native line layout; the Canvas only owns placement and rotation.
+struct CanvasTextLayout: Equatable {
+  let point: CGPoint
+  let alignment: RufletAlignment
+  let textAlign: String
+  let maxLines: Int?
+  let maxWidth: CGFloat?
+  let ellipsis: String?
+  let rotation: Double
+
+  init(node: ControlNode) {
+    point = CGPoint(x: node.double("x") ?? 0, y: node.double("y") ?? 0)
+    alignment = ControlProps.continuousAlignment(node.props["alignment"]) ?? .topLeft
+    switch node.string("text_align")?.lowercased() {
+    case "center": textAlign = "center"
+    case "end": textAlign = "end"
+    case "justify": textAlign = "justify"
+    case "left": textAlign = "left"
+    case "right": textAlign = "right"
+    default: textAlign = "start"
+    }
+    maxLines = node.int("max_lines")
+    maxWidth = node.double("max_width").map { CGFloat($0) }
+    ellipsis = node.string("ellipsis")
+    rotation = node.double("rotate") ?? 0
+  }
+
+  var anchor: UnitPoint {
+    UnitPoint(x: (alignment.x + 1) / 2, y: (alignment.y + 1) / 2)
+  }
+
+  var nativeTextAlignment: TextAlignment {
+    switch textAlign {
+    case "center": return .center
+    case "end", "right": return .trailing
+    default: return .leading
+    }
+  }
+
+  var frameAlignment: Alignment {
+    switch textAlign {
+    case "center": return .center
+    case "end", "right": return .trailing
+    default: return .leading
+    }
+  }
+}
+
+enum CanvasImageLayout {
+  /// Flutter uses the explicit destination rectangle only when *both* width
+  /// and height exist. Supplying one dimension still draws at intrinsic size.
+  static func destination(
+    x: CGFloat, y: CGFloat, width: CGFloat?, height: CGFloat?, intrinsic: CGSize
+  ) -> CGRect {
+    let size = width.flatMap { width in height.map { CGSize(width: width, height: $0) } }
+      ?? intrinsic
+    return CGRect(origin: CGPoint(x: x, y: y), size: size)
+  }
+}
+
 /// Flutter's `dart:ui.Paint` defaults and the subset which SwiftUI's
 /// immediate-mode canvas can express directly. Keeping this translation in
 /// one value prevents every shape from inventing its own colour, width, and
@@ -661,11 +740,112 @@ struct CanvasPaint: Equatable {
 
 /// Image shapes are supplied as Canvas symbols so remote, file, asset, data
 /// URI, and binary sources share the same loader as Flet's ordinary Image.
-private struct CanvasShapeImageView: View {
+@MainActor
+private final class CanvasImageCache: ObservableObject {
+  private struct Entry {
+    let source: RufletImageSource
+    let data: Data
+  }
+  @Published private var entries: [Int: Entry] = [:]
+
+  func data(for shape: ControlNode) -> Data? {
+    let source = RufletImageSource(node: shape)
+    guard entries[shape.id]?.source == source else { return nil }
+    return entries[shape.id]?.data
+  }
+
+  func load(_ shapes: [ControlNode], relativeTo serverURL: URL?) async {
+    for shape in shapes {
+      let source = RufletImageSource(node: shape)
+      guard entries[shape.id]?.source != source else { continue }
+      let resolved: Data?
+      switch source {
+      case .binary(let value):
+        resolved = value
+      case .remote(let url) where url.isFileURL:
+        resolved = try? Data(contentsOf: url)
+      case .remote(let url):
+        if let response = try? await URLSession.shared.data(from: url),
+          (response.1 as? HTTPURLResponse).map({ (200..<300).contains($0.statusCode) }) != false
+        {
+          resolved = response.0
+        } else {
+          resolved = nil
+        }
+      case .asset(let name):
+        if let packaged = RufletImageSource.packagedData(named: name) {
+          resolved = packaged
+        } else if let url = RufletImageAssetURL.imageAsset(name, relativeTo: serverURL),
+          let response = try? await URLSession.shared.data(from: url),
+          (response.1 as? HTTPURLResponse).map({ (200..<300).contains($0.statusCode) }) != false
+        {
+          resolved = response.0
+        } else {
+          resolved = nil
+        }
+      case .empty, .invalid, .missing:
+        resolved = nil
+      }
+      if let resolved {
+        entries[shape.id] = Entry(source: source, data: resolved)
+      } else {
+        entries[shape.id] = nil
+      }
+    }
+  }
+}
+
+/// Native text layout used as a Canvas symbol. This keeps Flet's complete
+/// inline TextSpan tree and lets SwiftUI constrain/wrap it before the Canvas
+/// applies the shape's anchor and rotation around (x, y).
+private struct CanvasShapeTextView: View {
   let node: ControlNode
+  let store: ControlStore
+
+  private var layout: CanvasTextLayout { CanvasTextLayout(node: node) }
+  private var document: RufletRichTextDocument {
+    RufletRichTextDocument(
+      value: node.string("value") ?? "",
+      spanIDs: node.controlIDs(forKey: "spans"),
+      resolve: store.node)
+  }
+  private var rootStyle: RufletTextStyle {
+    // Canvas starts from Theme.textTheme.bodyMedium. Preserve Material's
+    // semantic 14/20 default without drawing a Material-specific widget.
+    var style = RufletTextStyle()
+    style.size = 14
+    style.lineHeight = 20 / 14
+    style.color = .primary
+    if let map = node.map("style") { style.merge(RufletTextStyle(map: map)) }
+    return style
+  }
 
   @ViewBuilder
   var body: some View {
+    let text = Text(document.attributedString(rootStyle: rootStyle))
+      .multilineTextAlignment(layout.nativeTextAlignment)
+      .lineLimit(layout.maxLines)
+      .truncationMode(.tail)
+      .lineSpacing(rootStyle.swiftUILineSpacing)
+    if let width = layout.maxWidth {
+      text.frame(width: width, alignment: layout.frameAlignment)
+        .fixedSize(horizontal: false, vertical: true)
+    } else {
+      text.fixedSize(horizontal: true, vertical: true)
+    }
+  }
+}
+
+private struct CanvasShapeImageView: View {
+  let node: ControlNode
+  let settledData: Data?
+  let serverURL: URL?
+
+  @ViewBuilder
+  var body: some View {
+    if let settledData {
+      PlatformImageView(data: settledData)
+    } else {
     switch RufletImageSource(node: node) {
     case .binary(let data):
       PlatformImageView(data: data)
@@ -676,9 +856,14 @@ private struct CanvasShapeImageView: View {
         AsyncImage(url: url) { image in image.resizable() } placeholder: { Color.clear }
       }
     case .asset(let name):
-      Image(name).resizable()
+      if let url = RufletImageAssetURL.imageAsset(name, relativeTo: serverURL) {
+        AsyncImage(url: url) { image in image.resizable() } placeholder: { Color.clear }
+      } else {
+        Image(name).resizable()
+      }
     case .empty, .invalid, .missing:
       Color.clear
+    }
     }
   }
 }
