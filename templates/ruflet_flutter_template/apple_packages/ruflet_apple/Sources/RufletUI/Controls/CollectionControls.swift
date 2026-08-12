@@ -2244,8 +2244,10 @@ struct DataTableControlView: View {
   @State private var columnWidths: [Int: CGFloat] = [:]
 
   var body: some View {
-    let columns = node.controlIDs(forKey: "columns").compactMap { store.node($0) }
-    let rows = node.controlIDs(forKey: "rows").compactMap { store.node($0) }
+    let columns = DataTablePresentation.visibleStructuralIDs(
+      node.controlIDs(forKey: "columns"), in: store.nodes).compactMap { store.node($0) }
+    let rows = DataTablePresentation.visibleStructuralIDs(
+      node.controlIDs(forKey: "rows"), in: store.nodes).compactMap { store.node($0) }
     let metrics = CollectionDefaults.dataTable(node)
     let showsCheckboxes = metrics.showCheckboxColumn
       && rows.contains(where: { $0.handlesEvent("select_change") })
@@ -2299,7 +2301,7 @@ struct DataTableControlView: View {
               nativeRowSelectionToggle(row)
                 .modifier(NativeDataTableCheckboxMargin(node: node))
             }
-            ForEach(Array(row.controlIDs(forKey: "cells").enumerated()), id: \.element) {
+            ForEach(Array(visibleCellIDs(row).enumerated()), id: \.element) {
               index, cellID in
               cellContent(cellID, row: row, numeric: columns.indices.contains(index)
                 && columns[index].bool("numeric") == true)
@@ -2380,7 +2382,7 @@ struct DataTableControlView: View {
               .overlay(alignment: .trailing) { verticalRule }
               .disabled(!row.handlesEvent("select_change"))
             }
-            ForEach(Array(row.controlIDs(forKey: "cells").enumerated()), id: \.element) {
+            ForEach(Array(visibleCellIDs(row).enumerated()), id: \.element) {
               index, cellID in
               cellContent(cellID, row: row, numeric: columns.indices.contains(index)
                 && columns[index].bool("numeric") == true)
@@ -2566,6 +2568,11 @@ struct DataTableControlView: View {
     rows.filter { $0.handlesEvent("select_change") }
   }
 
+  private func visibleCellIDs(_ row: ControlNode) -> [Int] {
+    DataTablePresentation.visibleStructuralIDs(
+      row.controlIDs(forKey: "cells"), in: store.nodes)
+  }
+
   private func headingCheckboxSymbol(_ rows: [ControlNode]) -> String {
     let selectable = selectableRows(rows)
     let selectedCount = selectable.filter { $0.bool("selected") == true }.count
@@ -2684,6 +2691,15 @@ enum DataTablePresentation {
     let dividerThickness: CGFloat
     let checkboxMarginStart: CGFloat
     let checkboxMarginEnd: CGFloat
+  }
+
+  /// Columns, rows and cells are structural controls owned by DataTable.
+  /// Dart obtains every level through `children(...)`, whose default contract
+  /// removes invisible children before assigning column and row indices.
+  static func visibleStructuralIDs(
+    _ ids: [Int], in nodes: [Int: ControlNode]
+  ) -> [Int] {
+    ids.filter { nodes[$0]?.bool("visible") != false }
   }
 
   /// Resolves the same values passed to Flutter's `DataTable` constructor.
