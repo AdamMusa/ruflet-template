@@ -34,13 +34,15 @@ struct MapControlSemantics {
     var rotation: Double
 
     var value: RufletValue {
-      var result: [String: RufletValue] = [
+      let result: [String: RufletValue] = [
         "center": center.value,
         "zoom": .double(zoom),
         "rotation": .double(rotation),
+        // MapCamera.toMap includes both nullable bounds keys rather than
+        // dropping them when MapOptions has no global zoom constraint.
+        "min_zoom": minZoom.map(RufletValue.double) ?? .null,
+        "max_zoom": maxZoom.map(RufletValue.double) ?? .null,
       ]
-      if let minZoom { result["min_zoom"] = .double(minZoom) }
-      if let maxZoom { result["max_zoom"] = .double(maxZoom) }
       return .map(result)
     }
   }
@@ -50,6 +52,12 @@ struct MapControlSemantics {
   static let initialRotation = 0.0
   static let animationDurationMilliseconds = 500.0
   static let backgroundColor = "grey300"
+
+  struct MethodOptions: Equatable {
+    var duration: TimeInterval
+    var curve: String
+    var cancelOngoingAnimations: Bool
+  }
 
   enum InteractiveFlag {
     static let drag = 1 << 0
@@ -79,11 +87,71 @@ struct MapControlSemantics {
     value?.arrayValue?.compactMap(coordinate) ?? []
   }
 
+  static func methodOptions(_ call: RufletMethodCall, node: ControlNode?) -> MethodOptions {
+    MethodOptions(
+      duration: max(durationSeconds(
+        call.argument("duration") ?? node?.props["animation_duration"],
+        defaultMilliseconds: animationDurationMilliseconds), 0),
+      curve: normalizedCurve(
+        call.argument("curve")?.stringValue ?? node?.string("animation_curve")),
+      cancelOngoingAnimations: call.argument("cancel_ongoing_animations")?.boolValue ?? false)
+  }
+
   static func animationDuration(_ call: RufletMethodCall, node: ControlNode?) -> Double {
-    let milliseconds = call.argument("duration")?.doubleValue
-      ?? node?.double("animation_duration")
-      ?? animationDurationMilliseconds
-    return max(milliseconds, 0) / 1_000
+    methodOptions(call, node: node).duration
+  }
+
+  /// Flet's `parseDuration`: numeric values are integer milliseconds and maps
+  /// sum each Duration component. Ruflet duration extension type 3 carries
+  /// microseconds directly.
+  static func durationSeconds(
+    _ value: RufletValue?, defaultMilliseconds: Double = 0
+  ) -> TimeInterval {
+    guard let value, !value.isNull else { return defaultMilliseconds / 1_000 }
+    if case .int(let value) = value { return Double(value) / 1_000 }
+    if case .string(let value) = value { return Double(Int64(value) ?? 0) / 1_000 }
+    if case .extended(type: 3, let value) = value {
+      return Double(Int64(value) ?? 0) / 1_000_000
+    }
+    guard let map = value.mapValue else { return 0 }
+    func integer(_ key: String) -> Int64 {
+      switch map[key] {
+      case .int(let value): return value
+      case .string(let value): return Int64(value) ?? 0
+      default: return 0
+      }
+    }
+    let microseconds = integer("microseconds")
+      + 1_000 * integer("milliseconds")
+      + 1_000_000 * integer("seconds")
+      + 60_000_000 * integer("minutes")
+      + 3_600_000_000 * integer("hours")
+      + 86_400_000_000 * integer("days")
+    return Double(microseconds) / 1_000_000
+  }
+
+  static func normalizedCurve(_ value: String?) -> String {
+    let value = (value ?? "fastOutSlowIn").lowercased()
+      .replacingOccurrences(of: "_", with: "")
+    switch value {
+    case "linear": return "linear"
+    case "easein", "easeinback", "easeincirc", "easeincubic", "easeinexpo",
+      "easeinquad", "easeinquart", "easeinquint", "easeinsine": return "easein"
+    case "easeout", "easeoutback", "easeoutcirc", "easeoutcubic", "easeoutexpo",
+      "easeoutquad", "easeoutquart", "easeoutquint", "easeoutsine": return "easeout"
+    default: return "easeinout"
+    }
+  }
+
+  static func eventEnabled(_ name: String, node: ControlNode?) -> Bool {
+    node?.bool("on_\(name)") == true
+  }
+
+  static func clampedZoom(_ zoom: Double, node: ControlNode?) -> Double {
+    var result = zoom
+    if let minimum = node?.double("min_zoom") { result = max(result, minimum) }
+    if let maximum = node?.double("max_zoom") { result = min(result, maximum) }
+    return result
   }
 
   static func point(for call: RufletMethodCall, key: String) -> Coordinate? {
@@ -104,6 +172,35 @@ struct MapControlSemantics {
         center: center, zoom: zoom, minZoom: minZoom, maxZoom: maxZoom,
         rotation: rotation
       ).value,
+    ])
+  }
+
+  static func tapEvent(
+    coordinate: Coordinate, globalX: Double, globalY: Double,
+    localX: Double, localY: Double
+  ) -> RufletValue {
+    .map([
+      "coordinates": coordinate.value,
+      "gx": .double(globalX), "gy": .double(globalY),
+      "lx": .double(localX), "ly": .double(localY),
+    ])
+  }
+
+  static func pointerEvent(
+    coordinate: Coordinate, kind: String, globalX: Double, globalY: Double,
+    localX: Double, localY: Double, timestampMicroseconds: Int64
+  ) -> RufletValue {
+    .map([
+      "coordinates": coordinate.value,
+      "k": .string(kind),
+      "l": .map(["x": .double(localX), "y": .double(localY)]),
+      "g": .map(["x": .double(globalX), "y": .double(globalY)]),
+      "ts": .extended(type: 3, string: String(timestampMicroseconds)),
+      "dev": .int(0), "ps": .double(1), "pMin": .double(0), "pMax": .double(1),
+      "dist": .double(0), "distMax": .double(0), "size": .double(0),
+      "rMj": .double(0), "rMn": .double(0), "rMin": .double(0), "rMax": .double(0),
+      "or": .double(0), "tilt": .double(0),
+      "ld": .map(["x": .null, "y": .null]),
     ])
   }
 }
@@ -156,7 +253,8 @@ struct MapTileConfiguration: Equatable {
       } else {
         // An explicitly supplied FadeIn follows parseTileDisplay's defaults.
         displayOpacity = display["start_opacity"]?.doubleValue ?? 1
-        displayDuration = max(display["duration"]?.doubleValue ?? 100, 0) / 1_000
+        displayDuration = max(MapControlSemantics.durationSeconds(
+          display["duration"], defaultMilliseconds: 100), 0)
       }
     }
     additionalOptions = node.map("additional_options")?.reduce(into: [:]) { result, item in
@@ -170,16 +268,21 @@ struct MapTileConfiguration: Equatable {
     let resolvedZoom = Int((zoomOffset + (zoomReverse ? maximum - Double(z) : Double(z))).rounded())
     let resolvedY = tms ? ((1 << max(resolvedZoom, 0)) - 1) - y : y
     let subdomain = subdomains.isEmpty ? "" : subdomains[(x + y) % subdomains.count]
-    var replacements = additionalOptions
-    replacements.merge([
+    var replacements = [
       "x": String(x), "y": String(resolvedY), "z": String(resolvedZoom),
       "s": subdomain, "r": retinaMode ? "@2x" : "", "d": String(tileSize),
-    ]) { _, fletValue in fletValue }
+    ]
+    // flutter_map adds additionalOptions last, so callers may intentionally
+    // override even a standard placeholder such as x or r.
+    replacements.merge(additionalOptions) { _, callerValue in callerValue }
     for (key, replacement) in replacements {
       value = value.replacingOccurrences(of: "{\(key)}", with: replacement)
     }
     return URL(string: value)
   }
+
+  var httpUserAgent: String { "flutter_map (\(userAgent))" }
+  var allowsMemoryCache: Bool { fallbackURL == nil }
 
   func contains(pathX x: Int, y: Int, z: Int) -> Bool {
     guard let tileBounds else { return true }
@@ -303,11 +406,13 @@ private struct MapRichAttributionView: View {
         .buttonStyle(.plain)
       }
       .task(id: node.props["popup_initial_display_duration"]) {
-        guard let duration = node.double("popup_initial_display_duration"), duration > 0 else {
+        let duration = MapControlSemantics.durationSeconds(
+          node.props["popup_initial_display_duration"])
+        guard duration > 0 else {
           return
         }
         expanded = true
-        try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000))
+        try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
         expanded = false
       }
     }

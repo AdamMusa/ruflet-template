@@ -182,7 +182,9 @@ final class MapModel: NSObject, ObservableObject, MKMapViewDelegate {
     applyingConfiguration = false
     if !initialized {
       initialized = true
-      events.fire(node, "init")
+      if MapControlSemantics.eventEnabled("init", node: node) {
+        events.fire(node, "init")
+      }
     }
   }
 
@@ -408,10 +410,7 @@ final class MapModel: NSObject, ObservableObject, MKMapViewDelegate {
   }
 
   private func clampedZoom(_ zoom: Double) -> Double {
-    guard let control else { return zoom }
-    let lower = control.double("min_zoom") ?? zoom
-    let upper = control.double("max_zoom") ?? zoom
-    return min(max(zoom, lower), upper)
+    MapControlSemantics.clampedZoom(zoom, node: control)
   }
 
   private func hasGesture(_ mapView: MKMapView) -> Bool {
@@ -422,22 +421,43 @@ final class MapModel: NSObject, ObservableObject, MKMapViewDelegate {
     #endif
   }
 
-  private func pointData(_ point: CGPoint) -> RufletValue {
+  private func coordinateAndGlobalPoint(_ point: CGPoint) -> (
+    MapControlSemantics.Coordinate, CGPoint
+  ) {
     let coordinate = view.convert(point, toCoordinateFrom: view)
     let global = view.convert(point, to: nil)
-    return .map([
-      "coordinates": MapControlSemantics.Coordinate(
-        latitude: coordinate.latitude, longitude: coordinate.longitude).value,
-      "gx": .double(Double(global.x)), "gy": .double(Double(global.y)),
-      "lx": .double(Double(point.x)), "ly": .double(Double(point.y)),
-    ])
+    return (.init(latitude: coordinate.latitude, longitude: coordinate.longitude), global)
+  }
+
+  private func tapData(_ point: CGPoint) -> RufletValue {
+    let (coordinate, global) = coordinateAndGlobalPoint(point)
+    return MapControlSemantics.tapEvent(
+      coordinate: coordinate, globalX: Double(global.x), globalY: Double(global.y),
+      localX: Double(point.x), localY: Double(point.y))
+  }
+
+  private func pointerData(_ point: CGPoint, kind: String) -> RufletValue {
+    let (coordinate, global) = coordinateAndGlobalPoint(point)
+    return MapControlSemantics.pointerEvent(
+      coordinate: coordinate, kind: kind,
+      globalX: Double(global.x), globalY: Double(global.y),
+      localX: Double(point.x), localY: Double(point.y),
+      timestampMicroseconds: Int64(ProcessInfo.processInfo.systemUptime * 1_000_000))
   }
 
   private func fireTap(_ name: String, at point: CGPoint) {
-    guard let control else { return }
-    events.fire(control, name, data: pointData(point))
+    guard let control, MapControlSemantics.eventEnabled(name, node: control) else { return }
+    events.fire(control, name, data: tapData(point))
   }
-  private func firePointer(_ name: String, at point: CGPoint) { fireTap(name, at: point) }
+  private func firePointer(_ name: String, at point: CGPoint) {
+    guard let control, MapControlSemantics.eventEnabled(name, node: control) else { return }
+    #if canImport(UIKit)
+      let kind = name == "hover" ? "mouse" : "touch"
+    #else
+      let kind = "mouse"
+    #endif
+    events.fire(control, name, data: pointerData(point, kind: kind))
+  }
 
   func mapViewDidChangeVisibleRegion(_ mapView: MKMapView) {
     guard !applyingConfiguration, let control else { return }
@@ -448,12 +468,17 @@ final class MapModel: NSObject, ObservableObject, MKMapViewDelegate {
     let camera = MapControlSemantics.Camera(
       center: center, zoom: zoom, minZoom: control.double("min_zoom"),
       maxZoom: control.double("max_zoom"), rotation: rotation)
-    events.fire(control, "position_change", data: .map([
-      "coordinates": center.value, "has_gesture": .bool(hasGesture(mapView)), "camera": camera.value,
-    ]))
-    events.fire(control, "event", data: MapControlSemantics.cameraEvent(
-      source: hasGesture(mapView) ? "dragUpdate" : "mapController", center: center, zoom: zoom,
-      minZoom: control.double("min_zoom"), maxZoom: control.double("max_zoom"), rotation: rotation))
+    let gesture = hasGesture(mapView)
+    if MapControlSemantics.eventEnabled("position_change", node: control) {
+      events.fire(control, "position_change", data: .map([
+        "coordinates": center.value, "has_gesture": .bool(gesture), "camera": camera.value,
+      ]))
+    }
+    if MapControlSemantics.eventEnabled("event", node: control) {
+      events.fire(control, "event", data: MapControlSemantics.cameraEvent(
+        source: gesture ? "dragUpdate" : "mapController", center: center, zoom: zoom,
+        minZoom: control.double("min_zoom"), maxZoom: control.double("max_zoom"), rotation: rotation))
+    }
   }
 
   func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
@@ -547,7 +572,8 @@ final class MapModel: NSObject, ObservableObject, MKMapViewDelegate {
   }
 
   func handle(_ call: RufletMethodCall, completion: @escaping RufletMethodCompletion) {
-    let duration = MapControlSemantics.animationDuration(call, node: control)
+    let options = MapControlSemantics.methodOptions(call, node: control)
+    var didAnimate = false
     switch call.name {
     case "move_to":
       let destination = MapControlSemantics.point(for: call, key: "destination")?.native
@@ -557,16 +583,22 @@ final class MapModel: NSObject, ObservableObject, MKMapViewDelegate {
       var region = view.region
       if let destination { region.center = destination }
       if let zoom { region.span = Self.span(forZoom: clampedZoom(zoom)) }
-      if let offset {
+      let offsetX = offset?["x"]?.doubleValue ?? 0
+      let offsetY = offset?["y"]?.doubleValue ?? 0
+      if offset != nil {
         let centerPoint = view.convert(region.center, toPointTo: view)
         let shifted = CGPoint(
-          x: centerPoint.x - CGFloat(offset["x"]?.doubleValue ?? 0),
-          y: centerPoint.y - CGFloat(offset["y"]?.doubleValue ?? 0))
+          x: centerPoint.x - CGFloat(offsetX), y: centerPoint.y - CGFloat(offsetY))
         region.center = view.convert(shifted, toCoordinateFrom: view)
       }
-      animate(duration: duration) { self.view.setRegion(region, animated: false) }
-      if let rotation { setRotation(rotation, relative: false, duration: duration) }
-      completion(.success(.null))
+      if destination != nil || zoom != nil || offsetX != 0 || offsetY != 0 {
+        animate(options: options) { self.view.setRegion(region, animated: false) }
+        didAnimate = true
+      }
+      if let rotation {
+        setRotation(rotation, relative: false, options: options)
+        didAnimate = true
+      }
     case "center_on":
       if let point = MapControlSemantics.point(for: call, key: "point")?.native {
         var region = view.region
@@ -574,52 +606,84 @@ final class MapModel: NSObject, ObservableObject, MKMapViewDelegate {
         if let zoom = call.argument("zoom")?.doubleValue {
           region.span = Self.span(forZoom: clampedZoom(zoom))
         }
-        animate(duration: duration) { self.view.setRegion(region, animated: false) }
+        animate(options: options) { self.view.setRegion(region, animated: false) }
+        didAnimate = true
       }
-      completion(.success(.null))
     case "zoom_to":
-      if let zoom = call.argument("zoom")?.doubleValue { setZoom(zoom, duration: duration) }
-      completion(.success(.null))
+      if let zoom = call.argument("zoom")?.doubleValue {
+        setZoom(zoom, options: options)
+        didAnimate = true
+      }
     case "zoom_in":
-      setZoom(Self.zoom(forSpan: view.region.span) + 1, duration: duration)
-      completion(.success(.null))
+      setZoom(Self.zoom(forSpan: view.region.span) + 1, options: options)
+      didAnimate = true
     case "zoom_out":
-      setZoom(Self.zoom(forSpan: view.region.span) - 1, duration: duration)
-      completion(.success(.null))
+      setZoom(Self.zoom(forSpan: view.region.span) - 1, options: options)
+      didAnimate = true
     case "rotate_from":
       if let degree = call.argument("degree")?.doubleValue {
-        setRotation(degree, relative: true, duration: duration)
+        setRotation(degree, relative: true, options: options)
+        didAnimate = degree != 0
       }
-      completion(.success(.null))
     case "reset_rotation":
-      setRotation(0, relative: false, duration: duration)
-      completion(.success(.null))
+      didAnimate = view.camera.heading != 0
+      setRotation(0, relative: false, options: options)
     default:
       completion(.failure(rufletUnsupported("Map", call)))
+      return
     }
+    complete(completion, after: didAnimate ? options.duration : 0)
   }
 
-  private func setZoom(_ zoom: Double, duration: Double) {
+  private func setZoom(_ zoom: Double, options: MapControlSemantics.MethodOptions) {
     let region = MKCoordinateRegion(center: view.region.center, span: Self.span(forZoom: clampedZoom(zoom)))
-    animate(duration: duration) { self.view.setRegion(region, animated: false) }
+    animate(options: options) { self.view.setRegion(region, animated: false) }
   }
-  private func setRotation(_ rotation: Double, relative: Bool, duration: Double) {
+  private func setRotation(
+    _ rotation: Double, relative: Bool, options: MapControlSemantics.MethodOptions
+  ) {
     let camera = view.camera.copy() as! MKMapCamera
     camera.heading = relative ? camera.heading + rotation : rotation
-    animate(duration: duration) { self.view.setCamera(camera, animated: false) }
+    animate(options: options) { self.view.setCamera(camera, animated: false) }
   }
-  private func animate(duration: Double, changes: @escaping () -> Void) {
-    guard duration > 0 else { changes(); return }
+  private func animate(
+    options: MapControlSemantics.MethodOptions, changes: @escaping () -> Void
+  ) {
+    guard options.duration > 0 else { changes(); return }
     #if canImport(UIKit)
-      UIView.animate(withDuration: duration, delay: 0,
-        options: [.beginFromCurrentState, .curveEaseInOut], animations: changes)
+      var animationOptions: UIView.AnimationOptions = [.allowUserInteraction]
+      if options.cancelOngoingAnimations { animationOptions.insert(.beginFromCurrentState) }
+      switch options.curve {
+      case "linear": animationOptions.insert(.curveLinear)
+      case "easein": animationOptions.insert(.curveEaseIn)
+      case "easeout": animationOptions.insert(.curveEaseOut)
+      default: animationOptions.insert(.curveEaseInOut)
+      }
+      UIView.animate(
+        withDuration: options.duration, delay: 0,
+        options: animationOptions, animations: changes)
     #elseif canImport(AppKit)
+      if options.cancelOngoingAnimations { view.layer?.removeAllAnimations() }
       NSAnimationContext.runAnimationGroup { context in
-        context.duration = duration
-        context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        context.duration = options.duration
+        switch options.curve {
+        case "linear": context.timingFunction = CAMediaTimingFunction(name: .linear)
+        case "easein": context.timingFunction = CAMediaTimingFunction(name: .easeIn)
+        case "easeout": context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+        default: context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        }
         changes()
       }
     #endif
+  }
+
+  private func complete(
+    _ completion: @escaping RufletMethodCompletion, after duration: TimeInterval
+  ) {
+    guard duration > 0 else { completion(.success(.null)); return }
+    DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
+      completion(.success(.null))
+    }
   }
 }
 
@@ -719,7 +783,9 @@ private final class FletTileOverlay: MKTileOverlay {
     guard let url = configuration.url(pathX: path.x, y: path.y, z: path.z) else {
       result(nil, URLError(.badURL)); return
     }
-    if let data = Self.cache.object(forKey: url as NSURL) {
+    if configuration.allowsMemoryCache,
+      let data = Self.cache.object(forKey: url as NSURL)
+    {
       result(data as Data, nil); return
     }
     load(url: url,
@@ -730,11 +796,13 @@ private final class FletTileOverlay: MKTileOverlay {
   private func load(url: URL, fallback: URL?,
     result: @escaping (Data?, (any Error)?) -> Void) {
     var request = URLRequest(url: url)
-    request.setValue(configuration.userAgent, forHTTPHeaderField: "User-Agent")
+    request.setValue(configuration.httpUserAgent, forHTTPHeaderField: "User-Agent")
     URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
       let status = (response as? HTTPURLResponse)?.statusCode ?? 200
       if let data, error == nil, (200..<300).contains(status) {
-        Self.cache.setObject(data as NSData, forKey: url as NSURL)
+        if self?.configuration.allowsMemoryCache == true {
+          Self.cache.setObject(data as NSData, forKey: url as NSURL)
+        }
         result(data, nil)
       } else if let fallback, fallback != url {
         self?.load(url: fallback, fallback: nil, result: result)
