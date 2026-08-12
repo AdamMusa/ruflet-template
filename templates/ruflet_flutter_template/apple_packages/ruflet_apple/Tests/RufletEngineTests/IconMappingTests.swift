@@ -42,10 +42,13 @@ final class IconMappingTests: XCTestCase {
     XCTAssertTrue(MaterialIconGlyphs.codepoints.allSatisfy { UnicodeScalar($0) != nil })
   }
 
-  func testMaterialWireIconsRemainMaterialAndCupertinoIconsRemainNative() {
+  func testMaterialAndCupertinoWireIconsResolveToNativeAppleSymbols() throws {
+    let homeIndex = try XCTUnwrap(MaterialIconNames.material.firstIndex(of: "HOME"))
+    let homeCodepoint = MaterialIconNames.firstCodepoint + homeIndex
     XCTAssertEqual(
-      IconMapping.rendering(for: .int(Int64(MaterialIconNames.firstCodepoint))),
-      .materialGlyph(codepoint: 0xf04b6, name: "ABC"))
+      IconMapping.rendering(for: .int(Int64(homeCodepoint))),
+      .systemSymbol("house"))
+    XCTAssertEqual(IconMapping.rendering(for: .string("home")), .systemSymbol("house"))
     guard case .systemSymbol(let symbol) = IconMapping.rendering(
       for: .int(Int64(MaterialIconNames.cupertinoFirstCodepoint)))
     else { return XCTFail("Cupertino wire icon did not resolve to an SF Symbol") }

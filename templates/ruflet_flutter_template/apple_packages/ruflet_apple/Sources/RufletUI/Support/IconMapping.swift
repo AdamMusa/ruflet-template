@@ -12,9 +12,10 @@ import CoreText
 /// Resolves a Ruflet icon value to its native rendering source.
 ///
 /// Icons arrive as integers in distinct Material and Cupertino codepoint
-/// ranges. Material controls retain Flutter's actual Material Icons glyphs;
-/// explicit Cupertino controls retain Apple's SF Symbols. This distinction is
-/// part of Flet's design contract even when both controls run on iOS.
+/// ranges. On Apple, both families resolve to the closest native SF Symbol:
+/// Ruby can keep using one logical icon such as `home`, while iOS/macOS render
+/// Apple's `house` artwork. The wire family is still retained while resolving
+/// the name, so Material and Cupertino aliases can use different vocabulary.
 public enum IconMapping {
   public enum Family: Equatable, Sendable {
     case material
@@ -54,7 +55,7 @@ public enum IconMapping {
     }
   }
 
-  /// Resolves the family without collapsing Material art into SF Symbols.
+  /// Resolves either wire family to native Apple artwork.
   public static func rendering(for value: RufletValue?) -> Rendering? {
     guard let value, !value.isNull else { return nil }
     if let wireCodepoint = value.intValue,
@@ -62,9 +63,7 @@ public enum IconMapping {
     {
       switch descriptor.family {
       case .material:
-        guard let codepoint = MaterialIconGlyphs.codepoint(
-          forWireCodepoint: wireCodepoint) else { return nil }
-        return .materialGlyph(codepoint: codepoint, name: descriptor.name)
+        return .systemSymbol(symbol(forMaterialName: descriptor.name))
       case .cupertino:
         return .systemSymbol(symbol(forCupertinoName: descriptor.name))
       }
@@ -74,8 +73,8 @@ public enum IconMapping {
     if rawName.lowercased().hasPrefix("cupertinoicons.") {
       return .systemSymbol(symbol(forCupertinoName: rawName))
     }
-    if let codepoint = MaterialIconGlyphs.codepoint(forName: rawName) {
-      return .materialGlyph(codepoint: codepoint, name: rawName.uppercased())
+    if MaterialIconGlyphs.codepoint(forName: rawName) != nil {
+      return .systemSymbol(symbol(forMaterialName: rawName))
     }
     return .systemSymbol(symbol(forMaterialName: rawName))
   }
