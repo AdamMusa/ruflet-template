@@ -1105,7 +1105,7 @@ private struct ContainerDecorationImage: View {
       } else {
         Image(name).resizable(resizingMode: spec.repeatMode.swiftUI).interpolation(spec.interpolation)
       }
-    case .missing:
+    case .empty, .invalid, .missing:
       Color.clear
     }
   }

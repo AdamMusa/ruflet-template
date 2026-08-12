@@ -219,6 +219,32 @@ struct RufletSelectableRichText: View {
   }
 }
 
+/// The native selection bridge used by MarkdownBody text blocks. SwiftUI's
+/// `textSelection` has no selection callback, while Flet exposes the exact
+/// selected text and native range through `selection_change`.
+struct RufletSelectableMarkdownText: View {
+  let node: ControlNode
+  let source: String
+  let attributed: AttributedString
+  let events: RufletEventSink
+  let activate: (URL) -> Void
+  let tapText: () -> Void
+
+  var body: some View {
+    #if canImport(UIKit)
+      RufletUIKitMarkdownText(
+        node: node, source: source, attributed: attributed, events: events,
+        activate: activate, tapText: tapText)
+    #elseif canImport(AppKit)
+      RufletAppKitMarkdownText(
+        node: node, source: source, attributed: attributed, events: events,
+        activate: activate, tapText: tapText)
+    #else
+      Text(attributed).textSelection(.enabled).onTapGesture(perform: tapText)
+    #endif
+  }
+}
+
 #if canImport(UIKit)
   import UIKit
 
@@ -372,6 +398,64 @@ struct RufletSelectableRichText: View {
           hoveredID = nil
         }
       }
+    }
+  }
+
+  private struct RufletUIKitMarkdownText: UIViewRepresentable {
+    let node: ControlNode
+    let source: String
+    let attributed: AttributedString
+    let events: RufletEventSink
+    let activate: (URL) -> Void
+    let tapText: () -> Void
+
+    func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
+
+    func makeUIView(context: Context) -> UITextView {
+      let view = RufletIntrinsicTextView()
+      view.backgroundColor = .clear
+      view.isEditable = false
+      view.isScrollEnabled = false
+      view.isSelectable = true
+      view.textContainerInset = .zero
+      view.textContainer.lineFragmentPadding = 0
+      view.delegate = context.coordinator
+      let tap = UITapGestureRecognizer(
+        target: context.coordinator, action: #selector(Coordinator.didTap))
+      tap.cancelsTouchesInView = false
+      view.addGestureRecognizer(tap)
+      return view
+    }
+
+    func updateUIView(_ view: UITextView, context: Context) {
+      context.coordinator.parent = self
+      let rendered = NSAttributedString(attributed)
+      if !view.attributedText.isEqual(to: rendered) { view.attributedText = rendered }
+      view.isSelectable = node.bool("selectable") == true
+      view.isUserInteractionEnabled = true
+    }
+
+    final class Coordinator: NSObject, UITextViewDelegate {
+      var parent: RufletUIKitMarkdownText
+      init(parent: RufletUIKitMarkdownText) { self.parent = parent }
+
+      func textViewDidChangeSelection(_ textView: UITextView) {
+        guard parent.node.bool("selectable") == true else { return }
+        parent.events.fire(
+          parent.node, "selection_change",
+          data: RufletRichTextDocument.markdownSelectionData(
+            source: parent.source, range: textView.selectedRange))
+      }
+
+      func textView(
+        _ textView: UITextView, shouldInteractWith url: URL,
+        in characterRange: NSRange, interaction: UITextItemInteraction
+      ) -> Bool {
+        parent.activate(url)
+        return false
+      }
+
+      @objc func didTap() { parent.tapText() }
     }
   }
 #endif
@@ -545,6 +629,67 @@ struct RufletSelectableRichText: View {
         parent.activate(id)
         return true
       }
+    }
+  }
+
+  private struct RufletAppKitMarkdownText: NSViewRepresentable {
+    let node: ControlNode
+    let source: String
+    let attributed: AttributedString
+    let events: RufletEventSink
+    let activate: (URL) -> Void
+    let tapText: () -> Void
+
+    func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
+
+    func makeNSView(context: Context) -> NSTextView {
+      let view = RufletHoverTextView()
+      view.drawsBackground = false
+      view.isEditable = false
+      view.isSelectable = true
+      view.textContainerInset = .zero
+      view.textContainer?.lineFragmentPadding = 0
+      view.delegate = context.coordinator
+      let click = NSClickGestureRecognizer(
+        target: context.coordinator, action: #selector(Coordinator.didClick))
+      click.delaysPrimaryMouseButtonEvents = false
+      view.addGestureRecognizer(click)
+      return view
+    }
+
+    func updateNSView(_ view: NSTextView, context: Context) {
+      context.coordinator.parent = self
+      let rendered = NSAttributedString(attributed)
+      if !view.attributedString().isEqual(to: rendered) {
+        view.textStorage?.setAttributedString(rendered)
+      }
+      view.isSelectable = node.bool("selectable") == true
+    }
+
+    final class Coordinator: NSObject, NSTextViewDelegate {
+      var parent: RufletAppKitMarkdownText
+      init(parent: RufletAppKitMarkdownText) { self.parent = parent }
+
+      func textViewDidChangeSelection(_ notification: Notification) {
+        guard parent.node.bool("selectable") == true,
+          let view = notification.object as? NSTextView
+        else { return }
+        parent.events.fire(
+          parent.node, "selection_change",
+          data: RufletRichTextDocument.markdownSelectionData(
+            source: parent.source, range: view.selectedRange()))
+      }
+
+      func textView(
+        _ textView: NSTextView, clickedOnLink link: Any, at charIndex: Int
+      ) -> Bool {
+        guard let url = (link as? URL) ?? (link as? String).flatMap(URL.init(string:))
+        else { return false }
+        parent.activate(url)
+        return true
+      }
+
+      @objc func didClick() { parent.tapText() }
     }
   }
 #endif

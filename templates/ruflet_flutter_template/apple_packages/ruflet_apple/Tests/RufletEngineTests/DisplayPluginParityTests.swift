@@ -10,6 +10,7 @@ final class DisplayPluginParityTests: XCTestCase {
   func testDisplayEventsUseFletWireNames() {
     XCTAssertEqual(events("Text"), ["selection_change", "tap"])
     XCTAssertEqual(events("TextSpan"), ["click", "enter", "exit"])
+    XCTAssertEqual(events("Image"), [])
     XCTAssertEqual(events("CircleAvatar"), ["image_error"])
     XCTAssertEqual(events("Markdown"), ["selection_change", "tap_link", "tap_text"])
     XCTAssertEqual(events("Lottie"), ["error", "load"])

@@ -231,8 +231,7 @@ public enum ControlRegistry {
     add(["TextSpan"], .visible, "TextSpanControlView", .nativeView,
         events: ["click", "enter", "exit"])
     add(["Icon"], .visible, "IconControlView", .nativeView)
-    add(["Image"], .visible, "ImageControlView", .nativeView,
-        events: ["click", "error", "load"])
+    add(["Image"], .visible, "ImageControlView", .nativeView)
     add(["ProgressBar"], .visible, "ProgressBarControlView", .nativeView)
     add(["ProgressRing"], .visible, "ProgressRingControlView", .nativeView)
     let spinKitWireTypes = [

@@ -677,7 +677,7 @@ private struct CanvasShapeImageView: View {
       }
     case .asset(let name):
       Image(name).resizable()
-    case .missing:
+    case .empty, .invalid, .missing:
       Color.clear
     }
   }

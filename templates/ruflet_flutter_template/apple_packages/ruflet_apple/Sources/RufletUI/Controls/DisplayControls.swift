@@ -1,6 +1,12 @@
 import RufletEngine
 import RufletProtocol
 import SwiftUI
+#if canImport(ImageIO)
+  import ImageIO
+#endif
+#if canImport(WebKit)
+  import WebKit
+#endif
 
 /// `Text` — the control every Ruflet app starts with.
 ///
@@ -331,17 +337,15 @@ private struct IconBlendMode: ViewModifier {
 /// `Image` — a local bundle resource, a data URI, or a remote URL.
 struct ImageControlView: View {
   let node: ControlNode
-  @Environment(\.rufletEvents) private var events
+  @Environment(\.rufletServerURL) private var serverURL
 
   private var presentation: RufletImagePresentation { RufletImagePresentation(node: node) }
 
   var body: some View {
     content
-      .modifier(ImageFit(node: node))
       .modifier(ImageColorFilter(node: node))
       .clipShape(RoundedRectangle(cornerRadius: ControlProps.cornerRadius(node.props["border_radius"]) ?? 0))
       .modifier(ImageSemantics(node: node))
-      .modifier(TapReporter(node: node, events: events))
   }
 
   @ViewBuilder
@@ -349,32 +353,57 @@ struct ImageControlView: View {
     if case .binary(let data) = RufletImageSource(node: node) {
       PlatformImageView(
         data: data, repeatMode: presentation.repeatMode,
-        interpolation: presentation.interpolation)
+        interpolation: presentation.interpolation,
+        cacheWidth: presentation.cacheWidth, cacheHeight: presentation.cacheHeight)
+        .modifier(ImageFit(fit: presentation.fit))
     } else if case .remote(let url) = RufletImageSource(node: node) {
       if url.isFileURL, let data = try? Data(contentsOf: url) {
         PlatformImageView(
           data: data, repeatMode: presentation.repeatMode,
-          interpolation: presentation.interpolation)
+          interpolation: presentation.interpolation,
+          cacheWidth: presentation.cacheWidth, cacheHeight: presentation.cacheHeight)
+          .modifier(ImageFit(fit: presentation.fit))
       } else {
         RemoteImage(
           url: url,
           errorContentID: node.controlID(forKey: "error_content"),
           placeholder: placeholder,
-          presentation: presentation,
-          onLoad: { events.fire(node, "load") },
-          onError: { message in events.fire(node, "error", data: .string(message)) })
+          presentation: presentation)
+          .modifier(ImageFit(fit: presentation.fit))
       }
     } else if case .asset(let name) = RufletImageSource(node: node) {
       if let data = RufletImageSource.packagedData(named: name) {
         PlatformImageView(
           data: data, repeatMode: presentation.repeatMode,
-          interpolation: presentation.interpolation)
+          interpolation: presentation.interpolation,
+          cacheWidth: presentation.cacheWidth, cacheHeight: presentation.cacheHeight)
+          .modifier(ImageFit(fit: presentation.fit))
+      } else if let url = RufletImageAssetURL.imageAsset(name, relativeTo: serverURL) {
+        RemoteImage(
+          url: url,
+          errorContentID: node.controlID(forKey: "error_content"),
+          placeholder: placeholder,
+          presentation: presentation)
+          .modifier(ImageFit(fit: presentation.fit))
       } else {
         // Asset catalog lookup is the final packaged-asset fallback.
         Image(name)
           .resizable(resizingMode: presentation.repeatMode.swiftUI)
           .interpolation(presentation.interpolation)
+          .modifier(ImageFit(fit: presentation.fit))
       }
+    } else if case .invalid = RufletImageSource(node: node),
+      let errorContentID = node.controlID(forKey: "error_content")
+    {
+      ControlView(id: errorContentID, axis: .none)
+    } else if case .empty = RufletImageSource(node: node) {
+      Text("A valid src value must be specified.")
+        .font(.caption)
+        .foregroundColor(.secondary)
+    } else if case .invalid(let description) = RufletImageSource(node: node) {
+      Text("Error decoding src: \(description)")
+        .font(.caption)
+        .foregroundColor(.secondary)
     } else {
       Text("Image must have \"src\" specified.")
         .font(.caption)
@@ -388,27 +417,41 @@ struct ImageControlView: View {
     case .binary(let data):
       return AnyView(PlatformImageView(
         data: data, repeatMode: presentation.repeatMode,
-        interpolation: presentation.interpolation))
+        interpolation: presentation.interpolation,
+        cacheWidth: presentation.cacheWidth, cacheHeight: presentation.cacheHeight)
+        .modifier(ImageFit(fit: presentation.placeholderFit)))
     case .remote(let url) where url.isFileURL:
       guard let data = try? Data(contentsOf: url) else { return nil }
       return AnyView(PlatformImageView(
         data: data, repeatMode: presentation.repeatMode,
-        interpolation: presentation.interpolation))
+        interpolation: presentation.interpolation,
+        cacheWidth: presentation.cacheWidth, cacheHeight: presentation.cacheHeight)
+        .modifier(ImageFit(fit: presentation.placeholderFit)))
     case .remote(let url):
       // Flet resolves `placeholder_src` through the same image-provider path
       // as `src`, including HTTP(S) images. Do not silently drop a remote
       // placeholder just because the primary image is also asynchronous.
-      return AnyView(RemoteImage(url: url, errorContentID: nil, presentation: presentation))
+      return AnyView(
+        RemoteImage(url: url, errorContentID: nil, presentation: presentation)
+          .modifier(ImageFit(fit: presentation.placeholderFit)))
     case .asset(let name):
       if let data = RufletImageSource.packagedData(named: name) {
         return AnyView(PlatformImageView(
           data: data, repeatMode: presentation.repeatMode,
-          interpolation: presentation.interpolation))
+          interpolation: presentation.interpolation,
+          cacheWidth: presentation.cacheWidth, cacheHeight: presentation.cacheHeight)
+          .modifier(ImageFit(fit: presentation.placeholderFit)))
+      }
+      if let url = RufletImageAssetURL.imageAsset(name, relativeTo: serverURL) {
+        return AnyView(
+          RemoteImage(url: url, errorContentID: nil, presentation: presentation)
+            .modifier(ImageFit(fit: presentation.placeholderFit)))
       }
       return AnyView(
         Image(name)
           .resizable(resizingMode: presentation.repeatMode.swiftUI)
-          .interpolation(presentation.interpolation))
+          .interpolation(presentation.interpolation)
+          .modifier(ImageFit(fit: presentation.placeholderFit)))
     default:
       return nil
     }
@@ -441,6 +484,10 @@ struct RufletImagePresentation: Equatable {
   let filterQuality: String
   let antiAlias: Bool
   let gaplessPlayback: Bool
+  let cacheWidth: Int?
+  let cacheHeight: Int?
+  let fit: String?
+  let placeholderFit: String?
   let fadeInDuration: Double
   let fadeInCurve: String
   let fadeOutDuration: Double
@@ -463,6 +510,10 @@ struct RufletImagePresentation: Equatable {
     filterQuality = node.string("filter_quality")?.lowercased() ?? "medium"
     antiAlias = node.bool("anti_alias") ?? false
     gaplessPlayback = node.bool("gapless_playback") ?? false
+    cacheWidth = node.int("cache_width")
+    cacheHeight = node.int("cache_height")
+    fit = Self.nonEmpty(node.string("fit"))
+    placeholderFit = Self.nonEmpty(node.string("placeholder_fit")) ?? fit
     let fadeIn = Self.animation(node.props["fade_in_animation"], defaultMilliseconds: 250,
                                 defaultCurve: "easeinout")
     let fadeOut = Self.animation(node.props["placeholder_fade_out_animation"],
@@ -502,6 +553,8 @@ enum RufletImageSource: Equatable {
   case binary(Data)
   case remote(URL)
   case asset(String)
+  case empty
+  case invalid(String)
   case missing
 
   init(node: ControlNode) {
@@ -521,17 +574,25 @@ enum RufletImageSource: Equatable {
   /// Keep resolution value-based so every such control accepts the same wire
   /// forms: bytes, URLs, asset paths and unadorned Base64 strings.
   init(value: RufletValue?) {
-    if case .binary(let bytes) = value {
-      self = .binary(Data(bytes))
+    guard let value else {
+      self = .missing
       return
     }
-    guard let rawSource = value?.stringValue else {
+    if case .null = value {
       self = .missing
+      return
+    }
+    if case .binary(let bytes) = value {
+      self = bytes.isEmpty ? .empty : .binary(Data(bytes))
+      return
+    }
+    guard let rawSource = value.stringValue else {
+      self = .invalid("\(value) is not a supported source type.")
       return
     }
     let source = rawSource.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !source.isEmpty else {
-      self = .missing
+      self = .empty
       return
     }
     if let data = Self.dataURI(source) {
@@ -584,6 +645,51 @@ enum RufletImageSource: Equatable {
   }
 }
 
+/// Flet's native `getAssetSrc`: ordinary Image assets are relative to the
+/// current page URI, while MarkdownBody's `imageDirectory` is the origin.
+/// Keeping the two policies explicit prevents packaged assets from being
+/// confused with remote relative assets.
+enum RufletImageAssetURL {
+  static func imageAsset(_ path: String, relativeTo pageURL: URL?) -> URL? {
+    guard let pageURL = networkPageURL(pageURL) else { return nil }
+    let suffix = path.split(separator: "/", omittingEmptySubsequences: true).map(String.init)
+    guard !suffix.isEmpty else { return nil }
+    var components = URLComponents(url: pageURL, resolvingAgainstBaseURL: false)
+    let base = pageURL.path.split(separator: "/", omittingEmptySubsequences: true).map(String.init)
+    components?.path = "/" + (base + suffix).joined(separator: "/")
+    components?.query = nil
+    components?.fragment = nil
+    return components?.url
+  }
+
+  static func markdownAsset(_ path: String, relativeTo pageURL: URL?) -> URL? {
+    guard let pageURL = networkPageURL(pageURL) else { return nil }
+    let suffix = path.split(separator: "/", omittingEmptySubsequences: true).map(String.init)
+    guard !suffix.isEmpty else { return nil }
+    var components = URLComponents(url: pageURL, resolvingAgainstBaseURL: false)
+    components?.path = "/" + suffix.joined(separator: "/")
+    components?.query = nil
+    components?.fragment = nil
+    return components?.url
+  }
+
+  private static func networkPageURL(_ value: URL?) -> URL? {
+    guard let value, var components = URLComponents(url: value, resolvingAgainstBaseURL: false)
+    else { return nil }
+    switch components.scheme?.lowercased() {
+    case "ws":
+      components.scheme = "http"
+      components.path = "/"
+    case "wss":
+      components.scheme = "https"
+      components.path = "/"
+    case "http", "https": break
+    default: return nil
+    }
+    return components.url
+  }
+}
+
 private struct ImageColorFilter: ViewModifier {
   let node: ControlNode
 
@@ -615,11 +721,11 @@ private struct ImageSemantics: ViewModifier {
 }
 
 private struct ImageFit: ViewModifier {
-  let node: ControlNode
+  let fit: String?
 
   func body(content: Content) -> some View {
     // Flet's BoxFit; `contain` is Flutter's default for Image.
-    switch node.string("fit")?.lowercased() {
+    switch fit?.lowercased().replacingOccurrences(of: "_", with: "") {
     case "cover":
       return AnyView(content.aspectRatio(contentMode: .fill).clipped())
     case "fitwidth", "fitheight":
@@ -629,7 +735,7 @@ private struct ImageFit: ViewModifier {
       return AnyView(content.aspectRatio(contentMode: .fit))
     case "fill":
       return AnyView(content)
-    case "none", "scaledown":
+    case "none", "scaledown", nil:
       return AnyView(content.fixedSize())
     default:
       return AnyView(content.aspectRatio(contentMode: .fit))
@@ -680,13 +786,14 @@ private struct RemoteImage: View {
       if let data {
         PlatformImageView(
           data: data, repeatMode: presentation.repeatMode,
-          interpolation: presentation.interpolation)
+          interpolation: presentation.interpolation,
+          cacheWidth: presentation.cacheWidth, cacheHeight: presentation.cacheHeight)
           .transition(.opacity)
       } else if failed {
         if let errorContentID {
           ControlView(id: errorContentID, axis: .none)
         } else {
-          Image(systemName: "photo").foregroundColor(.secondary)
+          Color.clear
         }
       } else if placeholder == nil {
         Color.clear
@@ -718,6 +825,7 @@ private struct RemoteImage: View {
   }
 
   static func canDecode(_ data: Data) -> Bool {
+    if RufletSVGDocument.isSVG(data) { return true }
     #if canImport(UIKit)
       return UIImage(data: data) != nil
     #elseif canImport(AppKit)
@@ -745,23 +853,128 @@ struct PlatformImageView: View {
   let data: Data
   var repeatMode: RufletImagePresentation.RepeatMode = .noRepeat
   var interpolation: Image.Interpolation = .medium
+  var cacheWidth: Int? = nil
+  var cacheHeight: Int? = nil
 
   var body: some View {
+    if RufletSVGDocument.isSVG(data) {
+      RufletSVGDocumentView(data: data)
+    } else {
     #if canImport(UIKit)
-      if let image = UIImage(data: data) {
+      if let image = RufletDecodedImage.uiImage(data, width: cacheWidth, height: cacheHeight) {
         Image(uiImage: image)
           .resizable(resizingMode: repeatMode.swiftUI)
           .interpolation(interpolation)
       }
     #elseif canImport(AppKit)
-      if let image = NSImage(data: data) {
+      if let image = RufletDecodedImage.nsImage(data, width: cacheWidth, height: cacheHeight) {
         Image(nsImage: image)
           .resizable(resizingMode: repeatMode.swiftUI)
           .interpolation(interpolation)
       }
     #endif
+    }
   }
 }
+
+private enum RufletDecodedImage {
+  private static func thumbnail(_ data: Data, width: Int?, height: Int?) -> CGImage? {
+    guard let requested = [width, height].compactMap({ $0 }).filter({ $0 > 0 }).max(),
+      let source = CGImageSourceCreateWithData(data as CFData, nil)
+    else { return nil }
+    let options: [CFString: Any] = [
+      kCGImageSourceCreateThumbnailFromImageAlways: true,
+      kCGImageSourceCreateThumbnailWithTransform: true,
+      kCGImageSourceThumbnailMaxPixelSize: requested,
+      kCGImageSourceShouldCacheImmediately: true,
+    ]
+    return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
+  }
+
+  #if canImport(UIKit)
+    static func uiImage(_ data: Data, width: Int?, height: Int?) -> UIImage? {
+      if let thumbnail = thumbnail(data, width: width, height: height) {
+        return UIImage(cgImage: thumbnail)
+      }
+      return UIImage(data: data)
+    }
+  #endif
+
+  #if canImport(AppKit)
+    static func nsImage(_ data: Data, width: Int?, height: Int?) -> NSImage? {
+      if let thumbnail = thumbnail(data, width: width, height: height) {
+        return NSImage(cgImage: thumbnail, size: .zero)
+      }
+      return NSImage(data: data)
+    }
+  #endif
+}
+
+enum RufletSVGDocument {
+  static func isSVG(_ data: Data) -> Bool {
+    guard let prefix = String(data: data.prefix(4_096), encoding: .utf8)?.lowercased()
+    else { return false }
+    return prefix.contains("<svg")
+  }
+}
+
+/// Apple has no SwiftUI SVG image primitive. WebKit is the native system SVG
+/// renderer on both supported platforms, so the document stays vector-backed
+/// without recreating Flutter's `SvgPicture` painter.
+private struct RufletSVGDocumentView: View {
+  let data: Data
+
+  var body: some View {
+    #if canImport(WebKit)
+      RufletSVGWebView(data: data)
+    #else
+      Color.clear
+    #endif
+  }
+}
+
+#if canImport(WebKit) && canImport(UIKit)
+  private struct RufletSVGWebView: UIViewRepresentable {
+    let data: Data
+
+    func makeUIView(context: Context) -> WKWebView {
+      let view = WKWebView(frame: .zero)
+      view.isOpaque = false
+      view.backgroundColor = .clear
+      view.scrollView.isScrollEnabled = false
+      view.isUserInteractionEnabled = false
+      return view
+    }
+
+    func updateUIView(_ view: WKWebView, context: Context) {
+      view.loadHTMLString(Self.html(data), baseURL: nil)
+    }
+
+    fileprivate static func html(_ data: Data) -> String {
+      let svg = String(data: data, encoding: .utf8) ?? ""
+      return "<style>html,body,svg{margin:0;width:100%;height:100%;overflow:hidden}</style>\(svg)"
+    }
+  }
+#elseif canImport(WebKit) && canImport(AppKit)
+  private struct RufletSVGWebView: NSViewRepresentable {
+    let data: Data
+
+    func makeNSView(context: Context) -> WKWebView {
+      let view = WKWebView(frame: .zero)
+      view.setValue(false, forKey: "drawsBackground")
+      return view
+    }
+
+    func updateNSView(_ view: WKWebView, context: Context) {
+      view.loadHTMLString(Self.html(data), baseURL: nil)
+    }
+
+    fileprivate static func html(_ data: Data) -> String {
+      let svg = String(data: data, encoding: .utf8) ?? ""
+      return "<style>html,body,svg{margin:0;width:100%;height:100%;overflow:hidden}</style>\(svg)"
+    }
+  }
+#endif
 
 /// Flutter's `LinearProgressIndicator` geometry.
 ///
@@ -1323,7 +1536,7 @@ struct CircleAvatarControlView: View {
         .resizable()
         .aspectRatio(contentMode: .fill)
         .clipShape(Circle())
-    case .missing:
+    case .empty, .invalid, .missing:
       EmptyView()
     }
   }
@@ -1395,6 +1608,7 @@ struct BadgeControlView: View {
 struct MarkdownControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
+  @Environment(\.rufletServerURL) private var serverURL
 
   var body: some View {
     let sheet = RufletMarkdownStyleSheet(node: node)
@@ -1403,23 +1617,19 @@ struct MarkdownControlView: View {
     VStack(alignment: .leading, spacing: sheet.blockSpacing) {
       ForEach(Array(document.blocks.enumerated()), id: \.offset) { entry in
         MarkdownBlockView(
+          node: node,
           block: entry.element,
           sheet: sheet,
-          imageErrorContentID: node.controlID(forKey: "image_error_content"))
+          imageErrorContentID: node.controlID(forKey: "image_error_content"),
+          imageBaseURL: serverURL)
       }
     }
     // MarkdownBody stretches its children when `fitContent` is off and sizes
     // its column to the content when `shrinkWrap` is on.
     .frame(maxWidth: document.fitsContent ? nil : CGFloat.infinity, alignment: .leading)
     .frame(maxHeight: document.shrinksWrap ? nil : CGFloat.infinity, alignment: .top)
-    .modifier(SelectableText(enabled: node.bool("selectable") == true))
     .tint(sheet.linkColor)
     .environment(\.openURL, markdownURLAction)
-    .onTapGesture {
-      if node.handlesEvent("tap_text") {
-        events.fire(node, "tap_text")
-      }
-    }
   }
 
   /// Flet reports every link tap and additionally opens the link itself only
@@ -1427,15 +1637,19 @@ struct MarkdownControlView: View {
   private var markdownURLAction: OpenURLAction {
     OpenURLAction { url in
       events.fire(node, "tap_link", data: .string(url.absoluteString))
-      guard node.bool("auto_follow_links") == true else { return .handled }
-      // `auto_follow_links_target` is Flutter's UrlLauncher mode. A link asked
-      // to stay inside the app has no in-app browser here, so only an external
-      // target hands off to the system; the rest are reported and left.
-      switch node.string("auto_follow_links_target")?.lowercased() {
-      case "self", "in_app_web_view", "inappwebview": return .handled
-      default: return .systemAction
-      }
+      return RufletMarkdownLinkBehavior.follows(
+        automatically: node.bool("auto_follow_links") == true,
+        target: node.string("auto_follow_links_target")) ? .systemAction : .handled
     }
+  }
+}
+
+enum RufletMarkdownLinkBehavior {
+  /// On native Flutter targets the URL target only changes `_blank` from the
+  /// platform default to an external application; every target still launches
+  /// the URL. It is a web-window hint, not permission to suppress navigation.
+  static func follows(automatically: Bool, target: String?) -> Bool {
+    automatically
   }
 }
 
@@ -1474,6 +1688,7 @@ struct RufletMarkdownDocument: Equatable {
     case code(language: String, source: String)
     case quote(text: String)
     case listItem(marker: String, text: String, depth: Int)
+    case taskListItem(marker: String, text: String, depth: Int, checked: Bool)
     case image(source: String, alternate: String)
     case latex(source: String)
     case table(rows: [[String]])
@@ -1583,7 +1798,7 @@ struct RufletMarkdownDocument: Equatable {
         continue
       }
 
-      if let item = listItem(line) {
+      if let item = listItem(line, allowsTasks: extensions.allowsGitHubSyntaxes) {
         flushParagraph()
         flushQuote()
         blocks.append(item)
@@ -1644,21 +1859,43 @@ struct RufletMarkdownDocument: Equatable {
 
   /// Nesting is measured the way the `markdown` package does it, in pairs of
   /// leading spaces.
-  static func listItem(_ line: String) -> Block? {
+  static func listItem(_ line: String, allowsTasks: Bool = false) -> Block? {
     let indent = line.prefix { $0 == " " }.count
     let trimmed = line.trimmingCharacters(in: .whitespaces)
     for marker in ["- ", "* ", "+ "] where trimmed.hasPrefix(marker) {
+      let body = String(trimmed.dropFirst(marker.count))
+      if allowsTasks, let task = taskList(body) {
+        return .taskListItem(
+          marker: "\u{2022}", text: task.text, depth: indent / 2, checked: task.checked)
+      }
       return .listItem(
         marker: "\u{2022}",
-        text: String(trimmed.dropFirst(marker.count)),
+        text: body,
         depth: indent / 2)
     }
     let digits = trimmed.prefix { $0.isNumber }
     guard !digits.isEmpty, trimmed.dropFirst(digits.count).hasPrefix(". ") else { return nil }
+    let body = String(trimmed.dropFirst(digits.count + 2))
+    if allowsTasks, let task = taskList(body) {
+      return .taskListItem(
+        marker: "\(digits).", text: task.text, depth: indent / 2, checked: task.checked)
+    }
     return .listItem(
       marker: "\(digits).",
-      text: String(trimmed.dropFirst(digits.count + 2)),
+      text: body,
       depth: indent / 2)
+  }
+
+  private static func taskList(_ value: String) -> (checked: Bool, text: String)? {
+    guard value.count >= 3, value.hasPrefix("[") else { return nil }
+    let flagIndex = value.index(after: value.startIndex)
+    let closeIndex = value.index(after: flagIndex)
+    guard value[closeIndex] == "]" else { return nil }
+    let flag = value[flagIndex]
+    guard flag == " " || flag == "x" || flag == "X" else { return nil }
+    return (
+      flag != " ",
+      String(value[value.index(after: closeIndex)...]).trimmingCharacters(in: .whitespaces))
   }
 
   static func isTableDivider(_ line: String) -> Bool {
@@ -1730,6 +1967,12 @@ struct RufletMarkdownStyleSheet {
   let listBullet: RufletTextStyle
   let tableHead: RufletTextStyle
   let tableBody: RufletTextStyle
+  let checkbox: RufletTextStyle
+  let inlineCode: RufletTextStyle
+  let emphasis: RufletTextStyle
+  let strong: RufletTextStyle
+  let deletion: RufletTextStyle
+  let link: RufletTextStyle
   let latex: RufletTextStyle
   let latexFontSize: CGFloat
   let codeFontSize: CGFloat
@@ -1737,6 +1980,16 @@ struct RufletMarkdownStyleSheet {
   let linkColor: Color?
   let blockSpacing: CGFloat
   let listIndent: CGFloat
+  let paragraphPadding: EdgeInsets
+  let headingPaddings: [EdgeInsets]
+  let listBulletPadding: EdgeInsets
+  let paragraphAlignment: Alignment
+  let headingAlignments: [Alignment]
+  let blockquoteAlignment: Alignment
+  let codeBlockAlignment: Alignment
+  let orderedListAlignment: Alignment
+  let unorderedListAlignment: Alignment
+  let tableHeadTextAlignment: TextAlignment
   let codeBlockPadding: EdgeInsets
   let codeBlockBackground: Color
   let codeBlockRadius: CGFloat
@@ -1770,6 +2023,33 @@ struct RufletMarkdownStyleSheet {
     listBullet = Self.style(sheet, "list_bullet_text_style", theme: "bodyMedium")
     tableHead = Self.style(sheet, "table_head_text_style", theme: "bodyMedium")
     tableBody = Self.style(sheet, "table_body_text_style", theme: "bodyMedium")
+    var checkboxStyle = Self.style(sheet, "checkbox_text_style", theme: "bodyMedium")
+    if checkboxStyle.color == nil {
+      checkboxStyle.color = MaterialPalette.color(
+        RufletThemeDefaults.resolvedDisplayColorToken(for: node, property: "link_color"))
+    }
+    checkbox = checkboxStyle
+
+    inlineCode = Self.inlineStyle(
+      sheet, "code_text_style", defaultStyle: {
+        var style = RufletTextStyle(map: ["theme_style": .string("bodyMedium")])
+        style.fontFamily = "monospace"
+        style.size = RufletThemeDefaults.markdownBodyFontSize
+          * RufletThemeDefaults.markdownCodeFontScale
+        return style
+      }())
+    emphasis = Self.inlineStyle(
+      sheet, "em_text_style", defaultStyle: RufletTextStyle(map: ["italic": .bool(true)]))
+    strong = Self.inlineStyle(
+      sheet, "strong_text_style", defaultStyle: RufletTextStyle(map: ["weight": .string("bold")]))
+    deletion = Self.inlineStyle(
+      sheet, "del_text_style", defaultStyle: RufletTextStyle(
+        map: ["decoration": .int(Int64(RufletTextStyle.TextDecoration.lineThrough.rawValue))]))
+    link = Self.inlineStyle(
+      sheet, "a_text_style", defaultStyle: RufletTextStyle(
+        map: ["color": .string(
+          RufletThemeDefaults.resolvedDisplayColorToken(
+            for: node, property: "link_color") ?? "primary")]))
 
     let latexStyle = RufletTextStyle(map: node.map("latex_style") ?? [:])
     latex = latexStyle
@@ -1790,6 +2070,21 @@ struct RufletMarkdownStyleSheet {
       ?? RufletThemeDefaults.markdownBlockSpacing
     listIndent = sheet?["list_indent"]?.doubleValue.map { CGFloat($0) }
       ?? RufletThemeDefaults.markdownListIndent
+    paragraphPadding = ControlProps.edgeInsets(sheet?["p_padding"]) ?? EdgeInsets()
+    headingPaddings = (1...6).map {
+      ControlProps.edgeInsets(sheet?["h\($0)_padding"]) ?? EdgeInsets()
+    }
+    listBulletPadding = ControlProps.edgeInsets(sheet?["list_bullet_padding"])
+      ?? EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 4)
+    paragraphAlignment = Self.blockAlignment(sheet?["text_alignment"]?.stringValue)
+    headingAlignments = (1...6).map {
+      Self.blockAlignment(sheet?["h\($0)_alignment"]?.stringValue)
+    }
+    blockquoteAlignment = Self.blockAlignment(sheet?["blockquote_alignment"]?.stringValue)
+    codeBlockAlignment = Self.blockAlignment(sheet?["codeblock_alignment"]?.stringValue)
+    orderedListAlignment = Self.blockAlignment(sheet?["ordered_list_alignment"]?.stringValue)
+    unorderedListAlignment = Self.blockAlignment(sheet?["unordered_list_alignment"]?.stringValue)
+    tableHeadTextAlignment = Self.textAlignment(sheet?["table_head_text_align"]?.stringValue)
 
     codeBlockPadding = ControlProps.edgeInsets(codeSheet?["codeblock_padding"])
       ?? RufletThemeDefaults.markdownCodeblockPadding
@@ -1828,6 +2123,37 @@ struct RufletMarkdownStyleSheet {
 
   func heading(_ level: Int) -> RufletTextStyle {
     headings[min(max(level, 1), headings.count) - 1]
+  }
+
+  func headingPadding(_ level: Int) -> EdgeInsets {
+    headingPaddings[min(max(level, 1), headingPaddings.count) - 1]
+  }
+
+  func headingAlignment(_ level: Int) -> Alignment {
+    headingAlignments[min(max(level, 1), headingAlignments.count) - 1]
+  }
+
+  private static func inlineStyle(
+    _ map: [String: RufletValue]?, _ key: String, defaultStyle: RufletTextStyle
+  ) -> RufletTextStyle {
+    guard let value = map?[key]?.mapValue else { return defaultStyle }
+    return RufletTextStyle(map: value)
+  }
+
+  private static func blockAlignment(_ raw: String?) -> Alignment {
+    switch raw?.lowercased().replacingOccurrences(of: "_", with: "") {
+    case "center", "spacearound", "spacebetween", "spaceevenly": return .center
+    case "end", "right": return .trailing
+    default: return .leading
+    }
+  }
+
+  private static func textAlignment(_ raw: String?) -> TextAlignment {
+    switch raw?.lowercased() {
+    case "center": return .center
+    case "right", "end": return .trailing
+    default: return .leading
+    }
   }
 
   private static func style(
@@ -1902,15 +2228,58 @@ struct RufletMarkdownCodeTheme: Equatable {
 /// strikethrough is escaped away unless GitHub's syntaxes were asked for, and
 /// bare URLs are only linkified when they were.
 enum RufletMarkdownInline {
-  static func text(_ source: String, extensions: RufletMarkdownExtensionSet) -> Text {
-    let prepared = prepare(source, extensions: extensions)
-    guard let attributed = try? AttributedString(
+  static func attributed(
+    _ source: String, extensions: RufletMarkdownExtensionSet,
+    sheet: RufletMarkdownStyleSheet? = nil, baseStyle: RufletTextStyle? = nil,
+    literal: Bool = false
+  ) -> AttributedString {
+    let prepared = literal ? source : prepare(source, extensions: extensions)
+    var attributed = (try? AttributedString(
       markdown: prepared,
-      options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace))
-    else {
-      return Text(source)
+      options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)))
+      ?? AttributedString(source)
+    if let baseStyle { apply(baseStyle, to: &attributed, range: attributed.startIndex..<attributed.endIndex) }
+    if let sheet, !literal { applyInlineStyles(sheet, to: &attributed) }
+    return attributed
+  }
+
+  static func text(
+    _ source: String, extensions: RufletMarkdownExtensionSet,
+    sheet: RufletMarkdownStyleSheet? = nil, baseStyle: RufletTextStyle? = nil,
+    literal: Bool = false
+  ) -> Text {
+    Text(attributed(
+      source, extensions: extensions, sheet: sheet, baseStyle: baseStyle, literal: literal))
+  }
+
+  private static func applyInlineStyles(
+    _ sheet: RufletMarkdownStyleSheet, to attributed: inout AttributedString
+  ) {
+    for run in attributed.runs {
+      var style: RufletTextStyle?
+      if run.link != nil {
+        style = sheet.link
+      } else if let intent = run.inlinePresentationIntent {
+        if intent.contains(.code) { style = sheet.inlineCode }
+        else if intent.contains(.strikethrough) { style = sheet.deletion }
+        else if intent.contains(.stronglyEmphasized) { style = sheet.strong }
+        else if intent.contains(.emphasized) { style = sheet.emphasis }
+      }
+      guard let style else { continue }
+      apply(style, to: &attributed, range: run.range)
     }
-    return Text(attributed)
+  }
+
+  private static func apply(
+    _ style: RufletTextStyle, to attributed: inout AttributedString,
+    range: Range<AttributedString.Index>
+  ) {
+    attributed[range].font = style.font
+    if let color = style.color { attributed[range].foregroundColor = color }
+    if let background = style.backgroundColor { attributed[range].backgroundColor = background }
+    if let spacing = style.letterSpacing { attributed[range].kern = spacing }
+    if style.decoration.contains(.underline) { attributed[range].underlineStyle = .single }
+    if style.decoration.contains(.lineThrough) { attributed[range].strikethroughStyle = .single }
   }
 
   static func prepare(_ source: String, extensions: RufletMarkdownExtensionSet) -> String {
@@ -1934,33 +2303,37 @@ enum RufletMarkdownInline {
 
 /// One parsed block, drawn with the sheet that block's element uses.
 private struct MarkdownBlockView: View {
+  let node: ControlNode
   let block: RufletMarkdownDocument.Block
   let sheet: RufletMarkdownStyleSheet
   let imageErrorContentID: Int?
+  let imageBaseURL: URL?
 
   @ViewBuilder
   var body: some View {
     switch block {
     case .heading(let level, let text):
-      inline(text).rufletStyled(sheet.heading(level))
+      inline(text, style: sheet.heading(level))
+        .padding(sheet.headingPadding(level))
+        .frame(maxWidth: .infinity, alignment: sheet.headingAlignment(level))
 
     case .paragraph(let text):
-      inline(text).rufletStyled(sheet.paragraph)
+      inline(text, style: sheet.paragraph)
+        .padding(sheet.paragraphPadding)
+        .frame(maxWidth: .infinity, alignment: sheet.paragraphAlignment)
 
     case .code(_, let source):
-      Text(source)
-        .font(.system(size: sheet.codeFontSize, design: .monospaced))
-        .foregroundColor(sheet.codeForeground)
-        .frame(maxWidth: .infinity, alignment: .leading)
+      let codeStyle = markdownCodeBlockStyle
+      inline(source, style: codeStyle, literal: true)
+        .frame(maxWidth: .infinity, alignment: sheet.codeBlockAlignment)
         .padding(sheet.codeBlockPadding)
         .background(
           RoundedRectangle(cornerRadius: sheet.codeBlockRadius)
             .fill(sheet.codeBlockBackground))
 
     case .quote(let text):
-      inline(text)
-        .rufletStyled(sheet.blockquote)
-        .frame(maxWidth: .infinity, alignment: .leading)
+      inline(text, style: sheet.blockquote)
+        .frame(maxWidth: .infinity, alignment: sheet.blockquoteAlignment)
         .padding(sheet.blockquotePadding)
         .background(
           RoundedRectangle(cornerRadius: sheet.blockquoteRadius)
@@ -1969,29 +2342,45 @@ private struct MarkdownBlockView: View {
     case .listItem(let marker, let text, let depth):
       let bulletGap = RufletThemeDefaults.markdownListBulletGap
       HStack(alignment: .firstTextBaseline, spacing: bulletGap) {
-        Text(marker).rufletStyled(sheet.listBullet)
-        inline(text).rufletStyled(sheet.paragraph)
+        Text(marker).rufletStyled(sheet.listBullet).padding(sheet.listBulletPadding)
+        inline(text, style: sheet.paragraph)
       }
       .padding(.leading, sheet.listIndent * CGFloat(depth))
+      .frame(
+        maxWidth: .infinity,
+        alignment: marker == "•" ? sheet.unorderedListAlignment : sheet.orderedListAlignment)
+
+    case .taskListItem(let marker, let text, let depth, let checked):
+      HStack(alignment: .firstTextBaseline, spacing: RufletThemeDefaults.markdownListBulletGap) {
+        Image(systemName: checked ? "checkmark.square" : "square")
+          .rufletTextStyle(sheet.checkbox)
+          .accessibilityLabel(checked ? "Checked" : "Unchecked")
+        inline(text, style: sheet.paragraph)
+      }
+      .padding(.leading, sheet.listIndent * CGFloat(depth))
+      .frame(
+        maxWidth: .infinity,
+        alignment: marker == "•" ? sheet.unorderedListAlignment : sheet.orderedListAlignment)
 
     case .image(let source, let alternate):
       MarkdownImageView(
-        source: source, alternate: alternate, errorContentID: imageErrorContentID)
+        source: source, alternate: alternate, errorContentID: imageErrorContentID,
+        baseURL: imageBaseURL)
 
     case .latex(let source):
       // Ruflet has no maths typesetter, so the formula's own source is shown
       // in the style and at the scale Flet asked for rather than dropped.
-      Text(source)
-        .font(.system(size: sheet.latexFontSize, design: .serif))
-        .foregroundColor(sheet.latex.color)
+      inline(source, style: markdownLatexStyle, literal: true)
 
     case .table(let rows):
       VStack(alignment: .leading, spacing: 0) {
         ForEach(Array(rows.enumerated()), id: \.offset) { row in
           HStack(spacing: 0) {
             ForEach(Array(row.element.enumerated()), id: \.offset) { cell in
-              inline(cell.element)
-                .rufletStyled(row.offset == 0 ? sheet.tableHead : sheet.tableBody)
+              inline(
+                cell.element,
+                style: row.offset == 0 ? sheet.tableHead : sheet.tableBody)
+                .multilineTextAlignment(row.offset == 0 ? sheet.tableHeadTextAlignment : .leading)
                 .padding(sheet.tableCellPadding)
                 .frame(maxWidth: .infinity, alignment: row.offset == 0 ? .center : .leading)
             }
@@ -2009,9 +2398,37 @@ private struct MarkdownBlockView: View {
     }
   }
 
-  private func inline(_ text: String) -> Text {
-    RufletMarkdownInline.text(text, extensions: sheet.extensions)
+  @ViewBuilder
+  private func inline(
+    _ text: String, style: RufletTextStyle, literal: Bool = false
+  ) -> some View {
+    let attributed = RufletMarkdownInline.attributed(
+      text, extensions: sheet.extensions, sheet: sheet, baseStyle: style, literal: literal)
+    if node.bool("selectable") == true {
+      RufletSelectableMarkdownText(
+        node: node, source: text, attributed: attributed, events: events,
+        activate: { openURL($0) }, tapText: { events.fire(node, "tap_text") })
+    } else {
+      Text(attributed)
+    }
   }
+
+  private var markdownCodeBlockStyle: RufletTextStyle {
+    var style = RufletTextStyle()
+    style.size = sheet.codeFontSize
+    style.fontFamily = "monospace"
+    style.color = sheet.codeForeground
+    return style
+  }
+
+  private var markdownLatexStyle: RufletTextStyle {
+    var style = sheet.latex
+    style.size = sheet.latexFontSize
+    return style
+  }
+
+  @Environment(\.rufletEvents) private var events
+  @Environment(\.openURL) private var openURL
 }
 
 /// A block-level markdown image, which is where `image_error_content` lands.
@@ -2019,10 +2436,23 @@ private struct MarkdownImageView: View {
   let source: String
   let alternate: String
   let errorContentID: Int?
+  let baseURL: URL?
 
   @ViewBuilder
   var body: some View {
-    if let url = URL(string: source), url.scheme != nil {
+    if case .binary(let data) = RufletImageSource(value: .string(source)) {
+      PlatformImageView(data: data)
+        .aspectRatio(contentMode: .fit)
+        .accessibilityLabel(alternate)
+    } else if case .remote(let url) = RufletImageSource(value: .string(source)) {
+      RemoteImage(url: url, errorContentID: errorContentID)
+        .aspectRatio(contentMode: .fit)
+        .accessibilityLabel(alternate)
+    } else if let data = RufletImageSource.packagedData(named: source) {
+      PlatformImageView(data: data)
+        .aspectRatio(contentMode: .fit)
+        .accessibilityLabel(alternate)
+    } else if let url = RufletImageAssetURL.markdownAsset(source, relativeTo: baseURL) {
       RemoteImage(url: url, errorContentID: errorContentID)
         .aspectRatio(contentMode: .fit)
         .accessibilityLabel(alternate)

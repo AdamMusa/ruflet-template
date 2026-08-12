@@ -165,6 +165,8 @@ final class DisplayParityTests: XCTestCase {
       RufletImageSource(node: node("Image", ["src": .string("images/a.png")])),
       .asset("images/a.png"))
     XCTAssertEqual(RufletImageSource(node: node("Image")), .missing)
+    XCTAssertEqual(
+      RufletImageSource(node: node("Image", ["src": .null])), .missing)
   }
 
   /// `ResolvedAssetSource.from` tries an unadorned string as Base64 after it
@@ -183,7 +185,13 @@ final class DisplayParityTests: XCTestCase {
       .asset("avatar"))
     XCTAssertEqual(
       RufletImageSource(node: node("Image", ["src": .string("   ")])),
-      .missing)
+      .empty)
+    XCTAssertEqual(
+      RufletImageSource(node: node("Image", ["src": .binary([])])),
+      .empty)
+    XCTAssertEqual(
+      RufletImageSource(node: node("Image", ["src": .map(["bad": .bool(true)])])),
+      .invalid("{bad: true} is not a supported source type."))
   }
 
   func testImageResolvesInlineSVGAsDocumentBytes() {
@@ -215,6 +223,10 @@ final class DisplayParityTests: XCTestCase {
         "filter_quality": .string("high"),
         "anti_alias": .bool(true),
         "gapless_playback": .bool(true),
+        "fit": .string("cover"),
+        "placeholder_fit": .string("fitHeight"),
+        "cache_width": .int(320),
+        "cache_height": .int(180),
         "fade_in_animation": .bool(true),
         "placeholder_fade_out_animation": .map([
           "duration": .int(300), "curve": .string("bounceOut"),
@@ -225,6 +237,10 @@ final class DisplayParityTests: XCTestCase {
     XCTAssertEqual(presentation.interpolation, .high)
     XCTAssertTrue(presentation.antiAlias)
     XCTAssertTrue(presentation.gaplessPlayback)
+    XCTAssertEqual(presentation.fit, "cover")
+    XCTAssertEqual(presentation.placeholderFit, "fitHeight")
+    XCTAssertEqual(presentation.cacheWidth, 320)
+    XCTAssertEqual(presentation.cacheHeight, 180)
     XCTAssertEqual(presentation.fadeInDuration, 1, accuracy: 0.0001)
     XCTAssertEqual(presentation.fadeInCurve, "linear")
     XCTAssertEqual(presentation.fadeOutDuration, 0.3, accuracy: 0.0001)
@@ -234,6 +250,35 @@ final class DisplayParityTests: XCTestCase {
       "Image", ["fade_in_animation": .int(500)]))
     XCTAssertEqual(numeric.fadeInDuration, 0.5, accuracy: 0.0001)
     XCTAssertEqual(numeric.fadeInCurve, "linear")
+  }
+
+  func testImagePlaceholderFitFallsBackToThePrimaryFit() {
+    let presentation = RufletImagePresentation(
+      node: node("Image", ["fit": .string("scaleDown")]))
+    XCTAssertEqual(presentation.fit, "scaleDown")
+    XCTAssertEqual(presentation.placeholderFit, "scaleDown")
+  }
+
+  func testImageAndMarkdownRelativeAssetsFollowTheirDistinctFletBases() {
+    let page = URL(string: "https://example.test/app/session")!
+    XCTAssertEqual(
+      RufletImageAssetURL.imageAsset("images/cat.png", relativeTo: page)?.absoluteString,
+      "https://example.test/app/session/images/cat.png")
+    XCTAssertEqual(
+      RufletImageAssetURL.markdownAsset("images/cat.png", relativeTo: page)?.absoluteString,
+      "https://example.test/images/cat.png")
+    XCTAssertEqual(
+      RufletImageAssetURL.imageAsset(
+        "images/cat.png", relativeTo: URL(string: "wss://example.test/ws"))?.absoluteString,
+      "https://example.test/images/cat.png")
+    XCTAssertNil(
+      RufletImageAssetURL.imageAsset(
+        "images/cat.png", relativeTo: URL(string: "file:///tmp/project")))
+  }
+
+  func testInlineSVGDetectionUsesTheNativeVectorRendererBoundary() {
+    XCTAssertTrue(RufletSVGDocument.isSVG(Data("<?xml?><svg viewBox='0 0 1 1'/>".utf8)))
+    XCTAssertFalse(RufletSVGDocument.isSVG(Data([0x89, 0x50, 0x4E, 0x47])))
   }
 
   // MARK: - Icon
@@ -661,6 +706,18 @@ final class DisplayParityTests: XCTestCase {
       ])
   }
 
+  func testMarkdownTaskListsRequireTheGitHubExtensionSets() {
+    XCTAssertEqual(
+      blocks("- [x] shipped\n1. [ ] queued", extensions: .gitHubFlavored),
+      [
+        .taskListItem(marker: "\u{2022}", text: "shipped", depth: 0, checked: true),
+        .taskListItem(marker: "1.", text: "queued", depth: 0, checked: false),
+      ])
+    XCTAssertEqual(
+      blocks("- [x] shipped", extensions: .commonMark),
+      [.listItem(marker: "\u{2022}", text: "[x] shipped", depth: 0)])
+  }
+
   func testMarkdownQuotesJoinAcrossConsecutiveLines() {
     XCTAssertEqual(blocks("> one\n> two"), [.quote(text: "one two")])
   }
@@ -714,6 +771,13 @@ final class DisplayParityTests: XCTestCase {
   func testMarkdownAutolinksLeaveExistingLinksAlone() {
     let source = "[home](https://example.com)"
     XCTAssertEqual(RufletMarkdownInline.linkify(source), source)
+  }
+
+  func testMarkdownAutoFollowTargetNeverSuppressesNativeLaunch() {
+    XCTAssertFalse(RufletMarkdownLinkBehavior.follows(automatically: false, target: "_blank"))
+    for target in [nil, "_blank", "_self", "_parent", "_top"] as [String?] {
+      XCTAssertTrue(RufletMarkdownLinkBehavior.follows(automatically: true, target: target))
+    }
   }
 
   // MARK: - Markdown code theme
@@ -784,6 +848,62 @@ final class DisplayParityTests: XCTestCase {
     XCTAssertEqual(sheet.codeBlockPadding.leading, 20)
 
     XCTAssertEqual(RufletMarkdownStyleSheet(node: node("Markdown")).codeBlockPadding.leading, 8)
+  }
+
+  func testMarkdownStyleSheetConsumesEveryBlockPaddingAndAlignmentFamily() {
+    let sheet = RufletMarkdownStyleSheet(
+      node: node(
+        "Markdown",
+        [
+          "md_style_sheet": .map([
+            "p_padding": .double(3),
+            "h2_padding": .map(["left": .double(7)]),
+            "list_bullet_padding": .map(["right": .double(9)]),
+            "text_alignment": .string("center"),
+            "h2_alignment": .string("end"),
+            "blockquote_alignment": .string("center"),
+            "codeblock_alignment": .string("end"),
+            "ordered_list_alignment": .string("center"),
+            "unordered_list_alignment": .string("end"),
+            "table_head_text_align": .string("right"),
+          ])
+        ]))
+
+    XCTAssertEqual(sheet.paragraphPadding.leading, 3)
+    XCTAssertEqual(sheet.headingPadding(2).leading, 7)
+    XCTAssertEqual(sheet.listBulletPadding.trailing, 9)
+    XCTAssertEqual(sheet.paragraphAlignment, .center)
+    XCTAssertEqual(sheet.headingAlignment(2), .trailing)
+    XCTAssertEqual(sheet.blockquoteAlignment, .center)
+    XCTAssertEqual(sheet.codeBlockAlignment, .trailing)
+    XCTAssertEqual(sheet.orderedListAlignment, .center)
+    XCTAssertEqual(sheet.unorderedListAlignment, .trailing)
+    XCTAssertEqual(sheet.tableHeadTextAlignment, .trailing)
+  }
+
+  func testMarkdownStyleSheetKeepsPinnedInlineStyleDefaultsAndOverrides() {
+    let defaults = RufletMarkdownStyleSheet(node: node("Markdown"))
+    XCTAssertTrue(defaults.emphasis.italic)
+    XCTAssertEqual(defaults.strong.weight, .bold)
+    XCTAssertTrue(defaults.deletion.decoration.contains(.lineThrough))
+    XCTAssertEqual(defaults.inlineCode.fontFamily, "monospace")
+    XCTAssertNotNil(defaults.checkbox.color)
+
+    let explicit = RufletMarkdownStyleSheet(
+      node: node(
+        "Markdown",
+        [
+          "md_style_sheet": .map([
+            "em_text_style": .map(["size": .double(19)]),
+            "strong_text_style": .map(["weight": .string("w900")]),
+            "del_text_style": .map(["color": .string("red")]),
+            "a_text_style": .map(["size": .double(18)]),
+          ])
+        ]))
+    XCTAssertEqual(explicit.emphasis.size, 19)
+    XCTAssertEqual(explicit.strong.weight, .black)
+    XCTAssertNotNil(explicit.deletion.color)
+    XCTAssertEqual(explicit.link.size, 18)
   }
 
   // MARK: - Markdown document flags
