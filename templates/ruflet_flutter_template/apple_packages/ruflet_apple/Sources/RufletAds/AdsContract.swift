@@ -9,6 +9,20 @@ public enum RufletAdsContract {
   public static let iOSTestAdUnitID = "ca-app-pub-3940256099942544/4411468910"
   public static let bannerWidth = 320.0
   public static let bannerHeight = 50.0
+
+  /// Google Mobile Ads raises an Objective-C exception during `start()` when
+  /// the host has not supplied an application identifier. Optional Ruflet
+  /// extensions must not make an app that does not use them unlaunchable, so
+  /// initialization is gated on the same Info.plist value Google's SDK
+  /// requires.
+  public static func hasConfiguredApplicationID(
+    in infoDictionary: [String: Any]?
+  ) -> Bool {
+    guard let value = infoDictionary?["GADApplicationIdentifier"] as? String else {
+      return false
+    }
+    return !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+  }
 }
 
 /// Flet's `AdRequest` value object, preserved independently of Google's SDK

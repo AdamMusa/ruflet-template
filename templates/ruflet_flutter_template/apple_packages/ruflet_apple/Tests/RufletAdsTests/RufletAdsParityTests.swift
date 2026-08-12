@@ -13,6 +13,17 @@ final class RufletAdsContractTests: XCTestCase {
     XCTAssertEqual(RufletAdsContract.bannerHeight, 50)
   }
 
+  func testOptionalAdsExtensionStartsOnlyWithAConfiguredApplicationID() {
+    XCTAssertFalse(RufletAdsContract.hasConfiguredApplicationID(in: nil))
+    XCTAssertFalse(RufletAdsContract.hasConfiguredApplicationID(in: [:]))
+    XCTAssertFalse(
+      RufletAdsContract.hasConfiguredApplicationID(
+        in: ["GADApplicationIdentifier": "  \n"]))
+    XCTAssertTrue(
+      RufletAdsContract.hasConfiguredApplicationID(
+        in: ["GADApplicationIdentifier": "ca-app-pub-123~456"]))
+  }
+
   func testAdRequestPreservesEveryFletField() {
     let request = RufletAdRequest(value: .map([
       "keywords": .array(["swift", "ruby"]),

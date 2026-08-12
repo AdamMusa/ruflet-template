@@ -13,7 +13,13 @@ public enum RufletAds: RufletExtension {
 
   public static func register(in registry: ServiceRegistry) {
     #if os(iOS)
-    MobileAds.shared.start()
+    if RufletAdsContract.hasConfiguredApplicationID(in: Bundle.main.infoDictionary) {
+      MobileAds.shared.start()
+    } else {
+      RufletLog.debug(
+        "RufletAds is linked but GADApplicationIdentifier is not configured; "
+          + "skipping Google Mobile Ads startup")
+    }
     #endif
 
     registry.registerNamed(InterstitialAdService.wireType) { InterstitialAdService() }
