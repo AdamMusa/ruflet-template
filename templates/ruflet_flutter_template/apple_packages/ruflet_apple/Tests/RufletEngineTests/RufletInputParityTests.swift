@@ -65,6 +65,15 @@ final class RufletInputParityTests: XCTestCase {
       id: 4, type: "TextField", props: ["width": .double(240)])))
   }
 
+  func testOmittedAccessibilityLabelPreservesNativeInference() {
+    XCTAssertNil(RufletAccessibilitySemantics.label(ControlNode(id: 1, type: "Checkbox")))
+    XCTAssertEqual(RufletAccessibilitySemantics.label(ControlNode(
+      id: 2, type: "Checkbox", props: ["semantics_label": .string("")])), "")
+    XCTAssertEqual(RufletAccessibilitySemantics.label(ControlNode(
+      id: 3, type: "CupertinoCheckbox",
+      props: ["semantics_label": .string("Receive updates")])), "Receive updates")
+  }
+
   func testTextFieldCounterInterpolatesFletTokens() {
     XCTAssertEqual(
       RufletTextFieldDefaults.counterText(

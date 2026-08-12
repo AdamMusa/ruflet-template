@@ -347,7 +347,7 @@ private struct CupertinoCheckboxSelectionView: View {
     .modifier(SelectionScaling(node: node, natural: 20))
     .modifier(ListTileToggleListener(notifier: listTileClicks, action: advance))
     .modifier(FocusReporter(node: node, events: events))
-    .accessibilityLabel(node.string("semantics_label") ?? "")
+    .modifier(SelectionAccessibilityLabel(label: RufletAccessibilitySemantics.label(node)))
     .disabled(node.bool("disabled") ?? false)
   }
 

@@ -231,7 +231,7 @@ struct CheckboxControlView: View {
     .modifier(SelectionScaling(node: node, natural: RufletThemeDefaults.checkboxTargetSize))
     .modifier(ListTileToggleListener(notifier: listTileClicks, action: advance))
     .modifier(FocusReporter(node: node, events: events))
-    .accessibilityLabel(node.string("semantics_label") ?? "")
+    .modifier(SelectionAccessibilityLabel(label: RufletAccessibilitySemantics.label(node)))
     .disabled(disabled)
   }
 
@@ -314,6 +314,27 @@ struct CheckboxControlView: View {
         after: state, tristate: node.bool("tristate") == true),
       payload: .value,
       to: events)
+  }
+}
+
+/// Omission preserves the native control's inferred accessibility label;
+/// an explicit empty value is still forwarded exactly as the DSL requested.
+enum RufletAccessibilitySemantics {
+  static func label(_ node: ControlNode) -> String? {
+    guard node.props["semantics_label"] != nil else { return nil }
+    return node.string("semantics_label") ?? ""
+  }
+}
+
+struct SelectionAccessibilityLabel: ViewModifier {
+  let label: String?
+
+  func body(content: Content) -> some View {
+    if let label {
+      content.accessibilityLabel(Text(label))
+    } else {
+      content
+    }
   }
 }
 
