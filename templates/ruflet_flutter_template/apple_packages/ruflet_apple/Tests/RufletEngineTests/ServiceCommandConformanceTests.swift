@@ -164,7 +164,7 @@ final class ServiceCommandConformanceTests: XCTestCase {
   }
 
   @MainActor
-  func testFilePickerUploadExecutesAndReportsCanonicalFailureEvent() {
+  func testFilePickerUploadWithoutSelectionIsPinnedFletNoOp() {
     var observed: (Int, String, RufletValue)?
     let node = ControlNode(
       id: 9, type: "FilePicker", props: ["on_upload": .bool(true)])
@@ -181,10 +181,7 @@ final class ServiceCommandConformanceTests: XCTestCase {
       context: context { observed = ($0, $1, $2) })
 
     XCTAssertEqual(try? reply?.get(), .null)
-    XCTAssertEqual(observed?.0, node.id)
-    XCTAssertEqual(observed?.1, "upload")
-    XCTAssertEqual(observed?.2["file_name"]?.stringValue, "missing.txt")
-    XCTAssertNotNil(observed?.2["error"]?.stringValue)
+    XCTAssertNil(observed)
   }
 
   @MainActor

@@ -66,4 +66,48 @@ final class FilePickerPluginParityTests: XCTestCase {
     XCTAssertEqual(absolute?.resolvedURL(relativeTo: nil)?.absoluteString,
       "https://uploads.example/file")
   }
+
+  @MainActor
+  func testUploadBeforePickingReturnsNullWithoutInventingFailureEvent() {
+    let service = FilePickerService()
+    let node = ControlNode(
+      id: 7, type: "FilePicker", props: ["on_upload": .bool(true)])
+    var events: [(String, RufletValue)] = []
+    var reply: Result<RufletValue, Error>?
+
+    service.invoke(call([
+      "files": .array([.map([
+        "name": .string("not-selected.txt"),
+        "upload_url": .string("https://uploads.example/file"),
+        "method": .string("PUT"),
+      ])])
+    ], name: "upload"), node: node,
+      context: RufletServiceContext(
+        store: ControlStore(), emitEvent: { _, name, value in events.append((name, value)) })
+    ) { reply = $0 }
+
+    XCTAssertEqual(try? reply?.get(), .null)
+    XCTAssertTrue(events.isEmpty)
+  }
+
+  @MainActor
+  func testUploadEventUsesExactPinnedFletFieldsAndNulls() {
+    let value = FilePickerService.uploadEvent(
+      name: "main.rb", progress: nil, error: "offline")
+    XCTAssertEqual(Set(value.mapValue?.keys.map { $0 } ?? []),
+      ["file_name", "progress", "error"])
+    XCTAssertEqual(value["file_name"], .string("main.rb"))
+    XCTAssertEqual(value["progress"], .null)
+    XCTAssertEqual(value["error"], .string("offline"))
+  }
+
+  @MainActor
+  func testHTTPFailureRetainsFletColonForEmptyResponseBody() {
+    XCTAssertEqual(
+      FilePickerService.uploadHTTPError(status: 413, body: Data()),
+      "Upload endpoint returned code 413: ")
+    XCTAssertEqual(
+      FilePickerService.uploadHTTPError(status: 500, body: Data("failed".utf8)),
+      "Upload endpoint returned code 500: failed")
+  }
 }

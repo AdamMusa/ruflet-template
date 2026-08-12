@@ -36,8 +36,6 @@ public final class FilePickerService: NSObject, RufletService {
     context: RufletServiceContext,
     completion: @escaping RufletMethodCompletion
   ) {
-    eventNode = node
-    eventContext = context
     switch call.name {
     case "pick_files":
       pickFiles(call, completion: completion)
@@ -53,23 +51,6 @@ public final class FilePickerService: NSObject, RufletService {
     }
   }
 
-  private static var platformName: String {
-    #if os(iOS)
-      return "iOS"
-    #elseif os(macOS)
-      return "macOS"
-    #else
-      return "this Apple platform"
-    #endif
-  }
-
-  /// `result` is Ruflet's DSL extension. Method return values remain byte-for-
-  /// byte compatible with Flet's service.
-  private func reportResult(_ value: RufletValue) {
-    guard let eventNode, let eventContext, eventNode.handlesEvent("result") else { return }
-    eventContext.emitEvent(eventNode.id, "result", value)
-  }
-
   private func describe(_ urls: [URL], withData: Bool) -> RufletValue {
     .array(
       urls.enumerated().map { index, url in
@@ -81,13 +62,6 @@ public final class FilePickerService: NSObject, RufletService {
           bytes: withData ? (try? Data(contentsOf: url)).map(Array.init) : nil
         ).wireValue
       })
-  }
-
-  private func resultEvent(path: String?, files: RufletValue?) -> RufletValue {
-    .map([
-      "path": path.map(RufletValue.string) ?? .null,
-      "files": files ?? .null,
-    ])
   }
 
   #if canImport(UniformTypeIdentifiers)
@@ -121,7 +95,6 @@ public final class FilePickerService: NSObject, RufletService {
           self.selectedURLs = response == .OK ? panel.urls : []
           let files = response == .OK
             ? self.describe(panel.urls, withData: configuration.withData) : .array([])
-          self.reportResult(self.resultEvent(path: nil, files: files))
           completion(.success(files))
         }
       }
@@ -138,7 +111,6 @@ public final class FilePickerService: NSObject, RufletService {
       panel.begin { response in
         Task { @MainActor in
           let path = response == .OK ? panel.url?.path : nil
-          self.reportResult(self.resultEvent(path: path, files: nil))
           completion(.success(path.map(RufletValue.string) ?? .null))
         }
       }
@@ -157,7 +129,6 @@ public final class FilePickerService: NSObject, RufletService {
       panel.begin { response in
         Task { @MainActor in
           let path = response == .OK ? panel.urls.first?.path : nil
-          self.reportResult(self.resultEvent(path: path, files: nil))
           completion(.success(path.map(RufletValue.string) ?? .null))
         }
       }
@@ -231,8 +202,11 @@ public final class FilePickerService: NSObject, RufletService {
     context: RufletServiceContext,
     completion: @escaping RufletMethodCompletion
   ) {
+    eventNode = node
+    eventContext = context
     let requests = call.argument("files")?.arrayValue ?? []
-    guard !requests.isEmpty else {
+    // Flet starts uploads only after pick_files populated its private selection.
+    guard !requests.isEmpty, !selectedURLs.isEmpty else {
       return completion(.success(.null))
     }
     let uploads = requests.compactMap(FilePickerUploadRequest.init)
@@ -253,7 +227,8 @@ public final class FilePickerService: NSObject, RufletService {
       return selectedURLs.first { $0.lastPathComponent == name }
     }()
     guard let source else {
-      emitUpload(name: name ?? "", progress: nil, error: "Selected file was not found")
+      // Pinned Flet only logs a descriptor that no longer matches the current
+      // selection; it does not synthesize an upload failure event.
       return uploadNext(requests, index: index + 1, pageURL: pageURL)
     }
     guard let destination = request.resolvedURL(relativeTo: pageURL) else {
@@ -281,9 +256,8 @@ public final class FilePickerService: NSObject, RufletService {
             self.emitUpload(name: source.lastPathComponent, progress: nil,
               error: error.localizedDescription)
           } else if !(200...204).contains(status ?? 0) {
-            let suffix = String(data: body, encoding: .utf8).flatMap { $0.isEmpty ? nil : ": \($0)" } ?? ""
             self.emitUpload(name: source.lastPathComponent, progress: nil,
-              error: "Upload endpoint returned code \(status ?? 0)\(suffix)")
+              error: Self.uploadHTTPError(status: status ?? 0, body: body))
             // Flet removes a selected file after every completed HTTP response,
             // including a non-success response.
             self.selectedURLs.removeAll { $0 == source }
@@ -300,11 +274,21 @@ public final class FilePickerService: NSObject, RufletService {
 
   private func emitUpload(name: String, progress: Double?, error: String?) {
     guard let eventNode, eventNode.handlesEvent("upload"), let eventContext else { return }
-    eventContext.emitEvent(eventNode.id, "upload", .map([
+    eventContext.emitEvent(eventNode.id, "upload", Self.uploadEvent(
+      name: name, progress: progress, error: error))
+  }
+
+  static func uploadEvent(name: String, progress: Double?, error: String?) -> RufletValue {
+    .map([
       "file_name": .string(name),
       "progress": progress.map(RufletValue.double) ?? .null,
       "error": error.map(RufletValue.string) ?? .null
-    ]))
+    ])
+  }
+
+  static func uploadHTTPError(status: Int, body: Data) -> String {
+    let responseBody = String(data: body, encoding: .utf8) ?? ""
+    return "Upload endpoint returned code \(status): \(responseBody)"
   }
 }
 
@@ -322,16 +306,13 @@ public final class FilePickerService: NSObject, RufletService {
         case .files(let withData):
           selectedURLs = urls
           let files = describe(urls, withData: withData)
-          reportResult(resultEvent(path: nil, files: files))
           completion?(.success(files))
         case .directory:
           let path = urls.first?.path
-          reportResult(resultEvent(path: path, files: nil))
           completion?(.success(path.map(RufletValue.string) ?? .null))
         case .save(let temp):
           try? FileManager.default.removeItem(at: temp)
           let path = urls.first?.path
-          reportResult(resultEvent(path: path, files: nil))
           completion?(.success(path.map(RufletValue.string) ?? .null))
         case nil:
           completion?(.success(.null))
@@ -350,14 +331,11 @@ public final class FilePickerService: NSObject, RufletService {
         switch operation {
         case .files:
           selectedURLs = []
-          reportResult(resultEvent(path: nil, files: .array([])))
           completion?(.success(.array([])))
         case .save(let temp):
           try? FileManager.default.removeItem(at: temp)
-          reportResult(resultEvent(path: nil, files: nil))
           completion?(.success(.null))
         case .directory:
-          reportResult(resultEvent(path: nil, files: nil))
           completion?(.success(.null))
         case nil:
           completion?(.success(.null))
