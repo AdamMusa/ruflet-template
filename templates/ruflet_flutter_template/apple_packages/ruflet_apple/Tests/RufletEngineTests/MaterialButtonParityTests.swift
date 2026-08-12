@@ -5,7 +5,7 @@ import XCTest
 @testable import RufletUI
 
 final class MaterialButtonParityTests: XCTestCase {
-  func testStylelessButtonsUseTheirAppleNativeFamiliesWithoutInjectedColors() {
+  func testStylelessButtonsUseNativeFamiliesWithFlutterConstructorSemantics() {
     let expected: [(String, NativeButtonAppearance)] = [
       ("Button", .automatic),
       ("FilledButton", .borderedProminent),
@@ -19,18 +19,21 @@ final class MaterialButtonParityTests: XCTestCase {
       XCTAssertFalse(presentation.hasExplicitStyle, type)
       XCTAssertFalse(presentation.requiresCustomStyle, type)
       XCTAssertEqual(NativeButtonAppearance.resolve(ButtonVariant(wireType: type)), appearance)
-      XCTAssertNil(presentation.color("color"), type)
-      XCTAssertNil(presentation.color("bgcolor"), type)
+      XCTAssertNotNil(presentation.color("color"), type)
+      XCTAssertNotNil(presentation.color("bgcolor"), type)
+      XCTAssertEqual(presentation.minimumSize.minWidth, 64, type)
+      XCTAssertEqual(presentation.minimumSize.minHeight, 40, type)
+      XCTAssertEqual(presentation.radius, 20, type)
     }
   }
 
-  func testEmptyStyleDoesNotReplaceAppleNativeDefaults() {
+  func testEmptyStyleStillConstructsFletDefaultButtonStyle() {
     for type in ["Button", "FilledButton", "FilledTonalButton", "OutlinedButton", "TextButton"] {
       let presentation = ButtonPresentation(
         node: ControlNode(id: 1, type: type, internals: ["style": .map([:])]),
         variant: ButtonVariant(wireType: type))
       XCTAssertTrue(presentation.hasExplicitStyle, type)
-      XCTAssertFalse(presentation.requiresCustomStyle, type)
+      XCTAssertTrue(presentation.requiresCustomStyle, type)
     }
   }
 
@@ -54,6 +57,21 @@ final class MaterialButtonParityTests: XCTestCase {
     XCTAssertEqual(presentation.padding.leading, 6)
   }
 
+  func testButtonStyleCarriesFletIconSemantics() {
+    let presentation = ButtonPresentation(
+      node: ControlNode(
+        id: 1, type: "Button",
+        internals: [
+          "style": .map([
+            "icon_size": .double(22),
+            "icon_color": .string("red"),
+          ])
+        ]),
+      variant: .elevated)
+    XCTAssertEqual(presentation.iconSize, 22)
+    XCTAssertNotNil(presentation.iconColor)
+  }
+
   func testStylelessIconButtonsUseNativeCircularButtonFamilies() {
     for type in ["IconButton", "FilledIconButton", "FilledTonalIconButton", "OutlinedIconButton"] {
       XCTAssertFalse(
@@ -64,9 +82,23 @@ final class MaterialButtonParityTests: XCTestCase {
     XCTAssertEqual(NativeButtonAppearance.resolve(.icon), .borderless)
     XCTAssertEqual(NativeButtonAppearance.resolve(.filledIcon), .borderedProminent)
     XCTAssertEqual(NativeButtonAppearance.resolve(.outlinedIcon), .bordered)
+
+    let styleless = IconButtonPresentation(
+      node: ControlNode(id: 2, type: "IconButton", props: ["icon": .string("add")]))
+    XCTAssertEqual(styleless.padding.leading, 8)
+    XCTAssertEqual(styleless.padding.top, 8)
+    XCTAssertEqual(styleless.constraints.minWidth, 40)
+    XCTAssertEqual(styleless.constraints.minHeight, 40)
+    XCTAssertEqual(styleless.iconSize, 24)
+
+    let styled = IconButtonPresentation(
+      node: ControlNode(
+        id: 3, type: "IconButton", props: ["icon": .string("add")],
+        internals: ["style": .map(["icon_size": .double(19)])]))
+    XCTAssertEqual(styled.iconSize, 19)
   }
 
-  func testFloatingActionButtonUsesNativeProminentButtonUntilVisualsAreExplicit() {
+  func testFloatingActionButtonRetainsFletSemanticsOnNativeProminentButton() {
     let normal = FloatingActionPresentation(node: ControlNode(id: 1, type: "FloatingActionButton"))
     let mini = FloatingActionPresentation(
       node: ControlNode(
@@ -74,6 +106,12 @@ final class MaterialButtonParityTests: XCTestCase {
     XCTAssertFalse(normal.requiresCustomRendering)
     XCTAssertFalse(mini.requiresCustomRendering)
     XCTAssertEqual(NativeButtonAppearance.resolve(.floatingAction), .borderedProminent)
+    XCTAssertEqual(normal.width, 56)
+    XCTAssertEqual(normal.height, 56)
+    XCTAssertEqual(mini.width, 40)
+    XCTAssertEqual(mini.height, 40)
+    XCTAssertNotNil(normal.background)
+    XCTAssertNotNil(normal.foreground)
 
     let shaped = FloatingActionPresentation(
       node: ControlNode(
@@ -144,7 +182,7 @@ final class MaterialButtonParityTests: XCTestCase {
           props: ["selected": .array([.string("one")])],
           internals: ["style": .map(["bgcolor": .string("red")])])
       ).route,
-      .custom)
+      .buttonGroup)
   }
 
   func testChipResolvesRufletAndFletDeleteTooltipNames() {
@@ -168,9 +206,30 @@ final class MaterialButtonParityTests: XCTestCase {
     )
   }
 
-  func testStylelessChipUsesNativeAppleButtonDefaults() {
+  func testStylelessChipRetainsInputChipDefaultsOnNativeAppleButton() {
     let styleless = ControlNode(id: 1, type: "Chip", props: ["label": .string("A")])
     XCTAssertFalse(ChipPresentation.requiresCustomRendering(styleless))
+    XCTAssertNotNil(ChipPresentation.foreground(styleless))
+    XCTAssertEqual(ChipPresentation.padding(styleless).leading, 8)
+    XCTAssertEqual(ChipPresentation.labelPadding(styleless).leading, 8)
+    XCTAssertNil(ChipPresentation.background(styleless))
+
+    let selected = ControlNode(
+      id: 3, type: "Chip",
+      props: ["label": .string("A"), "selected": .bool(true)])
+    XCTAssertNotNil(ChipPresentation.background(selected))
+
+    let disabled = ControlNode(
+      id: 4, type: "Chip",
+      props: ["label": .string("A"), "disabled": .bool(true)])
+    XCTAssertNil(ChipPresentation.background(disabled))
+
+    let selectedDisabled = ControlNode(
+      id: 5, type: "Chip",
+      props: [
+        "label": .string("A"), "selected": .bool(true), "disabled": .bool(true)
+      ])
+    XCTAssertNotNil(ChipPresentation.background(selectedDisabled))
 
     let explicitChipVisuals: [(String, RufletValue)] = [
       ("bgcolor", .string("red")),
@@ -206,6 +265,25 @@ final class MaterialButtonParityTests: XCTestCase {
     XCTAssertEqual(ChipPresentation.checkmarkColorToken(selected), "primary")
     XCTAssertEqual(ChipPresentation.deleteIconColorToken(selected), "onsecondarycontainer")
     XCTAssertEqual(ChipPresentation.borderColorToken(selected), "transparent")
+  }
+
+  func testSegmentedButtonRetainsFlutterAndFletStyleDefaults() {
+    XCTAssertEqual(SegmentedButtonPresentation.defaultMinimumHeight, 40)
+    XCTAssertEqual(SegmentedButtonPresentation.defaultIconSize, 18)
+    XCTAssertEqual(SegmentedButtonPresentation.explicitStyleDefaultPadding.leading, 8)
+
+    let flutterDefault = SegmentedButtonPresentation(
+      node: ControlNode(
+        id: 1, type: "SegmentedButton",
+        props: ["selected": .array([.string("one")])]))
+    XCTAssertEqual(flutterDefault.route, .picker)
+
+    let fletExplicitDefault = SegmentedButtonPresentation(
+      node: ControlNode(
+        id: 2, type: "SegmentedButton",
+        props: ["selected": .array([.string("one")])],
+        internals: ["style": .map([:])]))
+    XCTAssertEqual(fletExplicitDefault.route, .buttonGroup)
   }
 
   func testChipEnforcesFletInputChipValidation() {
