@@ -699,22 +699,20 @@ private struct PositionedChild: View {
 
   @ViewBuilder
   var body: some View {
-    let animated = node.props["animate_position"] != nil
-    let hasInsets = ["left", "top", "right", "bottom"].contains { node.double($0) != nil }
-    let left = node.double("left") ?? (animated && !hasInsets ? 0 : nil)
-    let top = node.double("top") ?? (animated && !hasInsets ? 0 : nil)
-    let right = node.double("right")
-    let bottom = node.double("bottom")
+    let semantics = RufletPositionAnimationSemantics(node)
+    let position = semantics.position
 
     if #available(iOS 16.0, macOS 13.0, *) {
       RufletPositionedLayout(
-        left: left.map { CGFloat($0) }, top: top.map { CGFloat($0) },
-        right: right.map { CGFloat($0) }, bottom: bottom.map { CGFloat($0) },
+        left: position.left.map { CGFloat($0) }, top: position.top.map { CGFloat($0) },
+        right: position.right.map { CGFloat($0) },
+        bottom: position.bottom.map { CGFloat($0) },
         alignment: alignment
       ) {
         ControlView(id: node.id, axis: .none)
       }
-      .animation(ControlProps.animation(node.props["animate_position"]), value: node)
+      .animation(semantics.animation, value: position)
+      .modifier(RufletPositionAnimationEndReporter(node: node, semantics: semantics))
     } else {
       // Layout protocol is unavailable on iOS 15. Preserve the previous
       // placement fallback there; all supported macOS versions and modern
@@ -725,11 +723,72 @@ private struct PositionedChild: View {
           alignment: .center
         )
         .offset(
-          x: left.map { CGFloat($0) } ?? -(right.map { CGFloat($0) } ?? 0),
-          y: top.map { CGFloat($0) } ?? -(bottom.map { CGFloat($0) } ?? 0)
+          x: position.left.map { CGFloat($0) }
+            ?? -(position.right.map { CGFloat($0) } ?? 0),
+          y: position.top.map { CGFloat($0) }
+            ?? -(position.bottom.map { CGFloat($0) } ?? 0)
         )
-        .animation(ControlProps.animation(node.props["animate_position"]), value: node)
+        .animation(semantics.animation, value: position)
+        .modifier(RufletPositionAnimationEndReporter(node: node, semantics: semantics))
     }
+  }
+}
+
+/// The exact value AnimatedPositioned observes. Keying SwiftUI's implicit
+/// animation to the whole ControlNode also animated unrelated child patches
+/// and made it impossible to report Flutter's position-specific completion.
+struct RufletPositionState: Equatable {
+  let left: Double?
+  let top: Double?
+  let right: Double?
+  let bottom: Double?
+}
+
+struct RufletPositionAnimationSemantics {
+  static let eventData = "position"
+
+  let position: RufletPositionState
+  let animation: Animation?
+  let duration: Double?
+
+  init(_ node: ControlNode) {
+    let animated = node.props["animate_position"] != nil
+    let supplied = RufletPositionState(
+      left: node.double("left"), top: node.double("top"),
+      right: node.double("right"), bottom: node.double("bottom"))
+    let hasInset = supplied.left != nil || supplied.top != nil
+      || supplied.right != nil || supplied.bottom != nil
+    position = animated && !hasInset
+      ? RufletPositionState(left: 0, top: 0, right: nil, bottom: nil)
+      : supplied
+    animation = ControlProps.animation(node.props["animate_position"])
+    duration = ControlProps.animationDurationSeconds(node.props["animate_position"])
+  }
+
+  static func reportCompletion(_ node: ControlNode, to events: RufletEventSink) {
+    events.fire(node, "animation_end", data: .string(eventData))
+  }
+}
+
+private struct RufletPositionAnimationEndReporter: ViewModifier {
+  let node: ControlNode
+  let semantics: RufletPositionAnimationSemantics
+  @Environment(\.rufletEvents) private var events
+  @State private var pendingToken = UUID()
+
+  func body(content: Content) -> some View {
+    guard node.handlesEvent("animation_end"), let duration = semantics.duration else {
+      return AnyView(content)
+    }
+    return AnyView(
+      content.onChange(of: semantics.position) { _ in
+        let token = UUID()
+        pendingToken = token
+        DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
+          guard pendingToken == token else { return }
+          RufletPositionAnimationSemantics.reportCompletion(node, to: events)
+        }
+      })
   }
 }
 
