@@ -782,9 +782,12 @@ struct ChipControlView: View {
       .modifier(ChipNativeShadow(
         node: node, selected: selected,
         enabled: interactive && node.bool("disabled") != true))
-      .animation(ChipPresentation.animation(node, phase: .select), value: selected)
       .animation(
-        ChipPresentation.animation(node, phase: .enable),
+        ChipPresentation.animation(node, phase: .select, forward: selected),
+        value: selected)
+      .animation(
+        ChipPresentation.animation(
+          node, phase: .enable, forward: node.bool("disabled") != true),
         value: node.bool("disabled") == true)
       .allowsHitTesting(interactive && node.bool("disabled") != true)
       .accessibilityAddTraits(interactive ? .isButton : [])
@@ -798,8 +801,7 @@ struct ChipControlView: View {
         .buttonStyle(.borderless)
         .help(ChipPresentation.deleteTooltip(node) ?? "")
         .modifier(ChipSlotConstraints(value: node.props["delete_icon_size_constraints"]))
-        .transition(.opacity.animation(
-          ChipPresentation.animation(node, phase: .deleteDrawer) ?? .default))
+        .transition(ChipPresentation.transition(node, phase: .deleteDrawer))
       }
     }
     .controlSize(.small)
@@ -818,8 +820,7 @@ struct ChipControlView: View {
       } else if let leadingID = node.controlID(forKey: "leading") {
         ControlView(id: leadingID, axis: .none)
           .modifier(ChipSlotConstraints(value: node.props["leading_size_constraints"]))
-          .transition(.opacity.animation(
-            ChipPresentation.animation(node, phase: .leadingDrawer) ?? .default))
+          .transition(ChipPresentation.transition(node, phase: .leadingDrawer))
       }
       label
         .padding(ChipPresentation.labelPadding(node))
@@ -1001,7 +1002,19 @@ enum ChipPresentation {
       colorToken: shadowColorToken(node, selected: selected))
   }
 
-  static func animation(_ node: ControlNode, phase: ChipAnimationPhase) -> Animation? {
+  static func animation(
+    _ node: ControlNode, phase: ChipAnimationPhase, forward: Bool = true
+  ) -> Animation? {
+    guard let timing = animationTiming(node, phase: phase, forward: forward),
+      let duration = timing.durationMilliseconds
+    else { return .default }
+    return RufletCurve.animation(
+      timing.curveToken, duration: max(duration, 0) / 1_000)
+  }
+
+  static func animationTiming(
+    _ node: ControlNode, phase: ChipAnimationPhase, forward: Bool
+  ) -> ChipAnimationTiming? {
     let property: String
     switch phase {
     case .enable: property = "enable_animation_style"
@@ -1009,12 +1022,36 @@ enum ChipPresentation {
     case .leadingDrawer: property = "leading_drawer_animation_style"
     case .deleteDrawer: property = "delete_drawer_animation_style"
     }
-    return rufletAnimation(node.props[property] ?? node.internals[property])
+    guard let map = (node.props[property] ?? node.internals[property])?.mapValue else {
+      return nil
+    }
+    return ChipAnimationTiming(
+      durationMilliseconds: forward
+        ? map["duration"]?.doubleValue
+        : map["reverse_duration"]?.doubleValue ?? map["duration"]?.doubleValue,
+      curveToken: forward
+        ? map["curve"]?.stringValue
+        : map["reverse_curve"]?.stringValue ?? map["curve"]?.stringValue)
+  }
+
+  static func transition(
+    _ node: ControlNode, phase: ChipAnimationPhase
+  ) -> AnyTransition {
+    .asymmetric(
+      insertion: .opacity.animation(
+        animation(node, phase: phase, forward: true) ?? .default),
+      removal: .opacity.animation(
+        animation(node, phase: phase, forward: false) ?? .default))
   }
 }
 
 enum ChipAnimationPhase: CaseIterable {
   case enable, select, leadingDrawer, deleteDrawer
+}
+
+struct ChipAnimationTiming: Equatable {
+  let durationMilliseconds: Double?
+  let curveToken: String?
 }
 
 struct ChipShadowPresentation: Equatable {
