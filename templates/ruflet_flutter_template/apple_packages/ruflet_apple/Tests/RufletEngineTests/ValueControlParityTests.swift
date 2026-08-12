@@ -182,6 +182,15 @@ final class ValueControlParityTests: XCTestCase {
     XCTAssertFalse(RufletSliderInteraction.slideThumb.acceptsTrackGestures)
     XCTAssertTrue(RufletSliderInteraction.tapAndSlide.acceptsTrackGestures)
     XCTAssertFalse(RufletSliderInteraction.tapOnly.acceptsSlide)
+    XCTAssertTrue(RufletSliderInteraction.tapOnly.jumpsOnContact)
+    XCTAssertFalse(RufletSliderInteraction.slideOnly.jumpsOnContact)
+  }
+
+  func testSlideOnlyUsesDragDeltaInsteadOfJumpingToPointer() {
+    let scale = RufletSliderScale(
+      minimum: 0, maximum: 100, divisions: nil, width: 120, thumbWidth: 20)
+    XCTAssertEqual(scale.value(startingAt: 25, translation: 10), 35, accuracy: 0.0001)
+    XCTAssertEqual(scale.value(startingAt: 25, translation: -50), 0, accuracy: 0.0001)
   }
 
   func testRangeSliderBuildsOneFletTemplateLabelPerThumb() {
@@ -191,7 +200,7 @@ final class ValueControlParityTests: XCTestCase {
       ["Value: 1.2", "Value: 8.8"])
     XCTAssertEqual(
       RufletRangeSliderLabels.resolve(template: "", start: 1, end: 2, digits: 0),
-      [nil, nil])
+      ["", ""])
   }
 
   // MARK: - Checkbox
@@ -222,15 +231,83 @@ final class ValueControlParityTests: XCTestCase {
 
   // MARK: - Contract
 
+  func testFletValueUpdatePrecedesScalarChangeEvent() {
+    var operations: [String] = []
+    let control = node("Switch", ["on_change": .bool(true)])
+    let sink = RufletEventSink(
+      send: { _, name, data in operations.append("event:\(name):\(data)") },
+      setLocal: { _, key, value in operations.append("local:\(key):\(value)") },
+      update: { _, props in operations.append("update:\(props["value"]!)") })
+
+    RufletValueControlEvents.commit(
+      control, value: .bool(true), payload: .value, to: sink)
+
+    XCTAssertEqual(operations, ["local:value:true", "update:true", "event:change:true"])
+  }
+
+  func testCupertinoChangeUpdatesValueButCarriesNoEventData() {
+    var sent: RufletValue?
+    var updated = false
+    let control = node("CupertinoSwitch", ["on_change": .bool(true)])
+    let sink = RufletEventSink(
+      send: { _, _, data in sent = data },
+      update: { _, _ in updated = true })
+
+    RufletValueControlEvents.commit(
+      control, value: .bool(true), payload: .none, to: sink)
+
+    XCTAssertTrue(updated)
+    XCTAssertEqual(sent, .null)
+  }
+
+  func testRangeChangeUpdatesBothPropertiesAndCarriesNoEventData() {
+    var updated: [String: RufletValue] = [:]
+    var sent: RufletValue?
+    let control = node("RangeSlider", ["on_change": .bool(true)])
+    let sink = RufletEventSink(
+      send: { _, _, data in sent = data },
+      update: { _, props in updated = props })
+
+    RufletValueControlEvents.commitRange(control, start: 2, end: 8, to: sink)
+
+    XCTAssertEqual(updated, ["start_value": .double(2), "end_value": .double(8)])
+    XCTAssertEqual(sent, .null)
+  }
+
+  func testNearestRadioGroupWinsAndNestedControlSlotsAreTraversed() {
+    let outer = ControlNode(
+      id: 10, type: "RadioGroup", props: ["content": .controlRef(11)])
+    let column = ControlNode(id: 11, type: "Column", props: ["children": .array([.controlRef(12)])])
+    let inner = ControlNode(
+      id: 12, type: "RadioGroup", props: ["content": .controlRef(13)])
+    let radio = ControlNode(id: 13, type: "Radio", props: ["value": .string("a")])
+    let nodes = [10: outer, 11: column, 12: inner, 13: radio]
+
+    XCTAssertEqual(
+      RufletRadioGroupResolver.nearestGroup(containing: 13, in: nodes)?.id,
+      12)
+    XCTAssertNil(RufletRadioGroupResolver.nearestGroup(containing: 999, in: nodes))
+  }
+
   /// Flet gives each of these a FocusNode and reports focus/blur from it, so
   /// the descriptor has to advertise the pair — `FocusReporter` only mounts
   /// for controls that declare it.
   func testSelectionControlsAdvertiseTheFocusPairFletReports() {
-    for type in ["Switch", "Checkbox", "Radio"] {
+    for type in ["Switch", "Checkbox"] {
       XCTAssertEqual(
         ControlRegistry.descriptor(for: type)?.supportedEvents,
         ["blur", "change", "focus"], type)
     }
+    XCTAssertEqual(ControlRegistry.descriptor(for: "Radio")?.supportedEvents, ["blur", "focus"])
+    XCTAssertEqual(
+      ControlRegistry.descriptor(for: "CupertinoCheckbox")?.supportedEvents,
+      ["blur", "change", "focus"])
+    XCTAssertEqual(
+      ControlRegistry.descriptor(for: "CupertinoRadio")?.supportedEvents,
+      ["blur", "focus"])
+    XCTAssertEqual(
+      ControlRegistry.descriptor(for: "CupertinoSwitch")?.supportedEvents,
+      ["blur", "change", "focus", "image_error"])
     XCTAssertEqual(
       ControlRegistry.descriptor(for: "Slider")?.supportedEvents,
       ["blur", "change", "change_end", "change_start", "focus"])

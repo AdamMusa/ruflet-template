@@ -2,6 +2,46 @@ import RufletEngine
 import RufletProtocol
 import SwiftUI
 
+/// Flet's value controls do two distinct wire operations for every user edit:
+/// first `updateProperties(..., notify: true)`, then `triggerEvent(...)`.
+/// Keeping that contract explicit matters for unlistened controls (Ruby must
+/// still receive the new property) and for controls whose event deliberately
+/// carries no data, such as RangeSlider and adaptive CupertinoSlider.
+enum RufletValueControlEvents {
+  enum Payload {
+    case value
+    case none
+  }
+
+  static func commit(
+    _ node: ControlNode,
+    key: String = "value",
+    value: RufletValue,
+    payload: Payload,
+    event: String = "change",
+    to sink: RufletEventSink
+  ) {
+    sink.setLocal(node.id, key, value)
+    sink.update(node.id, [key: value])
+    sink.fire(node, event, data: payload == .value ? value : .null)
+  }
+
+  static func commitRange(
+    _ node: ControlNode,
+    start: Double,
+    end: Double,
+    to sink: RufletEventSink
+  ) {
+    let properties: [String: RufletValue] = [
+      "start_value": .double(start),
+      "end_value": .double(end),
+    ]
+    for (key, value) in properties { sink.setLocal(node.id, key, value) }
+    sink.update(node.id, properties)
+    sink.fire(node, "change")
+  }
+}
+
 /// `Switch` — Material's switch, drawn.
 ///
 /// A platform `Toggle` cannot take Flet's thumb, track, outline and thumb-icon
@@ -63,15 +103,18 @@ struct SwitchControlView: View {
       ControlView(id: labelID, axis: .none)
     } else if let value = node.string("label") {
       Text(value)
-        .rufletTextStyle(RufletTextStyle(node: node, styleKey: "label_text_style"))
+        .rufletTextStyle(RufletTextStyle(map: node.map("label_text_style") ?? [:]))
         // Flutter recolours a disabled label with the theme's disabled colour
         // rather than leaving the style's own colour in place.
-        .foregroundColor(node.bool("disabled") == true ? Color.secondary : nil)
+        .foregroundColor(
+          node.bool("disabled") == true && node.map("label_text_style") != nil
+            ? Color.secondary : nil)
     }
   }
 
   private func toggle() {
-    events.commit(node, value: .bool(!isOn))
+    RufletValueControlEvents.commit(
+      node, value: .bool(!isOn), payload: .value, to: events)
   }
 }
 
@@ -199,8 +242,10 @@ struct CheckboxControlView: View {
       ControlView(id: labelID, axis: .none)
     } else if let value = node.string("label") {
       Text(value)
-        .rufletTextStyle(RufletTextStyle(node: node, styleKey: "label_style"))
-        .foregroundColor(node.bool("disabled") == true ? Color.secondary : nil)
+        .rufletTextStyle(RufletTextStyle(map: node.map("label_style") ?? [:]))
+        .foregroundColor(
+          node.bool("disabled") == true && node.map("label_style") != nil
+            ? Color.secondary : nil)
     }
   }
 
@@ -258,7 +303,12 @@ struct CheckboxControlView: View {
   }
 
   private func advance() {
-    events.commit(node, value: RufletCheckboxState.next(after: state, tristate: node.bool("tristate") == true))
+    RufletValueControlEvents.commit(
+      node,
+      value: RufletCheckboxState.next(
+        after: state, tristate: node.bool("tristate") == true),
+      payload: .value,
+      to: events)
   }
 }
 
@@ -329,17 +379,26 @@ struct RadioControlView: View {
   @Environment(\.rufletEvents) private var events
   @Environment(\.rufletListTileClicks) private var listTileClicks
 
+  @ViewBuilder
   var body: some View {
+    if group == nil {
+      Text("Radio must be enclosed within RadioGroup")
+        .foregroundColor(.red)
+    } else {
+      radio
+    }
+  }
+
+  private var radio: some View {
     let disabled = node.bool("disabled") ?? false
 
-    HStack(spacing: 0) {
+    return HStack(spacing: 0) {
       if labelPosition == .left { label }
       radioMark
+        .contentShape(Rectangle())
+        .onTapGesture { if !disabled { select(toggleIfSelected: true) } }
       if labelPosition == .right { label }
     }
-    .contentShape(Rectangle())
-    .onTapGesture { if !disabled { select() } }
-    .modifier(SelectionScaling(node: node, natural: RufletThemeDefaults.radioTargetSize))
     .modifier(ListTileToggleListener(notifier: listTileClicks, action: selectFromListTile))
     .modifier(FocusReporter(node: node, events: events))
     .disabled(disabled)
@@ -353,12 +412,16 @@ struct RadioControlView: View {
 
   @ViewBuilder
   private var label: some View {
-    if let labelID = node.controlID(forKey: "label") {
-      ControlView(id: labelID, axis: .none)
-    } else if let value = node.string("label") {
+    if let value = node.string("label"), !value.isEmpty {
       Text(value)
-        .rufletTextStyle(RufletTextStyle(node: node, styleKey: "label_style"))
-        .foregroundColor(node.bool("disabled") == true ? Color.secondary : nil)
+        .rufletTextStyle(RufletTextStyle(map: node.map("label_style") ?? [:]))
+        .foregroundColor(
+          node.bool("disabled") == true && node.map("label_style") != nil
+            ? Color.secondary : nil)
+        .contentShape(Rectangle())
+        .onTapGesture {
+          if node.bool("disabled") != true { select(toggleIfSelected: false) }
+        }
     }
   }
 
@@ -388,24 +451,7 @@ struct RadioControlView: View {
   }
 
   private var group: ControlNode? {
-    // Radios sit inside their group's subtree, so the nearest ancestor that is
-    // a RadioGroup owns the selection.
-    store.nodes.values.first { candidate in
-      candidate.type == "RadioGroup" && contains(group: candidate, radio: node.id)
-    }
-  }
-
-  private func contains(group: ControlNode, radio: Int) -> Bool {
-    var frontier = group.childIDs + group.controlIDs(forKey: "content")
-    var seen: Set<Int> = []
-    while let id = frontier.popLast() {
-      guard seen.insert(id).inserted else { continue }
-      if id == radio { return true }
-      guard let child = store.node(id) else { continue }
-      frontier.append(contentsOf: child.childIDs)
-      frontier.append(contentsOf: child.controlIDs(forKey: "content"))
-    }
-    return false
+    RufletRadioGroupResolver.nearestGroup(containing: node.id, in: store.nodes)
   }
 
   private var isSelected: Bool {
@@ -413,36 +459,92 @@ struct RadioControlView: View {
     return group?.string("value") == value
   }
 
-  private func select() {
-    guard let value = node.string("value") else { return }
-    if let group {
-      if isSelected && node.bool("toggleable") == true {
-        events.commit(group, value: .string(""))
-      } else {
-        events.commit(group, value: .string(value))
-      }
-    } else {
-      events.commit(node, key: "selected", value: .bool(true), event: "change")
-    }
+  private func select(toggleIfSelected: Bool) {
+    guard let group, group.bool("disabled") != true else { return }
+    let value = node.string("value") ?? ""
+    let next: RufletValue = toggleIfSelected && isSelected && node.bool("toggleable") == true
+      ? .null
+      : .string(value)
+    RufletValueControlEvents.commit(group, value: next, payload: .value, to: events)
   }
 
   /// Flet's Radio is the one inherited selection control that explicitly
   /// ignores a ListTile click while the radio itself is disabled.
   private func selectFromListTile() {
     guard node.bool("disabled") != true else { return }
-    select()
+    select(toggleIfSelected: false)
+  }
+}
+
+/// Resolves the inherited `RadioGroup` context. A dictionary's iteration
+/// order cannot stand in for ancestry: nested groups must win exactly as
+/// Flutter's `RadioGroup.maybeOf(context)` selects the nearest provider.
+enum RufletRadioGroupResolver {
+  static func nearestGroup(
+    containing radioID: Int,
+    in nodes: [Int: ControlNode]
+  ) -> ControlNode? {
+    nodes.values
+      .filter { $0.type == "RadioGroup" }
+      .compactMap { group -> (ControlNode, Int)? in
+        distance(from: group.id, to: radioID, in: nodes).map { (group, $0) }
+      }
+      .min {
+        $0.1 == $1.1 ? $0.0.id < $1.0.id : $0.1 < $1.1
+      }?.0
+  }
+
+  private static func distance(
+    from rootID: Int,
+    to targetID: Int,
+    in nodes: [Int: ControlNode]
+  ) -> Int? {
+    var queue: [(Int, Int)] = directControlIDs(of: nodes[rootID]).map { ($0, 1) }
+    var cursor = 0
+    var seen: Set<Int> = [rootID]
+    while cursor < queue.count {
+      let (id, depth) = queue[cursor]
+      cursor += 1
+      guard seen.insert(id).inserted else { continue }
+      if id == targetID { return depth }
+      queue.append(contentsOf: directControlIDs(of: nodes[id]).map { ($0, depth + 1) })
+    }
+    return nil
+  }
+
+  private static func directControlIDs(of node: ControlNode?) -> [Int] {
+    guard let node else { return [] }
+    var result = node.childIDs
+    for value in node.props.values { collectControlIDs(value, into: &result) }
+    return Array(Set(result))
+  }
+
+  private static func collectControlIDs(_ value: RufletValue, into result: inout [Int]) {
+    switch value {
+    case .controlRef(let id): result.append(id)
+    case .array(let values):
+      for value in values { collectControlIDs(value, into: &result) }
+    case .map(let values):
+      if let id = value.controlID { result.append(id) }
+      for value in values.values { collectControlIDs(value, into: &result) }
+    default: break
+    }
   }
 }
 
 /// `RadioGroup` — holds the selected value; the radios inside it render.
 struct RadioGroupControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
 
   var body: some View {
-    if let contentID = node.controlID(forKey: "content") {
+    if let contentID = node.controlID(forKey: "content"),
+      store.node(contentID)?.bool("visible") != false
+    {
       ControlView(id: contentID, axis: .vertical)
     } else {
-      ControlList(ids: node.childIDs, axis: .vertical)
+      Text("RadioGroup.content must be provided and visible")
+        .foregroundColor(.red)
     }
   }
 }
@@ -492,6 +594,15 @@ struct RufletSliderScale {
     let step = span / Double(divisions)
     return min(max(minimum + ((raw - minimum) / step).rounded() * step, minimum), maximum)
   }
+
+  /// The slide-only modes preserve the thumb's pointer-down value and apply
+  /// the drag delta instead of jumping the thumb to the pointer.
+  func value(startingAt value: Double, translation: CGFloat) -> Double {
+    let raw = min(max(value + Double(translation / travel) * span, minimum), maximum)
+    guard let divisions else { return raw }
+    let step = span / Double(divisions)
+    return min(max(minimum + ((raw - minimum) / step).rounded() * step, minimum), maximum)
+  }
 }
 
 /// How much of the track responds to a tap or drag.
@@ -515,6 +626,7 @@ enum RufletSliderInteraction: String {
   /// Whether a gesture starting away from the thumb may move it.
   var acceptsTrackGestures: Bool { self != .slideThumb }
   var acceptsSlide: Bool { self != .tapOnly }
+  var jumpsOnContact: Bool { self == .tapAndSlide || self == .tapOnly }
 }
 
 /// `Slider` — a continuous or stepped value.
@@ -541,11 +653,19 @@ struct SliderControlView: View {
       interaction: RufletSliderInteraction(wire: node.string("interaction")),
       bubbles: [dragging ? bubbleText(for: value) : nil],
       scale: scale(width:),
-      onEdit: { editing in
+      shapeYear2023: node.bool("year_2023"),
+      thumbColorProperty: node.props["thumb_color"],
+      onEdit: { editing, values in
         dragging = editing
-        events.fire(node, editing ? "change_start" : "change_end", data: .double(clampedValue))
+        events.fire(
+          node, editing ? "change_start" : "change_end",
+          data: .double(values.first ?? value))
       },
-      onMove: { _, proposed in events.commit(node, value: .double(proposed)) })
+      onMove: { _, proposed in
+        RufletValueControlEvents.commit(
+          node, value: .double(proposed), payload: .value, to: events)
+        return proposed
+      })
       .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets())
       .modifier(FocusReporter(node: node, events: events))
       .disabled(node.bool("disabled") ?? false)
@@ -591,10 +711,12 @@ struct RangeSliderControlView: View {
       thumbs: [start, end],
       secondary: nil,
       activeRange: start...end,
-      interaction: RufletSliderInteraction(wire: node.string("interaction")),
+      interaction: .tapAndSlide,
       bubbles: dragging ? bubbleTexts(start: start, end: end) : [nil, nil],
       scale: scale(width:),
-      onEdit: { editing in
+      shapeYear2023: nil,
+      thumbColorProperty: nil,
+      onEdit: { editing, _ in
         dragging = editing
         events.fire(node, editing ? "change_start" : "change_end")
       },
@@ -602,12 +724,15 @@ struct RangeSliderControlView: View {
         // Each thumb clamps against the other, so the pair stays ordered even
         // when one is dragged past its neighbour.
         if index == 0 {
-          commit(start: min(proposed, end), end: end)
+          let actual = min(proposed, end)
+          commit(start: actual, end: end)
+          return actual
         } else {
-          commit(start: start, end: max(proposed, start))
+          let actual = max(proposed, start)
+          commit(start: start, end: actual)
+          return actual
         }
       })
-      .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets())
       .disabled(node.bool("disabled") ?? false)
   }
 
@@ -617,7 +742,7 @@ struct RangeSliderControlView: View {
   private func scale(width: CGFloat) -> RufletSliderScale {
     RufletSliderScale(
       minimum: minimum, maximum: maximum, divisions: node.int("divisions"), width: width,
-      thumbWidth: RufletThemeDefaults.sliderMetrics(year2023: node.bool("year_2023")).thumbWidth)
+      thumbWidth: RufletThemeDefaults.sliderMetrics(year2023: nil).thumbWidth)
   }
 
   private func bubbleTexts(start: Double, end: Double) -> [String?] {
@@ -629,18 +754,12 @@ struct RangeSliderControlView: View {
   /// `Page#apply_event_value_to_control` looks for a `start_value`/`end_value`
   /// pair in the event data and writes both back, so send them together.
   private func commit(start: Double, end: Double) {
-    events.setLocal(node.id, "start_value", .double(start))
-    events.setLocal(node.id, "end_value", .double(end))
-    guard node.handlesEvent("change") else { return }
-    events.send(
-      node.id, "change",
-      .map(["start_value": .double(start), "end_value": .double(end)]))
+    RufletValueControlEvents.commitRange(node, start: start, end: end, to: events)
   }
 }
 
 enum RufletRangeSliderLabels {
   static func resolve(template: String, start: Double, end: Double, digits: Int) -> [String?] {
-    guard !template.isEmpty else { return [nil, nil] }
     let format = "%.\(max(digits, 0))f"
     return [start, end].map { value in
       template.replacingOccurrences(
@@ -665,14 +784,18 @@ private struct MaterialSliderTrack: View {
   /// both the start thumb's label and the template semantics.
   let bubbles: [String?]
   let scale: (CGFloat) -> RufletSliderScale
-  let onEdit: (Bool) -> Void
-  let onMove: (Int, Double) -> Void
+  let shapeYear2023: Bool?
+  let thumbColorProperty: RufletValue?
+  let onEdit: (Bool, [Double]) -> Void
+  let onMove: (Int, Double) -> Double
 
   @State private var held: Int?
+  @State private var gestureStartThumbs: [Double] = []
+  @State private var latestThumbs: [Double] = []
 
   /// The 2023 or 2024 slider shape, chosen by `year_2023`.
   private var shape: RufletThemeDefaults.SliderMetrics {
-    RufletThemeDefaults.sliderMetrics(year2023: node.bool("year_2023"))
+    RufletThemeDefaults.sliderMetrics(year2023: shapeYear2023)
   }
 
   var body: some View {
@@ -703,21 +826,31 @@ private struct MaterialSliderTrack: View {
   private func gesture(in scale: RufletSliderScale) -> some Gesture {
     DragGesture(minimumDistance: 0)
       .onChanged { drag in
-        let proposed = scale.value(at: drag.location.x)
         if held == nil {
           // Which thumb a gesture owns is decided once, where it went down,
           // and the same thumb keeps it for the whole drag.
           guard let claimed = claim(at: drag.startLocation.x, in: scale) else { return }
           held = claimed
-          onEdit(true)
+          gestureStartThumbs = thumbs
+          latestThumbs = thumbs
+          onEdit(true, thumbs)
         }
         guard interaction.acceptsSlide || drag.translation == .zero else { return }
-        onMove(held ?? 0, proposed)
+        let index = held ?? 0
+        let proposed = interaction.jumpsOnContact
+          ? scale.value(at: drag.location.x)
+          : scale.value(
+            startingAt: gestureStartThumbs.indices.contains(index)
+              ? gestureStartThumbs[index]
+              : thumbs[index],
+            translation: drag.translation.width)
+        let actual = onMove(index, proposed)
+        if latestThumbs.indices.contains(index) { latestThumbs[index] = actual }
       }
       .onEnded { _ in
         guard held != nil else { return }
         held = nil
-        onEdit(false)
+        onEdit(false, latestThumbs.isEmpty ? thumbs : latestThumbs)
       }
   }
 
@@ -777,8 +910,7 @@ private struct MaterialSliderTrack: View {
   }
 
   private var thumbColor: Color {
-    MaterialPalette.color(stateful: node.props["thumb_color"], in: states)
-      ?? MaterialPalette.color(for: node, property: "thumb_color", default: activeColor)
+    MaterialPalette.color(stateful: thumbColorProperty, in: states) ?? activeColor
   }
 }
 

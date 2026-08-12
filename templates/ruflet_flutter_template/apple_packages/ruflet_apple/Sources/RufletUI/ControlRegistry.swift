@@ -291,9 +291,13 @@ public enum ControlRegistry {
         events: ["change"])
     // Flet gives each of these a FocusNode and reports focus/blur from it, so
     // the native marks must advertise the pair or FocusReporter never mounts.
-    add(["Switch", "Checkbox", "Radio"], .visible,
+    add(["Switch", "Checkbox"], .visible,
         "Drawn Material selection control", .nativeView,
         events: ["blur", "change", "focus"])
+    // Radio delegates value changes to RadioGroup; the radio itself owns only
+    // its FocusNode events in Flet 0.80.5.
+    add(["Radio"], .visible, "Drawn Material radio control", .nativeView,
+        events: ["blur", "focus"])
     add(["RadioGroup"], .visible, "RadioGroupControlView", .nativeView, events: ["change"])
     add(["Slider"], .visible, "SliderControlView", .nativeView,
         events: ["blur", "change", "change_end", "change_start", "focus"])
@@ -430,12 +434,15 @@ public enum ControlRegistry {
     // Cupertino-native controls.
     add(["CupertinoButton", "CupertinoFilledButton", "CupertinoTintedButton"], .visible,
         "CupertinoButtonControlView", .nativeView, events: buttonEvents, methods: ["focus"])
-    add(["CupertinoCheckbox", "CupertinoRadio", "CupertinoSegmentedButton",
-         "CupertinoSlidingSegmentedButton", "CupertinoPicker",
+    add(["CupertinoSegmentedButton", "CupertinoSlidingSegmentedButton", "CupertinoPicker",
          "CupertinoDatePicker", "CupertinoTimerPicker"], .visible,
         "Cupertino native value control", .nativeView, events: ["change"])
+    add(["CupertinoCheckbox"], .visible, "CupertinoSelectionControlView", .nativeView,
+        events: ["blur", "change", "focus"])
+    add(["CupertinoRadio"], .visible, "CupertinoSelectionControlView", .nativeView,
+        events: ["blur", "focus"])
     add(["CupertinoSwitch"], .visible, "CupertinoSwitchControlView", .nativeView,
-        events: ["change", "image_error"])
+        events: ["blur", "change", "focus", "image_error"])
     add(["CupertinoSlider"], .visible, "CupertinoSliderControlView", .nativeView,
         events: ["change", "change_end", "change_start"])
     add(["CupertinoActivityIndicator"], .visible, "CupertinoActivityIndicatorControlView",
