@@ -204,12 +204,14 @@ enum CollectionVisibleChildren {
   static func ids(
     _ ids: [Int], in nodes: [Int: ControlNode], reverse: Bool = false
   ) -> [Int] {
-    let visible = ids.filter { nodes[$0]?.bool("visible") != false }
+    let visible = ids.filter { id in
+      nodes[id].map { $0.bool("visible") != false } == true
+    }
     return reverse ? Array(visible.reversed()) : visible
   }
 
   static func visibleID(_ id: Int?, in nodes: [Int: ControlNode]) -> Int? {
-    guard let id, nodes[id]?.bool("visible") != false else { return nil }
+    guard let id, nodes[id].map({ $0.bool("visible") != false }) == true else { return nil }
     return id
   }
 }
@@ -2787,7 +2789,9 @@ enum DataTablePresentation {
   static func visibleStructuralIDs(
     _ ids: [Int], in nodes: [Int: ControlNode]
   ) -> [Int] {
-    ids.filter { nodes[$0]?.bool("visible") != false }
+    ids.filter { id in
+      nodes[id].map { $0.bool("visible") != false } == true
+    }
   }
 
   /// Resolves the same values passed to Flutter's `DataTable` constructor.

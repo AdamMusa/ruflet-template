@@ -7,7 +7,7 @@ final class DataTableVisibilityResidualTests: XCTestCase {
     let nodes = structuralNodes()
 
     XCTAssertEqual(
-      DataTablePresentation.visibleStructuralIDs([2, 3, 4], in: nodes),
+      DataTablePresentation.visibleStructuralIDs([2, 3, 4, 99], in: nodes),
       [2, 4])
   }
 

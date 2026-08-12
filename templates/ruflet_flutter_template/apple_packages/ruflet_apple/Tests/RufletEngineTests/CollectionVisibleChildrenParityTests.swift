@@ -11,9 +11,9 @@ final class CollectionVisibleChildrenParityTests: XCTestCase {
       3: ControlNode(id: 3, type: "Text"),
     ]
 
-    XCTAssertEqual(CollectionVisibleChildren.ids([1, 2, 3], in: nodes), [1, 3])
+    XCTAssertEqual(CollectionVisibleChildren.ids([1, 2, 3, 99], in: nodes), [1, 3])
     XCTAssertEqual(
-      CollectionVisibleChildren.ids([1, 2, 3], in: nodes, reverse: true), [3, 1])
+      CollectionVisibleChildren.ids([1, 2, 3, 99], in: nodes, reverse: true), [3, 1])
   }
 
   func testInvisiblePrototypeIsAbsentLikeFletBuildWidget() {
@@ -24,6 +24,7 @@ final class CollectionVisibleChildrenParityTests: XCTestCase {
 
     XCTAssertNil(CollectionVisibleChildren.visibleID(8, in: nodes))
     XCTAssertEqual(CollectionVisibleChildren.visibleID(9, in: nodes), 9)
+    XCTAssertNil(CollectionVisibleChildren.visibleID(10, in: nodes))
     XCTAssertNil(CollectionVisibleChildren.visibleID(nil, in: nodes))
   }
 }
