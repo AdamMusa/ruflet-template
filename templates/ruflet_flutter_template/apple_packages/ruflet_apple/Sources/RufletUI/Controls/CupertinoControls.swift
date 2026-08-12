@@ -3057,9 +3057,21 @@ struct CupertinoNavigationBarControlView: View {
   private var topBorder: some View {
     if let border = presentation.topBorder {
       Rectangle()
-        .fill(MaterialPalette.color(border.colorToken, default: .black.opacity(0.3)))
+        .fill(border.usesNativeDynamicColor
+          ? nativeSeparatorColor
+          : MaterialPalette.color(border.colorToken, default: .black.opacity(0.3)))
         .frame(height: border.width == 0 ? 1 / max(displayScale, 1) : border.width)
     }
+  }
+
+  private var nativeSeparatorColor: Color {
+    #if canImport(UIKit)
+      Color(uiColor: .separator).opacity(0.3)
+    #elseif canImport(AppKit)
+      Color(nsColor: .separatorColor).opacity(0.3)
+    #else
+      Color.black.opacity(0.3)
+    #endif
   }
 
   private func itemColor(selected: Bool) -> Color {
@@ -3104,7 +3116,7 @@ struct RufletCupertinoNavigationBarPresentation {
     activeColorToken = node.string("active_color")
     indicatorColorToken = node.string("indicator_color")
     inactiveColorToken = node.string("inactive_color")
-    topBorder = RufletCupertinoNavigationBarBorder(node.props["border"])
+    topBorder = RufletCupertinoNavigationBarBorder(node.props["border"], omittedUsesDefault: true)
   }
 
   func validationError(destinationCount: Int) -> String? {
@@ -3122,12 +3134,22 @@ struct RufletCupertinoNavigationBarPresentation {
 struct RufletCupertinoNavigationBarBorder: Equatable {
   let colorToken: String?
   let width: CGFloat
+  let usesNativeDynamicColor: Bool
 
-  init?(_ value: RufletValue?) {
+  init?(_ value: RufletValue?, omittedUsesDefault: Bool = false) {
+    if value == nil, omittedUsesDefault {
+      // CupertinoTabBar's constructor supplies a zero-width top BorderSide
+      // using its dynamic separator colour when `border` is omitted.
+      colorToken = nil
+      width = 0
+      usesNativeDynamicColor = true
+      return
+    }
     guard let map = value?.mapValue, let top = map["top"]?.mapValue else { return nil }
     guard (top["style"]?.stringValue?.lowercased() ?? "solid") != "none" else { return nil }
     colorToken = top["color"]?.stringValue
     width = max(0, CGFloat(top["width"]?.doubleValue ?? 1))
+    usesNativeDynamicColor = false
   }
 }
 

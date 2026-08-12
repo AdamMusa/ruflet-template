@@ -19,7 +19,11 @@ final class CupertinoNavigationBarParityTests: XCTestCase {
     XCTAssertNil(presentation.activeColorToken)
     XCTAssertNil(presentation.indicatorColorToken)
     XCTAssertNil(presentation.inactiveColorToken)
-    XCTAssertNil(presentation.topBorder)
+    XCTAssertEqual(
+      presentation.topBorder,
+      RufletCupertinoNavigationBarBorder(nil, omittedUsesDefault: true))
+    XCTAssertEqual(presentation.topBorder?.width, 0)
+    XCTAssertTrue(presentation.topBorder?.usesNativeDynamicColor == true)
     XCTAssertEqual(RufletCupertinoNavigationBarDefaults.height, 50)
     XCTAssertEqual(RufletCupertinoNavigationBarDefaults.itemBottomPadding, 4)
   }
@@ -79,6 +83,7 @@ final class CupertinoNavigationBarParityTests: XCTestCase {
     ]))
     XCTAssertEqual(border?.colorToken, "red")
     XCTAssertEqual(border?.width, 0)
+    XCTAssertFalse(border?.usesNativeDynamicColor ?? true)
   }
 
   func testSelectionUpdatesLocalAndBackendBeforeChange() {
