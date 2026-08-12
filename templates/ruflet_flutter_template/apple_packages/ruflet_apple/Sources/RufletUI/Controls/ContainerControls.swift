@@ -1908,15 +1908,23 @@ struct PageletControlView: View {
   @Environment(\.rufletEvents) private var events
   @StateObject private var scaffoldHost = RufletScaffoldHostState()
 
+  @ViewBuilder
   var body: some View {
+    if let contentID = PageletPresentation(node: node).contentID {
+      pagelet(contentID: contentID)
+    } else {
+      Text(PageletPresentation.missingContentError)
+        .font(.caption).foregroundStyle(.red)
+    }
+  }
+
+  private func pagelet(contentID: Int) -> some View {
     VStack(spacing: 0) {
       if let appBarID = node.controlID(forKey: "appbar") {
         ControlView(id: appBarID, axis: .none)
       }
-      if let contentID = node.controlID(forKey: "content") {
-        ControlView(id: contentID, axis: .vertical)
-          .frame(maxWidth: .infinity, maxHeight: .infinity)
-      }
+      ControlView(id: contentID, axis: .vertical)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
       if let navigationID = node.controlID(forKey: "navigation_bar") {
         ControlView(id: navigationID, axis: .none)
       } else if let bottomBarID = node.controlID(forKey: "bottom_appbar") {
@@ -1943,6 +1951,15 @@ struct PageletControlView: View {
     .modifier(DrawerPresenter(node: node))
     // A Pagelet's persistent bottom sheet is distinct from its modal drawers.
     .overlay(alignment: .bottom) { drawer(forKey: "bottom_sheet") }
+    .rufletCommandHandler(node.id) { call, completion in
+      guard PageletPresentation.methods.contains(call.name) else {
+        completion(.failure(rufletUnsupported("Pagelet", call)))
+        return
+      }
+      RufletViewCommands.performDrawer(
+        call.name, view: node, store: store, events: events)
+      completion(.success(.null))
+    }
   }
 
   @ViewBuilder
@@ -1999,6 +2016,16 @@ struct PageletControlView: View {
     guard let id = node.controlID(forKey: key) else { return }
     events.setLocal(id, "_open", .bool(true))
   }
+}
+
+struct PageletPresentation {
+  static let missingContentError = "Pagelet.content must be provided and visible"
+  static let methods: Set<String> = [
+    "close_drawer", "close_end_drawer", "show_drawer", "show_end_drawer",
+  ]
+
+  let node: ControlNode
+  var contentID: Int? { node.controlID(forKey: "content") }
 }
 
 /// `AnimatedSwitcher` — cross-fades whenever its content changes.

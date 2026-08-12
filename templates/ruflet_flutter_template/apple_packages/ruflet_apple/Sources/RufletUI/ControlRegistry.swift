@@ -200,7 +200,8 @@ public enum ControlRegistry {
     add(["Divider", "VerticalDivider"], .visible, "DividerControlView", .nativeView)
     add(["Placeholder"], .visible, "PlaceholderControlView", .nativeView)
     add(["RotatedBox"], .visible, "RotatedBoxControlView", .nativeView)
-    add(["Pagelet"], .visible, "PageletControlView", .nativeView)
+    add(["Pagelet"], .visible, "PageletControlView", .nativeView,
+        methods: PageletPresentation.methods)
     add(["AnimatedSwitcher"], .visible, "AnimatedSwitcherControlView", .nativeView)
     add(["Hero"], .visible, "HeroControlView", .nativeView)
     add(["Semantics"], .visible, "SemanticsControlView", .nativeView,
