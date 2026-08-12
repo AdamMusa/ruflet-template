@@ -559,10 +559,22 @@ private struct ScaleGestures: ViewModifier {
 /// group semantics.
 struct DraggableControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
   @State private var dragging = false
 
   var body: some View {
+    let contentID = node.controlID(forKey: "content")
+    let validation = RufletDraggableSemantics.validationError(
+      contentID: contentID, content: contentID.flatMap(store.node))
+    if let validation {
+      Text(validation).font(.caption).foregroundStyle(.red)
+    } else {
+      draggable
+    }
+  }
+
+  private var draggable: some View {
     let source = Group {
       if dragging, let draggingID = node.controlID(forKey: "content_when_dragging") {
         ControlView(id: draggingID, axis: .none)
@@ -570,6 +582,7 @@ struct DraggableControlView: View {
         ControlView(id: contentID, axis: .none)
       }
     }
+    return Group {
     if (node.int("max_simultaneous_drags") ?? 1) == 0 {
       source
     } else {
@@ -594,6 +607,16 @@ struct DraggableControlView: View {
         }
       }
     }
+    }
+  }
+}
+
+enum RufletDraggableSemantics {
+  static let missingContentError = "Draggable.content must be visible"
+
+  static func validationError(contentID: Int?, content: ControlNode?) -> String? {
+    RufletRequiredContent.validationError(
+      contentID: contentID, content: content, message: missingContentError)
   }
 }
 

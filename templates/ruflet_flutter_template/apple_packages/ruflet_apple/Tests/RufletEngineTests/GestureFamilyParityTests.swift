@@ -105,6 +105,14 @@ final class GestureFamilyParityTests: XCTestCase {
       contentID: 5, content: ControlNode(id: 5, type: "Container")))
   }
 
+  func testDraggableRequiresVisibleContent() {
+    XCTAssertEqual(
+      RufletDraggableSemantics.validationError(contentID: 5, content: nil),
+      "Draggable.content must be visible")
+    XCTAssertNil(RufletDraggableSemantics.validationError(
+      contentID: 5, content: ControlNode(id: 5, type: "Container")))
+  }
+
   func testInteractiveViewerUsesFletScaleDetailKeys() throws {
     let update = try XCTUnwrap(
       RufletInteractionParity.scaleUpdate(
