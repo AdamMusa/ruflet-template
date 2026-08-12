@@ -27,6 +27,12 @@ enum FletAudioSource: Equatable {
     case unsupported
   }
 
+  /// Flet 0.80.5 resolves the source exclusively from `src`. The earlier
+  /// `src_base64` compatibility property is not part of this service contract.
+  static func configuredValue(_ node: ControlNode) -> RufletValue? {
+    node.props["src"]
+  }
+
   /// Mirrors Flet's `ResolvedAssetSource.from`: byte lists stay bytes, HTTP
   /// URLs and dotted asset paths stay URIs, and an otherwise-valid Base64
   /// string is decoded before falling back to an asset path.
@@ -277,11 +283,7 @@ public final class AudioService: RufletStreamingService {
 
       let source: FletAudioSource?
       do {
-        if let legacy = node.props["src_base64"], node.props["src"] == nil {
-          source = try FletAudioSource.resolve(legacy)
-        } else {
-          source = try FletAudioSource.resolve(node.props["src"])
-        }
+        source = try FletAudioSource.resolve(FletAudioSource.configuredValue(node))
       } catch {
         sourceError = "Audio src decode error: unsupported source type."
         return

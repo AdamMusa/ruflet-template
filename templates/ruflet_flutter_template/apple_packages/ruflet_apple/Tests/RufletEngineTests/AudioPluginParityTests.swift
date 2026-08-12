@@ -30,6 +30,20 @@ final class AudioPluginParityTests: XCTestCase {
     XCTAssertThrowsError(try FletAudioSource.resolve(.array([.string("7")])))
   }
 
+  func testPinnedSourceSelectionDoesNotReadLegacySrcBase64() {
+    let legacyOnly = ControlNode(
+      id: 1, type: "Audio", props: ["src_base64": .string("AQID")])
+    XCTAssertNil(FletAudioSource.configuredValue(legacyOnly))
+
+    let current = ControlNode(
+      id: 2, type: "Audio",
+      props: [
+        "src": .string("tone.mp3"),
+        "src_base64": .string("AQID"),
+      ])
+    XCTAssertEqual(FletAudioSource.configuredValue(current), .string("tone.mp3"))
+  }
+
   func testDurationArgumentsAndResultsPreserveFletWireSemantics() {
     XCTAssertEqual(FletAudioDuration.milliseconds(.int(250)), 250)
     XCTAssertEqual(FletAudioDuration.milliseconds(.double(4.5)), 0)
