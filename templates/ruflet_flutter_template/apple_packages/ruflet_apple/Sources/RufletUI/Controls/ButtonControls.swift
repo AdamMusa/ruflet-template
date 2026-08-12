@@ -779,8 +779,8 @@ struct ChipControlView: View {
       .modifier(OptionalTint(color: ChipPresentation.background(node)))
       .modifier(OptionalForeground(color: ChipPresentation.foreground(node)))
       .modifier(ChipNativeShadow(
-        color: ChipPresentation.shadowColor(node, selected: selected),
-        elevation: ChipPresentation.elevation(node)))
+        node: node, selected: selected,
+        enabled: interactive && node.bool("disabled") != true))
       .animation(ChipPresentation.animation(node, phase: .select), value: selected)
       .animation(
         ChipPresentation.animation(node, phase: .enable),
@@ -979,10 +979,25 @@ enum ChipPresentation {
   }
 
   static func shadowColor(_ node: ControlNode, selected: Bool) -> Color? {
-    MaterialPalette.color(
-      selected
-        ? (node.string("selected_shadow_color") ?? node.string("shadow_color"))
-        : node.string("shadow_color"))
+    MaterialPalette.color(shadowColorToken(node, selected: selected))
+  }
+
+  static func shadowColorToken(_ node: ControlNode, selected: Bool) -> String? {
+    selected
+      ? (node.string("selected_shadow_color") ?? node.string("shadow_color"))
+      : node.string("shadow_color")
+  }
+
+  /// `InputChip.pressElevation` applies only while an enabled, interactive
+  /// chip is physically pressed. A missing press elevation leaves the normal
+  /// elevation in place and lets the native Button own its standard feedback.
+  static func shadowPresentation(
+    _ node: ControlNode, selected: Bool, pressed: Bool, enabled: Bool
+  ) -> ChipShadowPresentation {
+    let pressedElevation = pressed && enabled ? elevation(node, pressed: true) : nil
+    return ChipShadowPresentation(
+      elevation: pressedElevation ?? elevation(node),
+      colorToken: shadowColorToken(node, selected: selected))
   }
 
   static func animation(_ node: ControlNode, phase: ChipAnimationPhase) -> Animation? {
@@ -1001,6 +1016,11 @@ enum ChipAnimationPhase: CaseIterable {
   case enable, select, leadingDrawer, deleteDrawer
 }
 
+struct ChipShadowPresentation: Equatable {
+  let elevation: CGFloat?
+  let colorToken: String?
+}
+
 private struct NativeChipButtonStyle: ViewModifier {
   let selected: Bool
 
@@ -1015,13 +1035,31 @@ private struct NativeChipButtonStyle: ViewModifier {
 }
 
 private struct ChipNativeShadow: ViewModifier {
-  let color: Color?
-  let elevation: CGFloat?
+  let node: ControlNode
+  let selected: Bool
+  let enabled: Bool
+  @GestureState private var pressed = false
 
   func body(content: Content) -> some View {
-    if let elevation, elevation > 0 {
+    let presentation = ChipPresentation.shadowPresentation(
+      node, selected: selected, pressed: pressed, enabled: enabled)
+    content
+      .modifier(ChipResolvedShadow(presentation: presentation))
+      // Observe the native Button's pointer-down lifetime without replacing
+      // its platform ButtonStyle or consuming the activation gesture.
+      .simultaneousGesture(
+        DragGesture(minimumDistance: 0)
+          .updating($pressed) { _, state, _ in state = enabled })
+  }
+}
+
+private struct ChipResolvedShadow: ViewModifier {
+  let presentation: ChipShadowPresentation
+
+  func body(content: Content) -> some View {
+    if let elevation = presentation.elevation, elevation > 0 {
       content.shadow(
-        color: color ?? .black.opacity(0.25),
+        color: MaterialPalette.color(presentation.colorToken) ?? .black.opacity(0.25),
         radius: max(elevation / 2, 0.5), y: elevation / 2)
     } else {
       content
