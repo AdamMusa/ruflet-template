@@ -2,6 +2,7 @@ import RufletEngine
 @testable import RufletMedia
 import RufletProtocol
 @testable import RufletUI
+import Vision
 import XCTest
 
 /// Direct translations of the pinned `ruflet_qrcode_scanner` Dart tests,
@@ -34,6 +35,70 @@ final class QRScannerPluginParityTests: XCTestCase {
         "x": 10, "y": 20, "width": 100, "height": 200
       ])),
       QRScannerRect(x: 10, y: 20, width: 100, height: 200))
+  }
+
+  func testDarwinPayloadTypeHeuristicMatchesPinnedMobileScanner() {
+    XCTAssertEqual(QRScannerBarcodeType.detect(nil), .unknown)
+    XCTAssertEqual(QRScannerBarcodeType.detect("BEGIN:VCARD\nFN:Ada"), .contactInfo)
+    XCTAssertEqual(QRScannerBarcodeType.detect("WIFI:T:WPA;S:Ruflet;;"), .wifi)
+    XCTAssertEqual(QRScannerBarcodeType.detect("https://flet.dev"), .url)
+    XCTAssertEqual(QRScannerBarcodeType.detect("978-1-4028-9462-6"), .isbn)
+    XCTAssertEqual(QRScannerBarcodeType.detect("012345678905"), .product)
+    XCTAssertEqual(QRScannerBarcodeType.detect("plain text"), .text)
+  }
+
+  func testVisionCoordinatesMatchPinnedDarwinPixelTransform() {
+    let corners = QRScannerVisionBarcode.pixelCorners(
+      topLeft: CGPoint(x: 0.1, y: 0.9),
+      topRight: CGPoint(x: 0.4, y: 0.9),
+      bottomRight: CGPoint(x: 0.4, y: 0.5),
+      bottomLeft: CGPoint(x: 0.1, y: 0.5),
+      imageWidth: 1_000, imageHeight: 500,
+      scanWindow: CGRect(x: 0.2, y: 0.1, width: 0.5, height: 0.8))
+    #if os(macOS)
+    let expected = [
+      CGPoint(x: 400, y: 90), CGPoint(x: 250, y: 90),
+      CGPoint(x: 250, y: 250), CGPoint(x: 400, y: 250)
+    ]
+    #else
+    let expected = [
+      CGPoint(x: 250, y: 90), CGPoint(x: 400, y: 90),
+      CGPoint(x: 400, y: 250), CGPoint(x: 250, y: 250)
+    ]
+    #endif
+    XCTAssertEqual(corners.count, expected.count)
+    for (actual, expected) in zip(corners, expected) {
+      XCTAssertEqual(actual.x, expected.x, accuracy: 0.000_001)
+      XCTAssertEqual(actual.y, expected.y, accuracy: 0.000_001)
+    }
+  }
+
+  func testVisionFormatNamesMatchDartBarcodeFormatNames() {
+    XCTAssertEqual(QRScannerVisionBarcode.formatName(.qr), "qrCode")
+    XCTAssertEqual(QRScannerVisionBarcode.formatName(.i2of5), "itf2of5")
+    XCTAssertEqual(QRScannerVisionBarcode.formatName(.i2of5Checksum), "itf2of5WithChecksum")
+    XCTAssertEqual(QRScannerVisionBarcode.formatName(.itf14), "itf14")
+    if #available(iOS 15, macOS 12, *) {
+      XCTAssertEqual(QRScannerVisionBarcode.formatName(.gs1DataBarExpanded), "dataBarExpanded")
+    }
+  }
+
+  @MainActor
+  func testVisionSymbologyFilterPreservesSupportedPinnedFormats() {
+    let formats = QRScannerModel.visionSymbologies([
+      .qrCode, .dataMatrix, .itf2of5WithChecksum, .maxiCode, .microQrCode
+    ])
+    XCTAssertEqual(formats, [.qr, .dataMatrix, .i2of5Checksum])
+  }
+
+  func testPlatformCapabilitiesClassifyDarwinDifferencesExplicitly() {
+    #if os(iOS)
+    XCTAssertTrue(QRScannerPlatformCapabilities.zoom)
+    XCTAssertTrue(QRScannerPlatformCapabilities.tapToFocus)
+    #else
+    XCTAssertFalse(QRScannerPlatformCapabilities.zoom)
+    XCTAssertFalse(QRScannerPlatformCapabilities.tapToFocus)
+    #endif
   }
 
   func testCreatesScannerForNormalizedAndLegacyWireTypes() throws {

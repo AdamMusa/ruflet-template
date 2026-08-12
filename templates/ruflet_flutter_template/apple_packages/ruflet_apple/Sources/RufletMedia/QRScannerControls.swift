@@ -1,9 +1,11 @@
 import CoreImage
 import Foundation
+import ImageIO
 import RufletEngine
 import RufletProtocol
 import RufletUI
 import SwiftUI
+import Vision
 
 #if canImport(AVFoundation)
   @preconcurrency import AVFoundation
@@ -31,6 +33,49 @@ enum QRScannerBarcodeFormat: String, CaseIterable, Equatable {
   case unknown, all, code128, code39, code93, codabar, dataMatrix, ean13, ean8
   case itf2of5, itf2of5WithChecksum, itf, itf14, qrCode, upcA, upcE, pdf417
   case aztec, maxiCode, microQrCode, dataBar, dataBarExpanded, dataBarLimited
+}
+
+enum QRScannerBarcodeType: String, Equatable {
+  case unknown, contactInfo, email, isbn, phone, product, sms, text, url, wifi
+  case geo, calendarEvent, driverLicense
+
+  /// Exact translation of mobile_scanner's Darwin `detectBarcodeType()`.
+  static func detect(_ value: String?) -> QRScannerBarcodeType {
+    guard let value else { return .unknown }
+    let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmed.isEmpty else { return .unknown }
+    let upper = trimmed.uppercased()
+    if upper.hasPrefix("BEGIN:VCARD") { return .contactInfo }
+    if upper.hasPrefix("BEGIN:VCALENDAR") { return .calendarEvent }
+    if upper.hasPrefix("WIFI:") { return .wifi }
+    if upper.hasPrefix("MAILTO:") { return .email }
+    if upper.hasPrefix("TEL:") { return .phone }
+    if upper.hasPrefix("SMS:") { return .sms }
+    if upper.hasPrefix("GEO:") { return .geo }
+    if upper.hasPrefix("MEBKM:") || upper.hasPrefix("HTTP://") || upper.hasPrefix("HTTPS://") {
+      return .url
+    }
+    let isbn = trimmed.replacingOccurrences(of: "-", with: "")
+      .replacingOccurrences(of: " ", with: "")
+      .replacingOccurrences(of: "ISBN", with: "", options: .caseInsensitive)
+      .trimmingCharacters(in: .whitespacesAndNewlines)
+    if isbn.allSatisfy(\.isNumber),
+      isbn.count == 10 || (isbn.count == 13 && (isbn.hasPrefix("978") || isbn.hasPrefix("979")))
+    { return .isbn }
+    let digits = trimmed.filter(\.isNumber)
+    if [8, 12, 13].contains(digits.count) { return .product }
+    return .text
+  }
+}
+
+enum QRScannerPlatformCapabilities {
+  #if os(iOS)
+  static let zoom = true
+  static let tapToFocus = true
+  #else
+  static let zoom = false
+  static let tapToFocus = false
+  #endif
 }
 
 struct QRScannerRect: Equatable {
@@ -175,7 +220,6 @@ public struct QRScannerControlView: View {
 final class QRScannerModel: NSObject, ObservableObject {
   #if canImport(AVFoundation)
     let session = AVCaptureSession()
-    private let metadataOutput = AVCaptureMetadataOutput()
     private let videoOutput = AVCaptureVideoDataOutput()
     private let captureQueue = DispatchQueue(label: "com.izeesoft.ruflet.qrcode-scanner")
     private var input: AVCaptureDeviceInput?
@@ -189,6 +233,8 @@ final class QRScannerModel: NSObject, ObservableObject {
     private var lastImage: Data?
     private var lastDetection = Date.distantPast
     private var detectedValues = Set<String>()
+    private var processingFrame = false
+    private var visionRegionOfInterest: CGRect?
   #endif
 
   func attach(node: ControlNode, events: RufletEventSink) {
@@ -253,7 +299,7 @@ final class QRScannerModel: NSObject, ObservableObject {
         }
         setZoom(value, completion: completion)
       case "reset_zoom_scale":
-        setZoom(1, completion: completion)
+        setZoom(0, method: "reset_zoom_scale", completion: completion)
       default:
         fail(rufletUnsupported(control?.type ?? "qrcode_scanner", call), completion)
       }
@@ -307,23 +353,15 @@ final class QRScannerModel: NSObject, ObservableObject {
       defer { session.commitConfiguration() }
       session.sessionPreset = .high
       try addInput(facing: configuration.cameraFacing)
-      guard session.canAddOutput(metadataOutput) else {
-        throw RufletServiceError.unavailable("Barcode metadata output is unavailable")
+      guard session.canAddOutput(videoOutput) else {
+        throw RufletServiceError.unavailable("Barcode video output is unavailable")
       }
-      session.addOutput(metadataOutput)
-      metadataOutput.setMetadataObjectsDelegate(self, queue: captureQueue)
-      let requested = Self.metadataTypes(configuration.formats)
-      metadataOutput.metadataObjectTypes = requested.isEmpty
-        ? metadataOutput.availableMetadataObjectTypes
-        : requested.filter(metadataOutput.availableMetadataObjectTypes.contains)
-      if configuration.returnImage, session.canAddOutput(videoOutput) {
-        session.addOutput(videoOutput)
-        videoOutput.alwaysDiscardsLateVideoFrames = true
-        videoOutput.videoSettings = [
-          kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
-        ]
-        videoOutput.setSampleBufferDelegate(self, queue: captureQueue)
-      }
+      session.addOutput(videoOutput)
+      videoOutput.alwaysDiscardsLateVideoFrames = true
+      videoOutput.videoSettings = [
+        kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+      ]
+      videoOutput.setSampleBufferDelegate(self, queue: captureQueue)
       configured = true
       apply(configuration)
     }
@@ -333,6 +371,7 @@ final class QRScannerModel: NSObject, ObservableObject {
       stopSession()
       configured = false
       detectedValues.removeAll()
+      processingFrame = false
       session.inputs.forEach(session.removeInput)
       session.outputs.forEach(session.removeOutput)
       if wasRunning { shouldRun = true }
@@ -368,7 +407,7 @@ final class QRScannerModel: NSObject, ObservableObject {
     }
 
     private func apply(_ configuration: QRScannerConfiguration) {
-      setZoom(configuration.zoomScale, completion: nil)
+      setZoom(configuration.zoomScale, method: "set_zoom_scale", completion: nil)
       guard configuration.torchEnabled, let device = input?.device, device.hasTorch else { return }
       do {
         try device.lockForConfiguration()
@@ -377,24 +416,34 @@ final class QRScannerModel: NSObject, ObservableObject {
       } catch { report(error) }
     }
 
-    private func setZoom(_ value: Double, completion: RufletMethodCompletion?) {
+    private func setZoom(
+      _ value: Double, method: String = "set_zoom_scale",
+      completion: RufletMethodCompletion?
+    ) {
       #if os(iOS)
       do {
         guard let device = input?.device else {
           throw RufletServiceError.unavailable("QR scanner is not running")
         }
         try device.lockForConfiguration()
-        device.videoZoomFactor = min(max(CGFloat(value), 1), device.activeFormat.videoMaxZoomFactor)
+        device.videoZoomFactor = Self.safeZoomFactor(normalizedScale: value, device: device)
         device.unlockForConfiguration()
         completion?(.success(.bool(true)))
       } catch { fail(error, completion) }
       #else
       completion?(.failure(
         RufletServiceError.platformUnsupported(
-          type: control?.type ?? "qrcode_scanner", method: "set_zoom_scale",
+          type: control?.type ?? "qrcode_scanner", method: method,
           platform: "macOS")))
       #endif
     }
+
+    #if os(iOS)
+    private static func safeZoomFactor(normalizedScale: Double, device: AVCaptureDevice) -> CGFloat {
+      let requested = CGFloat(min(max(normalizedScale, 0), 1) * 4 + 1)
+      return min(5, requested, device.activeFormat.videoMaxZoomFactor)
+    }
+    #endif
 
     private func fail(_ error: Error, _ completion: RufletMethodCompletion?) {
       report(error)
@@ -409,7 +458,7 @@ final class QRScannerModel: NSObject, ObservableObject {
       ]))
     }
 
-    private static func metadataTypes(_ formats: [QRScannerBarcodeFormat]) -> [AVMetadataObject.ObjectType] {
+    static func visionSymbologies(_ formats: [QRScannerBarcodeFormat]) -> [VNBarcodeSymbology] {
       if formats.isEmpty || formats.contains(.all) { return [] }
       return formats.compactMap { format in
         switch format {
@@ -423,12 +472,20 @@ final class QRScannerModel: NSObject, ObservableObject {
         case .dataMatrix: return .dataMatrix
         case .ean13: return .ean13
         case .ean8: return .ean8
-        case .itf, .itf14, .itf2of5, .itf2of5WithChecksum: return .interleaved2of5
+        case .itf2of5: return .i2of5
+        case .itf2of5WithChecksum: return .i2of5Checksum
+        case .itf, .itf14: return .itf14
         case .upcE: return .upce
         case .pdf417: return .pdf417
         case .aztec: return .aztec
-        case .dataBar, .dataBarExpanded, .dataBarLimited:
-          if #available(iOS 15.4, macOS 12.3, *) { return .gs1DataBar }
+        case .dataBar:
+          if #available(iOS 15, macOS 12, *) { return .gs1DataBar }
+          return nil
+        case .dataBarExpanded:
+          if #available(iOS 15, macOS 12, *) { return .gs1DataBarExpanded }
+          return nil
+        case .dataBarLimited:
+          if #available(iOS 15, macOS 12, *) { return .gs1DataBarLimited }
           return nil
         case .upcA, .maxiCode, .microQrCode, .unknown, .all: return nil
         }
@@ -436,85 +493,207 @@ final class QRScannerModel: NSObject, ObservableObject {
     }
 
     fileprivate func updateScanWindow(_ rect: CGRect?) {
-      metadataOutput.rectOfInterest = rect ?? CGRect(x: 0, y: 0, width: 1, height: 1)
+      guard let rect else {
+        visionRegionOfInterest = nil
+        return
+      }
+      // Preview conversion uses top-left coordinates; Vision uses bottom-left.
+      visionRegionOfInterest = CGRect(
+        x: rect.minX, y: 1 - rect.maxY, width: rect.width, height: rect.height)
     }
   #endif
 }
 
 #if canImport(AVFoundation)
-extension QRScannerModel: AVCaptureMetadataOutputObjectsDelegate, AVCaptureVideoDataOutputSampleBufferDelegate {
-  nonisolated func metadataOutput(
-    _ output: AVCaptureMetadataOutput,
-    didOutput metadataObjects: [AVMetadataObject],
-    from connection: AVCaptureConnection
-  ) {
-    let codes = metadataObjects.compactMap { $0 as? AVMetadataMachineReadableCodeObject }
-    Task { @MainActor in self.consume(codes) }
-  }
-
+extension QRScannerModel: AVCaptureVideoDataOutputSampleBufferDelegate {
   nonisolated func captureOutput(
     _ output: AVCaptureOutput,
     didOutput sampleBuffer: CMSampleBuffer,
     from connection: AVCaptureConnection
   ) {
     guard let buffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
-    let image = CIImage(cvPixelBuffer: buffer)
-    guard let data = CIContext().jpegRepresentation(
-      of: image, colorSpace: CGColorSpaceCreateDeviceRGB(), options: [:])
-    else { return }
-    Task { @MainActor in self.lastImage = data }
+    Task { @MainActor in self.process(buffer) }
   }
 
-  private func consume(_ codes: [AVMetadataMachineReadableCodeObject]) {
+  private func process(_ buffer: CVPixelBuffer) {
     guard let configuration, let control, control.handlesEvent("detect") else { return }
     let now = Date()
-    if configuration.detectionSpeed == .normal,
+    if configuration.detectionSpeed != .unrestricted,
       now.timeIntervalSince(lastDetection) * 1_000 < Double(configuration.detectionTimeoutMilliseconds)
     { return }
-    let fresh = codes.filter { code in
-      guard configuration.detectionSpeed == .noDuplicates else { return true }
-      let value = code.stringValue ?? ""
-      return detectedValues.insert(value).inserted
-    }
-    guard !fresh.isEmpty || codes.isEmpty else { return }
+    guard !processingFrame else { return }
     lastDetection = now
-    if configuration.autoZoom, let first = fresh.first ?? codes.first {
-      let area = first.bounds.width * first.bounds.height
-      if area > 0, area < 0.1 { setZoom(2, completion: nil) }
+    processingFrame = true
+
+    var image = CIImage(cvPixelBuffer: buffer)
+    if configuration.invertImage {
+      image = image.applyingFilter("CIColorInvert")
     }
-    let values = fresh.isEmpty ? codes : fresh
+    let extent = image.extent
+    let request = VNDetectBarcodesRequest { [weak self] request, error in
+      Task { @MainActor in
+        guard let self else { return }
+        self.processingFrame = false
+        if let error {
+          self.report(error)
+          return
+        }
+        let observations = (request.results as? [VNBarcodeObservation]) ?? []
+        self.consume(
+          observations, image: image, imageWidth: Int(extent.width),
+          imageHeight: Int(extent.height), configuration: configuration, control: control)
+      }
+    }
+    let requested = Self.visionSymbologies(configuration.formats)
+    if !requested.isEmpty { request.symbologies = requested }
+    if let visionRegionOfInterest { request.regionOfInterest = visionRegionOfInterest }
+    Task.detached {
+      do {
+        try VNImageRequestHandler(ciImage: image).perform([request])
+      } catch {
+        await MainActor.run {
+          self.processingFrame = false
+          self.report(error)
+        }
+      }
+    }
+  }
+
+  private func consume(
+    _ observations: [VNBarcodeObservation], image: CIImage,
+    imageWidth: Int, imageHeight: Int,
+    configuration: QRScannerConfiguration, control: ControlNode
+  ) {
+    guard !observations.isEmpty else { return }
+    let fresh = observations.filter { observation in
+      guard configuration.detectionSpeed == .noDuplicates else { return true }
+      return detectedValues.insert(observation.payloadStringValue ?? "").inserted
+    }
+    guard !fresh.isEmpty else { return }
+    if configuration.autoZoom, let first = fresh.first { applyAutoZoom(first.boundingBox) }
+    let serialized = fresh.map {
+      QRScannerVisionBarcode(observation: $0, imageWidth: imageWidth, imageHeight: imageHeight,
+        scanWindow: visionRegionOfInterest).rufletValue
+    }
     var payload: [String: RufletValue] = [
-      "value": values.first?.stringValue.map(RufletValue.string) ?? .null,
-      "barcodes": .array(values.map(Self.serialize))
+      "value": fresh.first?.payloadStringValue.map(RufletValue.string) ?? .null,
+      "barcodes": .array(serialized)
     ]
-    if configuration.returnImage, let lastImage {
-      payload["image"] = .string(lastImage.base64EncodedString())
+    if configuration.returnImage,
+      let data = CIContext().jpegRepresentation(
+        of: image, colorSpace: CGColorSpaceCreateDeviceRGB(),
+        options: [
+          CIImageRepresentationOption(
+            rawValue: kCGImageDestinationLossyCompressionQuality as String): 0.8
+        ])
+    {
+      lastImage = data
+      payload["image"] = .string(data.base64EncodedString())
     }
     events.fire(control, "detect", data: .map(payload))
   }
 
-  private static func serialize(_ code: AVMetadataMachineReadableCodeObject) -> RufletValue {
+  private func applyAutoZoom(_ bounds: CGRect) {
+    #if os(iOS)
+    guard let device = input?.device else { return }
+    let side = max(bounds.width, bounds.height)
+    guard side > 0, side < 0.35 else { return }
+    let desiredFactor = min(device.videoZoomFactor * (0.35 / side), 5)
+    setZoom(Double((desiredFactor - 1) / 4), completion: nil)
+    #endif
+  }
+}
+
+struct QRScannerVisionBarcode {
+  let rawValue: String?
+  let displayValue: String?
+  let format: String
+  let type: QRScannerBarcodeType
+  let corners: [CGPoint]
+
+  init(
+    observation: VNBarcodeObservation, imageWidth: Int, imageHeight: Int,
+    scanWindow: CGRect?
+  ) {
+    rawValue = observation.payloadStringValue
+    if let value = observation.payloadStringValue,
+      let bytes = value.data(using: .isoLatin1),
+      let utf8 = String(data: bytes, encoding: .utf8)
+    { displayValue = utf8 }
+    else { displayValue = observation.payloadStringValue }
+    format = Self.formatName(observation.symbology)
+    type = .detect(observation.payloadStringValue)
+    corners = Self.pixelCorners(
+      topLeft: observation.topLeft, topRight: observation.topRight,
+      bottomRight: observation.bottomRight, bottomLeft: observation.bottomLeft,
+      imageWidth: imageWidth, imageHeight: imageHeight, scanWindow: scanWindow)
+  }
+
+  init(
+    rawValue: String?, displayValue: String?, format: String,
+    type: QRScannerBarcodeType, corners: [CGPoint]
+  ) {
+    self.rawValue = rawValue
+    self.displayValue = displayValue
+    self.format = format
+    self.type = type
+    self.corners = corners
+  }
+
+  var rufletValue: RufletValue {
     .map([
-      "raw_value": code.stringValue.map(RufletValue.string) ?? .null,
-      "display_value": code.stringValue.map(RufletValue.string) ?? .null,
-      "format": .string(formatName(code.type)),
-      "type": .string("text"),
-      "corners": .array(code.corners.map { point in
-        .map(["x": .double(point.x), "y": .double(point.y)])
+      "raw_value": rawValue.map(RufletValue.string) ?? .null,
+      "display_value": displayValue.map(RufletValue.string) ?? .null,
+      "format": .string(format),
+      "type": .string(type.rawValue),
+      "corners": .array(corners.map {
+        .map(["x": .double($0.x), "y": .double($0.y)])
       })
     ])
   }
 
-  private static func formatName(_ type: AVMetadataObject.ObjectType) -> String {
-    switch type {
-    case .qr: return "qrCode"
+  static func pixelCorners(
+    topLeft: CGPoint, topRight: CGPoint, bottomRight: CGPoint, bottomLeft: CGPoint,
+    imageWidth: Int, imageHeight: Int, scanWindow: CGRect?
+  ) -> [CGPoint] {
+    func adjusted(_ point: CGPoint) -> CGPoint {
+      guard let scanWindow else { return point }
+      return CGPoint(
+        x: scanWindow.minX + point.x * scanWindow.width,
+        y: scanWindow.minY + point.y * scanWindow.height)
+    }
+    func pixels(_ point: CGPoint) -> CGPoint {
+      let point = adjusted(point)
+      return CGPoint(x: point.x * CGFloat(imageWidth), y: (1 - point.y) * CGFloat(imageHeight))
+    }
+    #if os(macOS)
+    return [pixels(topRight), pixels(topLeft), pixels(bottomLeft), pixels(bottomRight)]
+    #else
+    return [pixels(topLeft), pixels(topRight), pixels(bottomRight), pixels(bottomLeft)]
+    #endif
+  }
+
+  static func formatName(_ symbology: VNBarcodeSymbology) -> String {
+    if #available(iOS 15, macOS 12, *) {
+      switch symbology {
+      case .codabar: return "codabar"
+      case .gs1DataBar: return "dataBar"
+      case .gs1DataBarExpanded: return "dataBarExpanded"
+      case .gs1DataBarLimited: return "dataBarLimited"
+      default: break
+      }
+    }
+    switch symbology {
     case .code128: return "code128"
     case .code39: return "code39"
     case .code93: return "code93"
     case .dataMatrix: return "dataMatrix"
     case .ean13: return "ean13"
     case .ean8: return "ean8"
-    case .interleaved2of5: return "itf"
+    case .i2of5: return "itf2of5"
+    case .i2of5Checksum: return "itf2of5WithChecksum"
+    case .itf14: return "itf14"
+    case .qr: return "qrCode"
     case .upce: return "upcE"
     case .pdf417: return "pdf417"
     case .aztec: return "aztec"
