@@ -44,4 +44,30 @@ final class PageletParityTests: XCTestCase {
     XCTAssertNil(
       presentation.validationError(content: ControlNode(id: 22, type: "Container")))
   }
+
+  func testPageletUsesCupertinoAppBarOnlyForAdaptiveAppleDesign() {
+    let material = PageletPresentation(node: ControlNode(id: 1, type: "Pagelet"))
+    let adaptive = PageletPresentation(node: ControlNode(
+      id: 2, type: "Pagelet", props: ["adaptive": .bool(true)]))
+    let appBar = ControlNode(id: 3, type: "AppBar")
+    let explicitCupertino = ControlNode(id: 4, type: "CupertinoAppBar")
+
+    XCTAssertFalse(material.usesCupertinoDesign)
+    XCTAssertEqual(material.appBarNode(appBar).type, "AppBar")
+    XCTAssertTrue(adaptive.usesCupertinoDesign)
+    XCTAssertEqual(adaptive.appBarNode(appBar).type, "CupertinoAppBar")
+    XCTAssertEqual(adaptive.appBarNode(explicitCupertino).type, "CupertinoAppBar")
+  }
+
+  func testPageletRequiresBoundedParentOnlyWhenHeightIsOmitted() {
+    let omitted = PageletPresentation(node: ControlNode(id: 1, type: "Pagelet"))
+    let fixed = PageletPresentation(node: ControlNode(
+      id: 2, type: "Pagelet", props: ["height": .int(320)]))
+
+    XCTAssertTrue(omitted.requiresBoundedHeight)
+    XCTAssertFalse(fixed.requiresBoundedHeight)
+    XCTAssertEqual(
+      PageletPresentation.unboundedHeightError,
+      "Error displaying Pagelet: height is unbounded.")
+  }
 }

@@ -2006,9 +2006,10 @@ struct PageletControlView: View {
   @Environment(\.rufletEvents) private var events
   @StateObject private var scaffoldHost = RufletScaffoldHostState()
 
+  private var presentation: PageletPresentation { PageletPresentation(node: node) }
+
   @ViewBuilder
   var body: some View {
-    let presentation = PageletPresentation(node: node)
     if let contentID = presentation.contentID,
       presentation.validationError(content: store.node(contentID)) == nil
     {
@@ -2020,9 +2021,9 @@ struct PageletControlView: View {
   }
 
   private func pagelet(contentID: Int) -> some View {
-    VStack(spacing: 0) {
+    let scaffold = VStack(spacing: 0) {
       if let appBarID = node.controlID(forKey: "appbar") {
-        ControlView(id: appBarID, axis: .none)
+        pageletAppBar(id: appBarID)
       }
       ControlView(id: contentID, axis: .vertical)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -2038,7 +2039,7 @@ struct PageletControlView: View {
             })
       }
     }
-    .background(MaterialPalette.color(node.string("bgcolor")))
+    .background(MaterialPalette.color(node.string("bgcolor")) ?? Color.clear)
     .overlay(floatingActionButton, alignment: fabAlignment)
     .coordinateSpace(name: scaffoldCoordinateSpace)
     .onPreferenceChange(BottomBarFramePreferenceKey.self) {
@@ -2060,6 +2061,35 @@ struct PageletControlView: View {
       RufletViewCommands.performDrawer(
         call.name, view: node, store: store, events: events)
       completion(.success(.null))
+    }
+
+    return Group {
+      if presentation.requiresBoundedHeight {
+        GeometryReader { proxy in
+          if proxy.size.height.isFinite {
+            scaffold
+          } else {
+            Text(PageletPresentation.unboundedHeightError)
+              .font(.caption).foregroundStyle(.red)
+          }
+        }
+      } else {
+        scaffold
+      }
+    }
+  }
+
+  @ViewBuilder
+  private func pageletAppBar(id: Int) -> some View {
+    if let appBar = store.node(id) {
+      let adapted = presentation.appBarNode(appBar)
+      if adapted.type == appBar.type {
+        ControlView(id: id, axis: .none)
+      } else {
+        ControlBody(node: adapted, axis: .none)
+          .rufletCommon(adapted, axis: .none)
+          .id(id)
+      }
     }
   }
 
@@ -2124,12 +2154,25 @@ struct PageletControlView: View {
 
 struct PageletPresentation {
   static let missingContentError = "Pagelet.content must be provided and visible"
+  static let unboundedHeightError = "Error displaying Pagelet: height is unbounded."
   static let methods: Set<String> = [
     "close_drawer", "close_end_drawer", "show_drawer", "show_end_drawer",
   ]
 
   let node: ControlNode
   var contentID: Int? { node.controlID(forKey: "content") }
+  var usesCupertinoDesign: Bool { node.bool("adaptive") == true }
+  var requiresBoundedHeight: Bool { node.double("height") == nil }
+
+  /// Flet selects Cupertino page design only when `adaptive` is true on an
+  /// Apple platform. The app bar follows that design even when its wire type
+  /// is the shared `AppBar` type.
+  func appBarNode(_ appBar: ControlNode) -> ControlNode {
+    guard usesCupertinoDesign, appBar.type == "AppBar" else { return appBar }
+    var adapted = appBar
+    adapted.type = "CupertinoAppBar"
+    return adapted
+  }
 
   /// Flet's `buildWidget("content")` filters both unresolved references and
   /// controls whose common `visible` property is false before Pagelet builds.
