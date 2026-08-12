@@ -1,13 +1,13 @@
 import RufletEngine
 import SwiftUI
 
-/// The presentation defaults that Flet obtains from Flutter's ThemeData and
-/// widget constructors rather than from the wire protocol.
+/// Shared layout and behavior defaults used by the Apple renderer.
 ///
-/// Keep this separate from `RufletControlDefaults`: semantic defaults are
-/// generated from the pinned Flet Dart source, while these values deliberately
-/// choose the native Apple metric or the equivalent Material colour role.
-/// Controls should never invent their own fallback colour or platform size.
+/// Flet remains the authority for wire values, validation, child slots,
+/// events, commands, and layout behavior. It is not the visual toolkit on
+/// Apple platforms: when a visual property is absent, the native
+/// SwiftUI/UIKit/AppKit control must keep its platform appearance. Only an
+/// explicitly supplied DSL value may override that native appearance.
 enum RufletThemeDefaults {
   /// View's Container uses `EdgeInsets.all(10)` when padding is omitted in
   /// Flet's pinned renderer. This is a widget-constructor default, not a Ruby
@@ -106,16 +106,20 @@ enum RufletThemeDefaults {
     }
   }
 
-  /// Returns the explicit wire value when present, otherwise the pinned Flet
-  /// theme role. Tests use this string-level resolver so omitted and explicit
-  /// behavior can be verified without comparing platform `Color` objects.
+  /// Returns only an explicitly supplied wire colour.
+  ///
+  /// Do not fall back to `colorToken(control:property:)` here. That table is
+  /// retained as a compatibility description of Flutter's Material theme for
+  /// explicit Material emulation, but it is not the Apple renderer's default
+  /// appearance. A nil result deliberately lets the native control resolve
+  /// its own platform colour and state styling.
   static func resolvedColorToken(for node: ControlNode, property: String) -> String? {
     if let explicit = node.props[property]?.stringValue,
       !explicit.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     {
       return explicit
     }
-    return colorToken(control: node.type, property: property)
+    return nil
   }
 
   static let materialButtonPadding = EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8)

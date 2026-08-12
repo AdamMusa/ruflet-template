@@ -53,9 +53,9 @@ public enum MaterialPalette {
     color(name) ?? fallback
   }
 
-  /// Resolves an explicitly supplied wire colour first, then the centralized
-  /// Flet/Flutter theme role for this control. A nil result is meaningful for
-  /// native Apple controls: it lets SwiftUI apply the platform appearance.
+  /// Resolves an explicitly supplied wire colour. A nil result is meaningful
+  /// for native Apple controls: it lets SwiftUI/UIKit/AppKit apply the platform
+  /// appearance instead of recreating a Material theme on Apple.
   public static func color(for node: ControlNode, property: String) -> Color? {
     color(RufletThemeDefaults.resolvedColorToken(for: node, property: property))
   }

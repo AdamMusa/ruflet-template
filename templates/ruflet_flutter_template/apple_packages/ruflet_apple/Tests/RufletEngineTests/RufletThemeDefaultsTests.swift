@@ -47,15 +47,12 @@ final class RufletThemeDefaultsTests: XCTestCase {
     XCTAssertTrue(RufletThemeDefaults.appBarCentersTitle(trueNode))
   }
 
-  func testMaterialButtonOmissionsUsePinnedFletThemeRoles() {
+  func testAppleControlsKeepNativeColorsWhenDSLColorsAreOmitted() {
     for type in ["Button", "FilledButton", "FilledTonalButton", "OutlinedButton", "TextButton"] {
       let node = ControlNode(id: 1, type: type)
-      XCTAssertEqual(RufletThemeDefaults.resolvedColorToken(for: node, property: "color"), "primary")
-      XCTAssertEqual(RufletThemeDefaults.resolvedColorToken(for: node, property: "bgcolor"), "surface")
+      XCTAssertNil(RufletThemeDefaults.resolvedColorToken(for: node, property: "color"))
+      XCTAssertNil(RufletThemeDefaults.resolvedColorToken(for: node, property: "bgcolor"))
     }
-    XCTAssertEqual(RufletThemeDefaults.materialButtonElevation, 1)
-    XCTAssertEqual(RufletThemeDefaults.materialButtonPadding.leading, 8)
-    XCTAssertEqual(RufletThemeDefaults.materialButtonPadding.trailing, 8)
   }
 
   func testExplicitMaterialButtonColorsOverrideThemeDefaults() {
@@ -68,15 +65,12 @@ final class RufletThemeDefaultsTests: XCTestCase {
       RufletThemeDefaults.resolvedColorToken(for: node, property: "bgcolor"), "red400")
   }
 
-  func testSelectionColorsResolveThroughThemeUnlessExplicit() {
+  func testSelectionColorsRemainNativeUnlessExplicit() {
     let omitted = ControlNode(id: 1, type: "Checkbox")
     let explicit = ControlNode(
       id: 2, type: "Checkbox", props: ["active_color": .string("green")])
-    XCTAssertEqual(
-      RufletThemeDefaults.resolvedColorToken(for: omitted, property: "active_color"), "primary")
-    XCTAssertEqual(
-      RufletThemeDefaults.resolvedColorToken(for: omitted, property: "inactive_color"),
-      "onsurfacevariant")
+    XCTAssertNil(RufletThemeDefaults.resolvedColorToken(for: omitted, property: "active_color"))
+    XCTAssertNil(RufletThemeDefaults.resolvedColorToken(for: omitted, property: "inactive_color"))
     XCTAssertEqual(
       RufletThemeDefaults.resolvedColorToken(for: explicit, property: "active_color"), "green")
   }

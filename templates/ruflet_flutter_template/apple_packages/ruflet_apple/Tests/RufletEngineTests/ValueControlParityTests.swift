@@ -80,21 +80,17 @@ final class ValueControlParityTests: XCTestCase {
 
   // MARK: - Switch
 
-  /// `active_color` is Flutter's `activeThumbColor`. Naming it `primary`, the
-  /// track's own role, would have painted the thumb the colour it sits on.
-  func testSwitchThumbAndTrackResolveToDifferentMaterialRoles() {
+  /// Omitted colours are presentation choices. The Apple renderer must leave
+  /// them unset so the native control resolves its own state appearance.
+  func testSwitchOmittedColorsRemainNative() {
     let omitted = node("Switch")
-    XCTAssertEqual(
-      RufletThemeDefaults.resolvedColorToken(for: omitted, property: "active_color"), "onprimary")
-    XCTAssertEqual(
-      RufletThemeDefaults.resolvedColorToken(for: omitted, property: "active_track_color"),
-      "primary")
-    XCTAssertEqual(
-      RufletThemeDefaults.resolvedColorToken(for: omitted, property: "inactive_thumb_color"),
-      "outline")
-    XCTAssertEqual(
-      RufletThemeDefaults.resolvedColorToken(for: omitted, property: "inactive_track_color"),
-      "surfacecontainerhighest")
+    XCTAssertNil(RufletThemeDefaults.resolvedColorToken(for: omitted, property: "active_color"))
+    XCTAssertNil(
+      RufletThemeDefaults.resolvedColorToken(for: omitted, property: "active_track_color"))
+    XCTAssertNil(
+      RufletThemeDefaults.resolvedColorToken(for: omitted, property: "inactive_thumb_color"))
+    XCTAssertNil(
+      RufletThemeDefaults.resolvedColorToken(for: omitted, property: "inactive_track_color"))
   }
 
   func testSwitchTrackIsMaterialsFiftyTwoByThirtyTwo() {
