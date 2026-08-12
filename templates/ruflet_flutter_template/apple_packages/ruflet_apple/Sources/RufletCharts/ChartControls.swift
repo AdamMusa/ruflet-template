@@ -1194,7 +1194,10 @@ public struct ChartControlView: View {
         var titled = context
         titled.translateBy(x: point.x, y: point.y)
         titled.rotate(by: .degrees(rotation))
-        titled.draw(Text(title).font(.system(size: defaults.titleSize)), at: .zero)
+        titled.draw(
+          Text(title).font(.system(size: ChartControlSemantics.contentFontSize(
+            titleID, node: store.node))),
+          at: .zero)
       }
 
       guard defaults.showLabels else { continue }
@@ -1222,7 +1225,10 @@ public struct ChartControlView: View {
         default:
           point = CGPoint(x: chart.minX + fraction * chart.width, y: chart.maxY + 4); anchor = .top
         }
-        context.draw(Text(text).font(.caption2), at: point, anchor: anchor)
+        context.draw(
+          Text(text).font(.system(size: ChartControlSemantics.contentFontSize(
+            contentID, node: store.node))),
+          at: point, anchor: anchor)
       }
     }
   }
