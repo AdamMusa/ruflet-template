@@ -3038,8 +3038,12 @@ enum RufletCupertinoPresentationDefaults {
     node.controlIDs(forKey: "actions")
   }
 
-  static func isValidContextMenu(_ node: ControlNode) -> Bool {
-    node.controlID(forKey: "content") != nil && !actionIDs(node).isEmpty
+  static func isValidContextMenu(
+    _ node: ControlNode,
+    visibilityForID: (Int) -> Bool? = { _ in nil }
+  ) -> Bool {
+    CupertinoContextMenuPresentation(
+      node: node, visibilityForID: visibilityForID).validationError == nil
   }
 
   static func hasAlertContent(_ node: ControlNode) -> Bool {
@@ -3440,15 +3444,15 @@ struct CupertinoContextMenuControlView: View {
 
   @ViewBuilder
   var body: some View {
-    if !RufletCupertinoPresentationDefaults.isValidContextMenu(node) {
-      Text(node.controlID(forKey: "content") == nil
-        ? "CupertinoContextMenu.content must be visible"
-        : "CupertinoContextMenu.actions requires at least one visible action")
+    let presentation = CupertinoContextMenuPresentation(
+      node: node, visibilityForID: { store.node($0)?.bool("visible") })
+    if let error = presentation.validationError {
+      Text(error)
         .foregroundColor(.red)
-    } else if let contentID = node.controlID(forKey: "content") {
+    } else if let contentID = presentation.contentID {
       ControlView(id: contentID, axis: .none)
         .contextMenu {
-          ForEach(RufletCupertinoPresentationDefaults.actionIDs(node), id: \.self) { id in
+          ForEach(presentation.actionIDs, id: \.self) { id in
             contextAction(id)
           }
         }
@@ -3459,8 +3463,7 @@ struct CupertinoContextMenuControlView: View {
   private func contextAction(_ id: Int) -> some View {
     if let action = store.node(id) {
       Button(role: action.bool("destructive") == true ? .destructive : nil) {
-        guard action.bool("disabled") != true else { return }
-        events.fire(action, "click")
+        CupertinoContextMenuActionPresentation.activate(action, through: events)
       } label: {
         HStack {
           actionContent(action)
@@ -3477,11 +3480,70 @@ struct CupertinoContextMenuControlView: View {
 
   @ViewBuilder
   private func actionContent(_ action: ControlNode) -> some View {
-    if let contentID = action.controlID(forKey: "content") {
+    let presentation = CupertinoContextMenuActionPresentation(
+      node: action, visibilityForID: { store.node($0)?.bool("visible") })
+    if let contentID = presentation.contentID {
       ControlView(id: contentID, axis: .none)
+    } else if let text = presentation.text {
+      Text(text).lineLimit(1)
     } else {
-      Text(action.string("content") ?? "").lineLimit(1)
+      Text(CupertinoContextMenuActionPresentation.missingContentError)
+        .foregroundColor(.red)
+        .lineLimit(1)
     }
+  }
+}
+
+struct CupertinoContextMenuPresentation: Equatable {
+  static let missingActionsError =
+    "at least one action in CupertinoContextMenu.actions must be visible"
+  static let missingContentError = "CupertinoContextMenu.content must be visible"
+
+  let contentID: Int?
+  let actionIDs: [Int]
+  let enableHapticFeedback: Bool
+
+  init(node: ControlNode, visibilityForID: (Int) -> Bool? = { _ in nil }) {
+    contentID = node.controlID(forKey: "content").flatMap {
+      visibilityForID($0) == false ? nil : $0
+    }
+    actionIDs = RufletCupertinoPresentationDefaults.actionIDs(node).filter {
+      visibilityForID($0) != false
+    }
+    enableHapticFeedback = node.bool("enable_haptic_feedback") ?? false
+  }
+
+  /// Pinned Flet validates actions before content, so a control missing both
+  /// surfaces the action error first.
+  var validationError: String? {
+    if actionIDs.isEmpty { return Self.missingActionsError }
+    if contentID == nil { return Self.missingContentError }
+    return nil
+  }
+}
+
+struct CupertinoContextMenuActionPresentation: Equatable {
+  static let missingContentError = "content (string or visible Control) must be provided"
+
+  let contentID: Int?
+  let text: String?
+
+  init(node: ControlNode, visibilityForID: (Int) -> Bool? = { _ in nil }) {
+    if let id = node.controlID(forKey: "content"), visibilityForID(id) != false {
+      contentID = id
+      text = nil
+    } else if case .string(let value) = node.props["content"] {
+      contentID = nil
+      text = value
+    } else {
+      contentID = nil
+      text = nil
+    }
+  }
+
+  static func activate(_ node: ControlNode, through events: RufletEventSink) {
+    guard node.bool("disabled") != true else { return }
+    events.fire(node, "click")
   }
 }
 
