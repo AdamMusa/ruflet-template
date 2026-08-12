@@ -1339,6 +1339,7 @@ struct DropdownControlView: View {
   @Environment(\.rufletEvents) private var events
   @State private var focused = false
   @State private var selection = NSRange(location: 0, length: 0)
+  @State private var menuPresented = false
 
   var body: some View {
     let options = optionNodes
@@ -1353,7 +1354,11 @@ struct DropdownControlView: View {
           placeholder: node.string("hint_text") ?? "",
           secure: false,
           traits: dropdownTraits,
-          onTap: { events.fire(node, "click") },
+          onTap: {
+            // DropdownMenu opens from its field even when it is editable; the
+            // editable switch only controls whether keyboard input is accepted.
+            menuPresented = true
+          },
           onTapOutside: {},
           onSubmit: { _ in })
       #else
@@ -1362,19 +1367,13 @@ struct DropdownControlView: View {
       RufletFormFieldSlot(node: node, key: "selected_suffix", styleKey: "text_style")
       RufletFormFieldSlot(node: node, key: "selected_trailing_icon")
       RufletFormFieldSlot(node: node, key: "helper_text", styleKey: "helper_style")
-      Menu {
-        ForEach(matching(options), id: \.id) { option in
-          Button {
-            select(option)
-          } label: {
-            optionLabel(option)
-          }
-        }
+      Button {
+        menuPresented.toggle()
       } label: {
         trailingIcon
       }
-      .modifier(FixedMenuOrder())
-      .frame(maxHeight: node.double("menu_height").map { CGFloat($0) })
+      .buttonStyle(.plain)
+      .disabled(node.bool("disabled") ?? false)
     }
     .padding(contentPadding)
     .padding(ControlProps.edgeInsets(node.props["expanded_insets"]) ?? EdgeInsets())
@@ -1382,10 +1381,12 @@ struct DropdownControlView: View {
     .overlay(borderStroke)
     // DropdownMenu.width sizes the field. `menu_width` belongs only to the
     // popup surface and must never resize the field itself.
-    .frame(width: node.double("width").map { CGFloat($0) })
+    .frame(width: DropdownMenuDefaults.fieldWidth(node))
     .shadow(radius: CGFloat(node.double("elevation") ?? 0))
-    .modifier(MenuSurfaceStyle(value: node.props["menu_style"]))
     .modifier(RufletFormFieldDecoration(node: node))
+    .popover(isPresented: $menuPresented, attachmentAnchor: .rect(.bounds)) {
+      dropdownPopup(options)
+    }
     .onAppear {
       focused = node.bool("autofocus") == true
       if node.string("text") == nil, let value = node.string("value") {
@@ -1400,6 +1401,45 @@ struct DropdownControlView: View {
       focused = true
       completion(.success(.null))
     }
+  }
+
+  /// Flutter's `DropdownMenu.menuWidth` sizes the popup surface independently
+  /// of the field. SwiftUI's `Menu` has no such contract, so the native port
+  /// uses a popover whose content width and maximum height come from the same
+  /// Flet constructor values.
+  private func dropdownPopup(_ options: [ControlNode]) -> some View {
+    ScrollView {
+      LazyVStack(alignment: .leading, spacing: 0) {
+        ForEach(matching(options), id: \.id) { option in
+          Button {
+            select(option)
+            menuPresented = false
+          } label: {
+            HStack(spacing: 8) {
+              if let leadingID = option.controlID(forKey: "leading_icon") {
+                ControlView(id: leadingID, axis: .none)
+              }
+              optionLabel(option)
+              Spacer(minLength: 8)
+              if let trailingID = option.controlID(forKey: "trailing_icon") {
+                ControlView(id: trailingID, axis: .none)
+              }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+          }
+          .buttonStyle(.plain)
+          .disabled((node.bool("disabled") ?? false) || (option.bool("disabled") ?? false))
+          .modifier(MaterialOptionButtonStyle(value: option.props["style"]))
+        }
+      }
+    }
+    .frame(width: DropdownMenuDefaults.menuWidth(node))
+    .frame(maxHeight: DropdownMenuDefaults.menuHeight(node))
+    .modifier(MenuSurfaceStyle(value: node.props["menu_style"]))
+    .background(MaterialPalette.color(node.string("bgcolor"), default: .clear))
+    .shadow(radius: CGFloat(node.double("elevation") ?? 0))
   }
 
   /// Flet shows `selected_trailing_icon` while the menu is open and
@@ -1510,6 +1550,37 @@ struct DropdownControlView: View {
     } else {
       Text(option.string("text") ?? option.string("key") ?? "")
     }
+  }
+}
+
+/// Source-derived `DropdownMenu` geometry. Keeping popup geometry separate
+/// from field geometry is important: Flet forwards `width` to DropdownMenu's
+/// field and `menu_width` to MenuStyle.fixedSize.
+enum DropdownMenuDefaults {
+  static func fieldWidth(_ node: ControlNode) -> CGFloat? {
+    node.double("width").map { CGFloat($0) }
+  }
+
+  static func menuWidth(_ node: ControlNode) -> CGFloat? {
+    node.double("menu_width").map { CGFloat($0) }
+  }
+
+  static func menuHeight(_ node: ControlNode) -> CGFloat? {
+    node.double("menu_height").map { CGFloat($0) }
+  }
+}
+
+/// A DropdownOption carries a Material ButtonStyle in the same way as Flet's
+/// DropdownMenuEntry. Apply the visible subset without changing popup layout.
+private struct MaterialOptionButtonStyle: ViewModifier {
+  let value: RufletValue?
+
+  func body(content: Content) -> some View {
+    guard let style = value?.mapValue else { return AnyView(content) }
+    return AnyView(
+      content
+        .foregroundColor(MaterialPalette.color(style["color"]?.stringValue))
+        .background(MaterialPalette.color(style["bgcolor"]?.stringValue)))
   }
 }
 

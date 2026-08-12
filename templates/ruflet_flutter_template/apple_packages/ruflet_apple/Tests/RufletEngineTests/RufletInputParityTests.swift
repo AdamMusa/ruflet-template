@@ -43,6 +43,24 @@ final class RufletInputParityTests: XCTestCase {
       ["change", "dismiss", "entry_mode_change"])
   }
 
+  func testDropdownKeepsFletFieldAndPopupGeometryIndependent() {
+    let omitted = ControlNode(id: 1, type: "Dropdown")
+    XCTAssertNil(DropdownMenuDefaults.fieldWidth(omitted))
+    XCTAssertNil(DropdownMenuDefaults.menuWidth(omitted))
+    XCTAssertNil(DropdownMenuDefaults.menuHeight(omitted))
+
+    let explicit = ControlNode(
+      id: 2, type: "Dropdown",
+      props: [
+        "width": .double(240),
+        "menu_width": .double(360),
+        "menu_height": .double(280),
+      ])
+    XCTAssertEqual(DropdownMenuDefaults.fieldWidth(explicit), 240)
+    XCTAssertEqual(DropdownMenuDefaults.menuWidth(explicit), 360)
+    XCTAssertEqual(DropdownMenuDefaults.menuHeight(explicit), 280)
+  }
+
   func testAutoCompleteSuggestionsAreParsedFromFletValueMaps() {
     let store = ControlStore()
     let value = RufletValue.array([
