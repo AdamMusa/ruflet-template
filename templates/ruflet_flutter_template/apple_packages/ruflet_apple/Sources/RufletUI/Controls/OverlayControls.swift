@@ -1210,15 +1210,15 @@ struct SubmenuButtonControlView: View {
       presented.toggle()
     } label: {
       HStack(spacing: 8) {
-        if let leadingID = node.controlID(forKey: "leading") {
+        if let leadingID = visibleSlotID("leading") {
           ControlView(id: leadingID, axis: .none)
         }
-        if let contentID = node.controlID(forKey: "content") {
+        if let contentID = visibleSlotID("content") {
           ControlView(id: contentID, axis: .none)
-        } else {
-          Text(node.string("content") ?? node.string("text") ?? "")
+        } else if case .string(let content)? = node.props["content"] {
+          Text(content)
         }
-        if let trailingID = node.controlID(forKey: "trailing") {
+        if let trailingID = visibleSlotID("trailing") {
           ControlView(id: trailingID, axis: .none)
         }
       }
@@ -1271,6 +1271,21 @@ struct SubmenuButtonControlView: View {
     MaterialMenuDefaults.visibleControlIDs(node, key: "controls") {
       store.node($0)?.bool("visible")
     }
+  }
+
+  private func visibleSlotID(_ key: String) -> Int? {
+    SubmenuButtonSlots.visibleControlID(
+      node, key: key,
+      visibilityForID: { id in store.node(id).map { $0.bool("visible") != false } })
+  }
+}
+
+enum SubmenuButtonSlots {
+  static func visibleControlID(
+    _ node: ControlNode, key: String, visibilityForID: (Int) -> Bool?
+  ) -> Int? {
+    guard let id = node.controlID(forKey: key), visibilityForID(id) == true else { return nil }
+    return id
   }
 }
 
