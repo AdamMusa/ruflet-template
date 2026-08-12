@@ -3059,29 +3059,20 @@ struct DateTimePickerControlView: View {
   /// and the typed-entry modes.
   @ViewBuilder
   var entryModeIcon: some View {
-    let key = entryModeIconKey
-    if let id = node.controlID(forKey: key) {
-      ControlView(id: id, axis: .none)
-    } else {
-      RufletIcon(value: node.props[key], size: 20, color: nil)
-    }
+    RufletIcon(value: entryModeIconValue, size: 20, color: nil)
   }
 
   /// A time picker swaps to a timer dial rather than a calendar, so it names
   /// its own icon for the mode switch.
   private var entryModeIconValue: RufletValue? {
-    node.props[entryModeIconKey]
-  }
-
-  private var entryModeIconKey: String {
-    guard entryMode == "input" else { return "switch_to_input_icon" }
-    return kind == .time ? "switch_to_timer_icon" : "switch_to_calendar_icon"
+    RufletPickerSemantics.switchIcon(node, kind: kind, entryMode: entryMode)
   }
 
   @ViewBuilder
   private var picker: some View {
+    let text = RufletPickerSemantics.text(node, kind: kind)
     VStack {
-      if let help = node.string("help_text"), !help.isEmpty {
+      if let help = text.helpText, !help.isEmpty {
         Text(help).frame(maxWidth: .infinity, alignment: .leading)
       }
 
@@ -3089,12 +3080,11 @@ struct DateTimePickerControlView: View {
       case .date:
         if entryMode == "input" {
           VStack(alignment: .leading, spacing: 4) {
-            if let label = node.string("field_label_text") { Text(label).font(.caption) }
+            if let label = text.fieldLabelText { Text(label).font(.caption) }
             DatePicker("", selection: $selection, in: allowedDates, displayedComponents: [.date])
               .datePickerStyle(.compact)
               .labelsHidden()
-              .accessibilityHint(node.string("field_hint_text") ?? "")
-            pickerValidationText
+              .accessibilityHint(text.fieldHintText ?? "")
           }
         } else {
           DatePicker("", selection: $selection, in: allowedDates, displayedComponents: [.date])
@@ -3108,8 +3098,7 @@ struct DateTimePickerControlView: View {
             DatePicker("", selection: $selection, displayedComponents: [.hourAndMinute])
               .datePickerStyle(.compact)
               .labelsHidden()
-              .accessibilityLabel(timeFieldAccessibilityLabel)
-            pickerValidationText
+              .accessibilityLabel(timeFieldAccessibilityLabel(text))
           }
         } else {
           DatePicker("", selection: $selection, displayedComponents: [.hourAndMinute])
@@ -3124,20 +3113,21 @@ struct DateTimePickerControlView: View {
       case .dateRange:
         VStack {
           DatePicker(
-            node.string("field_start_label_text") ?? "Start date",
+            entryMode == "input" ? (text.fieldStartLabelText ?? "Start date") : "Start date",
             selection: $rangeStart,
             in: allowedDates,
-            displayedComponents: [.date])
+            displayedComponents: [.date]
+          )
+          .accessibilityHint(entryMode == "input" ? (text.fieldStartHintText ?? "") : "")
           DatePicker(
-            node.string("field_end_label_text") ?? "End date",
+            entryMode == "input" ? (text.fieldEndLabelText ?? "End date") : "End date",
             selection: $rangeEnd,
             in: rangeStart...allowedDates.upperBound,
-            displayedComponents: [.date])
+            displayedComponents: [.date]
+          )
+          .accessibilityHint(entryMode == "input" ? (text.fieldEndHintText ?? "") : "")
         }
         .datePickerStyle(.compact)
-        if entryMode == "input" {
-          pickerValidationText
-        }
       }
 
       // DateRangePickerDialog also switches between calendar and input, but
@@ -3157,9 +3147,10 @@ struct DateTimePickerControlView: View {
       }
 
       HStack {
-        Button(node.string("cancel_text") ?? "Cancel", role: .cancel) { cancel() }
+        Button(text.cancelText ?? "Cancel", role: .cancel) { cancel() }
         Spacer()
-        Button(confirmButtonText) { confirm() }
+        Button(RufletPickerSemantics.confirmationText(
+          text, kind: kind, entryMode: entryMode)) { confirm() }
           .keyboardShortcut(.defaultAction)
       }
     }
@@ -3175,18 +3166,8 @@ struct DateTimePickerControlView: View {
 
   private var supportsEntryModeSwitch: Bool { true }
 
-  @ViewBuilder
-  private var pickerValidationText: some View {
-    let messages = RufletPickerSemantics.validationMessages(node, kind: kind)
-    if !messages.isEmpty {
-      Text(messages.joined(separator: "\n"))
-        .font(.caption)
-        .foregroundStyle(.red)
-    }
-  }
-
-  private var timeFieldAccessibilityLabel: String {
-    [node.string("hour_label_text"), node.string("minute_label_text")]
+  private func timeFieldAccessibilityLabel(_ text: RufletPickerTextSemantics) -> String {
+    [text.hourLabelText, text.minuteLabelText]
       .compactMap { $0 }.joined(separator: ", ")
   }
 
@@ -3198,12 +3179,6 @@ struct DateTimePickerControlView: View {
   private var nativeEntryModeLabel: String {
     guard entryMode != "input" else { return kind == .time ? "Clock" : "Calendar" }
     return "Keyboard"
-  }
-
-  private var confirmButtonText: String {
-    guard kind == .dateRange else { return node.string("confirm_text") ?? "OK" }
-    if entryMode == "input" { return node.string("confirm_text") ?? "Save" }
-    return node.string("save_text") ?? "Save"
   }
 
   private func toggleEntryMode() {
@@ -3367,30 +3342,77 @@ enum RufletPickerSemantics {
     node.string("entry_mode") ?? (kind == .time ? "dial" : "calendar")
   }
 
-  /// Flutter forwards these strings to its typed-entry form fields. Native
-  /// Apple pickers validate their own values, so keep the exact Flet strings
-  /// as semantic error/help text without recreating the Material dialog.
-  static func validationMessages(
+  /// Exact optional text forwarded to each pinned Flutter picker constructor.
+  /// Error strings are metadata for a validation failure, not persistent help
+  /// text: Apple's native DatePicker never exposes malformed typed text, so it
+  /// must not paint configured errors before a failure has occurred.
+  static func text(
     _ node: ControlNode, kind: DateTimePickerControlView.Kind
-  ) -> [String] {
-    let keys: [String]
+  ) -> RufletPickerTextSemantics {
     switch kind {
     case .date:
-      keys = ["error_format_text", "error_invalid_text"]
+      return RufletPickerTextSemantics(
+        helpText: node.string("help_text"),
+        cancelText: node.string("cancel_text"),
+        confirmText: node.string("confirm_text"),
+        errorFormatText: node.string("error_format_text"),
+        errorInvalidText: node.string("error_invalid_text"),
+        fieldHintText: node.string("field_hint_text"),
+        fieldLabelText: node.string("field_label_text"))
     case .dateRange:
-      keys = ["error_format_text", "error_invalid_text", "error_invalid_range_text",
-              "field_start_hint_text", "field_end_hint_text"]
+      return RufletPickerTextSemantics(
+        helpText: node.string("help_text"),
+        cancelText: node.string("cancel_text"),
+        confirmText: node.string("confirm_text"),
+        saveText: node.string("save_text"),
+        errorFormatText: node.string("error_format_text"),
+        errorInvalidText: node.string("error_invalid_text"),
+        errorInvalidRangeText: node.string("error_invalid_range_text"),
+        fieldStartHintText: node.string("field_start_hint_text"),
+        fieldEndHintText: node.string("field_end_hint_text"),
+        fieldStartLabelText: node.string("field_start_label_text"),
+        fieldEndLabelText: node.string("field_end_label_text"))
     case .time:
-      keys = ["error_invalid_text"]
+      return RufletPickerTextSemantics(
+        helpText: node.string("help_text"),
+        cancelText: node.string("cancel_text"),
+        confirmText: node.string("confirm_text"),
+        errorInvalidText: node.string("error_invalid_text"),
+        hourLabelText: node.string("hour_label_text"),
+        minuteLabelText: node.string("minute_label_text"))
     }
-    return keys.compactMap { node.string($0) }.filter { !$0.isEmpty }
   }
 
-  static func switchIconKeys(_ kind: DateTimePickerControlView.Kind) -> [String] {
-    switch kind {
-    case .date, .dateRange: return ["switch_to_calendar_icon", "switch_to_input_icon"]
-    case .time: return ["switch_to_timer_icon", "switch_to_input_icon"]
+  static func validationMessage(
+    _ failure: RufletPickerValidationFailure,
+    text: RufletPickerTextSemantics
+  ) -> String? {
+    switch failure {
+    case .format: return text.errorFormatText
+    case .invalid: return text.errorInvalidText
+    case .invalidRange: return text.errorInvalidRangeText
     }
+  }
+
+  static func switchIcon(
+    _ node: ControlNode,
+    kind: DateTimePickerControlView.Kind,
+    entryMode: String
+  ) -> RufletValue? {
+    guard entryMode == "input" else { return node.props["switch_to_input_icon"] }
+    switch kind {
+    case .date, .dateRange: return node.props["switch_to_calendar_icon"]
+    case .time: return node.props["switch_to_timer_icon"]
+    }
+  }
+
+  static func confirmationText(
+    _ text: RufletPickerTextSemantics,
+    kind: DateTimePickerControlView.Kind,
+    entryMode: String
+  ) -> String {
+    guard kind == .dateRange else { return text.confirmText ?? "OK" }
+    return entryMode == "input" ? (text.confirmText ?? "OK") : (text.saveText ?? "Save")
   }
 
   private static func date(year: Int, month: Int, day: Int) -> Date {
@@ -3398,4 +3420,28 @@ enum RufletPickerSemantics {
     calendar.timeZone = TimeZone(secondsFromGMT: 0)!
     return calendar.date(from: DateComponents(year: year, month: month, day: day))!
   }
+}
+
+enum RufletPickerValidationFailure: Equatable {
+  case format
+  case invalid
+  case invalidRange
+}
+
+struct RufletPickerTextSemantics: Equatable {
+  var helpText: String? = nil
+  var cancelText: String? = nil
+  var confirmText: String? = nil
+  var saveText: String? = nil
+  var errorFormatText: String? = nil
+  var errorInvalidText: String? = nil
+  var errorInvalidRangeText: String? = nil
+  var fieldHintText: String? = nil
+  var fieldLabelText: String? = nil
+  var fieldStartHintText: String? = nil
+  var fieldEndHintText: String? = nil
+  var fieldStartLabelText: String? = nil
+  var fieldEndLabelText: String? = nil
+  var hourLabelText: String? = nil
+  var minuteLabelText: String? = nil
 }

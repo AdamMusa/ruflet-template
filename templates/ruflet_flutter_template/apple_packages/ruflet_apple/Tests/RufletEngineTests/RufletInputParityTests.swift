@@ -450,40 +450,93 @@ final class RufletInputParityTests: XCTestCase {
 
   func testPickerTypedEntryStringsAndSwitchIconsStayOnTheirFletConstructors() {
     let date = ControlNode(id: 1, type: "DatePicker", props: [
+      "help_text": .string("Select a date"),
+      "cancel_text": .string("Never mind"),
+      "confirm_text": .string("Apply"),
       "error_format_text": .string("Bad format"),
       "error_invalid_text": .string("Bad date"),
       "field_hint_text": .string("MM/DD/YYYY"),
       "field_label_text": .string("Birthday"),
+      "switch_to_calendar_icon": .int(100),
+      "switch_to_input_icon": .int(101),
     ])
+    let dateText = RufletPickerSemantics.text(date, kind: .date)
+    XCTAssertEqual(dateText.helpText, "Select a date")
+    XCTAssertEqual(dateText.cancelText, "Never mind")
+    XCTAssertEqual(dateText.confirmText, "Apply")
+    XCTAssertEqual(dateText.errorFormatText, "Bad format")
+    XCTAssertEqual(dateText.errorInvalidText, "Bad date")
+    XCTAssertEqual(dateText.fieldHintText, "MM/DD/YYYY")
+    XCTAssertEqual(dateText.fieldLabelText, "Birthday")
+    XCTAssertEqual(RufletPickerSemantics.validationMessage(.format, text: dateText), "Bad format")
     XCTAssertEqual(
-      RufletPickerSemantics.validationMessages(date, kind: .date),
-      ["Bad format", "Bad date"])
+      RufletPickerSemantics.switchIcon(date, kind: .date, entryMode: "input"), .int(100))
     XCTAssertEqual(
-      RufletPickerSemantics.switchIconKeys(.date),
-      ["switch_to_calendar_icon", "switch_to_input_icon"])
+      RufletPickerSemantics.switchIcon(date, kind: .date, entryMode: "calendar"), .int(101))
 
     let range = ControlNode(id: 2, type: "DateRangePicker", props: [
+      "confirm_text": .string("Apply range"),
+      "save_text": .string("Save range"),
+      "error_format_text": .string("Bad format"),
+      "error_invalid_text": .string("Bad date"),
       "error_invalid_range_text": .string("Bad range"),
       "field_start_hint_text": .string("Start"),
       "field_end_hint_text": .string("End"),
+      "field_start_label_text": .string("From"),
+      "field_end_label_text": .string("To"),
+      "switch_to_calendar_icon": .int(200),
+      "switch_to_input_icon": .int(201),
     ])
+    let rangeText = RufletPickerSemantics.text(range, kind: .dateRange)
+    XCTAssertEqual(rangeText.confirmText, "Apply range")
+    XCTAssertEqual(rangeText.saveText, "Save range")
+    XCTAssertEqual(rangeText.errorFormatText, "Bad format")
+    XCTAssertEqual(rangeText.errorInvalidText, "Bad date")
+    XCTAssertEqual(rangeText.fieldStartHintText, "Start")
+    XCTAssertEqual(rangeText.fieldEndHintText, "End")
+    XCTAssertEqual(rangeText.fieldStartLabelText, "From")
+    XCTAssertEqual(rangeText.fieldEndLabelText, "To")
     XCTAssertEqual(
-      RufletPickerSemantics.validationMessages(range, kind: .dateRange),
-      ["Bad range", "Start", "End"])
+      RufletPickerSemantics.validationMessage(.invalidRange, text: rangeText), "Bad range")
     XCTAssertEqual(
-      RufletPickerSemantics.switchIconKeys(.dateRange),
-      ["switch_to_calendar_icon", "switch_to_input_icon"])
+      RufletPickerSemantics.switchIcon(range, kind: .dateRange, entryMode: "input"), .int(200))
+    XCTAssertEqual(
+      RufletPickerSemantics.switchIcon(range, kind: .dateRange, entryMode: "calendar"), .int(201))
 
     let time = ControlNode(id: 3, type: "TimePicker", props: [
       "error_invalid_text": .string("Bad time"),
       "hour_label_text": .string("Hour"),
       "minute_label_text": .string("Minute"),
+      "switch_to_timer_icon": .int(300),
+      "switch_to_input_icon": .int(301),
     ])
+    let timeText = RufletPickerSemantics.text(time, kind: .time)
+    XCTAssertEqual(timeText.errorInvalidText, "Bad time")
+    XCTAssertEqual(timeText.hourLabelText, "Hour")
+    XCTAssertEqual(timeText.minuteLabelText, "Minute")
+    XCTAssertNil(RufletPickerSemantics.validationMessage(.format, text: timeText))
     XCTAssertEqual(
-      RufletPickerSemantics.validationMessages(time, kind: .time), ["Bad time"])
+      RufletPickerSemantics.switchIcon(time, kind: .time, entryMode: "input"), .int(300))
     XCTAssertEqual(
-      RufletPickerSemantics.switchIconKeys(.time),
-      ["switch_to_timer_icon", "switch_to_input_icon"])
+      RufletPickerSemantics.switchIcon(time, kind: .time, entryMode: "dial"), .int(301))
+  }
+
+  func testDateRangeUsesConfirmForInputAndSaveForCalendarMode() {
+    let defaults = RufletPickerTextSemantics()
+    XCTAssertEqual(
+      RufletPickerSemantics.confirmationText(defaults, kind: .dateRange, entryMode: "input"),
+      "OK")
+    XCTAssertEqual(
+      RufletPickerSemantics.confirmationText(defaults, kind: .dateRange, entryMode: "calendar"),
+      "Save")
+
+    let custom = RufletPickerTextSemantics(confirmText: "Apply", saveText: "Store")
+    XCTAssertEqual(
+      RufletPickerSemantics.confirmationText(custom, kind: .dateRange, entryMode: "input"),
+      "Apply")
+    XCTAssertEqual(
+      RufletPickerSemantics.confirmationText(custom, kind: .dateRange, entryMode: "calendar"),
+      "Store")
   }
 
   func testPickerConfirmationUpdatesBeforeChangeAndDismiss() {
