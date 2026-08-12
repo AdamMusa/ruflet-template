@@ -932,10 +932,9 @@ private struct CupertinoCheckboxSelectionView: View {
     }
   }
 
+  @ViewBuilder
   private func mark(_ presentation: CupertinoCheckboxPresentation) -> some View {
-    Image(systemName: presentation.symbolName)
-      .symbolRenderingMode(.palette)
-      .foregroundStyle(presentation.markColor, presentation.fillColor)
+    let image = Image(systemName: presentation.symbolName)
       .font(.system(size: CupertinoCheckboxPresentation.visualSize, weight: .semibold))
       .frame(
         width: CupertinoCheckboxPresentation.visualSize,
@@ -945,6 +944,16 @@ private struct CupertinoCheckboxSelectionView: View {
           .stroke(
             presentation.focused ? presentation.focusColor : .clear,
             lineWidth: CupertinoCheckboxPresentation.focusOutlineWidth))
+    if presentation.value == false {
+      // `square` is a single-layer SF Symbol. Palette rendering uses the first
+      // colour only, which is the check colour and made an unchecked box white
+      // on a white surface. The outline owns the inactive colour instead.
+      image.foregroundColor(presentation.fillColor)
+    } else {
+      image
+        .symbolRenderingMode(.palette)
+        .foregroundStyle(presentation.markColor, presentation.fillColor)
+    }
   }
 
   private func advance() {
@@ -1079,10 +1088,9 @@ private struct CupertinoRadioSelectionView: View {
   private var group: ControlNode? {
     RufletRadioGroupResolver.nearestGroup(containing: node.id, in: store.nodes)
   }
+  @ViewBuilder
   private func mark(_ presentation: CupertinoRadioPresentation) -> some View {
-    Image(systemName: presentation.symbolName)
-      .symbolRenderingMode(.palette)
-      .foregroundStyle(presentation.innerColor, presentation.outerColor)
+    let image = Image(systemName: presentation.symbolName)
       .font(.system(size: CupertinoRadioPresentation.visualSize, weight: .semibold))
       .frame(
         width: CupertinoRadioPresentation.visualSize,
@@ -1091,6 +1099,15 @@ private struct CupertinoRadioSelectionView: View {
         Circle().stroke(
           presentation.focused ? presentation.focusColor : .clear,
           lineWidth: CupertinoRadioPresentation.focusOutlineWidth))
+    if presentation.selected {
+      image
+        .symbolRenderingMode(.palette)
+        .foregroundStyle(presentation.innerColor, presentation.outerColor)
+    } else {
+      // Like `square`, the unselected `circle` is one layer and must take the
+      // inactive outer-ring colour rather than the selected inner-dot colour.
+      image.foregroundColor(presentation.outerColor)
+    }
   }
 
   private func select(_ presentation: CupertinoRadioPresentation, toggleIfSelected: Bool) {
