@@ -36,6 +36,25 @@ public enum FletCoreServiceSemantics {
     return value
   }
 
+  public static func clipboardText(_ value: RufletValue?) throws -> String {
+    guard case .string(let value)? = value else {
+      throw RufletServiceError.invalidArguments("data must be a string")
+    }
+    return value
+  }
+
+  public static func clipboardFiles(_ value: RufletValue?) throws -> [String] {
+    guard case .array(let values)? = value else {
+      throw RufletServiceError.invalidArguments("files must be a list of paths")
+    }
+    return try values.map { value in
+      guard case .string(let path) = value else {
+        throw RufletServiceError.invalidArguments("files must contain only paths")
+      }
+      return path
+    }
+  }
+
   public static func consoleLogPath(fileManager: FileManager = .default) -> String? {
     fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first?
       .appendingPathComponent("console.log").path
@@ -474,13 +493,17 @@ public final class ClipboardService: RufletService {
   ) {
     switch call.name {
     case "set":
-      let text: String?
-      if case .string(let value)? = call.argument("data") { text = value } else { text = nil }
+      let text: String
+      do {
+        text = try FletCoreServiceSemantics.clipboardText(call.argument("data"))
+      } catch {
+        return completion(.failure(error))
+      }
       #if canImport(UIKit)
         UIPasteboard.general.string = text
       #elseif canImport(AppKit)
         NSPasteboard.general.clearContents()
-        if let text { NSPasteboard.general.setString(text, forType: .string) }
+        NSPasteboard.general.setString(text, forType: .string)
       #endif
       completion(.success(.null))
 
@@ -495,22 +518,29 @@ public final class ClipboardService: RufletService {
       #endif
 
     case "set_files":
-      let paths = (call.argument("files")?.arrayValue ?? []).compactMap(\.stringValue)
+      let paths: [String]
+      do {
+        paths = try FletCoreServiceSemantics.clipboardFiles(call.argument("files"))
+      } catch {
+        return completion(.failure(error))
+      }
       #if canImport(UIKit)
-        UIPasteboard.general.urls = paths.map { URL(fileURLWithPath: $0) }
-        completion(.success(.null))
+        completion(.failure(RufletServiceError.platformUnsupported(
+          type: "Clipboard", method: call.name, platform: "iOS")))
       #elseif canImport(AppKit)
         NSPasteboard.general.clearContents()
-        NSPasteboard.general.writeObjects(paths.map { URL(fileURLWithPath: $0) as NSURL })
-        completion(.success(.null))
+        let succeeded = NSPasteboard.general.writeObjects(
+          paths.map { URL(fileURLWithPath: $0) as NSURL })
+        completion(.success(.bool(succeeded)))
       #else
-        completion(
-          .failure(RufletServiceError.unavailable("File pasteboards are macOS-only")))
+        completion(.failure(RufletServiceError.platformUnsupported(
+          type: "Clipboard", method: call.name, platform: "this platform")))
       #endif
 
     case "get_files":
       #if canImport(UIKit)
-        completion(.success(.array((UIPasteboard.general.urls ?? []).map { .string($0.path) })))
+        completion(.failure(RufletServiceError.platformUnsupported(
+          type: "Clipboard", method: call.name, platform: "iOS")))
       #elseif canImport(AppKit)
         let urls =
           NSPasteboard.general.readObjects(forClasses: [NSURL.self]) as? [URL] ?? []

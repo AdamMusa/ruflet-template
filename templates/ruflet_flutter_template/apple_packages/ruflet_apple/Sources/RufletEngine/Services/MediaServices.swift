@@ -368,6 +368,140 @@ public final class FilePickerService: NSObject, RufletService {
 #endif
 
 /// `Share` — the system share sheet.
+public struct FletShareFile: Equatable {
+  public let path: String?
+  public let data: [UInt8]?
+  public let mimeType: String?
+  public let name: String
+  public let fileNameOverride: String
+}
+
+public struct FletShareRequest: Equatable {
+  public let method: String
+  public let text: String?
+  public let uri: String?
+  public let files: [FletShareFile]
+  public let title: String?
+  public let subject: String?
+  public let previewThumbnail: FletShareFile?
+  public let position: CGRect?
+  public let excludedCupertinoActivities: [String]
+  public let downloadFallbackEnabled: Bool
+  public let mailToFallbackEnabled: Bool
+}
+
+public enum FletShareSemantics {
+  public static func request(_ call: RufletMethodCall) throws -> FletShareRequest {
+    guard ["share_text", "share_uri", "share_files"].contains(call.name) else {
+      throw RufletServiceError.unsupportedMethod(type: "Share", method: call.name)
+    }
+    let text = call.argument("text").flatMap(strictString)
+    let uri = call.argument("uri").flatMap(strictString)
+    let files: [FletShareFile]
+    if call.name == "share_files" {
+      guard let values = call.argument("files")?.arrayValue, !values.isEmpty else {
+        throw RufletServiceError.invalidArguments("files cannot be empty")
+      }
+      files = try values.map(parseFile)
+    } else {
+      files = []
+    }
+    if call.name == "share_text", text == nil {
+      throw RufletServiceError.invalidArguments("text is required")
+    }
+    if call.name == "share_uri", uri == nil {
+      throw RufletServiceError.invalidArguments("uri is required")
+    }
+    return FletShareRequest(
+      method: call.name,
+      text: text,
+      uri: uri,
+      files: files,
+      title: call.argument("title").flatMap(strictString),
+      subject: call.argument("subject").flatMap(strictString),
+      previewThumbnail: try call.argument("preview_thumbnail").map(parseFile),
+      position: parseRect(call.argument("share_position_origin")),
+      excludedCupertinoActivities:
+        call.argument("excluded_cupertino_activities")?.arrayValue?
+        .compactMap(strictString) ?? [],
+      downloadFallbackEnabled: call.argument("download_fallback_enabled")?.boolValue ?? true,
+      mailToFallbackEnabled: call.argument("mail_to_fallback_enabled")?.boolValue ?? true)
+  }
+
+  public static func result(status: String, raw: String) -> RufletValue {
+    .map(["status": .string(status), "raw": .string(raw)])
+  }
+
+  private static func strictString(_ value: RufletValue) -> String? {
+    guard case .string(let value) = value else { return nil }
+    return value
+  }
+
+  private static func parseFile(_ value: RufletValue) throws -> FletShareFile {
+    guard let map = value.mapValue else {
+      throw RufletServiceError.invalidArguments("share files must be file maps")
+    }
+    let path = map["path"].flatMap(strictString)
+    let explicitName = map["name"].flatMap(strictString)
+    let mimeType = map["mime_type"].flatMap(strictString)
+    if let path {
+      let candidate = explicitName ?? URL(fileURLWithPath: path).lastPathComponent
+      let name = candidate.trimmingCharacters(in: .whitespacesAndNewlines)
+      let trimmedExplicitName = explicitName?.trimmingCharacters(in: .whitespacesAndNewlines)
+      let trimmedPath = path.trimmingCharacters(in: .whitespacesAndNewlines)
+      let override = trimmedExplicitName?.isEmpty == false
+        ? trimmedExplicitName!
+        : (trimmedPath.isEmpty ? "shared_file" : URL(fileURLWithPath: trimmedPath).lastPathComponent)
+      return FletShareFile(
+        path: path, data: nil, mimeType: mimeType,
+        name: name.isEmpty ? "shared_file" : name,
+        fileNameOverride: override.isEmpty ? "shared_file" : override)
+    }
+    if let bytes = FletCoreServiceSemantics.imageBytes(map["data"]) {
+      let name = explicitName?.isEmpty == false ? explicitName! : "shared_file"
+      let trimmed = explicitName?.trimmingCharacters(in: .whitespacesAndNewlines)
+      return FletShareFile(
+        path: nil, data: bytes, mimeType: mimeType,
+        name: name,
+        fileNameOverride: trimmed?.isEmpty == false ? trimmed! : "shared_file")
+    }
+    throw RufletServiceError.invalidArguments("share file requires path or data")
+  }
+
+  private static func parseRect(_ value: RufletValue?) -> CGRect? {
+    guard let map = value?.mapValue else { return nil }
+    return CGRect(
+      x: map["x"]?.doubleValue ?? 0,
+      y: map["y"]?.doubleValue ?? 0,
+      width: map["width"]?.doubleValue ?? 0,
+      height: map["height"]?.doubleValue ?? 0)
+  }
+
+  #if canImport(UIKit)
+    static func activityType(_ value: String) -> UIActivity.ActivityType? {
+      switch value {
+      case "postToFacebook": return .postToFacebook
+      case "postToTwitter": return .postToTwitter
+      case "postToWeibo": return .postToWeibo
+      case "message": return .message
+      case "mail": return .mail
+      case "print": return .print
+      case "copyToPasteboard": return .copyToPasteboard
+      case "assignToContact": return .assignToContact
+      case "saveToCameraRoll": return .saveToCameraRoll
+      case "addToReadingList": return .addToReadingList
+      case "postToFlickr": return .postToFlickr
+      case "postToVimeo": return .postToVimeo
+      case "postToTencentWeibo": return .postToTencentWeibo
+      case "airDrop": return .airDrop
+      case "openInIBooks": return .openInIBooks
+      case "markupAsPDF": return .markupAsPDF
+      default: return nil
+      }
+    }
+  #endif
+}
+
 @MainActor
 public final class ShareService: RufletService {
   public static let wireType = "Share"
@@ -380,49 +514,45 @@ public final class ShareService: RufletService {
     context: RufletServiceContext,
     completion: @escaping RufletMethodCompletion
   ) {
-    var items: [Any] = []
-
-    switch call.name {
-    case "share_text":
-      if let text = call.argument("text")?.stringValue { items.append(text) }
-    case "share_uri":
-      if let raw = call.argument("uri")?.stringValue, let url = URL(string: raw) {
-        items.append(url)
-      }
-    case "share_files":
-      for file in call.argument("files")?.arrayValue ?? [] {
-        if let path = file["path"]?.stringValue ?? file.stringValue {
-          items.append(URL(fileURLWithPath: path))
-        }
-      }
-      if let text = call.argument("text")?.stringValue { items.append(text) }
-    default:
-      return completion(
-        .failure(RufletServiceError.unsupportedMethod(type: "Share", method: call.name)))
+    let request: FletShareRequest
+    do {
+      request = try FletShareSemantics.request(call)
+    } catch {
+      return completion(.failure(error))
     }
 
-    guard !items.isEmpty else {
-      return completion(.failure(RufletServiceError.invalidArguments("Nothing to share")))
+    let prepared: (items: [Any], temporaryDirectory: URL?)
+    do {
+      prepared = try prepareItems(request)
+    } catch {
+      return completion(.failure(error))
     }
 
     #if canImport(UIKit)
       guard let presenter = RufletWindow.topViewController() else {
         return completion(.failure(RufletServiceError.unavailable("No window to present from")))
       }
-      let sheet = UIActivityViewController(activityItems: items, applicationActivities: nil)
+      let sheet = UIActivityViewController(
+        activityItems: prepared.items, applicationActivities: nil)
+      sheet.title = request.title
+      if let subject = request.subject { sheet.setValue(subject, forKey: "subject") }
+      sheet.excludedActivityTypes = request.excludedCupertinoActivities.compactMap(
+        FletShareSemantics.activityType)
       // An iPad needs an anchor or the popover cannot be positioned.
       sheet.popoverPresentationController?.sourceView = presenter.view
-      sheet.popoverPresentationController?.sourceRect = CGRect(
+      sheet.popoverPresentationController?.sourceRect = request.position ?? CGRect(
         x: presenter.view.bounds.midX, y: presenter.view.bounds.midY, width: 0, height: 0)
       sheet.completionWithItemsHandler = { activity, completed, _, error in
         Task { @MainActor in
+          if let directory = prepared.temporaryDirectory {
+            try? FileManager.default.removeItem(at: directory)
+          }
           if let error {
             completion(.failure(RufletServiceError.failed(error.localizedDescription)))
           } else {
-            completion(.success(.map([
-              "status": .string(completed ? "success" : "dismissed"),
-              "raw": .string(activity?.rawValue ?? "")
-            ])))
+            completion(.success(FletShareSemantics.result(
+              status: completed ? "success" : "dismissed",
+              raw: activity?.rawValue ?? "")))
           }
         }
       }
@@ -431,15 +561,59 @@ public final class ShareService: RufletService {
       guard let view = NSApp.keyWindow?.contentView else {
         return completion(.failure(RufletServiceError.unavailable("No window to present from")))
       }
-      let picker = NSSharingServicePicker(items: items)
+      let picker = NSSharingServicePicker(items: prepared.items)
       picker.show(relativeTo: view.bounds, of: view, preferredEdge: .minY)
-      completion(.success(.map([
-        "status": .string("success"),
-        "raw": .string("")
-      ])))
+      completion(.success(FletShareSemantics.result(status: "unavailable", raw: "")))
     #else
       completion(.failure(RufletServiceError.unavailable("No share sheet on this platform")))
     #endif
+  }
+
+  private func prepareItems(_ request: FletShareRequest) throws
+    -> (items: [Any], temporaryDirectory: URL?)
+  {
+    var items: [Any] = []
+    if let text = request.text { items.append(text) }
+    if let uri = request.uri {
+      guard let url = URL(string: uri) else {
+        throw RufletServiceError.invalidArguments("uri is invalid")
+      }
+      items.append(url)
+    }
+    var temporaryDirectory: URL?
+    for file in request.files {
+      if let path = file.path {
+        items.append(URL(fileURLWithPath: path))
+      } else if let bytes = file.data {
+        #if canImport(UIKit)
+          let identifier: String
+          #if canImport(UniformTypeIdentifiers)
+            identifier = file.mimeType.flatMap { UTType(mimeType: $0) }?.identifier
+              ?? UTType.data.identifier
+          #else
+            identifier = "public.data"
+          #endif
+          let provider = NSItemProvider(item: Data(bytes) as NSData, typeIdentifier: identifier)
+          provider.suggestedName = file.fileNameOverride
+          items.append(provider)
+        #else
+          if temporaryDirectory == nil {
+            let directory = FileManager.default.temporaryDirectory
+              .appendingPathComponent("ruflet-share-\(UUID().uuidString)", isDirectory: true)
+            try FileManager.default.createDirectory(
+              at: directory, withIntermediateDirectories: true)
+            temporaryDirectory = directory
+          }
+          let url = temporaryDirectory!.appendingPathComponent(file.fileNameOverride)
+          try Data(bytes).write(to: url, options: .atomic)
+          items.append(url)
+        #endif
+      }
+    }
+    guard !items.isEmpty else {
+      throw RufletServiceError.invalidArguments("Nothing to share")
+    }
+    return (items, temporaryDirectory)
   }
 }
 
