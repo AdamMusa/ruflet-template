@@ -1774,18 +1774,19 @@ struct DividerControlView: View {
   var body: some View {
     let metrics = DividerGeometry.metrics(
       node: node, isVertical: isVertical, displayScale: displayScale)
-    let color = MaterialPalette.color(metrics.colorToken, default: .clear)
-
-    DividerLine(color: color, radii: ControlProps.cornerRadii(node.props["radius"]))
-      .frame(
-        width: isVertical ? metrics.thickness : nil,
-        height: isVertical ? nil : metrics.thickness
-      )
-      .padding(isVertical ? .top : .leading, metrics.leadingIndent)
-      .padding(isVertical ? .bottom : .trailing, metrics.trailingIndent)
-      .frame(
-        width: isVertical ? metrics.extent : nil,
-        height: isVertical ? nil : metrics.extent)
+    if isVertical {
+      HStack { Divider() }
+        .modifier(DividerExplicitTint(color: DividerGeometry.explicitColor(node)))
+        .padding(.top, metrics.leadingIndent)
+        .padding(.bottom, metrics.trailingIndent)
+        .frame(width: metrics.extent)
+    } else {
+      Divider()
+        .modifier(DividerExplicitTint(color: DividerGeometry.explicitColor(node)))
+        .padding(.leading, metrics.leadingIndent)
+        .padding(.trailing, metrics.trailingIndent)
+        .frame(height: metrics.extent)
+    }
   }
 }
 
@@ -1819,6 +1820,11 @@ enum DividerGeometry {
     return CGFloat(requested)
   }
 
+  static func explicitColor(_ node: ControlNode) -> Color? {
+    guard node.props["color"] != nil, !node.props["color"]!.isNull else { return nil }
+    return MaterialPalette.color(node.string("color"))
+  }
+
   private static func nonNegative(_ requested: Double?) -> CGFloat? {
     guard let requested else { return nil }
     assert(requested >= 0, "Divider dimensions and indents must be non-negative")
@@ -1826,16 +1832,18 @@ enum DividerGeometry {
   }
 }
 
-private struct DividerLine: View {
+private struct DividerExplicitTint: ViewModifier {
   let color: Color
-  let radii: RufletCornerRadii?
 
-  @ViewBuilder var body: some View {
-    if let radii {
-      RufletRoundedRectangle(radii: radii).fill(color)
-    } else {
-      Rectangle().fill(color)
-    }
+  init(color: Color?) {
+    self.color = color ?? .clear
+    self.hasColor = color != nil
+  }
+
+  private let hasColor: Bool
+
+  func body(content: Content) -> some View {
+    if hasColor { AnyView(content.overlay(color.mask(content))) } else { AnyView(content) }
   }
 }
 
