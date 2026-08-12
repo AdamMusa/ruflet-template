@@ -1,4 +1,6 @@
 import XCTest
+import RufletEngine
+import RufletProtocol
 @testable import RufletUI
 
 final class RufletBaseControlPipelineTests: XCTestCase {
@@ -48,5 +50,21 @@ final class RufletBaseControlPipelineTests: XCTestCase {
     let source = try String(contentsOf: sourceURL)
 
     XCTAssertFalse(source.contains("false) ? .rightToLeft : .leftToRight"))
+  }
+
+  func testAdaptiveButtonUsesDialogActionOnlyInsideDialogs() {
+    let ordinary = ControlNode(
+      id: 1, type: "Button", props: ["adaptive": .bool(true)])
+    XCTAssertFalse(ControlRegistry.AdaptiveControlSemantics.usesCupertinoDialogAction(ordinary))
+
+    var dialog = ordinary
+    dialog.internals["_flet_parent_type"] = .string("AlertDialog")
+    XCTAssertTrue(ControlRegistry.AdaptiveControlSemantics.usesCupertinoDialogAction(dialog))
+    XCTAssertEqual(ControlRegistry.AdaptiveControlSemantics.dialogAction(dialog).type,
+                   "CupertinoDialogAction")
+
+    var sheet = ordinary
+    sheet.internals["_flet_parent_type"] = .string("BottomSheet")
+    XCTAssertFalse(ControlRegistry.AdaptiveControlSemantics.usesCupertinoDialogAction(sheet))
   }
 }

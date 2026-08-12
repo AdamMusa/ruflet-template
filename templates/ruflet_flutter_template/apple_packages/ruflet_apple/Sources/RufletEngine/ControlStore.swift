@@ -513,7 +513,9 @@ public final class ControlStore: ObservableObject {
     var changed: Set<Int> = []
     var visited: Set<Int> = []
 
-    func visit(_ id: Int, parentDisabled: Bool, parentAdaptive: Bool?) {
+    func visit(
+      _ id: Int, parentDisabled: Bool, parentAdaptive: Bool?, parentType: String?
+    ) {
       guard visited.insert(id).inserted, var node = nodes[id] else { return }
 
       // Component wrappers are transparent in Flet's `Control.parent` getter.
@@ -533,6 +535,11 @@ public final class ControlStore: ObservableObject {
       } else {
         node.internals.removeValue(forKey: "_flet_resolved_adaptive")
       }
+      if let parentType {
+        node.internals["_flet_parent_type"] = .string(parentType)
+      } else {
+        node.internals.removeValue(forKey: "_flet_parent_type")
+      }
       if oldDisabled != effectiveDisabled || oldAdaptive != effectiveAdaptive {
         nodes[id] = node
         changed.insert(id)
@@ -541,11 +548,15 @@ public final class ControlStore: ObservableObject {
       var children: [Int] = []
       for value in node.props.values { appendControlIDs(in: value, to: &children) }
       for childID in children {
-        visit(childID, parentDisabled: effectiveDisabled, parentAdaptive: effectiveAdaptive)
+        visit(
+          childID, parentDisabled: effectiveDisabled, parentAdaptive: effectiveAdaptive,
+          parentType: isComponent ? parentType : node.type)
       }
     }
 
-    visit(RufletWireID.page, parentDisabled: false, parentAdaptive: nil)
+    visit(
+      RufletWireID.page, parentDisabled: false, parentAdaptive: nil,
+      parentType: nil)
     return changed
   }
 }

@@ -142,8 +142,25 @@ public enum ControlRegistry {
     case "AppBar": return AnyView(CupertinoAppBarControlView(node: node))
     case "Button", "ElevatedButton", "FilledButton", "FilledTonalButton",
       "OutlinedButton", "TextButton":
+      if AdaptiveControlSemantics.usesCupertinoDialogAction(node) {
+        return AnyView(DialogActionControlView(node: AdaptiveControlSemantics.dialogAction(node)))
+      }
       return AnyView(CupertinoButtonControlView(node: node))
     default: return nil
+    }
+  }
+
+  enum AdaptiveControlSemantics {
+    static func usesCupertinoDialogAction(_ node: ControlNode) -> Bool {
+      guard node.bool("adaptive") == true else { return false }
+      return ["AlertDialog", "CupertinoAlertDialog"].contains(
+        node.internals["_flet_parent_type"]?.stringValue)
+    }
+
+    static func dialogAction(_ node: ControlNode) -> ControlNode {
+      var action = node
+      action.type = "CupertinoDialogAction"
+      return action
     }
   }
 
