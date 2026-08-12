@@ -16,85 +16,318 @@ struct CupertinoButtonControlView: View {
 
   @Environment(\.rufletEvents) private var events
   @Environment(\.openURL) private var openURL
+  @EnvironmentObject private var store: ControlStore
+  @FocusState private var focused: Bool
+  @State private var longPressConsumedClick = false
 
   @ViewBuilder
   var body: some View {
-    switch variant {
-    case .plain:
-      configuredButton.buttonStyle(.borderless)
-    case .filled:
-      configuredButton.buttonStyle(.borderedProminent)
-    case .tinted:
-      configuredButton.buttonStyle(.bordered)
-    }
+    nativeButton
+      .modifier(CupertinoButtonNativeSemantics(
+        presentation: presentation, focused: focused))
+      .modifier(CupertinoButtonLongPress(
+        enabled: !presentation.disabled && node.handlesEvent("long_press"),
+        action: handleLongPress))
+      .modifier(CupertinoPressOpacity(
+        value: presentation.pressedOpacity, enabled: !presentation.disabled))
+      .focused($focused)
+      .onAppear { focused = presentation.autofocus }
+      .onChange(of: focused) { events.fire(node, $0 ? "focus" : "blur") }
+      .rufletCommandHandler(node.id) { call, completion in
+        guard call.name == "focus" else {
+          completion(.failure(rufletUnsupported(node.type, call)))
+          return
+        }
+        focused = true
+        completion(.success(.null))
+      }
+      .disabled(presentation.disabled)
   }
 
-  private enum Variant { case plain, filled, tinted }
-
-  private var variant: Variant {
-    switch node.type {
-    case "CupertinoFilledButton": return .filled
-    case "CupertinoTintedButton": return .tinted
-    default: return .plain
-    }
+  private var presentation: CupertinoButtonPresentation {
+    CupertinoButtonPresentation(node: node)
   }
 
-  private var configuredButton: some View {
-    Button(action: activate) { label }
-      // CupertinoButton receives nil for omitted padding, color and bgcolor.
-      // These optional modifiers preserve that native constructor behavior.
-      .modifier(OptionalEdgeInsets(insets: RufletThemeDefaults.cupertinoButtonPadding(node)))
-      .modifier(OptionalMinimumSize(value: node.props["min_size"]))
-      .modifier(OptionalTint(color: cupertinoFill))
-      .modifier(OptionalForeground(color: MaterialPalette.color(node.string("color"))))
-      .modifier(FocusReporter(node: node, events: events))
-      .modifier(LongPressReporter(node: node, events: events))
-      // Cupertino dims a button while it is held rather than washing it.
-      // Flet passes 0.4 when the property is omitted, matching
-      // CupertinoButton.pressedOpacity rather than SwiftUI's button-style
-      // feedback.
-      .modifier(CupertinoPressOpacity(value: node.double("opacity_on_click") ?? 0.4))
-      .disabled(node.bool("disabled") ?? false)
+  @ViewBuilder
+  private var nativeButton: some View {
+    let button = Button(action: activate) { label }
+    switch presentation.appearance {
+    case .borderedProminent: button.buttonStyle(.borderedProminent)
+    case .bordered: button.buttonStyle(.bordered)
+    case .borderless: button.buttonStyle(.borderless)
+    }
   }
 
   @ViewBuilder
   private var label: some View {
-    let icon = node.props["icon"]
-    HStack(spacing: RufletThemeDefaults.materialButtonIconSpacing) {
-      if icon != nil {
-        RufletIcon(
-          value: icon,
-          size: node.double("icon_size").map { CGFloat($0) }
-            ?? RufletThemeDefaults.materialIconButtonSize,
-          color: MaterialPalette.color(node.string("icon_color")))
-      }
-      if let contentID = node.controlID(forKey: "content") {
-        ControlView(id: contentID, axis: .none)
+    Group {
+      if hasVisibleIcon && hasVisibleContent {
+        HStack(spacing: CupertinoButtonPresentation.iconContentSpacing) {
+          icon
+          content
+        }
+      } else if hasVisibleIcon {
+        icon
+      } else if hasVisibleContent {
+        content
       } else {
-        Text(node.string("content") ?? node.string("text") ?? "")
+        Text("")
       }
+    }
+    // An explicit padding value belongs inside CupertinoButton's decoration.
+    // When omitted, the native button family owns its visual insets while the
+    // exact Flet/Flutter defaults remain pinned in the presentation contract.
+    .modifier(OptionalEdgeInsets(insets: presentation.explicitPadding))
+  }
+
+  @ViewBuilder
+  private var icon: some View {
+    if let iconID = node.controlID(forKey: "icon"), isVisible(iconID) {
+      ControlView(id: iconID, axis: .none)
+    } else if node.controlID(forKey: "icon") == nil, node.props["icon"] != nil {
+      RufletIcon(
+        value: node.props["icon"], size: CupertinoButtonPresentation.iconSize,
+        color: MaterialPalette.color(node.string("icon_color")))
     }
   }
 
-  /// A disabled Cupertino button has its own fill rather than a dimmed one.
-  private var cupertinoFill: Color? {
-    if node.bool("disabled") == true,
-      let disabled = MaterialPalette.color(node.string("disabled_bgcolor"))
+  @ViewBuilder
+  private var content: some View {
+    if let contentID = node.controlID(forKey: "content"), isVisible(contentID) {
+      ControlView(id: contentID, axis: .none)
+    } else if node.controlID(forKey: "content") == nil,
+      let text = node.string("content") ?? node.string("text")
     {
-      return disabled
+      Text(text)
     }
-    return MaterialPalette.color(node.string("bgcolor"))
+  }
+
+  private var hasVisibleIcon: Bool {
+    if let id = node.controlID(forKey: "icon") { return isVisible(id) }
+    return node.props["icon"]?.isNull == false
+  }
+
+  private var hasVisibleContent: Bool {
+    if let id = node.controlID(forKey: "content") { return isVisible(id) }
+    return node.string("content") != nil || node.string("text") != nil
+  }
+
+  private func isVisible(_ id: Int) -> Bool {
+    store.node(id)?.bool("visible") != false
   }
 
   private func activate() {
+    guard !presentation.disabled else { return }
+    if longPressConsumedClick {
+      longPressConsumedClick = false
+      return
+    }
     if let url = node.string("url").flatMap(URL.init(string:)) { openURL(url) }
     events.fire(node, "click")
+  }
+
+  private func handleLongPress() {
+    longPressConsumedClick = true
+    events.fire(node, "long_press")
+    // SwiftUI normally lets the long-press recognizer suppress Button's tap.
+    // Keep the flag briefly as a guard for platform releases
+    // where both callbacks are delivered for the same pointer sequence.
+    DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+      if longPressConsumedClick { longPressConsumedClick = false }
+    }
+  }
+}
+
+enum CupertinoButtonVariant: Equatable {
+  case plain
+  case filled
+  case tinted
+
+  init(wireType: String) {
+    switch wireType {
+    case "CupertinoFilledButton", "FilledButton": self = .filled
+    case "CupertinoTintedButton", "FilledTonalButton": self = .tinted
+    default: self = .plain
+    }
+  }
+}
+
+enum CupertinoButtonSizeStyle: String, Equatable {
+  case small
+  case medium
+  case large
+}
+
+enum CupertinoNativeButtonAppearance: Equatable {
+  case borderedProminent
+  case bordered
+  case borderless
+}
+
+enum CupertinoButtonSlot: Equatable {
+  case none
+  case scalar
+  case control(Int)
+}
+
+/// The source-pinned constructor values Flet passes to Flutter's
+/// `CupertinoButton`, independent of how SwiftUI chooses to draw them.
+struct CupertinoButtonPresentation {
+  let node: ControlNode
+
+  static let iconContentSpacing: CGFloat = 8
+  static let iconSize: CGFloat = 20
+  static let focusOutlineWidth: CGFloat = 3.5
+  static let defaultDisabledBackgroundToken = "tertiarySystemFill"
+  static let defaultFocusColorOpacity = 0.80
+  static let defaultFocusColorBrightness = 0.69
+  static let defaultFocusColorSaturation = 0.835
+
+  var variant: CupertinoButtonVariant { CupertinoButtonVariant(wireType: node.type) }
+  var disabled: Bool { node.bool("disabled") ?? false }
+  var autofocus: Bool { node.bool("autofocus") ?? false }
+  var pressedOpacity: Double { node.double("opacity_on_click") ?? 0.4 }
+
+  var sizeStyle: CupertinoButtonSizeStyle {
+    CupertinoButtonSizeStyle(rawValue: node.string("size")?.lowercased() ?? "") ?? .large
+  }
+
+  var defaultMinimumSide: CGFloat {
+    switch sizeStyle {
+    case .small: return 28
+    case .medium: return 32
+    case .large: return 44
+    }
+  }
+
+  var minimumSize: CGSize {
+    guard let size = node.props["min_size"]?.mapValue else {
+      return CGSize(width: defaultMinimumSide, height: defaultMinimumSide)
+    }
+    return CGSize(
+      width: CGFloat(size["width"]?.doubleValue ?? Double(defaultMinimumSide)),
+      height: CGFloat(size["height"]?.doubleValue ?? Double(defaultMinimumSide)))
+  }
+
+  var explicitPadding: EdgeInsets? { ControlProps.edgeInsets(node.props["padding"]) }
+
+  var resolvedPadding: EdgeInsets {
+    if let explicitPadding { return explicitPadding }
+    switch sizeStyle {
+    case .small: return EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)
+    case .medium: return EdgeInsets(top: 10, leading: 15, bottom: 10, trailing: 15)
+    case .large: return EdgeInsets(top: 16, leading: 20, bottom: 16, trailing: 20)
+    }
+  }
+
+  var alignment: Alignment {
+    ControlProps.alignment(node.props["alignment"]) ?? .center
+  }
+
+  // Flet explicitly passes 8 even though Flutter's newer size presets have
+  // their own radii, so every size keeps this value unless Ruby overrides it.
+  var borderRadius: CGFloat { RufletThemeDefaults.cupertinoButtonRadius(node) }
+
+  var backgroundToken: String? { node.string("bgcolor") }
+  var foregroundToken: String? { node.string("color") }
+  var focusColorToken: String? { node.string("focus_color") }
+  var disabledBackgroundToken: String {
+    node.string("disabled_bgcolor") ?? Self.defaultDisabledBackgroundToken
+  }
+
+  func slot(_ key: String) -> CupertinoButtonSlot {
+    if let id = node.controlID(forKey: key) { return .control(id) }
+    guard node.props[key]?.isNull == false else { return .none }
+    return .scalar
+  }
+
+  var hasBackground: Bool {
+    variant != .plain || backgroundToken != nil
+  }
+
+  var appearance: CupertinoNativeButtonAppearance {
+    switch variant {
+    case .filled: return .borderedProminent
+    case .tinted: return .bordered
+    case .plain:
+      return hasBackground ? .borderedProminent : .borderless
+    }
+  }
+
+  var foreground: Color? { MaterialPalette.color(foregroundToken) }
+
+  var tint: Color? {
+    if disabled, hasBackground {
+      return MaterialPalette.color(node.string("disabled_bgcolor"))
+        ?? Self.nativeTertiarySystemFill
+    }
+    return MaterialPalette.color(backgroundToken)
+  }
+
+  var focusColor: Color {
+    MaterialPalette.color(focusColorToken)
+      ?? Color.accentColor.opacity(Self.defaultFocusColorOpacity)
+  }
+
+  var controlSize: ControlSize {
+    switch sizeStyle {
+    case .small: return .small
+    case .medium: return .regular
+    case .large: return .large
+    }
+  }
+
+  private static var nativeTertiarySystemFill: Color? {
+    #if os(iOS)
+      return Color(uiColor: .tertiarySystemFill)
+    #else
+      // AppKit has no `tertiarySystemFill` color. Leaving the tint unspecified
+      // lets the native disabled button style resolve the platform fill.
+      return nil
+    #endif
+  }
+}
+
+private struct CupertinoButtonNativeSemantics: ViewModifier {
+  let presentation: CupertinoButtonPresentation
+  let focused: Bool
+
+  func body(content: Content) -> some View {
+    content
+      .controlSize(presentation.controlSize)
+      .modifier(OptionalTint(color: presentation.tint))
+      .modifier(OptionalForeground(color: presentation.foreground))
+      .frame(
+        minWidth: presentation.minimumSize.width,
+        minHeight: presentation.minimumSize.height,
+        alignment: presentation.alignment)
+      .clipShape(RoundedRectangle(
+        cornerRadius: presentation.borderRadius, style: .continuous))
+      .overlay(
+        RoundedRectangle(cornerRadius: presentation.borderRadius, style: .continuous)
+          .stroke(
+            focused ? presentation.focusColor : .clear,
+            lineWidth: CupertinoButtonPresentation.focusOutlineWidth))
+  }
+}
+
+private struct CupertinoButtonLongPress: ViewModifier {
+  let enabled: Bool
+  let action: () -> Void
+
+  func body(content: Content) -> some View {
+    if enabled {
+      content.simultaneousGesture(LongPressGesture().onEnded { _ in action() })
+    } else {
+      content
+    }
   }
 }
 
 /// Cupertino's press feedback is a fade, and the button names how far.
 private struct CupertinoPressOpacity: ViewModifier {
   let value: Double
+  let enabled: Bool
   @State private var pressed = false
 
   func body(content: Content) -> some View {
@@ -102,8 +335,14 @@ private struct CupertinoPressOpacity: ViewModifier {
       .opacity(pressed ? value : 1)
       .simultaneousGesture(
         DragGesture(minimumDistance: 0)
-          .onChanged { _ in pressed = true }
-          .onEnded { _ in pressed = false })
+          .onChanged { _ in
+            guard enabled, !pressed else { return }
+            withAnimation(.easeInOut(duration: 0.12)) { pressed = true }
+          }
+          .onEnded { _ in
+            guard pressed else { return }
+            withAnimation(.easeOut(duration: 0.18)) { pressed = false }
+          })
   }
 }
 
@@ -111,21 +350,6 @@ private struct OptionalEdgeInsets: ViewModifier {
   let insets: EdgeInsets?
   func body(content: Content) -> some View {
     if let insets { content.padding(insets) } else { content }
-  }
-}
-
-private struct OptionalMinimumSize: ViewModifier {
-  let value: RufletValue?
-  func body(content: Content) -> some View {
-    if let map = value?.mapValue {
-      let width = CGFloat(map["width"]?.doubleValue ?? 0)
-      let height = CGFloat(map["height"]?.doubleValue ?? 0)
-      content.frame(
-        minWidth: width,
-        minHeight: height)
-    } else {
-      content
-    }
   }
 }
 
