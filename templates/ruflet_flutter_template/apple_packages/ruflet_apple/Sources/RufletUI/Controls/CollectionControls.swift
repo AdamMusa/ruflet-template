@@ -13,6 +13,7 @@ import SwiftUI
 /// for the end of the list still fires.
 struct ListViewControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
   @State private var measuredPrototypeExtent: CGFloat?
   @StateObject private var scrollDriver = CollectionNativeScrollDriver()
@@ -26,7 +27,12 @@ struct ListViewControlView: View {
     let config = CollectionDefaults.listView(node)
     let horizontal = config.horizontal
     let axis: LayoutAxis = horizontal ? .horizontal : .vertical
-    let usesPrototype = config.usesPrototype
+    let children = CollectionVisibleChildren.ids(
+      node.childIDs, in: store.nodes, reverse: config.reverse)
+    let explicitPrototype = CollectionVisibleChildren.visibleID(
+      config.prototypeItemID, in: store.nodes)
+    let prototypeID = explicitPrototype ?? (config.firstItemPrototype ? children.first : nil)
+    let usesPrototype = config.spacing == 0 && prototypeID != nil
 
     ScrollView(
       horizontal ? .horizontal : .vertical,
@@ -34,19 +40,31 @@ struct ListViewControlView: View {
     ) {
       Group {
         if horizontal, config.lazy {
-          LazyHStack(spacing: 0) { rows(axis: axis, usesPrototype: usesPrototype) }
+          LazyHStack(spacing: 0) {
+            rows(axis: axis, usesPrototype: usesPrototype, children: children,
+              explicitPrototypeID: explicitPrototype)
+          }
         } else if horizontal {
-          HStack(spacing: 0) { rows(axis: axis, usesPrototype: usesPrototype) }
+          HStack(spacing: 0) {
+            rows(axis: axis, usesPrototype: usesPrototype, children: children,
+              explicitPrototypeID: explicitPrototype)
+          }
         } else if config.lazy {
-          LazyVStack(spacing: 0) { rows(axis: axis, usesPrototype: usesPrototype) }
+          LazyVStack(spacing: 0) {
+            rows(axis: axis, usesPrototype: usesPrototype, children: children,
+              explicitPrototypeID: explicitPrototype)
+          }
         } else {
-          VStack(spacing: 0) { rows(axis: axis, usesPrototype: usesPrototype) }
+          VStack(spacing: 0) {
+            rows(axis: axis, usesPrototype: usesPrototype, children: children,
+              explicitPrototypeID: explicitPrototype)
+          }
         }
       }
       .padding(config.padding)
       .modifier(CollectionClip(behavior: config.clipBehavior))
       .overlay(alignment: .topLeading) {
-        if usesPrototype, let prototype = node.controlID(forKey: "prototype_item") {
+        if usesPrototype, let prototype = explicitPrototype {
           ControlView(id: prototype, axis: axis)
             .fixedSize()
             .opacity(0)
@@ -78,10 +96,11 @@ struct ListViewControlView: View {
   /// `divider_thickness` puts a rule between items — the one place a Flet list
   /// differs from a plain stack of children.
   @ViewBuilder
-  private func rows(axis: LayoutAxis, usesPrototype: Bool) -> some View {
+  private func rows(
+    axis: LayoutAxis, usesPrototype: Bool, children: [Int], explicitPrototypeID: Int?
+  ) -> some View {
     let config = CollectionDefaults.listView(node)
     let spacing = config.spacing
-    let children = config.reverse ? Array(node.childIDs.reversed()) : node.childIDs
     // Flet deliberately ignores item/prototype extents when separators are
     // enabled because ListView.separated has no itemExtent/prototypeItem.
     let itemExtent = measuredPrototypeExtent ?? config.itemExtent
@@ -96,7 +115,7 @@ struct ListViewControlView: View {
       }
       ControlView(id: children[index], axis: axis)
         .modifier(CollectionPrototypeMeasure(
-          enabled: usesPrototype && node.controlID(forKey: "prototype_item") == nil && index == 0,
+          enabled: usesPrototype && explicitPrototypeID == nil && index == 0,
           horizontal: axis == .horizontal))
         .frame(
           width: axis == .horizontal ? itemExtent : nil,
@@ -110,6 +129,7 @@ struct ListViewControlView: View {
 /// (`runs_count`) or a maximum item extent, the two modes Flet exposes.
 struct GridViewControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
   @StateObject private var scrollDriver = CollectionNativeScrollDriver()
 
@@ -148,7 +168,8 @@ struct GridViewControlView: View {
   @ViewBuilder
   private var gridChildren: some View {
     let config = CollectionDefaults.gridView(node)
-    let ids = config.reverse ? Array(node.childIDs.reversed()) : node.childIDs
+    let ids = CollectionVisibleChildren.ids(
+      node.childIDs, in: store.nodes, reverse: config.reverse)
     ForEach(ids, id: \.self) { childID in
       ControlView(id: childID, axis: .none)
         .aspectRatio(config.childAspectRatio, contentMode: .fit)
@@ -172,6 +193,24 @@ struct GridViewControlView: View {
     }
     let extent = config.maxExtent ?? 1
     return [GridItem(.adaptive(minimum: extent), spacing: spacing)]
+  }
+}
+
+/// Flet's `children("controls")` and `buildWidget("prototype_item")` omit
+/// invisible controls before list/grid construction. Filtering at the native
+/// collection boundary also keeps separators, reversal and prototype choice
+/// indexed against the same visible sequence as Flutter.
+enum CollectionVisibleChildren {
+  static func ids(
+    _ ids: [Int], in nodes: [Int: ControlNode], reverse: Bool = false
+  ) -> [Int] {
+    let visible = ids.filter { nodes[$0]?.bool("visible") != false }
+    return reverse ? Array(visible.reversed()) : visible
+  }
+
+  static func visibleID(_ id: Int?, in nodes: [Int: ControlNode]) -> Int? {
+    guard let id, nodes[id]?.bool("visible") != false else { return nil }
+    return id
   }
 }
 
