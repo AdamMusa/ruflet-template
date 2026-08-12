@@ -2196,40 +2196,48 @@ struct DateTimePickerControlView: View {
   @State private var rangeEnd = Date()
   @State private var entryMode = ""
 
+  @ViewBuilder
   var body: some View {
-    picker
-      .padding(20)
-      .frame(maxWidth: 420)
-      .background(
-        RoundedRectangle(cornerRadius: 14)
-          .fill(MaterialPalette.color(node.string("bgcolor"), default: pickerSurface)))
-      .shadow(radius: 20)
-      .padding(ControlProps.edgeInsets(node.props["inset_padding"])
-        ?? EdgeInsets(top: 24, leading: 24, bottom: 24, trailing: 24))
-      .environment(\.locale, pickerLocale)
-      .modifier(PickerValidation(node: node, kind: kind))
-      .modifier(TimeFieldLabels(node: node, kind: kind))
-      .onAppear {
-        // `adaptive` picks the Cupertino wheel on Apple, which is what the
-        // native pickers already are; `modal` and `barrier_color` belong to
-        // the presenter that shows this.
-        _ = node.bool("adaptive")
-        // A 12- or 24-hour clock is the locale's on Apple; Flutter lets the
-        // control override it, and `orientation` picks the dial's layout,
-        // which the native picker decides from its own size.
-        _ = node.string("hour_format")
-        _ = node.string("orientation")
-        _ = node.bool("modal")
-        _ = node.string("barrier_color")
-        _ = node.string("keyboard_type")
-        _ = node.string("date_picker_mode")
-        if let current = date(from: node.string("current_date")) { selection = current }
-      }
+    // Flet's picker widget itself is always zero-sized. It presents exactly
+    // once when `open` changes from false to true. DialogPresenter normally
+    // performs that host transition, but retaining the same guard here is
+    // important when a picker is mounted directly and makes `open` a real
+    // renderer contract rather than presenter-only bookkeeping.
+    if node.bool("open") == true {
+      picker
+        .padding(20)
+        .frame(maxWidth: 420)
+        .background(
+          RoundedRectangle(cornerRadius: 14)
+            .fill(MaterialPalette.color(node.string("bgcolor"), default: pickerSurface)))
+        .shadow(radius: 20)
+        .padding(ControlProps.edgeInsets(node.props["inset_padding"])
+          ?? EdgeInsets(top: 24, leading: 24, bottom: 24, trailing: 24))
+        .environment(\.locale, pickerLocale)
+        .modifier(PickerValidation(node: node, kind: kind))
+        .modifier(TimeFieldLabels(node: node, kind: kind))
+        .onAppear {
+          // `adaptive` chooses the platform picker on Apple. `modal` and
+          // `barrier_color` are consumed by DialogPresenter.
+          _ = node.bool("adaptive")
+          _ = node.string("orientation")
+          _ = node.bool("modal")
+          _ = node.string("barrier_color")
+          _ = node.string("keyboard_type")
+          _ = node.string("date_picker_mode")
+        }
+    }
   }
 
   /// `locale` is the calendar and month names the picker draws with.
   private var pickerLocale: Locale {
-    node.string("locale").map { Locale(identifier: $0) } ?? .current
+    let base = node.string("locale") ?? Locale.current.identifier
+    guard kind == .time else { return Locale(identifier: base) }
+    switch node.string("hour_format")?.lowercased() {
+    case "h12": return Locale(identifier: "\(base)@hours=h12")
+    case "h24": return Locale(identifier: "\(base)@hours=h23")
+    default: return Locale(identifier: base)
+    }
   }
 
   /// The icons Material puts on the button that swaps between the calendar
@@ -2245,11 +2253,6 @@ struct DateTimePickerControlView: View {
     guard entryMode == "input" else { return node.props["switch_to_input_icon"] }
     if kind == .time, let timer = node.props["switch_to_timer_icon"] { return timer }
     return node.props["switch_to_calendar_icon"]
-  }
-
-  private func date(from text: String?) -> Date? {
-    guard let text else { return nil }
-    return ISO8601DateFormatter().date(from: text)
   }
 
   @ViewBuilder
@@ -2303,25 +2306,41 @@ struct DateTimePickerControlView: View {
       }
 
       if kind != .dateRange {
-        Button(entryMode == "input" ? "Calendar" : "Keyboard") { toggleEntryMode() }
-          .buttonStyle(.plain)
-          .accessibilityLabel(entryMode == "input" ? "Switch to picker mode" : "Switch to input mode")
+        Button(action: toggleEntryMode) {
+          HStack(spacing: 6) {
+            if entryModeIconValue != nil {
+              entryModeIcon
+            } else {
+              Image(systemName: entryMode == "input" ? "calendar" : "keyboard")
+            }
+            Text(entryMode == "input" ? "Calendar" : "Keyboard")
+          }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(entryMode == "input" ? "Switch to picker mode" : "Switch to input mode")
       }
 
       HStack {
         Button(node.string("cancel_text") ?? "Cancel") { close(cancelled: true) }
         Spacer()
-        Button(node.string("confirm_text") ?? "OK") { confirm() }
+        Button(confirmButtonText) { confirm() }
           .keyboardShortcut(.defaultAction)
       }
     }
     .padding()
     .onAppear {
-      selection = parsedValue(node.string("value")) ?? selection
-      rangeStart = parsedValue(node.string("start_value")) ?? selection
+      let current = parsedValue(node.string("current_date")) ?? selection
+      selection = parsedValue(node.string("value")) ?? current
+      rangeStart = parsedValue(node.string("start_value")) ?? current
       rangeEnd = max(parsedValue(node.string("end_value")) ?? rangeStart, rangeStart)
       entryMode = node.string("entry_mode") ?? (kind == .time ? "dial" : "calendar")
     }
+  }
+
+  private var confirmButtonText: String {
+    guard kind == .dateRange else { return node.string("confirm_text") ?? "OK" }
+    if entryMode == "input" { return node.string("confirm_text") ?? "Save" }
+    return node.string("save_text") ?? "Save"
   }
 
   private func toggleEntryMode() {
@@ -2412,6 +2431,12 @@ struct DateTimePickerControlView: View {
 enum RufletPickerSemantics {
   static let defaultFirstDate = date(year: 1900, month: 1, day: 1)
   static let defaultLastDate = date(year: 2050, month: 1, day: 1)
+
+  /// Mirrors Flet's `control.getBool("open", false)` gate. Pickers are dialog
+  /// services with no persistent visual body, so a missing value is closed.
+  static func isPresented(_ node: ControlNode) -> Bool {
+    node.bool("open") == true
+  }
 
   private static func date(year: Int, month: Int, day: Int) -> Date {
     var calendar = Calendar(identifier: .gregorian)

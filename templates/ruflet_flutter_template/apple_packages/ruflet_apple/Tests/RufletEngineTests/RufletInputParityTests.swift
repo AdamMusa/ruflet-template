@@ -78,4 +78,28 @@ final class RufletInputParityTests: XCTestCase {
     XCTAssertEqual(calendar.component(.month, from: RufletPickerSemantics.defaultLastDate), 1)
     XCTAssertEqual(calendar.component(.day, from: RufletPickerSemantics.defaultLastDate), 1)
   }
+
+  func testMaterialPickersUseFletsOpenFalsePresentationGate() {
+    XCTAssertFalse(RufletPickerSemantics.isPresented(ControlNode(id: 1, type: "DatePicker")))
+    XCTAssertFalse(RufletPickerSemantics.isPresented(ControlNode(
+      id: 2,
+      type: "TimePicker",
+      props: ["open": .bool(false)])))
+    XCTAssertTrue(RufletPickerSemantics.isPresented(ControlNode(
+      id: 3,
+      type: "DateRangePicker",
+      props: ["open": .bool(true)])))
+  }
+
+  func testEveryMaterialPickerAdvertisesItsPinnedFletEvents() {
+    XCTAssertEqual(
+      ControlRegistry.descriptor(for: "DatePicker")?.supportedEvents,
+      ["change", "dismiss", "entry_mode_change"])
+    XCTAssertEqual(
+      ControlRegistry.descriptor(for: "DateRangePicker")?.supportedEvents,
+      ["change", "dismiss"])
+    XCTAssertEqual(
+      ControlRegistry.descriptor(for: "TimePicker")?.supportedEvents,
+      ["change", "dismiss", "entry_mode_change"])
+  }
 }
