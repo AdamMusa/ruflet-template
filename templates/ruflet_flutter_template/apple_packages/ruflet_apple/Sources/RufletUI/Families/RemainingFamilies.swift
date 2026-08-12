@@ -63,8 +63,6 @@ extension ControlRegistry {
     switch node.type {
     case "Canvas":
       return AnyView(CanvasControlView(node: node))
-    case "LineChart", "BarChart", "PieChart", "ScatterChart":
-      return AnyView(ChartControlView(node: node))
     case "WebView":
       return AnyView(WebViewControlView(node: node))
     case "Video":
@@ -91,8 +89,6 @@ extension ControlRegistry {
     case "Arc", "Circle", "Color", "Fill", "Line", "Oval", "Path", "Points", "Rect", "Shadow":
       // Canvas shapes, drawn by their Canvas parent.
       return AnyView(EmptyView())
-    case "RadarChart", "CandlestickChart":
-      return AnyView(ChartControlView(node: node))
     case "RadarChartTitle", "RadarDataSet", "RadarDataSetEntry", "CandlestickChartSpot",
       "ScatterChartSpot", "group", "rod", "stack_item", "axis", "l", "data", "p",
       "section":

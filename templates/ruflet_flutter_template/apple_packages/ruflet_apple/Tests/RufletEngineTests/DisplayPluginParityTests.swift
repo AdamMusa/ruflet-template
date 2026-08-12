@@ -1,6 +1,7 @@
 @testable import RufletUI
 @testable import RufletRive
 @testable import RufletLottie
+@testable import RufletCharts
 import RufletEngine
 import RufletProtocol
 import XCTest

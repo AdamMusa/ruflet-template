@@ -24,6 +24,7 @@ let package = Package(
     .library(name: "RufletFlashlight", targets: ["RufletFlashlight"]),
     .library(name: "RufletRive", targets: ["RufletRive"]),
     .library(name: "RufletLottie", targets: ["RufletLottie"]),
+    .library(name: "RufletCharts", targets: ["RufletCharts"]),
     .library(name: "RufletCodeEditor", targets: ["RufletCodeEditor"]),
     .library(name: "RufletSpinKit", targets: ["RufletSpinKit"]),
 
@@ -72,6 +73,9 @@ let package = Package(
         .product(name: "Lottie", package: "lottie-ios")
       ]),
     .target(
+      name: "RufletCharts",
+      dependencies: ["RufletUI", "RufletEngine", "RufletProtocol"]),
+    .target(
       name: "RufletCodeEditor",
       dependencies: ["RufletUI", "RufletEngine", "RufletProtocol"]),
     .target(
@@ -84,7 +88,8 @@ let package = Package(
         "RufletEngine", "RufletProtocol", "RufletUI",
         "RufletMotion", "RufletLocation", "RufletMedia",
         "RufletAudioRecorder", "RufletCamera", "RufletFlashlight",
-        "RufletRive", "RufletLottie"
+        "RufletRive", "RufletLottie",
+        "RufletCharts"
       ]),
     .testTarget(
       name: "RufletCodeEditorTests",

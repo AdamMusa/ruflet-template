@@ -432,7 +432,8 @@ public enum ControlRegistry {
     add(["Canvas"], .visible, "CanvasControlView", .nativeView,
         events: ["resize"], methods: ["capture", "clear_capture", "get_capture"])
     add(["LineChart", "BarChart", "PieChart", "ScatterChart", "RadarChart",
-        "CandlestickChart"], .visible, "ChartControlView", .nativeView,
+        "CandlestickChart"], .visible, "RufletCharts.ChartControlView",
+        .optionalBundle("RufletCharts"),
         events: ["event"])
     add(["Arc", "Circle", "Color", "Fill", "Line", "Oval", "Path", "Points", "Rect",
          "Shadow", "RadarChartTitle", "RadarDataSet", "RadarDataSetEntry",

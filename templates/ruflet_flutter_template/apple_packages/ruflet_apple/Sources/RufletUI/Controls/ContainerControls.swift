@@ -1180,8 +1180,8 @@ struct PassthroughControlView: View {
 }
 
 /// Flet's `LinearGradient` on a container background.
-enum GradientProps {
-  static func linear(_ value: RufletValue?) -> LinearGradient? {
+public enum GradientProps {
+  public static func linear(_ value: RufletValue?) -> LinearGradient? {
     guard let map = value?.mapValue else { return nil }
     let colors = (map["colors"]?.arrayValue ?? [])
       .compactMap { MaterialPalette.color($0.stringValue) }
