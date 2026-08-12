@@ -33,7 +33,11 @@ class NativeRendererGapAuditTest < Minitest::Test
     camera = @surface.fetch("Camera")
     assert_includes camera.fetch("declarations"), "control_descriptor"
     assert_includes camera.fetch("declarations"), "named_service"
-    assert_includes camera.fetch("events"), "picture_taken"
+    # The pinned flet_camera control emits state_change and stream_image.
+    # take_picture returns its result through the method completion; it does
+    # not synthesize a picture_taken event.
+    assert_includes camera.fetch("events"), "state_change"
+    assert_includes camera.fetch("events"), "stream_image"
     assert_includes camera.fetch("methods"), "request_permission"
   end
 
