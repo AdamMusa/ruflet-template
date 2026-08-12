@@ -481,9 +481,10 @@ struct NavigationBarControlView: View {
           .frame(maxWidth: .infinity)
           .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(NavigationDestinationButtonStyle(
+          node: node, selected: isSelected, disabled: isDisabled))
         .disabled(isDisabled)
-        .modifier(NavigationOverlayTint(node: node, selected: isSelected, disabled: isDisabled))
+        .modifier(NavigationHoverTint(node: node, selected: isSelected, disabled: isDisabled))
         .modifier(NavigationDestinationHelpModifier(
           text: isDisabled ? nil : destination.string("tooltip") ?? destination.string("label")))
         .accessibilityAddTraits(isSelected ? .isSelected : [])
@@ -522,32 +523,45 @@ struct NavigationBarControlView: View {
   }
 }
 
-/// Press/hover tint supplied explicitly by Ruflet's stateful overlay colour.
-private struct NavigationOverlayTint: ViewModifier {
+/// Resolve the pressed overlay from the native Button's own press lifetime.
+/// Adding a second zero-distance DragGesture here made the first tap compete
+/// with the control it was decorating.
+private struct NavigationDestinationButtonStyle: ButtonStyle {
   let node: ControlNode
   let selected: Bool
   let disabled: Bool
-  @State private var pressed = false
+
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label
+      .background(color(pressed: configuration.isPressed) ?? .clear)
+  }
+
+  private func color(pressed: Bool) -> Color? {
+    guard !disabled, pressed else { return nil }
+    return MaterialPalette.color(
+      stateful: node.props["overlay_color"],
+      in: node.widgetStates(selected: selected, extra: [.pressed]))
+  }
+}
+
+/// Pointer hover is independent of activation and needs no gesture recognizer.
+private struct NavigationHoverTint: ViewModifier {
+  let node: ControlNode
+  let selected: Bool
+  let disabled: Bool
   @State private var hovered = false
 
   func body(content: Content) -> some View {
     content
       .background(color ?? .clear)
       .onHover { hovered = $0 }
-      .simultaneousGesture(
-        DragGesture(minimumDistance: 0)
-          .onChanged { _ in if !disabled { pressed = true } }
-          .onEnded { _ in pressed = false })
   }
 
   private var color: Color? {
-    guard !disabled, pressed || hovered else { return nil }
-    var extra: Set<RufletWidgetState> = []
-    if pressed { extra.insert(.pressed) }
-    if hovered { extra.insert(.hovered) }
+    guard !disabled, hovered else { return nil }
     return MaterialPalette.color(
       stateful: node.props["overlay_color"],
-      in: node.widgetStates(selected: selected, extra: extra))
+      in: node.widgetStates(selected: selected, extra: [.hovered]))
   }
 }
 

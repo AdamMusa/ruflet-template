@@ -39,8 +39,6 @@ struct CupertinoButtonControlView: View {
       .modifier(CupertinoButtonLongPress(
         enabled: !presentation.disabled && node.handlesEvent("long_press"),
         action: handleLongPress))
-      .modifier(CupertinoPressOpacity(
-        value: presentation.pressedOpacity, enabled: !presentation.disabled))
       .focused($focused)
       .onAppear { focused = presentation.autofocus }
       .onChange(of: focused) { events.fire(node, $0 ? "focus" : "blur") }
@@ -332,28 +330,6 @@ private struct CupertinoButtonLongPress: ViewModifier {
     } else {
       content
     }
-  }
-}
-
-/// Cupertino's press feedback is a fade, and the button names how far.
-private struct CupertinoPressOpacity: ViewModifier {
-  let value: Double
-  let enabled: Bool
-  @State private var pressed = false
-
-  func body(content: Content) -> some View {
-    content
-      .opacity(pressed ? value : 1)
-      .simultaneousGesture(
-        DragGesture(minimumDistance: 0)
-          .onChanged { _ in
-            guard enabled, !pressed else { return }
-            withAnimation(.easeInOut(duration: 0.12)) { pressed = true }
-          }
-          .onEnded { _ in
-            guard pressed else { return }
-            withAnimation(.easeOut(duration: 0.18)) { pressed = false }
-          })
   }
 }
 
