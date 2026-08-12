@@ -885,7 +885,24 @@ public final class UrlLauncherService: RufletService {
   }
 }
 
-/// `HapticFeedback` — the taptic engine on iOS; a no-op elsewhere.
+/// `HapticFeedback` — the taptic engine on iOS and Force Touch feedback on macOS.
+public enum FletHapticFeedbackSemantics {
+  public enum Method: String, CaseIterable, Equatable {
+    case heavyImpact = "heavy_impact"
+    case lightImpact = "light_impact"
+    case mediumImpact = "medium_impact"
+    case vibrate
+    case selectionClick = "selection_click"
+  }
+
+  public static func method(_ name: String) throws -> Method {
+    guard let method = Method(rawValue: name) else {
+      throw RufletServiceError.unsupportedMethod(type: "HapticFeedback", method: name)
+    }
+    return method
+  }
+}
+
 @MainActor
 public final class HapticFeedbackService: RufletService {
   public static let wireType = "HapticFeedback"
@@ -898,14 +915,21 @@ public final class HapticFeedbackService: RufletService {
     context: RufletServiceContext,
     completion: @escaping RufletMethodCompletion
   ) {
+    let method: FletHapticFeedbackSemantics.Method
+    do {
+      method = try FletHapticFeedbackSemantics.method(call.name)
+    } catch {
+      return completion(.failure(error))
+    }
+
     #if os(iOS)
-      switch call.name {
-      case "light_impact":
+      switch method {
+      case .lightImpact:
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
-      case "medium_impact":
+      case .mediumImpact:
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
-      case "heavy_impact", "vibrate":
-        if call.name == "vibrate" {
+      case .heavyImpact, .vibrate:
+        if method == .vibrate {
           #if canImport(AudioToolbox)
             AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
           #else
@@ -914,19 +938,21 @@ public final class HapticFeedbackService: RufletService {
         } else {
           UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
         }
-      case "selection_click":
+      case .selectionClick:
         UISelectionFeedbackGenerator().selectionChanged()
-      default:
-        return completion(
-          .failure(
-            RufletServiceError.unsupportedMethod(type: "HapticFeedback", method: call.name)))
       }
-      completion(.success(.null))
+    #elseif canImport(AppKit)
+      let pattern: NSHapticFeedbackManager.FeedbackPattern
+      switch method {
+      case .selectionClick, .lightImpact: pattern = .alignment
+      case .mediumImpact: pattern = .levelChange
+      case .heavyImpact, .vibrate: pattern = .generic
+      }
+      NSHapticFeedbackManager.defaultPerformer.perform(pattern, performanceTime: .now)
     #else
-      // A Mac has no haptics; succeeding quietly is better than failing a call
-      // an application makes for polish rather than for behaviour.
-      completion(.success(.null))
+      _ = method
     #endif
+    completion(.success(.null))
   }
 }
 
@@ -980,6 +1006,131 @@ public final class WakelockService: RufletService {
 }
 
 /// `SemanticsService` — VoiceOver announcements.
+public enum FletSemanticsAssertiveness: String, Equatable {
+  case polite
+  case assertive
+
+  init(_ value: RufletValue?) {
+    self = value?.stringValue?.lowercased() == "assertive" ? .assertive : .polite
+  }
+}
+
+public struct FletSemanticsAnnouncement: Equatable {
+  public enum Kind: Equatable { case message, tooltip }
+
+  public let kind: Kind
+  public let message: String
+  public let rtl: Bool
+  public let assertiveness: FletSemanticsAssertiveness
+}
+
+public struct FletAccessibilityFeatures: Equatable {
+  public let accessibleNavigation: Bool
+  public let boldText: Bool
+  public let disableAnimations: Bool
+  public let highContrast: Bool
+  public let invertColors: Bool
+  public let reduceMotion: Bool
+  public let onOffSwitchLabels: Bool
+  public let supportsAnnouncements: Bool
+
+  public init(
+    accessibleNavigation: Bool,
+    boldText: Bool,
+    disableAnimations: Bool,
+    highContrast: Bool,
+    invertColors: Bool,
+    reduceMotion: Bool,
+    onOffSwitchLabels: Bool,
+    supportsAnnouncements: Bool
+  ) {
+    self.accessibleNavigation = accessibleNavigation
+    self.boldText = boldText
+    self.disableAnimations = disableAnimations
+    self.highContrast = highContrast
+    self.invertColors = invertColors
+    self.reduceMotion = reduceMotion
+    self.onOffSwitchLabels = onOffSwitchLabels
+    self.supportsAnnouncements = supportsAnnouncements
+  }
+
+  public var wireValue: RufletValue {
+    .map([
+      "accessible_navigation": .bool(accessibleNavigation),
+      "bold_text": .bool(boldText),
+      "disable_animations": .bool(disableAnimations),
+      "high_contrast": .bool(highContrast),
+      "invert_colors": .bool(invertColors),
+      "reduce_motion": .bool(reduceMotion),
+      "on_off_switch_labels": .bool(onOffSwitchLabels),
+      "supports_announcements": .bool(supportsAnnouncements),
+    ])
+  }
+}
+
+public enum FletSemanticsServiceSemantics {
+  public static func announcement(_ call: RufletMethodCall) throws
+    -> FletSemanticsAnnouncement
+  {
+    let kind: FletSemanticsAnnouncement.Kind
+    switch call.name {
+    case "announce_message": kind = .message
+    case "announce_tooltip": kind = .tooltip
+    default:
+      throw RufletServiceError.unsupportedMethod(type: "SemanticsService", method: call.name)
+    }
+    return FletSemanticsAnnouncement(
+      kind: kind,
+      message: dartString(call.argument("message")),
+      rtl: kind == .message && call.argument("rtl")?.boolValue == true,
+      assertiveness: kind == .message
+        ? FletSemanticsAssertiveness(call.argument("assertiveness")) : .polite)
+  }
+
+  public static func dartString(_ value: RufletValue?) -> String {
+    switch value {
+    case nil, .null: return "null"
+    case .string(let value), .extended(_, let value): return value
+    case .bool(let value): return value ? "true" : "false"
+    case .int(let value): return String(value)
+    case .double(let value): return String(value)
+    case let value?: return value.description
+    }
+  }
+
+  public static var currentFeatures: FletAccessibilityFeatures {
+    #if canImport(UIKit)
+      let reduceMotion = UIAccessibility.isReduceMotionEnabled
+      return FletAccessibilityFeatures(
+        accessibleNavigation: UIAccessibility.isVoiceOverRunning
+          || UIAccessibility.isSwitchControlRunning,
+        boldText: UIAccessibility.isBoldTextEnabled,
+        disableAnimations: reduceMotion,
+        highContrast: UIAccessibility.isDarkerSystemColorsEnabled,
+        invertColors: UIAccessibility.isInvertColorsEnabled,
+        reduceMotion: reduceMotion,
+        onOffSwitchLabels: UIAccessibility.isOnOffSwitchLabelsEnabled,
+        supportsAnnouncements: true)
+    #elseif canImport(AppKit)
+      let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+      return FletAccessibilityFeatures(
+        accessibleNavigation: NSWorkspace.shared.isVoiceOverEnabled,
+        boldText: false,
+        disableAnimations: reduceMotion,
+        highContrast: NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast,
+        invertColors: NSWorkspace.shared.accessibilityDisplayShouldInvertColors,
+        reduceMotion: reduceMotion,
+        onOffSwitchLabels: false,
+        supportsAnnouncements: true)
+    #else
+      return FletAccessibilityFeatures(
+        accessibleNavigation: false, boldText: false, disableAnimations: false,
+        highContrast: false, invertColors: false, reduceMotion: false,
+        onOffSwitchLabels: false, supportsAnnouncements: false)
+    #endif
+  }
+}
+
 @MainActor
 public final class SemanticsAnnouncementService: RufletService {
   public static let wireType = "SemanticsService"
@@ -993,54 +1144,34 @@ public final class SemanticsAnnouncementService: RufletService {
     completion: @escaping RufletMethodCompletion
   ) {
     if call.name == "get_accessibility_features" {
-      return completion(.success(Self.accessibilityFeatures()))
+      return completion(.success(FletSemanticsServiceSemantics.currentFeatures.wireValue))
     }
 
-    guard call.name == "announce_message" || call.name == "announce_tooltip" else {
-      return completion(
-        .failure(
-          RufletServiceError.unsupportedMethod(type: "SemanticsService", method: call.name)))
+    let announcement: FletSemanticsAnnouncement
+    do {
+      announcement = try FletSemanticsServiceSemantics.announcement(call)
+    } catch {
+      return completion(.failure(error))
     }
-    let message = call.argument("message")?.stringValue ?? ""
     #if canImport(UIKit)
-      UIAccessibility.post(notification: .announcement, argument: message)
+      let spoken = NSMutableAttributedString(string: announcement.message)
+      spoken.addAttribute(
+        NSAttributedString.Key(rawValue: "UIAccessibilitySpeechAttributeQueueAnnouncement"),
+        value: announcement.assertiveness == .polite,
+        range: NSRange(location: 0, length: spoken.length))
+      UIAccessibility.post(notification: .announcement, argument: spoken)
     #elseif canImport(AppKit)
       NSAccessibility.post(
         element: NSApp as Any,
         notification: .announcementRequested,
-        userInfo: [.announcement: message])
+        userInfo: [
+          .announcement: announcement.message,
+          .priority: NSNumber(value:
+            announcement.assertiveness == .assertive
+              ? NSAccessibilityPriorityLevel.high.rawValue
+              : NSAccessibilityPriorityLevel.low.rawValue),
+        ])
     #endif
     completion(.success(.null))
-  }
-
-  /// The keys Flutter's `AccessibilityFeatures` exposes, filled in from the
-  /// platform's own settings so a Ruby app can branch on them the same way.
-  private static func accessibilityFeatures() -> RufletValue {
-    #if canImport(UIKit)
-      return .map([
-        "accessible_navigation": .bool(UIAccessibility.isVoiceOverRunning),
-        "bold_text": .bool(UIAccessibility.isBoldTextEnabled),
-        "disable_animations": .bool(UIAccessibility.isReduceMotionEnabled),
-        "high_contrast": .bool(UIAccessibility.isDarkerSystemColorsEnabled),
-        "invert_colors": .bool(UIAccessibility.isInvertColorsEnabled),
-        "reduce_motion": .bool(UIAccessibility.isReduceMotionEnabled),
-        "on_off_switch_labels": .bool(UIAccessibility.shouldDifferentiateWithoutColor),
-        "supports_announcements": .bool(true)
-      ])
-    #elseif canImport(AppKit)
-      let defaults = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
-      return .map([
-        "accessible_navigation": .bool(NSWorkspace.shared.isVoiceOverEnabled),
-        "bold_text": .bool(false),
-        "disable_animations": .bool(defaults),
-        "high_contrast": .bool(NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast),
-        "invert_colors": .bool(NSWorkspace.shared.accessibilityDisplayShouldInvertColors),
-        "reduce_motion": .bool(defaults),
-        "on_off_switch_labels": .bool(false),
-        "supports_announcements": .bool(true)
-      ])
-    #else
-      return .map([:])
-    #endif
   }
 }
