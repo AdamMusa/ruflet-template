@@ -61,6 +61,7 @@ enum AppleChromeAppearance {
 /// any navigation stack, and a navigation bar would not accept those patches.
 struct AppBarControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletNavigationContext) private var navigation
   @Environment(\.rufletScaffoldHost) private var scaffold
   @Environment(\.rufletScaffoldSlots) private var scaffoldSlots
@@ -69,7 +70,8 @@ struct AppBarControlView: View {
     let metrics = ChromeDefaults.appBar(node)
     let elevation = currentElevation(metrics)
     Group {
-      if RufletThemeDefaults.appBarCentersTitle(node) {
+      if ChromeDefaults.appBarCentersTitle(
+        node, visibleActionCount: visibleActionIDs.count) {
         centeredBar
       } else {
         leadingBar
@@ -138,7 +140,7 @@ struct AppBarControlView: View {
     switch slots.actions {
     case .explicit:
       HStack(spacing: 0) {
-        ForEach(node.controlIDs(forKey: "actions"), id: \.self) { actionID in
+        ForEach(visibleActionIDs, id: \.self) { actionID in
           ControlView(id: actionID, axis: .none)
             .frame(maxHeight: metrics.toolbarHeight)
         }
@@ -215,9 +217,14 @@ struct AppBarControlView: View {
   /// action retains its intrinsic SwiftUI layout inside that region.
   private var centeredTitleInset: CGFloat {
     let leading = hasLeading ? metrics.leadingWidth + metrics.titleSpacing : metrics.titleSpacing
-    let trailing = CGFloat(max(node.controlIDs(forKey: "actions").count, slots.actions == .endDrawer ? 1 : 0))
+    let trailing = CGFloat(max(visibleActionIDs.count, slots.actions == .endDrawer ? 1 : 0))
       * 48 + metrics.titleSpacing
     return max(leading, trailing)
+  }
+
+  private var visibleActionIDs: [Int] {
+    ChromeDefaults.visibleAppBarActionIDs(
+      node.controlIDs(forKey: "actions"), in: store.nodes)
   }
 
   @ViewBuilder
@@ -749,6 +756,25 @@ enum ChromeDefaults {
     let tileHeight: CGFloat
     let indicatorWidth: CGFloat
     let indicatorHeight: CGFloat
+  }
+
+  /// AppBar actions are structural children built with Dart's default-visible
+  /// `buildWidgets("actions")` contract before native layout and title rules.
+  static func visibleAppBarActionIDs(
+    _ ids: [Int], in nodes: [Int: ControlNode]
+  ) -> [Int] {
+    ids.filter { nodes[$0]?.bool("visible") != false }
+  }
+
+  static func appBarCentersTitle(
+    _ node: ControlNode, visibleActionCount: Int
+  ) -> Bool {
+    if let explicit = node.props["center_title"]?.boolValue { return explicit }
+    #if os(iOS) || os(macOS)
+      return visibleActionCount < 2
+    #else
+      return false
+    #endif
   }
 
   static func visibleNavigationBarDestinations(_ destinations: [ControlNode]) -> [ControlNode] {
