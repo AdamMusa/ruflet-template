@@ -31,6 +31,21 @@ public struct RufletAdRequest: Equatable {
     httpTimeoutMilliseconds = map["http_timeout"]?.intValue
     extras = map["extras"]?.mapValue
   }
+
+  /// The additional parameters forwarded by google_mobile_ads on Apple.
+  ///
+  /// `http_timeout` intentionally does not participate: the pinned plugin's
+  /// platform codec omits it on iOS, as documented by Flet's `AdRequest`.
+  /// The plugin adds `npa` first and then merges caller extras, so an explicit
+  /// `extras["npa"]` has the final say.
+  public var appleAdditionalParameters: [String: RufletValue] {
+    var parameters: [String: RufletValue] = [:]
+    if nonPersonalizedAds == true {
+      parameters["npa"] = .string("1")
+    }
+    parameters.merge(extras ?? [:]) { _, explicit in explicit }
+    return parameters
+  }
 }
 
 public enum RufletAdPrecision: String, Equatable {

@@ -22,7 +22,7 @@ final class RufletAdsContractTests: XCTestCase {
         "https://ruflet.dev/one", "https://ruflet.dev/two",
       ]),
       "http_timeout": 1_500,
-      "extras": .map(["channel": "native", "age": 4, "enabled": true]),
+      "extras": .map(["channel": "native", "publisher": "ruflet"]),
     ]))
 
     XCTAssertEqual(request.keywords, ["swift", "ruby"])
@@ -34,7 +34,35 @@ final class RufletAdsContractTests: XCTestCase {
     XCTAssertEqual(request.httpTimeoutMilliseconds, 1_500)
     XCTAssertEqual(
       request.extras,
-      ["channel": "native", "age": 4, "enabled": true])
+      ["channel": "native", "publisher": "ruflet"])
+  }
+
+  func testAppleRequestUsesPinnedExplicitExtrasPrecedenceOverNpa() {
+    let request = RufletAdRequest(value: .map([
+      "non_personalized_ads": true,
+      "http_timeout": 25,
+      "extras": .map([
+        "npa": "publisher-choice",
+        "channel": "native",
+        "invalid": 3,
+      ]),
+    ]))
+
+    XCTAssertEqual(
+      request.appleAdditionalParameters,
+      ["npa": "publisher-choice", "channel": "native", "invalid": 3])
+    XCTAssertEqual(request.httpTimeoutMilliseconds, 25)
+    XCTAssertEqual(request.extras?["invalid"], 3)
+  }
+
+  func testAppleRequestInjectsNpaOnlyWhenRequested() {
+    XCTAssertEqual(
+      RufletAdRequest(value: .map(["non_personalized_ads": true]))
+        .appleAdditionalParameters,
+      ["npa": "1"])
+    XCTAssertTrue(
+      RufletAdRequest(value: .map(["non_personalized_ads": false]))
+        .appleAdditionalParameters.isEmpty)
   }
 
   func testAbsentAdRequestUsesFletEmptyRequestDefaults() {
@@ -85,4 +113,43 @@ final class RufletAdsRegistrationTests: XCTestCase {
     })
     XCTAssertEqual(ServiceRegistry.bundleProviding("InterstitialAd"), "RufletAds")
   }
+
+  func testInterstitialRejectsUnknownMethodsWithoutStartingAnAdRequest() {
+    let service = InterstitialAdService()
+    var result: Result<RufletValue, Error>?
+    service.invoke(
+      RufletMethodCall(
+        controlID: 7, callID: "unknown", name: "reload", args: .null),
+      node: nil,
+      context: RufletServiceContext(
+        store: ControlStore(), emitEvent: { _, _, _ in }),
+      completion: { result = $0 })
+
+    guard case .failure(let error) = result else {
+      return XCTFail("Expected an unsupported-method failure")
+    }
+    XCTAssertEqual(
+      error as? RufletServiceError,
+      .unsupportedMethod(type: "InterstitialAd", method: "reload"))
+  }
+
+  #if os(macOS)
+  func testInterstitialShowReportsTheOptionalProductsIOSBoundary() {
+    let service = InterstitialAdService()
+    var result: Result<RufletValue, Error>?
+    service.invoke(
+      RufletMethodCall(controlID: 7, callID: "show", name: "show", args: .null),
+      node: nil,
+      context: RufletServiceContext(
+        store: ControlStore(), emitEvent: { _, _, _ in }),
+      completion: { result = $0 })
+
+    guard case .failure(let error) = result else {
+      return XCTFail("Expected an unsupported-platform failure")
+    }
+    XCTAssertEqual(
+      error as? RufletServiceError,
+      .platformUnsupported(type: "InterstitialAd", method: "show", platform: "macOS"))
+  }
+  #endif
 }

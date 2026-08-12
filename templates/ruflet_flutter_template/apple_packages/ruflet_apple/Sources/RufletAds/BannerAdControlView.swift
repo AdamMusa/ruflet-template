@@ -58,8 +58,6 @@ private struct BannerAdRepresentable: UIViewRepresentable {
     private var events: RufletEventSink
     private weak var banner: BannerView?
     private var signature: Configuration?
-    private var timeoutTask: DispatchWorkItem?
-    private var requestTimedOut = false
 
     init(node: ControlNode, events: RufletEventSink) {
       self.node = node
@@ -77,14 +75,12 @@ private struct BannerAdRepresentable: UIViewRepresentable {
       let next = Configuration(node: node)
       guard next != signature else { return }
       signature = next
-      requestTimedOut = false
-      timeoutTask?.cancel()
 
       guard let banner else { return }
       banner.adUnitID = next.unitID
       banner.rootViewController = nil // The SDK resolves the containing/top controller.
       banner.paidEventHandler = { [weak self] value in
-        guard let self, !self.requestTimedOut else { return }
+        guard let self else { return }
         self.fire(
           "paid",
           data: RufletPaidAdEvent.payload(
@@ -93,24 +89,6 @@ private struct BannerAdRepresentable: UIViewRepresentable {
             currencyCode: value.currencyCode))
       }
       banner.load(next.request.googleRequest())
-      armTimeout(next.request.httpTimeoutMilliseconds)
-    }
-
-    private func armTimeout(_ milliseconds: Int?) {
-      guard let milliseconds, milliseconds > 0 else { return }
-      let task = DispatchWorkItem { [weak self] in
-        guard let self else { return }
-        self.requestTimedOut = true
-        self.fire("error", data: .string("Ad request timed out after \(milliseconds) ms"))
-      }
-      timeoutTask = task
-      DispatchQueue.main.asyncAfter(
-        deadline: .now() + .milliseconds(milliseconds), execute: task)
-    }
-
-    private func finishRequest() {
-      timeoutTask?.cancel()
-      timeoutTask = nil
     }
 
     private func fire(_ name: String, data: RufletValue = .null) {
@@ -118,8 +96,6 @@ private struct BannerAdRepresentable: UIViewRepresentable {
     }
 
     func bannerViewDidReceiveAd(_ bannerView: BannerView) {
-      guard !requestTimedOut else { return }
-      finishRequest()
       fire("load")
     }
 
@@ -127,8 +103,6 @@ private struct BannerAdRepresentable: UIViewRepresentable {
       _ bannerView: BannerView,
       didFailToReceiveAdWithError error: any Error
     ) {
-      guard !requestTimedOut else { return }
-      finishRequest()
       fire("error", data: .string(String(describing: error)))
     }
 

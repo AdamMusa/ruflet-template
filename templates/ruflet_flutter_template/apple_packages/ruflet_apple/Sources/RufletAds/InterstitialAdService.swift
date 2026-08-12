@@ -14,7 +14,6 @@ public final class InterstitialAdService: NSObject, RufletStreamingService {
   private var eventContext: RufletServiceContext?
   private var loadedConfiguration: Configuration?
   private var loadingConfiguration: Configuration?
-  private var timeoutTask: DispatchWorkItem?
 
   #if os(iOS)
   // The pinned Flet service holds a static InterstitialAd reference, so a
@@ -63,15 +62,12 @@ public final class InterstitialAdService: NSObject, RufletStreamingService {
   private func load(_ configuration: Configuration) {
     #if os(iOS)
     loadingConfiguration = configuration
-    timeoutTask?.cancel()
     InterstitialAd.load(
       with: configuration.unitID,
       request: configuration.request.googleRequest()
     ) { [weak self] ad, error in
       Task { @MainActor in
         guard let self, self.loadingConfiguration == configuration else { return }
-        self.timeoutTask?.cancel()
-        self.timeoutTask = nil
         self.loadingConfiguration = nil
         if let error {
           Self.loadedAd = nil
@@ -85,23 +81,8 @@ public final class InterstitialAdService: NSObject, RufletStreamingService {
         self.fire("load")
       }
     }
-    armTimeout(configuration.request.httpTimeoutMilliseconds, configuration: configuration)
     #endif
   }
-
-  #if os(iOS)
-  private func armTimeout(_ milliseconds: Int?, configuration: Configuration) {
-    guard let milliseconds, milliseconds > 0 else { return }
-    let task = DispatchWorkItem { [weak self] in
-      guard let self, self.loadingConfiguration == configuration else { return }
-      self.loadingConfiguration = nil
-      self.fire("error", data: .string("Ad request timed out after \(milliseconds) ms"))
-    }
-    timeoutTask = task
-    DispatchQueue.main.asyncAfter(
-      deadline: .now() + .milliseconds(milliseconds), execute: task)
-  }
-  #endif
 
   private func fire(_ name: String, data: RufletValue = .null) {
     guard let eventNode, eventNode.handlesEvent(name), let eventContext else { return }

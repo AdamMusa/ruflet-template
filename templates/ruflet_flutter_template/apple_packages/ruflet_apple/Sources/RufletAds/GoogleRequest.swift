@@ -9,14 +9,7 @@ extension RufletAdRequest {
     request.contentURL = contentURL
     request.neighboringContentURLs = neighboringContentURLs
 
-    var parameters: [AnyHashable: Any] = [:]
-    for (key, value) in extras ?? [:] {
-      parameters[key] = value.googleAdValue
-    }
-    if nonPersonalizedAds == true {
-      // This is the Google Mobile Ads equivalent used by the Flutter plugin.
-      parameters["npa"] = "1"
-    }
+    let parameters = appleAdditionalParameters.mapValues(\.googleAdValue)
     if !parameters.isEmpty {
       let extras = Extras()
       extras.additionalParameters = parameters
