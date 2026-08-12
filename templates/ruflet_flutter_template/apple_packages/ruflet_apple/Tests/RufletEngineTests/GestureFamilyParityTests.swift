@@ -1,5 +1,6 @@
 @testable import RufletUI
 import CoreGraphics
+import RufletEngine
 import RufletProtocol
 import XCTest
 
@@ -12,6 +13,29 @@ final class GestureFamilyParityTests: XCTestCase {
     XCTAssertEqual(RufletGestureParity.interactiveMaxScale, 2.5)
     XCTAssertEqual(RufletGestureParity.interactiveFriction, 0.0000135)
     XCTAssertEqual(RufletGestureParity.interactiveScaleFactor, 200)
+  }
+
+  func testDismissibleUsesPinnedFletDurationsAndRufletAliases() {
+    let omitted = ControlNode(id: 1, type: "Dismissible")
+    XCTAssertEqual(RufletDismissibleDefaults.movementDuration(omitted), 200)
+    XCTAssertEqual(RufletDismissibleDefaults.resizeDuration(omitted), 300)
+
+    let generatedNames = ControlNode(
+      id: 2, type: "Dismissible",
+      props: ["movement_duration": .double(125), "resize_duration": .double(450)])
+    XCTAssertEqual(RufletDismissibleDefaults.movementDuration(generatedNames), 125)
+    XCTAssertEqual(RufletDismissibleDefaults.resizeDuration(generatedNames), 450)
+
+    // Exact pinned Flet wire semantics win when both representations arrive.
+    let pinnedWire = ControlNode(
+      id: 3, type: "Dismissible",
+      props: [
+        "duration": .double(80),
+        "movement_duration": .double(125),
+        "resize_duration": .double(450),
+      ])
+    XCTAssertEqual(RufletDismissibleDefaults.movementDuration(pinnedWire), 80)
+    XCTAssertEqual(RufletDismissibleDefaults.resizeDuration(pinnedWire), 80)
   }
 
   func testDragTargetPayloadMatchesFletDragTargetEvent() {

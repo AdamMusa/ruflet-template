@@ -791,11 +791,8 @@ struct DismissibleControlView: View {
     case "down": target = CGSize(width: 0, height: distance)
     default: target = CGSize(width: 0, height: -distance)
     }
-    // Pinned Flet currently supplies the same `duration` property to Flutter's
-    // movement and resize phases, retaining their 200/300 ms defaults when it
-    // is absent.
-    let seconds = (node.double("duration") ?? 200) / 1_000
-    let collapse = (node.double("duration") ?? 300) / 1_000
+    let seconds = RufletDismissibleDefaults.movementDuration(node) / 1_000
+    let collapse = RufletDismissibleDefaults.resizeDuration(node) / 1_000
     let cross = crossAxisEndOffset(for: direction)
     dismissedDirection = direction
     withAnimation(.easeOut(duration: seconds)) {
@@ -821,10 +818,28 @@ struct DismissibleControlView: View {
     thresholdReached = false
     withAnimation(
       .easeOut(
-        duration: (node.double("duration") ?? 200) / 1_000)
+        duration: RufletDismissibleDefaults.movementDuration(node) / 1_000)
     ) {
       translation = .zero
     }
+  }
+}
+
+/// Constructor durations for Flet's Dismissible.
+///
+/// The pinned Dart client currently reads its historical wire key `duration`
+/// for both phases. Ruflet's public DSL also exposes the clearer generated
+/// names `movement_duration` and `resize_duration`; those are accepted as
+/// compatibility aliases only when the exact Flet key is absent. This keeps
+/// the native engine faithful to Flet while ensuring both public properties
+/// are actually consumed instead of silently discarded.
+enum RufletDismissibleDefaults {
+  static func movementDuration(_ node: ControlNode) -> Double {
+    max(node.double("duration") ?? node.double("movement_duration") ?? 200, 0)
+  }
+
+  static func resizeDuration(_ node: ControlNode) -> Double {
+    max(node.double("duration") ?? node.double("resize_duration") ?? 300, 0)
   }
 }
 
