@@ -196,7 +196,7 @@ struct ButtonControlView: View {
 
   private var floatingActionSlots: FloatingActionSlots {
     FloatingActionSlots(
-      node: node, visibilityForID: { store.node($0)?.bool("visible") })
+      node: node, visibilityForID: { FloatingActionSlots.visibility(of: store.node($0)) })
   }
 }
 
@@ -762,6 +762,10 @@ struct FloatingActionSlots: Equatable {
   var hasIcon: Bool { iconID != nil || iconValue != nil }
   var hasContent: Bool { contentID != nil || contentText != nil }
   var isExtended: Bool { hasIcon && hasContent }
+
+  static func visibility(of node: ControlNode?) -> Bool? {
+    node.map { $0.bool("visible") != false }
+  }
 
   init(node: ControlNode, visibilityForID: (Int) -> Bool?) {
     if let id = node.controlID(forKey: "icon"), visibilityForID(id) == true {

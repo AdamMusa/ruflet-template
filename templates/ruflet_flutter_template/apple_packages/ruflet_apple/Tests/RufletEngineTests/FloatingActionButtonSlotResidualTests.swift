@@ -20,6 +20,16 @@ final class FloatingActionButtonSlotResidualTests: XCTestCase {
     XCTAssertEqual(FloatingActionSlots(node: controlIcon) { _ in true }.iconID, 4)
   }
 
+  func testExistingDefaultVisibleChildrenDifferFromDanglingReferences() {
+    let child = ControlNode(id: 4, type: "Icon")
+
+    XCTAssertEqual(FloatingActionSlots.visibility(of: child), true)
+    XCTAssertEqual(
+      FloatingActionSlots.visibility(of: ControlNode(
+        id: 5, type: "Icon", props: ["visible": .bool(false)])), false)
+    XCTAssertNil(FloatingActionSlots.visibility(of: nil))
+  }
+
   func testFabContentAcceptsOnlyStringOrVisibleControl() {
     let numeric = ControlNode(id: 1, type: "FloatingActionButton", props: [
       "content": .int(12),
