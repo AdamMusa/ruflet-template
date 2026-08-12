@@ -257,54 +257,72 @@ struct CupertinoSliderControlView: View {
   @Environment(\.rufletEvents) private var events
   @State private var currentValue: Double?
 
-  /// `divisions` is a count in Flutter and a stride in SwiftUI.
-  private func sliderStep(minimum: Double, maximum: Double) -> Double.Stride {
-    guard let divisions = node.int("divisions"), divisions > 0 else {
-      return .leastNonzeroMagnitude
-    }
-    return (max(maximum, minimum) - minimum) / Double(divisions)
-  }
-
   var body: some View {
-    let minimum = node.double("min") ?? 0
-    let maximum = node.double("max") ?? 1
-
-    Slider(
-      value: Binding(
-        get: { currentValue ?? clampedNodeValue(minimum: minimum, maximum: maximum) },
-        set: {
-          currentValue = $0
-          RufletValueControlEvents.commit(
-            node, value: .double($0), payload: .none, to: events)
-        }),
-      in: minimum...max(maximum, minimum + .ulpOfOne),
-      // `divisions` snaps the slider to discrete steps, which SwiftUI takes
-      // as the distance between them rather than as a count.
-      step: sliderStep(minimum: minimum, maximum: maximum),
-      onEditingChanged: { editing in
-        events.fire(
-          node, editing ? "change_start" : "change_end",
-          data: .double(currentValue ?? clampedNodeValue(minimum: minimum, maximum: maximum)))
+    let presentation = CupertinoSliderPresentation(node: node)
+    Group {
+      if let step = presentation.step {
+        Slider(
+          value: valueBinding(presentation), in: presentation.range, step: step,
+          onEditingChanged: editingChanged(presentation))
+      } else {
+        // Flet passes `divisions: null` to CupertinoSlider for a genuinely
+        // continuous control. Supplying an artificial epsilon step changes
+        // native value quantisation and can overflow SwiftUI's step count.
+        Slider(
+          value: valueBinding(presentation), in: presentation.range,
+          onEditingChanged: editingChanged(presentation))
       }
-    )
-    .tint(MaterialPalette.color(node.string("active_color")))
-    // Cupertino names the knob's colour separately from the track's.
-    .modifier(SliderThumbTint(color: MaterialPalette.color(node.string("thumb_color"))))
+    }
+    .modifier(OptionalSliderTint(color: presentation.activeColor))
     .disabled(node.bool("disabled") ?? false)
-    .onAppear { currentValue = clampedNodeValue(minimum: minimum, maximum: maximum) }
+    .onAppear { currentValue = presentation.value }
     .onChange(of: node.double("value")) { _ in
-      currentValue = clampedNodeValue(minimum: minimum, maximum: maximum)
+      currentValue = CupertinoSliderPresentation(node: node).value
     }
   }
 
-  private func clampedNodeValue(minimum: Double, maximum: Double) -> Double {
-    min(max(node.double("value") ?? minimum, minimum), max(maximum, minimum))
+  private func valueBinding(_ presentation: CupertinoSliderPresentation) -> Binding<Double> {
+    Binding(
+      get: { currentValue ?? presentation.value },
+      set: {
+        currentValue = $0
+        // Pinned Flet first updates the public value property and then emits
+        // a data-less `change` event.
+        RufletValueControlEvents.commit(
+          node, value: .double($0), payload: .none, to: events)
+      })
+  }
+
+  private func editingChanged(
+    _ presentation: CupertinoSliderPresentation
+  ) -> (Bool) -> Void {
+    { editing in
+      events.fire(
+        node, editing ? "change_start" : "change_end",
+        data: .double(currentValue ?? presentation.value))
+    }
   }
 }
 
-/// SwiftUI tints the whole slider at once, so a distinct thumb colour is
-/// drawn over the knob.
-private struct SliderThumbTint: ViewModifier {
+/// Exact wire/default interpretation for Flet's CupertinoSlider.
+struct CupertinoSliderPresentation {
+  let node: ControlNode
+
+  var minimum: Double { node.double("min") ?? 0 }
+  var maximum: Double { max(node.double("max") ?? 1, minimum + .ulpOfOne) }
+  var range: ClosedRange<Double> { minimum...maximum }
+  var value: Double { min(max(node.double("value") ?? minimum, minimum), maximum) }
+  var divisions: Int? { node.int("divisions") }
+  var step: Double? {
+    guard let divisions, divisions > 0 else { return nil }
+    return (maximum - minimum) / Double(divisions)
+  }
+  var activeColor: Color? { MaterialPalette.color(node.string("active_color")) }
+  /// Flutter's CupertinoSlider defaults the thumb to Cupertino white.
+  var thumbColorName: String { node.string("thumb_color") ?? "white" }
+}
+
+private struct OptionalSliderTint: ViewModifier {
   let color: Color?
 
   func body(content: Content) -> some View {

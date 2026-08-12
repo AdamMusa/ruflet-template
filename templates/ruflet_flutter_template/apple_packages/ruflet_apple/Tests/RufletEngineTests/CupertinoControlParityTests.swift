@@ -224,4 +224,32 @@ final class CupertinoControlParityTests: XCTestCase {
     XCTAssertEqual(configuration.padding?.bottom, 6)
     XCTAssertEqual(configuration.padding?.leading, 7)
   }
+
+  func testCupertinoSliderPreservesPinnedDefaultsAndContinuousMode() {
+    let presentation = CupertinoSliderPresentation(
+      node: ControlNode(id: 1, type: "CupertinoSlider"))
+
+    XCTAssertEqual(presentation.minimum, 0)
+    XCTAssertEqual(presentation.maximum, 1)
+    XCTAssertEqual(presentation.value, 0)
+    XCTAssertNil(presentation.divisions)
+    XCTAssertNil(presentation.step)
+    XCTAssertEqual(presentation.thumbColorName, "white")
+  }
+
+  func testCupertinoSliderClampsValueAndConvertsDivisionsToNativeStep() {
+    let presentation = CupertinoSliderPresentation(
+      node: ControlNode(
+        id: 2, type: "CupertinoSlider",
+        props: [
+          "min": .double(10), "max": .double(30),
+          "value": .double(40), "divisions": .int(4),
+          "thumb_color": .string("red"),
+        ]))
+
+    XCTAssertEqual(presentation.range, 10...30)
+    XCTAssertEqual(presentation.value, 30)
+    XCTAssertEqual(presentation.step, 5)
+    XCTAssertEqual(presentation.thumbColorName, "red")
+  }
 }
