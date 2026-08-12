@@ -931,54 +931,35 @@ struct ExpansionTileControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
 
+  @ViewBuilder
   var body: some View {
-    DisclosureGroup(
-      isExpanded: Binding(
-        get: { node.bool("expanded") ?? false },
-        set: { events.commit(node, key: "expanded", value: .bool($0)) })
-    ) {
-      VStack(alignment: .leading, spacing: 0) {
-        ControlList(ids: node.controlIDs(forKey: "controls"), axis: .vertical)
-      }
-      .padding(ControlProps.edgeInsets(node.props["controls_padding"]) ?? EdgeInsets())
-    } label: {
-      HStack(spacing: 12) {
-        // `affinity` puts the disclosure control on the leading side; the
-        // leading slot then follows it rather than opening the row.
-        if affinity == .leading, node.bool("show_trailing_icon") != false { expansionIcon }
-        if let leadingID = node.controlID(forKey: "leading") {
-          ControlView(id: leadingID, axis: .none)
-        }
-        VStack(alignment: .leading, spacing: 2) {
-          if let titleID = node.controlID(forKey: "title") {
-            ControlView(id: titleID, axis: .none)
-          } else if let title = node.string("title") {
-            Text(title)
-          }
-          if let subtitleID = node.controlID(forKey: "subtitle") {
-            ControlView(id: subtitleID, axis: .none)
-          }
-        }
-        .foregroundColor(textColor)
-        Spacer(minLength: 0)
-        if let trailingID = node.controlID(forKey: "trailing") {
-          ControlView(id: trailingID, axis: .none)
+    if let message = ExpansionTilePresentation.validationMessage(node) {
+      Text(message).font(.caption).foregroundStyle(.red)
+    } else {
+      VStack(spacing: 0) {
+        Button(action: toggle) { header }
+          .buttonStyle(.plain)
+          .disabled(node.bool("disabled") == true)
+          .modifier(TapFeedback(enabled: node.bool("enable_feedback") != false))
+
+        if expanded || node.bool("maintain_state") == true {
+          ControlList(ids: node.controlIDs(forKey: "controls"), axis: .vertical)
+            .padding(ControlProps.edgeInsets(node.props["controls_padding"]) ?? EdgeInsets())
+            .frame(
+              maxWidth: expandedCrossAxisAlignment == .stretch ? .infinity : nil,
+              alignment: expandedCrossAxisAlignment.alignment)
+            .frame(maxWidth: .infinity, alignment: expandedAlignment)
+            .opacity(expanded ? 1 : 0)
+            .frame(maxHeight: expanded ? nil : 0)
+            .clipped()
         }
       }
-      .frame(minHeight: node.double("min_tile_height").map { CGFloat($0) })
-      .modifier(VisualDensityPadding(value: node.props["visual_density"]))
-      .contentShape(Rectangle())
+      .frame(maxWidth: .infinity)
+      .background(RoundedRectangle(cornerRadius: tileRadius).fill(tileBackground))
+      .overlay { tileOutline }
+      .modifier(ChromeClipModifier(behavior: node.string("clip_behavior") ?? "none"))
+      .animation(rufletAnimation(node.props["animation_style"]), value: expanded)
     }
-    .padding(ControlProps.edgeInsets(node.props["tile_padding"])
-      ?? EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
-    .frame(maxWidth: .infinity, alignment: expandedAlignment)
-    .background(
-      RoundedRectangle(cornerRadius: tileRadius).fill(tileBackground))
-    .animation(rufletAnimation(node.props["animation_style"]), value: node.bool("expanded"))
-    // `maintain_state` keeps the collapsed children built, which is what
-    // Flutter's flag does; SwiftUI discards them otherwise.
-    .modifier(MaintainedState(enabled: node.bool("maintain_state") == true))
-    .modifier(TapFeedback(enabled: node.bool("enable_feedback") != false))
   }
 
   private enum Affinity { case leading, trailing }
@@ -989,6 +970,41 @@ struct ExpansionTileControlView: View {
 
   private var expanded: Bool { node.bool("expanded") ?? false }
 
+  private func toggle() {
+    let next = !expanded
+    events.commit(node, key: "expanded", value: .bool(next), event: "change")
+  }
+
+  private var header: some View {
+    HStack(spacing: 12) {
+      if node.controlID(forKey: "leading") == nil, affinity == .leading { expansionIcon }
+      if let leadingID = node.controlID(forKey: "leading") {
+        ControlView(id: leadingID, axis: .none)
+      }
+      VStack(alignment: .leading, spacing: 2) {
+        if let titleID = node.controlID(forKey: "title") {
+          ControlView(id: titleID, axis: .none)
+        } else if let title = node.string("title") { Text(title) }
+        if let subtitleID = node.controlID(forKey: "subtitle") {
+          ControlView(id: subtitleID, axis: .none)
+        } else if let subtitle = node.string("subtitle") { Text(subtitle) }
+      }
+      .foregroundColor(textColor)
+      Spacer(minLength: 0)
+      if node.bool("show_trailing_icon") != false {
+        if let trailingID = node.controlID(forKey: "trailing") {
+          ControlView(id: trailingID, axis: .none)
+        } else if affinity == .trailing { expansionIcon }
+      }
+    }
+    .padding(ControlProps.edgeInsets(node.props["tile_padding"])
+      ?? EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+    .frame(minHeight: ExpansionTilePresentation(node: node).minTileHeight)
+    .modifier(VisualDensityPadding(value: node.props["visual_density"]))
+    .contentShape(Rectangle())
+    .accessibilityHint(expanded ? "Collapse" : "Expand")
+  }
+
   @ViewBuilder
   private var expansionIcon: some View {
     Image(systemName: expanded ? "chevron.down" : "chevron.right")
@@ -997,13 +1013,13 @@ struct ExpansionTileControlView: View {
   }
 
   private var iconColor: Color? {
-    guard expanded else { return MaterialPalette.color(node.string("collapsed_icon_color")) }
-    return MaterialPalette.color(node.string("icon_color"))
+    let presentation = ExpansionTilePresentation(node: node)
+    return MaterialPalette.color(expanded ? presentation.iconColorToken : presentation.collapsedIconColorToken)
   }
 
   private var textColor: Color? {
-    guard expanded else { return MaterialPalette.color(node.string("collapsed_text_color")) }
-    return MaterialPalette.color(node.string("text_color"))
+    let presentation = ExpansionTilePresentation(node: node)
+    return MaterialPalette.color(expanded ? presentation.textColorToken : presentation.collapsedTextColorToken)
   }
 
   private var tileBackground: Color {
@@ -1020,25 +1036,83 @@ struct ExpansionTileControlView: View {
     return ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? 0
   }
 
+  @ViewBuilder
+  private var tileOutline: some View {
+    if let shape = node.map(expanded ? "shape" : "collapsed_shape"),
+      let side = shape["side"]?.mapValue
+    {
+      RoundedRectangle(cornerRadius: tileRadius)
+        .strokeBorder(
+          MaterialPalette.color(side["color"]?.stringValue, default: .clear),
+          lineWidth: CGFloat(side["width"]?.doubleValue ?? 1))
+    } else if expanded {
+      VStack(spacing: 0) {
+        Rectangle().frame(height: 1)
+        Spacer(minLength: 0)
+        Rectangle().frame(height: 1)
+      }
+      .foregroundColor(MaterialPalette.color("outlinevariant", default: .clear))
+    }
+  }
+
   /// `expanded_alignment` and `expanded_cross_axis_alignment` place the tile
   /// and its children once it is open.
   private var expandedAlignment: Alignment {
-    ControlProps.alignment(node.props["expanded_alignment"])
-      ?? (node.string("expanded_cross_axis_alignment")?.lowercased() == "center"
-        ? .center : .leading)
+    ControlProps.alignment(node.props["expanded_alignment"]) ?? .center
+  }
+
+  private var expandedCrossAxisAlignment: ExpansionCrossAxisAlignment {
+    ExpansionCrossAxisAlignment(rawValue:
+      node.string("expanded_cross_axis_alignment")?.lowercased() ?? "center") ?? .center
   }
 }
 
-/// Flutter keeps a maintained tile's children alive while it is collapsed.
-private struct MaintainedState: ViewModifier {
-  let enabled: Bool
+enum ExpansionCrossAxisAlignment: String {
+  case start, center, end, stretch
 
-  func body(content: Content) -> some View {
-    if enabled {
-      content.transaction { $0.disablesAnimations = false }
-    } else {
-      content
+  var alignment: Alignment {
+    switch self {
+    case .start: return .leading
+    case .center, .stretch: return .center
+    case .end: return .trailing
     }
+  }
+}
+
+struct ExpansionTilePresentation {
+  let node: ControlNode
+
+  static func validationMessage(_ node: ControlNode) -> String? {
+    let hasTitle = node.controlID(forKey: "title") != nil || !(node.string("title") ?? "").isEmpty
+    if !hasTitle { return "ExpansionTile.title must be provided and visible" }
+    if node.string("expanded_cross_axis_alignment")?.lowercased() == "baseline" {
+      return "CrossAxisAlignment.BASELINE is not supported since the expanded controls are aligned in a column, not a row. Try aligning the controls differently."
+    }
+    return nil
+  }
+
+  var textColorToken: String { node.string("text_color") ?? "onsurface" }
+  var iconColorToken: String { node.string("icon_color") ?? "primary" }
+  var collapsedTextColorToken: String { node.string("collapsed_text_color") ?? "onsurface" }
+  var collapsedIconColorToken: String { node.string("collapsed_icon_color") ?? "onsurfacevariant" }
+  var iconAffinityToken: String {
+    node.string("affinity")?.lowercased() == "leading" ? "leading" : "trailing"
+  }
+  var showsTrailingIcon: Bool { node.bool("show_trailing_icon") != false }
+  var maintainState: Bool { node.bool("maintain_state") ?? false }
+  var enableFeedback: Bool { node.bool("enable_feedback") ?? true }
+  var animationDuration: TimeInterval { 0.2 }
+  var expandedAlignmentToken: String {
+    node.string("expanded_alignment")?.lowercased() ?? "center"
+  }
+  var expandedCrossAxisAlignmentToken: String {
+    node.string("expanded_cross_axis_alignment")?.lowercased() ?? "center"
+  }
+
+  var minTileHeight: CGFloat? {
+    if let explicit = node.double("min_tile_height") { return CGFloat(explicit) }
+    if node.bool("dense") == true { return 48 }
+    return nil
   }
 }
 
@@ -1049,25 +1123,52 @@ struct ExpansionPanelListControlView: View {
   @Environment(\.rufletEvents) private var events
 
   var body: some View {
-    VStack(spacing: CGFloat(node.double("spacing") ?? 16)) {
+    let presentation = ExpansionPanelListPresentation(node: node)
+    VStack(spacing: 0) {
       ForEach(Array(node.childIDs.enumerated()), id: \.element) { index, panelID in
         if let panel = store.node(panelID) {
           ExpansionPanelView(node: panel, list: node)
-            .padding(
-              ControlProps.edgeInsets(node.props["expanded_header_padding"]) ?? EdgeInsets())
-            .shadow(radius: CGFloat(node.double("elevation") ?? 2))
-          if index < node.childIDs.count - 1, let divider = dividerColor {
-            Rectangle().fill(divider).frame(height: 1)
+            .shadow(
+              color: panel.bool("expanded") == true ? .black.opacity(0.2) : .clear,
+              radius: panel.bool("expanded") == true ? presentation.elevation : 0)
+          if index < node.childIDs.count - 1 {
+            let nextExpanded = store.node(node.childIDs[index + 1])?.bool("expanded") == true
+            if presentation.hasGap(
+              afterExpanded: panel.bool("expanded") == true,
+              beforeExpanded: nextExpanded)
+            {
+              Color.clear.frame(height: presentation.spacing)
+            } else if let divider = dividerColor {
+              Rectangle().fill(divider).frame(height: 1)
+            }
           }
         }
       }
     }
     // `expand_icon_color` tints the chevron every panel draws.
-    .foregroundColor(MaterialPalette.color(node.string("expand_icon_color")))
+    .foregroundColor(MaterialPalette.color(node.string("expanded_icon_color")))
   }
 
   private var dividerColor: Color? {
     MaterialPalette.color(node.string("divider_color"))
+  }
+}
+
+struct ExpansionPanelListPresentation {
+  let node: ControlNode
+  var elevation: CGFloat { CGFloat(node.double("elevation") ?? 2) }
+  var spacing: CGFloat { CGFloat(node.double("spacing") ?? 16) }
+  var expandedHeaderPadding: EdgeInsets {
+    ControlProps.edgeInsets(node.props["expanded_header_padding"])
+      ?? EdgeInsets(top: 16, leading: 0, bottom: 16, trailing: 0)
+  }
+  var animationDuration: TimeInterval { 0.2 }
+
+  func hasGap(afterExpanded: Bool, beforeExpanded: Bool) -> Bool {
+    // Flutter inserts a MaterialGap immediately *after* an expanded child.
+    // The next child's state does not create a leading gap by itself.
+    _ = beforeExpanded
+    return afterExpanded
   }
 }
 
@@ -1077,35 +1178,78 @@ private struct ExpansionPanelView: View {
   @Environment(\.rufletEvents) private var events
 
   var body: some View {
-    DisclosureGroup(
-      isExpanded: Binding(
-        get: { node.bool("expanded") ?? false },
-        set: { expanded in
-          events.setLocal(node.id, "expanded", .bool(expanded))
-          // Flet's ExpansionPanelList callback carries the panel index. The
-          // expanded property itself lives on the structural panel child.
-          events.fire(
-            list, "change",
-            data: .int(Int64(list.childIDs.firstIndex(of: node.id) ?? 0)))
-        })
-    ) {
-      if let contentID = node.controlID(forKey: "content") {
-        ControlView(id: contentID, axis: .vertical)
-      }
-    } label: {
-      if let headerID = node.controlID(forKey: "header") {
-        ControlView(id: headerID, axis: .none)
-          // `can_tap_header` lets the whole header toggle the panel rather
-          // than only the chevron.
-          .allowsHitTesting(node.bool("can_tap_header") == true)
+    VStack(spacing: 0) {
+      header
+        .padding(expanded
+          ? ExpansionPanelListPresentation(node: list).expandedHeaderPadding : EdgeInsets())
+        .frame(minHeight: 48)
+      if expanded {
+        if let contentID = node.controlID(forKey: "content") {
+          ControlView(id: contentID, axis: .vertical)
+        } else {
+          Text("Body Placeholder").padding()
+        }
       }
     }
-    .padding(.horizontal, 12)
-    .background(MaterialPalette.color(node.string("bgcolor")))
-    .modifier(
-      ListTileSplash(
-        color: MaterialPalette.color(
-          node.string("splash_color") ?? node.string("highlight_color"))))
+    .background(MaterialPalette.color(node.string("bgcolor"), default: MaterialPalette.color("surface", default: .clear)))
+    .modifier(ListTileSplash(color:
+      MaterialPalette.color(node.string("splash_color") ?? node.string("highlight_color"))))
+    .animation(
+      .easeInOut(duration: ExpansionPanelListPresentation(node: list).animationDuration),
+      value: expanded)
+  }
+
+  private var expanded: Bool { node.bool("expanded") ?? false }
+
+  @ViewBuilder
+  private var header: some View {
+    if node.bool("can_tap_header") == true {
+      Button(action: toggle) { headerContents }.buttonStyle(.plain)
+        .disabled(list.bool("disabled") == true)
+    } else {
+      HStack(spacing: 0) {
+        headerControl
+        Spacer(minLength: 0)
+        Button(action: toggle) { expandIcon }
+          .buttonStyle(.plain)
+          .disabled(list.bool("disabled") == true)
+      }
+    }
+  }
+
+  private var headerContents: some View {
+    HStack(spacing: 0) {
+      headerControl
+      Spacer(minLength: 0)
+      expandIcon
+    }
+    .contentShape(Rectangle())
+  }
+
+  @ViewBuilder
+  private var headerControl: some View {
+    if let headerID = node.controlID(forKey: "header") {
+      ControlView(id: headerID, axis: .none)
+    } else {
+      Text("Header Placeholder").padding()
+    }
+  }
+
+  private var expandIcon: some View {
+    Image(systemName: "chevron.down")
+      .rotationEffect(.degrees(expanded ? 180 : 0))
+      .foregroundColor(MaterialPalette.color(list.string("expanded_icon_color")))
+      .padding(12)
+  }
+
+  private func toggle() {
+    guard list.bool("disabled") != true else { return }
+    let next = !expanded
+    events.setLocal(node.id, "expanded", .bool(next))
+    events.update(node.id, ["expanded": .bool(next)])
+    events.fire(
+      list, "change",
+      data: .int(Int64(list.childIDs.firstIndex(of: node.id) ?? 0)))
   }
 }
 
