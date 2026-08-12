@@ -35,6 +35,37 @@ class NativePropertyConsumptionAuditTest < Minitest::Test
       "registry declarations are not property-consumption evidence"
   end
 
+  def test_optional_descriptor_registrars_resolve_concrete_views
+    implementations = NativePropertyConsumptionAudit.implementation_map
+
+    assert_equal ["VideoControlView"], implementations.fetch("Video")
+    assert_equal ["ChartControlView"], implementations.fetch("BarChart")
+    assert_equal ["ChartControlView"], implementations.fetch("CandlestickChart")
+    assert_equal ["SpinKitControlView"], implementations.fetch("RufletSpinKit")
+    assert_equal ["SpinKitControlView"], implementations.fetch("SpinKitWaveSpinner")
+  end
+
+  def test_optional_package_properties_are_proven_by_their_concrete_sources
+    implementations = NativePropertyConsumptionAudit.implementation_map
+    entries = NativePropertyConsumptionAudit.merged_surface_entries.to_h do |entry|
+      [entry.fetch("wire_type"), entry]
+    end
+    assertions = {
+      "Video" => %w[playlist on_completed on_track_changed],
+      "BarChart" => %w[groups],
+      "RufletSpinKit" => %w[variant]
+    }
+
+    assertions.each do |wire, properties|
+      reads = NativePropertyConsumptionAudit.reads_for_types(implementations.fetch(wire))
+      properties.each do |property|
+        classification, = NativePropertyConsumptionAudit.classify(
+          entries.fetch(wire), property, reads, {}, {})
+        assert_equal "consumed", classification, "#{wire}.#{property}"
+      end
+    end
+  end
+
   def test_manual_classifications_are_specific_and_reviewed
     declarations = JSON.parse(File.read(NativePropertyConsumptionAudit::CLASSIFICATIONS_PATH))
     assert_equal %w[parent_consumed service unsupported], declarations.keys.sort

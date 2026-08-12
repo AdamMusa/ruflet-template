@@ -214,8 +214,93 @@ module NativePropertyConsumptionAudit
           result[wire].push(type)
         end
       end
+      descriptor_implementation_map.each do |wire, types|
+        result[wire].concat(types)
+      end
       result.transform_values { |types| types.uniq.sort }
     end
+  end
+
+  # Optional Flet packages register a ControlDescriptor rather than using the
+  # legacy `ControlRegistry.register("Wire")` spelling. The descriptor's
+  # implementation is metadata, not property-consumption evidence, but it is
+  # the authoritative source-to-view edge the audit must follow before it can
+  # inspect the concrete view. Registrars commonly share one builder through a
+  # source-defined loop (Charts and SpinKit), so resolve both literal
+  # descriptors and array expressions without maintaining a parallel wire
+  # allowlist here.
+  def descriptor_implementation_map
+    @descriptor_implementation_map ||= begin
+      result = Hash.new { |hash, key| hash[key] = [] }
+      array_constants = swift_array_constants
+
+      swift_files.each do |_path, raw_lines|
+        lines = code_lines(raw_lines)
+        text = lines.join("\n")
+
+        text.scan(
+          /ControlDescriptor\s*\(\s*wireType:\s*"([A-Za-z0-9_]+)".*?\bimplementation:\s*"(?:[A-Za-z_][A-Za-z0-9_]*\.)?([A-Za-z_][A-Za-z0-9_]*)"/m
+        ) do |wire, type|
+          result[wire] << type
+        end
+
+        lines.each_with_index do |line, index|
+          next unless line.match?(/\bfor\s+[a-z][A-Za-z0-9_]*\s+in\s+/)
+
+          header = +line
+          finish = index
+          until header.include?("{") || finish + 1 >= lines.length
+            finish += 1
+            header << "\n" << lines[finish]
+          end
+          match = header.match(/\bfor\s+([a-z][A-Za-z0-9_]*)\s+in\s+(.+?)\s*\{/m)
+          next unless match
+
+          variable = match[1]
+          expression = match[2]
+          depth = 0
+          body_lines = []
+          lines[finish..].each do |body_line|
+            body_lines << body_line
+            depth += body_line.count("{")
+            depth -= body_line.count("}")
+            break if depth <= 0
+          end
+          implementation = body_lines.join("\n")[
+            /ControlDescriptor\s*\(.*?wireType:\s*#{Regexp.escape(variable)}\b.*?\bimplementation:\s*"(?:[A-Za-z_][A-Za-z0-9_]*\.)?([A-Za-z_][A-Za-z0-9_]*)"/m,
+            1
+          ]
+          next unless implementation
+
+          resolve_swift_string_array(expression, array_constants).each do |wire|
+            result[wire] << implementation
+          end
+        end
+      end
+      result.transform_values { |types| types.uniq.sort }
+    end
+  end
+
+  def swift_array_constants
+    @swift_array_constants ||= begin
+      constants = {}
+      swift_files.each do |_path, raw_lines|
+        code_lines(raw_lines).join("\n").scan(
+          /\bstatic\s+let\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*\[(.*?)\]/m
+        ) do |name, body|
+          constants[name] = body.scan(/"([A-Za-z0-9_]+)"/).flatten
+        end
+      end
+      constants
+    end
+  end
+
+  def resolve_swift_string_array(expression, constants)
+    values = expression.scan(/"([A-Za-z0-9_]+)"/).flatten
+    expression.scan(/\b[A-Z][A-Za-z0-9_]*\.([A-Za-z_][A-Za-z0-9_]*)\b/) do |(name)|
+      values.concat(constants.fetch(name, []))
+    end
+    values.uniq
   end
 
   def service_implementation_map
@@ -296,6 +381,10 @@ module NativePropertyConsumptionAudit
   end
 
   def reads_for_types(types)
+    @reads_for_types ||= {}
+    key = types.sort.freeze
+    return @reads_for_types.fetch(key) if @reads_for_types.key?(key)
+
     reads = Hash.new { |hash, key| hash[key] = [] }
     implementation_closure(types).each do |type|
       type_scopes.fetch(type, []).each do |scope|
@@ -311,7 +400,7 @@ module NativePropertyConsumptionAudit
         end
       end
     end
-    reads
+    @reads_for_types[key] = reads
   end
 
   def implementation_closure(types)
@@ -362,6 +451,21 @@ module NativePropertyConsumptionAudit
     @classifications ||= JSON.parse(File.read(CLASSIFICATIONS_PATH))
   end
 
+  # RufletEventSink sends the spelling Ruby actually attached for a canonical
+  # Flet event. Keep the property audit on that same source-driven alias table
+  # so compatibility names such as `on_completed` prove the concrete
+  # `complete` emission instead of requiring duplicate renderer branches.
+  def event_aliases_to_canonical
+    @event_aliases_to_canonical ||= begin
+      path = File.join(SWIFT_ROOT, "RufletEngine", "ControlNode.swift")
+      text = code_lines(swift_files.fetch(path)).join("\n")
+      body = text[/\beventAliases\s*:\s*\[String:\s*\[String\]\]\s*=\s*\[(.*?)^\s*\]/m, 1] || ""
+      body.scan(/"([A-Za-z0-9_]+)"\s*:\s*\[([^\]]*)\]/).each_with_object({}) do |(canonical, aliases), result|
+        aliases.scan(/"([A-Za-z0-9_]+)"/).flatten.each { |name| result[name] = canonical }
+      end
+    end
+  end
+
   def declared(category, wire, keyword)
     value = classifications.fetch(category, {}).dig(wire, keyword)
     return unless value
@@ -387,6 +491,11 @@ module NativePropertyConsumptionAudit
     family = entry.fetch("family")
     probes = [keyword]
     probes << keyword.delete_prefix("on_") if keyword.start_with?("on_")
+    if keyword.start_with?("on_") &&
+        (canonical = event_aliases_to_canonical[keyword.delete_prefix("on_")])
+      probes << "on_#{canonical}"
+      probes << canonical
+    end
 
     if (probe = probes.find { |candidate| service_reads.key?(candidate) })
       return ["service", service_reads.fetch(probe)]
