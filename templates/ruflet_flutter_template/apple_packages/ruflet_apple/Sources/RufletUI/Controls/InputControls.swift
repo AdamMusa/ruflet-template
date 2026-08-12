@@ -3088,9 +3088,14 @@ struct DateTimePickerControlView: View {
       switch kind {
       case .date:
         if entryMode == "input" {
-          DatePicker("", selection: $selection, in: allowedDates, displayedComponents: [.date])
-            .datePickerStyle(.compact)
-            .labelsHidden()
+          VStack(alignment: .leading, spacing: 4) {
+            if let label = node.string("field_label_text") { Text(label).font(.caption) }
+            DatePicker("", selection: $selection, in: allowedDates, displayedComponents: [.date])
+              .datePickerStyle(.compact)
+              .labelsHidden()
+              .accessibilityHint(node.string("field_hint_text") ?? "")
+            pickerValidationText
+          }
         } else {
           DatePicker("", selection: $selection, in: allowedDates, displayedComponents: [.date])
             .datePickerStyle(.graphical)
@@ -3099,9 +3104,13 @@ struct DateTimePickerControlView: View {
       case .time:
         #if os(iOS)
         if entryMode == "input" {
-          DatePicker("", selection: $selection, displayedComponents: [.hourAndMinute])
-            .datePickerStyle(.compact)
-            .labelsHidden()
+          VStack(alignment: .leading, spacing: 4) {
+            DatePicker("", selection: $selection, displayedComponents: [.hourAndMinute])
+              .datePickerStyle(.compact)
+              .labelsHidden()
+              .accessibilityLabel(timeFieldAccessibilityLabel)
+            pickerValidationText
+          }
         } else {
           DatePicker("", selection: $selection, displayedComponents: [.hourAndMinute])
             .datePickerStyle(.wheel)
@@ -3126,6 +3135,9 @@ struct DateTimePickerControlView: View {
             displayedComponents: [.date])
         }
         .datePickerStyle(.compact)
+        if entryMode == "input" {
+          pickerValidationText
+        }
       }
 
       // DateRangePickerDialog also switches between calendar and input, but
@@ -3162,6 +3174,21 @@ struct DateTimePickerControlView: View {
   }
 
   private var supportsEntryModeSwitch: Bool { true }
+
+  @ViewBuilder
+  private var pickerValidationText: some View {
+    let messages = RufletPickerSemantics.validationMessages(node, kind: kind)
+    if !messages.isEmpty {
+      Text(messages.joined(separator: "\n"))
+        .font(.caption)
+        .foregroundStyle(.red)
+    }
+  }
+
+  private var timeFieldAccessibilityLabel: String {
+    [node.string("hour_label_text"), node.string("minute_label_text")]
+      .compactMap { $0 }.joined(separator: ", ")
+  }
 
   private var nativeEntryModeIcon: String {
     guard entryMode != "input" else { return kind == .time ? "clock" : "calendar" }
@@ -3338,6 +3365,32 @@ enum RufletPickerSemantics {
     _ node: ControlNode, kind: DateTimePickerControlView.Kind
   ) -> String {
     node.string("entry_mode") ?? (kind == .time ? "dial" : "calendar")
+  }
+
+  /// Flutter forwards these strings to its typed-entry form fields. Native
+  /// Apple pickers validate their own values, so keep the exact Flet strings
+  /// as semantic error/help text without recreating the Material dialog.
+  static func validationMessages(
+    _ node: ControlNode, kind: DateTimePickerControlView.Kind
+  ) -> [String] {
+    let keys: [String]
+    switch kind {
+    case .date:
+      keys = ["error_format_text", "error_invalid_text"]
+    case .dateRange:
+      keys = ["error_format_text", "error_invalid_text", "error_invalid_range_text",
+              "field_start_hint_text", "field_end_hint_text"]
+    case .time:
+      keys = ["error_invalid_text"]
+    }
+    return keys.compactMap { node.string($0) }.filter { !$0.isEmpty }
+  }
+
+  static func switchIconKeys(_ kind: DateTimePickerControlView.Kind) -> [String] {
+    switch kind {
+    case .date, .dateRange: return ["switch_to_calendar_icon", "switch_to_input_icon"]
+    case .time: return ["switch_to_timer_icon", "switch_to_input_icon"]
+    }
   }
 
   private static func date(year: Int, month: Int, day: Int) -> Date {

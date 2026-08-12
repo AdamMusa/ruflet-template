@@ -448,6 +448,44 @@ final class RufletInputParityTests: XCTestCase {
     XCTAssertEqual(RufletOverlaySemantics.defaultBarrierOpacity(date), 0.54)
   }
 
+  func testPickerTypedEntryStringsAndSwitchIconsStayOnTheirFletConstructors() {
+    let date = ControlNode(id: 1, type: "DatePicker", props: [
+      "error_format_text": .string("Bad format"),
+      "error_invalid_text": .string("Bad date"),
+      "field_hint_text": .string("MM/DD/YYYY"),
+      "field_label_text": .string("Birthday"),
+    ])
+    XCTAssertEqual(
+      RufletPickerSemantics.validationMessages(date, kind: .date),
+      ["Bad format", "Bad date"])
+    XCTAssertEqual(
+      RufletPickerSemantics.switchIconKeys(.date),
+      ["switch_to_calendar_icon", "switch_to_input_icon"])
+
+    let range = ControlNode(id: 2, type: "DateRangePicker", props: [
+      "error_invalid_range_text": .string("Bad range"),
+      "field_start_hint_text": .string("Start"),
+      "field_end_hint_text": .string("End"),
+    ])
+    XCTAssertEqual(
+      RufletPickerSemantics.validationMessages(range, kind: .dateRange),
+      ["Bad range", "Start", "End"])
+    XCTAssertEqual(
+      RufletPickerSemantics.switchIconKeys(.dateRange),
+      ["switch_to_calendar_icon", "switch_to_input_icon"])
+
+    let time = ControlNode(id: 3, type: "TimePicker", props: [
+      "error_invalid_text": .string("Bad time"),
+      "hour_label_text": .string("Hour"),
+      "minute_label_text": .string("Minute"),
+    ])
+    XCTAssertEqual(
+      RufletPickerSemantics.validationMessages(time, kind: .time), ["Bad time"])
+    XCTAssertEqual(
+      RufletPickerSemantics.switchIconKeys(.time),
+      ["switch_to_timer_icon", "switch_to_input_icon"])
+  }
+
   func testPickerConfirmationUpdatesBeforeChangeAndDismiss() {
     let node = ControlNode(id: 10, type: "DatePicker", props: [
       "open": .bool(true), "on_change": .bool(true), "on_dismiss": .bool(true),
