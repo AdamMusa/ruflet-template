@@ -7,7 +7,7 @@ final class AppBarActionVisibilityResidualTests: XCTestCase {
     let nodes = actionNodes()
 
     XCTAssertEqual(
-      ChromeDefaults.visibleAppBarActionIDs([2, 3, 4], in: nodes),
+      ChromeDefaults.visibleAppBarActionIDs([2, 3, 4, 99], in: nodes),
       [2, 4])
   }
 

@@ -19,7 +19,7 @@ final class NavigationDrawerResidualParityTests: XCTestCase {
       [1, 3, 5])
   }
 
-  func testMissingNodeIsNotInventedAsInvisible() {
-    XCTAssertEqual(NavigationDrawerVisibleControls.ids([99], in: [:]), [99])
+  func testMissingNodeIsAbsentLikeFletChildrenResults() {
+    XCTAssertEqual(NavigationDrawerVisibleControls.ids([99], in: [:]), [])
   }
 }

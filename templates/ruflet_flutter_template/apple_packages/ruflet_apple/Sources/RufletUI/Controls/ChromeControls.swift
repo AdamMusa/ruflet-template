@@ -779,7 +779,9 @@ enum ChromeDefaults {
   static func visibleAppBarActionIDs(
     _ ids: [Int], in nodes: [Int: ControlNode]
   ) -> [Int] {
-    ids.filter { nodes[$0]?.bool("visible") != false }
+    ids.filter { id in
+      nodes[id].map { $0.bool("visible") != false } == true
+    }
   }
 
   static func appBarCentersTitle(
@@ -1260,7 +1262,9 @@ struct NavigationDrawerControlView: View {
 /// visible destination sequence while headings/dividers remain supported.
 enum NavigationDrawerVisibleControls {
   static func ids(_ ids: [Int], in nodes: [Int: ControlNode]) -> [Int] {
-    ids.filter { nodes[$0]?.bool("visible") != false }
+    ids.filter { id in
+      nodes[id].map { $0.bool("visible") != false } == true
+    }
   }
 }
 
