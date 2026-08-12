@@ -495,17 +495,24 @@ private struct RufletOpacityModifier: ViewModifier {
 
 private struct RufletRotationModifier: ViewModifier {
   let node: ControlNode
+  @State private var childSize = CGSize.zero
 
   func body(content: Content) -> some View {
-    let rotation = ControlProps.rotation(node.props["rotate"]) ?? .zero
-    let result = content.rotationEffect(rotation)
+    let presentation = ControlProps.rotationPresentation(node.props["rotate"])
+      ?? .init(
+        radians: 0, alignment: .center, origin: .zero,
+        transformHitTests: true, filterQuality: nil)
+    let result = content
+      .background(transformSizeReader)
+      .modifier(RufletRotationEffect(presentation: presentation, childSize: childSize))
+      .onPreferenceChange(RufletTransformSizeKey.self) { childSize = $0 }
     if let animation = ControlProps.animation(node.props["animate_rotation"]) {
       result
-        .animation(animation, value: rotation.radians)
+        .animation(animation, value: presentation.radians)
         .modifier(
           RufletAnimationEndReporter(
             node: node, animation: node.props["animate_rotation"],
-            value: rotation.radians, property: "rotation"))
+            value: presentation.radians, property: "rotation"))
     } else {
       result
     }
@@ -514,20 +521,89 @@ private struct RufletRotationModifier: ViewModifier {
 
 private struct RufletScaleModifier: ViewModifier {
   let node: ControlNode
+  @State private var childSize = CGSize.zero
 
   func body(content: Content) -> some View {
-    let scale = ControlProps.scale(node.props["scale"]) ?? CGSize(width: 1, height: 1)
-    let result = content.scaleEffect(x: scale.width, y: scale.height)
+    let presentation = ControlProps.scalePresentation(node.props["scale"])
+      ?? .init(
+        factors: CGSize(width: 1, height: 1), alignment: .center,
+        origin: .zero, transformHitTests: true, filterQuality: nil)
+    let result = content
+      .background(transformSizeReader)
+      .modifier(RufletScaleEffect(presentation: presentation, childSize: childSize))
+      .onPreferenceChange(RufletTransformSizeKey.self) { childSize = $0 }
     if let animation = ControlProps.animation(node.props["animate_scale"]) {
       result
-        .animation(animation, value: scale)
+        .animation(animation, value: presentation.factors)
         .modifier(
           RufletAnimationEndReporter(
-            node: node, animation: node.props["animate_scale"], value: scale,
+            node: node, animation: node.props["animate_scale"], value: presentation.factors,
             property: "scale"))
     } else {
       result
     }
+  }
+}
+
+private var transformSizeReader: some View {
+  GeometryReader { proxy in
+    Color.clear.preference(key: RufletTransformSizeKey.self, value: proxy.size)
+  }
+}
+
+private struct RufletTransformSizeKey: PreferenceKey {
+  static var defaultValue = CGSize.zero
+  static func reduce(value: inout CGSize, nextValue: () -> CGSize) { value = nextValue() }
+}
+
+private struct RufletRotationEffect: ViewModifier {
+  let presentation: ControlProps.RotationPresentation
+  let childSize: CGSize
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if presentation.transformHitTests {
+      // SwiftUI's semantic transform moves its native hit-test coordinate
+      // space with the pixels, matching Flutter's default.
+      content.rotationEffect(
+        .radians(presentation.radians), anchor: presentation.anchor(in: childSize))
+    } else {
+      // Projection effects paint in the transformed coordinate space without
+      // moving the view's original native hit-test bounds.
+      content.projectionEffect(ProjectionTransform(rotationTransform))
+    }
+  }
+
+  private var rotationTransform: CGAffineTransform {
+    let anchor = presentation.anchor(in: childSize)
+    let pivot = CGPoint(x: anchor.x * childSize.width, y: anchor.y * childSize.height)
+    return CGAffineTransform(translationX: pivot.x, y: pivot.y)
+      .rotated(by: presentation.radians)
+      .translatedBy(x: -pivot.x, y: -pivot.y)
+  }
+}
+
+private struct RufletScaleEffect: ViewModifier {
+  let presentation: ControlProps.ScalePresentation
+  let childSize: CGSize
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if presentation.transformHitTests {
+      content.scaleEffect(
+        x: presentation.factors.width, y: presentation.factors.height,
+        anchor: presentation.anchor(in: childSize))
+    } else {
+      content.projectionEffect(ProjectionTransform(scaleTransform))
+    }
+  }
+
+  private var scaleTransform: CGAffineTransform {
+    let anchor = presentation.anchor(in: childSize)
+    let pivot = CGPoint(x: anchor.x * childSize.width, y: anchor.y * childSize.height)
+    return CGAffineTransform(translationX: pivot.x, y: pivot.y)
+      .scaledBy(x: presentation.factors.width, y: presentation.factors.height)
+      .translatedBy(x: -pivot.x, y: -pivot.y)
   }
 }
 

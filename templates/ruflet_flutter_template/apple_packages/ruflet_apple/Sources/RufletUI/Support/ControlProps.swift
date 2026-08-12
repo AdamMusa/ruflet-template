@@ -162,25 +162,107 @@ public enum ControlProps {
     return CGSize(width: map["x"]?.doubleValue ?? 0, height: map["y"]?.doubleValue ?? 0)
   }
 
-  /// `rotate` is either radians or `{angle:}`, matching Flet's `Rotate`.
-  public static func rotation(_ value: RufletValue?) -> Angle? {
-    guard let value else { return nil }
-    if let radians = value.doubleValue { return .radians(radians) }
-    if let angle = value["angle"]?.doubleValue { return .radians(angle) }
-    return nil
+  /// Full Flet `Rotate` wire shape. Keeping the presentation details together
+  /// prevents the shared wrapper from silently dropping a non-centre pivot.
+  public struct RotationPresentation: Equatable {
+    public let radians: Double
+    public let alignment: RufletAlignment
+    public let origin: CGSize
+    public let transformHitTests: Bool
+    public let filterQuality: String?
+
+    /// SwiftUI describes the pivot as a unit point. Flet adds `origin` (in
+    /// logical pixels) to its alignment point, so the unit point may legally
+    /// sit outside 0...1 just as Flutter's transform origin may sit outside.
+    public func anchor(in size: CGSize) -> UnitPoint {
+      let baseX = (alignment.x + 1) / 2
+      let baseY = (alignment.y + 1) / 2
+      return UnitPoint(
+        x: baseX + (size.width == 0 ? 0 : origin.width / size.width),
+        y: baseY + (size.height == 0 ? 0 : origin.height / size.height))
+    }
   }
 
-  /// `scale` is either a factor or `{scale:}`/`{scale_x:, scale_y:}`.
-  public static func scale(_ value: RufletValue?) -> CGSize? {
+  /// `rotate` is either radians or the complete serialized `Rotate` object.
+  public static func rotationPresentation(_ value: RufletValue?) -> RotationPresentation? {
     guard let value else { return nil }
-    if let factor = value.doubleValue { return CGSize(width: factor, height: factor) }
-    guard let map = value.mapValue else { return nil }
-    if let uniform = map["scale"]?.doubleValue {
-      return CGSize(width: uniform, height: uniform)
+    if let radians = value.doubleValue {
+      return RotationPresentation(
+        radians: radians, alignment: .center, origin: .zero,
+        transformHitTests: true, filterQuality: nil)
     }
+    guard let map = value.mapValue else { return nil }
+    return RotationPresentation(
+      radians: map["angle"]?.doubleValue ?? 0,
+      alignment: continuousAlignment(map["alignment"]) ?? .center,
+      origin: point(map["origin"]),
+      transformHitTests: map["transform_hit_tests"]?.boolValue ?? true,
+      filterQuality: filterQuality(map["filter_quality"]?.stringValue))
+  }
+
+  /// Backwards-compatible scalar adapter for callers which only need angle.
+  public static func rotation(_ value: RufletValue?) -> Angle? {
+    rotationPresentation(value).map { .radians($0.radians) }
+  }
+
+  /// Full Flet `Scale` wire shape, including its pivot and hit-test policy.
+  public struct ScalePresentation: Equatable {
+    public let factors: CGSize
+    public let alignment: RufletAlignment
+    public let origin: CGSize
+    public let transformHitTests: Bool
+    public let filterQuality: String?
+
+    public func anchor(in size: CGSize) -> UnitPoint {
+      let baseX = (alignment.x + 1) / 2
+      let baseY = (alignment.y + 1) / 2
+      return UnitPoint(
+        x: baseX + (size.width == 0 ? 0 : origin.width / size.width),
+        y: baseY + (size.height == 0 ? 0 : origin.height / size.height))
+    }
+  }
+
+  /// `scale` is either a factor or the complete serialized `Scale` object.
+  public static func scalePresentation(_ value: RufletValue?) -> ScalePresentation? {
+    guard let value else { return nil }
+    if let factor = value.doubleValue {
+      return ScalePresentation(
+        factors: CGSize(width: factor, height: factor), alignment: .center,
+        origin: .zero, transformHitTests: true, filterQuality: nil)
+    }
+    guard let map = value.mapValue else { return nil }
+    let factors: CGSize
+    if let uniform = map["scale"]?.doubleValue {
+      factors = CGSize(width: uniform, height: uniform)
+    } else {
+      factors = CGSize(
+        width: map["scale_x"]?.doubleValue ?? 1,
+        height: map["scale_y"]?.doubleValue ?? 1)
+    }
+    return ScalePresentation(
+      factors: factors,
+      alignment: continuousAlignment(map["alignment"]) ?? .center,
+      origin: point(map["origin"]),
+      transformHitTests: map["transform_hit_tests"]?.boolValue ?? true,
+      filterQuality: filterQuality(map["filter_quality"]?.stringValue))
+  }
+
+  /// Backwards-compatible factor adapter.
+  public static func scale(_ value: RufletValue?) -> CGSize? {
+    scalePresentation(value)?.factors
+  }
+
+  private static func point(_ value: RufletValue?) -> CGSize {
+    guard let map = value?.mapValue else { return .zero }
     return CGSize(
-      width: map["scale_x"]?.doubleValue ?? 1,
-      height: map["scale_y"]?.doubleValue ?? 1)
+      width: map["x"]?.doubleValue ?? 0,
+      height: map["y"]?.doubleValue ?? 0)
+  }
+
+  private static func filterQuality(_ value: String?) -> String? {
+    guard let value = value?.lowercased(), ["none", "low", "medium", "high"].contains(value)
+    else { return nil }
+    return value
   }
 
   /// Flutter's `BlendMode` case names against SwiftUI's. Flutter's Skia set is
