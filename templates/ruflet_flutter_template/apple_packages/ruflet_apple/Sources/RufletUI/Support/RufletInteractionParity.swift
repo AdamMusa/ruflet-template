@@ -53,29 +53,34 @@ enum RufletInteractionParity {
     ])
   }
 
-  static func scaleStart(local: CGPoint, global: CGPoint, timestamp: Double) -> RufletValue {
+  static func scaleStart(
+    local: CGPoint, global: CGPoint, pointerCount: Int = 2, timestamp: Double
+  ) -> RufletValue {
     .map([
-      "gfp": point(global), "lfp": point(local), "pc": .int(2),
+      "gfp": point(global), "lfp": point(local), "pc": .int(Int64(pointerCount)),
       "ts": .double(timestamp),
     ])
   }
 
   static func scaleUpdate(
     scale: Double, local: CGPoint, global: CGPoint, previousLocal: CGPoint,
-    timestamp: Double
+    pointerCount: Int = 2, horizontalScale: Double? = nil,
+    verticalScale: Double? = nil, rotation: Double = 0, timestamp: Double
   ) -> RufletValue {
     .map([
       "gfp": point(global),
       "fpd": point(CGPoint(x: local.x - previousLocal.x, y: local.y - previousLocal.y)),
-      "lfp": point(local), "pc": .int(2), "hs": .double(scale),
-      "vs": .double(scale), "s": .double(scale), "rot": .double(0),
+      "lfp": point(local), "pc": .int(Int64(pointerCount)),
+      "hs": .double(horizontalScale ?? scale),
+      "vs": .double(verticalScale ?? scale), "s": .double(scale),
+      "rot": .double(rotation),
       "ts": .double(timestamp),
     ])
   }
 
-  static func scaleEnd(velocity: CGVector = .zero) -> RufletValue {
+  static func scaleEnd(pointerCount: Int = 2, velocity: CGVector = .zero) -> RufletValue {
     .map([
-      "pc": .int(2),
+      "pc": .int(Int64(pointerCount)),
       "v": .map(["x": .double(velocity.dx), "y": .double(velocity.dy)]),
     ])
   }

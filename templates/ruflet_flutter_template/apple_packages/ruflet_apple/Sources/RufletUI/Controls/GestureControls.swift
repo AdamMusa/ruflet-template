@@ -1141,13 +1141,20 @@ struct InteractiveViewerControlView: View {
   @State private var gestureStartScale: CGFloat?
   @State private var gestureStartOffset: CGSize?
   @State private var viewportSize = CGSize.zero
+  @State private var viewportGlobalOrigin = CGPoint.zero
+  @State private var previousInteractionLocal: CGPoint?
+  @State private var lastInteractionTimestamp = Date.distantPast
   @State private var lastReport = Date.distantPast
   /// `save_state`/`restore_state` are a matched pair in Flet's API.
   @State private var saved: (scale: CGFloat, offset: CGSize)?
 
   /// `interaction_update_interval` throttles the update stream the way Flet
   /// throttles its own; start and end are never dropped.
-  private func report(event name: String) {
+  private func report(
+    event name: String, local: CGPoint? = nil, previousLocal: CGPoint? = nil,
+    gestureScale: Double = 1, pointerCount: Int = 1,
+    velocity: CGVector = .zero
+  ) {
     if name == "interaction_update" {
       let interval = TimeInterval(
         node.int("interaction_update_interval") ?? RufletGestureParity.interactionUpdateInterval
@@ -1155,28 +1162,40 @@ struct InteractiveViewerControlView: View {
       guard Date().timeIntervalSince(lastReport) >= interval else { return }
       lastReport = Date()
     }
+    let focal = local ?? CGPoint(x: viewportSize.width / 2, y: viewportSize.height / 2)
+    let global = CGPoint(
+      x: focal.x + viewportGlobalOrigin.x,
+      y: focal.y + viewportGlobalOrigin.y)
     let timestamp = Date().timeIntervalSince1970 * 1_000
     switch name {
     case "interaction_start":
       events.fire(
         node, name,
         data: RufletInteractionParity.scaleStart(
-          local: .zero, global: .zero, timestamp: timestamp))
+          local: focal, global: global, pointerCount: pointerCount,
+          timestamp: timestamp))
     case "interaction_update":
       events.fire(
         node, name,
         data: RufletInteractionParity.scaleUpdate(
-          scale: scale, local: .zero, global: .zero,
-          previousLocal: CGPoint(x: -offset.width, y: -offset.height), timestamp: timestamp))
+          scale: gestureScale, local: focal, global: global,
+          previousLocal: previousLocal ?? focal, pointerCount: pointerCount,
+          timestamp: timestamp))
     default:
-      events.fire(node, name, data: RufletInteractionParity.scaleEnd())
+      events.fire(
+        node, name,
+        data: RufletInteractionParity.scaleEnd(
+          pointerCount: pointerCount, velocity: velocity))
     }
   }
 
-  private func startInteractionIfNeeded() {
+  private func startInteractionIfNeeded(local: CGPoint? = nil, pointerCount: Int = 1) {
     guard !interacting else { return }
     interacting = true
-    report(event: "interaction_start")
+    previousInteractionLocal = local
+      ?? CGPoint(x: viewportSize.width / 2, y: viewportSize.height / 2)
+    lastInteractionTimestamp = Date()
+    report(event: "interaction_start", local: previousInteractionLocal, pointerCount: pointerCount)
   }
 
   private var transformAnchor: UnitPoint {
@@ -1222,28 +1241,48 @@ struct InteractiveViewerControlView: View {
     .background(
       GeometryReader { proxy in
         Color.clear
-          .onAppear { viewportSize = proxy.size }
-          .onChange(of: proxy.size) { viewportSize = $0 }
+          .onAppear {
+            viewportSize = proxy.size
+            viewportGlobalOrigin = proxy.frame(in: .global).origin
+          }
+          .onChange(of: proxy.size) {
+            viewportSize = $0
+            viewportGlobalOrigin = proxy.frame(in: .global).origin
+          }
+          .onChange(of: proxy.frame(in: .global).origin) {
+            viewportGlobalOrigin = $0
+          }
       })
     .gesture(
       SimultaneousGesture(
         MagnificationGesture().onChanged { value in
           guard node.bool("disabled") != true, node.bool("scale_enabled") != false else { return }
-          startInteractionIfNeeded()
+          let focal = CGPoint(x: viewportSize.width / 2, y: viewportSize.height / 2)
+          startInteractionIfNeeded(local: focal, pointerCount: 2)
           let minimum = CGFloat(node.double("min_scale") ?? RufletGestureParity.interactiveMinScale)
           let maximum = CGFloat(node.double("max_scale") ?? RufletGestureParity.interactiveMaxScale)
           if gestureStartScale == nil { gestureStartScale = scale }
           scale = min(max((gestureStartScale ?? 1) * value, minimum), maximum)
-          report(event: "interaction_update")
+          report(
+            event: "interaction_update", local: focal,
+            previousLocal: previousInteractionLocal, gestureScale: value,
+            pointerCount: 2)
+          previousInteractionLocal = focal
+          lastInteractionTimestamp = Date()
         },
         DragGesture().onChanged { value in
           guard node.bool("disabled") != true, node.bool("pan_enabled") != false else { return }
-          startInteractionIfNeeded()
+          startInteractionIfNeeded(local: value.startLocation, pointerCount: 1)
           if gestureStartOffset == nil { gestureStartOffset = offset }
           offset = clampedOffset(CGSize(
             width: (gestureStartOffset ?? .zero).width + value.translation.width,
             height: (gestureStartOffset ?? .zero).height + value.translation.height))
-          report(event: "interaction_update")
+          report(
+            event: "interaction_update", local: value.location,
+            previousLocal: previousInteractionLocal, gestureScale: 1,
+            pointerCount: 1)
+          previousInteractionLocal = value.location
+          lastInteractionTimestamp = Date()
         }
       )
       .onEnded { value in
@@ -1255,6 +1294,7 @@ struct InteractiveViewerControlView: View {
           node.double("interaction_end_friction_coefficient")
           ?? RufletGestureParity.interactiveFriction
         let duration = min(max(friction * 1_000, 0.1), 1)
+        var endVelocity = CGVector.zero
         if node.bool("pan_enabled") != false, let drag = value.second {
           let origin = gestureStartOffset ?? offset
           let projected = clampedOffset(
@@ -1262,21 +1302,34 @@ struct InteractiveViewerControlView: View {
               width: origin.width + drag.predictedEndTranslation.width,
               height: origin.height + drag.predictedEndTranslation.height))
           withAnimation(.easeOut(duration: duration)) { offset = projected }
+          let elapsed = max(Date().timeIntervalSince(lastInteractionTimestamp), 1.0 / 60)
+          endVelocity = CGVector(
+            dx: (drag.predictedEndTranslation.width - drag.translation.width) / elapsed,
+            dy: (drag.predictedEndTranslation.height - drag.translation.height) / elapsed)
         }
         gestureStartScale = nil
         gestureStartOffset = nil
-        report(event: "interaction_end")
+        previousInteractionLocal = nil
+        report(
+          event: "interaction_end", pointerCount: 0,
+          velocity: endVelocity)
       })
     .modifier(ChromeClipModifier(behavior: node.string("clip_behavior") ?? "hardEdge"))
     .modifier(
       InteractiveTrackpadScale(
         node: node, scale: $scale,
-        began: { startInteractionIfNeeded() },
-        updated: { report(event: "interaction_update") },
+        began: { startInteractionIfNeeded(local: nil, pointerCount: 0) },
+        updated: { gestureScale in
+          report(
+            event: "interaction_update", local: nil,
+            previousLocal: previousInteractionLocal, gestureScale: gestureScale,
+            pointerCount: 0)
+        },
         ended: {
           guard interacting else { return }
           interacting = false
-          report(event: "interaction_end")
+          previousInteractionLocal = nil
+          report(event: "interaction_end", pointerCount: 0)
         }))
     .rufletCommandHandler(node.id) { call, completion in
       switch call.name {
@@ -1406,7 +1459,7 @@ private struct InteractiveTrackpadScale: ViewModifier {
   let node: ControlNode
   @Binding var scale: CGFloat
   let began: () -> Void
-  let updated: () -> Void
+  let updated: (Double) -> Void
   let ended: () -> Void
   @State private var endWork: DispatchWorkItem?
 
@@ -1422,8 +1475,9 @@ private struct InteractiveTrackpadScale: ViewModifier {
           let factor = node.double("scale_factor") ?? RufletGestureParity.interactiveScaleFactor
           let minimum = node.double("min_scale") ?? RufletGestureParity.interactiveMinScale
           let maximum = node.double("max_scale") ?? RufletGestureParity.interactiveMaxScale
-          scale = CGFloat(min(max(Double(scale) * exp(-delta / factor), minimum), maximum))
-          updated()
+          let gestureScale = exp(-delta / factor)
+          scale = CGFloat(min(max(Double(scale) * gestureScale, minimum), maximum))
+          updated(gestureScale)
           endWork?.cancel()
           let work = DispatchWorkItem(block: ended)
           endWork = work
