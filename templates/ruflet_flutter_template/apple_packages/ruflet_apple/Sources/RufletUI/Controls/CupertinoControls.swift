@@ -3431,7 +3431,7 @@ struct CupertinoActionSheetControlView: View {
             .padding(.bottom,
                      RufletCupertinoPresentationDefaults.actionSheetContentVerticalPadding)
         }
-        ForEach(node.controlIDs(forKey: "actions"), id: \.self) { actionID in
+        ForEach(visibleActionIDs, id: \.self) { actionID in
           Divider().background(dividerColor)
           action(actionID)
         }
@@ -3441,7 +3441,7 @@ struct CupertinoActionSheetControlView: View {
       .clipShape(RoundedRectangle(
         cornerRadius: RufletCupertinoPresentationDefaults.actionSheetCornerRadius))
 
-      if let cancelID = node.controlID(forKey: "cancel") {
+      if let cancelID = visibleControlID("cancel") {
         action(cancelID)
           .background(cancelSurface, in: RoundedRectangle(
             cornerRadius: RufletCupertinoPresentationDefaults.actionSheetCornerRadius))
@@ -3475,9 +3475,9 @@ struct CupertinoActionSheetControlView: View {
 
   @ViewBuilder
   private func actionContent(_ action: ControlNode) -> some View {
-    if let contentID = action.controlID(forKey: "content") {
+    if let contentID = visibleControlID(action, key: "content") {
       ControlView(id: contentID, axis: .none)
-    } else if let content = action.string("content") {
+    } else if case .string(let content)? = action.props["content"] {
       Text(content)
     } else {
       Text("content must be provided").foregroundColor(.red)
@@ -3486,20 +3486,42 @@ struct CupertinoActionSheetControlView: View {
 
   @ViewBuilder
   private func textOrWidget(_ key: String) -> some View {
-    if let id = node.controlID(forKey: key) {
+    if let id = visibleControlID(key) {
       ControlView(id: id, axis: .none)
-    } else if let text = node.string(key) {
+    } else if case .string(let text)? = node.props[key] {
       Text(text)
     }
   }
 
   private func hasTextOrWidget(_ key: String) -> Bool {
-    node.controlID(forKey: key) != nil || node.string(key) != nil
+    visibleControlID(key) != nil || {
+      if case .string? = node.props[key] { return true }
+      return false
+    }()
   }
 
   private var hasMainSheet: Bool {
     hasTextOrWidget("title") || hasTextOrWidget("message")
-      || !node.controlIDs(forKey: "actions").isEmpty
+      || !visibleActionIDs.isEmpty
+  }
+
+  private var visibleActionIDs: [Int] {
+    CupertinoActionSheetSlots.visibleActionIDs(
+      node, visibilityForID: visibility)
+  }
+
+  private func visibleControlID(_ key: String) -> Int? {
+    CupertinoActionSheetSlots.visibleControlID(
+      node, key: key, visibilityForID: visibility)
+  }
+
+  private func visibleControlID(_ owner: ControlNode, key: String) -> Int? {
+    CupertinoActionSheetSlots.visibleControlID(
+      owner, key: key, visibilityForID: visibility)
+  }
+
+  private func visibility(_ id: Int) -> Bool? {
+    store.node(id).map { $0.bool("visible") != false }
   }
 
   private var sheetSurface: Color {
@@ -3524,6 +3546,21 @@ struct CupertinoActionSheetControlView: View {
     colorScheme == .dark
       ? Color(.sRGB, red: 125 / 255, green: 125 / 255, blue: 125 / 255, opacity: 213 / 255)
       : Color(.sRGB, red: 201 / 255, green: 201 / 255, blue: 201 / 255, opacity: 212 / 255)
+  }
+}
+
+enum CupertinoActionSheetSlots {
+  static func visibleControlID(
+    _ node: ControlNode, key: String, visibilityForID: (Int) -> Bool?
+  ) -> Int? {
+    guard let id = node.controlID(forKey: key), visibilityForID(id) == true else { return nil }
+    return id
+  }
+
+  static func visibleActionIDs(
+    _ node: ControlNode, visibilityForID: (Int) -> Bool?
+  ) -> [Int] {
+    node.controlIDs(forKey: "actions").filter { visibilityForID($0) == true }
   }
 }
 
