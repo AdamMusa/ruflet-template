@@ -81,6 +81,42 @@ final class CodeEditorParityTests: XCTestCase {
     XCTAssertTrue(value.disabled)
   }
 
+  func testGutterMarginMapAndAutocompleteUsePinnedDartConversions() {
+    let configuration = CodeEditorConfiguration(node: ControlNode(
+      id: 1, type: "CodeEditor", props: [
+        "gutter_style": .map([
+          "margin": .map(["left": .double(4), "right": .double(8)])
+        ]),
+        "autocomplete_words": .array([
+          .string("Ruflet"), .int(42), .bool(true), .null,
+        ]),
+      ]))
+    XCTAssertEqual(configuration.gutter.margin, 6)
+    XCTAssertEqual(configuration.autocompleteWords, ["Ruflet", "42", "true", "null"])
+  }
+
+  func testValueChangesUpdateControlBeforeOptionalChangeEvent() {
+    var trace: [String] = []
+    let sink = RufletEventSink(
+      send: { _, name, value in trace.append("event:\(name):\(value.stringValue ?? "")") },
+      setLocal: { _, key, value in trace.append("local:\(key):\(value.stringValue ?? "")") },
+      update: { _, props in trace.append("update:\(props["value"]?.stringValue ?? "")") })
+    CodeEditorValueEvents.commit(
+      ControlNode(
+        id: 1, type: "CodeEditor", props: ["on_change": .bool(true)]),
+      value: "puts :native", to: sink)
+    XCTAssertEqual(trace, [
+      "local:value:puts :native",
+      "update:puts :native",
+      "event:change:puts :native",
+    ])
+
+    trace = []
+    CodeEditorValueEvents.commit(
+      ControlNode(id: 2, type: "CodeEditor"), value: "silent", to: sink)
+    XCTAssertEqual(trace, ["local:value:silent", "update:silent"])
+  }
+
   func testSelectionClampsAndUsesFletUtf16Payload() {
     let reversed: RufletValue = .map([
       "base_offset": .int(7), "extent_offset": .int(1),

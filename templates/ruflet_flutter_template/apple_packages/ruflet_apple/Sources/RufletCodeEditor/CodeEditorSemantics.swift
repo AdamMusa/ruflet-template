@@ -50,7 +50,12 @@ struct CodeEditorConfiguration: Equatable {
     var parsed = Gutter()
     if let map = node.map("gutter_style") {
       if let value = map["width"]?.doubleValue { parsed.width = CGFloat(value) }
-      if let value = map["margin"]?.doubleValue { parsed.margin = CGFloat(value) }
+      if let value = map["margin"]?.doubleValue {
+        parsed.margin = CGFloat(value)
+      } else if let insets = ControlProps.edgeInsets(map["margin"]) {
+        // Pinned Flet averages the horizontal EdgeInsets for GutterStyle.
+        parsed.margin = (insets.leading + insets.trailing) / 2
+      }
       if let value = map["show_errors"]?.boolValue { parsed.showErrors = value }
       if let value = map["show_folding_handles"]?.boolValue { parsed.showFoldingHandles = value }
       if let value = map["show_line_numbers"]?.boolValue { parsed.showLineNumbers = value }
@@ -59,7 +64,7 @@ struct CodeEditorConfiguration: Equatable {
     }
     gutter = parsed
     autocomplete = node.bool("autocomplete") ?? false
-    autocompleteWords = node.array("autocomplete_words")?.compactMap(\.stringValue) ?? []
+    autocompleteWords = node.array("autocomplete_words")?.map(Self.dartString) ?? []
     readOnly = node.bool("read_only") ?? false
     autofocus = node.bool("autofocus") ?? false
     disabled = node.bool("disabled") == true
@@ -79,6 +84,33 @@ struct CodeEditorConfiguration: Equatable {
       leading: padding.leading + (gutter.visible ? gutter.width + gutter.margin : 0),
       bottom: padding.bottom,
       trailing: padding.trailing)
+  }
+
+  /// Mirrors Dart's `value.map((e) => e.toString())` used by the plugin.
+  static func dartString(_ value: RufletValue) -> String {
+    switch value {
+    case .null: return "null"
+    case .bool(let value): return value ? "true" : "false"
+    case .int(let value): return String(value)
+    case .double(let value): return String(value)
+    case .string(let value), .extended(_, let value): return value
+    case .binary(let value): return "[" + value.map(String.init).joined(separator: ", ") + "]"
+    case .array(let value): return "[" + value.map(Self.dartString).joined(separator: ", ") + "]"
+    case .map(let value):
+      return "{" + value.keys.sorted().map {
+        "\($0): \(Self.dartString(value[$0]!))"
+      }.joined(separator: ", ") + "}"
+    case .controlRef(let value): return String(value)
+    }
+  }
+}
+
+enum CodeEditorValueEvents {
+  static func commit(_ node: ControlNode, value: String, to events: RufletEventSink) {
+    let wireValue = RufletValue.string(value)
+    events.setLocal(node.id, "value", wireValue)
+    events.update(node.id, ["value": wireValue])
+    events.fire(node, "change", data: wireValue)
   }
 }
 

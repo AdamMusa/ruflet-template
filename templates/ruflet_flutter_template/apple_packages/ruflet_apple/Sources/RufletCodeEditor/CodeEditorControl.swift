@@ -129,7 +129,7 @@ struct CodeEditorControlView: View {
   private var value: Binding<String> {
     Binding(
       get: { node.string("value") ?? "" },
-      set: { events.commit(node, value: .string($0)) })
+      set: { CodeEditorValueEvents.commit(node, value: $0, to: events) })
   }
 
   private var source: String { node.string("value") ?? "" }
@@ -141,7 +141,7 @@ struct CodeEditorControlView: View {
       get: { CodeFoldProjection.project(source, folding: folds) },
       set: { newValue in
         guard folds.isEmpty else { return }
-        events.commit(node, value: .string(newValue))
+        CodeEditorValueEvents.commit(node, value: newValue, to: events)
       })
   }
 
@@ -175,7 +175,7 @@ struct CodeEditorControlView: View {
     guard folds.isEmpty else { return }
     let next = (source as NSString).replacingCharacters(in: range, with: word)
     selection = NSRange(location: range.location + word.utf16.count, length: 0)
-    events.commit(node, value: .string(next))
+    CodeEditorValueEvents.commit(node, value: next, to: events)
   }
 
   private var editorFont: Font {
@@ -397,4 +397,3 @@ private struct CodeEditorChrome: ViewModifier {
           default: dark ? Color(red: 0.16, green: 0.17, blue: 0.20) : .white))
   }
 }
-
