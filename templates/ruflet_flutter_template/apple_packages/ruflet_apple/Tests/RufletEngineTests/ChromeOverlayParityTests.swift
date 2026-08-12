@@ -56,23 +56,45 @@ final class ChromeOverlayParityTests: XCTestCase {
 
     XCTAssertFalse(RufletPageNavigation.canImplyLeading(viewCount: 1))
     XCTAssertTrue(RufletPageNavigation.canImplyLeading(viewCount: 2))
-    RufletPageNavigation.requestPop(page: page, view: ordinary, events: sink)
+    RufletPageNavigation.commitPop(page: page, view: ordinary, events: sink)
     XCTAssertEqual(sent.first?.0, 1)
     XCTAssertEqual(sent.first?.1, "view_pop")
     XCTAssertEqual(sent.first?.2, .map(["route": .string("/details")]))
 
-    sent.removeAll()
-    let confirming = ControlNode(
-      id: 10, type: "View",
-      props: ["on_confirm_pop": .bool(true)])
-    RufletPageNavigation.requestPop(page: page, view: confirming, events: sink)
-    XCTAssertEqual(sent.first?.0, 10)
-    XCTAssertEqual(sent.first?.1, "confirm_pop")
+  }
 
-    sent.removeAll()
-    let blocked = ControlNode(id: 11, type: "View", props: ["can_pop": .bool(false)])
-    RufletPageNavigation.requestPop(page: page, view: blocked, events: sink)
-    XCTAssertTrue(sent.isEmpty)
+  @MainActor
+  func testViewConfirmPopWaitsForCommandAndThenUsesPageViewPopProtocol() {
+    let page = ControlNode(id: 1, type: "Page")
+    let view = ControlNode(
+      id: 10, type: "View",
+      props: ["route": .string("/guarded"), "on_confirm_pop": .bool(true)])
+    var sent: [(Int, String, RufletValue)] = []
+    let sink = RufletEventSink(send: { sent.append(($0, $1, $2)) })
+    let coordinator = RufletViewPopCoordinator()
+
+    coordinator.request(page: page, view: view, events: sink)
+    XCTAssertTrue(coordinator.isAwaitingConfirmation)
+    XCTAssertEqual(sent.map(\.1), ["confirm_pop"])
+
+    coordinator.confirm(shouldPop: false)
+    XCTAssertFalse(coordinator.isAwaitingConfirmation)
+    XCTAssertEqual(sent.map(\.1), ["confirm_pop"])
+
+    coordinator.request(page: page, view: view, events: sink)
+    coordinator.confirm(shouldPop: true)
+    XCTAssertEqual(sent.last?.0, page.id)
+    XCTAssertEqual(sent.last?.1, "view_pop")
+    XCTAssertEqual(sent.last?.2, .map(["route": .string("/guarded")]))
+  }
+
+  func testViewDeclaresEveryFletScaffoldCommand() throws {
+    XCTAssertEqual(
+      try XCTUnwrap(ControlRegistry.descriptor(for: "View")).supportedMethods,
+      Set(["close_drawer", "close_end_drawer", "confirm_pop", "show_drawer", "show_end_drawer"]))
+    XCTAssertEqual(
+      try XCTUnwrap(ControlRegistry.descriptor(for: "View")).supportedEvents,
+      ["confirm_pop", "scroll"])
   }
 
   @MainActor

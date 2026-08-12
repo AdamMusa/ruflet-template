@@ -150,6 +150,7 @@ struct PageControlView: View {
   @Environment(\.rufletNativeScene) private var nativeScene
   @Environment(\.rufletEvents) private var events
   @Namespace private var heroNamespace
+  @StateObject private var popCoordinator = RufletViewPopCoordinator()
 
   var body: some View {
     Group {
@@ -199,9 +200,14 @@ struct PageControlView: View {
     else {
       return RufletNavigationContext()
     }
-    return RufletNavigationContext(canPop: true) {
-      RufletPageNavigation.requestPop(page: node, view: view, events: events)
-    }
+    return RufletNavigationContext(
+      canPop: true,
+      requestPop: {
+        popCoordinator.request(page: node, view: view, events: events)
+      },
+      confirmPop: { shouldPop in
+        popCoordinator.confirm(shouldPop: shouldPop)
+      })
   }
 }
 
@@ -460,6 +466,8 @@ private struct WindowTitle: ViewModifier {
 struct ViewControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
+  @Environment(\.rufletEvents) private var events
+  @Environment(\.rufletNavigationContext) private var navigation
   @StateObject private var scaffoldHost = RufletScaffoldHostState()
 
   var body: some View {
@@ -520,6 +528,19 @@ struct ViewControlView: View {
     .environment(\.rufletScaffoldHost, scaffoldHost)
     .modifier(DrawerPresenter(node: node))
     .modifier(DialogPresenter(host: node))
+    .rufletCommandHandler(node.id) { call, completion in
+      switch call.name {
+      case "show_drawer", "close_drawer", "show_end_drawer", "close_end_drawer":
+        RufletViewCommands.performDrawer(
+          call.name, view: node, store: store, events: events)
+        completion(.success(.null))
+      case "confirm_pop":
+        navigation.confirmPop(call.argument("should_pop")?.boolValue ?? false)
+        completion(.success(.null))
+      default:
+        completion(.failure(rufletUnsupported(node.type, call)))
+      }
+    }
   }
 
   @ViewBuilder
@@ -596,6 +617,30 @@ struct ViewControlView: View {
   }
 
   private var scaffoldCoordinateSpace: String { "ruflet-scaffold-\(node.id)" }
+}
+
+/// Exact imperative command surface installed by Flet's `ViewControlState`.
+/// Drawer state belongs to the rendered drawer node, while dismissal is an
+/// event of that drawer after Scaffold has actually closed it.
+enum RufletViewCommands {
+  static let methods: Set<String> = [
+    "close_drawer", "close_end_drawer", "confirm_pop", "show_drawer",
+    "show_end_drawer",
+  ]
+
+  static func performDrawer(
+    _ method: String,
+    view: ControlNode,
+    store: ControlStore,
+    events: RufletEventSink
+  ) {
+    let end = method.contains("end_drawer")
+    let opening = method.hasPrefix("show")
+    let key = end ? "end_drawer" : "drawer"
+    guard let id = view.controlID(forKey: key), let drawer = store.node(id) else { return }
+    events.setLocal(id, "_open", .bool(opening))
+    if !opening { events.fire(drawer, "dismiss") }
+  }
 }
 
 private struct BottomBarFramePreferenceKey: PreferenceKey {
