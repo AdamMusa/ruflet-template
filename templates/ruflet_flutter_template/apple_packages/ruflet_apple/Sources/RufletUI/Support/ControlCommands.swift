@@ -32,6 +32,18 @@ extension View {
   ) -> some View {
     modifier(CommandHandlerModifier(controlID: controlID, handler: handler))
   }
+
+  /// Claims one method while leaving the control's service-owned methods
+  /// untouched.
+  public func rufletCommandHandler(
+    _ controlID: Int,
+    method: String,
+    handler: @escaping (RufletMethodCall, @escaping RufletMethodCompletion) -> Void
+  ) -> some View {
+    modifier(
+      MethodCommandHandlerModifier(
+        controlID: controlID, method: method, handler: handler))
+  }
 }
 
 private struct CommandHandlerModifier: ViewModifier {
@@ -44,6 +56,20 @@ private struct CommandHandlerModifier: ViewModifier {
     content
       .onAppear { bus?.register(controlID, handler: handler) }
       .onDisappear { bus?.unregister(controlID) }
+  }
+}
+
+private struct MethodCommandHandlerModifier: ViewModifier {
+  let controlID: Int
+  let method: String
+  let handler: (RufletMethodCall, @escaping RufletMethodCompletion) -> Void
+
+  @Environment(\.rufletCommands) private var bus
+
+  func body(content: Content) -> some View {
+    content
+      .onAppear { bus?.register(controlID, method: method, handler: handler) }
+      .onDisappear { bus?.unregister(controlID, method: method) }
   }
 }
 

@@ -193,6 +193,7 @@ struct PageControlView: View {
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletNativeScene) private var nativeScene
   @Environment(\.rufletEvents) private var events
+  @Environment(\.displayScale) private var displayScale
   @Namespace private var heroNamespace
   @StateObject private var popCoordinator = RufletViewPopCoordinator()
 
@@ -230,6 +231,9 @@ struct PageControlView: View {
       }
     }
     .environment(\.rufletHeroNamespace, heroNamespace)
+    .modifier(
+      PageScreenshotCaptureModifier(
+        node: node, store: store, events: events, displayScale: displayScale))
   }
 
   /// Flet selects the `BasePage` whose `view_id` matches the native platform
@@ -266,6 +270,61 @@ struct PageControlView: View {
       confirmPop: { shouldPop in
         popCoordinator.confirm(shouldPop: shouldPop)
       })
+  }
+}
+
+/// Flet conditionally installs a root RepaintBoundary when
+/// `enable_screenshots` is true. The Apple renderer mirrors that boundary at
+/// the mounted Page and returns PNG bytes through the Page method call.
+private struct PageScreenshotCaptureModifier: ViewModifier {
+  let node: ControlNode
+  let store: ControlStore
+  let events: RufletEventSink
+  let displayScale: CGFloat
+
+  func body(content: Content) -> some View {
+    content.rufletCommandHandler(node.id, method: "take_screenshot") { call, completion in
+      // Consult the current store node rather than the value captured when the
+      // view first mounted; Ruby may toggle screenshot support in a later
+      // patch without replacing the mounted Page identity.
+      guard store.node(node.id)?.bool("enable_screenshots") == true else {
+        completion(.success(.null))
+        return
+      }
+
+      let delay = RufletScreenshotSemantics.delayMilliseconds(call.argument("delay"))
+      let pixelRatio = call.argument("pixel_ratio")?.doubleValue.map { CGFloat($0) }
+        ?? displayScale
+      let capture = {
+        guard #available(iOS 16.0, macOS 13.0, *) else {
+          completion(.success(.null))
+          return
+        }
+        let renderer = ImageRenderer(
+          content: content
+            .environmentObject(store)
+            .environment(\.rufletEvents, events))
+        renderer.scale = pixelRatio
+
+        #if canImport(UIKit)
+          let data = renderer.uiImage?.pngData()
+        #elseif canImport(AppKit)
+          let data = renderer.nsImage
+            .flatMap(\.tiffRepresentation)
+            .flatMap(NSBitmapImageRep.init(data:))
+            .flatMap { $0.representation(using: .png, properties: [:]) }
+        #else
+          let data: Data? = nil
+        #endif
+        completion(.success(data.map { .binary([UInt8]($0)) } ?? .null))
+      }
+
+      if delay > 0 {
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay / 1_000, execute: capture)
+      } else {
+        capture()
+      }
+    }
   }
 }
 
