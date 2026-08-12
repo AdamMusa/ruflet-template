@@ -2709,18 +2709,22 @@ struct CupertinoActivityIndicatorControlView: View {
 
   @ViewBuilder
   var body: some View {
-    switch presentation.mode {
-    case .indeterminate(let animating):
-      RufletNativeCupertinoActivityIndicator(
-        animating: animating,
-        color: MaterialPalette.color(presentation.colorToken))
-        .frame(width: presentation.diameter, height: presentation.diameter)
-    case .partiallyRevealed(let progress):
-      RufletPartiallyRevealedCupertinoActivityIndicator(
-        radius: presentation.radius,
-        color: MaterialPalette.color(presentation.colorToken)
-          ?? RufletCupertinoActivityIndicatorDefaults.partiallyRevealedColor,
-        progress: progress)
+    if let validationError = presentation.validationError {
+      Text(validationError).foregroundColor(.red)
+    } else {
+      switch presentation.mode {
+      case .indeterminate(let animating):
+        RufletNativeCupertinoActivityIndicator(
+          animating: animating,
+          color: MaterialPalette.color(presentation.colorToken))
+          .frame(width: presentation.diameter, height: presentation.diameter)
+      case .partiallyRevealed(let progress):
+        RufletPartiallyRevealedCupertinoActivityIndicator(
+          radius: presentation.radius,
+          color: MaterialPalette.color(presentation.colorToken)
+            ?? RufletCupertinoActivityIndicatorDefaults.partiallyRevealedColor,
+          progress: progress)
+      }
     }
   }
 }
@@ -2737,11 +2741,21 @@ struct RufletCupertinoActivityIndicatorPresentation {
   let radius: CGFloat
   let colorToken: String?
   let mode: RufletCupertinoActivityIndicatorMode
+  let validationError: String?
 
   init(node: ControlNode) {
-    radius = CGFloat(node.double("radius") ?? RufletCupertinoActivityIndicatorDefaults.radius)
+    let radius = node.double("radius") ?? RufletCupertinoActivityIndicatorDefaults.radius
+    let progress = node.double("progress")
+    self.radius = CGFloat(radius)
     colorToken = node.string("color")
-    if let progress = node.double("progress") {
+    if !radius.isFinite || radius <= 0 {
+      validationError = "CupertinoActivityIndicator.radius must be greater than 0"
+    } else if let progress, !(0...1).contains(progress) {
+      validationError = "CupertinoActivityIndicator.progress must be between 0 and 1"
+    } else {
+      validationError = nil
+    }
+    if let progress {
       mode = .partiallyRevealed(
         progress: RufletCupertinoActivityIndicatorMetrics.clamped(progress))
     } else {
@@ -2756,11 +2770,49 @@ enum RufletCupertinoActivityIndicatorDefaults {
   static let radius = 10.0
   static let nativeDiameter: CGFloat = 20
   static let partiallyRevealedOpacity = 147.0 / 255.0
+  static let lightTickRGB: UInt32 = 0x3C3C44
+  static let darkTickRGB: UInt32 = 0xEBEBF5
 
-  /// Flutter's fallback is the dynamic iOS tick colour extracted from the
-  /// native control. `primary` is Apple's adaptive label colour equivalent;
-  /// the painter applies Flutter's 147/255 partial-tick alpha separately.
-  static var partiallyRevealedColor: Color { .primary }
+  /// Flutter's default comes from the native Cupertino spinner and is pinned
+  /// to these adaptive light/dark RGB values. This deliberately differs from
+  /// SwiftUI's primary label color (black/white).
+  static var partiallyRevealedColor: Color {
+    #if canImport(UIKit)
+      Color(
+        UIColor { traits in
+          uiColor(traits.userInterfaceStyle == .dark ? darkTickRGB : lightTickRGB)
+        })
+    #elseif canImport(AppKit)
+      Color(
+        NSColor(name: nil) { appearance in
+          let match = appearance.bestMatch(from: [.darkAqua, .aqua])
+          return nsColor(match == .darkAqua ? darkTickRGB : lightTickRGB)
+        })
+    #else
+      Color(
+        red: Double((lightTickRGB >> 16) & 0xff) / 255,
+        green: Double((lightTickRGB >> 8) & 0xff) / 255,
+        blue: Double(lightTickRGB & 0xff) / 255)
+    #endif
+  }
+
+  #if canImport(UIKit)
+    private static func uiColor(_ value: UInt32) -> UIColor {
+      UIColor(
+        red: CGFloat((value >> 16) & 0xff) / 255,
+        green: CGFloat((value >> 8) & 0xff) / 255,
+        blue: CGFloat(value & 0xff) / 255,
+        alpha: 1)
+    }
+  #elseif canImport(AppKit)
+    private static func nsColor(_ value: UInt32) -> NSColor {
+      NSColor(
+        srgbRed: CGFloat((value >> 16) & 0xff) / 255,
+        green: CGFloat((value >> 8) & 0xff) / 255,
+        blue: CGFloat(value & 0xff) / 255,
+        alpha: 1)
+    }
+  #endif
 }
 
 /// Flutter must paint its partially-revealed variant because Apple's native
@@ -2776,7 +2828,10 @@ private struct RufletPartiallyRevealedCupertinoActivityIndicator: View {
       ForEach(0..<RufletCupertinoActivityIndicatorMetrics.revealedTicks(progress: progress), id: \.self) {
         index in
         Capsule()
-          .fill(color.opacity(RufletCupertinoActivityIndicatorDefaults.partiallyRevealedOpacity))
+          .fill(
+            color.opacity(
+              RufletCupertinoActivityIndicatorMetrics.tickOpacity(
+                index: index, progress: progress)))
           .frame(
             width: radius / RufletCupertinoActivityIndicatorDefaults.radius * 2,
             height: radius * 2 / 3)
@@ -2794,7 +2849,8 @@ private struct RufletPartiallyRevealedCupertinoActivityIndicator: View {
 
 enum RufletCupertinoActivityIndicatorMetrics {
   /// Flutter's pinned Cupertino painter has eight alpha/tick entries.
-  static let tickCount = 8
+  static let tickAlphaValues = [47, 47, 47, 47, 72, 97, 122, 147]
+  static let tickCount = tickAlphaValues.count
 
   static func clamped(_ progress: Double) -> Double {
     min(max(progress, 0), 1)
@@ -2802,6 +2858,16 @@ enum RufletCupertinoActivityIndicatorMetrics {
 
   static func revealedTicks(progress: Double) -> Int {
     Int(ceil(clamped(progress) * Double(tickCount)))
+  }
+
+  /// A partial indicator uses the leading-tick alpha for every revealed tick.
+  /// At exactly 1.0 Flutter switches back to the native spinner's alpha trail.
+  static func tickOpacity(index: Int, progress: Double) -> Double {
+    guard clamped(progress) == 1 else {
+      return RufletCupertinoActivityIndicatorDefaults.partiallyRevealedOpacity
+    }
+    let normalizedIndex = ((index % tickCount) + tickCount) % tickCount
+    return Double(tickAlphaValues[normalizedIndex]) / 255
   }
 }
 
