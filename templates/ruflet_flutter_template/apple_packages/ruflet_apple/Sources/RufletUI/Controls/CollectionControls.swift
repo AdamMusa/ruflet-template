@@ -2558,6 +2558,10 @@ enum CollectionDefaults {
     let unselectedLabelTextStyleToken: String
     let padding: EdgeInsets
     let labelPadding: EdgeInsets
+    /// Flutter applies this only to the Material ink response. SwiftUI's
+    /// native segmented Picker exposes no ripple shape, but the exact Flet
+    /// geometry remains consumed and modelled rather than discarded.
+    let splashBorderRadius: RufletCornerRadii?
     let tabAlignmentToken: String
     let enableFeedback: Bool
 
@@ -2738,6 +2742,7 @@ enum CollectionDefaults {
       padding: ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets(),
       labelPadding: ControlProps.edgeInsets(node.props["label_padding"])
         ?? RufletThemeDefaults.tabBarLabelPadding,
+      splashBorderRadius: ControlProps.cornerRadii(node.props["splash_border_radius"]),
       tabAlignmentToken: node.string("tab_alignment")
         ?? (scrollable ? "startOffset" : "fill"),
       enableFeedback: node.bool("enable_feedback") ?? true)

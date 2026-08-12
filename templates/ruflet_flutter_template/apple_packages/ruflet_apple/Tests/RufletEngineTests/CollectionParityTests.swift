@@ -452,6 +452,20 @@ final class CollectionParityTests: XCTestCase {
     XCTAssertTrue(secondary.showsDivider)
   }
 
+  func testTabBarConsumesFletSplashBorderRadiusWithoutReplacingNativePicker() {
+    let values = CollectionDefaults.tabBar(ControlNode(
+      id: 1, type: "TabBar", props: [
+        "splash_border_radius": .map([
+          "top_left": .double(2), "top_right": .double(4),
+          "bottom_left": .double(6), "bottom_right": .double(8),
+        ])
+      ]))
+    XCTAssertEqual(
+      values.splashBorderRadius,
+      RufletCornerRadii(topLeft: 2, topRight: 4, bottomLeft: 6, bottomRight: 8))
+    XCTAssertTrue(TabBarPresentation.usesNativeAppearance(ControlNode(id: 1, type: "TabBar")))
+  }
+
   func testTabBarExplicitSemanticsOverrideEveryPinnedDefault() {
     let values = CollectionDefaults.tabBar(ControlNode(
       id: 1, type: "TabBar", props: [
