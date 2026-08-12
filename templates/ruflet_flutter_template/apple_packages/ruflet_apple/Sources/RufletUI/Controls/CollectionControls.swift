@@ -1502,48 +1502,73 @@ struct DataTableControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
+  @State private var columnWidths: [Int: CGFloat] = [:]
 
   var body: some View {
     let columns = node.controlIDs(forKey: "columns").compactMap { store.node($0) }
     let rows = node.controlIDs(forKey: "rows").compactMap { store.node($0) }
     let metrics = CollectionDefaults.dataTable(node)
-    let spacing = metrics.columnSpacing
     let showsCheckboxes = metrics.showCheckboxColumn
       && rows.contains(where: { $0.handlesEvent("select_change") })
 
     ScrollView(.horizontal, showsIndicators: true) {
       VStack(alignment: .leading, spacing: 0) {
-        HStack(spacing: spacing) {
+        HStack(spacing: 0) {
           if showsCheckboxes {
             Button { selectAll(rows) } label: {
-              Image(systemName: allSelected(rows) ? "checkmark.square.fill" : "square")
+              Image(systemName: headingCheckboxSymbol(rows))
             }
             .buttonStyle(.plain)
-            .disabled(!node.handlesEvent("select_all"))
+            .padding(.leading, metrics.checkboxMarginStart)
+            .padding(.trailing, metrics.checkboxMarginEnd)
+            .overlay(alignment: .trailing) { verticalRule }
+            // Flutter invokes each selectable row when onSelectAll is null.
+            .disabled(!node.handlesEvent("select_all") && selectableRows(rows).isEmpty)
           }
-          ForEach(columns, id: \.id) { column in
-            headerCell(column, index: columns.firstIndex(where: { $0.id == column.id }) ?? 0)
+          ForEach(Array(columns.enumerated()), id: \.element.id) { index, column in
+            headerCell(column, index: index)
+              .modifier(DataTableColumnWidth(
+                index: index, width: columnWidths[index],
+                alignment: headingAlignment(column)))
+              .padding(metrics.cellPadding(column: index, columnCount: columns.count,
+                checkboxVisible: showsCheckboxes))
+              .overlay(alignment: .trailing) {
+                if index < columns.count - 1 { verticalRule }
+              }
           }
         }
         .frame(height: metrics.headingRowHeight)
-        .background(MaterialPalette.color(node.string("heading_row_color")))
+        .background(headingBackground)
         .font(.subheadline.weight(.semibold))
         .rufletTextStyle(RufletTextStyle(node: node, styleKey: "heading_text_style"))
 
         tableDivider
 
         ForEach(rows, id: \.id) { row in
-          HStack(spacing: spacing) {
+          HStack(spacing: 0) {
             if showsCheckboxes {
               Button { selectRow(row, selected: !(row.bool("selected") ?? false)) } label: {
                 Image(systemName: (row.bool("selected") ?? false) ? "checkmark.square.fill" : "square")
               }
               .buttonStyle(.plain)
-              .padding(.horizontal, CGFloat(node.double("checkbox_horizontal_margin") ?? 0))
+              .padding(.leading, metrics.checkboxMarginStart)
+              .padding(.trailing, metrics.checkboxMarginEnd)
+              .overlay(alignment: .trailing) { verticalRule }
               .disabled(!row.handlesEvent("select_change"))
             }
-            ForEach(row.controlIDs(forKey: "cells"), id: \.self) { cellID in
-              cellContent(cellID)
+            ForEach(Array(row.controlIDs(forKey: "cells").enumerated()), id: \.element) {
+              index, cellID in
+              cellContent(cellID, row: row, numeric: columns.indices.contains(index)
+                && columns[index].bool("numeric") == true)
+                .modifier(DataTableColumnWidth(
+                  index: index, width: columnWidths[index],
+                  alignment: columns.indices.contains(index)
+                    && columns[index].bool("numeric") == true ? .trailing : .leading))
+                .padding(metrics.cellPadding(column: index, columnCount: columns.count,
+                  checkboxVisible: showsCheckboxes))
+                .overlay(alignment: .trailing) {
+                  if index < columns.count - 1 { verticalRule }
+                }
             }
           }
           .frame(minHeight: metrics.dataRowMinHeight, maxHeight: metrics.dataRowMaxHeight)
@@ -1551,16 +1576,23 @@ struct DataTableControlView: View {
           .rufletTextStyle(RufletTextStyle(node: node, styleKey: "data_text_style"))
           .background(rowBackground(row))
           .overlay(alignment: .bottom) { horizontalRule }
-          .overlay(alignment: .trailing) { verticalRule }
           .contentShape(Rectangle())
-          .onTapGesture { selectRow(row, selected: !(row.bool("selected") ?? false)) }
-          .modifier(LongPressReporter(node: row, events: events))
 
           if metrics.dividerThickness > 0,
             row.id != rows.last?.id || metrics.showBottomBorder { tableDivider }
         }
       }
-      .padding(.horizontal, metrics.horizontalMargin)
+      .background { tableBackground }
+      .overlay { tableBorder }
+      .modifier(DataTableClip(
+        behavior: node.string("clip_behavior") ?? "none", radii: tableRadii))
+      .onPreferenceChange(DataTableColumnWidthPreference.self) { measured in
+        var next = columnWidths
+        for (index, width) in measured {
+          next[index] = max(next[index] ?? 0, width)
+        }
+        if next != columnWidths { columnWidths = next }
+      }
     }
   }
 
@@ -1573,49 +1605,53 @@ struct DataTableControlView: View {
   @ViewBuilder
   private func headerCell(_ column: ControlNode, index: Int) -> some View {
     Button {
-      let ascending = node.int("sort_column_index") == index
-        ? !(node.bool("sort_ascending") ?? false) : true
+      let ascending = DataTablePresentation.nextSortAscending(
+        sortedColumn: node.int("sort_column_index"), tappedColumn: index,
+        currentlyAscending: node.bool("sort_ascending") ?? false)
       events.fire(
         column, "sort",
         data: .map(["ci": .int(Int64(index)), "asc": .bool(ascending)]))
     } label: {
       HStack(spacing: 4) {
+        if column.bool("numeric") == true, column.handlesEvent("sort") {
+          sortArrow(index)
+        }
         if let labelID = column.controlID(forKey: "label") {
           ControlView(id: labelID, axis: .none)
         } else {
           Text(column.string("label") ?? "")
         }
-        if node.int("sort_column_index") == index {
-          Image(systemName: (node.bool("sort_ascending") ?? false) ? "arrow.up" : "arrow.down")
-            .font(.caption)
+        if column.bool("numeric") != true, column.handlesEvent("sort") {
+          sortArrow(index)
         }
       }
-      .frame(maxWidth: .infinity,
-        alignment: column.bool("numeric") == true ? .trailing : .leading)
     }
     .buttonStyle(.plain)
-    .help(column.string("tooltip") ?? "")
+    .help(DataTablePresentation.tooltipMessage(column) ?? "")
     .disabled(!column.handlesEvent("sort"))
   }
 
   @ViewBuilder
-  private func cellContent(_ cellID: Int) -> some View {
+  private func cellContent(_ cellID: Int, row: ControlNode, numeric: Bool) -> some View {
     if let cell = store.node(cellID) {
-      Group {
-        if let contentID = cell.controlID(forKey: "content") {
-          ControlView(id: contentID, axis: .none)
-        } else if let text = cell.string("content") {
-          HStack(spacing: 4) {
+      HStack(spacing: 4) {
+        if numeric, cell.bool("show_edit_icon") == true {
+          Image(systemName: "pencil").font(.system(size: 18)).foregroundColor(.secondary)
+        }
+        Group {
+          if let contentID = cell.controlID(forKey: "content") {
+            ControlView(id: contentID, axis: .none)
+          } else if let text = cell.string("content") {
             Text(text)
-            if cell.bool("show_edit_icon") == true {
-              Image(systemName: "pencil").foregroundColor(.secondary)
-            }
           }
-          .opacity(cell.bool("placeholder") == true ? 0.55 : 1)
+        }
+        if !numeric, cell.bool("show_edit_icon") == true {
+          Image(systemName: "pencil").font(.system(size: 18)).foregroundColor(.secondary)
         }
       }
+      .opacity(cell.bool("placeholder") == true ? 0.6 : 1)
       .contentShape(Rectangle())
-      .modifier(DataCellInteractionReporter(node: cell, events: events))
+      .modifier(DataCellInteractionReporter(node: cell, row: row, events: events))
     } else {
       ControlView(id: cellID, axis: .none)
     }
@@ -1627,29 +1663,38 @@ struct DataTableControlView: View {
     events.send(row.id, "select_change", .bool(selected))
   }
 
-  private func allSelected(_ rows: [ControlNode]) -> Bool {
-    !rows.isEmpty && rows.allSatisfy { $0.bool("selected") ?? false }
+  private func selectableRows(_ rows: [ControlNode]) -> [ControlNode] {
+    rows.filter { $0.handlesEvent("select_change") }
+  }
+
+  private func headingCheckboxSymbol(_ rows: [ControlNode]) -> String {
+    let selectable = selectableRows(rows)
+    let selectedCount = selectable.filter { $0.bool("selected") == true }.count
+    if selectedCount > 0, selectedCount < selectable.count { return "minus.square.fill" }
+    return selectedCount == selectable.count && !selectable.isEmpty
+      ? "checkmark.square.fill" : "square"
   }
 
   /// `data_row_color` is a WidgetStateProperty: Flet sends the resting colour
   /// and the selected one under their state names.
   private func rowBackground(_ row: ControlNode) -> Color {
-    let states = node.map("data_row_color")
     let selected = row.bool("selected") ?? false
-    if selected {
-      return MaterialPalette.color(
-        states?["selected"]?.stringValue,
-        default: MaterialPalette.color("secondarycontainer", default: .clear))
+    let states: Set<RufletWidgetState> = selected ? [.selected] : []
+    if let own = MaterialPalette.color(stateful: row.props["color"], in: states) {
+      return own
     }
-    return MaterialPalette.color(
-      states?["default"]?.stringValue ?? states?[""]?.stringValue, default: .clear)
+    if let table = MaterialPalette.color(stateful: node.props["data_row_color"], in: states) {
+      return table
+    }
+    // Flutter's selected default is primary at 8%; unselected is transparent.
+    return selected ? MaterialPalette.color("primary", default: .clear).opacity(0.08) : .clear
   }
 
   /// `horizontal_lines` and `vertical_lines` are BorderSides drawn between
   /// the cells rather than around the table.
   @ViewBuilder
   private var horizontalRule: some View {
-    if let side = node.map("horizontal_lines") {
+    if let side = node.map("horizontal_lLines") ?? node.map("horizontal_lines") {
       Rectangle()
         .fill(MaterialPalette.color(side["color"]?.stringValue, default: .clear))
         .frame(height: CGFloat(side["width"]?.doubleValue ?? 1))
@@ -1666,8 +1711,158 @@ struct DataTableControlView: View {
   }
 
   private func selectAll(_ rows: [ControlNode]) {
-    let selected = !allSelected(rows)
-    events.fire(node, "select_all", data: .bool(selected))
+    let selected = DataTablePresentation.nextSelectAllValue(rows: rows)
+    if node.handlesEvent("select_all") {
+      events.fire(node, "select_all", data: .bool(selected))
+      return
+    }
+    for change in DataTablePresentation.fallbackRowChanges(rows: rows, selected: selected) {
+      events.setLocal(change.id, "selected", .bool(change.selected))
+      if let row = rows.first(where: { $0.id == change.id }) {
+        events.fire(row, "select_change", data: .bool(change.selected))
+      }
+    }
+  }
+
+  private var headingBackground: Color {
+    MaterialPalette.color(stateful: node.props["heading_row_color"], in: []) ?? .clear
+  }
+
+  private func headingAlignment(_ column: ControlNode) -> Alignment {
+    let numeric = column.bool("numeric") == true
+    switch column.string("heading_row_alignment")?.lowercased().replacingOccurrences(of: "_", with: "") {
+    case "center", "spacearound", "spacebetween", "spaceevenly": return .center
+    case "end": return numeric ? .leading : .trailing
+    default: return numeric ? .trailing : .leading
+    }
+  }
+
+  private func sortArrow(_ index: Int) -> some View {
+    let sorted = node.int("sort_column_index") == index
+    return Image(systemName: "arrow.up")
+      .font(.caption)
+      .rotationEffect((node.bool("sort_ascending") ?? false) ? .zero : .degrees(180))
+      .opacity(sorted ? 1 : 0)
+      .animation(.easeInOut(duration: 0.15), value: sorted)
+      .animation(.easeInOut(duration: 0.15), value: node.bool("sort_ascending") ?? false)
+  }
+
+  private var tableRadii: RufletCornerRadii {
+    ControlProps.cornerRadii(node.props["border_radius"]) ?? RufletCornerRadii(uniform: 0)
+  }
+
+  @ViewBuilder private var tableBackground: some View {
+    let shape = RufletRoundedRectangle(radii: tableRadii)
+    if let gradient = RufletWrapperGradient(node.props["gradient"]) {
+      gradient.view.mask(shape)
+    } else {
+      shape.fill(MaterialPalette.color(node.string("bgcolor"), default: .clear))
+    }
+  }
+
+  @ViewBuilder private var tableBorder: some View {
+    DataTableBorderLayer(border: ControlProps.borderSides(node.props["border"]))
+  }
+}
+
+enum DataTablePresentation {
+  static func tooltipMessage(_ column: ControlNode) -> String? {
+    column.string("tooltip") ?? column.map("tooltip")?["message"]?.stringValue
+  }
+
+  static func nextSortAscending(
+    sortedColumn: Int?, tappedColumn: Int, currentlyAscending: Bool
+  ) -> Bool {
+    sortedColumn != tappedColumn || !currentlyAscending
+  }
+
+  static func nextSelectAllValue(rows: [ControlNode]) -> Bool {
+    let selectable = rows.filter { $0.handlesEvent("select_change") }
+    return !(!selectable.isEmpty && selectable.allSatisfy { $0.bool("selected") == true })
+  }
+
+  static func fallbackRowChanges(rows: [ControlNode], selected: Bool)
+    -> [(id: Int, selected: Bool)]
+  {
+    rows.compactMap { row in
+      guard row.handlesEvent("select_change"), row.bool("selected") != selected else { return nil }
+      return (row.id, selected)
+    }
+  }
+
+  static func cellOverridesRowInteraction(_ cell: ControlNode) -> Bool {
+    ["tap", "double_tap", "long_press", "tap_cancel", "tap_down"]
+      .contains(where: cell.handlesEvent)
+  }
+}
+
+private struct DataTableClip: ViewModifier {
+  let behavior: String
+  let radii: RufletCornerRadii
+
+  func body(content: Content) -> some View {
+    if behavior.lowercased() == "none" { content }
+    else { content.clipShape(RufletRoundedRectangle(radii: radii)) }
+  }
+}
+
+/// Flutter's `DataTable` computes an intrinsic width for each column once and
+/// reuses it for the heading and every row. Independent SwiftUI `HStack`s do
+/// not share those measurements, so this preference performs the same table-
+/// wide max pass without introducing equal-width or Explorer-specific rules.
+private struct DataTableColumnWidthPreference: PreferenceKey {
+  static var defaultValue: [Int: CGFloat] = [:]
+
+  static func reduce(value: inout [Int: CGFloat], nextValue: () -> [Int: CGFloat]) {
+    for (index, width) in nextValue() {
+      value[index] = max(value[index] ?? 0, width)
+    }
+  }
+}
+
+private struct DataTableColumnWidth: ViewModifier {
+  let index: Int
+  let width: CGFloat?
+  let alignment: Alignment
+
+  func body(content: Content) -> some View {
+    content
+      .fixedSize(horizontal: true, vertical: false)
+      .background(GeometryReader { proxy in
+        Color.clear.preference(
+          key: DataTableColumnWidthPreference.self,
+          value: [index: proxy.size.width])
+      })
+      .frame(width: width, alignment: alignment)
+  }
+}
+
+private struct DataTableBorderLayer: View {
+  let border: RufletBorder?
+
+  var body: some View {
+    GeometryReader { proxy in
+      let size = proxy.size
+      ZStack {
+        if let side = border?.top {
+          Rectangle().fill(side.color).frame(height: side.width)
+            .position(x: size.width / 2, y: side.width / 2)
+        }
+        if let side = border?.bottom {
+          Rectangle().fill(side.color).frame(height: side.width)
+            .position(x: size.width / 2, y: size.height - side.width / 2)
+        }
+        if let side = border?.left {
+          Rectangle().fill(side.color).frame(width: side.width)
+            .position(x: side.width / 2, y: size.height / 2)
+        }
+        if let side = border?.right {
+          Rectangle().fill(side.color).frame(width: side.width)
+            .position(x: size.width - side.width / 2, y: size.height / 2)
+        }
+      }
+    }
+    .allowsHitTesting(false)
   }
 }
 
@@ -1720,6 +1915,19 @@ enum CollectionDefaults {
     let dividerThickness: CGFloat
     let showBottomBorder: Bool
     let showCheckboxColumn: Bool
+    let checkboxMarginStart: CGFloat
+    let checkboxMarginEnd: CGFloat
+
+    func cellPadding(column: Int, columnCount: Int, checkboxVisible: Bool) -> EdgeInsets {
+      let leading: CGFloat
+      if column == 0 {
+        leading = checkboxVisible ? horizontalMargin / 2 : horizontalMargin
+      } else {
+        leading = columnSpacing / 2
+      }
+      let trailing = column == columnCount - 1 ? horizontalMargin : columnSpacing / 2
+      return EdgeInsets(top: 0, leading: leading, bottom: 0, trailing: trailing)
+    }
   }
 
   struct PageViewValues {
@@ -1794,11 +2002,13 @@ enum CollectionDefaults {
   }
 
   static func dataTable(_ node: ControlNode) -> DataTableValues {
-    DataTableValues(
+    let horizontalMargin = CGFloat(node.double("horizontal_margin")
+      ?? Double(RufletThemeDefaults.dataTableHorizontalMargin))
+    let explicitCheckboxMargin = node.double("checkbox_horizontal_margin").map { CGFloat($0) }
+    return DataTableValues(
       columnSpacing: CGFloat(node.double("column_spacing")
         ?? Double(RufletThemeDefaults.dataTableColumnSpacing)),
-      horizontalMargin: CGFloat(node.double("horizontal_margin")
-        ?? Double(RufletThemeDefaults.dataTableHorizontalMargin)),
+      horizontalMargin: horizontalMargin,
       headingRowHeight: CGFloat(node.double("heading_row_height")
         ?? Double(RufletThemeDefaults.dataTableHeadingHeight)),
       dataRowMinHeight: CGFloat(node.double("data_row_min_height")
@@ -1807,7 +2017,9 @@ enum CollectionDefaults {
         ?? Double(RufletThemeDefaults.dataTableRowMaxHeight)),
       dividerThickness: CGFloat(node.double("divider_thickness") ?? 1),
       showBottomBorder: node.bool("show_bottom_border") ?? false,
-      showCheckboxColumn: node.bool("show_checkbox_column") ?? false)
+      showCheckboxColumn: node.bool("show_checkbox_column") ?? false,
+      checkboxMarginStart: explicitCheckboxMargin ?? horizontalMargin,
+      checkboxMarginEnd: explicitCheckboxMargin ?? horizontalMargin / 2)
   }
 
   static func pageView(_ node: ControlNode) -> PageViewValues {
@@ -1863,30 +2075,85 @@ private struct PageViewport: ViewModifier {
 /// DataTable, which is the source of the current silent/double-click bug.
 private struct DataCellInteractionReporter: ViewModifier {
   let node: ControlNode
+  let row: ControlNode
+  let events: RufletEventSink
+
+  func body(content: Content) -> some View {
+    content
+      .modifier(DataCellTapReporter(node: node, row: row, events: events))
+      .modifier(LongPressReporter(
+        node: DataTablePresentation.cellOverridesRowInteraction(node) ? node : row,
+        events: events))
+      .modifier(DataCellPointerReporter(node: node, events: events))
+  }
+}
+
+private struct DataCellPointerReporter: ViewModifier {
+  let node: ControlNode
   let events: RufletEventSink
   @State private var pointerOrigin: CGPoint?
 
   func body(content: Content) -> some View {
-    content
-      .onTapGesture(count: 2) { events.fire(node, "double_tap") }
-      .onTapGesture(count: 1) { events.fire(node, "tap") }
-      .modifier(LongPressReporter(node: node, events: events))
+    if node.handlesEvent("tap_down") || node.handlesEvent("tap_cancel") {
+      content
       .simultaneousGesture(
         DragGesture(minimumDistance: 0, coordinateSpace: .local)
           .onChanged { value in
             guard pointerOrigin == nil else { return }
             pointerOrigin = value.startLocation
-            events.fire(
-              node, "tap_down",
-              data: CollectionParity.tapDownPayload(
-                x: value.startLocation.x, y: value.startLocation.y))
+            if node.handlesEvent("tap_down") {
+              events.fire(
+                node, "tap_down",
+                data: CollectionParity.tapDownPayload(
+                  x: value.startLocation.x, y: value.startLocation.y))
+            }
           }
           .onEnded { value in
             defer { pointerOrigin = nil }
-            guard let origin = pointerOrigin else { return }
+            guard node.handlesEvent("tap_cancel"), let origin = pointerOrigin else { return }
             let distance = hypot(value.location.x - origin.x, value.location.y - origin.y)
             if distance > 18 { events.fire(node, "tap_cancel") }
           })
+    } else {
+      content
+    }
+  }
+}
+
+private struct DataCellTapReporter: ViewModifier {
+  let node: ControlNode
+  let row: ControlNode
+  let events: RufletEventSink
+
+  func body(content: Content) -> some View {
+    if DataTablePresentation.cellOverridesRowInteraction(node) {
+      if node.handlesEvent("double_tap") {
+        content
+          .onTapGesture(count: 2) { events.fire(node, "double_tap") }
+          .modifier(DataCellSingleTap(node: node, events: events))
+      } else {
+        content.modifier(DataCellSingleTap(node: node, events: events))
+      }
+    } else if row.handlesEvent("select_change") {
+      content.onTapGesture {
+        let selected = !(row.bool("selected") ?? false)
+        events.setLocal(row.id, "selected", .bool(selected))
+        events.fire(row, "select_change", data: .bool(selected))
+      }
+    } else {
+      content
+    }
+  }
+}
+
+private struct DataCellSingleTap: ViewModifier {
+  let node: ControlNode
+  let events: RufletEventSink
+
+  func body(content: Content) -> some View {
+    if node.handlesEvent("tap") {
+      content.onTapGesture(count: 1) { events.fire(node, "tap") }
+    } else { content }
   }
 }
 
