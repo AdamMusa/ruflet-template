@@ -307,6 +307,8 @@ public final class AudioRecorderService: RufletService {
   private var recorderState = "stopped"
   private var eventContext: RufletServiceContext?
   private var eventNode: ControlNode?
+  private var streamTimer: DispatchSourceTimer?
+  private var streamedByteCount: UInt64 = 0
 
   public init() {}
 
@@ -321,6 +323,11 @@ public final class AudioRecorderService: RufletService {
     #if canImport(AVFoundation)
       switch call.name {
       case "start_recording":
+        let configurationValue = call.argument("configuration") ?? node?.props["configuration"]
+        guard let configuration = AudioRecorderConfiguration(configurationValue) else {
+          completion(.success(.bool(false)))
+          return
+        }
         // Validate the device-only path before asking for microphone access.
         // This preserves Flet's false result while avoiding a permission prompt
         // for a request that could never start recording.
@@ -354,8 +361,7 @@ public final class AudioRecorderService: RufletService {
           try FileManager.default.createDirectory(
             at: URL(fileURLWithPath: path).deletingLastPathComponent(),
             withIntermediateDirectories: true)
-          let configuration = call.argument("configuration")?.mapValue ?? [:]
-          let encoder = configuration["encoder"]?.stringValue?.lowercased() ?? "wav"
+          let encoder = configuration.encoder.lowercased()
           guard Self.isSupportedEncoder(encoder), let format = Self.formatID(for: encoder) else {
             completion(.success(.bool(false)))
             return
@@ -366,13 +372,13 @@ public final class AudioRecorderService: RufletService {
             paused = false
             emitState("stopped")
           }
-          let requestedSampleRate = configuration["sample_rate"]?.doubleValue ?? 44_100
+          let requestedSampleRate = Double(configuration.sampleRate)
           let sampleRate = Self.sampleRate(for: encoder, requested: requestedSampleRate)
           var settings: [String: Any] = [
             AVFormatIDKey: Int(format),
             AVSampleRateKey: sampleRate,
-            AVNumberOfChannelsKey: configuration["channels"]?.intValue ?? 2,
-            AVEncoderBitRateKey: configuration["bit_rate"]?.intValue ?? 128_000,
+            AVNumberOfChannelsKey: configuration.channels,
+            AVEncoderBitRateKey: configuration.bitRate,
             AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
           ]
           if format == kAudioFormatLinearPCM {
@@ -385,7 +391,7 @@ public final class AudioRecorderService: RufletService {
             settings: settings)
           #if os(iOS)
             try Self.configureAudioSession(configuration)
-            if let requestedID = configuration["device"]?["id"]?.stringValue,
+            if let requestedID = configuration.device?.id,
               let input = AVAudioSession.sharedInstance().availableInputs?.first(where: {
                 $0.uid == requestedID
               })
@@ -399,6 +405,8 @@ public final class AudioRecorderService: RufletService {
           self.recorder = recorder
           outputPath = path
           paused = false
+          streamedByteCount = 0
+          startStreamIfHandled()
           emitState("recording")
           completion(.success(.bool(true)))
         } catch {
@@ -409,6 +417,7 @@ public final class AudioRecorderService: RufletService {
         let path = recorder == nil ? nil : outputPath
         recorder?.stop()
         recorder = nil
+        stopStream(flush: true)
         paused = false
         emitState("stopped")
         outputPath = nil
@@ -417,6 +426,7 @@ public final class AudioRecorderService: RufletService {
       case "cancel_recording":
         recorder?.stop()
         recorder = nil
+        stopStream(flush: false)
         paused = false
         if let outputPath { try? FileManager.default.removeItem(atPath: outputPath) }
         outputPath = nil
@@ -462,8 +472,13 @@ public final class AudioRecorderService: RufletService {
         #endif
 
       case "is_supported_encoder":
-        let encoder = call.argument("encoder")?.stringValue?.lowercased()
-        completion(.success(.bool(encoder.map(Self.isSupportedEncoder) ?? false)))
+        guard let raw = call.argument("encoder")?.stringValue,
+          let encoder = Self.parsedEncoder(raw)
+        else {
+          completion(.success(.null))
+          return
+        }
+        completion(.success(.bool(Self.isSupportedEncoder(encoder))) )
 
       case "has_permission":
         #if os(iOS)
@@ -507,9 +522,46 @@ public final class AudioRecorderService: RufletService {
     eventContext.emitEvent(eventNode.id, "state_change", .string(state))
   }
 
+  /// Ruflet's native `on_stream` extension emits the bytes appended to the
+  /// configured recording file. The wire carries them as MessagePack binary,
+  /// matching the typed byte buffers produced by record's Darwin stream.
+  private func startStreamIfHandled() {
+    stopStream(flush: false)
+    guard eventNode?.handlesEvent("stream") == true else { return }
+    let timer = DispatchSource.makeTimerSource(queue: .main)
+    timer.schedule(deadline: .now() + .milliseconds(100), repeating: .milliseconds(100))
+    timer.setEventHandler { [weak self] in self?.emitPendingStream() }
+    streamTimer = timer
+    timer.resume()
+  }
+
+  private func stopStream(flush: Bool) {
+    streamTimer?.cancel()
+    streamTimer = nil
+    if flush { emitPendingStream() }
+    streamedByteCount = 0
+  }
+
+  private func emitPendingStream() {
+    guard let outputPath, let eventContext, let eventNode,
+      eventNode.handlesEvent("stream"),
+      let handle = try? FileHandle(forReadingFrom: URL(fileURLWithPath: outputPath))
+    else { return }
+    defer { try? handle.close() }
+    do {
+      try handle.seek(toOffset: streamedByteCount)
+      guard let data = try handle.readToEnd(), !data.isEmpty else { return }
+      streamedByteCount += UInt64(data.count)
+      eventContext.emitEvent(eventNode.id, "stream", AudioRecorderStreamEvent.wireValue(data))
+    } catch {
+      // A recording may not have flushed its first packet yet; the next timer
+      // tick retries from the same offset.
+    }
+  }
+
   #if canImport(AVFoundation)
     private static func formatID(for encoder: String) -> AudioFormatID? {
-      switch encoder.replacingOccurrences(of: "-", with: "_") {
+      switch encoder.replacingOccurrences(of: "-", with: "_").lowercased() {
       case "wav", "pcm16bits": return kAudioFormatLinearPCM
       case "aaclc", "aac_lc": return kAudioFormatMPEG4AAC
       case "aache", "aac_he": return kAudioFormatMPEG4AAC_HE_V2
@@ -528,7 +580,7 @@ public final class AudioRecorderService: RufletService {
     /// reports them as unsupported because its recording pipeline cannot
     /// guarantee conversion for those formats.
     private static func isSupportedEncoder(_ encoder: String) -> Bool {
-      switch encoder.replacingOccurrences(of: "-", with: "_") {
+      switch encoder.replacingOccurrences(of: "-", with: "_").lowercased() {
       case "wav", "pcm16bits", "aaclc", "aac_lc", "aaceld", "aac_eld", "opus", "flac":
         return true
       default:
@@ -536,8 +588,23 @@ public final class AudioRecorderService: RufletService {
       }
     }
 
+    private static func parsedEncoder(_ value: String) -> String? {
+      switch value.replacingOccurrences(of: "_", with: "").lowercased() {
+      case "aaclc": return "aacLc"
+      case "aaceld": return "aacEld"
+      case "aache": return "aacHe"
+      case "amrnb": return "amrNb"
+      case "amrwb": return "amrWb"
+      case "opus": return "opus"
+      case "flac": return "flac"
+      case "pcm16bits": return "pcm16bits"
+      case "wav": return "wav"
+      default: return nil
+      }
+    }
+
     private static func sampleRate(for encoder: String, requested: Double) -> Double {
-      guard encoder.replacingOccurrences(of: "-", with: "_") == "opus" else {
+      guard encoder.replacingOccurrences(of: "-", with: "_").lowercased() == "opus" else {
         return requested
       }
       return [8_000.0, 12_000, 16_000, 24_000, 48_000]
@@ -545,30 +612,26 @@ public final class AudioRecorderService: RufletService {
     }
 
     #if os(iOS)
-      private static func configureAudioSession(_ configuration: [String: RufletValue]) throws {
+      private static func configureAudioSession(_ configuration: AudioRecorderConfiguration) throws {
         let session = AVAudioSession.sharedInstance()
-        let ios = configuration["ios_configuration"]?.mapValue ?? [:]
-        let manage = ios["manage_audio_session"]?.boolValue ?? true
-        let optionNames = ios["options"]?.arrayValue?.compactMap(\.stringValue)
-        let options = audioSessionOptions(optionNames)
+        let options = audioSessionOptions(configuration.ios.options)
 
         try session.setPreferredSampleRate(
-          min(configuration["sample_rate"]?.doubleValue ?? 44_100, 48_000))
-        if manage {
+          min(Double(configuration.sampleRate), 48_000))
+        if configuration.ios.manageAudioSession {
           try session.setCategory(.playAndRecord, mode: .default, options: options)
           try session.setActive(true, options: .notifyOthersOnDeactivation)
         }
         let channels = min(
-          configuration["channels"]?.intValue ?? 2,
+          configuration.channels,
           session.maximumInputNumberOfChannels)
         if channels > 0 { try session.setPreferredInputNumberOfChannels(channels) }
       }
 
-      private static func audioSessionOptions(_ names: [String]?)
+      private static func audioSessionOptions(_ names: [String])
         -> AVAudioSession.CategoryOptions
       {
-        let values = names ?? ["default_to_speaker", "allow_bluetooth", "allow_bluetooth_a2dp"]
-        return values.reduce(into: AVAudioSession.CategoryOptions()) { result, raw in
+        names.reduce(into: AVAudioSession.CategoryOptions()) { result, raw in
           switch raw.replacingOccurrences(of: "_", with: "").lowercased() {
           case "mixwithothers": result.insert(.mixWithOthers)
           case "duckothers": result.insert(.duckOthers)

@@ -498,7 +498,7 @@ public enum ControlRegistry {
         methods: ["get_current_position", "get_duration", "pause", "play", "release",
                   "resume", "seek"])
     add(["AudioRecorder"], .service, "RufletMedia AudioRecorderService", .serviceOnly,
-        events: ["state_change"],
+        events: ["state_change", "stream"],
         methods: ["cancel_recording", "get_input_devices", "has_permission", "is_paused",
                   "is_recording", "is_supported_encoder", "pause_recording",
                   "resume_recording", "start_recording", "stop_recording"])
