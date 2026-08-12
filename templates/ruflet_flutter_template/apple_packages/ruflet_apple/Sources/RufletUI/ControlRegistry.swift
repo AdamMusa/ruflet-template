@@ -484,6 +484,11 @@ public enum ControlRegistry {
                   "set_focus_point", "set_zoom_level", "start_image_stream",
                   "start_video_recording", "stop_image_stream", "stop_video_recording",
                   "supports_image_streaming", "take_picture", "unlock_capture_orientation"])
+    add(["QrcodeScanner", "qrcode_scanner"], .visible,
+        "RufletMedia.QRScannerControlView", .optionalBundle("RufletMedia"),
+        events: ["detect", "error"],
+        methods: ["reset_zoom_scale", "set_zoom_scale", "start", "stop",
+                  "switch_camera", "toggle_torch"])
     add(["Audio"], .service, "RufletMedia AudioService", .serviceOnly,
         events: ["duration_change", "loaded", "position_change", "seek_complete", "state_change"],
         methods: ["get_current_position", "get_duration", "pause", "play", "release",

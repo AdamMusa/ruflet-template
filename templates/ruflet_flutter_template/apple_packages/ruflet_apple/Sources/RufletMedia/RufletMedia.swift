@@ -38,6 +38,24 @@ public enum RufletMedia: RufletServiceBundle {
     ControlRegistry.register("Camera") { node, _ in
       AnyView(CameraControlView(node: node))
     }
+    let qrDescriptor = ControlDescriptor(
+      wireType: "QrcodeScanner", classification: .visible,
+      implementation: "RufletMedia.QRScannerControlView", rendering: .nativeView,
+      supportedEvents: ["detect", "error"],
+      supportedMethods: ["reset_zoom_scale", "set_zoom_scale", "start", "stop",
+                         "switch_camera", "toggle_torch"])
+    ControlRegistry.register(descriptor: qrDescriptor) { node, _ in
+      AnyView(QRScannerControlView(node: node))
+    }
+    ControlRegistry.register(
+      descriptor: ControlDescriptor(
+        wireType: "qrcode_scanner", classification: .visible,
+        implementation: qrDescriptor.implementation, rendering: .nativeView,
+        supportedEvents: qrDescriptor.supportedEvents,
+        supportedMethods: qrDescriptor.supportedMethods)
+    ) { node, _ in
+      AnyView(QRScannerControlView(node: node))
+    }
 
     #if canImport(AVFoundation)
       RufletPermissions.installProbe { permission in
