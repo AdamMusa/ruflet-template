@@ -96,6 +96,24 @@ final class MediaPluginParityTests: XCTestCase {
     XCTAssertEqual(source.httpHeaders["X-Enabled"], "true")
   }
 
+  @MainActor
+  func testVideoMediaRejectsAliasesAndScalarSourcesAbsentFromPinnedParser() {
+    XCTAssertNil(VideoMediaSource(.string("https://example.test/scalar.mp4")))
+    XCTAssertNil(VideoMediaSource(.map([
+      "resource_url": .string("https://example.test/legacy.mp4")
+    ])))
+    XCTAssertNil(VideoMediaSource(.map([
+      "src": .string("https://example.test/legacy.mp4")
+    ])))
+    XCTAssertNil(VideoMediaSource(.map(["resource": .int(42)])))
+
+    XCTAssertEqual(
+      VideoPlayerModel.sources(in: ControlNode(
+        id: 9, type: "Video",
+        props: ["src": .string("https://example.test/not-a-video-property.mp4")])),
+      [])
+  }
+
   func testVideoDurationArgumentsAndResultsUseFletDurationWireType() {
     XCTAssertEqual(FletVideoDuration.milliseconds(.int(250)), 250)
     XCTAssertEqual(FletVideoDuration.milliseconds(.double(4.5)), 0)
@@ -184,6 +202,44 @@ final class MediaPluginParityTests: XCTestCase {
   }
 
   #if canImport(AVKit)
+    @MainActor
+    func testChangedPlaylistResetsVisibleIndexAndEmptyReplacementClearsItem() throws {
+      let model = VideoPlayerModel()
+      let events = RufletEventSink()
+      model.configure(
+        from: ControlNode(id: 20, type: "Video", props: [
+          "playlist": .array([
+            .map(["resource": .string("file:///tmp/one.mp4")]),
+            .map(["resource": .string("file:///tmp/two.mp4")]),
+          ])
+        ]), events: events)
+
+      var jumpResult: Result<RufletValue, Error>?
+      model.handle(
+        RufletMethodCall(
+          controlID: 20, callID: "jump", name: "jump_to",
+          args: .map(["media_index": .int(1)]))) { jumpResult = $0 }
+      XCTAssertEqual(try jumpResult?.get(), .null)
+      XCTAssertEqual(model.index, 1)
+
+      model.configure(
+        from: ControlNode(id: 20, type: "Video", props: [
+          "playlist": .array([
+            .map(["resource": .string("file:///tmp/replacement.mp4")]),
+            .map(["resource": .string("file:///tmp/replacement-two.mp4")]),
+          ])
+        ]), events: events)
+      XCTAssertEqual(model.index, 0)
+      XCTAssertNotNil(model.player.currentItem)
+
+      model.configure(
+        from: ControlNode(id: 20, type: "Video", props: [
+          "playlist": .array([])
+        ]), events: events)
+      XCTAssertEqual(model.index, 0)
+      XCTAssertNil(model.player.currentItem)
+    }
+
     @MainActor
     func testVideoInitialDurationMethodsReturnDurationZeroInsteadOfNull() throws {
       let model = VideoPlayerModel()

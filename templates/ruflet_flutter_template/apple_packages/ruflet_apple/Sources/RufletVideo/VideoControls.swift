@@ -266,7 +266,7 @@ final class VideoPlayerModel: ObservableObject {
   #endif
 
   private var playlist: [VideoMediaSource] = []
-  private var index = 0
+  private(set) var index = 0
   private var configured = false
   private var didEmitLoaded = false
   private var playbackRate: Float = 1
@@ -286,8 +286,7 @@ final class VideoPlayerModel: ObservableObject {
   private var node: ControlNode?
   private var events: RufletEventSink?
 
-  /// Flet's `playlist` is a list of `{resource_url:}` maps; `src` is the
-  /// single-source shorthand.
+  /// Flet's `playlist` is a list of media maps.
   func configure(from node: ControlNode, events: RufletEventSink) {
     let sources = Self.sources(in: node)
 
@@ -320,9 +319,24 @@ final class VideoPlayerModel: ObservableObject {
       let sourcesChanged = sources != playlist || !configured
       if sourcesChanged {
         playlist = sources
-        index = min(index, max(sources.count - 1, 0))
+        // Reconstructing Flet's player opens the replacement Playlist at its
+        // visible/current index zero rather than retaining the old position.
+        index = 0
+        didEmitLoaded = false
         configured = true
-        load(at: index)
+        if sources.isEmpty {
+          if let completionObserver {
+            NotificationCenter.default.removeObserver(completionObserver)
+            self.completionObserver = nil
+          }
+          itemStatusObserver?.invalidate()
+          itemStatusObserver = nil
+          player.replaceCurrentItem(with: nil)
+          subtitleText = ""
+          subtitleCues = []
+        } else {
+          load(at: index)
+        }
       } else if subtitleChanged {
         applySubtitleTrack()
       }
@@ -387,8 +401,7 @@ final class VideoPlayerModel: ObservableObject {
     if let playlist = node.array("playlist") {
       return playlist.compactMap(VideoMediaSource.init)
     }
-    guard let raw = node.string("src") else { return [] }
-    return [VideoMediaSource(resource: raw)]
+    return []
   }
 
   #if canImport(AVKit)
@@ -670,14 +683,8 @@ struct VideoMediaSource: Equatable {
   }
 
   init?(_ value: RufletValue) {
-    if let raw = value.stringValue {
-      self.init(resource: raw)
-      return
-    }
     guard let map = value.mapValue,
-      let resource = map["resource"]?.stringValue
-        ?? map["resource_url"]?.stringValue
-        ?? map["src"]?.stringValue
+      case .string(let resource)? = map["resource"]
     else { return nil }
     let headers = map["http_headers"]?.mapValue?.reduce(into: [String: String]()) {
       switch $1.value {
