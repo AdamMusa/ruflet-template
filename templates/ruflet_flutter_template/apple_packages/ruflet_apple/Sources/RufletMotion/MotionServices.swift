@@ -10,10 +10,10 @@ import RufletProtocol
 /// `Magnetometer` and `Barometer`.
 ///
 /// All five behave identically from Ruby's side — they configure a sampling
-/// interval and stream `change` events — so one implementation serves them all,
+/// interval and stream `reading` events — so one implementation serves them all,
 /// parameterised by which motion feed to read.
 @MainActor
-public final class MotionSensorService: RufletService {
+public final class MotionSensorService: RufletStreamingService {
   public enum Sensor: String {
     case accelerometer
     case userAccelerometer
@@ -32,7 +32,6 @@ public final class MotionSensorService: RufletService {
     let enabled: Bool
     let intervalMilliseconds: Double
     let reportsReading: Bool
-    let reportsLegacyChange: Bool
     let reportsError: Bool
     let cancelOnError: Bool
   }
@@ -52,31 +51,10 @@ public final class MotionSensorService: RufletService {
     context: RufletServiceContext,
     completion: @escaping RufletMethodCompletion
   ) {
-    #if canImport(CoreMotion) && os(iOS)
-      guard let node else {
-        return completion(.failure(RufletServiceError.unknownTarget(call.controlID)))
-      }
-      switch call.name {
-      case "start", "resume":
-        // An explicit start reuses the configuration the control was set up
-        // with; `configure` would decline to act on an unchanged one.
-        let resolved = configuration ?? resolvedConfiguration(node: node)
-        configuration = resolved
-        start(node: node, context: context, configuration: resolved)
-        completion(.success(.null))
-      case "stop", "pause":
-        stop()
-        completion(.success(.null))
-      default:
-        completion(
-          .failure(
-            RufletServiceError.unsupportedMethod(type: sensor.rawValue, method: call.name)))
-      }
-    #else
-      completion(
-        .failure(
-          RufletServiceError.unavailable("\(sensor.rawValue) is not available on this platform")))
-    #endif
+    // Flet's BaseSensorService exposes no invoke methods; configuration and
+    // subscription lifetime are entirely driven by control updates.
+    completion(
+      .failure(RufletServiceError.unsupportedMethod(type: sensor.rawValue, method: call.name)))
   }
 
   /// Sensors stream without being asked: Ruby configures the control and waits
@@ -84,27 +62,37 @@ public final class MotionSensorService: RufletService {
   public func activate(node: ControlNode, context: RufletServiceContext) {
     #if canImport(CoreMotion) && os(iOS)
       configure(node: node, context: context)
+    #else
+      let next = resolvedConfiguration(node: node)
+      guard next != configuration else { return }
+      configuration = next
+      if next.enabled, next.reportsError {
+        context.emitEvent(
+          node.id, "error",
+          FletMotionSensorSemantics.errorEvent(
+            "\(sensor.rawValue) is not available on this platform"))
+      }
     #endif
   }
 
-  #if canImport(CoreMotion) && os(iOS)
-    private func resolvedConfiguration(node: ControlNode) -> Configuration {
-      Configuration(
-        enabled: node.bool("enabled") ?? true,
-        intervalMilliseconds: max(0, node.double("interval") ?? node.double("sampling_rate") ?? 200),
-        reportsReading: node.handlesEvent("reading"),
-        reportsLegacyChange: node.handlesEvent("change"),
-        reportsError: node.handlesEvent("error"),
-        cancelOnError: node.bool("cancel_on_error") ?? true
-      )
-    }
+  private func resolvedConfiguration(node: ControlNode) -> Configuration {
+    Configuration(
+      enabled: node.bool("enabled") ?? true,
+      intervalMilliseconds: FletMotionSensorSemantics.intervalMilliseconds(
+        node.props["interval"]),
+      reportsReading: node.handlesEvent("reading"),
+      reportsError: node.handlesEvent("error"),
+      cancelOnError: node.bool("cancel_on_error") ?? true
+    )
+  }
 
+  #if canImport(CoreMotion) && os(iOS)
     private func configure(node: ControlNode, context: RufletServiceContext) {
       let next = resolvedConfiguration(node: node)
       guard next != configuration else { return }
       stop()
       configuration = next
-      guard next.enabled, next.reportsReading || next.reportsLegacyChange || next.reportsError else {
+      guard next.enabled, next.reportsReading || next.reportsError else {
         return
       }
       start(node: node, context: context, configuration: next)
@@ -125,60 +113,74 @@ public final class MotionSensorService: RufletService {
 
       let report: (RufletValue) -> Void = { value in
         if configuration.reportsReading { context.emitEvent(id, "reading", value) }
-        if configuration.reportsLegacyChange { context.emitEvent(id, "change", value) }
       }
       let reportError: (Error?) -> Void = { [weak self] error in
         guard let self else { return }
         if configuration.reportsError {
-          context.emitEvent(id, "error", .map([
-            "message": .string(error?.localizedDescription ?? "Unknown sensor error")
-          ]))
+          context.emitEvent(
+            id, "error",
+            FletMotionSensorSemantics.errorEvent(
+              error?.localizedDescription ?? "Unknown sensor error"))
         }
         if configuration.cancelOnError { self.stop() }
       }
 
       switch sensor {
       case .accelerometer:
+        guard manager.isAccelerometerAvailable else {
+          reportError(FletMotionSensorError.unavailable("Accelerometer"))
+          return
+        }
         manager.accelerometerUpdateInterval = interval
         manager.startAccelerometerUpdates(to: queue) { data, error in
           if let error { return reportError(error) }
           guard let data else { return }
-          report(Self.vector(data.acceleration, timestamp: data.timestamp))
+          report(FletMotionSensorSemantics.accelerationReading(
+            x: data.acceleration.x, y: data.acceleration.y, z: data.acceleration.z,
+            motionTimestamp: data.timestamp, userAcceleration: false))
         }
       case .userAccelerometer:
+        guard manager.isDeviceMotionAvailable else {
+          reportError(FletMotionSensorError.unavailable("UserAccelerometer"))
+          return
+        }
         manager.deviceMotionUpdateInterval = interval
         manager.startDeviceMotionUpdates(to: queue) { data, error in
           if let error { return reportError(error) }
           guard let data else { return }
-          report(Self.vector(data.userAcceleration, timestamp: data.timestamp))
+          report(FletMotionSensorSemantics.accelerationReading(
+            x: data.userAcceleration.x, y: data.userAcceleration.y, z: data.userAcceleration.z,
+            motionTimestamp: data.timestamp, userAcceleration: true))
         }
       case .gyroscope:
+        guard manager.isGyroAvailable else {
+          reportError(FletMotionSensorError.unavailable("Gyroscope"))
+          return
+        }
         manager.gyroUpdateInterval = interval
         manager.startGyroUpdates(to: queue) { data, error in
           if let error { return reportError(error) }
           guard let data else { return }
-          report(.map([
-            "x": .double(data.rotationRate.x),
-            "y": .double(data.rotationRate.y),
-            "z": .double(data.rotationRate.z),
-            "timestamp": .double(data.timestamp)
-          ]))
+          report(FletMotionSensorSemantics.vectorReading(
+            x: data.rotationRate.x, y: data.rotationRate.y, z: data.rotationRate.z,
+            motionTimestamp: data.timestamp))
         }
       case .magnetometer:
+        guard manager.isMagnetometerAvailable else {
+          reportError(FletMotionSensorError.unavailable("Magnetometer"))
+          return
+        }
         manager.magnetometerUpdateInterval = interval
         manager.startMagnetometerUpdates(to: queue) { data, error in
           if let error { return reportError(error) }
           guard let data else { return }
-          report(.map([
-            "x": .double(data.magneticField.x),
-            "y": .double(data.magneticField.y),
-            "z": .double(data.magneticField.z),
-            "timestamp": .double(data.timestamp)
-          ]))
+          report(FletMotionSensorSemantics.vectorReading(
+            x: data.magneticField.x, y: data.magneticField.y, z: data.magneticField.z,
+            motionTimestamp: data.timestamp))
         }
       case .barometer:
         guard CMAltimeter.isRelativeAltitudeAvailable() else {
-          reportError(nil)
+          reportError(FletMotionSensorError.unavailable("Barometer"))
           return
         }
         let altimeter = CMAltimeter()
@@ -186,11 +188,9 @@ public final class MotionSensorService: RufletService {
         altimeter.startRelativeAltitudeUpdates(to: queue) { data, error in
           if let error { return reportError(error) }
           guard let data else { return }
-          report(.map([
-            // kPa on the wire, matching Flet's barometer payload.
-            "pressure": .double(data.pressure.doubleValue),
-            "timestamp": .double(ProcessInfo.processInfo.systemUptime)
-          ]))
+          report(FletMotionSensorSemantics.barometerReading(
+            pressureKilopascals: data.pressure.doubleValue,
+            motionTimestamp: data.timestamp))
         }
       }
     }
@@ -208,28 +208,120 @@ public final class MotionSensorService: RufletService {
       }
     }
 
-    private static func vector(_ acceleration: CMAcceleration, timestamp: TimeInterval) -> RufletValue {
-      .map([
-        "x": .double(acceleration.x),
-        "y": .double(acceleration.y),
-        "z": .double(acceleration.z),
-        "timestamp": .double(timestamp)
-      ])
-    }
   #endif
 
   deinit {
     #if canImport(CoreMotion) && os(iOS)
-      // `stop()` is main-actor isolated; the shared manager can be told
-      // directly from any thread.
       if running {
         let manager = Self.manager
-        manager.stopAccelerometerUpdates()
-        manager.stopDeviceMotionUpdates()
-        manager.stopGyroUpdates()
-        manager.stopMagnetometerUpdates()
+        switch sensor {
+        case .accelerometer: manager.stopAccelerometerUpdates()
+        case .userAccelerometer: manager.stopDeviceMotionUpdates()
+        case .gyroscope: manager.stopGyroUpdates()
+        case .magnetometer: manager.stopMagnetometerUpdates()
+        case .barometer: (altimeter as? CMAltimeter)?.stopRelativeAltitudeUpdates()
+        }
       }
     #endif
+  }
+}
+
+private enum FletMotionSensorError: LocalizedError {
+  case unavailable(String)
+
+  var errorDescription: String? {
+    switch self {
+    case .unavailable(let name): return "\(name) is not available on this device"
+    }
+  }
+}
+
+/// Pure conversions from Core Motion into the exact values emitted by the
+/// pinned sensors_plus/Flet adapters.
+public enum FletMotionSensorSemantics {
+  public static let normalIntervalMilliseconds = 200.0
+  public static let standardGravity = 9.81
+
+  public static func intervalMilliseconds(_ value: RufletValue?) -> Double {
+    let parsed: Double?
+    switch value {
+    case .int(let milliseconds): parsed = Double(milliseconds)
+    case .double(let milliseconds):
+      parsed = milliseconds.isFinite ? Double(Int(milliseconds)) : nil
+    case .extended(type: 3, let microseconds):
+      parsed = Double(microseconds).map { $0 / 1_000 }
+    case .map(let fields):
+      func integer(_ key: String) -> Double { Double(fields[key]?.intValue ?? 0) }
+      parsed =
+        24 * 60 * 60 * 1_000 * integer("days")
+        + 60 * 60 * 1_000 * integer("hours")
+        + 60 * 1_000 * integer("minutes")
+        + 1_000 * integer("seconds")
+        + integer("milliseconds")
+        + integer("microseconds") / 1_000
+    default: parsed = nil
+    }
+    guard let parsed, parsed >= 0 else { return normalIntervalMilliseconds }
+    return parsed
+  }
+
+  public static func accelerationReading(
+    x: Double, y: Double, z: Double, motionTimestamp: TimeInterval,
+    userAcceleration: Bool,
+    bootEpoch: TimeInterval = Date().timeIntervalSince1970 - ProcessInfo.processInfo.systemUptime
+  ) -> RufletValue {
+    let timestamp = timestampValue(
+      motionTimestamp: motionTimestamp, bootEpoch: bootEpoch,
+      integerMicroseconds: userAcceleration)
+    return .map([
+      "x": .double(-x * standardGravity),
+      "y": .double(-y * standardGravity),
+      "z": .double(-z * standardGravity),
+      "timestamp": timestamp,
+    ])
+  }
+
+  public static func vectorReading(
+    x: Double, y: Double, z: Double, motionTimestamp: TimeInterval,
+    bootEpoch: TimeInterval = Date().timeIntervalSince1970 - ProcessInfo.processInfo.systemUptime
+  ) -> RufletValue {
+    .map([
+      "x": .double(x), "y": .double(y), "z": .double(z),
+      "timestamp": timestampValue(
+        motionTimestamp: motionTimestamp, bootEpoch: bootEpoch, integerMicroseconds: false),
+    ])
+  }
+
+  public static func barometerReading(
+    pressureKilopascals: Double, motionTimestamp: TimeInterval,
+    bootEpoch: TimeInterval = Date().timeIntervalSince1970 - ProcessInfo.processInfo.systemUptime
+  ) -> RufletValue {
+    .map([
+      "pressure": .double(pressureKilopascals * 10),
+      "timestamp": timestampValue(
+        motionTimestamp: motionTimestamp, bootEpoch: bootEpoch, integerMicroseconds: false),
+    ])
+  }
+
+  public static func errorEvent(_ message: String) -> RufletValue {
+    .map(["message": .string(message)])
+  }
+
+  private static func timestampValue(
+    motionTimestamp: TimeInterval, bootEpoch: TimeInterval, integerMicroseconds: Bool
+  ) -> RufletValue {
+    let totalMicroseconds = Int64((bootEpoch + motionTimestamp) * 1_000_000)
+    if integerMicroseconds { return .int(totalMicroseconds) }
+    let seconds = totalMicroseconds / 1_000_000
+    let microseconds = totalMicroseconds % 1_000_000
+    let date = Date(timeIntervalSince1970: Double(seconds))
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone = TimeZone(secondsFromGMT: 0)
+    formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+    return .extended(
+      type: 1,
+      string: String(format: "%@.%06lld+00:00", formatter.string(from: date), microseconds))
   }
 }
 
