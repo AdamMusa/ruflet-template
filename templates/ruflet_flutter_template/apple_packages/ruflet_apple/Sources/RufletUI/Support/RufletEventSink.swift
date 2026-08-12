@@ -79,6 +79,10 @@ private struct RufletServerURLKey: EnvironmentKey {
   static let defaultValue: URL? = nil
 }
 
+private struct RufletExtensionsKey: EnvironmentKey {
+  static let defaultValue: [any RufletExtension.Type] = []
+}
+
 extension EnvironmentValues {
   public var rufletEvents: RufletEventSink {
     get { self[RufletEventSinkKey.self] }
@@ -90,5 +94,13 @@ extension EnvironmentValues {
   public var rufletServerURL: URL? {
     get { self[RufletServerURLKey.self] }
     set { self[RufletServerURLKey.self] = newValue }
+  }
+
+  /// Optional native packages linked by the root host. Nested `RufletApp`
+  /// sessions inherit the same extension registry, matching FletBackend's
+  /// extension propagation instead of silently losing Camera/Map/etc.
+  var rufletExtensions: [any RufletExtension.Type] {
+    get { self[RufletExtensionsKey.self] }
+    set { self[RufletExtensionsKey.self] = newValue }
   }
 }

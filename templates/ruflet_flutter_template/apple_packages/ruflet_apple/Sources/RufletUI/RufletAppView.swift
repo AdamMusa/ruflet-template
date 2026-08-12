@@ -114,6 +114,7 @@ public struct RufletAppView: View {
       }
     }
     .task { await host.start() }
+    .environment(\.rufletExtensions, host.registeredExtensions)
   }
 }
 
@@ -215,6 +216,7 @@ public final class RufletHost: ObservableObject {
 
   private let source: Source
   private let extensions: [any RufletExtension.Type]
+  var registeredExtensions: [any RufletExtension.Type] { extensions }
   private let capabilities: ClientCapabilities
   private let reconnectInterval: TimeInterval
   private let reconnectTimeout: TimeInterval?
