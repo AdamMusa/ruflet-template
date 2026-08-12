@@ -7,30 +7,31 @@ import SwiftUI
 /// The same shape appears inline on a `Text` (`size`, `weight`, `italic`, …)
 /// and nested under a `style` map, and controls such as `ListTile` and `Chip`
 /// carry their own `*_text_style` slots, so it is resolved once here.
-struct RufletTextStyle {
-  var size: CGFloat?
-  var weight: Font.Weight?
-  var italic = false
-  var color: Color?
-  var backgroundColor: Color?
-  var fontFamily: String?
-  var letterSpacing: CGFloat?
-  var lineHeight: CGFloat?
-  var decoration: TextDecoration = []
-  var themeStyle: Font.TextStyle?
+public struct RufletTextStyle {
+  public var size: CGFloat?
+  public var weight: Font.Weight?
+  public var italic = false
+  public var color: Color?
+  public var backgroundColor: Color?
+  public var fontFamily: String?
+  public var letterSpacing: CGFloat?
+  public var lineHeight: CGFloat?
+  public var decoration: TextDecoration = []
+  public var themeStyle: Font.TextStyle?
 
-  struct TextDecoration: OptionSet {
-    let rawValue: Int
-    static let underline = TextDecoration(rawValue: 1)
-    static let overline = TextDecoration(rawValue: 2)
-    static let lineThrough = TextDecoration(rawValue: 4)
+  public struct TextDecoration: OptionSet {
+    public let rawValue: Int
+    public init(rawValue: Int) { self.rawValue = rawValue }
+    public static let underline = TextDecoration(rawValue: 1)
+    public static let overline = TextDecoration(rawValue: 2)
+    public static let lineThrough = TextDecoration(rawValue: 4)
   }
 
   /// Reads a style map, then lets the control's own inline props override it —
   /// the precedence Flet applies.
   /// An unstyled starting point, for a slot Ruby gave a bare value rather
   /// than a style map.
-  init() {}
+  public init() {}
 
   /// `Text` carries its own typography beside the `style` map, and Flet layers
   /// the two: the theme style is the base, `style` refines it, and the
@@ -94,7 +95,7 @@ struct RufletTextStyle {
     apply(map: node.props)
   }
 
-  init(map: [String: RufletValue]) {
+  public init(map: [String: RufletValue]) {
     apply(map: map)
   }
 
@@ -154,7 +155,7 @@ struct RufletTextStyle {
 
   /// The resolved font: an explicit size wins, otherwise the theme ramp, and
   /// a custom family replaces the system face while keeping the size.
-  var font: Font {
+  public var font: Font {
     var base: Font
     if let size {
       base = fontFamily.map { Font.custom($0, size: size) } ?? Font.system(size: size)
@@ -201,7 +202,7 @@ extension Text {
   }
 }
 
-extension View {
+public extension View {
   /// Applies the parts of a style that any view can carry, for controls whose
   /// label is not a bare `Text`.
   func rufletTextStyle(_ style: RufletTextStyle) -> some View {

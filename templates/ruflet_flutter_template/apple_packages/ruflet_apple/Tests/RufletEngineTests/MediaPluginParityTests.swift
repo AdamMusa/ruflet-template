@@ -2,6 +2,7 @@ import RufletEngine
 @testable import RufletAudio
 @testable import RufletAudioRecorder
 @testable import RufletCamera
+@testable import RufletVideo
 import RufletProtocol
 @testable import RufletUI
 import XCTest

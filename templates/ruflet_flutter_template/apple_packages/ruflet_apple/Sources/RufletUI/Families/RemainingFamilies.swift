@@ -63,10 +63,6 @@ extension ControlRegistry {
     switch node.type {
     case "Canvas":
       return AnyView(CanvasControlView(node: node))
-    case "WebView":
-      return AnyView(WebViewControlView(node: node))
-    case "Video":
-      return AnyView(VideoControlView(node: node))
     case "Map":
       return AnyView(MissingBundleControlView(node: node, bundle: "RufletMap"))
     case "TileLayer", "MarkerLayer", "Marker", "CircleLayer", "CircleMarker",

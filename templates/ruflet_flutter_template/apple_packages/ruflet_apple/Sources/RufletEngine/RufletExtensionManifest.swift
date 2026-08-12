@@ -41,8 +41,8 @@ public enum RufletExtensionManifest {
     .init(fletPackage: "flet_rive", swiftProduct: "RufletRive", status: .available),
     .init(fletPackage: "flet_secure_storage", swiftProduct: "RufletSecureStorage", status: .available),
     .init(fletPackage: "flet_spinkit", swiftProduct: "RufletSpinKit", status: .available),
-    .init(fletPackage: "flet_video", swiftProduct: "RufletVideo", status: .pending),
-    .init(fletPackage: "flet_webview", swiftProduct: "RufletWebView", status: .pending),
+    .init(fletPackage: "flet_video", swiftProduct: "RufletVideo", status: .available),
+    .init(fletPackage: "flet_webview", swiftProduct: "RufletWebView", status: .available),
     .init(fletPackage: "ruflet_qrcode_scanner", swiftProduct: "RufletQRScanner", status: .available),
   ]
 }

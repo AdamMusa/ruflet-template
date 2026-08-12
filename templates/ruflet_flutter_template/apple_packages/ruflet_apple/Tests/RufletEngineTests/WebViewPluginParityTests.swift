@@ -1,4 +1,5 @@
 import RufletEngine
+@testable import RufletWebView
 @testable import RufletUI
 import XCTest
 
