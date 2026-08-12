@@ -1514,6 +1514,7 @@ private struct KeyboardType: ViewModifier {
 /// answers Ruby's `focus`, `open_view` and `close_view`.
 struct SearchBarControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
   @State private var nativeFocused = false
   @State private var viewOpen = false
@@ -1571,7 +1572,7 @@ struct SearchBarControlView: View {
   private var suggestions: some View {
     VStack(alignment: .leading, spacing: 0) {
       HStack {
-        if let leading = node.controlID(forKey: "view_leading") {
+        if let leading = visibleSlotID("view_leading") {
           ControlView(id: leading, axis: .none)
         }
         #if canImport(UIKit) || canImport(AppKit)
@@ -1582,7 +1583,7 @@ struct SearchBarControlView: View {
             placeholder: "",
             secure: false,
             nativeChrome: false,
-            searchAppearance: node.controlID(forKey: "view_leading") == nil,
+            searchAppearance: visibleSlotID("view_leading") == nil,
             traits: viewTraits,
             onTap: {},
             onTapOutside: {},
@@ -1594,7 +1595,7 @@ struct SearchBarControlView: View {
         #else
           TextField(node.string("view_hint_text") ?? "", text: searchValue)
         #endif
-        let trailing = node.controlIDs(forKey: "view_trailing")
+        let trailing = visibleSlotIDs("view_trailing")
         if !trailing.isEmpty { ControlList(ids: trailing, axis: .horizontal) }
       }
       .frame(height: CGFloat(
@@ -1603,7 +1604,7 @@ struct SearchBarControlView: View {
       .padding(RufletSearchBarDefaults.viewBarPadding(node))
       Divider().overlay(
         MaterialPalette.color(node.string("divider_color") ?? "outline"))
-      ControlList(ids: node.controlIDs(forKey: "controls"), axis: .vertical)
+      ControlList(ids: visibleSlotIDs("controls"), axis: .vertical)
     }
     .padding(ControlProps.edgeInsets(node.props["view_padding"]) ?? EdgeInsets())
     .frame(maxWidth: node.bool("shrink_wrap") == true ? nil : .infinity, alignment: .leading)
@@ -1616,7 +1617,7 @@ struct SearchBarControlView: View {
 
   private var bar: some View {
     HStack {
-      if let leading = node.controlID(forKey: "bar_leading") {
+      if let leading = visibleSlotID("bar_leading") {
         ControlView(id: leading, axis: .none)
       }
       #if canImport(UIKit) || canImport(AppKit)
@@ -1627,7 +1628,7 @@ struct SearchBarControlView: View {
           placeholder: "",
           secure: false,
           nativeChrome: false,
-          searchAppearance: node.controlID(forKey: "bar_leading") == nil,
+          searchAppearance: visibleSlotID("bar_leading") == nil,
           traits: barTraits,
           onTap: {
             events.fire(node, "tap")
@@ -1647,7 +1648,7 @@ struct SearchBarControlView: View {
         .onSubmit { events.fire(node, "submit", data: .string(node.string("value") ?? "")) }
       #endif
 
-      let trailing = node.controlIDs(forKey: "bar_trailing")
+      let trailing = visibleSlotIDs("bar_trailing")
       if !trailing.isEmpty {
         ControlList(ids: trailing, axis: .horizontal)
       }
@@ -1662,6 +1663,20 @@ struct SearchBarControlView: View {
     .modifier(SlotSizeConstraints(value: node.props["bar_size_constraints"]))
     .modifier(SearchSurface(node: node, prefix: "bar"))
     .onChange(of: nativeFocused) { events.fire(node, $0 ? "focus" : "blur") }
+  }
+
+  private func visibleSlotID(_ key: String) -> Int? {
+    RufletSearchBarSlots.visibleID(
+      node.controlID(forKey: key), visibilityForID: visibilityForID)
+  }
+
+  private func visibleSlotIDs(_ key: String) -> [Int] {
+    RufletSearchBarSlots.visibleIDs(
+      node.controlIDs(forKey: key), visibilityForID: visibilityForID)
+  }
+
+  private func visibilityForID(_ id: Int) -> Bool? {
+    store.node(id).map { $0.bool("visible") != false }
   }
 
   /// The bar's own text styling, plus the scroll padding Flet names for it.
@@ -1735,6 +1750,24 @@ struct SearchBarControlView: View {
     if let blur, blur != lastBlurValue {
       lastBlurValue = blur
       nativeFocused = false
+    }
+  }
+}
+
+enum RufletSearchBarSlots {
+  static func visibleID(
+    _ id: Int?, visibilityForID: (Int) -> Bool?
+  ) -> Int? {
+    guard let id, visibilityForID(id) != false else { return nil }
+    return id
+  }
+
+  static func visibleIDs(
+    _ ids: [Int], visibilityForID: (Int) -> Bool?
+  ) -> [Int] {
+    var seen = Set<Int>()
+    return ids.filter { id in
+      visibilityForID(id) != false && seen.insert(id).inserted
     }
   }
 }
