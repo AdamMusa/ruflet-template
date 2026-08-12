@@ -52,6 +52,51 @@ final class SpinKitCoverageTests: XCTestCase {
     XCTAssertEqual(configuration.waveType, "start")
   }
 
+  func testGenericVariantNormalizationMatchesPinnedDartHelper() {
+    XCTAssertEqual(
+      RufletSpinKitConfiguration(
+        node: ControlNode(
+          id: 1, type: "RufletSpinKit",
+          props: ["variant": .string("  pouring---hour glass_refined  ")])).variant,
+      "pouring_hour_glass_refined")
+    XCTAssertEqual(
+      RufletSpinKitConfiguration(
+        node: ControlNode(
+          id: 1, type: "RufletSpinKit", props: ["variant": .string("---")])).variant,
+      "rotating_circle")
+  }
+
+  func testIndividualFletTypesUseTheirPinnedConstructorDurations() {
+    let durations: [String: TimeInterval] = [
+      "SpinKitDoubleBounce": 2.0,
+      "SpinKitWanderingCubes": 1.8,
+      "SpinKitPulse": 1.0,
+      "SpinKitChasingDots": 2.0,
+      "SpinKitThreeBounce": 1.4,
+      "SpinKitFoldingCube": 2.4,
+      "SpinKitPumpingHeart": 1.0,
+      "SpinKitPouringHourGlassRefined": 2.4,
+      "SpinKitRipple": 1.8,
+      "SpinKitSquareCircle": 0.5,
+      "SpinKitThreeInOut": 1.5,
+      "SpinKitRotatingCircle": 1.2,
+    ]
+    for (wireType, expected) in durations {
+      XCTAssertEqual(
+        RufletSpinKitConfiguration(node: ControlNode(id: 1, type: wireType)).duration,
+        expected,
+        accuracy: 0.000_001,
+        "wrong pinned constructor duration for \(wireType)")
+    }
+  }
+
+  func testExplicitFletDurationOverridesVariantDefault() {
+    let configuration = RufletSpinKitConfiguration(
+      node: ControlNode(
+        id: 1, type: "SpinKitDoubleBounce", props: ["duration": .int(750)]))
+    XCTAssertEqual(configuration.duration, 0.75, accuracy: 0.000_001)
+  }
+
   func testIndividualFletWireTypeResolvesItsOwnVariant() {
     let configuration = RufletSpinKitConfiguration(
       node: ControlNode(

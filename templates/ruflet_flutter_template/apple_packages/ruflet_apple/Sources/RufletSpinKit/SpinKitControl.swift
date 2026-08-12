@@ -31,10 +31,15 @@ struct RufletSpinKitConfiguration: Equatable {
   init(node: ControlNode) {
     variant = Self.variant(node)
     size = CGFloat(node.double("size") ?? 50)
-    duration = max((node.double("duration") ?? 1200) / 1000, 0.15)
+    // The generated global contract has a 1200ms fallback for this property,
+    // but Flet applies duration defaults per SpinKit constructor. Inspect the
+    // explicit wire property before selecting that constructor default.
+    let durationMilliseconds = node.props["duration"]?.doubleValue
+      ?? (node.type == "RufletSpinKit" ? 1200 : Self.defaultDurationMilliseconds(for: variant))
+    duration = durationMilliseconds / 1000
     lineWidth = node.double("line_width").map { CGFloat($0) }
     borderWidth = node.double("border_width").map { CGFloat($0) }
-    itemCount = max(node.int("item_count") ?? 5, 1)
+    itemCount = node.int("item_count") ?? 5
     waveType = node.string("wave_type")?.lowercased() ?? "start"
   }
 
@@ -59,9 +64,36 @@ struct RufletSpinKitConfiguration: Equatable {
   }
 
   private static func normalize(_ value: String) -> String {
-    value.lowercased()
-      .replacingOccurrences(of: "-", with: "_")
-      .replacingOccurrences(of: " ", with: "_")
+    let words = value.unicodeScalars.split {
+      !CharacterSet.alphanumerics.contains($0)
+    }
+    let normalized = words.map { String(String.UnicodeScalarView($0)).lowercased() }
+      .joined(separator: "_")
+    return normalized.isEmpty ? "rotating_circle" : normalized
+  }
+
+  /// Defaults copied from the corresponding constructor in the pinned
+  /// `flet_spinkit` switch. `RufletSpinKit` intentionally keeps its own 1200ms
+  /// default; these values apply to Flet's thirty individual wire types.
+  private static func defaultDurationMilliseconds(for variant: String) -> Double {
+    switch variant {
+    case "double_bounce", "chasing_dots":
+      return 2000
+    case "wandering_cubes", "ripple":
+      return 1800
+    case "pulse", "pumping_heart":
+      return 1000
+    case "three_bounce":
+      return 1400
+    case "folding_cube", "pouring_hour_glass", "pouring_hour_glass_refined":
+      return 2400
+    case "square_circle":
+      return 500
+    case "three_in_out":
+      return 1500
+    default:
+      return 1200
+    }
   }
 }
 
@@ -73,7 +105,8 @@ struct SpinKitControlView: View {
     let configuration = RufletSpinKitConfiguration(node: node)
     TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { timeline in
       let seconds = timeline.date.timeIntervalSinceReferenceDate
-      glyph(phase: seconds / configuration.duration, configuration: configuration)
+      let phase = configuration.duration > 0 ? seconds / configuration.duration : 0
+      glyph(phase: phase, configuration: configuration)
     }
     .frame(width: configuration.size, height: configuration.size)
     .accessibilityHidden(true)
@@ -185,7 +218,7 @@ struct SpinKitControlView: View {
 
   private func bars(phase: Double, configuration: RufletSpinKitConfiguration) -> some View {
     let size = configuration.size
-    let count = configuration.itemCount
+    let count = max(configuration.itemCount, 1)
     let phaseDirection = configuration.waveType == "end" ? -1.0 : 1.0
     return HStack(alignment: .center, spacing: size * 0.06) {
       ForEach(0..<count, id: \.self) { index in

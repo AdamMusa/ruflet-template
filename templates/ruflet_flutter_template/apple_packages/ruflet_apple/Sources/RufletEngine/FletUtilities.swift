@@ -47,10 +47,12 @@ public enum FletURI {
   }
 
   public static func isURL(_ value: String) -> Bool {
-    let lowercased = value.lowercased()
-    return lowercased.hasPrefix("http://")
-      || lowercased.hasPrefix("https://")
-      || lowercased.hasPrefix("www.")
+    // Flet's RegExp is case-sensitive. Do not normalize this input: accepting
+    // `HTTPS://` here when the pinned Dart client rejects it changes whether a
+    // source is treated as a network URL or a packaged asset.
+    value.hasPrefix("http://")
+      || value.hasPrefix("https://")
+      || value.hasPrefix("www.")
   }
 }
 
@@ -64,7 +66,7 @@ public enum FletNetworking {
   /// `InternetAddress.isLinkLocal/isLoopback`).
   public static func isPrivateHost(_ host: String) async throws -> Bool {
     if let address = parsedAddress(host) {
-      return address.isPrivate
+      return address.isPrivateLiteral
     }
 
     var hints = addrinfo(
@@ -83,31 +85,47 @@ public enum FletNetworking {
     }
     defer { freeaddrinfo(result) }
 
-    var cursor: UnsafeMutablePointer<addrinfo>? = first
-    while let current = cursor {
-      if let address = resolvedAddress(current.pointee), address.isPrivate {
-        return true
-      }
-      cursor = current.pointee.ai_next
-    }
-    return false
+    // `InternetAddress.lookup(host).first` is deliberate in Flet. A host with
+    // several records is classified from the first result rather than from
+    // the most-private result in the entire answer set.
+    return resolvedAddress(first.pointee)?.isPrivateResolved ?? false
   }
 
   public static func isPrivateIPAddress(_ value: String) -> Bool {
-    parsedAddress(value)?.isPrivate ?? false
+    parsedAddress(value)?.isPrivateLiteral ?? false
   }
 
   private enum ParsedAddress {
     case ipv4(UInt32)
     case ipv6([UInt8])
 
-    var isPrivate: Bool {
+    private static func isPrivateIPv4Word(_ address: UInt32) -> Bool {
+      (address & 0xff00_0000) == 0x7f00_0000
+        || (address & 0xffff_0000) == 0xc0a8_0000
+        || (address & 0xfff0_0000) == 0xac10_0000
+        || (address & 0xff00_0000) == 0x0a00_0000
+    }
+
+    /// Directly parsed IPv6 literals fall through Flet's `ipToInt`, which
+    /// reads only their first 32 bits and applies the IPv4 masks. This is
+    /// observably different from the DNS-resolution branch below.
+    var isPrivateLiteral: Bool {
       switch self {
       case .ipv4(let address):
-        return (address & 0xff00_0000) == 0x7f00_0000
-          || (address & 0xffff_0000) == 0xc0a8_0000
-          || (address & 0xfff0_0000) == 0xac10_0000
-          || (address & 0xff00_0000) == 0x0a00_0000
+        return Self.isPrivateIPv4Word(address)
+      case .ipv6(let bytes):
+        guard bytes.count >= 4 else { return false }
+        let firstWord = bytes.prefix(4).reduce(UInt32(0)) { ($0 << 8) | UInt32($1) }
+        return Self.isPrivateIPv4Word(firstWord)
+      }
+    }
+
+    /// Flet handles a DNS result whose first address is IPv6 with Dart's
+    /// native link-local/loopback flags instead of the IPv4-mask helper.
+    var isPrivateResolved: Bool {
+      switch self {
+      case .ipv4(let address):
+        return Self.isPrivateIPv4Word(address)
       case .ipv6(let bytes):
         let loopback = bytes.dropLast().allSatisfy { $0 == 0 } && bytes.last == 1
         let linkLocal = bytes.count == 16 && bytes[0] == 0xfe && (bytes[1] & 0xc0) == 0x80
@@ -152,11 +170,18 @@ public enum FletUserFonts {
   /// JSON object values into RufletValue, so only string-valued font entries
   /// participate in the resulting family-to-source map.
   public static func parse(_ value: RufletValue?) -> [String: String]? {
-    guard let entries = value?.mapValue else { return nil }
-    return entries.reduce(into: [:]) { result, entry in
-      if let source = entry.value.stringValue {
-        result[entry.key] = source
-      }
+    // `parseFonts(null)` returns an empty map in the pinned client. For a
+    // non-null value, `Map<String, String>.from` requires every value to be a
+    // string; returning nil is the Swift boundary equivalent of rejecting a
+    // map with the wrong value type instead of silently dropping entries.
+    guard let value else { return [:] }
+    guard let entries = value.mapValue else { return nil }
+    var fonts: [String: String] = [:]
+    fonts.reserveCapacity(entries.count)
+    for (family, source) in entries {
+      guard case .string(let source) = source else { return nil }
+      fonts[family] = source
     }
+    return fonts
   }
 }

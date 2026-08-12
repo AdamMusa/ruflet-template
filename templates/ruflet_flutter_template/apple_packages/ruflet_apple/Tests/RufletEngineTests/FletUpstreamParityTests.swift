@@ -16,6 +16,20 @@ final class FletUpstreamParityTests: XCTestCase {
     )
   }
 
+  func testControlEqualityIncludesIdentityTypeAndDeepProperties() {
+    let properties: [String: RufletValue] = [
+      "a": .int(1), "nested": .map(["value": .string("same")])
+    ]
+    let control = ControlNode(id: 1, type: "Button", props: properties)
+    XCTAssertNotEqual(control, ControlNode(id: 2, type: "Button", props: properties))
+    XCTAssertNotEqual(control, ControlNode(id: 1, type: "Text", props: properties))
+    XCTAssertNotEqual(
+      control,
+      ControlNode(
+        id: 1, type: "Button",
+        props: ["a": .int(1), "nested": .map(["value": .string("changed")])]))
+  }
+
   func testControlPatchUpdatesFirstAndSecondLevelValues() {
     let store = ControlStore()
     XCTAssertTrue(store.apply(ControlPatch(controlID: 1, operations: [
@@ -60,6 +74,43 @@ final class FletUpstreamParityTests: XCTestCase {
     XCTAssertTrue(store.lastChangedIDs.isEmpty)
   }
 
+  func testNestedControlUpdatesMergeByIdentityLikeFletControlUpdate() {
+    let store = ControlStore()
+    XCTAssertTrue(store.apply(ControlPatch(controlID: 1, operations: [
+      .set(key: "_c", value: .string("Button")),
+      .set(key: "content", value: .map([
+        "_i": .int(2), "_c": .string("Text"),
+        "value": .string("before"), "preserved": .bool(true)
+      ]))
+    ])))
+
+    XCTAssertTrue(store.apply(ControlPatch(controlID: 1, operations: [
+      .set(key: "content", value: .map([
+        "_i": .int(2), "_c": .string("IgnoredWhenIdentityMatches"),
+        "value": .string("after")
+      ]))
+    ])))
+
+    XCTAssertEqual(store.node(1)?.controlID(forKey: "content"), 2)
+    XCTAssertEqual(store.node(2)?.type, "Text")
+    XCTAssertEqual(store.node(2)?.string("value"), "after")
+    XCTAssertEqual(store.node(2)?.bool("preserved"), true)
+  }
+
+  func testSecondLevelIdenticalMapUpdateIsANoOp() {
+    let store = ControlStore()
+    let initial = ControlPatch(controlID: 1, operations: [
+      .set(key: "_c", value: .string("Button")),
+      .set(key: "nested", value: .map(["value": .string("same")]))
+    ])
+    XCTAssertTrue(store.apply(initial))
+    let revision = store.revision
+    XCTAssertFalse(store.apply(ControlPatch(controlID: 1, operations: [
+      .set(key: "nested", value: .map(["value": .string("same")]))
+    ])))
+    XCTAssertEqual(store.revision, revision)
+  }
+
   func testWebPageNameMatchesFletURIUtility() throws {
     XCTAssertEqual(FletURI.webPageName(try url("http://localhost:8550/p/test/")), "p/test")
     XCTAssertEqual(FletURI.webPageName(try url("http://localhost:8550/p/test")), "p/test")
@@ -78,6 +129,20 @@ final class FletUpstreamParityTests: XCTestCase {
     XCTAssertFalse(FletURI.isUDSPath("https://flet.dev/images/test.png"))
   }
 
+  func testRemainingFletURIHelpersKeepTheirPinnedSemantics() throws {
+    let page = try url("http://localhost:8550/p/test?token=secret#fragment")
+    XCTAssertEqual(
+      FletURI.assetURL(pageURL: page, assetPath: "images/logo.png")?.absoluteString,
+      "http://localhost:8550/p/test/images/logo.png")
+    XCTAssertEqual(FletURI.baseURL(page)?.absoluteString, "http://localhost:8550")
+    XCTAssertTrue(FletURI.isLocalhost(page))
+    XCTAssertTrue(FletURI.isLocalhost(try url("http://127.0.0.1:8550")))
+    XCTAssertFalse(FletURI.isLocalhost(try url("http://127.0.1.1:8550")))
+    XCTAssertTrue(FletURI.isURL("https://flet.dev"))
+    XCTAssertTrue(FletURI.isURL("www.flet.dev"))
+    XCTAssertFalse(FletURI.isURL("HTTPS://flet.dev"))
+  }
+
   func testPrivateIPv4RangesMatchFletNetworkingUtility() {
     XCTAssertTrue(FletNetworking.isPrivateIPAddress("127.0.1.1"))
     XCTAssertTrue(FletNetworking.isPrivateIPAddress("192.168.0.1"))
@@ -87,9 +152,32 @@ final class FletUpstreamParityTests: XCTestCase {
     XCTAssertFalse(FletNetworking.isPrivateIPAddress("45.3.2.2"))
   }
 
+  func testPrivateHostLiteralCasesCallTheSamePublicAPIAsFletTests() async throws {
+    for host in ["127.0.1.1", "192.168.0.1", "172.16.0.10", "10.0.5.100"] {
+      let isPrivate = try await FletNetworking.isPrivateHost(host)
+      XCTAssertTrue(isPrivate, host)
+    }
+    for host in ["216.34.2.201", "45.3.2.2"] {
+      let isPrivate = try await FletNetworking.isPrivateHost(host)
+      XCTAssertFalse(isPrivate, host)
+    }
+  }
+
+  func testDirectIPv6LiteralsKeepFletsDistinctLiteralBranch() {
+    // The pinned implementation sends parsed literals through `ipToInt` but
+    // uses IPv6 link-local/loopback flags only after DNS lookup.
+    XCTAssertFalse(FletNetworking.isPrivateIPAddress("::1"))
+    XCTAssertFalse(FletNetworking.isPrivateIPAddress("fe80::1"))
+  }
+
   func testLocalhostResolutionMatchesFletNetworkingUtility() async throws {
     let isPrivate = try await FletNetworking.isPrivateHost("localhost")
     XCTAssertTrue(isPrivate)
+  }
+
+  func testFlutterDevResolutionMatchesFletNetworkingUtility() async throws {
+    let isPrivate = try await FletNetworking.isPrivateHost("flutter.dev")
+    XCTAssertFalse(isPrivate)
   }
 
   func testCustomFontsAreParsedFromFletMap() {
@@ -100,6 +188,14 @@ final class FletUpstreamParityTests: XCTestCase {
     XCTAssertEqual(fonts?.count, 2)
     XCTAssertEqual(fonts?["font1"], "https://fonts.com/font1.ttf")
     XCTAssertEqual(fonts?["font2"], "https://fonts.com/font2.ttf")
+  }
+
+  func testNullFontsUseFletsEmptyMapAndInvalidMapsAreRejected() {
+    XCTAssertEqual(FletUserFonts.parse(nil), [:])
+    XCTAssertNil(FletUserFonts.parse(.map([
+      "valid": .string("font.ttf"), "invalid": .int(1)
+    ])))
+    XCTAssertNil(FletUserFonts.parse(.string("font.ttf")))
   }
 
   func testDisabledAndAdaptiveInheritLikeFletBaseControl() {
