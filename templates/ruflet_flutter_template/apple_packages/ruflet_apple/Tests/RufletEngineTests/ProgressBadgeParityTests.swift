@@ -85,16 +85,22 @@ final class ProgressBadgeParityTests: XCTestCase {
       CGSize(width: 7, height: 3))
   }
 
-  func testProgressRingUsesTheExactFletWireKey() {
+  func testProgressRingAcceptsRubyAndSerializedFletWireKeys() {
     let fletKey = RufletCircularProgressMetrics(node: ControlNode(
       id: 1, type: "ProgressRing", props: ["year2023": .bool(false)]))
-    let progressBarKey = RufletCircularProgressMetrics(node: ControlNode(
+    let rubyKey = RufletCircularProgressMetrics(node: ControlNode(
       id: 2, type: "ProgressRing", props: ["year_2023": .bool(false)]))
 
     XCTAssertEqual(fletKey.strokeAlign, -1)
     XCTAssertEqual(fletKey.width, 40)
-    XCTAssertEqual(progressBarKey.strokeAlign, 0)
-    XCTAssertEqual(progressBarKey.width, 36)
+    XCTAssertEqual(rubyKey.strokeAlign, -1)
+    XCTAssertEqual(rubyKey.width, 40)
+
+    let precedence = RufletCircularProgressMetrics(node: ControlNode(
+      id: 3, type: "ProgressRing",
+      props: ["year_2023": .bool(true), "year2023": .bool(false)]))
+    XCTAssertEqual(precedence.strokeAlign, 0)
+    XCTAssertEqual(precedence.width, 36)
   }
 
   func testCircularIndicatorPreservesIndependentBoxConstraintAxes() {

@@ -802,6 +802,7 @@ enum RufletProgressAppearance {
     [
       "color", "bgcolor", "stroke_width", "stroke_align", "stroke_cap",
       "track_gap", "track_gap_fallback", "size_constraints", "padding", "year2023",
+      "year_2023",
     ].allSatisfy { node.props[$0] == nil }
   }
 
@@ -923,10 +924,10 @@ struct RufletCircularProgressMetrics: Equatable {
   let padding: EdgeInsets?
 
   init(node: ControlNode) {
-    // Flet 0.80.5's ProgressRingControl reads this exact key (unlike
-    // ProgressBar, whose property is `year_2023`). Preserve that observable
-    // wire distinction instead of normalising the two controls here.
-    let year2023 = node.bool("year2023") != false
+    // Flet's Dart client reads the serialized camelCase name while Ruflet's
+    // public Ruby DSL exposes `year_2023`. Accept both at the renderer
+    // boundary, with the canonical Ruby spelling taking precedence.
+    let year2023 = (node.bool("year_2023") ?? node.bool("year2023")) != false
     let indeterminate = node.double("value") == nil
     if let raw = node.double("value") {
       value = min(max(raw, 0), 1)

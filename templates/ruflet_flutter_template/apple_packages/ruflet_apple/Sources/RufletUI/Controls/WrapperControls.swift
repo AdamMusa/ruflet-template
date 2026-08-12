@@ -751,6 +751,28 @@ struct HeroControlView: View {
       .matchedGeometryEffect(
         id: RufletHeroTag(node.props["tag"]),
         in: pageNamespace ?? fallbackNamespace)
+      .modifier(HeroGestureTransition(
+        enabled: RufletHeroSemantics.transitionOnUserGestures(node)))
+    }
+  }
+}
+
+enum RufletHeroSemantics {
+  static func transitionOnUserGestures(_ node: ControlNode) -> Bool {
+    node.bool("transition_on_user_gestures") ?? false
+  }
+}
+
+/// Flutter keeps a Hero flight attached to an interactive route gesture when
+/// this flag is true. SwiftUI's corresponding transaction signal is
+/// `isContinuous`; the enclosing native navigation transition still owns the
+/// gesture and timing.
+private struct HeroGestureTransition: ViewModifier {
+  let enabled: Bool
+
+  func body(content: Content) -> some View {
+    content.transaction { transaction in
+      if enabled { transaction.isContinuous = true }
     }
   }
 }

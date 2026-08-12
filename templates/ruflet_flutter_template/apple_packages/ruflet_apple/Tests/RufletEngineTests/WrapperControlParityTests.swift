@@ -67,6 +67,14 @@ final class WrapperControlParityTests: XCTestCase {
     XCTAssertNotEqual(RufletHeroTag(.bool(true)), RufletHeroTag(.string("true")))
   }
 
+  func testHeroTransitionOnUserGesturesKeepsFletDefaultAndExplicitValue() {
+    XCTAssertFalse(RufletHeroSemantics.transitionOnUserGestures(
+      ControlNode(id: 1, type: "Hero")))
+    XCTAssertTrue(RufletHeroSemantics.transitionOnUserGestures(ControlNode(
+      id: 2, type: "Hero",
+      props: ["transition_on_user_gestures": .bool(true)])))
+  }
+
   private func wrapperGradient(_ type: String) -> RufletValue {
     .map([
       "_type": .string(type),
