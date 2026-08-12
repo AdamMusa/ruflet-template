@@ -134,6 +134,27 @@ extension EnvironmentValues {
   }
 }
 
+/// The structural slots Flutter's AppBar discovers through its enclosing
+/// Scaffold. Keeping these actions in the environment preserves that ownership:
+/// an AppBar never reaches into the store to guess which View or Pagelet owns it.
+struct RufletScaffoldSlots {
+  var hasDrawer = false
+  var hasEndDrawer = false
+  var openDrawer: () -> Void = {}
+  var openEndDrawer: () -> Void = {}
+}
+
+private struct RufletScaffoldSlotsKey: EnvironmentKey {
+  static let defaultValue = RufletScaffoldSlots()
+}
+
+extension EnvironmentValues {
+  var rufletScaffoldSlots: RufletScaffoldSlots {
+    get { self[RufletScaffoldSlotsKey.self] }
+    set { self[RufletScaffoldSlotsKey.self] = newValue }
+  }
+}
+
 /// Reads the offset already computed by a renderer-owned scroll surface.
 /// Reporting is independent of `on_scroll`: Material's AppBar consumes scroll
 /// notifications even when Ruby did not subscribe to them.

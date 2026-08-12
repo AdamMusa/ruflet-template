@@ -61,9 +61,9 @@ enum AppleChromeAppearance {
 /// any navigation stack, and a navigation bar would not accept those patches.
 struct AppBarControlView: View {
   let node: ControlNode
-  @Environment(\.rufletEvents) private var events
   @Environment(\.rufletNavigationContext) private var navigation
   @Environment(\.rufletScaffoldHost) private var scaffold
+  @Environment(\.rufletScaffoldSlots) private var scaffoldSlots
 
   var body: some View {
     let metrics = ChromeDefaults.appBar(node)
@@ -77,23 +77,21 @@ struct AppBarControlView: View {
     }
     .padding(.horizontal, metrics.horizontalPadding)
     .frame(height: metrics.toolbarHeight)
-    .background(metrics.forceMaterialTransparency
-      ? Color.clear : MaterialPalette.color(node.string("bgcolor") ?? "surface"))
+    .background {
+      MaterialPalette.color(
+        ChromeDefaults.appBarBackgroundToken(
+          node, scrolledUnder: scaffold?.scrolledUnder == true),
+        default: .clear)
+        .ignoresSafeArea(edges: metrics.primary ? .top : [])
+    }
     .foregroundColor(MaterialPalette.color(node.string("color") ?? "onsurface"))
     .shadow(
       color: AppleChromeAppearance.color(node.string("shadow_color"), fallback: .clear),
       radius: elevation > 0 ? elevation : 0,
       y: elevation > 0 ? elevation / 2 : 0)
     .modifier(ChromeClipModifier(behavior: metrics.clipBehavior))
-    .modifier(AppBarHeaderSemanticsModifier(excluded: metrics.excludeHeaderSemantics))
     .modifier(ChromeShapeClipModifier(value: node.props["shape"]))
     .font(.system(size: 14))
-  }
-
-  /// Flutter supplies a back affordance when the route can pop and nothing
-  /// else fills the leading slot; `automatically_imply_leading` turns that off.
-  private var impliesLeading: Bool {
-    node.bool("automatically_imply_leading") != false
   }
 
   private func currentElevation(_ metrics: ChromeDefaults.AppBarValues) -> CGFloat {
@@ -102,20 +100,19 @@ struct AppBarControlView: View {
 
   private var leadingBar: some View {
     HStack(spacing: metrics.titleSpacing) {
-      if node.controlID(forKey: "leading") == nil, impliesLeading, navigation.canPop {
-        impliedLeadingButton
-      }
-      if let leadingID = node.controlID(forKey: "leading") {
-        ControlView(id: leadingID, axis: .none)
-          .frame(width: metrics.leadingWidth, height: metrics.toolbarHeight)
+      leading
+
+      if hasTitle {
+        title
+          .lineLimit(1)
+          .frame(maxWidth: .infinity, alignment: .leading)
+          .padding(.leading, hasLeading ? 0 : metrics.titleSpacing)
+          .padding(.trailing, slots.actions == .none ? metrics.titleSpacing : 0)
+      } else {
+        Spacer(minLength: 0)
       }
 
-      title
-        .lineLimit(1)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.leading, hasLeading ? 0 : metrics.titleSpacing)
-
-      actions.padding(metrics.actionsPadding)
+      actions
     }
     .opacity(metrics.toolbarOpacity)
     .rufletTextStyle(RufletTextStyle(node: node, styleKey: "toolbar_text_style"))
@@ -123,41 +120,76 @@ struct AppBarControlView: View {
 
   private var centeredBar: some View {
     ZStack {
-      title.lineLimit(1)
+      title
+        .lineLimit(1)
+        .padding(.horizontal, centeredTitleInset)
       HStack(spacing: metrics.titleSpacing) {
-        if node.controlID(forKey: "leading") == nil, impliesLeading, navigation.canPop {
-          impliedLeadingButton
-        }
-        if let leadingID = node.controlID(forKey: "leading") {
-          ControlView(id: leadingID, axis: .none)
-            .frame(width: metrics.leadingWidth, height: metrics.toolbarHeight)
-        }
+        leading
         Spacer(minLength: 0)
-        actions.padding(metrics.actionsPadding)
+        actions
       }
     }
     .opacity(metrics.toolbarOpacity)
     .rufletTextStyle(RufletTextStyle(node: node, styleKey: "toolbar_text_style"))
   }
 
+  @ViewBuilder
   private var actions: some View {
-    HStack(spacing: 0) {
-      ForEach(node.controlIDs(forKey: "actions"), id: \.self) { actionID in
-        ControlView(id: actionID, axis: .none)
+    switch slots.actions {
+    case .explicit:
+      HStack(spacing: 0) {
+        ForEach(node.controlIDs(forKey: "actions"), id: \.self) { actionID in
+          ControlView(id: actionID, axis: .none)
+            .frame(maxHeight: metrics.toolbarHeight)
+        }
       }
+      .padding(metrics.actionsPadding)
+    case .endDrawer:
+      Button(action: scaffoldSlots.openEndDrawer) {
+        Image(systemName: "sidebar.right")
+          .font(.system(size: 20, weight: .medium))
+          .frame(width: 40, height: 40)
+          .contentShape(Rectangle())
+      }
+      .buttonStyle(.plain)
+      .accessibilityLabel("Open navigation menu")
+    case .none:
+      EmptyView()
     }
   }
 
-  private var impliedLeadingButton: some View {
-    Button(action: navigation.requestPop) {
-      Image(systemName: "chevron.backward")
+  @ViewBuilder
+  private var leading: some View {
+    switch slots.leading {
+    case .explicit:
+      if let leadingID = node.controlID(forKey: "leading") {
+        ControlView(id: leadingID, axis: .none)
+          .frame(width: metrics.leadingWidth, height: metrics.toolbarHeight)
+      }
+    case .drawer:
+      impliedLeadingButton(
+        systemName: "line.3.horizontal", label: "Open navigation menu",
+        action: scaffoldSlots.openDrawer)
+    case .back:
+      impliedLeadingButton(
+        systemName: "chevron.backward", label: "Back", action: navigation.requestPop)
+    case .none:
+      EmptyView()
+    }
+  }
+
+  private func impliedLeadingButton(
+    systemName: String, label: String, action: @escaping () -> Void
+  ) -> some View {
+    Button(action: action) {
+      Image(systemName: systemName)
         .font(.system(size: 20, weight: .semibold))
         .frame(width: 40, height: 40)
         .contentShape(Rectangle())
     }
     .frame(width: metrics.leadingWidth, height: metrics.toolbarHeight)
     .buttonStyle(.plain)
-    .accessibilityLabel("Back")
+    .accessibilityLabel(label)
   }
 
   private var metrics: ChromeDefaults.AppBarValues {
@@ -165,7 +197,27 @@ struct AppBarControlView: View {
   }
 
   private var hasLeading: Bool {
-    node.controlID(forKey: "leading") != nil || (impliesLeading && navigation.canPop)
+    slots.leading != .none
+  }
+
+  private var hasTitle: Bool {
+    node.controlID(forKey: "title") != nil || node.string("title") != nil
+  }
+
+  private var slots: ChromeDefaults.AppBarSlotValues {
+    ChromeDefaults.appBarSlots(
+      node, canPop: navigation.canPop,
+      hasDrawer: scaffoldSlots.hasDrawer, hasEndDrawer: scaffoldSlots.hasEndDrawer)
+  }
+
+  /// A centered native title stays clear of the fixed leading slot and the
+  /// action row. The count-based trailing estimate is only a guard rail; each
+  /// action retains its intrinsic SwiftUI layout inside that region.
+  private var centeredTitleInset: CGFloat {
+    let leading = hasLeading ? metrics.leadingWidth + metrics.titleSpacing : metrics.titleSpacing
+    let trailing = CGFloat(max(node.controlIDs(forKey: "actions").count, slots.actions == .endDrawer ? 1 : 0))
+      * 48 + metrics.titleSpacing
+    return max(leading, trailing)
   }
 
   @ViewBuilder
@@ -173,15 +225,13 @@ struct AppBarControlView: View {
     if let titleID = node.controlID(forKey: "title") {
       ControlView(id: titleID, axis: .none)
         .rufletTextStyle(RufletTextStyle(node: node, styleKey: "title_text_style"))
+        .modifier(AppBarHeaderSemanticsModifier(excluded: metrics.excludeHeaderSemantics))
     } else if let text = node.string("title") {
       Text(text)
         .font(.system(size: 22))
         .rufletTextStyle(RufletTextStyle(node: node, styleKey: "title_text_style"))
+        .modifier(AppBarHeaderSemanticsModifier(excluded: metrics.excludeHeaderSemantics))
     }
-  }
-
-  private var barSurface: Color {
-    MaterialPalette.color("surface", default: .clear)
   }
 }
 
@@ -196,26 +246,36 @@ struct BottomAppBarControlView: View {
       cornerRadii: metrics.cornerRadii,
       guestFrame: scaffold?.fabFrameInBottomBar,
       notch: ChromeDefaults.bottomAppBarNotch(node))
+    Group {
+      if metrics.clipBehavior.lowercased() == "none" {
+        content(shape: shape, metrics: metrics)
+      } else {
+        content(shape: shape, metrics: metrics)
+          .mask(shape.fill(style: FillStyle(eoFill: true)))
+      }
+    }
+    .modifier(ChromeClipModifier(behavior: metrics.clipBehavior))
+  }
+
+  private func content(
+    shape: BottomAppBarHostShape, metrics: ChromeDefaults.BottomAppBarValues
+  ) -> some View {
     HStack {
       if let contentID = node.controlID(forKey: "content") {
         ControlView(id: contentID, axis: .none)
       }
     }
-    .padding(
-      metrics.padding
-    )
+    .padding(metrics.padding)
     .frame(height: metrics.height)
     .frame(maxWidth: .infinity)
     .background(
       shape.fill(
         MaterialPalette.color(node.string("bgcolor") ?? "surfacecontainer", default: .clear),
-        style: FillStyle(eoFill: true)))
-    .mask(shape.fill(style: FillStyle(eoFill: true)))
-    .shadow(
-      color: AppleChromeAppearance.color(node.string("shadow_color"), fallback: .clear),
-      radius: metrics.elevation > 0 ? metrics.elevation : 0,
-      y: metrics.elevation > 0 ? metrics.elevation / 2 : 0)
-    .modifier(ChromeClipModifier(behavior: metrics.clipBehavior))
+        style: FillStyle(eoFill: true))
+        .shadow(
+          color: AppleChromeAppearance.color(node.string("shadow_color"), fallback: .clear),
+          radius: metrics.elevation > 0 ? metrics.elevation : 0,
+          y: metrics.elevation > 0 ? metrics.elevation / 2 : 0))
   }
 }
 
@@ -584,6 +644,14 @@ private struct ChromeRailGroupAlignmentLayout: Layout {
 
 /// Pinned Flet/Flutter semantic defaults consumed by native Apple chrome.
 enum ChromeDefaults {
+  enum AppBarLeadingSlot: Equatable { case none, explicit, drawer, back }
+  enum AppBarActionsSlot: Equatable { case none, explicit, endDrawer }
+
+  struct AppBarSlotValues: Equatable {
+    let leading: AppBarLeadingSlot
+    let actions: AppBarActionsSlot
+  }
+
   struct AppBarValues {
     let toolbarHeight: CGFloat
     let toolbarOpacity: Double
@@ -596,6 +664,7 @@ enum ChromeDefaults {
     let clipBehavior: String
     let excludeHeaderSemantics: Bool
     let forceMaterialTransparency: Bool
+    let primary: Bool
   }
 
   struct BottomAppBarValues {
@@ -613,6 +682,9 @@ enum ChromeDefaults {
     let kind: BottomAppBarNotchKind
     let inverted: Bool
     let margin: CGFloat
+    let subtractsGuest: Bool
+    let hostShape: RufletValue?
+    let guestShape: RufletValue?
   }
 
   enum NavigationLabelBehavior {
@@ -716,7 +788,44 @@ enum ChromeDefaults {
       scrolledUnderElevation: CGFloat(node.double("elevation_on_scroll") ?? 3),
       clipBehavior: node.string("clip_behavior") ?? "none",
       excludeHeaderSemantics: node.bool("exclude_header_semantics") ?? false,
-      forceMaterialTransparency: node.bool("force_material_transparency") ?? false)
+      forceMaterialTransparency: node.bool("force_material_transparency") ?? false,
+      primary: node.bool("secondary") != true)
+  }
+
+  /// Flutter resolves the implied drawer before route dismissal, and only
+  /// implies the end-drawer action when the explicit actions list is empty.
+  static func appBarSlots(
+    _ node: ControlNode, canPop: Bool, hasDrawer: Bool, hasEndDrawer: Bool
+  ) -> AppBarSlotValues {
+    let leading: AppBarLeadingSlot
+    if node.controlID(forKey: "leading") != nil {
+      leading = .explicit
+    } else if node.bool("automatically_imply_leading") != false, hasDrawer {
+      leading = .drawer
+    } else if node.bool("automatically_imply_leading") != false, canPop {
+      leading = .back
+    } else {
+      leading = .none
+    }
+
+    let actions: AppBarActionsSlot
+    if !node.controlIDs(forKey: "actions").isEmpty {
+      actions = .explicit
+    } else if hasEndDrawer {
+      actions = .endDrawer
+    } else {
+      actions = .none
+    }
+    return AppBarSlotValues(leading: leading, actions: actions)
+  }
+
+  /// An omitted M3 AppBar color changes from surface to surface-container
+  /// while content is scrolled beneath it. An explicit Flet color remains
+  /// stable, and transparent material paints no bar surface at all.
+  static func appBarBackgroundToken(_ node: ControlNode, scrolledUnder: Bool) -> String? {
+    if node.bool("force_material_transparency") == true { return nil }
+    if let explicit = node.props["bgcolor"]?.stringValue { return explicit }
+    return scrolledUnder ? "surfacecontainer" : "surface"
   }
 
   static func bottomAppBar(_ node: ControlNode) -> BottomAppBarValues {
@@ -741,10 +850,17 @@ enum ChromeDefaults {
     case "auto": .automatic
     default: .automatic
     }
+    let explicitAutomatic = shape?["_type"]?.stringValue?.lowercased() == "auto"
     return BottomAppBarNotchValues(
       kind: kind,
       inverted: shape?["inverted"]?.boolValue ?? false,
-      margin: CGFloat(node.double("notch_margin") ?? 4))
+      margin: CGFloat(node.double("notch_margin") ?? 4),
+      // Material 3's theme default is AutomaticNotchedShape(host) with no
+      // guest shape, so it deliberately does not cut a FAB notch. Flet's
+      // explicit `auto` form behaves the same until `guest` is supplied.
+      subtractsGuest: kind == .circular || (explicitAutomatic && shape?["guest"] != nil),
+      hostShape: explicitAutomatic ? shape?["host"] : nil,
+      guestShape: explicitAutomatic ? shape?["guest"] : nil)
   }
 
   static func navigationBar(_ node: ControlNode) -> NavigationBarValues {
@@ -850,17 +966,21 @@ private struct BottomAppBarHostShape: Shape {
   let notch: ChromeDefaults.BottomAppBarNotchValues
 
   func path(in rect: CGRect) -> Path {
-    var path = RufletRoundedRectangle(radii: cornerRadii).path(in: rect)
-    guard notch.kind != .none, let guestFrame else { return path }
+    var path: Path
+    if notch.kind == .automatic, let hostShape = notch.hostShape {
+      path = ChromeOutlinedShape(value: hostShape, defaultKind: .continuousRectangle).path(in: rect)
+    } else {
+      path = RufletRoundedRectangle(radii: cornerRadii).path(in: rect)
+    }
+    guard notch.subtractsGuest, let guestFrame else { return path }
     let cutout = guestFrame.insetBy(dx: -notch.margin, dy: -notch.margin)
     guard cutout.maxY > rect.minY, cutout.minY < rect.maxY else { return path }
 
     let local = cutout.offsetBy(dx: -rect.minX, dy: -rect.minY)
     if notch.kind == .automatic {
-      path.addRoundedRect(
-        in: local,
-        cornerSize: CGSize(width: min(local.width, local.height) / 2,
-                           height: min(local.width, local.height) / 2))
+      let guest = ChromeOutlinedShape(
+        value: notch.guestShape, defaultKind: .roundedRectangle)
+      path.addPath(guest.path(in: local))
     } else {
       let diameter = max(local.width, local.height)
       let circle = CGRect(

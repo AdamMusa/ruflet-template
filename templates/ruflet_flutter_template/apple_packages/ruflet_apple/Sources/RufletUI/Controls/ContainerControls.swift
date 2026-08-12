@@ -568,6 +568,7 @@ struct ViewControlView: View {
       scaffoldHost.reportFAB(frame: $0)
     }
     .environment(\.rufletScaffoldHost, scaffoldHost)
+    .environment(\.rufletScaffoldSlots, scaffoldSlots)
     .modifier(DrawerPresenter(node: node))
     .modifier(DialogPresenter(host: node))
     .rufletCommandHandler(node.id) { call, completion in
@@ -630,35 +631,41 @@ struct ViewControlView: View {
           })
         .modifier(
           FABScaffoldPlacement(
-            location: node.string("floating_action_button_location"),
+            location: node.props["floating_action_button_location"],
             bottomBarHeight: scaffoldHost.bottomBarFrame.height,
-            fabHeight: measuredFABHeight))
+            appBarHeight: appBarHeight,
+            fabSize: measuredFABSize))
     }
   }
 
   /// Flet's `FloatingActionButtonLocation`, reduced to the corner it names.
   private var fabAlignment: Alignment {
-    let location = normalizedFABLocation
-    if location.contains("top") {
-      if location.contains("center") { return .top }
-      if location.contains("start") || location.contains("left") { return .topLeading }
-      return .topTrailing
-    }
-    if location.contains("center") { return .bottom }
-    if location.contains("start") || location.contains("left") { return .bottomLeading }
-    return .bottomTrailing
+    RufletFABPlacement(node.props["floating_action_button_location"]).alignment
   }
 
-  private var normalizedFABLocation: String {
-    node.string("floating_action_button_location")?.lowercased()
-      .replacingOccurrences(of: "_", with: "") ?? "endfloat"
+  private var measuredFABSize: CGSize {
+    scaffoldHost.fabFrame.isNull ? CGSize(width: 56, height: 56) : scaffoldHost.fabFrame.size
   }
 
-  private var measuredFABHeight: CGFloat {
-    scaffoldHost.fabFrame.isNull ? 56 : scaffoldHost.fabFrame.height
+  private var appBarHeight: CGFloat {
+    guard let id = node.controlID(forKey: "appbar"), let appBar = store.node(id) else { return 0 }
+    return ChromeDefaults.appBar(appBar).toolbarHeight
   }
 
   private var scaffoldCoordinateSpace: String { "ruflet-scaffold-\(node.id)" }
+
+  private var scaffoldSlots: RufletScaffoldSlots {
+    RufletScaffoldSlots(
+      hasDrawer: node.controlID(forKey: "drawer") != nil,
+      hasEndDrawer: node.controlID(forKey: "end_drawer") != nil,
+      openDrawer: { setDrawerOpen(key: "drawer") },
+      openEndDrawer: { setDrawerOpen(key: "end_drawer") })
+  }
+
+  private func setDrawerOpen(key: String) {
+    guard let id = node.controlID(forKey: key) else { return }
+    events.setLocal(id, "_open", .bool(true))
+  }
 }
 
 /// Exact imperative command surface installed by Flet's `ViewControlState`.
@@ -699,25 +706,102 @@ private struct FABFramePreferenceKey: PreferenceKey {
 /// distinction for BottomAppBar is docked (the FAB centre sits on the bar's
 /// top edge), floating (a 16pt gap), and contained (centred inside the bar).
 private struct FABScaffoldPlacement: ViewModifier {
-  let location: String?
+  let location: RufletValue?
   let bottomBarHeight: CGFloat
-  let fabHeight: CGFloat
+  let appBarHeight: CGFloat
+  let fabSize: CGSize
 
   func body(content: Content) -> some View {
-    let value = location?.lowercased().replacingOccurrences(of: "_", with: "") ?? "endfloat"
-    let top = value.contains("top") ? CGFloat(16) : 0
-    let bottom: CGFloat
-    if value.contains("contained") {
-      bottom = max(0, (bottomBarHeight - fabHeight) / 2)
-    } else if value.contains("docked") {
-      bottom = max(0, bottomBarHeight - fabHeight / 2)
-    } else if value.contains("top") {
-      bottom = 0
-    } else {
-      bottom = bottomBarHeight + 16
-    }
+    let padding = RufletFABPlacement(location).padding(
+      bottomBarHeight: bottomBarHeight, appBarHeight: appBarHeight, fabSize: fabSize)
     return content
-      .padding(EdgeInsets(top: top, leading: 16, bottom: bottom, trailing: 16))
+      .padding(padding)
+  }
+}
+
+/// Source-derived placement names for the FAB slot shared by View and Pagelet.
+/// The rendering stays a native overlay; only the Scaffold geometry contract
+/// (start/center/end and top/float/docked/contained) is carried across.
+struct RufletFABPlacement: Equatable {
+  enum Horizontal: Equatable { case start, center, end }
+  enum Vertical: Equatable { case top, floating, docked, contained, custom }
+
+  let horizontal: Horizontal
+  let vertical: Vertical
+  let customOffset: CGPoint?
+  let mini: Bool
+
+  init(_ value: RufletValue?) {
+    if let point = Self.point(value) {
+      horizontal = .end
+      vertical = .custom
+      customOffset = point
+      mini = false
+      return
+    }
+    let raw = value?.stringValue?.lowercased()
+      .replacingOccurrences(of: "_", with: "") ?? "endfloat"
+    horizontal = raw.contains("center") ? .center : (raw.contains("start") ? .start : .end)
+    vertical = raw.contains("top") ? .top
+      : raw.contains("docked") ? .docked
+      : raw.contains("contained") ? .contained : .floating
+    customOffset = nil
+    mini = raw.hasPrefix("mini")
+  }
+
+  var alignment: Alignment {
+    switch (horizontal, vertical) {
+    case (.start, .top): return .topLeading
+    case (.center, .top): return .top
+    case (.end, .top): return .topTrailing
+    case (.start, _): return .bottomLeading
+    case (.center, _): return .bottom
+    case (.end, _): return .bottomTrailing
+    }
+  }
+
+  func padding(
+    bottomBarHeight: CGFloat, appBarHeight: CGFloat, fabSize: CGSize
+  ) -> EdgeInsets {
+    if let customOffset {
+      return EdgeInsets(
+        top: 0, leading: 0,
+        bottom: customOffset.y - fabSize.height,
+        trailing: customOffset.x - fabSize.width)
+    }
+    let horizontalInset: CGFloat = horizontal == .center ? 0 : (mini ? 12 : 16)
+    switch vertical {
+    case .top:
+      return EdgeInsets(
+        top: max(0, appBarHeight - fabSize.height / 2),
+        leading: horizontal == .start ? horizontalInset : 0,
+        bottom: 0, trailing: horizontal == .end ? horizontalInset : 0)
+    case .contained:
+      return EdgeInsets(
+        top: 0, leading: horizontal == .start ? horizontalInset : 0,
+        bottom: max(0, (bottomBarHeight - fabSize.height) / 2),
+        trailing: horizontal == .end ? horizontalInset : 0)
+    case .docked:
+      return EdgeInsets(
+        top: 0, leading: horizontal == .start ? horizontalInset : 0,
+        bottom: max(0, bottomBarHeight - fabSize.height / 2),
+        trailing: horizontal == .end ? horizontalInset : 0)
+    case .floating, .custom:
+      return EdgeInsets(
+        top: 0, leading: horizontal == .start ? horizontalInset : 0,
+        bottom: bottomBarHeight + (mini ? 12 : 16),
+        trailing: horizontal == .end ? horizontalInset : 0)
+    }
+  }
+
+  private static func point(_ value: RufletValue?) -> CGPoint? {
+    if let items = value?.arrayValue, items.count > 1 {
+      return CGPoint(x: items[0].doubleValue ?? 0, y: items[1].doubleValue ?? 0)
+    }
+    if let map = value?.mapValue {
+      return CGPoint(x: map["x"]?.doubleValue ?? 0, y: map["y"]?.doubleValue ?? 0)
+    }
+    return nil
   }
 }
 
@@ -1820,6 +1904,9 @@ private struct RotatedQuarterTurnLayout: Layout {
 /// `Pagelet` — a screen-in-a-screen with its own bars.
 struct PageletControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
+  @Environment(\.rufletEvents) private var events
+  @StateObject private var scaffoldHost = RufletScaffoldHostState()
 
   var body: some View {
     VStack(spacing: 0) {
@@ -1830,22 +1917,31 @@ struct PageletControlView: View {
         ControlView(id: contentID, axis: .vertical)
           .frame(maxWidth: .infinity, maxHeight: .infinity)
       }
-      if let barID = node.controlID(forKey: "navigation_bar")
-        ?? node.controlID(forKey: "bottom_appbar")
-      {
-        ControlView(id: barID, axis: .none)
+      if let navigationID = node.controlID(forKey: "navigation_bar") {
+        ControlView(id: navigationID, axis: .none)
+      } else if let bottomBarID = node.controlID(forKey: "bottom_appbar") {
+        ControlView(id: bottomBarID, axis: .none)
+          .background(
+            GeometryReader { proxy in
+              Color.clear.preference(
+                key: BottomBarFramePreferenceKey.self,
+                value: proxy.frame(in: .named(scaffoldCoordinateSpace)))
+            })
       }
     }
     .background(MaterialPalette.color(node.string("bgcolor")))
-    .overlay(alignment: fabAlignment) {
-      if let fabID = node.controlID(forKey: "floating_action_button") {
-        ControlView(id: fabID, axis: .none).padding(16)
-      }
+    .overlay(floatingActionButton, alignment: fabAlignment)
+    .coordinateSpace(name: scaffoldCoordinateSpace)
+    .onPreferenceChange(BottomBarFramePreferenceKey.self) {
+      scaffoldHost.reportBottomBar(frame: $0)
     }
-    // A pagelet carries the same three slots a page does; each is presented
-    // over the content rather than laid out beside it.
-    .overlay(alignment: .leading) { drawer(forKey: "drawer") }
-    .overlay(alignment: .trailing) { drawer(forKey: "end_drawer") }
+    .onPreferenceChange(FABFramePreferenceKey.self) {
+      scaffoldHost.reportFAB(frame: $0)
+    }
+    .environment(\.rufletScaffoldHost, scaffoldHost)
+    .environment(\.rufletScaffoldSlots, scaffoldSlots)
+    .modifier(DrawerPresenter(node: node))
+    // A Pagelet's persistent bottom sheet is distinct from its modal drawers.
     .overlay(alignment: .bottom) { drawer(forKey: "bottom_sheet") }
   }
 
@@ -1859,11 +1955,49 @@ struct PageletControlView: View {
   /// Flutter's FloatingActionButtonLocation names a corner and whether the
   /// button is docked into the bar below it.
   private var fabAlignment: Alignment {
-    let location = node.string("floating_action_button_location")?.lowercased() ?? ""
-    if location.contains("center") { return .bottom }
-    if location.contains("start") { return .bottomLeading }
-    if location.contains("top") { return .topTrailing }
-    return .bottomTrailing
+    RufletFABPlacement(node.props["floating_action_button_location"]).alignment
+  }
+
+  @ViewBuilder
+  private var floatingActionButton: some View {
+    if let fabID = node.controlID(forKey: "floating_action_button") {
+      ControlView(id: fabID, axis: .none)
+        .background(
+          GeometryReader { proxy in
+            Color.clear.preference(
+              key: FABFramePreferenceKey.self,
+              value: proxy.frame(in: .named(scaffoldCoordinateSpace)))
+          })
+        .modifier(FABScaffoldPlacement(
+          location: node.props["floating_action_button_location"],
+          bottomBarHeight: scaffoldHost.bottomBarFrame.height,
+          appBarHeight: appBarHeight,
+          fabSize: measuredFABSize))
+    }
+  }
+
+  private var measuredFABSize: CGSize {
+    scaffoldHost.fabFrame.isNull ? CGSize(width: 56, height: 56) : scaffoldHost.fabFrame.size
+  }
+
+  private var appBarHeight: CGFloat {
+    guard let id = node.controlID(forKey: "appbar"), let appBar = store.node(id) else { return 0 }
+    return ChromeDefaults.appBar(appBar).toolbarHeight
+  }
+
+  private var scaffoldCoordinateSpace: String { "ruflet-pagelet-scaffold-\(node.id)" }
+
+  private var scaffoldSlots: RufletScaffoldSlots {
+    RufletScaffoldSlots(
+      hasDrawer: node.controlID(forKey: "drawer") != nil,
+      hasEndDrawer: node.controlID(forKey: "end_drawer") != nil,
+      openDrawer: { setDrawerOpen(key: "drawer") },
+      openEndDrawer: { setDrawerOpen(key: "end_drawer") })
+  }
+
+  private func setDrawerOpen(key: String) {
+    guard let id = node.controlID(forKey: key) else { return }
+    events.setLocal(id, "_open", .bool(true))
   }
 }
 
