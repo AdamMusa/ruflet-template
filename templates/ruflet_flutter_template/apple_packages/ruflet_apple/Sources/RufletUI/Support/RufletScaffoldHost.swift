@@ -9,6 +9,7 @@ import SwiftUI
 /// navigator, just as it does in Flet's Scaffold.
 struct RufletNavigationContext {
   var canPop = false
+  var fullscreenDialog = false
   var requestPop: () -> Void = {}
   var confirmPop: (Bool) -> Void = { _ in }
 }

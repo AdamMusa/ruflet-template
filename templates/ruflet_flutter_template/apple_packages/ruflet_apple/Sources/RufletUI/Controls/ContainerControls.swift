@@ -259,6 +259,7 @@ struct PageControlView: View {
     }
     return RufletNavigationContext(
       canPop: true,
+      fullscreenDialog: view.bool("fullscreen_dialog") ?? false,
       requestPop: {
         popCoordinator.request(page: node, view: view, events: events)
       },
@@ -664,6 +665,9 @@ struct ViewControlView: View {
 
   private var appBarHeight: CGFloat {
     guard let id = node.controlID(forKey: "appbar"), let appBar = store.node(id) else { return 0 }
+    if appBar.type == "CupertinoAppBar" {
+      return RufletCupertinoAppBarConfiguration(node: appBar).renderedHeight
+    }
     return ChromeDefaults.appBar(appBar).toolbarHeight
   }
 
@@ -2014,6 +2018,9 @@ struct PageletControlView: View {
 
   private var appBarHeight: CGFloat {
     guard let id = node.controlID(forKey: "appbar"), let appBar = store.node(id) else { return 0 }
+    if appBar.type == "CupertinoAppBar" {
+      return RufletCupertinoAppBarConfiguration(node: appBar).renderedHeight
+    }
     return ChromeDefaults.appBar(appBar).toolbarHeight
   }
 

@@ -2688,55 +2688,109 @@ enum RufletCupertinoActivityIndicatorMetrics {
 /// `CupertinoAppBar` — the iOS title bar.
 struct CupertinoAppBarControlView: View {
   let node: ControlNode
+  @Environment(\.rufletNavigationContext) private var navigation
+  @Environment(\.rufletScaffoldHost) private var scaffold
+  @Environment(\.rufletHeroNamespace) private var heroNamespace
+  @Environment(\.rufletHeroProvidesGeometry) private var providesHeroGeometry
+  @Environment(\.displayScale) private var displayScale
+  @Namespace private var fallbackHeroNamespace
 
   private var configuration: RufletCupertinoAppBarConfiguration {
     RufletCupertinoAppBarConfiguration(node: node)
   }
 
   var body: some View {
-    Group {
+    let bar = Group {
       if configuration.large {
         VStack(alignment: .leading, spacing: 0) {
           chromeRow
-          title.font(.largeTitle.weight(.bold))
+          title
+            .font(.system(size: 34, weight: .bold))
+            .lineLimit(1)
+            .accessibilityAddTraits(.isHeader)
             .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.leading, configuration.padding?.leading
+              ?? RufletCupertinoAppBarDefaults.edgePadding)
+            .padding(.trailing, configuration.padding?.trailing
+              ?? RufletCupertinoAppBarDefaults.edgePadding)
+            .padding(.bottom, RufletCupertinoAppBarDefaults.largeTitleBottomPadding)
         }
       } else {
         ZStack {
           chromeRow
-          title.font(.headline)
+          title
+            .font(.system(size: 17, weight: .semibold))
+            .lineLimit(1)
+            .accessibilityAddTraits(.isHeader)
+            .padding(.horizontal, 56)
         }
       }
     }
-    .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets(
-      top: 0, leading: 12, bottom: 0, trailing: 12))
-    .frame(minHeight: configuration.height)
+    .padding(.top, configuration.padding?.top ?? 0)
+    .padding(.bottom, configuration.padding?.bottom ?? 0)
+    .frame(height: configuration.renderedHeight)
     .background(appBarBackground)
     .overlay(alignment: .bottom) { appBarBorder }
     .preferredColorScheme(preferredColorScheme)
+
+    if configuration.transitionBetweenRoutes {
+      bar.matchedGeometryEffect(
+        id: RufletCupertinoAppBarDefaults.heroID,
+        in: heroNamespace ?? fallbackHeroNamespace,
+        isSource: providesHeroGeometry)
+    } else {
+      bar
+    }
   }
 
   private var chromeRow: some View {
-    HStack(spacing: 8) {
+    HStack(spacing: 0) {
       if let leadingID = node.controlID(forKey: "leading") {
         ControlView(id: leadingID, axis: .none)
+          .padding(.leading, configuration.padding?.leading
+            ?? RufletCupertinoAppBarDefaults.edgePadding)
+      } else if configuration.automaticallyImplyLeading && navigation.canPop {
+        Button(action: navigation.requestPop) {
+          if navigation.fullscreenDialog {
+            Text("Cancel")
+          } else {
+            HStack(spacing: 0) {
+              Image(systemName: "chevron.backward")
+                .font(.system(size: 21, weight: .semibold))
+              if let label = configuration.backLabel {
+                Text(label).lineLimit(1)
+              }
+            }
+          }
+        }
+        .buttonStyle(.plain)
+        .foregroundColor(.accentColor)
+        .frame(minWidth: RufletCupertinoAppBarDefaults.backButtonTapWidth,
+               minHeight: RufletCupertinoAppBarDefaults.persistentHeight,
+               alignment: .leading)
+        .padding(.leading, 8)
+        .accessibilityLabel(navigation.fullscreenDialog ? "Cancel" : "Back")
       }
       Spacer(minLength: 0)
-      HStack(spacing: 8) {
+      HStack(spacing: 0) {
         if let trailingID = node.controlID(forKey: "trailing") {
           ControlView(id: trailingID, axis: .none)
         } else {
           ForEach(actionIDs, id: \.self) { ControlView(id: $0, axis: .none) }
         }
       }
+      .padding(.trailing, hasTrailing
+        ? (configuration.padding?.trailing ?? RufletCupertinoAppBarDefaults.edgePadding) : 0)
     }
-    .frame(minHeight: 44)
+    .frame(height: RufletCupertinoAppBarDefaults.persistentHeight)
   }
 
   @ViewBuilder
   private var title: some View {
-    if let titleID = node.controlID(forKey: "title") ?? node.controlID(forKey: "middle") {
+    if let titleID = node.controlID(forKey: "title") {
       ControlView(id: titleID, axis: .none)
+    } else if let scalarTitle = node.string("title") {
+      Text(scalarTitle)
     }
   }
 
@@ -2744,26 +2798,41 @@ struct CupertinoAppBarControlView: View {
     node.controlIDs(forKey: "actions")
   }
 
+  private var hasTrailing: Bool {
+    node.controlID(forKey: "trailing") != nil || !actionIDs.isEmpty
+  }
+
   @ViewBuilder
   private var appBarBackground: some View {
-    if let color = MaterialPalette.color(node.string("bgcolor")) {
-      color
-    } else if configuration.backgroundFilterBlur {
-      Rectangle().fill(.ultraThinMaterial)
-    } else {
+    if configuration.automaticBackgroundVisibility && scaffold?.scrolledUnder != true {
       Color.clear
+    } else if configuration.backgroundFilterBlur {
+      ZStack {
+        Rectangle().fill(.ultraThinMaterial)
+        MaterialPalette.color(node.string("bgcolor"), default: defaultBarBackground)
+      }
+    } else {
+      MaterialPalette.color(node.string("bgcolor"), default: defaultBarBackground)
     }
   }
 
   @ViewBuilder
   private var appBarBorder: some View {
-    if let border = node.map("border") {
+    if let border = configuration.bottomBorder {
       Rectangle()
-        .fill(MaterialPalette.color(border["color"]?.stringValue, default: .secondary.opacity(0.25)))
-        .frame(height: CGFloat(border["width"]?.doubleValue ?? 0))
-    } else {
-      Divider()
+        .fill(MaterialPalette.color(border.colorToken, default: .black))
+        .frame(height: border.width == 0 ? 1 / max(displayScale, 1) : border.width)
     }
+  }
+
+  private var defaultBarBackground: Color {
+    #if canImport(UIKit)
+      return Color(uiColor: .systemBackground).opacity(240 / 255)
+    #elseif canImport(AppKit)
+      return Color(nsColor: .windowBackgroundColor).opacity(240 / 255)
+    #else
+      return Color.white.opacity(240 / 255)
+    #endif
   }
 
   private var preferredColorScheme: ColorScheme? {
@@ -2783,6 +2852,8 @@ struct RufletCupertinoAppBarConfiguration {
   let automaticBackgroundVisibility: Bool
   let backgroundFilterBlur: Bool
   let previousPageTitle: String?
+  let padding: EdgeInsets?
+  let bottomBorder: RufletCupertinoAppBarBorder?
 
   init(node: ControlNode) {
     large = node.bool("large") ?? false
@@ -2792,9 +2863,45 @@ struct RufletCupertinoAppBarConfiguration {
     automaticBackgroundVisibility = node.bool("automatic_background_visibility") ?? true
     backgroundFilterBlur = node.bool("background_filter_blur") ?? true
     previousPageTitle = node.string("previous_page_title")
+    padding = ControlProps.edgeInsets(node.props["padding"])
+    bottomBorder = RufletCupertinoAppBarBorder(node.props["border"])
   }
 
-  var height: CGFloat { large ? 88 : 44 }
+  /// Flet's wrapper always reports a 44-point preferred height, while the
+  /// large constructor lays out Flutter's additional 52-point title region.
+  var preferredHeight: CGFloat { RufletCupertinoAppBarDefaults.persistentHeight }
+  var renderedHeight: CGFloat {
+    RufletCupertinoAppBarDefaults.persistentHeight
+      + (large ? RufletCupertinoAppBarDefaults.largeTitleExtension : 0)
+      + (padding?.top ?? 0) + (padding?.bottom ?? 0)
+  }
+
+  var backLabel: String? {
+    guard let previousPageTitle else { return nil }
+    return previousPageTitle.count > 12 ? "Back" : previousPageTitle
+  }
+}
+
+struct RufletCupertinoAppBarBorder: Equatable {
+  let colorToken: String?
+  let width: CGFloat
+
+  init?(_ value: RufletValue?) {
+    guard let map = value?.mapValue, let bottom = map["bottom"]?.mapValue else { return nil }
+    let style = bottom["style"]?.stringValue?.lowercased() ?? "solid"
+    guard style != "none" else { return nil }
+    colorToken = bottom["color"]?.stringValue
+    width = max(0, CGFloat(bottom["width"]?.doubleValue ?? 1))
+  }
+}
+
+enum RufletCupertinoAppBarDefaults {
+  static let persistentHeight: CGFloat = 44
+  static let largeTitleExtension: CGFloat = 52
+  static let edgePadding: CGFloat = 16
+  static let largeTitleBottomPadding: CGFloat = 8
+  static let backButtonTapWidth: CGFloat = 50
+  static let heroID = "ruflet-cupertino-navigation-bar"
 }
 
 /// Flutter Cupertino constructor constants used by the presentation family.

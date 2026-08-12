@@ -63,7 +63,10 @@ final class CupertinoControlParityTests: XCTestCase {
     XCTAssertTrue(configuration.automaticBackgroundVisibility)
     XCTAssertTrue(configuration.backgroundFilterBlur)
     XCTAssertNil(configuration.previousPageTitle)
-    XCTAssertEqual(configuration.height, 44)
+    XCTAssertEqual(configuration.preferredHeight, 44)
+    XCTAssertEqual(configuration.renderedHeight, 44)
+    XCTAssertNil(configuration.padding)
+    XCTAssertNil(configuration.bottomBorder)
   }
 
   func testLargeAppBarAndExplicitNavigationPropertiesArePreserved() {
@@ -87,7 +90,53 @@ final class CupertinoControlParityTests: XCTestCase {
     XCTAssertFalse(configuration.automaticBackgroundVisibility)
     XCTAssertFalse(configuration.backgroundFilterBlur)
     XCTAssertEqual(configuration.previousPageTitle, "Gallery")
-    XCTAssertEqual(configuration.height, 88)
+    XCTAssertEqual(configuration.preferredHeight, 44)
+    XCTAssertEqual(configuration.renderedHeight, 96)
+    XCTAssertEqual(configuration.backLabel, "Gallery")
+  }
+
+  func testAppBarUsesExactCupertinoGeometryPaddingAndBackLabelRules() {
+    XCTAssertEqual(RufletCupertinoAppBarDefaults.persistentHeight, 44)
+    XCTAssertEqual(RufletCupertinoAppBarDefaults.largeTitleExtension, 52)
+    XCTAssertEqual(RufletCupertinoAppBarDefaults.edgePadding, 16)
+    XCTAssertEqual(RufletCupertinoAppBarDefaults.largeTitleBottomPadding, 8)
+    XCTAssertEqual(RufletCupertinoAppBarDefaults.backButtonTapWidth, 50)
+
+    let configuration = RufletCupertinoAppBarConfiguration(
+      node: ControlNode(
+        id: 1, type: "CupertinoAppBar",
+        props: [
+          "large": .bool(true),
+          "previous_page_title": .string("A very long route title"),
+          "padding": .map([
+            "left": .double(3), "top": .double(2),
+            "right": .double(5), "bottom": .double(4),
+          ]),
+          "border": .map([
+            "bottom": .map([
+              "color": .string("red"), "width": .double(0),
+            ])
+          ]),
+        ]))
+
+    XCTAssertEqual(configuration.renderedHeight, 102)
+    XCTAssertEqual(configuration.padding?.leading, 3)
+    XCTAssertEqual(configuration.padding?.top, 2)
+    XCTAssertEqual(configuration.padding?.trailing, 5)
+    XCTAssertEqual(configuration.padding?.bottom, 4)
+    XCTAssertEqual(configuration.backLabel, "Back")
+    XCTAssertEqual(configuration.bottomBorder?.colorToken, "red")
+    XCTAssertEqual(configuration.bottomBorder?.width, 0)
+  }
+
+  func testAppBarBorderOmissionAndNoneDifferFromExplicitHairline() {
+    XCTAssertNil(RufletCupertinoAppBarBorder(nil))
+    XCTAssertNil(RufletCupertinoAppBarBorder(.map([
+      "bottom": .map(["style": .string("none"), "width": .double(4)])
+    ])))
+    XCTAssertEqual(RufletCupertinoAppBarBorder(.map([
+      "bottom": .map(["color": .string("blue")])
+    ]))?.width, 1)
   }
 
   func testTimerPickerDefaultsToHourMinuteSecondColumns() {
