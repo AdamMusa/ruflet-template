@@ -385,6 +385,7 @@ enum RufletTextSelection {
     let placeholder: String
     let secure: Bool
     var nativeChrome = false
+    var searchAppearance = false
     var traits = RufletTextInputTraits()
     let onTap: () -> Void
     let onTapOutside: () -> Void
@@ -407,6 +408,7 @@ enum RufletTextSelection {
       view.delegate = context.coordinator
       view.placeholder = placeholder
       view.borderStyle = nativeChrome ? .roundedRect : .none
+      configureSearchAppearance(view)
       view.isSecureTextEntry = secure && !masksManually
       view.addTarget(context.coordinator, action: #selector(Coordinator.changed(_:)), for: .editingChanged)
       view.addTarget(context.coordinator, action: #selector(Coordinator.began(_:)), for: .editingDidBegin)
@@ -423,6 +425,7 @@ enum RufletTextSelection {
       if view.text != shown { view.text = shown }
       view.placeholder = placeholder
       view.borderStyle = nativeChrome ? .roundedRect : .none
+      configureSearchAppearance(view)
       view.isSecureTextEntry = secure && !masksManually
       view.traits = traits
       apply(traits, to: view)
@@ -433,6 +436,22 @@ enum RufletTextSelection {
         view.resignFirstResponder()
       }
       context.coordinator.apply(selection, to: view)
+    }
+
+    private func configureSearchAppearance(_ view: UITextField) {
+      guard searchAppearance else {
+        view.leftView = nil
+        view.leftViewMode = .never
+        view.clearButtonMode = .never
+        return
+      }
+      let icon = UIImageView(image: UIImage(systemName: "magnifyingglass"))
+      icon.tintColor = .secondaryLabel
+      icon.contentMode = .center
+      icon.frame = CGRect(x: 0, y: 0, width: 28, height: 20)
+      view.leftView = icon
+      view.leftViewMode = .always
+      view.clearButtonMode = .whileEditing
     }
 
     private func apply(_ traits: RufletTextInputTraits, to view: UITextField) {
@@ -1003,6 +1022,7 @@ enum RufletTextSelection {
     let placeholder: String
     let secure: Bool
     var nativeChrome = false
+    var searchAppearance = false
     var traits = RufletTextInputTraits()
     let onTap: () -> Void
     let onTapOutside: () -> Void
@@ -1011,14 +1031,16 @@ enum RufletTextSelection {
     func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
 
     func makeNSView(context: Context) -> NSTextField {
-      let field: NSTextField = secure ? NSSecureTextField() : NSTextField()
+      let field: NSTextField = secure
+        ? NSSecureTextField()
+        : (searchAppearance ? NSSearchField() : NSTextField())
       if secure {
         let cell = RufletSecureTextFieldCell(textCell: "")
         cell.traits = traits
         cell.isEditable = true
         cell.isSelectable = true
         field.cell = cell
-      } else {
+      } else if !searchAppearance {
         let cell = RufletTextFieldCell(textCell: "")
         cell.traits = traits
         cell.isEditable = true

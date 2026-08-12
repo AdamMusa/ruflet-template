@@ -1460,26 +1460,36 @@ private struct PickerValidation: ViewModifier {
 struct SearchBarControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
-  @FocusState private var focused: Bool
   @State private var nativeFocused = false
   @State private var viewOpen = false
   @State private var selection = NSRange(location: 0, length: 0)
+  @State private var lastFocusValue: String?
+  @State private var lastBlurValue: String?
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 0) {
-      bar
-      // Flet's SearchView is the sheet the bar opens onto: its own header,
-      // padding and surface, with the suggestion controls beneath a divider.
-      if viewOpen, !node.controlIDs(forKey: "controls").isEmpty {
-        Divider().background(MaterialPalette.color(node.string("divider_color")))
-        suggestions
+    Group {
+      if node.bool("full_screen") == true {
+        #if os(macOS)
+          bar.sheet(isPresented: $viewOpen) { suggestions }
+        #else
+          bar.fullScreenCover(isPresented: $viewOpen) { suggestions }
+        #endif
+      } else {
+        bar.popover(isPresented: $viewOpen, attachmentAnchor: .rect(.bounds)) {
+          suggestions
+        }
       }
     }
     .frame(maxWidth: node.bool("full_screen") == true ? .infinity : nil)
+    .onAppear {
+      nativeFocused = node.bool("autofocus") == true
+      consumeFocusProperties()
+    }
+    .onChange(of: node.string("focus")) { _ in consumeFocusProperties() }
+    .onChange(of: node.string("blur")) { _ in consumeFocusProperties() }
     .rufletCommandHandler(node.id) { call, completion in
       switch call.name {
       case "focus":
-        focused = true
         nativeFocused = true
         completion(.success(.null))
       case "open_view":
@@ -1505,99 +1515,85 @@ struct SearchBarControlView: View {
   /// letting it fill, and `view_header_height` fixes the header row.
   private var suggestions: some View {
     VStack(alignment: .leading, spacing: 0) {
-      if let header = node.string("view_hint_text") {
-        Text(header)
-          .rufletTextStyle(RufletTextStyle(node: node, styleKey: "view_header_text_style"))
-          .frame(height: node.double("view_header_height").map { CGFloat($0) })
-          .padding(ControlProps.edgeInsets(node.props["view_bar_padding"]) ?? EdgeInsets())
+      HStack {
+        if let leading = node.controlID(forKey: "view_leading") {
+          ControlView(id: leading, axis: .none)
+        }
+        #if canImport(UIKit) || canImport(AppKit)
+          RufletNativeTextInput(
+            text: searchValue,
+            focused: $nativeFocused,
+            selection: $selection,
+            placeholder: node.string("view_hint_text") ?? "",
+            secure: false,
+            nativeChrome: true,
+            searchAppearance: node.controlID(forKey: "view_leading") == nil,
+            traits: viewTraits,
+            onTap: {},
+            onTapOutside: {},
+            onSubmit: { submit($0) })
+        #else
+          TextField(node.string("view_hint_text") ?? "", text: searchValue)
+        #endif
+        let trailing = node.controlIDs(forKey: "view_trailing")
+        if !trailing.isEmpty { ControlList(ids: trailing, axis: .horizontal) }
+      }
+      .frame(height: node.double("view_header_height").map { CGFloat($0) })
+      .padding(ControlProps.edgeInsets(node.props["view_bar_padding"]) ?? EdgeInsets())
+      if node.props["divider_color"] != nil {
+        Divider().background(MaterialPalette.color(node.string("divider_color")))
+      } else {
+        Divider()
       }
       ControlList(ids: node.controlIDs(forKey: "controls"), axis: .vertical)
     }
     .padding(ControlProps.edgeInsets(node.props["view_padding"]) ?? EdgeInsets())
     .frame(maxWidth: node.bool("shrink_wrap") == true ? nil : .infinity, alignment: .leading)
     .modifier(SlotSizeConstraints(value: node.props["view_size_constraints"]))
-    .background(
-      RoundedRectangle(cornerRadius: shapeRadius(node.props["view_shape"]))
-        .fill(MaterialPalette.color(node.string("view_bgcolor"), default: .clear)))
-    .overlay(
-      RoundedRectangle(cornerRadius: shapeRadius(node.props["view_shape"]))
-        .strokeBorder(
-          MaterialPalette.color(node.map("view_side")?["color"]?.stringValue, default: .clear),
-          lineWidth: CGFloat(node.map("view_side")?["width"]?.doubleValue ?? 0)))
-    .shadow(radius: CGFloat(node.double("view_elevation") ?? 0))
-  }
-
-  private func shapeRadius(_ value: RufletValue?) -> CGFloat {
-    ControlProps.cornerRadius(value?.mapValue?["radius"]) ?? 0
+    .modifier(ExplicitSearchSurface(node: node, prefix: "view"))
   }
 
   private var bar: some View {
-    HStack(spacing: 8) {
+    HStack {
       if let leading = node.controlID(forKey: "bar_leading") {
         ControlView(id: leading, axis: .none)
-      } else if let viewLeading = node.controlID(forKey: "view_leading") {
-        ControlView(id: viewLeading, axis: .none)
-      } else {
-        Image(systemName: "magnifyingglass").foregroundColor(.secondary)
       }
       #if canImport(UIKit) || canImport(AppKit)
         RufletNativeTextInput(
-          text: searchValue,
-          focused: $nativeFocused,
-          selection: $selection,
-          placeholder: node.string("bar_hint_text") ?? node.string("view_hint_text") ?? "",
+            text: searchValue,
+            focused: $nativeFocused,
+            selection: $selection,
+            placeholder: hasExplicitBarHintStyle ? "" : (node.string("bar_hint_text") ?? ""),
           secure: false,
+          nativeChrome: RufletSearchBarDefaults.usesNativeChrome(node),
+          searchAppearance: node.controlID(forKey: "bar_leading") == nil,
           traits: barTraits,
-          onTap: { events.fire(node, "tap") },
+          onTap: {
+            events.fire(node, "tap")
+            viewOpen = true
+          },
           onTapOutside: { events.fire(node, "tap_outside_bar") },
-          onSubmit: {
-            let value = RufletSearchBarDefaults.capitalized(
-              $0, mode: node.string("capitalization"))
-            synchronize(value)
-            events.fire(node, "submit", data: .string(value))
-          })
+          onSubmit: { submit($0) })
           .modifier(SearchBarHint(node: node, showing: (node.string("value") ?? "").isEmpty))
       #else
         TextField(
           node.string("bar_hint_text") ?? node.string("view_hint_text") ?? "",
           text: searchValue)
         .textFieldStyle(.plain)
-        .focused($focused)
         .onSubmit { events.fire(node, "submit", data: .string(node.string("value") ?? "")) }
       #endif
 
-      let trailing = node.controlIDs(forKey: "bar_trailing").isEmpty
-        ? node.controlIDs(forKey: "view_trailing")
-        : node.controlIDs(forKey: "bar_trailing")
+      let trailing = node.controlIDs(forKey: "bar_trailing")
       if !trailing.isEmpty {
         ControlList(ids: trailing, axis: .horizontal)
       }
     }
-    .padding(ControlProps.edgeInsets(node.props["bar_padding"])
-      ?? EdgeInsets(top: 8, leading: 10, bottom: 8, trailing: 10))
+    .padding(ControlProps.edgeInsets(node.props["bar_padding"]) ?? EdgeInsets())
     // `bar_scroll_padding` is the inset used when scrolling the page to keep
     // the caret visible. It is not layout padding around the search bar.
     .modifier(SlotSizeConstraints(value: node.props["bar_size_constraints"]))
-    .background(
-      RoundedRectangle(cornerRadius: barRadius)
-        .fill(MaterialPalette.color(node.string("bar_bgcolor"), default: .gray.opacity(0.14))))
-    .overlay(
-      RoundedRectangle(cornerRadius: barRadius)
-        .strokeBorder(
-          MaterialPalette.color(
-            node.map("bar_border_side")?["color"]?.stringValue, default: .clear),
-          lineWidth: CGFloat(node.map("bar_border_side")?["width"]?.doubleValue ?? 0)))
-    .shadow(
-      color: MaterialPalette.color(node.string("bar_shadow_color"), default: .black.opacity(0.2)),
-      radius: CGFloat(node.double("bar_elevation") ?? 0))
-    .onAppear { nativeFocused = node.bool("autofocus") == true }
+    .modifier(ExplicitSearchSurface(node: node, prefix: "bar"))
     .onChange(of: nativeFocused) { events.fire(node, $0 ? "focus" : "blur") }
-  }
-
-  /// `bar_shape` is an OutlinedBorder; a search bar is a capsule by default,
-  /// so an absent radius takes half the bar's height.
-  private var barRadius: CGFloat {
-    ControlProps.cornerRadius(node.map("bar_shape")?["radius"]) ?? 22
   }
 
   /// The bar's own text styling, plus the scroll padding Flet names for it.
@@ -1613,15 +1609,26 @@ struct SearchBarControlView: View {
     return traits
   }
 
+  private var viewTraits: RufletTextInputTraits {
+    var traits = barTraits
+    let style = RufletTextStyle(node: node, styleKey: "view_header_text_style")
+    if style.color != nil { traits.textColor = style.color }
+    if style.size != nil { traits.fontSize = style.size }
+    return traits
+  }
+
   private var searchValue: Binding<String> {
     Binding(
       get: { node.string("value") ?? "" },
       set: {
         let value = RufletSearchBarDefaults.capitalized(
           $0, mode: node.string("capitalization"))
-        synchronize(value)
-        events.fire(node, "change", data: .string(value))
+        RufletSearchBarEvents.change(value, on: node, to: events)
       })
+  }
+
+  private var hasExplicitBarHintStyle: Bool {
+    node.map("bar_hint_text_style") != nil
   }
 
   /// SearchController updates its backing property even when Ruby did not
@@ -1632,6 +1639,76 @@ struct SearchBarControlView: View {
     events.setLocal(node.id, "value", .string(transformed))
     events.update(node.id, ["value": .string(transformed)])
   }
+
+  private func submit(_ value: String) {
+    let transformed = RufletSearchBarDefaults.capitalized(
+      value, mode: node.string("capitalization"))
+    synchronize(transformed)
+    events.fire(node, "submit", data: .string(transformed))
+  }
+
+  private func consumeFocusProperties() {
+    let focus = node.string("focus")
+    if let focus, focus != lastFocusValue {
+      lastFocusValue = focus
+      nativeFocused = true
+    }
+    let blur = node.string("blur")
+    if let blur, blur != lastBlurValue {
+      lastBlurValue = blur
+      nativeFocused = false
+    }
+  }
+}
+
+/// Apple supplies the ordinary search-field surface. Ruflet only wraps it
+/// when the DSL explicitly sets SearchBar/SearchView decoration properties.
+private struct ExplicitSearchSurface: ViewModifier {
+  let node: ControlNode
+  let prefix: String
+
+  func body(content: Content) -> some View {
+    guard hasExplicitChrome else { return AnyView(content) }
+    let shapeKey = prefix == "bar" ? "bar_shape" : "view_shape"
+    let sideKey = prefix == "bar" ? "bar_border_side" : "view_side"
+    let radius = ControlProps.cornerRadius(node.map(shapeKey)?["radius"]) ?? 0
+    let side = node.map(sideKey)
+    return AnyView(
+      content
+        .background(
+          RoundedRectangle(cornerRadius: radius)
+            .fill(MaterialPalette.color(node.string("\(prefix)_bgcolor"), default: .clear)))
+        .overlay(
+          RoundedRectangle(cornerRadius: radius)
+            .strokeBorder(
+              MaterialPalette.color(side?["color"]?.stringValue, default: .clear),
+              lineWidth: CGFloat(side?["width"]?.doubleValue ?? 0)))
+        .modifier(ExplicitSearchShadow(node: node, prefix: prefix)))
+  }
+
+  private var hasExplicitChrome: Bool {
+    let shapeKey = prefix == "bar" ? "bar_shape" : "view_shape"
+    let sideKey = prefix == "bar" ? "bar_border_side" : "view_side"
+    return node.props[shapeKey] != nil || node.props[sideKey] != nil
+      || node.props["\(prefix)_bgcolor"] != nil
+      || node.props["\(prefix)_shadow_color"] != nil
+      || node.props["\(prefix)_elevation"] != nil
+  }
+}
+
+private struct ExplicitSearchShadow: ViewModifier {
+  let node: ControlNode
+  let prefix: String
+
+  func body(content: Content) -> some View {
+    guard let elevation = node.double("\(prefix)_elevation") else {
+      return AnyView(content)
+    }
+    if let color = MaterialPalette.color(node.string("\(prefix)_shadow_color")) {
+      return AnyView(content.shadow(color: color, radius: CGFloat(elevation)))
+    }
+    return AnyView(content.shadow(radius: CGFloat(elevation)))
+  }
 }
 
 /// Source-derived SearchBar controller behavior from Flet 0.80.5.
@@ -1640,6 +1717,11 @@ struct SearchBarControlView: View {
 /// capitalization mode before synchronizing `value`, and SearchBar's
 /// `scrollPadding` constructor keeps twenty logical pixels clear by default.
 enum RufletSearchBarDefaults {
+  static func usesNativeChrome(_ node: ControlNode) -> Bool {
+    node.props["bar_shape"] == nil && node.props["bar_bgcolor"] == nil
+      && node.props["bar_border_side"] == nil
+  }
+
   static func scrollPadding(_ node: ControlNode) -> EdgeInsets {
     ControlProps.edgeInsets(node.props["bar_scroll_padding"])
       ?? EdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 20)
@@ -1670,6 +1752,15 @@ enum RufletSearchBarDefaults {
   }
 }
 
+enum RufletSearchBarEvents {
+  static func change(_ value: String, on node: ControlNode, to events: RufletEventSink) {
+    let wire = RufletValue.string(value)
+    events.setLocal(node.id, "value", wire)
+    events.update(node.id, ["value": wire])
+    events.fire(node, "change", data: wire)
+  }
+}
+
 /// `bar_hint_text_style` and `view_hint_text_style` style the placeholder,
 /// which neither platform field does directly.
 private struct SearchBarHint: ViewModifier {
@@ -1681,7 +1772,7 @@ private struct SearchBarHint: ViewModifier {
     else { return AnyView(content) }
     let key = node.map("bar_hint_text_style") != nil
       ? "bar_hint_text_style" : "view_hint_text_style"
-    let text = node.string("bar_hint_text") ?? node.string("view_hint_text") ?? ""
+    let text = node.string("bar_hint_text") ?? ""
     return AnyView(
       content.overlay(alignment: .leading) {
         Text(text)
@@ -1704,8 +1795,39 @@ struct DropdownControlView: View {
   var body: some View {
     let options = optionNodes
 
-    HStack(spacing: 8) {
-      RufletFormFieldSlot(node: node, key: "leading_icon")
+    fieldContent(options)
+    .padding(contentPadding)
+    .background(RoundedRectangle(cornerRadius: fieldRadius).fill(fieldBackground))
+    .overlay(borderStroke)
+    // DropdownMenu.width sizes the field. `menu_width` belongs only to the
+    // popup surface and must never resize the field itself.
+    .frame(width: DropdownMenuDefaults.fieldWidth(node))
+    .modifier(RufletFormFieldDecoration(node: node))
+    .disabled(node.bool("disabled") == true)
+    .popover(isPresented: $menuPresented, attachmentAnchor: .rect(.bounds)) {
+      dropdownPopup(options)
+    }
+    .onAppear {
+      focused = node.bool("autofocus") == true && isEditable
+      synchronizeSelectionFromWire(initial: true)
+    }
+    .onChange(of: node.string("value")) { _ in synchronizeSelectionFromWire(initial: false) }
+    .onChange(of: optionSignature) { _ in synchronizeSelectionFromWire(initial: false) }
+    .onChange(of: focused) { events.fire(node, $0 ? "focus" : "blur") }
+    .rufletCommandHandler(node.id) { call, completion in
+      guard call.name == "focus" else {
+        completion(.failure(rufletUnsupported(node.type, call))); return
+      }
+      if isEditable { focused = true }
+      completion(.success(.null))
+    }
+  }
+
+  @ViewBuilder
+  private func fieldContent(_ options: [ControlNode]) -> some View {
+    if isEditable {
+      HStack {
+        RufletFormFieldSlot(node: node, key: "leading_icon")
       #if canImport(UIKit) || canImport(AppKit)
         RufletNativeTextInput(
           text: dropdownText,
@@ -1713,6 +1835,7 @@ struct DropdownControlView: View {
           selection: $selection,
           placeholder: node.string("hint_text") ?? "",
           secure: false,
+          nativeChrome: DropdownMenuDefaults.usesNativeChrome(node),
           traits: dropdownTraits,
           onTap: {
             // DropdownMenu opens from its field even when it is editable; the
@@ -1724,42 +1847,35 @@ struct DropdownControlView: View {
       #else
         TextField(node.string("hint_text") ?? "", text: dropdownText)
       #endif
-      RufletFormFieldSlot(node: node, key: "selected_suffix", styleKey: "text_style")
-      RufletFormFieldSlot(node: node, key: "selected_trailing_icon")
-      RufletFormFieldSlot(node: node, key: "helper_text", styleKey: "helper_style")
-      Button {
-        menuPresented.toggle()
+        Button {
+          menuPresented.toggle()
+        } label: {
+          trailingIcon
+        }
+        .buttonStyle(.plain)
+      }
+    } else {
+      Menu {
+        ForEach(options, id: \.id) { option in
+          Button {
+            select(option)
+          } label: {
+            optionLabel(option)
+          }
+          .disabled(option.bool("disabled") == true)
+          .modifier(MaterialOptionButtonStyle(value: option.props["style"]))
+        }
       } label: {
-        trailingIcon
+        HStack {
+          RufletFormFieldSlot(node: node, key: "leading_icon")
+          Text(selectedText)
+          if node.controlID(forKey: "trailing_icon") != nil
+            || node.controlID(forKey: "selected_trailing_icon") != nil
+          {
+            trailingIcon
+          }
+        }
       }
-      .buttonStyle(.plain)
-      .disabled(node.bool("disabled") ?? false)
-    }
-    .padding(contentPadding)
-    .padding(ControlProps.edgeInsets(node.props["expanded_insets"]) ?? EdgeInsets())
-    .background(RoundedRectangle(cornerRadius: fieldRadius).fill(fieldBackground))
-    .overlay(borderStroke)
-    // DropdownMenu.width sizes the field. `menu_width` belongs only to the
-    // popup surface and must never resize the field itself.
-    .frame(width: DropdownMenuDefaults.fieldWidth(node))
-    .shadow(radius: CGFloat(node.double("elevation") ?? 0))
-    .modifier(RufletFormFieldDecoration(node: node))
-    .popover(isPresented: $menuPresented, attachmentAnchor: .rect(.bounds)) {
-      dropdownPopup(options)
-    }
-    .onAppear {
-      focused = node.bool("autofocus") == true
-      if node.string("text") == nil, let value = node.string("value") {
-        events.setLocal(node.id, "text", .string(label(for: value)))
-      }
-    }
-    .onChange(of: focused) { events.fire(node, $0 ? "focus" : "blur") }
-    .rufletCommandHandler(node.id) { call, completion in
-      guard call.name == "focus" else {
-        completion(.failure(rufletUnsupported(node.type, call))); return
-      }
-      focused = true
-      completion(.success(.null))
     }
   }
 
@@ -1786,8 +1902,6 @@ struct DropdownControlView: View {
               }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
           }
           .buttonStyle(.plain)
           .disabled((node.bool("disabled") ?? false) || (option.bool("disabled") ?? false))
@@ -1799,15 +1913,14 @@ struct DropdownControlView: View {
     .frame(maxHeight: DropdownMenuDefaults.menuHeight(node))
     .modifier(MenuSurfaceStyle(value: node.props["menu_style"]))
     .background(MaterialPalette.color(node.string("bgcolor"), default: .clear))
-    .shadow(radius: CGFloat(node.double("elevation") ?? 0))
+    .shadow(radius: node.props["elevation"] == nil ? 0 : CGFloat(node.double("elevation") ?? 0))
   }
 
   /// Flet shows `selected_trailing_icon` while the menu is open and
-  /// `trailing_icon` while it is closed; SwiftUI's Menu does not report that
-  /// state, so the selected form stands in once a value exists.
+  /// `trailing_icon` while it is closed.
   @ViewBuilder
   private var trailingIcon: some View {
-    let key = node.string("value") == nil ? "trailing_icon" : "selected_trailing_icon"
+    let key = menuPresented ? "selected_trailing_icon" : "trailing_icon"
     if let id = node.controlID(forKey: key) ?? node.controlID(forKey: "trailing_icon") {
       ControlView(id: id, axis: .none)
     } else {
@@ -1816,9 +1929,7 @@ struct DropdownControlView: View {
   }
 
   private var contentPadding: EdgeInsets {
-    if let explicit = ControlProps.edgeInsets(node.props["content_padding"]) { return explicit }
-    let inset: CGFloat = node.bool("dense") == true ? 4 : 8
-    return EdgeInsets(top: inset, leading: inset, bottom: inset, trailing: inset)
+    ControlProps.edgeInsets(node.props["content_padding"]) ?? EdgeInsets()
   }
 
   /// A Material 3 dropdown can be typed into. `editable` opens the field,
@@ -1830,6 +1941,7 @@ struct DropdownControlView: View {
   private var dropdownTraits: RufletTextInputTraits {
     var traits = RufletTextInputTraits(node: node)
     traits.readOnly = !isEditable
+    traits.canRequestFocus = isEditable && node.bool("can_request_focus") != false
     return traits
   }
 
@@ -1837,7 +1949,7 @@ struct DropdownControlView: View {
   /// typed into; Flutter distinguishes them by whether the match is
   /// highlighted, which is not a distinction SwiftUI's menu draws.
   private var filtersOptions: Bool {
-    node.bool("enable_filter") == true || node.bool("enable_search") == true
+    DropdownMenuDefaults.filtersOptions(node)
   }
 
   private func matching(_ options: [ControlNode]) -> [ControlNode] {
@@ -1851,16 +1963,18 @@ struct DropdownControlView: View {
 
   private var fieldBackground: Color {
     guard node.bool("filled") == true else { return .clear }
-    return MaterialPalette.color(node.string("fill_color"), default: .gray.opacity(0.10))
+    return MaterialPalette.color(node.string("fill_color"), default: .clear)
   }
 
   private var fieldRadius: CGFloat {
-    ControlProps.cornerRadius(node.props["border_radius"]) ?? 4
+    ControlProps.cornerRadius(node.props["border_radius"]) ?? 0
   }
+
+  private var hasExplicitFieldChrome: Bool { !DropdownMenuDefaults.usesNativeChrome(node) }
 
   @ViewBuilder
   private var borderStroke: some View {
-    if node.string("border")?.lowercased() != "none" {
+    if hasExplicitFieldChrome, node.string("border")?.lowercased() != "none" {
       RoundedRectangle(cornerRadius: fieldRadius)
         .strokeBorder(
           MaterialPalette.color(
@@ -1874,7 +1988,7 @@ struct DropdownControlView: View {
 
   private var dropdownText: Binding<String> {
     Binding(
-      get: { node.string("text") ?? label(for: node.string("value") ?? "") },
+      get: { node.string("text") ?? validatedLabel(for: node.string("value") ?? "") },
       set: {
         events.setLocal(node.id, "text", .string($0))
         events.update(node.id, ["text": .string($0)])
@@ -1885,10 +1999,7 @@ struct DropdownControlView: View {
   private func select(_ option: ControlNode) {
     let key = option.string("key") ?? option.string("text") ?? ""
     let text = option.string("text") ?? key
-    events.setLocal(node.id, "value", .string(key))
-    events.setLocal(node.id, "text", .string(text))
-    events.update(node.id, ["value": .string(key), "text": .string(text)])
-    events.fire(node, "select", data: .string(key))
+    RufletDropdownEvents.select(key: key, text: text, on: node, to: events)
   }
 
   private func label(for key: String) -> String {
@@ -1896,11 +2007,46 @@ struct DropdownControlView: View {
       .string("text") ?? key
   }
 
+  private func validatedLabel(for key: String) -> String {
+    guard optionNodes.contains(where: {
+      ($0.string("key") ?? $0.string("text") ?? "") == key
+    }) else { return "" }
+    return label(for: key)
+  }
+
+  private var selectedText: String {
+    if let text = node.string("text"), !text.isEmpty { return text }
+    let label = validatedLabel(for: node.string("value") ?? "")
+    return label.isEmpty ? (node.string("hint_text") ?? "") : label
+  }
+
   /// Options arrive under `options` on a Dropdown and `controls` on the M2
   /// variant, so both are accepted.
   private var optionNodes: [ControlNode] {
-    let ids = node.controlIDs(forKey: "options") + node.childIDs
-    return ids.compactMap { store.node($0) }
+    node.controlIDs(forKey: "options").compactMap { store.node($0) }.filter {
+      $0.string("key") != nil || $0.string("text") != nil
+    }
+  }
+
+  private var optionSignature: String {
+    optionNodes.map {
+      "\($0.id):\($0.string("key") ?? ""): \($0.string("text") ?? "")"
+    }.joined(separator: "|")
+  }
+
+  /// A backend value change updates the controller without a `text_change`
+  /// event. The initial explicit text is retained for a valid initial value,
+  /// matching Dropdown's `text ?? value` controller construction; an invalid
+  /// value is cleared on the first build.
+  private func synchronizeSelectionFromWire(initial: Bool) {
+    guard let value = node.string("value"), !value.isEmpty else {
+      if !initial { events.setLocal(node.id, "text", .string("")) }
+      return
+    }
+    let label = validatedLabel(for: value)
+    if label.isEmpty || !initial || node.string("text") == nil {
+      events.setLocal(node.id, "text", .string(label))
+    }
   }
 
   @ViewBuilder
@@ -1917,6 +2063,22 @@ struct DropdownControlView: View {
 /// from field geometry is important: Flet forwards `width` to DropdownMenu's
 /// field and `menu_width` to MenuStyle.fixedSize.
 enum DropdownMenuDefaults {
+  static func usesNativeChrome(_ node: ControlNode) -> Bool {
+    node.props["border"] == nil && node.props["border_radius"] == nil
+      && node.props["border_color"] == nil && node.props["border_width"] == nil
+      && node.props["focused_border_color"] == nil
+      && node.props["focused_border_width"] == nil && node.props["fill_color"] == nil
+      && node.props["filled"] == nil
+  }
+
+  static func filtersOptions(_ node: ControlNode) -> Bool {
+    node.bool("enable_filter") == true
+  }
+
+  static func searchesOptions(_ node: ControlNode) -> Bool {
+    node.bool("enable_search") ?? true
+  }
+
   static func fieldWidth(_ node: ControlNode) -> CGFloat? {
     node.double("width").map { CGFloat($0) }
   }
@@ -1927,6 +2089,25 @@ enum DropdownMenuDefaults {
 
   static func menuHeight(_ node: ControlNode) -> CGFloat? {
     node.double("menu_height").map { CGFloat($0) }
+  }
+}
+
+enum RufletDropdownEvents {
+  static func select(
+    key: String, text: String, on node: ControlNode, to events: RufletEventSink
+  ) {
+    // Flutter's DropdownMenu writes its entry label through the controller
+    // before calling onSelected, so Flet's controller listener reports the
+    // ordinary text-change path first.
+    let textValue = RufletValue.string(text)
+    events.setLocal(node.id, "text", textValue)
+    events.update(node.id, ["text": textValue])
+    events.fire(node, "text_change", data: textValue)
+
+    let selection = RufletValue.string(key)
+    events.setLocal(node.id, "value", selection)
+    events.update(node.id, ["value": selection])
+    events.fire(node, "select", data: selection)
   }
 }
 
@@ -2112,43 +2293,59 @@ struct AutoCompleteControlView: View {
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
   @State private var query = ""
+  @State private var focused = false
+  @State private var selection = NSRange(location: 0, length: 0)
+  @State private var suggestionsPresented = false
 
   var body: some View {
-    VStack(alignment: .leading, spacing: 0) {
-      TextField("", text: $query)
-        .textFieldStyle(.plain)
-        .padding(8)
-        .background(RoundedRectangle(cornerRadius: 8).fill(Color.gray.opacity(0.12)))
-        .onChange(of: query) { value in
-          // Flet's controller always synchronizes `value`; `on_change` only
-          // decides whether an event accompanies that synchronization.
-          events.setLocal(node.id, "value", .string(value))
-          events.update(node.id, ["value": .string(value)])
-          events.fire(node, "change", data: .string(value))
-        }
-
-      if !query.isEmpty {
-        ScrollView {
-          LazyVStack(alignment: .leading, spacing: 0) {
-            ForEach(matches) { match in
-              Button {
-                select(match)
-              } label: {
-                Text(match.suggestion.value)
-                  .frame(maxWidth: .infinity, alignment: .leading)
-                  .padding(.vertical, 6)
-                  .padding(.horizontal, 8)
-              }
-              .buttonStyle(.plain)
+    Group {
+      #if canImport(UIKit) || canImport(AppKit)
+        RufletNativeTextInput(
+          text: queryBinding,
+          focused: $focused,
+          selection: $selection,
+          placeholder: "",
+          secure: false,
+          nativeChrome: true,
+          traits: RufletTextInputTraits(node: node),
+          onTap: { suggestionsPresented = !query.isEmpty && !matches.isEmpty },
+          onTapOutside: {},
+          onSubmit: { _ in
+            if let match = matches.first { select(match) }
+          })
+      #else
+        TextField("", text: queryBinding)
+      #endif
+    }
+    .popover(isPresented: $suggestionsPresented, attachmentAnchor: .rect(.bounds)) {
+      ScrollView {
+        LazyVStack(alignment: .leading, spacing: 0) {
+          ForEach(matches) { match in
+            Button {
+              select(match)
+            } label: {
+              Text(match.suggestion.value)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
           }
         }
-        // `suggestions_max_height` is a pixel constraint, not a cap on the
-        // number of matches (the previous implementation always took eight).
-        .frame(maxHeight: CGFloat(node.double("suggestions_max_height") ?? 200))
       }
+      // Flet's optionsMaxHeight defaults to 200 logical pixels.
+      .frame(maxHeight: CGFloat(node.double("suggestions_max_height") ?? 200))
     }
-    .onAppear { query = node.string("value") ?? "" }
+    .onAppear { synchronizeFromWire() }
+    .onChange(of: node.string("value")) { _ in synchronizeFromWire() }
+  }
+
+  private var queryBinding: Binding<String> {
+    Binding(
+      get: { query },
+      set: { value in
+        guard value != query else { return }
+        query = value
+        RufletAutoCompleteEvents.change(value, on: node, to: events)
+        suggestionsPresented = !value.isEmpty && !matches.isEmpty
+      })
   }
 
   private var suggestions: [RufletAutoCompleteSuggestion] {
@@ -2166,8 +2363,11 @@ struct AutoCompleteControlView: View {
 
   private func select(_ match: RufletAutoCompleteMatch) {
     // Flutter Autocomplete writes displayStringForOption (`value`) into the
-    // field, then reports the original key/value pair and source index.
+    // field (which first follows the ordinary change path), then reports the
+    // original key/value pair and source index.
     query = match.suggestion.value
+    RufletAutoCompleteEvents.change(query, on: node, to: events)
+    suggestionsPresented = false
     let index = Int64(match.index)
     events.setLocal(node.id, "_selected_index", .int(index))
     events.update(node.id, ["_selected_index": .int(index)])
@@ -2175,6 +2375,22 @@ struct AutoCompleteControlView: View {
       "index": .int(index),
       "selection": match.suggestion.wireValue,
     ]))
+  }
+
+  private func synchronizeFromWire() {
+    let value = node.string("value") ?? ""
+    guard value != query else { return }
+    query = value
+    selection = NSRange(location: value.utf16.count, length: 0)
+  }
+}
+
+enum RufletAutoCompleteEvents {
+  static func change(_ value: String, on node: ControlNode, to events: RufletEventSink) {
+    let wire = RufletValue.string(value)
+    events.setLocal(node.id, "value", wire)
+    events.update(node.id, ["value": wire])
+    events.fire(node, "change", data: wire)
   }
 }
 

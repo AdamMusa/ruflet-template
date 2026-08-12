@@ -116,6 +116,49 @@ final class RufletInputParityTests: XCTestCase {
     XCTAssertEqual(DropdownMenuDefaults.menuHeight(explicit), 280)
   }
 
+  func testSearchAndDropdownOmittedDecorationUseNativeAppleChrome() {
+    XCTAssertTrue(RufletSearchBarDefaults.usesNativeChrome(
+      ControlNode(id: 1, type: "SearchBar")))
+    XCTAssertFalse(RufletSearchBarDefaults.usesNativeChrome(ControlNode(
+      id: 2, type: "SearchBar", props: ["bar_bgcolor": .string("#ffffff")])))
+
+    XCTAssertTrue(DropdownMenuDefaults.usesNativeChrome(
+      ControlNode(id: 3, type: "Dropdown")))
+    XCTAssertFalse(DropdownMenuDefaults.usesNativeChrome(ControlNode(
+      id: 4, type: "Dropdown", props: ["border": .string("outline")])))
+  }
+
+  func testDropdownDefaultsKeepSearchAndFilteringDistinct() {
+    let omitted = ControlNode(id: 1, type: "Dropdown")
+    XCTAssertFalse(DropdownMenuDefaults.filtersOptions(omitted))
+    XCTAssertTrue(DropdownMenuDefaults.searchesOptions(omitted))
+
+    let explicit = ControlNode(
+      id: 2, type: "Dropdown",
+      props: ["enable_filter": .bool(true), "enable_search": .bool(false)])
+    XCTAssertTrue(DropdownMenuDefaults.filtersOptions(explicit))
+    XCTAssertFalse(DropdownMenuDefaults.searchesOptions(explicit))
+  }
+
+  func testDropdownSelectionFollowsControllerThenSelectionOrdering() {
+    let node = ControlNode(id: 8, type: "Dropdown", props: [
+      "on_select": .bool(true), "on_text_change": .bool(true),
+    ])
+    var calls: [String] = []
+    let sink = RufletEventSink(
+      send: { _, name, data in calls.append("event:\(name):\(data.stringValue ?? "")") },
+      setLocal: { _, key, value in calls.append("local:\(key):\(value.stringValue ?? "")") },
+      update: { _, props in
+        calls.append("update:\(props.keys.sorted().joined(separator: ","))")
+      })
+
+    RufletDropdownEvents.select(key: "nyc", text: "New York", on: node, to: sink)
+    XCTAssertEqual(calls, [
+      "local:text:New York", "update:text", "event:text_change:New York",
+      "local:value:nyc", "update:value", "event:select:nyc",
+    ])
+  }
+
   func testSearchBarUsesFlutterScrollPaddingWithoutChangingBarLayout() {
     let omitted = RufletSearchBarDefaults.scrollPadding(
       ControlNode(id: 1, type: "SearchBar"))
@@ -162,6 +205,18 @@ final class RufletInputParityTests: XCTestCase {
     XCTAssertEqual(traits.caretScrollPadding.trailing, 20)
   }
 
+  func testSearchBarChangeUpdatesBeforeOptionalEvent() {
+    let node = ControlNode(id: 7, type: "SearchBar", props: ["on_change": .bool(true)])
+    var calls: [String] = []
+    let sink = RufletEventSink(
+      send: { _, name, _ in calls.append("event:\(name)") },
+      setLocal: { _, key, _ in calls.append("local:\(key)") },
+      update: { _, props in calls.append("update:\(props.keys.sorted().joined(separator: ","))") })
+
+    RufletSearchBarEvents.change("native", on: node, to: sink)
+    XCTAssertEqual(calls, ["local:value", "update:value", "event:change"])
+  }
+
   func testAutoCompleteSuggestionsAreParsedFromFletValueMaps() {
     let store = ControlStore()
     let value = RufletValue.array([
@@ -185,6 +240,18 @@ final class RufletInputParityTests: XCTestCase {
     XCTAssertEqual(
       suggestion.wireValue,
       .map(["key": .string("nyc"), "value": .string("New York")]))
+  }
+
+  func testAutoCompleteChangeMatchesControllerWireOrdering() {
+    let node = ControlNode(id: 6, type: "AutoComplete", props: ["on_change": .bool(true)])
+    var calls: [String] = []
+    let sink = RufletEventSink(
+      send: { _, name, _ in calls.append("event:\(name)") },
+      setLocal: { _, key, _ in calls.append("local:\(key)") },
+      update: { _, props in calls.append("update:\(props.keys.sorted().joined(separator: ","))") })
+
+    RufletAutoCompleteEvents.change("swift", on: node, to: sink)
+    XCTAssertEqual(calls, ["local:value", "update:value", "event:change"])
   }
 
   func testMaterialPickerBoundsAreThePinnedFletDatesNotARollingWindow() {
