@@ -1968,16 +1968,20 @@ struct DropdownControlView: View {
       focused = node.bool("autofocus") == true && isEditable
       localValue = node.string("value") ?? ""
       localText = node.string("text") ?? validatedLabel(for: localValue)
-      synchronizeSelectionFromWire(initial: true)
+      synchronizeSelectionFromWire(value: node.string("value"), initial: true)
     }
     .onChange(of: node.string("value")) { value in
-      localValue = value ?? ""
-      synchronizeSelectionFromWire(initial: false)
+      // Use the value delivered by SwiftUI. Reading `node` again here reads
+      // the previous render snapshot and can restore the option that was
+      // selected before this change.
+      synchronizeSelectionFromWire(value: value, initial: false)
     }
     .onChange(of: node.string("text")) { text in
       localText = text ?? validatedLabel(for: localValue)
     }
-    .onChange(of: optionSignature) { _ in synchronizeSelectionFromWire(initial: false) }
+    .onChange(of: optionSignature) { _ in
+      synchronizeSelectionFromWire(value: localValue, initial: false)
+    }
     .onChange(of: focused) { events.fire(node, $0 ? "focus" : "blur") }
     .rufletCommandHandler(node.id) { call, completion in
       guard call.name == "focus" else {
@@ -2194,20 +2198,18 @@ struct DropdownControlView: View {
   /// event. The initial explicit text is retained for a valid initial value,
   /// matching Dropdown's `text ?? value` controller construction; an invalid
   /// value is cleared on the first build.
-  private func synchronizeSelectionFromWire(initial: Bool) {
-    guard let value = node.string("value"), !value.isEmpty else {
-      if !initial {
-        localValue = ""
-        localText = ""
-        events.setLocal(node.id, "text", .string(""))
-      }
-      return
-    }
-    let label = validatedLabel(for: value)
-    localValue = value
-    if label.isEmpty || !initial || node.string("text") == nil {
-      localText = label
-      events.setLocal(node.id, "text", .string(label))
+  private func synchronizeSelectionFromWire(value: String?, initial: Bool) {
+    let label = value.map(validatedLabel(for:)) ?? ""
+    guard let resolved = RufletDropdownSelectionSync.resolve(
+      value: value,
+      explicitText: node.string("text"),
+      initial: initial,
+      validatedLabel: label)
+    else { return }
+    localValue = resolved.value
+    localText = resolved.text
+    if resolved.publishText {
+      events.setLocal(node.id, "text", .string(resolved.text))
     }
   }
 
@@ -2515,6 +2517,30 @@ private struct DropdownPopupGeometry: ViewModifier {
         minWidth: DropdownMenuDefaults.minimumStyledWidth(node),
         maxWidth: DropdownMenuDefaults.maximumStyledWidth(node), maxHeight: height)
     }
+  }
+}
+
+struct RufletDropdownSelectionSync: Equatable {
+  let value: String
+  let text: String
+  let publishText: Bool
+
+  /// Resolves the exact controller state from the value delivered by the
+  /// observer. The delivered value is deliberately an argument: the view's
+  /// captured ControlNode is the snapshot from before SwiftUI invoked the
+  /// observer.
+  static func resolve(
+    value: String?, explicitText: String?, initial: Bool, validatedLabel: String
+  ) -> RufletDropdownSelectionSync? {
+    guard let value, !value.isEmpty else {
+      return initial ? nil : RufletDropdownSelectionSync(
+        value: "", text: "", publishText: true)
+    }
+    let publishText = validatedLabel.isEmpty || !initial || explicitText == nil
+    return RufletDropdownSelectionSync(
+      value: value,
+      text: publishText ? validatedLabel : (explicitText ?? validatedLabel),
+      publishText: publishText)
   }
 }
 

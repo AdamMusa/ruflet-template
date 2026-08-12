@@ -336,6 +336,30 @@ final class RufletInputParityTests: XCTestCase {
     ])
   }
 
+  func testDropdownObserverUsesDeliveredSelectionInsteadOfPreviousNodeSnapshot() {
+    XCTAssertEqual(
+      RufletDropdownSelectionSync.resolve(
+        value: "swift", explicitText: "Ruby", initial: false,
+        validatedLabel: "Swift"),
+      RufletDropdownSelectionSync(value: "swift", text: "Swift", publishText: true))
+  }
+
+  func testDropdownInitialExplicitTextAndClearingSemantics() {
+    XCTAssertEqual(
+      RufletDropdownSelectionSync.resolve(
+        value: "nyc", explicitText: "New York City", initial: true,
+        validatedLabel: "New York"),
+      RufletDropdownSelectionSync(
+        value: "nyc", text: "New York City", publishText: false))
+    XCTAssertNil(RufletDropdownSelectionSync.resolve(
+      value: nil, explicitText: nil, initial: true, validatedLabel: ""))
+    XCTAssertEqual(
+      RufletDropdownSelectionSync.resolve(
+        value: nil, explicitText: "stale", initial: false,
+        validatedLabel: ""),
+      RufletDropdownSelectionSync(value: "", text: "", publishText: true))
+  }
+
   func testSearchBarUsesFlutterScrollPaddingWithoutChangingBarLayout() {
     let omitted = RufletSearchBarDefaults.scrollPadding(
       ControlNode(id: 1, type: "SearchBar"))
