@@ -337,18 +337,30 @@ struct PageViewControlView: View {
 
   var body: some View {
     let config = CollectionDefaults.pageView(node)
-    TabView(selection: $selectedIndex) {
-      ForEach(PageViewParity.pages(node.childIDs, reverse: config.reverse), id: \.id) { page in
-        ControlView(id: page.id, axis: .none)
-          .modifier(PageViewport(
-            horizontal: config.horizontal,
-            fraction: config.viewportFraction,
-            padEnds: config.padEnds))
-          .tag(page.index)
+    Group {
+      if config.snap {
+        TabView(selection: $selectedIndex) {
+          ForEach(PageViewParity.pages(node.childIDs), id: \.id) { page in
+            ControlView(id: page.id, axis: .none)
+              .modifier(PageViewport(
+                horizontal: config.horizontal,
+                fraction: config.viewportFraction,
+                padEnds: config.padEnds))
+              .modifier(PageReverse(horizontal: config.horizontal, enabled: config.reverse))
+              .tag(page.index)
+          }
+        }
+        .modifier(PagedTabStyle())
+        .modifier(PageReverse(horizontal: config.horizontal, enabled: config.reverse))
+        .modifier(PageAxis(horizontal: config.horizontal))
+      } else {
+        FreeScrollingPageView(
+          ids: node.childIDs, selectedIndex: $selectedIndex,
+          horizontal: config.horizontal, reverse: config.reverse,
+          fraction: config.viewportFraction, padEnds: config.padEnds,
+          implicitScrolling: config.implicitScrolling)
       }
     }
-    .modifier(PagedTabStyle())
-    .modifier(PageAxis(horizontal: config.horizontal))
     .modifier(CollectionClip(behavior: config.clipBehavior))
     .background(
       GeometryReader { proxy in
@@ -416,9 +428,10 @@ struct PageViewControlView: View {
 
 enum PageViewParity {
   struct Page: Equatable { let index: Int; let id: Int }
-  static func pages(_ ids: [Int], reverse: Bool) -> [Page] {
-    let pages = ids.enumerated().map { Page(index: $0.offset, id: $0.element) }
-    return reverse ? Array(pages.reversed()) : pages
+  /// Flutter's `reverse` changes the axis direction; it does not reorder the
+  /// children or reinterpret PageController indices.
+  static func pages(_ ids: [Int]) -> [Page] {
+    ids.enumerated().map { Page(index: $0.offset, id: $0.element) }
   }
   static func commandAnimation(_ call: RufletMethodCall) -> Animation {
     let duration = call.argument("duration")?.doubleValue ?? 1_000
@@ -426,6 +439,87 @@ enum PageViewParity {
     return ControlProps.animation(.map([
       "duration": .double(duration), "curve": .string(curve)
     ])) ?? .linear(duration: max(duration, 0) / 1_000)
+  }
+}
+
+private struct PageReverse: ViewModifier {
+  let horizontal: Bool
+  let enabled: Bool
+  func body(content: Content) -> some View {
+    enabled
+      ? AnyView(content.scaleEffect(x: horizontal ? -1 : 1, y: horizontal ? 1 : -1))
+      : AnyView(content)
+  }
+}
+
+private struct FreeScrollingPageView: View {
+  let ids: [Int]
+  @Binding var selectedIndex: Int
+  let horizontal: Bool
+  let reverse: Bool
+  let fraction: CGFloat
+  let padEnds: Bool
+  let implicitScrolling: Bool
+
+  var body: some View {
+    GeometryReader { viewport in
+      ScrollViewReader { reader in
+        ScrollView(horizontal ? .horizontal : .vertical, showsIndicators: false) {
+          stack(viewport: viewport.size)
+            .modifier(PageReverse(horizontal: horizontal, enabled: reverse))
+        }
+        .coordinateSpace(name: "ruflet-free-page")
+        .onPreferenceChange(PageFramePreference.self) { frames in
+          guard let nearest = frames.min(by: {
+            abs(center($0.value, viewport: viewport.size))
+              < abs(center($1.value, viewport: viewport.size))
+          })?.key else { return }
+          if nearest != selectedIndex { selectedIndex = nearest }
+        }
+        .onAppear { reader.scrollTo(selectedIndex, anchor: .center) }
+        .onChange(of: selectedIndex) { reader.scrollTo($0, anchor: .center) }
+      }
+    }
+  }
+
+  @ViewBuilder
+  private func stack(viewport: CGSize) -> some View {
+    let resolvedFraction = max(fraction, 0.01)
+    let pageExtent = (horizontal ? viewport.width : viewport.height) * resolvedFraction
+    let endPadding = padEnds ? max(((horizontal ? viewport.width : viewport.height) - pageExtent) / 2, 0) : 0
+    let pages = ForEach(Array(ids.enumerated()), id: \.offset) { index, id in
+      ControlView(id: id, axis: .none)
+        .frame(
+          width: horizontal ? pageExtent : viewport.width,
+          height: horizontal ? viewport.height : pageExtent)
+        .modifier(PageReverse(horizontal: horizontal, enabled: reverse))
+        .background(
+          GeometryReader { proxy in
+            Color.clear.preference(
+              key: PageFramePreference.self,
+              value: [index: proxy.frame(in: .named("ruflet-free-page"))])
+          })
+        .id(index)
+        .accessibilityHidden(!implicitScrolling && abs(index - selectedIndex) > 1)
+    }
+    if horizontal {
+      LazyHStack(spacing: 0) { pages }
+        .padding(.horizontal, endPadding)
+    } else {
+      LazyVStack(spacing: 0) { pages }
+        .padding(.vertical, endPadding)
+    }
+  }
+
+  private func center(_ frame: CGRect, viewport: CGSize) -> CGFloat {
+    horizontal ? frame.midX - viewport.width / 2 : frame.midY - viewport.height / 2
+  }
+}
+
+private struct PageFramePreference: PreferenceKey {
+  static var defaultValue: [Int: CGRect] = [:]
+  static func reduce(value: inout [Int: CGRect], nextValue: () -> [Int: CGRect]) {
+    value.merge(nextValue(), uniquingKeysWith: { _, new in new })
   }
 }
 
@@ -1425,11 +1519,21 @@ enum CollectionParity {
   }
 }
 
+private struct CollectionScrollSample: Equatable {
+  var pixels: CGFloat = 0
+  var contentExtent: CGFloat = 0
+}
+
 private struct CollectionScrollOffsetKey: PreferenceKey {
-  static var defaultValue: CGFloat = 0
-  static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+  static var defaultValue = CollectionScrollSample()
+  static func reduce(value: inout CollectionScrollSample, nextValue: () -> CollectionScrollSample) {
     value = nextValue()
   }
+}
+
+private struct CollectionViewportKey: PreferenceKey {
+  static var defaultValue: CGFloat = 0
+  static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = nextValue() }
 }
 
 private struct CollectionScrollReporter: ViewModifier {
@@ -1437,28 +1541,67 @@ private struct CollectionScrollReporter: ViewModifier {
   let horizontal: Bool
   let events: RufletEventSink
   @Environment(\.rufletScaffoldHost) private var scaffold
-  @State private var lastReport = Date.distantPast
+  @State private var lastReports: [String: Date] = [:]
+  @State private var viewportExtent: CGFloat = 0
+  @State private var previousPixels: CGFloat = 0
+  @State private var hasSample = false
+  @State private var isScrolling = false
+  @State private var endToken = UUID()
 
   func body(content: Content) -> some View {
     content
       .coordinateSpace(name: "ruflet-scroll-\(node.id)")
-      .onPreferenceChange(CollectionScrollOffsetKey.self) { pixels in
-          scaffold?.reportScroll(sourceID: node.id, offset: max(0, pixels))
+      .background(
+        GeometryReader { proxy in
+          Color.clear.preference(
+            key: CollectionViewportKey.self,
+            value: horizontal ? proxy.size.width : proxy.size.height)
+        })
+      .onPreferenceChange(CollectionViewportKey.self) { viewportExtent = $0 }
+      .onPreferenceChange(CollectionScrollOffsetKey.self) { sample in
+          let pixels = max(0, sample.pixels)
+          scaffold?.reportScroll(sourceID: node.id, offset: pixels)
           guard node.handlesEvent("scroll") else { return }
-          // `scroll_interval` throttles the stream the way Flet throttles its
-          // own; zero reports every sample.
-          let interval = TimeInterval(node.int("scroll_interval") ?? 0) / 1_000
-          guard Date().timeIntervalSince(lastReport) >= interval else { return }
-          lastReport = Date()
-          events.fire(
-            node, "scroll",
-            data: .map([
-              "pixels": .double(Double(max(0, pixels))),
-              "event_type": .string("update"),
-              "axis": .string(horizontal ? "horizontal" : "vertical")
-            ]))
+          guard hasSample else {
+            hasSample = true
+            previousPixels = pixels
+            return
+          }
+          let delta = pixels - previousPixels
+          guard abs(delta) > 0.001 else { return }
+          if !isScrolling {
+            isScrolling = true
+            report(type: "start", sample: sample, pixels: pixels)
+          }
+          report(type: "update", sample: sample, pixels: pixels, delta: delta)
+          previousPixels = pixels
+          let token = UUID()
+          endToken = token
+          DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
+            guard endToken == token else { return }
+            isScrolling = false
+            report(type: "end", sample: sample, pixels: pixels)
+          }
       }
       .onDisappear { scaffold?.removeScrollSource(node.id) }
+  }
+
+  private func report(
+    type: String, sample: CollectionScrollSample, pixels: CGFloat, delta: CGFloat? = nil
+  ) {
+    let now = Date()
+    let interval = TimeInterval(node.int("scroll_interval") ?? 10) / 1_000
+    if let prior = lastReports[type], now.timeIntervalSince(prior) <= interval { return }
+    lastReports[type] = now
+    var payload: [String: RufletValue] = [
+      "pixels": .double(Double(pixels)),
+      "min_scroll_extent": .double(0),
+      "max_scroll_extent": .double(Double(max(sample.contentExtent - viewportExtent, 0))),
+      "viewport_dimension": .double(Double(viewportExtent)),
+      "event_type": .string(type),
+    ]
+    if let delta { payload["scroll_delta"] = .double(Double(delta)) }
+    events.fire(node, "scroll", data: .map(payload))
   }
 }
 
@@ -1474,9 +1617,11 @@ private struct CollectionScrollContentProbe: ViewModifier {
       GeometryReader { proxy in
         Color.clear.preference(
           key: CollectionScrollOffsetKey.self,
-          value: horizontal
-            ? -proxy.frame(in: .named("ruflet-scroll-\(node.id)")).minX
-            : -proxy.frame(in: .named("ruflet-scroll-\(node.id)")).minY)
+          value: CollectionScrollSample(
+            pixels: horizontal
+              ? -proxy.frame(in: .named("ruflet-scroll-\(node.id)")).minX
+              : -proxy.frame(in: .named("ruflet-scroll-\(node.id)")).minY,
+            contentExtent: horizontal ? proxy.size.width : proxy.size.height))
       })
   }
 }
