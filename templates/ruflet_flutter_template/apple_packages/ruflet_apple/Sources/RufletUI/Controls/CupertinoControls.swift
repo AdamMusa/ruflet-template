@@ -774,70 +774,146 @@ private struct CupertinoCheckboxSelectionView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
   @Environment(\.rufletListTileClicks) private var listTileClicks
+  @FocusState private var focused: Bool
+  @State private var currentValue: Bool?
 
-  var body: some View {
-    HStack(spacing: CGFloat(node.double("spacing") ?? 10)) {
-      if labelPosition == .left { label }
-      mark
-      if labelPosition == .right { label }
-    }
-    .contentShape(Rectangle())
-    .onTapGesture { if node.bool("disabled") != true { advance() } }
-    .modifier(SelectionScaling(node: node, natural: 20))
-    .modifier(ListTileToggleListener(notifier: listTileClicks, action: advance))
-    .modifier(FocusReporter(node: node, events: events))
-    .modifier(SelectionAccessibilityLabel(label: RufletAccessibilitySemantics.label(node)))
-    .disabled(node.bool("disabled") ?? false)
+  init(node: ControlNode) {
+    self.node = node
+    _currentValue = State(initialValue: RufletCheckboxState.resting(node))
   }
 
-  private enum LabelPlacement { case left, right }
-  private var labelPosition: LabelPlacement {
-    node.string("label_position")?.lowercased() == "left" ? .left : .right
+  var body: some View {
+    let presentation = CupertinoCheckboxPresentation(
+      node: node, value: currentValue, focused: focused)
+    HStack(spacing: presentation.spacing) {
+      if presentation.labelPosition == .left { label(presentation) }
+      mark(presentation)
+      if presentation.labelPosition == .right { label(presentation) }
+    }
+    .contentShape(Rectangle())
+    .onTapGesture { if !presentation.disabled { advance(presentation) } }
+    .modifier(SelectionScaling(node: node, natural: CupertinoCheckboxPresentation.visualSize))
+    .modifier(ListTileToggleListener(notifier: listTileClicks, action: advance))
+    .focused($focused)
+    .onAppear {
+      currentValue = RufletCheckboxState.resting(node)
+      focused = presentation.autofocus
+    }
+    .onChange(of: node.props["value"]) { _ in
+      currentValue = RufletCheckboxState.resting(node)
+    }
+    .onChange(of: focused) { events.fire(node, $0 ? "focus" : "blur") }
+    .modifier(SelectionAccessibilityLabel(label: RufletAccessibilitySemantics.label(node)))
+    .disabled(presentation.disabled)
   }
 
   @ViewBuilder
-  private var label: some View {
+  private func label(_ presentation: CupertinoCheckboxPresentation) -> some View {
     if let labelID = node.controlID(forKey: "label") {
       ControlView(id: labelID, axis: .none)
-    } else if let text = node.string("label") {
-      Text(text).rufletTextStyle(RufletTextStyle(map: node.map("label_style") ?? [:]))
+    } else if let text = presentation.label {
+      Text(text)
+        .rufletTextStyle(RufletTextStyle(map: node.map("label_style") ?? [:]))
+        .foregroundColor(
+          presentation.disabled && node.map("label_style") != nil ? .secondary : nil)
     }
   }
 
-  private var state: Bool? { RufletCheckboxState.resting(node) }
-  private var states: Set<RufletWidgetState> { node.widgetStates(selected: state == true) }
-
-  private var mark: some View {
-    let side = ControlProps.statefulBorderSide(node.props["border_side"], in: states)
-    let radius = ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? 5
-    return ZStack {
-      RoundedRectangle(cornerRadius: radius)
-        .fill(state == false ? .clear : fillColor)
-      RoundedRectangle(cornerRadius: radius)
-        .strokeBorder(
-          state == false ? (side?.color ?? .secondary) : .clear,
-          lineWidth: side?.width ?? 1.5)
-      if state != false {
-        Image(systemName: state == true ? "checkmark" : "minus")
-          .font(.system(size: 12, weight: .bold))
-          .foregroundColor(MaterialPalette.color(node.string("check_color"), default: .white))
-      }
-    }
-    .frame(width: 20, height: 20)
-  }
-
-  private var fillColor: Color {
-    MaterialPalette.color(stateful: node.props["fill_color"], in: states)
-      ?? MaterialPalette.color(node.string("active_color"), default: .accentColor)
+  private func mark(_ presentation: CupertinoCheckboxPresentation) -> some View {
+    Image(systemName: presentation.symbolName)
+      .symbolRenderingMode(.palette)
+      .foregroundStyle(presentation.markColor, presentation.fillColor)
+      .font(.system(size: CupertinoCheckboxPresentation.visualSize, weight: .semibold))
+      .frame(
+        width: CupertinoCheckboxPresentation.visualSize,
+        height: CupertinoCheckboxPresentation.visualSize)
+      .background(
+        RoundedRectangle(cornerRadius: presentation.cornerRadius, style: .continuous)
+          .stroke(
+            presentation.focused ? presentation.focusColor : .clear,
+            lineWidth: CupertinoCheckboxPresentation.focusOutlineWidth))
   }
 
   private func advance() {
-    RufletValueControlEvents.commit(
-      node,
-      value: RufletCheckboxState.next(
-        after: state, tristate: node.bool("tristate") == true),
-      payload: .value,
-      to: events)
+    advance(CupertinoCheckboxPresentation(node: node, value: currentValue, focused: focused))
+  }
+
+  private func advance(_ presentation: CupertinoCheckboxPresentation) {
+    let next = presentation.nextValue
+    currentValue = next.boolValue
+    RufletValueControlEvents.commit(node, value: next, payload: .value, to: events)
+  }
+}
+
+enum CupertinoSelectionLabelPosition: Equatable {
+  case left
+  case right
+}
+
+/// Flet's nullable checkbox state plus the values Flutter resolves for its
+/// Cupertino constructor. The mark remains an Apple SF Symbol.
+struct CupertinoCheckboxPresentation {
+  static let visualSize: CGFloat = 14
+  static let defaultCornerRadius: CGFloat = 4
+  static let focusOutlineWidth: CGFloat = 3.5
+
+  let node: ControlNode
+  let value: Bool?
+  let focused: Bool
+
+  init(node: ControlNode, value: Bool? = nil, focused: Bool = false) {
+    self.node = node
+    self.value = node.props["value"] == nil && value == nil
+      ? RufletCheckboxState.resting(node) : value
+    self.focused = focused
+  }
+
+  var disabled: Bool { node.bool("disabled") ?? false }
+  var tristate: Bool { node.bool("tristate") ?? false }
+  var autofocus: Bool { node.bool("autofocus") ?? false }
+  var spacing: CGFloat { CGFloat(node.double("spacing") ?? 10) }
+  var label: String? { node.string("label") }
+  var labelPosition: CupertinoSelectionLabelPosition {
+    node.string("label_position")?.lowercased() == "left" ? .left : .right
+  }
+  /// Flutter includes the mixed/null checkbox in WidgetState.selected.
+  var selected: Bool { value != false }
+  var states: Set<RufletWidgetState> {
+    var extra: Set<RufletWidgetState> = []
+    if focused { extra.insert(.focused) }
+    return node.widgetStates(selected: selected, extra: extra)
+  }
+  var nextValue: RufletValue { RufletCheckboxState.next(after: value, tristate: tristate) }
+  var symbolName: String {
+    switch value {
+    case .some(true): return "checkmark.square.fill"
+    case .none: return "minus.square.fill"
+    case .some(false): return "square"
+    }
+  }
+  var activeColorToken: String? { node.string("active_color") }
+  var checkColorToken: String? { node.string("check_color") }
+  var focusColorToken: String? { node.string("focus_color") }
+  var fillColorToken: String? {
+    RufletWidgetStateProperty.resolve(node.props["fill_color"], in: states)?.stringValue
+  }
+  var borderSide: (color: Color?, width: CGFloat)? {
+    ControlProps.statefulBorderSide(node.props["border_side"], in: states)
+  }
+  var cornerRadius: CGFloat {
+    ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? Self.defaultCornerRadius
+  }
+  var fillColor: Color {
+    if let color = MaterialPalette.color(fillColorToken) { return color }
+    if selected { return MaterialPalette.color(activeColorToken) ?? .accentColor }
+    if disabled { return .white.opacity(0.5) }
+    return .white
+  }
+  var markColor: Color {
+    MaterialPalette.color(checkColorToken) ?? (disabled ? .secondary : .white)
+  }
+  var focusColor: Color {
+    MaterialPalette.color(focusColorToken) ?? fillColor.opacity(0.8)
   }
 }
 
@@ -845,6 +921,7 @@ private struct CupertinoRadioSelectionView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
+  @FocusState private var focused: Bool
 
   @ViewBuilder
   var body: some View {
@@ -852,33 +929,34 @@ private struct CupertinoRadioSelectionView: View {
       Text("CupertinoRadio must be enclosed within RadioGroup")
         .foregroundColor(.red)
     } else {
+      let presentation = CupertinoRadioPresentation(
+        node: node, group: group, focused: focused)
       HStack(spacing: 0) {
-        if labelPosition == .left { label }
-        mark
+        if presentation.labelPosition == .left { label(presentation) }
+        mark(presentation)
           .contentShape(Rectangle())
           .onTapGesture {
-            if node.bool("disabled") != true { select(toggleIfSelected: true) }
+            if !presentation.disabled { select(presentation, toggleIfSelected: true) }
           }
-        if labelPosition == .right { label }
+        if presentation.labelPosition == .right { label(presentation) }
       }
-      .modifier(FocusReporter(node: node, events: events))
-      .disabled(node.bool("disabled") ?? false)
+      // Deliberately no ListTileToggleListener: pinned Flet's
+      // CupertinoRadioControl never subscribes to ListTileClicks.
+      .focused($focused)
+      .onAppear { focused = presentation.autofocus }
+      .onChange(of: focused) { events.fire(node, $0 ? "focus" : "blur") }
+      .disabled(presentation.disabled)
     }
   }
 
-  private enum LabelPlacement { case left, right }
-  private var labelPosition: LabelPlacement {
-    node.string("label_position")?.lowercased() == "left" ? .left : .right
-  }
-
   @ViewBuilder
-  private var label: some View {
-    if let text = node.string("label"), !text.isEmpty {
+  private func label(_ presentation: CupertinoRadioPresentation) -> some View {
+    if let text = presentation.label {
       Text(text)
-        .foregroundColor(node.bool("disabled") == true ? .secondary : nil)
+        .foregroundColor(presentation.disabled ? .secondary : nil)
         .contentShape(Rectangle())
         .onTapGesture {
-          if node.bool("disabled") != true { select(toggleIfSelected: false) }
+          if !presentation.disabled { select(presentation, toggleIfSelected: false) }
         }
     }
   }
@@ -886,32 +964,79 @@ private struct CupertinoRadioSelectionView: View {
   private var group: ControlNode? {
     RufletRadioGroupResolver.nearestGroup(containing: node.id, in: store.nodes)
   }
-  private var value: String { node.string("value") ?? "" }
-  private var selected: Bool { group?.string("value") == value }
-
-  private var mark: some View {
-    let active = MaterialPalette.color(
-      node.string("active_color") ?? node.string("fill_color"), default: .accentColor)
-    let inactive = MaterialPalette.color(node.string("inactive_color"), default: .secondary)
-    return ZStack {
-      if node.bool("use_checkmark_style") == true {
-        Image(systemName: selected ? "checkmark" : "")
-          .font(.system(size: 14, weight: .semibold))
-      } else {
-        Circle().strokeBorder(selected ? active : inactive, lineWidth: 1.5)
-        if selected { Circle().fill(active).frame(width: 10, height: 10) }
-      }
-    }
-    .foregroundColor(selected ? active : inactive)
-    .frame(width: 20, height: 20)
+  private func mark(_ presentation: CupertinoRadioPresentation) -> some View {
+    Image(systemName: presentation.symbolName)
+      .symbolRenderingMode(.palette)
+      .foregroundStyle(presentation.innerColor, presentation.outerColor)
+      .font(.system(size: CupertinoRadioPresentation.visualSize, weight: .semibold))
+      .frame(
+        width: CupertinoRadioPresentation.visualSize,
+        height: CupertinoRadioPresentation.visualSize)
+      .background(
+        Circle().stroke(
+          presentation.focused ? presentation.focusColor : .clear,
+          lineWidth: CupertinoRadioPresentation.focusOutlineWidth))
   }
 
-  private func select(toggleIfSelected: Bool) {
+  private func select(_ presentation: CupertinoRadioPresentation, toggleIfSelected: Bool) {
     guard let group, group.bool("disabled") != true else { return }
-    let next: RufletValue = toggleIfSelected && selected && node.bool("toggleable") == true
-      ? .null
-      : .string(value)
+    let next = presentation.nextValue(toggleIfSelected: toggleIfSelected)
     RufletValueControlEvents.commit(group, value: next, payload: .value, to: events)
+  }
+}
+
+/// RadioGroup owns CupertinoRadio selection. `fill_color` is the inner dot;
+/// it must never replace `active_color`, which paints the selected outer ring.
+struct CupertinoRadioPresentation {
+  static let visualSize: CGFloat = 18
+  static let focusOutlineWidth: CGFloat = 3
+
+  let node: ControlNode
+  let group: ControlNode?
+  let focused: Bool
+
+  init(node: ControlNode, group: ControlNode?, focused: Bool = false) {
+    self.node = node
+    self.group = group
+    self.focused = focused
+  }
+
+  var value: String { node.string("value") ?? "" }
+  var selected: Bool { group?.string("value") == value }
+  var disabled: Bool { node.bool("disabled") ?? false }
+  var autofocus: Bool { node.bool("autofocus") ?? false }
+  var toggleable: Bool { node.bool("toggleable") ?? false }
+  var usesCheckmarkStyle: Bool { node.bool("use_checkmark_style") ?? false }
+  var label: String? {
+    guard let text = node.string("label"), !text.isEmpty else { return nil }
+    return text
+  }
+  var labelPosition: CupertinoSelectionLabelPosition {
+    node.string("label_position")?.lowercased() == "left" ? .left : .right
+  }
+  var activeColorToken: String? { node.string("active_color") }
+  var inactiveColorToken: String? { node.string("inactive_color") }
+  var fillColorToken: String? { node.string("fill_color") }
+  var focusColorToken: String? { node.string("focus_color") }
+  var symbolName: String {
+    if usesCheckmarkStyle { return selected ? "checkmark" : "square.dashed" }
+    return selected ? "circle.inset.filled" : "circle"
+  }
+  var outerColor: Color {
+    if disabled { return .white.opacity(0.5) }
+    if selected { return MaterialPalette.color(activeColorToken) ?? .accentColor }
+    return MaterialPalette.color(inactiveColorToken) ?? .white
+  }
+  var innerColor: Color {
+    if disabled && selected { return .secondary }
+    return MaterialPalette.color(fillColorToken) ?? .white
+  }
+  var focusColor: Color {
+    MaterialPalette.color(focusColorToken)
+      ?? (MaterialPalette.color(activeColorToken) ?? .accentColor).opacity(0.8)
+  }
+  func nextValue(toggleIfSelected: Bool) -> RufletValue {
+    toggleIfSelected && selected && toggleable ? .null : .string(value)
   }
 }
 
