@@ -63,16 +63,10 @@ public enum IconMapping {
     {
       switch descriptor.family {
       case .material:
-        let symbol = symbol(forMaterialName: descriptor.name)
-        if symbol != placeholderSymbol { return .systemSymbol(symbol) }
-        if let codepoint = MaterialIconGlyphs.codepoint(forWireCodepoint: wireCodepoint) {
-          // SF Symbols does not contain an honest equivalent for every one of
-          // Flutter's 8,000+ Material icons. Preserve the exact Android/Web
-          // glyph in those cases instead of showing an unrelated question
-          // mark. Curated semantic matches above still use native artwork.
-          return .materialGlyph(codepoint: codepoint, name: descriptor.name)
-        }
-        return .systemSymbol(placeholderSymbol)
+        // The wire name is cross-platform; the artwork is not. Apple must
+        // always render native SF Symbols rather than leaking Android's
+        // Material font whenever the curated table has no exact entry.
+        return .systemSymbol(symbol(forMaterialName: descriptor.name))
       case .cupertino:
         return .systemSymbol(symbol(forCupertinoName: descriptor.name))
       }
@@ -84,9 +78,8 @@ public enum IconMapping {
     }
     if let codepoint = MaterialIconGlyphs.codepoint(forName: rawName) {
       let symbol = symbol(forMaterialName: rawName)
-      return symbol == placeholderSymbol
-        ? .materialGlyph(codepoint: codepoint, name: canonical(rawName).uppercased())
-        : .systemSymbol(symbol)
+      _ = codepoint // Confirms this is a real Material catalog name.
+      return .systemSymbol(symbol)
     }
     return .systemSymbol(symbol(forMaterialName: rawName))
   }
@@ -137,8 +130,99 @@ public enum IconMapping {
       if let fallback = unavailableSymbolFallbacks[base], isAvailable(fallback) { return fallback }
     }
 
+    // Flet intentionally sends the same Material icon name on every platform.
+    // For less-common names, derive a stable semantic SF Symbol from that
+    // catalog name. This keeps all 8,825 icons native while the explicit table
+    // above preserves high-fidelity mappings for common and ambiguous names.
+    if MaterialIconGlyphs.codepoint(forName: rawName) != nil {
+      return semanticMaterialFallback(for: name)
+    }
+
     RufletLog.debug("No SF Symbol for Material icon `\(rawName)`")
     return placeholderSymbol
+  }
+
+  private static func semanticMaterialFallback(for name: String) -> String {
+    let semanticName = ["_outlined", "_rounded", "_sharp"]
+      .first(where: name.hasSuffix)
+      .map { String(name.dropLast($0.count)) } ?? name
+    let exact: [String: String] = [
+      "add_home": "house.badge.plus",
+      "add_home_work": "house.badge.plus",
+      "home_work": "house",
+      "person_add": "person.badge.plus",
+      "person_remove": "person.badge.minus",
+      "add_a_photo": "camera.badge.ellipsis",
+      "create_new_folder": "folder.badge.plus",
+      "playlist_add": "text.badge.plus",
+      "playlist_remove": "text.badge.minus",
+      "new_label": "tag",
+    ]
+    if let symbol = exact[semanticName], isAvailable(symbol) { return symbol }
+
+    // Ordered from specific concepts to broad verbs. Every return value is
+    // checked against the running OS so an icon introduced on a newer Apple
+    // release cannot disappear on the supported deployment floor.
+    let semanticSymbols: [(String, String)] = [
+      ("home", "house"), ("house", "house"),
+      ("person", "person"), ("account", "person.crop.circle"),
+      ("people", "person.2"), ("group", "person.3"),
+      ("flight", "airplane"), ("airline", "airplane"), ("airplane", "airplane"),
+      ("seat", "chair"), ("hotel", "bed.double"),
+      ("camera", "camera"), ("photo", "photo"), ("image", "photo"),
+      ("video", "video"), ("movie", "film"), ("music", "music.note"),
+      ("audio", "waveform"), ("mic", "mic"), ("volume", "speaker.wave.2"),
+      ("folder", "folder"), ("file", "doc"), ("document", "doc"),
+      ("description", "doc.text"), ("article", "doc.text"),
+      ("calendar", "calendar"), ("date", "calendar"), ("schedule", "clock"),
+      ("time", "clock"), ("timer", "timer"), ("alarm", "alarm"),
+      ("location", "mappin"), ("place", "mappin"), ("map", "map"),
+      ("navigation", "location.north"), ("compass", "safari"),
+      ("phone", "phone"), ("call", "phone"), ("mail", "envelope"),
+      ("message", "bubble.left"), ("chat", "bubble.left"),
+      ("notification", "bell"), ("wifi", "wifi"), ("bluetooth", "wave.3.right"),
+      ("battery", "battery.100"), ("cloud", "cloud"), ("download", "arrow.down.circle"),
+      ("upload", "arrow.up.circle"), ("share", "square.and.arrow.up"),
+      ("link", "link"), ("lock", "lock"), ("security", "shield"),
+      ("shield", "shield"), ("key", "key"), ("fingerprint", "touchid"),
+      ("search", "magnifyingglass"), ("zoom", "magnifyingglass"),
+      ("settings", "gearshape"), ("build", "wrench"), ("tools", "wrench"),
+      ("edit", "pencil"), ("draw", "pencil.tip"), ("paint", "paintbrush"),
+      ("delete", "trash"), ("remove", "minus.circle"), ("clear", "xmark"),
+      ("close", "xmark"), ("cancel", "xmark.circle"),
+      ("add", "plus.circle"), ("create", "plus.circle"),
+      ("check", "checkmark"), ("done", "checkmark"),
+      ("warning", "exclamationmark.triangle"), ("error", "exclamationmark.octagon"),
+      ("info", "info.circle"), ("help", "questionmark.circle"),
+      ("star", "star"), ("favorite", "heart"), ("heart", "heart"),
+      ("bookmark", "bookmark"), ("flag", "flag"), ("label", "tag"),
+      ("cart", "cart"), ("shopping", "bag"), ("store", "storefront"),
+      ("payment", "creditcard"), ("money", "dollarsign.circle"),
+      ("car", "car"), ("bus", "bus"), ("train", "tram"), ("bike", "bicycle"),
+      ("walk", "figure.walk"), ("run", "figure.run"),
+      ("book", "book"), ("school", "graduationcap"), ("work", "briefcase"),
+      ("language", "globe"), ("public", "globe"), ("web", "globe"),
+      ("code", "chevron.left.forwardslash.chevron.right"),
+      ("terminal", "terminal"), ("print", "printer"), ("save", "square.and.arrow.down"),
+      ("play", "play"), ("pause", "pause"), ("stop", "stop"),
+      ("refresh", "arrow.clockwise"), ("sync", "arrow.triangle.2.circlepath"),
+      ("arrow", "arrow.right"), ("chevron", "chevron.right"),
+      ("menu", "line.3.horizontal"), ("list", "list.bullet"),
+      ("grid", "square.grid.2x2"), ("dashboard", "square.grid.2x2"),
+      ("visibility", "eye"), ("eye", "eye"), ("light", "lightbulb"),
+      ("dark", "moon"), ("sun", "sun.max"), ("weather", "cloud.sun"),
+      ("accessibility", "accessibility"), ("touch", "hand.tap"),
+      ("gesture", "hand.tap"), ("face", "face.smiling"),
+      ("emoji", "face.smiling"), ("sports", "sportscourt"),
+      ("game", "gamecontroller"), ("science", "flask"),
+      ("medical", "cross.case"), ("health", "heart.text.square"),
+    ]
+    if let symbol = semanticSymbols.first(where: { semanticName.contains($0.0) })?.1,
+      isAvailable(symbol)
+    {
+      return symbol
+    }
+    return isAvailable("app") ? "app" : "square"
   }
 
   /// Resolves Flutter's Cupertino icon catalog to SF Symbols. Cupertino icon

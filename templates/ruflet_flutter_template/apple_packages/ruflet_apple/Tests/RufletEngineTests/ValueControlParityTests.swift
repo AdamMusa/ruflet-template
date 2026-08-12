@@ -229,6 +229,13 @@ final class ValueControlParityTests: XCTestCase {
     XCTAssertEqual(RufletCheckboxState.next(after: nil, tristate: false), .bool(true))
   }
 
+  func testCheckboxObserverConsumesTheNewWireValueWithoutCapturedNodeRollback() {
+    XCTAssertEqual(RufletCheckboxState.resting(.bool(true), tristate: false), true)
+    XCTAssertEqual(RufletCheckboxState.resting(.bool(false), tristate: false), false)
+    XCTAssertNil(RufletCheckboxState.resting(.null, tristate: true))
+    XCTAssertEqual(RufletCheckboxState.resting(nil, tristate: false), false)
+  }
+
   // MARK: - Contract
 
   func testFletValueUpdatePrecedesScalarChangeEvent() {

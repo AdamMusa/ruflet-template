@@ -394,8 +394,10 @@ struct CupertinoSwitchControlView: View {
       currentValue = CupertinoSwitchPresentation(node: node).value
       focused = presentation.autofocus
     }
-    .onChange(of: node.bool("value")) { _ in
-      currentValue = CupertinoSwitchPresentation(node: node).value
+    .onChange(of: node.bool("value")) { value in
+      // Do not re-read the old captured node here. The observer's argument is
+      // the authoritative value from the newly rendered store revision.
+      currentValue = value ?? false
     }
     .onChange(of: focused) { events.fire(node, $0 ? "focus" : "blur") }
     .disabled(presentation.disabled)
@@ -696,8 +698,10 @@ struct CupertinoSliderControlView: View {
     slider(presentation)
     .disabled(node.bool("disabled") == true || !presentation.hasSelectableRange)
     .onAppear { currentValue = presentation.value }
-    .onChange(of: node.double("value")) { _ in
-      currentValue = CupertinoSliderPresentation(node: node).value
+    .onChange(of: node.double("value")) { value in
+      let minimum = presentation.minimum
+      let maximum = max(presentation.maximum, minimum)
+      currentValue = min(max(value ?? minimum, minimum), maximum)
     }
   }
 
@@ -929,8 +933,9 @@ private struct CupertinoCheckboxSelectionView: View {
       currentValue = RufletCheckboxState.resting(node)
       focused = presentation.autofocus
     }
-    .onChange(of: node.props["value"]) { _ in
-      currentValue = RufletCheckboxState.resting(node)
+    .onChange(of: node.props["value"]) { value in
+      currentValue = RufletCheckboxState.resting(
+        value, tristate: node.bool("tristate") == true)
     }
     .onChange(of: focused) { events.fire(node, $0 ? "focus" : "blur") }
     .modifier(SelectionAccessibilityLabel(label: RufletAccessibilitySemantics.label(node)))

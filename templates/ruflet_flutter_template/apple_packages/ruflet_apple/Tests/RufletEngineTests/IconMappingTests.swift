@@ -52,9 +52,8 @@ final class IconMappingTests: XCTestCase {
       case .systemSymbol(let symbol):
         XCTAssertNotEqual(symbol, IconMapping.placeholderSymbol, "Placeholder for \(name)")
         XCTAssertTrue(IconMapping.nativeSymbolExists(symbol), "Unavailable SF Symbol \(symbol) for \(name)")
-      case .materialGlyph(let codepoint, let resolvedName):
-        XCTAssertEqual(resolvedName, name)
-        XCTAssertEqual(codepoint, MaterialIconGlyphs.codepoints[index])
+      case .materialGlyph:
+        XCTFail("Material icon \(name) leaked Android font artwork on Apple")
       }
     }
   }
@@ -134,18 +133,27 @@ final class IconMappingTests: XCTestCase {
       "arrow.triangle.2.circlepath.camera")
   }
 
-  func testUnmappedMaterialNamesKeepTheirExactFlutterGlyphInsteadOfAPlaceholder() throws {
+  func testLessCommonMaterialNamesStillUseNativeAppleArtwork() throws {
     let name = "AIRLINE_SEAT_INDIVIDUAL_SUITE"
     let index = try XCTUnwrap(MaterialIconNames.material.firstIndex(of: name))
     let wireCodepoint = MaterialIconNames.firstCodepoint + index
-    let glyphCodepoint = try XCTUnwrap(MaterialIconGlyphs.codepoint(forName: name))
+    guard case .systemSymbol(let wireSymbol) = IconMapping.rendering(
+      for: .int(Int64(wireCodepoint))) else {
+      return XCTFail("Wire icon did not use SF Symbols")
+    }
+    guard case .systemSymbol(let namedSymbol) = IconMapping.rendering(for: .string(name)) else {
+      return XCTFail("Named icon did not use SF Symbols")
+    }
+    XCTAssertTrue(IconMapping.nativeSymbolExists(wireSymbol))
+    XCTAssertEqual(wireSymbol, namedSymbol)
+  }
 
-    XCTAssertEqual(
-      IconMapping.rendering(for: .int(Int64(wireCodepoint))),
-      .materialGlyph(codepoint: glyphCodepoint, name: name))
-    XCTAssertEqual(
-      IconMapping.rendering(for: .string(name)),
-      .materialGlyph(codepoint: glyphCodepoint, name: name))
+  func testMaterialAddHomeVariantsMapToNativeHouseArtwork() {
+    let addHome = IconMapping.symbol(forMaterialName: "ADD_HOME")
+    let outlined = IconMapping.symbol(forMaterialName: "ADD_HOME_OUTLINED")
+    XCTAssertTrue(IconMapping.nativeSymbolExists(addHome))
+    XCTAssertEqual(addHome, "house")
+    XCTAssertEqual(outlined, addHome)
   }
 
   func testAppleIconSearchExposesOnlyTheCupertinoCatalog() {

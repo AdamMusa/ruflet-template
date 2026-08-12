@@ -202,8 +202,11 @@ struct CheckboxControlView: View {
     .modifier(SelectionAccessibilityLabel(label: RufletAccessibilitySemantics.label(node)))
     .disabled(disabled)
     .onAppear { currentValue = RufletCheckboxState.resting(node) }
-    .onChange(of: node.props["value"]) { _ in
-      currentValue = RufletCheckboxState.resting(node)
+    .onChange(of: node.props["value"]) { value in
+      // `node` is the immutable value captured for this render pass. Re-reading
+      // it here restores the pre-change value and makes a checkbox appear to
+      // need two taps. Consume the value delivered by SwiftUI instead.
+      currentValue = RufletCheckboxState.resting(value, tristate: node.bool("tristate") == true)
     }
   }
 
@@ -322,9 +325,11 @@ enum RufletCheckboxState {
   /// tristate: a tristate checkbox that was never given a value rests
   /// *indeterminate*, not unchecked, so absence and `false` differ here.
   static func resting(_ node: ControlNode) -> Bool? {
-    guard let value = node.props["value"], !value.isNull else {
-      return node.bool("tristate") == true ? nil : false
-    }
+    resting(node.props["value"], tristate: node.bool("tristate") == true)
+  }
+
+  static func resting(_ value: RufletValue?, tristate: Bool) -> Bool? {
+    guard let value, !value.isNull else { return tristate ? nil : false }
     return value.boolValue ?? false
   }
 
