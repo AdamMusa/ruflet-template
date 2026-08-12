@@ -591,16 +591,52 @@ public final class ClipboardService: RufletService {
 
 /// `SharedPreferences` — `UserDefaults`, namespaced so a Ruflet app cannot
 /// collide with the host app's own keys.
+public enum FletSharedPreferencesSemantics {
+  public static let storagePrefix = "flutter."
+
+  public enum Method: String, CaseIterable, Equatable {
+    case set
+    case get
+    case containsKey = "contains_key"
+    case getKeys = "get_keys"
+    case remove
+    case clear
+  }
+
+  public static func method(_ name: String) throws -> Method {
+    guard let method = Method(rawValue: name) else {
+      throw RufletServiceError.unsupportedMethod(type: "SharedPreferences", method: name)
+    }
+    return method
+  }
+
+  public static func requiredString(_ value: RufletValue?, name: String) throws -> String {
+    guard case .string(let value)? = value else {
+      throw RufletServiceError.invalidArguments("\(name) must be a string")
+    }
+    return value
+  }
+
+  public static func storageKey(_ key: String) -> String { storagePrefix + key }
+
+  public static func visibleKeys(_ storedKeys: some Sequence<String>, prefix: String) -> [String] {
+    storedKeys.compactMap { key in
+      guard key.hasPrefix(storagePrefix) else { return nil }
+      let visible = String(key.dropFirst(storagePrefix.count))
+      return visible.hasPrefix(prefix) ? visible : nil
+    }
+  }
+}
+
 @MainActor
 public final class SharedPreferencesService: RufletService {
   public static let wireType = "SharedPreferences"
 
-  /// The prefix Flet's shared_preferences plugin uses on Apple platforms, kept
-  /// so a value written by the Flutter engine is still readable here.
-  private let prefix = "flutter."
-  private let defaults = UserDefaults.standard
+  private let defaults: UserDefaults
 
-  public init() {}
+  public init(defaults: UserDefaults = .standard) {
+    self.defaults = defaults
+  }
 
   public func invoke(
     _ call: RufletMethodCall,
@@ -608,57 +644,73 @@ public final class SharedPreferencesService: RufletService {
     context: RufletServiceContext,
     completion: @escaping RufletMethodCompletion
   ) {
-    switch call.name {
-    case "set":
-      guard let key = call.argument("key")?.stringValue else {
-        return completion(.failure(RufletServiceError.invalidArguments("key is required")))
-      }
-      let value: String
+    let method: FletSharedPreferencesSemantics.Method
+    do {
+      method = try FletSharedPreferencesSemantics.method(call.name)
+    } catch {
+      return completion(.failure(error))
+    }
+
+    switch method {
+    case .set:
       do {
-        value = try FletCoreServiceSemantics.sharedPreferenceString(call.argument("value"))
+        let key = try FletSharedPreferencesSemantics.requiredString(
+          call.argument("key"), name: "key")
+        let value = try FletSharedPreferencesSemantics.requiredString(
+          call.argument("value"), name: "value")
+        defaults.set(value, forKey: FletSharedPreferencesSemantics.storageKey(key))
       } catch {
         return completion(.failure(error))
       }
-      defaults.set(value, forKey: prefix + key)
       completion(.success(.bool(true)))
 
-    case "get":
-      guard let key = call.argument("key")?.stringValue else {
-        return completion(.failure(RufletServiceError.invalidArguments("key is required")))
+    case .get:
+      do {
+        let key = try FletSharedPreferencesSemantics.requiredString(
+          call.argument("key"), name: "key")
+        completion(.success(FletCoreServiceSemantics.nullableString(
+          defaults.string(forKey: FletSharedPreferencesSemantics.storageKey(key)))))
+      } catch {
+        completion(.failure(error))
       }
-      completion(.success(FletCoreServiceSemantics.nullableString(
-        defaults.string(forKey: prefix + key))))
 
-    case "contains_key":
-      guard let key = call.argument("key")?.stringValue else {
-        return completion(.failure(RufletServiceError.invalidArguments("key is required")))
+    case .containsKey:
+      do {
+        let key = try FletSharedPreferencesSemantics.requiredString(
+          call.argument("key"), name: "key")
+        completion(.success(.bool(
+          defaults.object(forKey: FletSharedPreferencesSemantics.storageKey(key)) != nil)))
+      } catch {
+        completion(.failure(error))
       }
-      completion(.success(.bool(defaults.object(forKey: prefix + key) != nil)))
 
-    case "get_keys":
-      let filter = (call.argument("key_prefix")?.stringValue ?? "")
-      let keys = defaults.dictionaryRepresentation().keys
-        .filter { $0.hasPrefix(prefix + filter) }
-        .map { String($0.dropFirst(prefix.count)) }
-      completion(.success(.array(keys.sorted().map(RufletValue.string))))
-
-    case "remove":
-      guard let key = call.argument("key")?.stringValue else {
-        return completion(.failure(RufletServiceError.invalidArguments("key is required")))
+    case .getKeys:
+      do {
+        let filter = try FletSharedPreferencesSemantics.requiredString(
+          call.argument("key_prefix"), name: "key_prefix")
+        let keys = FletSharedPreferencesSemantics.visibleKeys(
+          defaults.dictionaryRepresentation().keys, prefix: filter)
+        completion(.success(.array(keys.map(RufletValue.string))))
+      } catch {
+        completion(.failure(error))
       }
-      defaults.removeObject(forKey: prefix + key)
-      completion(.success(.bool(true)))
 
-    case "clear":
-      for key in defaults.dictionaryRepresentation().keys where key.hasPrefix(prefix) {
+    case .remove:
+      do {
+        let key = try FletSharedPreferencesSemantics.requiredString(
+          call.argument("key"), name: "key")
+        defaults.removeObject(forKey: FletSharedPreferencesSemantics.storageKey(key))
+        completion(.success(.bool(true)))
+      } catch {
+        completion(.failure(error))
+      }
+
+    case .clear:
+      for key in defaults.dictionaryRepresentation().keys
+      where key.hasPrefix(FletSharedPreferencesSemantics.storagePrefix) {
         defaults.removeObject(forKey: key)
       }
       completion(.success(.bool(true)))
-
-    default:
-      completion(
-        .failure(
-          RufletServiceError.unsupportedMethod(type: "SharedPreferences", method: call.name)))
     }
   }
 
@@ -957,15 +1009,44 @@ public final class HapticFeedbackService: RufletService {
 }
 
 /// `Wakelock` — keeps the screen awake.
+public enum FletWakelockSemantics {
+  public enum Method: String, CaseIterable, Equatable {
+    case enable
+    case disable
+    case isEnabled = "is_enabled"
+  }
+
+  public static func method(_ name: String) throws -> Method {
+    guard let method = Method(rawValue: name) else {
+      throw RufletServiceError.unsupportedMethod(type: "Wakelock", method: name)
+    }
+    return method
+  }
+
+  public static func nextEnabledState(current: Bool, method: Method) -> Bool {
+    switch method {
+    case .enable: return true
+    case .disable: return false
+    case .isEnabled: return current
+    }
+  }
+}
+
 @MainActor
 public final class WakelockService: RufletService {
   public static let wireType = "Wakelock"
 
   #if canImport(AppKit)
-    private var assertion: Any?
+    private var assertion: NSObjectProtocol?
   #endif
 
   public init() {}
+
+  deinit {
+    #if canImport(AppKit)
+      if let assertion { ProcessInfo.processInfo.endActivity(assertion) }
+    #endif
+  }
 
   public func invoke(
     _ call: RufletMethodCall,
@@ -973,23 +1054,30 @@ public final class WakelockService: RufletService {
     context: RufletServiceContext,
     completion: @escaping RufletMethodCompletion
   ) {
-    switch call.name {
-    case "enable", "disable":
-      let enable = call.name == "enable"
+    let method: FletWakelockSemantics.Method
+    do {
+      method = try FletWakelockSemantics.method(call.name)
+    } catch {
+      return completion(.failure(error))
+    }
+
+    switch method {
+    case .enable, .disable:
+      let enable = method == .enable
       #if os(iOS)
         UIApplication.shared.isIdleTimerDisabled = enable
       #elseif canImport(AppKit)
-        if enable {
+        if enable, assertion == nil {
           assertion = ProcessInfo.processInfo.beginActivity(
             options: [.idleDisplaySleepDisabled], reason: "Ruflet wakelock")
-        } else if let token = assertion as? NSObjectProtocol {
-          ProcessInfo.processInfo.endActivity(token)
-          assertion = nil
+        } else if !enable, let assertion {
+          ProcessInfo.processInfo.endActivity(assertion)
+          self.assertion = nil
         }
       #endif
       completion(.success(.null))
 
-    case "is_enabled":
+    case .isEnabled:
       #if os(iOS)
         completion(.success(.bool(UIApplication.shared.isIdleTimerDisabled)))
       #elseif canImport(AppKit)
@@ -997,10 +1085,6 @@ public final class WakelockService: RufletService {
       #else
         completion(.success(.bool(false)))
       #endif
-
-    default:
-      completion(
-        .failure(RufletServiceError.unsupportedMethod(type: "Wakelock", method: call.name)))
     }
   }
 }
