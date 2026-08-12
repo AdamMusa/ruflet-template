@@ -495,7 +495,7 @@ struct ChipControlView: View {
           deleteIcon
         }
         .buttonStyle(.plain)
-        .help(node.string("delete_button_tooltip") ?? "")
+        .help(ChipPresentation.deleteTooltip(node) ?? "")
         .modifier(ChipSlotConstraints(value: node.props["delete_icon_size_constraints"]))
       }
     }
@@ -604,6 +604,16 @@ struct ChipControlView: View {
       node.props["leading_drawer_animation_style"]
         ?? node.props["delete_drawer_animation_style"]
         ?? node.props["enable_animation_style"])
+  }
+}
+
+enum ChipPresentation {
+  /// Pinned Flet calls this `delete_button_tooltip`; Ruflet's public DSL has
+  /// historically serialized the equivalent field as `delete_icon_tooltip`.
+  /// Resolve both at the control boundary so the native constructor retains
+  /// Flet semantics without making applications rewrite their DSL.
+  static func deleteTooltip(_ node: ControlNode) -> String? {
+    node.string("delete_icon_tooltip") ?? node.string("delete_button_tooltip")
   }
 }
 

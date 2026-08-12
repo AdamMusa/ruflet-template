@@ -31,4 +31,23 @@ final class MaterialButtonParityTests: XCTestCase {
     XCTAssertEqual(mini.side, 40)
     XCTAssertEqual(mini.radius, 12)
   }
+
+  func testChipResolvesRufletAndFletDeleteTooltipNames() {
+    XCTAssertEqual(
+      ChipPresentation.deleteTooltip(ControlNode(
+        id: 1,
+        type: "Chip",
+        props: ["delete_icon_tooltip": .string("Remove")]
+      )),
+      "Remove"
+    )
+    XCTAssertEqual(
+      ChipPresentation.deleteTooltip(ControlNode(
+        id: 2,
+        type: "Chip",
+        props: ["delete_button_tooltip": .string("Delete")]
+      )),
+      "Delete"
+    )
+  }
 }
