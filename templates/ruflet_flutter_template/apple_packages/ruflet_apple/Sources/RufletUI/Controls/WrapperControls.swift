@@ -1128,18 +1128,25 @@ extension EnvironmentValues {
 /// inputs' content types, so this is a presentation-free native container.
 struct AutofillGroupControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
 
   @ViewBuilder var body: some View {
-    if let contentID = node.controlID(forKey: "content") {
+    let contentID = node.controlID(forKey: "content")
+    let contentIsVisible = contentID.flatMap(store.node).map { $0.bool("visible") != false } ?? false
+    if let error = RufletAutofillGroupSemantics.validationError(
+      contentID: contentID, contentIsVisible: contentIsVisible)
+    {
+      RufletWrapperError(error)
+    } else if let contentID {
       ControlView(id: contentID, axis: .none)
         .onDisappear { RufletAutofillGroupSemantics.dispose(node) }
-    } else {
-      RufletWrapperError("AutofillGroup control has no content.")
     }
   }
 }
 
 enum RufletAutofillGroupSemantics {
+  static let missingContentError = "AutofillGroup control has no content."
+
   enum DisposeAction: String, Equatable {
     case commit
     case cancel
@@ -1148,6 +1155,13 @@ enum RufletAutofillGroupSemantics {
   /// Flet defaults missing and unknown values to commit.
   static func disposeAction(_ node: ControlNode) -> DisposeAction {
     DisposeAction(rawValue: node.string("dispose_action")?.lowercased() ?? "") ?? .commit
+  }
+
+  /// Flet resolves the content slot through `buildWidget`, which rejects both
+  /// absent controls and controls removed by `visible: false`.
+  static func validationError(contentID: Int?, contentIsVisible: Bool) -> String? {
+    guard contentID != nil, contentIsVisible else { return missingContentError }
+    return nil
   }
 
   @MainActor

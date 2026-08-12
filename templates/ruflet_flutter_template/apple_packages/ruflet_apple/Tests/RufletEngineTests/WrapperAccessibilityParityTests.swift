@@ -95,6 +95,20 @@ final class WrapperAccessibilityParityTests: XCTestCase {
           ])), .commit)
   }
 
+  func testAutofillGroupRequiresVisibleContentLikeFletBuildWidget() {
+    XCTAssertEqual(
+      RufletAutofillGroupSemantics.validationError(
+        contentID: nil, contentIsVisible: false),
+      "AutofillGroup control has no content.")
+    XCTAssertEqual(
+      RufletAutofillGroupSemantics.validationError(
+        contentID: 2, contentIsVisible: false),
+      "AutofillGroup control has no content.")
+    XCTAssertNil(
+      RufletAutofillGroupSemantics.validationError(
+        contentID: 2, contentIsVisible: true))
+  }
+
   func testWrapperAndBrowserContextMenuDescriptorsAreExecutable() {
     let autofill = ControlRegistry.builtInDescriptor(for: "AutofillGroup")
     XCTAssertEqual(autofill?.classification, .visible)
