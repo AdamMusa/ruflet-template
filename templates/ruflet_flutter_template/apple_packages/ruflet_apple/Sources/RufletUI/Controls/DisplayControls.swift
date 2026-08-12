@@ -1077,28 +1077,17 @@ struct RufletLinearProgressMetrics: Equatable {
 /// does. This keeps unstyled Ruflet apps native instead of painting a Material
 /// indicator on iOS/macOS.
 enum RufletProgressAppearance {
-  static func usesNativeLinear(_ node: ControlNode) -> Bool {
-    [
-      "color", "bgcolor", "bar_height", "border_radius", "track_gap",
-      "stop_indicator_color", "stop_indicator_radius", "year_2023",
-    ].allSatisfy { !hasExplicitValue(node.props[$0]) }
-  }
+  static func usesNativeLinear(_ node: ControlNode) -> Bool { true }
 
-  static func usesNativeCircular(_ node: ControlNode) -> Bool {
-    [
-      "color", "bgcolor", "stroke_width", "stroke_align", "stroke_cap",
-      "track_gap", "track_gap_fallback", "size_constraints", "padding", "year2023",
-      "year_2023",
-    ].allSatisfy { !hasExplicitValue(node.props[$0]) }
-  }
+  static func usesNativeCircular(_ node: ControlNode) -> Bool { true }
 
   static func value(_ node: ControlNode) -> Double? {
     node.double("value").map { min(max($0, 0), 1) }
   }
 
-  private static func hasExplicitValue(_ value: RufletValue?) -> Bool {
-    guard let value else { return false }
-    return !value.isNull
+  static func explicitTint(_ node: ControlNode) -> Color? {
+    guard node.props["color"] != nil, !node.props["color"]!.isNull else { return nil }
+    return MaterialPalette.color(node.string("color"))
   }
 }
 
@@ -1108,90 +1097,18 @@ enum RufletProgressAppearance {
 /// exposes neither the bar's height nor the 2024 track gap and stop indicator.
 struct ProgressBarControlView: View {
   let node: ControlNode
-  @State private var sweep: CGFloat = 0
-  @Environment(\.layoutDirection) private var layoutDirection
 
-  @ViewBuilder
   var body: some View {
-    if RufletProgressAppearance.usesNativeLinear(node) {
-      Group {
-        if let value = RufletProgressAppearance.value(node) {
-          ProgressView(value: value, total: 1)
-        } else {
-          ProgressView()
-        }
+    Group {
+      if let value = RufletProgressAppearance.value(node) {
+        ProgressView(value: value, total: 1)
+      } else {
+        ProgressView()
       }
-      .progressViewStyle(.linear)
-      // Keep the native ProgressView, but feed it Flutter's resolved semantic
-      // colour rather than replacing an omitted value with an Apple default.
-      .tint(progressColor)
-      .modifier(ProgressSemanticsValue(node: node))
-    } else {
-      let metrics = RufletLinearProgressMetrics(node: node)
-      GeometryReader { proxy in
-        ZStack(alignment: .leading) {
-          bar(metrics, width: proxy.size.width)
-        }
-        // Flutter's painter resolves its fractional endpoints through
-        // TextDirection. Mirroring the native drawing surface preserves the
-        // same leading edge and trailing stop-dot behavior in RTL.
-        .scaleEffect(x: layoutDirection == .rightToLeft ? -1 : 1, y: 1)
-      }
-      .frame(height: metrics.height)
-      .modifier(ProgressSemanticsValue(node: node))
     }
-  }
-
-  /// Flutter paints the track, then the stop indicator, then the active
-  /// indicator over both.
-  @ViewBuilder
-  private func bar(_ metrics: RufletLinearProgressMetrics, width: CGFloat) -> some View {
-    let shape = RoundedRectangle(cornerRadius: metrics.cornerRadius)
-    let origin = metrics.trackOrigin(in: width)
-
-    shape
-      .fill(trackColor)
-      .frame(width: max(0, width - origin))
-      .offset(x: origin)
-
-    if let radius = metrics.resolvedStopIndicatorRadius {
-      Circle()
-        .fill(stopIndicatorColor)
-        .frame(width: radius * 2, height: radius * 2)
-        .offset(x: metrics.stopIndicatorCentre(in: width) - radius)
-    }
-
-    if metrics.value != nil {
-      shape
-        .fill(progressColor)
-        .frame(width: metrics.activeWidth(in: width))
-    } else {
-      // Flutter runs two lines across the track over 1800ms; one travelling
-      // segment reads the same way without a per-frame animation driver.
-      shape
-        .fill(progressColor)
-        .frame(width: width * 0.4)
-        .offset(x: -width * 0.4 + sweep * width * 1.4)
-        .onAppear { sweep = 1 }
-        .animation(
-          .linear(duration: RufletThemeDefaults.linearProgressIndeterminateDuration)
-            .repeatForever(autoreverses: false),
-          value: sweep)
-    }
-  }
-
-  private var progressColor: Color {
-    MaterialPalette.color(for: node, property: "color", default: .primary)
-  }
-
-  private var trackColor: Color {
-    MaterialPalette.color(for: node, property: "bgcolor", default: .clear)
-  }
-
-  private var stopIndicatorColor: Color {
-    let token = RufletThemeDefaults.resolvedDisplayColorToken(
-      for: node, property: "stop_indicator_color")
-    return MaterialPalette.color(token, default: progressColor)
+    .progressViewStyle(.linear)
+    .modifier(OptionalTint(color: RufletProgressAppearance.explicitTint(node)))
+    .modifier(ProgressSemanticsValue(node: node))
   }
 }
 
@@ -1354,71 +1271,18 @@ enum RufletStrokeCap: String {
 /// `ProgressRing` — Flutter's `CircularProgressIndicator`.
 struct ProgressRingControlView: View {
   let node: ControlNode
-  @State private var rotation = Angle.zero
 
-  @ViewBuilder
   var body: some View {
-    if RufletProgressAppearance.usesNativeCircular(node) {
-      Group {
-        if let value = RufletProgressAppearance.value(node) {
-          ProgressView(value: value, total: 1)
-        } else {
-          ProgressView()
-        }
+    Group {
+      if let value = RufletProgressAppearance.value(node) {
+        ProgressView(value: value, total: 1)
+      } else {
+        ProgressView()
       }
-      .progressViewStyle(.circular)
-      .tint(progressColor)
-      .modifier(ProgressSemanticsValue(node: node))
-    } else {
-      let metrics = RufletCircularProgressMetrics(node: node)
-      ZStack {
-        if let track = metrics.trackArc {
-          arc(metrics, from: track.from, to: track.to)
-            .stroke(trackColor, style: style(metrics, cap: metrics.trackCap))
-            .rotationEffect(.degrees(-90))
-        }
-
-        if let active = metrics.valueArc {
-          arc(metrics, from: active.from, to: active.to)
-            .stroke(progressColor, style: style(metrics, cap: metrics.strokeCap))
-            .rotationEffect(.degrees(-90))
-        } else {
-          arc(metrics, from: 0.12, to: 0.72)
-            .stroke(progressColor, style: style(metrics, cap: metrics.strokeCap))
-            .rotationEffect(rotation)
-            .onAppear { rotation = .degrees(360) }
-            .animation(
-              .linear(duration: RufletThemeDefaults.circularProgressIndeterminateDuration)
-                .repeatForever(autoreverses: false),
-              value: rotation)
-        }
-      }
-      .frame(width: metrics.width, height: metrics.height)
-      .padding(metrics.padding ?? EdgeInsets())
-      .modifier(ProgressSemanticsValue(node: node))
     }
-  }
-
-  private func arc(
-    _ metrics: RufletCircularProgressMetrics,
-    from: CGFloat,
-    to: CGFloat
-  ) -> some Shape {
-    Ellipse()
-      .inset(by: metrics.strokeInset)
-      .trim(from: from, to: to)
-  }
-
-  private func style(_ metrics: RufletCircularProgressMetrics, cap: CGLineCap) -> StrokeStyle {
-    StrokeStyle(lineWidth: metrics.strokeWidth, lineCap: cap)
-  }
-
-  private var progressColor: Color {
-    MaterialPalette.color(for: node, property: "color", default: .primary)
-  }
-
-  private var trackColor: Color {
-    MaterialPalette.color(for: node, property: "bgcolor", default: .clear)
+    .progressViewStyle(.circular)
+    .modifier(OptionalTint(color: RufletProgressAppearance.explicitTint(node)))
+    .modifier(ProgressSemanticsValue(node: node))
   }
 }
 

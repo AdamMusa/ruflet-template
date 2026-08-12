@@ -16,15 +16,38 @@ final class ProgressBadgeParityTests: XCTestCase {
     XCTAssertTrue(RufletProgressAppearance.usesNativeLinear(linear))
     XCTAssertTrue(RufletProgressAppearance.usesNativeCircular(circular))
 
-    XCTAssertFalse(RufletProgressAppearance.usesNativeLinear(ControlNode(
+    XCTAssertTrue(RufletProgressAppearance.usesNativeLinear(ControlNode(
       id: 3, type: "ProgressBar", props: ["bar_height": .double(8)])))
-    XCTAssertFalse(RufletProgressAppearance.usesNativeCircular(ControlNode(
+    XCTAssertTrue(RufletProgressAppearance.usesNativeCircular(ControlNode(
       id: 4, type: "ProgressRing", props: ["stroke_width": .double(8)])))
 
     XCTAssertTrue(RufletProgressAppearance.usesNativeLinear(ControlNode(
       id: 5, type: "ProgressBar", props: ["bar_height": .null])))
     XCTAssertTrue(RufletProgressAppearance.usesNativeCircular(ControlNode(
       id: 6, type: "ProgressRing", props: ["padding": .null])))
+  }
+
+  func testProgressTintIsExplicitOnlyWhileMaterialRolesStaySemantic() {
+    XCTAssertNil(RufletProgressAppearance.explicitTint(ControlNode(
+      id: 1, type: "ProgressBar")))
+    XCTAssertNotNil(RufletProgressAppearance.explicitTint(ControlNode(
+      id: 2, type: "ProgressRing", props: ["color": .string("red")])))
+  }
+
+  func testProgressRenderersNeverRecreateMaterialPainterChrome() throws {
+    let package = URL(fileURLWithPath: #filePath)
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+    let source = try String(contentsOf: package.appendingPathComponent(
+      "Sources/RufletUI/Controls/DisplayControls.swift"))
+    let start = try XCTUnwrap(source.range(of: "struct ProgressBarControlView"))
+    let end = try XCTUnwrap(source.range(of: "/// Flutter defaults a determinate", range: start.upperBound..<source.endIndex))
+    let renderers = source[start.lowerBound..<end.lowerBound]
+    XCTAssertTrue(renderers.contains("ProgressView("))
+    XCTAssertFalse(renderers.contains("GeometryReader"))
+    XCTAssertFalse(renderers.contains("RoundedRectangle"))
+    XCTAssertFalse(renderers.contains("Ellipse()"))
   }
 
   func testCircleAvatarContentAcceptsFletStringOrControlProviders() {
