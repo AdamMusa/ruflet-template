@@ -1091,7 +1091,11 @@ struct SegmentedButtonControlView: View {
 
   @ViewBuilder
   var body: some View {
-    let segments = node.controlIDs(forKey: "segments").compactMap { store.node($0) }
+    // Flet's `children("segments")` returns visible children only. Segment is
+    // structural and never passes through ControlView, so its parent must
+    // apply that visibility filter before validation and rendering.
+    let segments = SegmentedButtonPresentation.visibleSegments(
+      node.controlIDs(forKey: "segments").compactMap { store.node($0) })
     let selected = selectedValues
     if let message = SegmentedButtonPresentation.validationMessage(
       segmentCount: segments.count, selected: selectedValuesInWireOrder, node: node)
@@ -1114,6 +1118,7 @@ struct SegmentedButtonControlView: View {
         segmentLabel(segment, chosen: selectedValues.contains(value))
           .tag(value)
           .disabled(segment.bool("disabled") == true)
+          .help(SegmentedButtonPresentation.tooltip(segment) ?? "")
       }
     }
     .pickerStyle(.segmented)
@@ -1152,7 +1157,7 @@ struct SegmentedButtonControlView: View {
           selected: isSelected,
           disabled: segment.bool("disabled") == true))
         .disabled(node.bool("disabled") == true || segment.bool("disabled") == true)
-        .help(segment.bool("disabled") == true ? "" : (segment.string("tooltip") ?? ""))
+        .help(SegmentedButtonPresentation.tooltip(segment) ?? "")
       }
     }
     .disabled(node.bool("disabled") ?? false)
@@ -1246,6 +1251,17 @@ struct SegmentedButtonPresentation {
   enum Route: Equatable {
     case picker
     case buttonGroup
+  }
+
+  static func visibleSegments(_ segments: [ControlNode]) -> [ControlNode] {
+    segments.filter { $0.bool("visible") != false }
+  }
+
+  /// Pinned Flet passes no tooltip for a disabled ButtonSegment. An enabled
+  /// segment keeps its optional tooltip in both native rendering routes.
+  static func tooltip(_ segment: ControlNode) -> String? {
+    guard segment.bool("disabled") != true else { return nil }
+    return segment.string("tooltip")
   }
 
   var route: Route {
