@@ -128,6 +128,82 @@ public struct ChartControlSemantics {
   }
 }
 
+/// Exact wire maps and repeat filtering used by the pinned `flet_charts`
+/// adapters. Five chart families retain the previous Equatable event and do
+/// not send it twice. Scatter deliberately forwards every callback.
+struct ChartEventSemantics {
+  static func bar(
+    type: String, groupIndex: Int?, rodIndex: Int?, stackItemIndex: Int?
+  ) -> RufletValue {
+    .map([
+      "type": .string(type),
+      "group_index": integer(groupIndex),
+      "rod_index": integer(rodIndex),
+      "stack_item_index": integer(stackItemIndex),
+    ])
+  }
+
+  static func line(type: String, spots: [(barIndex: Int, spotIndex: Int)]) -> RufletValue {
+    .map([
+      "type": .string(type),
+      "spots": .array(spots.map { spot in
+        .map([
+          "bar_index": .int(Int64(spot.barIndex)),
+          "spot_index": .int(Int64(spot.spotIndex)),
+        ])
+      }),
+    ])
+  }
+
+  static func pie(
+    type: String, sectionIndex: Int?, localX: Double?, localY: Double?
+  ) -> RufletValue {
+    .map([
+      "type": .string(type),
+      "section_index": integer(sectionIndex),
+      "local_x": localX.map(RufletValue.double) ?? .null,
+      "local_y": localY.map(RufletValue.double) ?? .null,
+    ])
+  }
+
+  static func spot(type: String, spotIndex: Int?) -> RufletValue {
+    .map([
+      "type": .string(type),
+      "spot_index": integer(spotIndex),
+    ])
+  }
+
+  static func radar(
+    type: String, dataSetIndex: Int?, entryIndex: Int?, entryValue: Double?
+  ) -> RufletValue {
+    .map([
+      "type": .string(type),
+      "data_set_index": integer(dataSetIndex),
+      "entry_index": integer(entryIndex),
+      "entry_value": entryValue.map(RufletValue.double) ?? .null,
+    ])
+  }
+
+  /// Pie's Dart Equatable intentionally excludes the local pointer position.
+  /// Consequently moving within one section is still a duplicate when the
+  /// event type has not changed. The other retained events compare every wire
+  /// field; ScatterChart has no retained `_eventData` at all.
+  static func shouldForward(
+    _ event: RufletValue, after previous: RufletValue?, chartType: String
+  ) -> Bool {
+    guard chartType != "ScatterChart", let previous else { return true }
+    if chartType == "PieChart" {
+      return event["type"] != previous["type"]
+        || event["section_index"] != previous["section_index"]
+    }
+    return event != previous
+  }
+
+  private static func integer(_ value: Int?) -> RufletValue {
+    value.map { .int(Int64($0)) } ?? .null
+  }
+}
+
 /// The chart family, drawn from the same control trees Flet's chart widgets take.
 ///
 /// The chart controls do not share a wire shape: lines contain data series,
@@ -140,6 +216,7 @@ public struct ChartControlView: View {
   @Environment(\.rufletEvents) private var events
   @State private var chartSize: CGSize = .zero
   @State private var interactionLocation: CGPoint?
+  @State private var previousEvent: RufletValue?
 
   public init(node: ControlNode) {
     self.node = node
@@ -192,7 +269,13 @@ public struct ChartControlView: View {
         guard ChartControlSemantics.interactionEnabled(for: node) else { return }
         interactionLocation = event.location
         if ChartControlSemantics.shouldEmitEvent(for: node) {
-          events.fire(node, "event", data: chartEvent(at: event.location))
+          let payload = chartEvent(at: event.location, type: "tapUp")
+          if ChartEventSemantics.shouldForward(
+            payload, after: previousEvent, chartType: node.type
+          ) {
+            previousEvent = payload
+            events.fire(node, "event", data: payload)
+          }
         }
       })
   }
@@ -241,7 +324,7 @@ public struct ChartControlView: View {
   /// Matches the maps produced by the Flet chart plugin's `*EventData.toMap()`.
   /// Swift Charts does not expose fl_chart's response objects, so hit indices
   /// are resolved against the same geometry used by this renderer.
-  private func chartEvent(at location: CGPoint) -> RufletValue {
+  private func chartEvent(at location: CGPoint, type: String = "tapUp") -> RufletValue {
     let xFraction = max(0, min(location.x / max(chartSize.width, 1), 0.999_999))
     switch node.type {
     case "BarChart":
@@ -250,10 +333,11 @@ public struct ChartControlView: View {
       let maxX = node.double("max_x") ?? groups.map(\.x).max() ?? 1
       let target = minX + Double(xFraction) * max(maxX - minX, .ulpOfOne)
       let groupIndex = ChartControlSemantics.nearestIndex(to: target, values: groups.map(\.x)) ?? 0
-      return .map([
-        "type": .string("tapUp"), "group_index": barGroups.isEmpty ? .null : .int(Int64(groupIndex)),
-        "rod_index": barGroups.isEmpty ? .null : .int(0), "stack_item_index": .null,
-      ])
+      return ChartEventSemantics.bar(
+        type: type,
+        groupIndex: barGroups.isEmpty ? nil : groupIndex,
+        rodIndex: barGroups.isEmpty ? nil : 0,
+        stackItemIndex: nil)
     case "PieChart":
       let sections = orderedUnique(node.controlIDs(forKey: "sections") + node.childIDs)
         .compactMap { store.node($0) }.filter { ($0.double("value") ?? 0) > 0 }
@@ -267,10 +351,9 @@ public struct ChartControlView: View {
         cursor += ((section.double("value") ?? 0) / max(total, .ulpOfOne)) * 2 * .pi
         if angle <= cursor { hit = index; break }
       }
-      return .map([
-        "type": .string("tapUp"), "section_index": hit.map { .int(Int64($0)) } ?? .null,
-        "local_x": .double(location.x), "local_y": .double(location.y),
-      ])
+      return ChartEventSemantics.pie(
+        type: type, sectionIndex: hit,
+        localX: Double(location.x), localY: Double(location.y))
     case "ScatterChart", "CandlestickChart":
       let key = "spots"
       let spots = orderedUnique(node.controlIDs(forKey: key) + node.childIDs).compactMap { store.node($0) }
@@ -279,34 +362,33 @@ public struct ChartControlView: View {
       let maxX = node.double("max_x") ?? values.max() ?? 1
       let target = minX + Double(xFraction) * max(maxX - minX, .ulpOfOne)
       let index = ChartControlSemantics.nearestIndex(to: target, values: values)
-      return .map([
-        "type": .string("tapUp"),
-        "spot_index": index.map { .int(Int64($0)) } ?? .null,
-      ])
+      return ChartEventSemantics.spot(type: type, spotIndex: index)
     case "RadarChart":
       let sets = node.controlIDs(forKey: "data_sets").compactMap { store.node($0) }
-      let values = sets.first?.controlIDs(forKey: "data_entries").compactMap {
+      let values = sets.first.map {
+        orderedUnique($0.controlIDs(forKey: "entries") + $0.controlIDs(forKey: "data_entries"))
+      }?.compactMap {
         store.node($0)?.double("value")
       } ?? []
       let centre = CGPoint(x: chartSize.width / 2, y: chartSize.height / 2)
       var angle = atan2(location.y - centre.y, location.x - centre.x) + .pi / 2
       if angle < 0 { angle += 2 * .pi }
       let entry = values.isEmpty ? nil : min(Int(angle / (2 * .pi) * Double(values.count)), values.count - 1)
-      return .map([
-        "type": .string("tapUp"), "data_set_index": sets.isEmpty ? .null : .int(0),
-        "entry_index": entry.map { .int(Int64($0)) } ?? .null,
-        "entry_value": entry.map { .double(values[$0]) } ?? .null,
-      ])
+      return ChartEventSemantics.radar(
+        type: type,
+        dataSetIndex: sets.isEmpty ? nil : 0,
+        entryIndex: entry,
+        entryValue: entry.map { values[$0] })
     default:
-      let spots = lineSeries.enumerated().map { barIndex, series -> RufletValue in
+      let spots = lineSeries.enumerated().map { barIndex, series in
         let xs = series.points.map(\.x)
         let minX = node.double("min_x") ?? xs.min() ?? 0
         let maxX = node.double("max_x") ?? xs.max() ?? 1
         let target = minX + Double(xFraction) * max(maxX - minX, .ulpOfOne)
         let index = ChartControlSemantics.nearestIndex(to: target, values: xs) ?? 0
-        return .map(["bar_index": .int(Int64(barIndex)), "spot_index": .int(Int64(index))])
+        return (barIndex: barIndex, spotIndex: index)
       }
-      return .map(["type": .string("tapUp"), "spots": .array(spots)])
+      return ChartEventSemantics.line(type: type, spots: spots)
     }
   }
 
