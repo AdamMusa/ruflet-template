@@ -1442,6 +1442,46 @@ struct RufletCupertinoAppBarConfiguration {
   var height: CGFloat { large ? 88 : 44 }
 }
 
+/// Flutter Cupertino constructor constants used by the presentation family.
+/// These are intentionally independent of SwiftUI defaults: changing the
+/// deployment SDK must not restyle a Ruflet control whose source of truth is
+/// Flet 0.80.5 / Flutter 3.41.2.
+enum RufletCupertinoPresentationDefaults {
+  static let actionSheetEdgePadding: CGFloat = 8
+  static let actionSheetCancelPadding: CGFloat = 8
+  static let actionSheetContentHorizontalPadding: CGFloat = 16
+  static let actionSheetContentVerticalPadding: CGFloat = 13.5
+  static let actionSheetActionMinimumHeight: CGFloat = 57.17
+  static let actionSheetCornerRadius: CGFloat = 12
+  static let contextMenuActionMinimumHeight: CGFloat = 43
+  static let contextMenuActionPadding = EdgeInsets(
+    top: 8, leading: 15.5, bottom: 8, trailing: 17.5)
+  static let alertInsetDurationMilliseconds: Double = 100
+  static let bottomSheetPickerHeight: CGFloat = 220
+
+  static func actionIDs(_ node: ControlNode) -> [Int] {
+    node.controlIDs(forKey: "actions")
+  }
+
+  static func isValidContextMenu(_ node: ControlNode) -> Bool {
+    node.controlID(forKey: "content") != nil && !actionIDs(node).isEmpty
+  }
+
+  static func hasAlertContent(_ node: ControlNode) -> Bool {
+    node.props["title"] != nil
+      || node.props["content"] != nil
+      || !actionIDs(node).isEmpty
+  }
+
+  static func isDefaultAction(_ node: ControlNode) -> Bool {
+    node.bool("default") == true
+  }
+
+  static func isDestructiveAction(_ node: ControlNode) -> Bool {
+    node.bool("destructive") == true
+  }
+}
+
 /// Flet's `CupertinoNavigationBar` is a `CupertinoTabBar`, despite its name:
 /// destinations select an index and emit that integer through `change`.
 struct CupertinoNavigationBarControlView: View {
@@ -1508,43 +1548,194 @@ struct CupertinoNavigationBarControlView: View {
 /// `CupertinoActionSheet` — a titled list of actions above a cancel button.
 struct CupertinoActionSheetControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
+  @Environment(\.rufletEvents) private var events
+  @Environment(\.colorScheme) private var colorScheme
 
   var body: some View {
-    VStack(spacing: 8) {
+    actionSheet
+  }
+
+  private var actionSheet: some View {
+    VStack(spacing: hasMainSheet
+      ? RufletCupertinoPresentationDefaults.actionSheetCancelPadding : 0) {
       VStack(spacing: 0) {
-        if let titleID = node.controlID(forKey: "title") {
-          ControlView(id: titleID, axis: .none).padding(12).font(.footnote)
+        if hasTextOrWidget("title") {
+          textOrWidget("title")
+            .font(.system(
+              size: 13,
+              weight: hasTextOrWidget("message") ? .semibold : .regular))
+            .foregroundColor(contentTextColor)
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal,
+                     RufletCupertinoPresentationDefaults.actionSheetContentHorizontalPadding)
+            .padding(.top,
+                     RufletCupertinoPresentationDefaults.actionSheetContentVerticalPadding)
+            .padding(.bottom, !hasTextOrWidget("message")
+              ? RufletCupertinoPresentationDefaults.actionSheetContentVerticalPadding : 0)
         }
-        if let messageID = node.controlID(forKey: "message") {
-          ControlView(id: messageID, axis: .none).padding(.horizontal, 12).font(.footnote)
+        if hasTextOrWidget("message") {
+          textOrWidget("message")
+            .font(.system(
+              size: 13,
+              weight: hasTextOrWidget("title") ? .regular : .semibold))
+            .foregroundColor(contentTextColor)
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal,
+                     RufletCupertinoPresentationDefaults.actionSheetContentHorizontalPadding)
+            .padding(.top, !hasTextOrWidget("title")
+              ? RufletCupertinoPresentationDefaults.actionSheetContentVerticalPadding : 4)
+            .padding(.bottom,
+                     RufletCupertinoPresentationDefaults.actionSheetContentVerticalPadding)
         }
         ForEach(node.controlIDs(forKey: "actions"), id: \.self) { actionID in
-          Divider()
-          ControlView(id: actionID, axis: .none)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
+          Divider().background(dividerColor)
+          action(actionID)
         }
       }
-      .background(sheetSurface, in: RoundedRectangle(cornerRadius: 12))
+      .background(sheetSurface, in: RoundedRectangle(
+        cornerRadius: RufletCupertinoPresentationDefaults.actionSheetCornerRadius))
+      .clipShape(RoundedRectangle(
+        cornerRadius: RufletCupertinoPresentationDefaults.actionSheetCornerRadius))
 
       if let cancelID = node.controlID(forKey: "cancel") {
-        ControlView(id: cancelID, axis: .none)
-          .frame(maxWidth: .infinity)
-          .padding(.vertical, 14)
-          .background(sheetSurface, in: RoundedRectangle(cornerRadius: 12))
+        action(cancelID)
+          .background(cancelSurface, in: RoundedRectangle(
+            cornerRadius: RufletCupertinoPresentationDefaults.actionSheetCornerRadius))
+          .clipShape(RoundedRectangle(
+            cornerRadius: RufletCupertinoPresentationDefaults.actionSheetCornerRadius))
       }
     }
-    .padding(12)
+    .padding(.horizontal, RufletCupertinoPresentationDefaults.actionSheetEdgePadding)
+    .padding(.bottom, RufletCupertinoPresentationDefaults.actionSheetEdgePadding)
+  }
+
+  @ViewBuilder
+  private func action(_ id: Int) -> some View {
+    if let action = store.node(id) {
+      Button {
+        guard action.bool("disabled") != true else { return }
+        events.fire(action, "click")
+      } label: {
+        actionContent(action)
+          .font(.system(size: 17, weight: action.bool("default") == true ? .semibold : .regular))
+          .foregroundColor(action.bool("destructive") == true ? .red : .accentColor)
+          .frame(maxWidth: .infinity, minHeight:
+            RufletCupertinoPresentationDefaults.actionSheetActionMinimumHeight)
+          .padding(.horizontal, 10)
+      }
+      .buttonStyle(.plain)
+      .background(sheetSurface)
+      .disabled(action.bool("disabled") == true)
+    }
+  }
+
+  @ViewBuilder
+  private func actionContent(_ action: ControlNode) -> some View {
+    if let contentID = action.controlID(forKey: "content") {
+      ControlView(id: contentID, axis: .none)
+    } else if let content = action.string("content") {
+      Text(content)
+    } else {
+      Text("content must be provided").foregroundColor(.red)
+    }
+  }
+
+  @ViewBuilder
+  private func textOrWidget(_ key: String) -> some View {
+    if let id = node.controlID(forKey: key) {
+      ControlView(id: id, axis: .none)
+    } else if let text = node.string(key) {
+      Text(text)
+    }
+  }
+
+  private func hasTextOrWidget(_ key: String) -> Bool {
+    node.controlID(forKey: key) != nil || node.string(key) != nil
+  }
+
+  private var hasMainSheet: Bool {
+    hasTextOrWidget("title") || hasTextOrWidget("message")
+      || !node.controlIDs(forKey: "actions").isEmpty
   }
 
   private var sheetSurface: Color {
-    #if canImport(UIKit)
-      return Color(UIColor.secondarySystemBackground)
-    #elseif canImport(AppKit)
-      return Color(NSColor.controlBackgroundColor)
-    #else
-      return .white
-    #endif
+    colorScheme == .dark
+      ? Color(.sRGB, red: 41 / 255, green: 41 / 255, blue: 41 / 255, opacity: 190 / 255)
+      : Color(.sRGB, red: 252 / 255, green: 252 / 255, blue: 252 / 255, opacity: 200 / 255)
+  }
+
+  private var cancelSurface: Color {
+    colorScheme == .dark
+      ? Color(.sRGB, red: 44 / 255, green: 44 / 255, blue: 44 / 255, opacity: 1)
+      : .white
+  }
+
+  private var contentTextColor: Color {
+    colorScheme == .dark
+      ? Color(.sRGB, red: 241 / 255, green: 241 / 255, blue: 241 / 255, opacity: 150 / 255)
+      : Color(.sRGB, red: 29 / 255, green: 29 / 255, blue: 29 / 255, opacity: 133 / 255)
+  }
+
+  private var dividerColor: Color {
+    colorScheme == .dark
+      ? Color(.sRGB, red: 125 / 255, green: 125 / 255, blue: 125 / 255, opacity: 213 / 255)
+      : Color(.sRGB, red: 201 / 255, green: 201 / 255, blue: 201 / 255, opacity: 212 / 255)
+  }
+}
+
+/// Native Apple context menu corresponding to Flutter's
+/// `CupertinoContextMenu`. SwiftUI supplies the platform preview/animation and
+/// closes the menu after a child action is selected.
+struct CupertinoContextMenuControlView: View {
+  let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
+  @Environment(\.rufletEvents) private var events
+
+  @ViewBuilder
+  var body: some View {
+    if !RufletCupertinoPresentationDefaults.isValidContextMenu(node) {
+      Text(node.controlID(forKey: "content") == nil
+        ? "CupertinoContextMenu.content must be visible"
+        : "CupertinoContextMenu.actions requires at least one visible action")
+        .foregroundColor(.red)
+    } else if let contentID = node.controlID(forKey: "content") {
+      ControlView(id: contentID, axis: .none)
+        .contextMenu {
+          ForEach(RufletCupertinoPresentationDefaults.actionIDs(node), id: \.self) { id in
+            contextAction(id)
+          }
+        }
+    }
+  }
+
+  @ViewBuilder
+  private func contextAction(_ id: Int) -> some View {
+    if let action = store.node(id) {
+      Button(role: action.bool("destructive") == true ? .destructive : nil) {
+        guard action.bool("disabled") != true else { return }
+        events.fire(action, "click")
+      } label: {
+        HStack {
+          actionContent(action)
+            .font(.system(size: 16,
+                          weight: action.bool("default") == true ? .semibold : .regular))
+          if let icon = action.props["trailing_icon"] {
+            RufletIcon(value: icon, size: 21, color: nil)
+          }
+        }
+      }
+      .disabled(action.bool("disabled") == true)
+    }
+  }
+
+  @ViewBuilder
+  private func actionContent(_ action: ControlNode) -> some View {
+    if let contentID = action.controlID(forKey: "content") {
+      ControlView(id: contentID, axis: .none)
+    } else {
+      Text(action.string("content") ?? "").lineLimit(1)
+    }
   }
 }
 

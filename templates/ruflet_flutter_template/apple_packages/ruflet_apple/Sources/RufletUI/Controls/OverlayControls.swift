@@ -221,10 +221,16 @@ struct AlertDialogControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
+  @Environment(\.colorScheme) private var colorScheme
 
   @ViewBuilder
   var body: some View {
-    if RufletOverlaySemantics.usesCupertinoDialog(node) {
+    if RufletOverlaySemantics.usesCupertinoDialog(node)
+        && !RufletCupertinoPresentationDefaults.hasAlertContent(node)
+    {
+      Text("CupertinoAlertDialog has nothing to display. Provide title, content, or actions.")
+        .foregroundColor(.red)
+    } else if RufletOverlaySemantics.usesCupertinoDialog(node) {
       appleAlert
     } else {
       materialDialog
@@ -306,22 +312,24 @@ struct AlertDialogControlView: View {
 
   private var appleAlert: some View {
     VStack(spacing: 0) {
-      VStack(spacing: 8) {
-        if let titleID = node.controlID(forKey: "title") {
-          ControlView(id: titleID, axis: .none)
-            .font(.headline)
-            .multilineTextAlignment(.center)
-            .frame(maxWidth: .infinity)
-        }
-        if let contentID = node.controlID(forKey: "content") {
-          ControlView(id: contentID, axis: .vertical)
-            .font(.subheadline)
-            .multilineTextAlignment(.center)
-            .frame(maxWidth: .infinity)
-        }
+      if node.props["title"] != nil {
+        appleTextOrWidget("title")
+          .font(.system(size: 17, weight: .semibold))
+          .multilineTextAlignment(.center)
+          .frame(maxWidth: .infinity)
+          .padding(.horizontal, 20)
+          .padding(.top, 20)
+          .padding(.bottom, node.controlID(forKey: "content") == nil ? 20 : 1)
       }
-      .padding(.horizontal, 16)
-      .padding(.vertical, 20)
+      if let contentID = node.controlID(forKey: "content") {
+        ControlView(id: contentID, axis: .vertical)
+          .font(.system(size: 13))
+          .multilineTextAlignment(.center)
+          .frame(maxWidth: .infinity)
+          .padding(.horizontal, 20)
+          .padding(.top, node.controlID(forKey: "title") == nil ? 20 : 1)
+          .padding(.bottom, 20)
+      }
 
       let actionIDs = node.controlIDs(forKey: "actions")
       if !actionIDs.isEmpty {
@@ -345,7 +353,13 @@ struct AlertDialogControlView: View {
       }
     }
     .frame(width: 270)
-    .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+    .background {
+      RoundedRectangle(cornerRadius: 14, style: .continuous)
+        .fill(.ultraThinMaterial)
+        .overlay(
+          RoundedRectangle(cornerRadius: 14, style: .continuous)
+            .fill(cupertinoDialogSurface))
+    }
     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     .shadow(color: .black.opacity(0.2), radius: 18, y: 8)
   }
@@ -353,13 +367,20 @@ struct AlertDialogControlView: View {
   @ViewBuilder
   private func appleAction(_ actionID: Int) -> some View {
     if let action = store.node(actionID) {
-      Button(actionLabel(action)) {
+      Button {
+        guard action.bool("disabled") != true else { return }
         events.fire(action, "click")
+      } label: {
+        appleActionContent(action)
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
       }
       .buttonStyle(.plain)
-      .font(.body.weight(action.bool("is_default_action") == true ? .semibold : .regular))
+      .font(.system(
+        size: 16.8,
+        weight: RufletCupertinoPresentationDefaults.isDefaultAction(action)
+          ? .semibold : .regular))
       .foregroundColor(
-        action.bool("is_destructive_action") == true
+        RufletCupertinoPresentationDefaults.isDestructiveAction(action)
           ? MaterialPalette.color("error", default: .red)
           : MaterialPalette.color("primary", default: .primary))
       .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -367,14 +388,30 @@ struct AlertDialogControlView: View {
     }
   }
 
-  private func actionLabel(_ action: ControlNode) -> String {
-    if let text = action.string("content") ?? action.string("text") ?? action.string("label") {
-      return text
+  @ViewBuilder
+  private func appleActionContent(_ action: ControlNode) -> some View {
+    if let contentID = action.controlID(forKey: "content") {
+      ControlView(id: contentID, axis: .none)
+    } else if let text = action.string("content") {
+      Text(text)
+    } else {
+      Text("content must be provided").foregroundColor(.red)
     }
-    if let contentID = action.controlID(forKey: "content"), let content = store.node(contentID) {
-      return content.string("value") ?? content.string("text") ?? "OK"
+  }
+
+  @ViewBuilder
+  private func appleTextOrWidget(_ key: String) -> some View {
+    if let contentID = node.controlID(forKey: key) {
+      ControlView(id: contentID, axis: .none)
+    } else if let text = node.string(key) {
+      Text(text)
     }
-    return "OK"
+  }
+
+  private var cupertinoDialogSurface: Color {
+    colorScheme == .dark
+      ? Color(.sRGB, red: 45 / 255, green: 45 / 255, blue: 45 / 255, opacity: 204 / 255)
+      : Color(.sRGB, red: 242 / 255, green: 242 / 255, blue: 242 / 255, opacity: 204 / 255)
   }
 
   private var dialogSurface: Color {
@@ -483,7 +520,8 @@ struct BottomSheetControlView: View {
       if let content = store.node(contentID), Self.cupertinoPickerTypes.contains(content.type) {
         ControlView(id: contentID, axis: .vertical)
           .frame(maxWidth: .infinity)
-          .frame(height: CGFloat(node.double("height") ?? 220))
+          .frame(height: CGFloat(node.double("height")
+            ?? Double(RufletCupertinoPresentationDefaults.bottomSheetPickerHeight)))
           .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets())
           .background(MaterialPalette.color(node.string("bgcolor"), default: cupertinoSheetSurface))
       } else {
@@ -1326,7 +1364,9 @@ struct ContextMenuControlView: View {
 
   var body: some View {
     Group {
-      if let contentID = node.controlID(forKey: "content") {
+      if node.type == "CupertinoContextMenu" {
+        CupertinoContextMenuControlView(node: node)
+      } else if let contentID = node.controlID(forKey: "content") {
         ControlView(id: contentID, axis: .none)
       } else {
         Text("ContextMenu.content must be visible")
@@ -1339,6 +1379,7 @@ struct ContextMenuControlView: View {
         .onChanged { primaryPressGlobalPosition = $0.location }
         .onEnded { primaryPressGlobalPosition = $0.location })
     .onLongPressGesture {
+      guard node.type != "CupertinoContextMenu" else { return }
       guard RufletContextMenuDefaults.permitsGesture(
         node, button: "primary", gesture: "long_press") else { return }
       let global = primaryPressGlobalPosition
@@ -1370,6 +1411,10 @@ struct ContextMenuControlView: View {
       }
     }
     .rufletCommandHandler(node.id) { call, completion in
+      guard node.type != "CupertinoContextMenu" else {
+        completion(.failure(rufletUnsupported(node.type, call)))
+        return
+      }
       guard call.name == "open" else {
         completion(.failure(rufletUnsupported(node.type, call)))
         return
@@ -1491,8 +1536,9 @@ private struct ContextMenuPointerTriggers: ViewModifier {
   let open: (String, CGPoint) -> Void
 
   func body(content: Content) -> some View {
+    guard node.type != "CupertinoContextMenu" else { return AnyView(content) }
     #if os(macOS)
-      content.overlay(
+      return AnyView(content.overlay(
         RufletNativePointerMonitor { name, payload in
           guard let action = RufletContextMenuDefaults.pointerAction(
             node, nativeEvent: name),
@@ -1501,9 +1547,9 @@ private struct ContextMenuPointerTriggers: ViewModifier {
           else { return }
           open(action.button, local)
         }
-        .allowsHitTesting(false))
+        .allowsHitTesting(false)))
     #else
-      content
+      return AnyView(content)
     #endif
   }
 }

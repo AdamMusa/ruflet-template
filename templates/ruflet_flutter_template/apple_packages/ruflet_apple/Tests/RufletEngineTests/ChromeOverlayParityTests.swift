@@ -409,6 +409,73 @@ final class ChromeOverlayParityTests: XCTestCase {
     XCTAssertEqual(operations, ["local:open=true", "update:true", "event:dismiss"])
   }
 
+  func testCupertinoPresentationDefaultsMatchPinnedFlutterConstructors() {
+    XCTAssertEqual(RufletCupertinoPresentationDefaults.actionSheetEdgePadding, 8)
+    XCTAssertEqual(RufletCupertinoPresentationDefaults.actionSheetCancelPadding, 8)
+    XCTAssertEqual(RufletCupertinoPresentationDefaults.actionSheetContentHorizontalPadding, 16)
+    XCTAssertEqual(RufletCupertinoPresentationDefaults.actionSheetContentVerticalPadding, 13.5)
+    XCTAssertEqual(RufletCupertinoPresentationDefaults.actionSheetActionMinimumHeight, 57.17)
+    XCTAssertEqual(RufletCupertinoPresentationDefaults.actionSheetCornerRadius, 12)
+    XCTAssertEqual(RufletCupertinoPresentationDefaults.contextMenuActionMinimumHeight, 43)
+    XCTAssertEqual(RufletCupertinoPresentationDefaults.contextMenuActionPadding.top, 8)
+    XCTAssertEqual(RufletCupertinoPresentationDefaults.contextMenuActionPadding.leading, 15.5)
+    XCTAssertEqual(RufletCupertinoPresentationDefaults.contextMenuActionPadding.trailing, 17.5)
+    XCTAssertEqual(RufletCupertinoPresentationDefaults.alertInsetDurationMilliseconds, 100)
+    XCTAssertEqual(RufletCupertinoPresentationDefaults.bottomSheetPickerHeight, 220)
+  }
+
+  func testCupertinoContextMenuRequiresContentAndAtLeastOneAction() {
+    let missingContent = ControlNode(
+      id: 140, type: "CupertinoContextMenu",
+      props: ["actions": .array([.controlRef(2)])])
+    let missingActions = ControlNode(
+      id: 141, type: "CupertinoContextMenu",
+      props: ["content": .controlRef(1)])
+    let complete = ControlNode(
+      id: 142, type: "CupertinoContextMenu",
+      props: [
+        "content": .controlRef(1),
+        "actions": .array([.controlRef(2), .controlRef(3)]),
+      ])
+
+    XCTAssertFalse(RufletCupertinoPresentationDefaults.isValidContextMenu(missingContent))
+    XCTAssertFalse(RufletCupertinoPresentationDefaults.isValidContextMenu(missingActions))
+    XCTAssertTrue(RufletCupertinoPresentationDefaults.isValidContextMenu(complete))
+    XCTAssertEqual(RufletCupertinoPresentationDefaults.actionIDs(complete), [2, 3])
+  }
+
+  func testCupertinoAlertValidationAndActionFlagsUseFletWireNames() {
+    XCTAssertFalse(RufletCupertinoPresentationDefaults.hasAlertContent(
+      ControlNode(id: 150, type: "CupertinoAlertDialog")))
+    XCTAssertTrue(RufletCupertinoPresentationDefaults.hasAlertContent(ControlNode(
+      id: 151, type: "CupertinoAlertDialog",
+      props: ["actions": .array([.controlRef(2)])])))
+    XCTAssertTrue(RufletCupertinoPresentationDefaults.hasAlertContent(ControlNode(
+      id: 154, type: "CupertinoAlertDialog",
+      props: ["title": .string("Plain string title")])))
+
+    let action = ControlNode(
+      id: 152, type: "CupertinoDialogAction",
+      props: ["default": .bool(true), "destructive": .bool(true)])
+    XCTAssertTrue(RufletCupertinoPresentationDefaults.isDefaultAction(action))
+    XCTAssertTrue(RufletCupertinoPresentationDefaults.isDestructiveAction(action))
+
+    // The old Android-style aliases are not part of Flet's Cupertino wire API.
+    let aliases = ControlNode(
+      id: 153, type: "CupertinoDialogAction",
+      props: ["is_default_action": .bool(true), "is_destructive_action": .bool(true)])
+    XCTAssertFalse(RufletCupertinoPresentationDefaults.isDefaultAction(aliases))
+    XCTAssertFalse(RufletCupertinoPresentationDefaults.isDestructiveAction(aliases))
+  }
+
+  func testCupertinoOverlayDescriptorsExposeOnlySourceEventsAndNoMaterialCommands() {
+    XCTAssertEqual(events("CupertinoAlertDialog"), ["dismiss", "visible"])
+    XCTAssertEqual(events("CupertinoBottomSheet"), ["dismiss", "visible"])
+    XCTAssertEqual(events("CupertinoActionSheetAction"), ["click"])
+    XCTAssertEqual(events("CupertinoContextMenuAction"), ["click"])
+    XCTAssertEqual(methods("CupertinoContextMenu"), [])
+  }
+
   private func events(_ type: String) -> Set<String> {
     ControlRegistry.builtInDescriptor(for: type)?.supportedEvents ?? []
   }

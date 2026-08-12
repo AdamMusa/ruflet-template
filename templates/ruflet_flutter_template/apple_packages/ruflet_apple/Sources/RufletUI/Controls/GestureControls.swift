@@ -1116,7 +1116,16 @@ struct DialogActionControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
 
+  @ViewBuilder
   var body: some View {
+    if node.type.hasPrefix("Cupertino") {
+      cupertinoAction
+    } else {
+      materialAction
+    }
+  }
+
+  private var materialAction: some View {
     Button {
       events.fire(node, "click")
     } label: {
@@ -1135,5 +1144,67 @@ struct DialogActionControlView: View {
     // the font itself.
     .modifier(DefaultActionEmphasis(emphasised: node.bool("default") == true))
     .disabled(node.bool("disabled") ?? false)
+  }
+
+  private var cupertinoAction: some View {
+    Button {
+      guard node.bool("disabled") != true else { return }
+      events.fire(node, "click")
+    } label: {
+      HStack(spacing: 8) {
+        actionContent
+        if node.type == "CupertinoContextMenuAction",
+           let icon = node.props["trailing_icon"]
+        {
+          RufletIcon(value: icon, size: 21, color: nil)
+        }
+      }
+      .frame(maxWidth: .infinity, alignment: .center)
+      .frame(minHeight: minimumHeight)
+      .padding(actionPadding)
+    }
+    .buttonStyle(.plain)
+    .font(.system(size: actionFontSize,
+                  weight: node.bool("default") == true ? .semibold : .regular))
+    .rufletTextStyle(RufletTextStyle(node: node, styleKey: "text_style"))
+    .foregroundColor(node.bool("destructive") == true ? .red : .accentColor)
+    .disabled(node.bool("disabled") == true)
+  }
+
+  @ViewBuilder
+  private var actionContent: some View {
+    if let contentID = node.controlID(forKey: "content") {
+      ControlView(id: contentID, axis: .none)
+    } else if let content = node.string("content") {
+      Text(content).lineLimit(node.type == "CupertinoContextMenuAction" ? 1 : nil)
+    } else {
+      Text("content must be provided").foregroundColor(.red)
+    }
+  }
+
+  private var minimumHeight: CGFloat {
+    switch node.type {
+    case "CupertinoActionSheetAction":
+      return RufletCupertinoPresentationDefaults.actionSheetActionMinimumHeight
+    case "CupertinoContextMenuAction":
+      return RufletCupertinoPresentationDefaults.contextMenuActionMinimumHeight
+    default:
+      return 44
+    }
+  }
+
+  private var actionPadding: EdgeInsets {
+    switch node.type {
+    case "CupertinoActionSheetAction":
+      return EdgeInsets(top: 0, leading: 10, bottom: 0, trailing: 10)
+    case "CupertinoContextMenuAction":
+      return RufletCupertinoPresentationDefaults.contextMenuActionPadding
+    default:
+      return EdgeInsets()
+    }
+  }
+
+  private var actionFontSize: CGFloat {
+    node.type == "CupertinoContextMenuAction" ? 16 : 17
   }
 }
