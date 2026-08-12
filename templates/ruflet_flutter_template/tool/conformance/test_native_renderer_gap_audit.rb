@@ -57,7 +57,10 @@ class NativeRendererGapAuditTest < Minitest::Test
     assert_includes @surface.fetch("Connectivity").fetch("events"), "change"
     assert_includes @surface.fetch("FilePicker").fetch("methods"), "pick_files"
     assert_includes @surface.fetch("SecureStorage").fetch("methods"), "contains_key"
-    assert_includes @surface.fetch("Barometer").fetch("events"), "change"
+    # BaseSensorService exposes `on_reading` and `on_error`; it is not a
+    # value-control `on_change` stream.
+    assert_includes @surface.fetch("Barometer").fetch("events"), "reading"
+    assert_includes @surface.fetch("Barometer").fetch("events"), "error"
     assert_equal "named_service", @surface.fetch("Gyroscope").fetch("declaration")
   end
 
