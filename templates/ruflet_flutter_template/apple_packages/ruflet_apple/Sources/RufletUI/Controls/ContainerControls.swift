@@ -2002,7 +2002,10 @@ struct PageletControlView: View {
 
   @ViewBuilder
   var body: some View {
-    if let contentID = PageletPresentation(node: node).contentID {
+    let presentation = PageletPresentation(node: node)
+    if let contentID = presentation.contentID,
+      presentation.validationError(content: store.node(contentID)) == nil
+    {
       pagelet(contentID: contentID)
     } else {
       Text(PageletPresentation.missingContentError)
@@ -2121,6 +2124,15 @@ struct PageletPresentation {
 
   let node: ControlNode
   var contentID: Int? { node.controlID(forKey: "content") }
+
+  /// Flet's `buildWidget("content")` filters both unresolved references and
+  /// controls whose common `visible` property is false before Pagelet builds.
+  func validationError(content: ControlNode?) -> String? {
+    guard contentID != nil, let content, content.bool("visible") != false else {
+      return Self.missingContentError
+    }
+    return nil
+  }
 }
 
 /// `AnimatedSwitcher` — cross-fades whenever its content changes.

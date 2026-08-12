@@ -27,4 +27,21 @@ final class PageletParityTests: XCTestCase {
         id: 1, type: "Pagelet", props: ["content": .controlRef(22)]))
     XCTAssertEqual(presentation.contentID, 22)
   }
+
+  func testPageletRejectsUnresolvedAndInvisibleContentLikeFletBuildWidget() {
+    let presentation = PageletPresentation(
+      node: ControlNode(
+        id: 1, type: "Pagelet", props: ["content": .controlRef(22)]))
+
+    XCTAssertEqual(
+      presentation.validationError(content: nil),
+      PageletPresentation.missingContentError)
+    XCTAssertEqual(
+      presentation.validationError(
+        content: ControlNode(
+          id: 22, type: "Container", props: ["visible": .bool(false)])),
+      PageletPresentation.missingContentError)
+    XCTAssertNil(
+      presentation.validationError(content: ControlNode(id: 22, type: "Container")))
+  }
 }
