@@ -20,6 +20,17 @@ final class ContainerPrimitiveParityTests: XCTestCase {
     XCTAssertEqual(
       SafeAreaInsetMath.missingContentError,
       "SafeArea.content must be provided and visible")
+    XCTAssertEqual(
+      RufletRequiredContent.validationError(
+        contentID: 2,
+        content: ControlNode(
+          id: 2, type: "Container", props: ["visible": .bool(false)]),
+        message: SafeAreaInsetMath.missingContentError),
+      SafeAreaInsetMath.missingContentError)
+    XCTAssertNil(
+      RufletRequiredContent.validationError(
+        contentID: 2, content: ControlNode(id: 2, type: "Container"),
+        message: SafeAreaInsetMath.missingContentError))
 
     let result = SafeAreaInsetMath.resolved(
       safeArea: EdgeInsets(top: 47, leading: 0, bottom: 34, trailing: 0),

@@ -102,6 +102,20 @@ final class GestureFamilyParityTests: XCTestCase {
     XCTAssertEqual(update["pc"], .int(2))
   }
 
+  func testInteractiveViewerRequiresVisibleContent() {
+    XCTAssertEqual(
+      RufletInteractiveViewerSemantics.validationError(contentID: 4, content: nil),
+      "InteractiveViewer.content must be provided and visible")
+    XCTAssertEqual(
+      RufletInteractiveViewerSemantics.validationError(
+        contentID: 4,
+        content: ControlNode(
+          id: 4, type: "Container", props: ["visible": .bool(false)])),
+      RufletInteractiveViewerSemantics.missingContentError)
+    XCTAssertNil(RufletInteractiveViewerSemantics.validationError(
+      contentID: 4, content: ControlNode(id: 4, type: "Container")))
+  }
+
   func testGestureFamilyDeclaresFletLifecycleAndCommands() throws {
     XCTAssertEqual(
       try XCTUnwrap(ControlRegistry.descriptor(for: "Draggable")).supportedEvents,

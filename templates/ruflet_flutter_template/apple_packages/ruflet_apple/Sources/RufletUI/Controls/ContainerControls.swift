@@ -1742,10 +1742,16 @@ private struct NativeCardClip: ViewModifier {
 /// `SafeArea` — insets its content past the notch and home indicator.
 struct SafeAreaControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
 
   @ViewBuilder
   var body: some View {
-    if let contentID = node.controlID(forKey: "content") {
+    let contentID = node.controlID(forKey: "content")
+    if RufletRequiredContent.validationError(
+      contentID: contentID, content: contentID.flatMap(store.node),
+      message: SafeAreaInsetMath.missingContentError) == nil,
+      let contentID
+    {
       safeArea(contentID: contentID)
     } else {
       RufletContainerError(SafeAreaInsetMath.missingContentError)

@@ -929,6 +929,7 @@ enum RufletDismissibleDefaults {
 /// `InteractiveViewer` — pan and zoom over its content.
 struct InteractiveViewerControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
   @State private var scale: CGFloat = 1
   @State private var offset: CGSize = .zero
@@ -997,9 +998,16 @@ struct InteractiveViewerControlView: View {
   }
 
   var body: some View {
-    Group {
-      if let contentID = node.controlID(forKey: "content") {
+    let contentID = node.controlID(forKey: "content")
+    return Group {
+      if RufletInteractiveViewerSemantics.validationError(
+        contentID: contentID, content: contentID.flatMap(store.node)) == nil,
+        let contentID
+      {
         ControlView(id: contentID, axis: .none)
+      } else {
+        Text(RufletInteractiveViewerSemantics.missingContentError)
+          .font(.caption).foregroundStyle(.red)
       }
     }
     .scaleEffect(scale, anchor: transformAnchor)
@@ -1110,6 +1118,15 @@ struct InteractiveViewerControlView: View {
         completion(.failure(rufletUnsupported("InteractiveViewer", call)))
       }
     }
+  }
+}
+
+enum RufletInteractiveViewerSemantics {
+  static let missingContentError = "InteractiveViewer.content must be provided and visible"
+
+  static func validationError(contentID: Int?, content: ControlNode?) -> String? {
+    RufletRequiredContent.validationError(
+      contentID: contentID, content: content, message: missingContentError)
   }
 }
 

@@ -17,6 +17,11 @@ final class WindowDragAreaParityTests: XCTestCase {
       node: ControlNode(
         id: 2, type: "WindowDragArea", props: ["content": .controlRef(7)]))
     XCTAssertEqual(present.contentID, 7)
+    XCTAssertEqual(
+      present.validationError(content: ControlNode(
+        id: 7, type: "Container", props: ["visible": .bool(false)])),
+      WindowDragAreaPresentation.missingContentError)
+    XCTAssertNil(present.validationError(content: ControlNode(id: 7, type: "Container")))
   }
 
   func testWindowDragAreaUsesPinnedMaximizableDefault() {

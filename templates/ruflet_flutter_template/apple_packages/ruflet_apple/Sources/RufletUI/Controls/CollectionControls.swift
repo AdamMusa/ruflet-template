@@ -1074,6 +1074,10 @@ struct ListTilePresentation {
   }
 
   static func validationMessage(_ node: ControlNode) -> String? {
+    validationMessage(node, contentIsVisible: node.controlID(forKey: "content") != nil)
+  }
+
+  static func validationMessage(_ node: ControlNode, contentIsVisible: Bool) -> String? {
     guard node.type == "CupertinoListTile" else { return nil }
     let hasTitle = node.controlID(forKey: "title") != nil || node.string("title") != nil
     return hasTitle ? nil : "CupertinoListTile.title must be provided and visible"
@@ -1556,6 +1560,10 @@ struct TabsPresentation {
   }
 
   static func validationMessage(_ node: ControlNode) -> String? {
+    validationMessage(node, contentIsVisible: node.controlID(forKey: "content") != nil)
+  }
+
+  static func validationMessage(_ node: ControlNode, contentIsVisible: Bool) -> String? {
     let length = node.int("length") ?? 0
     let selected = node.int("selected_index") ?? 0
     if length < 0 {
@@ -1564,7 +1572,7 @@ struct TabsPresentation {
     if !(-length <= selected && selected < length) {
       return "selected_index out of range: got \(selected), expected in range [-\(length), \(length - 1)]"
     }
-    if node.controlID(forKey: "content") == nil {
+    if node.controlID(forKey: "content") == nil || !contentIsVisible {
       return "Tabs.content must be provided and visible"
     }
     return nil
@@ -1643,6 +1651,7 @@ struct TabBarViewPresentation {
 /// and TabBarView, exactly as Flet's ancestor TabController contract does.
 struct TabsControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
   @State private var selectedIndex: Int
 
@@ -1652,10 +1661,15 @@ struct TabsControlView: View {
   }
 
   var body: some View {
+    let contentID = node.controlID(forKey: "content")
+    let content = contentID.flatMap { store.node($0) }
+    let contentIsVisible = RufletRequiredContent.isVisible(content)
+    let validationMessage = TabsPresentation.validationMessage(
+      node, contentIsVisible: contentIsVisible)
     Group {
-      if let message = TabsPresentation.validationMessage(node) {
+      if let message = validationMessage {
         Text(message).font(.caption).foregroundStyle(.red)
-      } else if let contentID = node.controlID(forKey: "content") {
+      } else if let contentID {
         ControlView(id: contentID, axis: .vertical)
       } else {
         EmptyView()

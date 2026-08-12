@@ -1126,11 +1126,15 @@ private struct RufletWrapperError: View {
 /// `WindowDragArea` — dragging this region moves the window.
 struct WindowDragAreaControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
 
   @ViewBuilder
   var body: some View {
-    if let contentID = WindowDragAreaPresentation(node: node).contentID {
+    let presentation = WindowDragAreaPresentation(node: node)
+    if let contentID = presentation.contentID,
+      presentation.validationError(content: store.node(contentID)) == nil
+    {
       ControlView(id: contentID, axis: .none)
         .modifier(WindowDragGesture(node: node, events: events))
     } else {
@@ -1144,6 +1148,11 @@ struct WindowDragAreaPresentation {
   let node: ControlNode
   var contentID: Int? { node.controlID(forKey: "content") }
   var maximizable: Bool { node.bool("maximizable") ?? true }
+
+  func validationError(content: ControlNode?) -> String? {
+    RufletRequiredContent.validationError(
+      contentID: contentID, content: content, message: Self.missingContentError)
+  }
 
   static func doubleTapPayload(wasMaximized: Bool) -> RufletValue {
     .string(wasMaximized ? "unmaximize" : "maximize")

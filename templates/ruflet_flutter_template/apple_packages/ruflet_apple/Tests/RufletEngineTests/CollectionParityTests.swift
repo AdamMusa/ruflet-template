@@ -394,6 +394,9 @@ final class CollectionParityTests: XCTestCase {
       TabsPresentation.validationMessage(ControlNode(
         id: 4, type: "Tabs", props: ["length": .int(2)])),
       "Tabs.content must be provided and visible")
+    XCTAssertEqual(
+      TabsPresentation.validationMessage(defaults.node, contentIsVisible: false),
+      "Tabs.content must be provided and visible")
     XCTAssertNil(TabsPresentation.moveValidationMessage(index: -1, length: 3))
     XCTAssertEqual(
       TabsPresentation.moveValidationMessage(index: 3, length: 3),
