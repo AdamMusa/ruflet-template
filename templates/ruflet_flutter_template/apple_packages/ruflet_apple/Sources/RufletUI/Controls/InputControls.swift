@@ -619,66 +619,69 @@ enum RufletSliderInteraction: String {
   var jumpsOnContact: Bool { self == .tapAndSlide || self == .tapOnly }
 }
 
-/// `Slider` — a continuous or stepped value.
-///
-/// Reports `change_start` when the drag begins, `change` while it moves and
-/// `change_end` when it settles, which is the trio Flet's Slider emits.
-///
-/// Drawn rather than delegated to SwiftUI's `Slider`, which offers no way to
-/// colour the inactive track, the thumb or the secondary track, and no value
-/// bubble — four of the properties Flet's Slider carries.
+/// `Slider` — Flet value/event semantics through Apple's native Slider.
 struct SliderControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
-  @Environment(\.layoutDirection) private var layoutDirection
-  @State private var dragging = false
 
   var body: some View {
-    let value = clampedValue
-
-    MaterialSliderTrack(
-      node: node,
-      thumbs: [value],
-      secondary: node.double("secondary_track_value"),
-      activeRange: minimum...value,
-      interaction: RufletSliderInteraction(wire: node.string("interaction")),
-      bubbles: [dragging ? bubbleText(for: value) : nil],
-      scale: scale(width:),
-      shapeYear2023: node.bool("year_2023"),
-      thumbColorProperty: node.props["thumb_color"],
-      onEdit: { editing, values in
-        dragging = editing
-        events.fire(
-          node, editing ? "change_start" : "change_end",
-          data: .double(values.first ?? value))
-      },
-      onMove: { _, proposed in
-        RufletValueControlEvents.commit(
-          node, value: .double(proposed), payload: .value, to: events)
-        return proposed
-      })
+    nativeSlider
       .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets())
+      .modifier(OptionalTint(color: SliderPresentation(node: node).explicitTint))
       .modifier(FocusReporter(node: node, events: events))
       .disabled(node.bool("disabled") ?? false)
   }
 
-  private var minimum: Double { node.double("min") ?? 0 }
-  private var maximum: Double { node.double("max") ?? 1 }
-
-  private var clampedValue: Double {
-    min(max(node.double("value") ?? minimum, minimum), max(maximum, minimum))
+  @ViewBuilder
+  private var nativeSlider: some View {
+    let presentation = SliderPresentation(node: node)
+    if let step = presentation.step {
+      Slider(
+        value: binding, in: presentation.minimum...presentation.maximum, step: step,
+        onEditingChanged: editingChanged)
+    } else {
+      Slider(
+        value: binding, in: presentation.minimum...presentation.maximum,
+        onEditingChanged: editingChanged)
+    }
   }
 
-  private func scale(width: CGFloat) -> RufletSliderScale {
-    RufletSliderScale(
-      minimum: minimum, maximum: maximum, divisions: node.int("divisions"), width: width,
-      thumbWidth: RufletThemeDefaults.sliderMetrics(year2023: node.bool("year_2023")).thumbWidth,
-      reversed: layoutDirection == .rightToLeft)
+  private var binding: Binding<Double> {
+    Binding(
+      get: { SliderPresentation(node: node).value },
+      set: {
+        RufletValueControlEvents.commit(
+          node, value: .double($0), payload: .value, to: events)
+      })
   }
 
-  /// Flet's `label` is a template: it substitutes the thumb's value, rounded
-  /// to `round` decimals, wherever `{value}` appears.
-  private func bubbleText(for value: Double) -> String? {
+  private func editingChanged(_ editing: Bool) {
+    events.fire(
+      node, editing ? "change_start" : "change_end",
+      data: .double(SliderPresentation(node: node).value))
+  }
+}
+
+struct SliderPresentation {
+  let node: ControlNode
+
+  var minimum: Double { node.double("min") ?? 0 }
+  var requestedMaximum: Double { node.double("max") ?? 1 }
+  var maximum: Double { max(requestedMaximum, minimum + .ulpOfOne) }
+  var value: Double {
+    min(max(node.double("value") ?? minimum, minimum), maximum)
+  }
+  var step: Double? {
+    guard let divisions = node.int("divisions"), divisions > 0,
+      requestedMaximum > minimum
+    else { return nil }
+    return (requestedMaximum - minimum) / Double(divisions)
+  }
+  var explicitTint: Color? {
+    guard node.props["active_color"] != nil else { return nil }
+    return MaterialPalette.color(node.string("active_color"))
+  }
+  func label(for value: Double) -> String? {
     guard let template = node.string("label"), !template.isEmpty else { return nil }
     let digits = max(node.int("round") ?? 0, 0)
     return template.replacingOccurrences(
