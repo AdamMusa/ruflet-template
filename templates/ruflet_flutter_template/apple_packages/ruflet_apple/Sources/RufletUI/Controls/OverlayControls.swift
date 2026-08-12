@@ -287,9 +287,8 @@ struct AlertDialogControlView: View {
 
   @ViewBuilder
   var body: some View {
-    if !hasAlertContent
-    {
-      Text("AlertDialog has nothing to display. Provide icon, title, content, or actions.")
+    if let validationError = alertValidationError {
+      Text(validationError)
         .foregroundColor(.red)
     } else if RufletOverlaySemantics.usesNativeAppleDialog(node)
         && (node.type == "CupertinoAlertDialog"
@@ -303,33 +302,34 @@ struct AlertDialogControlView: View {
 
   private var styledDialog: some View {
     let defaults = OverlayDefaults.dialog(node)
-    let hasTitle = node.controlID(forKey: "title") != nil
-    let hasContent = node.controlID(forKey: "content") != nil
+    let hasTitle = visibleControlID(forKey: "title") != nil || strictString(forKey: "title") != nil
+    let hasContent = visibleControlID(forKey: "content") != nil
+    let actionIDs = visibleActionIDs
     let body = VStack(alignment: .leading, spacing: 0) {
-      if node.controlID(forKey: "icon") != nil {
-        RufletFormFieldSlot(node: node, key: "icon")
+      if hasVisibleIcon {
+        alertIcon
           .foregroundColor(MaterialPalette.color(node.string("icon_color"), default:
             .secondary))
           .frame(maxWidth: .infinity)
           .padding(ControlProps.edgeInsets(node.props["icon_padding"]) ?? EdgeInsets(
             top: 24, leading: 24, bottom: hasTitle ? 16 : (hasContent ? 0 : 24), trailing: 24))
       }
-      if let titleID = node.controlID(forKey: "title") {
-        ControlView(id: titleID, axis: .none)
+      if hasTitle {
+        appleTextOrWidget("title")
           .rufletTextStyle(RufletTextStyle(node: node, styleKey: "title_text_style"))
           .padding(ControlProps.edgeInsets(node.props["title_padding"]) ?? EdgeInsets(
-            top: node.controlID(forKey: "icon") == nil ? 24 : 0,
+            top: hasVisibleIcon ? 0 : 24,
             leading: 24, bottom: hasContent ? 0 : 20, trailing: 24))
       }
-      if let contentID = node.controlID(forKey: "content") {
+      if let contentID = visibleControlID(forKey: "content") {
         ControlView(id: contentID, axis: .vertical)
           .rufletTextStyle(RufletTextStyle(node: node, styleKey: "content_text_style"))
           .padding(defaults.content)
       }
-      if !node.controlIDs(forKey: "actions").isEmpty {
+      if !actionIDs.isEmpty {
         HStack(spacing: CGFloat(node.double("actions_overflow_button_spacing") ?? 8)) {
           if actionsAlignment != .leading { Spacer(minLength: 0) }
-          ControlList(ids: node.controlIDs(forKey: "actions"), axis: .horizontal)
+          ControlList(ids: actionIDs, axis: .horizontal)
             .padding(ControlProps.edgeInsets(node.props["action_button_padding"]) ?? EdgeInsets())
           if actionsAlignment == .leading { Spacer(minLength: 0) }
         }
@@ -374,34 +374,34 @@ struct AlertDialogControlView: View {
 
   private var appleAlert: some View {
     VStack(spacing: 0) {
-      if let iconID = node.controlID(forKey: "icon") {
-        ControlView(id: iconID, axis: .none)
+      if hasVisibleIcon {
+        alertIcon
           .foregroundColor(AppleChromeAppearance.color(
             node.string("icon_color"), fallback: .accentColor))
           .frame(maxWidth: .infinity)
           .padding(ControlProps.edgeInsets(node.props["icon_padding"])
             ?? EdgeInsets(top: 18, leading: 20, bottom: 4, trailing: 20))
       }
-      if node.props["title"] != nil {
+      if visibleControlID(forKey: "title") != nil || strictString(forKey: "title") != nil {
         appleTextOrWidget("title")
           .font(.system(size: 17, weight: .semibold))
           .multilineTextAlignment(.center)
           .frame(maxWidth: .infinity)
           .padding(.horizontal, 20)
           .padding(.top, 20)
-          .padding(.bottom, node.controlID(forKey: "content") == nil ? 20 : 1)
+          .padding(.bottom, visibleControlID(forKey: "content") == nil ? 20 : 1)
       }
-      if let contentID = node.controlID(forKey: "content") {
+      if let contentID = visibleControlID(forKey: "content") {
         ControlView(id: contentID, axis: .vertical)
           .font(.system(size: 13))
           .multilineTextAlignment(.center)
           .frame(maxWidth: .infinity)
           .padding(.horizontal, 20)
-          .padding(.top, node.controlID(forKey: "title") == nil ? 20 : 1)
+          .padding(.top, hasRenderedTitle ? 1 : 20)
           .padding(.bottom, 20)
       }
 
-      let actionIDs = node.controlIDs(forKey: "actions")
+      let actionIDs = visibleActionIDs
       if !actionIDs.isEmpty {
         Divider()
         if actionIDs.count <= 2 {
@@ -475,20 +475,89 @@ struct AlertDialogControlView: View {
 
   @ViewBuilder
   private func appleTextOrWidget(_ key: String) -> some View {
-    if let contentID = node.controlID(forKey: key) {
+    if let contentID = visibleControlID(forKey: key) {
       ControlView(id: contentID, axis: .none)
-    } else if let text = node.string(key) {
+    } else if let text = strictString(forKey: key) {
       Text(text)
     }
   }
 
-  private var hasAlertContent: Bool {
-    node.controlID(forKey: "icon") != nil
-      || RufletCupertinoPresentationDefaults.hasAlertContent(node)
+  @ViewBuilder
+  private var alertIcon: some View {
+    if let iconID = visibleControlID(forKey: "icon") {
+      ControlView(id: iconID, axis: .none)
+    } else if case .int? = node.props["icon"] {
+      RufletIcon(value: node.props["icon"])
+    }
+  }
+
+  private var hasVisibleIcon: Bool {
+    visibleControlID(forKey: "icon") != nil || {
+      if case .int? = node.props["icon"] { return true }
+      return false
+    }()
+  }
+
+  private var hasRenderedTitle: Bool {
+    visibleControlID(forKey: "title") != nil || strictString(forKey: "title") != nil
+  }
+
+  private var alertValidationError: String? {
+    RufletAlertDialogSlots.validationError(
+      node, visibilityForID: { id in store.node(id).map { $0.bool("visible") != false } })
+  }
+
+  private var visibleActionIDs: [Int] {
+    RufletAlertDialogSlots.visibleActionIDs(
+      node, visibilityForID: { id in store.node(id).map { $0.bool("visible") != false } })
+  }
+
+  private func visibleControlID(forKey key: String) -> Int? {
+    RufletAlertDialogSlots.visibleControlID(
+      node, key: key,
+      visibilityForID: { id in store.node(id).map { $0.bool("visible") != false } })
+  }
+
+  private func strictString(forKey key: String) -> String? {
+    guard case .string(let value)? = node.props[key] else { return nil }
+    return value
   }
 
   private var dialogSurface: Color {
     AppleChromeAppearance.barSurface
+  }
+}
+
+enum RufletAlertDialogSlots {
+  static func visibleControlID(
+    _ node: ControlNode, key: String, visibilityForID: (Int) -> Bool?
+  ) -> Int? {
+    guard let id = node.controlID(forKey: key), visibilityForID(id) != false else { return nil }
+    return id
+  }
+
+  static func visibleActionIDs(
+    _ node: ControlNode, visibilityForID: (Int) -> Bool?
+  ) -> [Int] {
+    node.controlIDs(forKey: "actions").filter { visibilityForID($0) != false }
+  }
+
+  /// Pinned Flet validates title/content by wire presence, actions by visible
+  /// children, and deliberately does not count the optional icon.
+  static func hasDisplayContract(
+    _ node: ControlNode, visibilityForID: (Int) -> Bool?
+  ) -> Bool {
+    node.props["title"] != nil
+      || node.props["content"] != nil
+      || !visibleActionIDs(node, visibilityForID: visibilityForID).isEmpty
+  }
+
+  static func validationError(
+    _ node: ControlNode, visibilityForID: (Int) -> Bool?
+  ) -> String? {
+    guard !hasDisplayContract(node, visibilityForID: visibilityForID) else { return nil }
+    let type = node.type == "CupertinoAlertDialog" ? "CupertinoAlertDialog" : "AlertDialog"
+    return "\(type) has nothing to display. Provide at minimum one of the following: title, content, actions."
   }
 }
 
