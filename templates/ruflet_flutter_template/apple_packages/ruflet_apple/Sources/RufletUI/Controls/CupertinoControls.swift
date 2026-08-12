@@ -1973,14 +1973,18 @@ struct CupertinoDatePickerControlView: View {
   init(node: ControlNode, timerMode: Bool) {
     self.node = node
     self.timerMode = timerMode
-    let formatter = ISO8601DateFormatter()
-    _selection = State(initialValue: node.string("value").flatMap(formatter.date(from:)) ?? Date())
+    _selection = State(initialValue: RufletCupertinoDateCodec.date(from: node.props["value"]) ?? Date())
     _timerSeconds = State(initialValue: RufletCupertinoTimerModel.seconds(from: node.props["value"]))
   }
 
   @ViewBuilder
   var body: some View {
-    if timerMode {
+    if let message = timerMode
+      ? timerConfiguration.validationMessage
+      : dateConfiguration.validationMessage(value: selection)
+    {
+      Text("\(node.type) Error: \(message)").foregroundColor(.red)
+    } else if timerMode {
       timerPicker
     } else {
       datePicker
@@ -1994,28 +1998,88 @@ struct CupertinoDatePickerControlView: View {
           .font(.caption)
           .foregroundStyle(.secondary)
       }
-      DatePicker("", selection: $selection, in: allowedRange, displayedComponents: components)
-        .modifier(WheelDatePickerStyle())
-        .labelsHidden()
+      if dateConfiguration.mode == .monthYear {
+        monthYearPicker
+      } else {
+        DatePicker("", selection: $selection, in: allowedRange, displayedComponents: components)
+          .modifier(WheelDatePickerStyle())
+          .labelsHidden()
+      }
     }
     .environment(\.locale, pickerLocale)
-    .frame(minHeight: CGFloat(dateConfiguration.itemExtent) * 5)
-    .background(MaterialPalette.color(node.string("bgcolor")))
+    .background(MaterialPalette.color(dateConfiguration.backgroundToken))
+    .disabled(dateConfiguration.disabled)
     .onChange(of: selection) { value in
       let snapped = dateConfiguration.snapped(value)
       if snapped != value {
         selection = snapped
         return
       }
-      events.commit(node, value: .string(ISO8601DateFormatter().string(from: value)))
+      // An external patch updates selection through the change observer below.
+      // If the node already carries that value, do not echo it back as a user
+      // change. Flutter's controller rebuild has the same one-way behavior.
+      guard RufletCupertinoDateCodec.date(from: node.props["value"]) != value else { return }
+      RufletCupertinoDatePickerEvents.change(value, on: node, to: events)
     }
-    .onChange(of: node.string("value")) { wireValue in
-      guard let wireValue,
-        let next = ISO8601DateFormatter().date(from: wireValue),
+    .onChange(of: node.props["value"]) { wireValue in
+      guard let next = RufletCupertinoDateCodec.date(from: wireValue),
         next != selection
       else { return }
       selection = next
     }
+  }
+
+  private var monthYearPicker: some View {
+    HStack(spacing: 0) {
+      if dateConfiguration.order == .ymd || dateConfiguration.order == .ydm {
+        yearColumn
+        monthColumn
+      } else {
+        monthColumn
+        yearColumn
+      }
+    }
+  }
+
+  private var monthColumn: some View {
+    Picker("", selection: Binding(
+      get: { Calendar.current.component(.month, from: selection) },
+      set: { setMonthYear(month: $0) })) {
+        ForEach(1...12, id: \.self) { month in
+          Text(dateConfiguration.monthName(month)).tag(month)
+        }
+      }
+      .modifier(WheelPickerStyle())
+      .labelsHidden()
+      .frame(maxWidth: .infinity)
+  }
+
+  private var yearColumn: some View {
+    Picker("", selection: Binding(
+      get: { Calendar.current.component(.year, from: selection) },
+      set: { setMonthYear(year: $0) })) {
+        ForEach(dateConfiguration.yearValues, id: \.self) { year in
+          Text(String(year)).tag(year)
+        }
+      }
+      .modifier(WheelPickerStyle())
+      .labelsHidden()
+      .frame(maxWidth: .infinity)
+  }
+
+  private func setMonthYear(month: Int? = nil, year: Int? = nil) {
+    let calendar = Calendar.current
+    let current = calendar.dateComponents([.year, .month, .day], from: selection)
+    var components = current
+    components.year = year ?? current.year
+    components.month = month ?? current.month
+    components.day = 1
+    guard let first = calendar.date(from: components),
+      let days = calendar.range(of: .day, in: .month, for: first)
+    else { return }
+    components.day = min(current.day ?? 1, days.count)
+    guard let next = calendar.date(from: components) else { return }
+    selection = min(max(next, allowedRange.lowerBound), allowedRange.upperBound)
   }
 
   private var timerPicker: some View {
@@ -2027,20 +2091,20 @@ struct CupertinoDatePickerControlView: View {
       }
       if timerColumns.minutes {
         durationColumn(
-          values: strideValues(interval: node.int("minute_interval") ?? 1),
+          values: strideValues(interval: timerConfiguration.minuteInterval),
           selection: minutesBinding, suffix: "min")
       }
       if timerColumns.seconds {
         durationColumn(
-          values: strideValues(interval: node.int("second_interval") ?? 1),
+          values: strideValues(interval: timerConfiguration.secondInterval),
           selection: secondsBinding, suffix: "sec")
       }
     }
-    .frame(minHeight: CGFloat(node.double("item_extent") ?? 32) * 5)
     .frame(
       maxWidth: .infinity,
-      alignment: ControlProps.alignment(node.props["alignment"]) ?? .center)
-    .background(MaterialPalette.color(node.string("bgcolor")))
+      alignment: timerConfiguration.alignment)
+    .background(MaterialPalette.color(timerConfiguration.backgroundToken))
+    .disabled(timerConfiguration.disabled)
     .onChange(of: node.props["value"]) { value in
       let seconds = RufletCupertinoTimerModel.seconds(from: value)
       guard seconds != timerSeconds else { return }
@@ -2051,7 +2115,11 @@ struct CupertinoDatePickerControlView: View {
   private func durationColumn(values: [Int], selection: Binding<Int>, suffix: String) -> some View {
     Picker("", selection: selection) {
       ForEach(values, id: \.self) { value in
-        Text("\(value) \(suffix)").tag(value)
+        Text("\(value) \(suffix)")
+          .frame(
+            minHeight: CGFloat(timerConfiguration.itemExtent),
+            maxHeight: CGFloat(timerConfiguration.itemExtent))
+          .tag(value)
       }
     }
     .modifier(WheelPickerStyle())
@@ -2060,7 +2128,7 @@ struct CupertinoDatePickerControlView: View {
   }
 
   private var timerColumns: (hours: Bool, minutes: Bool, seconds: Bool) {
-    RufletCupertinoTimerModel.columns(mode: node.string("mode"))
+    RufletCupertinoTimerModel.columns(mode: timerConfiguration.mode)
   }
 
   private func strideValues(interval: Int) -> [Int] {
@@ -2075,7 +2143,7 @@ struct CupertinoDatePickerControlView: View {
     Binding(
       get: {
         RufletCupertinoTimerModel.snap(
-          (timerSeconds % 3_600) / 60, interval: node.int("minute_interval") ?? 1)
+          (timerSeconds % 3_600) / 60, interval: timerConfiguration.minuteInterval)
       },
       set: { setTimer(minutes: $0) })
   }
@@ -2084,7 +2152,7 @@ struct CupertinoDatePickerControlView: View {
     Binding(
       get: {
         RufletCupertinoTimerModel.snap(
-          timerSeconds % 60, interval: node.int("second_interval") ?? 1)
+          timerSeconds % 60, interval: timerConfiguration.secondInterval)
       },
       set: { setTimer(seconds: $0) })
   }
@@ -2094,10 +2162,8 @@ struct CupertinoDatePickerControlView: View {
       + (minutes ?? (timerSeconds % 3_600) / 60) * 60
       + (seconds ?? timerSeconds % 60)
     timerSeconds = next
-    events.commit(
-      node,
-      value: RufletCupertinoTimerModel.wireValue(
-        seconds: next, preserving: node.props["value"]))
+    RufletCupertinoTimerPickerEvents.change(
+      seconds: next, preserving: node.props["value"], on: node, to: events)
   }
 
   private var pickerLocale: Locale {
@@ -2108,22 +2174,14 @@ struct CupertinoDatePickerControlView: View {
     RufletCupertinoDatePickerConfiguration(node: node)
   }
 
+  private var timerConfiguration: RufletCupertinoTimerPickerConfiguration {
+    RufletCupertinoTimerPickerConfiguration(node: node)
+  }
+
   /// `first_date`/`last_date` bound the wheel; `minimum_year`/`maximum_year`
   /// are the coarser form Flutter offers in year mode.
   private var allowedRange: ClosedRange<Date> {
-    let calendar = Calendar.current
-    let formatter = ISO8601DateFormatter()
-    let lower = node.string("first_date").flatMap(formatter.date(from:))
-      ?? node.int("minimum_year").flatMap {
-        calendar.date(from: DateComponents(year: $0, month: 1, day: 1))
-      }
-      ?? Date.distantPast
-    let upper = node.string("last_date").flatMap(formatter.date(from:))
-      ?? node.int("maximum_year").flatMap {
-        calendar.date(from: DateComponents(year: $0, month: 12, day: 31))
-      }
-      ?? Date.distantFuture
-    return lower <= upper ? lower...upper : Date.distantPast...Date.distantFuture
+    dateConfiguration.allowedRange
   }
 
   private var components: DatePickerComponents {
@@ -2175,6 +2233,12 @@ struct RufletCupertinoDatePickerConfiguration {
   let use24HourFormat: Bool
   let itemExtent: Double
   let minuteInterval: Int
+  let minimumYear: Int
+  let maximumYear: Int?
+  let firstDate: Date?
+  let lastDate: Date?
+  let disabled: Bool
+  let backgroundToken: String?
   let baseLocaleIdentifier: String
 
   init(node: ControlNode) {
@@ -2183,12 +2247,18 @@ struct RufletCupertinoDatePickerConfiguration {
     showDayOfWeek = node.bool("show_day_of_week") ?? false
     use24HourFormat = node.bool("use_24h_format") ?? false
     itemExtent = node.double("item_extent") ?? 32
-    minuteInterval = max(node.int("minute_interval") ?? 1, 1)
+    minuteInterval = node.int("minute_interval") ?? 1
+    minimumYear = node.int("minimum_year") ?? 1
+    maximumYear = node.int("maximum_year")
+    firstDate = RufletCupertinoDateCodec.date(from: node.props["first_date"])
+    lastDate = RufletCupertinoDateCodec.date(from: node.props["last_date"])
+    disabled = node.bool("disabled") ?? false
+    backgroundToken = node.string("bgcolor")
     baseLocaleIdentifier = node.string("locale") ?? Locale.current.identifier
   }
 
   var showsWeekday: Bool {
-    showDayOfWeek && mode != .time
+    showDayOfWeek && mode == .date
   }
 
   /// Flutter receives `dateOrder` as a wheel-order override. SwiftUI exposes
@@ -2214,6 +2284,17 @@ struct RufletCupertinoDatePickerConfiguration {
     return formatter.string(from: date)
   }
 
+  func monthName(_ month: Int) -> String {
+    let formatter = DateFormatter()
+    formatter.locale = locale
+    return formatter.monthSymbols[max(0, min(month - 1, 11))]
+  }
+
+  var yearValues: ClosedRange<Int> {
+    let lower = max(minimumYear, 1)
+    return lower...max(maximumYear ?? 9_999, lower)
+  }
+
   /// CupertinoDatePicker only permits minute intervals that divide 60. Flet
   /// passes the interval to Flutter's constructor; snapping here gives the
   /// native wheel the same value contract even though SwiftUI does not expose
@@ -2224,6 +2305,157 @@ struct RufletCupertinoDatePickerConfiguration {
     let snappedMinute = (minute / minuteInterval) * minuteInterval
     guard snappedMinute != minute else { return date }
     return calendar.date(byAdding: .minute, value: snappedMinute - minute, to: date) ?? date
+  }
+
+  var allowedRange: ClosedRange<Date> {
+    var calendar = Calendar.current
+    calendar.timeZone = TimeZone.current
+    let yearLower = calendar.date(from: DateComponents(
+      year: max(minimumYear, 1), month: 1, day: 1)) ?? Date.distantPast
+    let yearUpper = maximumYear.flatMap {
+      calendar.date(from: DateComponents(year: $0, month: 12, day: 31, hour: 23, minute: 59))
+    } ?? Date.distantFuture
+    let usesYearBounds = mode == .date || mode == .monthYear
+    let lower = usesYearBounds
+      ? (firstDate.map { max($0, yearLower) } ?? yearLower)
+      : (firstDate ?? Date.distantPast)
+    let upper = usesYearBounds
+      ? (lastDate.map { min($0, yearUpper) } ?? yearUpper)
+      : (lastDate ?? Date.distantFuture)
+    return lower <= upper ? lower...upper : Date.distantPast...Date.distantFuture
+  }
+
+  func validationMessage(value: Date) -> String? {
+    if itemExtent <= 0 {
+      return "item_extent must be strictly greater than 0, got \(itemExtent)"
+    }
+    if minuteInterval <= 0 || 60 % minuteInterval != 0 {
+      return "minute_interval must be a positive integer factor of 60, got \(minuteInterval)"
+    }
+    if showDayOfWeek && mode != .date {
+      return "show_day_of_week is only supported when date_picker_mode is CupertinoDatePickerMode.DATE"
+    }
+    let calendar = Calendar.current
+    if mode == .dateAndTime {
+      if let firstDate, value < firstDate {
+        return "value can't be before first_date"
+      }
+      if let lastDate, value > lastDate {
+        return "value can't be after last_date"
+      }
+    }
+    if mode == .date || mode == .monthYear {
+      let year = calendar.component(.year, from: value)
+      if minimumYear < 1 || year < minimumYear {
+        return "value.year (\(year)) can't be less than minimum_year (\(minimumYear))"
+      }
+      if let maximumYear, year > maximumYear {
+        return "value.year (\(year)) can't be greater than maximum_year (\(maximumYear))"
+      }
+      if let firstDate, value < firstDate { return "value can't be before first_date" }
+      if let lastDate, value > lastDate { return "value can't be after last_date" }
+    }
+    let minute = calendar.component(.minute, from: value)
+    if minute % minuteInterval != 0 {
+      return "value.minute (\(minute)) must be divisible by minute_interval (\(minuteInterval))"
+    }
+    return nil
+  }
+}
+
+struct RufletCupertinoTimerPickerConfiguration {
+  let mode: String
+  let minuteInterval: Int
+  let secondInterval: Int
+  let itemExtent: Double
+  let alignment: Alignment
+  let backgroundToken: String?
+  let disabled: Bool
+  let seconds: Int
+
+  init(node: ControlNode) {
+    mode = node.string("mode") ?? "hms"
+    minuteInterval = node.int("minute_interval") ?? 1
+    secondInterval = node.int("second_interval") ?? 1
+    itemExtent = node.double("item_extent") ?? 32
+    alignment = ControlProps.alignment(node.props["alignment"]) ?? .center
+    backgroundToken = node.string("bgcolor")
+    disabled = node.bool("disabled") ?? false
+    seconds = RufletCupertinoTimerModel.seconds(from: node.props["value"])
+  }
+
+  var validationMessage: String? {
+    if seconds < 0 { return "value must be a non-negative duration" }
+    if seconds >= 86_400 {
+      return "value must be strictly less than 24 hours, got \(seconds / 3_600) hours"
+    }
+    if minuteInterval <= 0 || 60 % minuteInterval != 0 {
+      return "minute_interval (\(minuteInterval)) must be a positive integer factor of 60"
+    }
+    if secondInterval <= 0 || 60 % secondInterval != 0 {
+      return "second_interval (\(secondInterval)) must be a positive integer factor of 60"
+    }
+    if (seconds / 60) % minuteInterval != 0 {
+      return "value (\(seconds / 60) minutes) must be a multiple of minute_interval (\(minuteInterval))"
+    }
+    if seconds % secondInterval != 0 {
+      return "value (\(seconds) seconds) must be a multiple of second_interval (\(secondInterval))"
+    }
+    if itemExtent <= 0 {
+      return "item_extent must be strictly greater than 0.0, got \(itemExtent)"
+    }
+    return nil
+  }
+}
+
+enum RufletCupertinoDateCodec {
+  private static let parserWithFractions: ISO8601DateFormatter = {
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    return formatter
+  }()
+
+  private static let parser: ISO8601DateFormatter = ISO8601DateFormatter()
+
+  private static let encoder: ISO8601DateFormatter = {
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    formatter.timeZone = TimeZone(secondsFromGMT: 0)
+    return formatter
+  }()
+
+  static func date(from value: RufletValue?) -> Date? {
+    guard let payload = value?.stringValue else { return nil }
+    return parserWithFractions.date(from: payload) ?? parser.date(from: payload)
+  }
+
+  static func wireValue(_ date: Date) -> RufletValue {
+    var payload = encoder.string(from: date)
+    if payload.hasSuffix("Z") {
+      payload.removeLast()
+      payload += "+00:00"
+    }
+    return .extended(type: 1, string: payload)
+  }
+}
+
+enum RufletCupertinoDatePickerEvents {
+  static func change(_ date: Date, on node: ControlNode, to events: RufletEventSink) {
+    RufletValueControlEvents.commit(
+      node, value: RufletCupertinoDateCodec.wireValue(date), payload: .value, to: events)
+  }
+}
+
+enum RufletCupertinoTimerPickerEvents {
+  static func change(
+    seconds: Int, preserving original: RufletValue?,
+    on node: ControlNode, to events: RufletEventSink
+  ) {
+    RufletValueControlEvents.commit(
+      node,
+      value: RufletCupertinoTimerModel.wireValue(seconds: seconds, preserving: original),
+      payload: .value,
+      to: events)
   }
 }
 
@@ -2250,34 +2482,32 @@ enum RufletCupertinoTimerModel {
   /// Duration values. Ruby uses MessagePack extension type 3 for Duration.
   static func seconds(from value: RufletValue?) -> Int {
     guard let value else { return 0 }
-    if let seconds = value.intValue { return max(seconds, 0) }
+    if let seconds = value.intValue { return seconds }
     if case .extended(type: 3, let payload) = value {
-      return max(parseDurationPayload(payload), 0)
+      return parseDurationPayload(payload)
     }
     if let map = value.mapValue {
-      return max(
-        (map["days"]?.intValue ?? 0) * 86_400
+      return (map["days"]?.intValue ?? 0) * 86_400
           + (map["hours"]?.intValue ?? 0) * 3_600
           + (map["minutes"]?.intValue ?? 0) * 60
-          + (map["seconds"]?.intValue ?? 0),
-        0)
+          + (map["seconds"]?.intValue ?? 0)
     }
     return 0
   }
 
   static func wireValue(seconds: Int, preserving original: RufletValue?) -> RufletValue {
-    let seconds = max(seconds, 0)
     // The upstream engine checks `control.get("value") is int`, not whether
     // the value can be converted to an integer. Maps, doubles and missing
     // values therefore change to a Duration value after the first gesture.
     if case .int = original { return .int(Int64(seconds)) }
-    return .extended(type: 3, string: durationPayload(seconds: seconds))
+    // FletMsgpackEncoder serializes Duration as total microseconds.
+    return .extended(type: 3, string: String(Int64(seconds) * 1_000_000))
   }
 
   private static func parseDurationPayload(_ payload: String) -> Int {
-    // Ruby's duration extension is either a numeric seconds payload or an
-    // ISO-8601 duration. Accept both without changing the public wire type.
-    if let seconds = Int(payload) { return seconds }
+    // FletMsgpackEncoder encodes Duration.inMicroseconds as a decimal string.
+    if let microseconds = Int64(payload) { return Int(microseconds / 1_000_000) }
+    // Accept Ruflet's older ISO-8601 payload while sessions migrate.
     let expression = try? NSRegularExpression(
       pattern: #"^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$"#)
     let range = NSRange(payload.startIndex..<payload.endIndex, in: payload)
@@ -2290,14 +2520,6 @@ enum RufletCupertinoTimerModel {
     return component(1) * 86_400 + component(2) * 3_600 + component(3) * 60 + component(4)
   }
 
-  private static func durationPayload(seconds: Int) -> String {
-    let days = seconds / 86_400
-    let hours = (seconds % 86_400) / 3_600
-    let minutes = (seconds % 3_600) / 60
-    let remainder = seconds % 60
-    let dayPart = days == 0 ? "" : "\(days)D"
-    return "P\(dayPart)T\(hours)H\(minutes)M\(remainder)S"
-  }
 }
 
 /// `CupertinoActivityIndicator` — the iOS spinner.

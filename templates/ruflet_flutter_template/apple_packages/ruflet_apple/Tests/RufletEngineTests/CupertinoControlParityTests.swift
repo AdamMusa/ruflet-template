@@ -95,6 +95,18 @@ final class CupertinoControlParityTests: XCTestCase {
     XCTAssertTrue(columns.hours)
     XCTAssertTrue(columns.minutes)
     XCTAssertTrue(columns.seconds)
+
+    let configuration = RufletCupertinoTimerPickerConfiguration(
+      node: ControlNode(id: 1, type: "CupertinoTimerPicker"))
+    XCTAssertEqual(configuration.mode, "hms")
+    XCTAssertEqual(configuration.minuteInterval, 1)
+    XCTAssertEqual(configuration.secondInterval, 1)
+    XCTAssertEqual(configuration.itemExtent, 32)
+    XCTAssertEqual(configuration.alignment, .center)
+    XCTAssertEqual(configuration.seconds, 0)
+    XCTAssertFalse(configuration.disabled)
+    XCTAssertNil(configuration.backgroundToken)
+    XCTAssertNil(configuration.validationMessage)
   }
 
   func testTimerPickerModesAndIntervalsMatchCupertinoConstructor() {
@@ -115,6 +127,10 @@ final class CupertinoControlParityTests: XCTestCase {
   func testTimerPickerPreservesFletDurationWireRepresentation() {
     XCTAssertEqual(RufletCupertinoTimerModel.seconds(from: .int(3_661)), 3_661)
     XCTAssertEqual(
+      RufletCupertinoTimerModel.seconds(from: .extended(type: 3, string: "93784000000")),
+      93_784)
+    // Accept the pre-Flet-native Ruflet payload during session migration.
+    XCTAssertEqual(
       RufletCupertinoTimerModel.seconds(from: .extended(type: 3, string: "P1DT2H3M4S")),
       93_784)
     XCTAssertEqual(
@@ -125,15 +141,26 @@ final class CupertinoControlParityTests: XCTestCase {
 
     XCTAssertEqual(
       RufletCupertinoTimerModel.wireValue(
-        seconds: 3_661, preserving: .extended(type: 3, string: "PT0S")),
-      .extended(type: 3, string: "PT1H1M1S"))
+        seconds: 3_661, preserving: .extended(type: 3, string: "0")),
+      .extended(type: 3, string: "3661000000"))
     XCTAssertEqual(
       RufletCupertinoTimerModel.wireValue(seconds: 61, preserving: .int(0)),
       .int(61))
     XCTAssertEqual(
       RufletCupertinoTimerModel.wireValue(
         seconds: 61, preserving: .map(["seconds": .int(0)])),
-      .extended(type: 3, string: "PT0H1M1S"))
+      .extended(type: 3, string: "61000000"))
+  }
+
+  func testTimerPickerValidatesIntervalsDurationAndItemExtent() {
+    XCTAssertNotNil(RufletCupertinoTimerPickerConfiguration(node: ControlNode(
+      id: 1, type: "CupertinoTimerPicker", props: ["value": .int(86_400)])).validationMessage)
+    XCTAssertNotNil(RufletCupertinoTimerPickerConfiguration(node: ControlNode(
+      id: 1, type: "CupertinoTimerPicker", props: ["minute_interval": .int(7)])).validationMessage)
+    XCTAssertNotNil(RufletCupertinoTimerPickerConfiguration(node: ControlNode(
+      id: 1, type: "CupertinoTimerPicker", props: ["second_interval": .int(7)])).validationMessage)
+    XCTAssertNotNil(RufletCupertinoTimerPickerConfiguration(node: ControlNode(
+      id: 1, type: "CupertinoTimerPicker", props: ["item_extent": .double(0)])).validationMessage)
   }
 
   func testDatePickerUsesPinnedFletCupertinoDefaults() {
@@ -146,7 +173,14 @@ final class CupertinoControlParityTests: XCTestCase {
     XCTAssertFalse(configuration.use24HourFormat)
     XCTAssertEqual(configuration.itemExtent, 32)
     XCTAssertEqual(configuration.minuteInterval, 1)
+    XCTAssertEqual(configuration.minimumYear, 1)
+    XCTAssertNil(configuration.maximumYear)
+    XCTAssertNil(configuration.firstDate)
+    XCTAssertNil(configuration.lastDate)
+    XCTAssertFalse(configuration.disabled)
+    XCTAssertNil(configuration.backgroundToken)
     XCTAssertFalse(configuration.showsWeekday)
+    XCTAssertNil(configuration.validationMessage(value: Date()))
   }
 
   func testDatePickerConsumesDateOrderWeekdayAnd24HourOverrides() {
@@ -177,6 +211,54 @@ final class CupertinoControlParityTests: XCTestCase {
     let date = calendar.date(from: DateComponents(
       year: 2026, month: 8, day: 11, hour: 10, minute: 43))!
     XCTAssertEqual(calendar.component(.minute, from: configuration.snapped(date, calendar: calendar)), 30)
+  }
+
+  func testDatePickerUsesFletDateTimeExtensionAndUpdateBeforeChange() {
+    var calendar = Calendar(identifier: .gregorian)
+    calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+    let date = calendar.date(from: DateComponents(
+      year: 2026, month: 8, day: 12, hour: 3, minute: 30, second: 45))!
+    let wire = RufletCupertinoDateCodec.wireValue(date)
+    guard case .extended(type: 1, let payload) = wire else {
+      return XCTFail("expected Flet DateTime extension")
+    }
+    XCTAssertTrue(payload.hasSuffix("+00:00"))
+    XCTAssertEqual(RufletCupertinoDateCodec.date(from: wire), date)
+
+    let node = ControlNode(
+      id: 5, type: "CupertinoDatePicker", props: ["on_change": .bool(true)])
+    var calls: [String] = []
+    let sink = RufletEventSink(
+      send: { _, name, data in
+        if case .extended(let type, _) = data { calls.append("event:\(name):\(type)") }
+      },
+      setLocal: { _, key, _ in calls.append("local:\(key)") },
+      update: { _, props in calls.append("update:\(props.keys.sorted().joined(separator: ","))") })
+    RufletCupertinoDatePickerEvents.change(date, on: node, to: sink)
+    XCTAssertEqual(calls, ["local:value", "update:value", "event:change:1"])
+  }
+
+  func testTimerPickerUsesFletDurationExtensionAndUpdateBeforeChange() {
+    let node = ControlNode(
+      id: 6, type: "CupertinoTimerPicker",
+      props: [
+        "value": .extended(type: 3, string: "0"),
+        "on_change": .bool(true),
+      ])
+    var calls: [String] = []
+    let sink = RufletEventSink(
+      send: { _, name, data in
+        if case .extended(let type, let payload) = data {
+          calls.append("event:\(name):\(type):\(payload)")
+        }
+      },
+      setLocal: { _, key, _ in calls.append("local:\(key)") },
+      update: { _, props in calls.append("update:\(props.keys.sorted().joined(separator: ","))") })
+    RufletCupertinoTimerPickerEvents.change(
+      seconds: 61, preserving: node.props["value"], on: node, to: sink)
+    XCTAssertEqual(calls, [
+      "local:value", "update:value", "event:change:3:61000000",
+    ])
   }
 
   func testCupertinoPickerUsesFlutterConstructorDefaults() {
