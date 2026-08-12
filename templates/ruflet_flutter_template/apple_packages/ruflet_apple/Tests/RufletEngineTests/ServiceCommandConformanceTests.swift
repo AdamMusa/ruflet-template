@@ -81,9 +81,14 @@ final class ServiceCommandConformanceTests: XCTestCase {
       service, type: "Page", method: "get_device_info", node: store.page,
       context: serviceContext)
     let info = try? infoReply?.get().mapValue
-    XCTAssertFalse(info?["os"]?.stringValue?.isEmpty ?? true)
-    XCTAssertFalse(info?["os_version"]?.stringValue?.isEmpty ?? true)
-    XCTAssertFalse(info?["locale"]?.stringValue?.isEmpty ?? true)
+    #if canImport(UIKit)
+      XCTAssertFalse(info?["system_name"]?.stringValue?.isEmpty ?? true)
+      XCTAssertFalse(info?["model"]?.stringValue?.isEmpty ?? true)
+    #elseif os(macOS)
+      XCTAssertFalse(info?["arch"]?.stringValue?.isEmpty ?? true)
+      XCTAssertFalse(info?["model"]?.stringValue?.isEmpty ?? true)
+    #endif
+    XCTAssertFalse(info?["locales"]?.arrayValue?.isEmpty ?? true)
   }
 
   @MainActor

@@ -309,19 +309,7 @@ public final class PageService: RufletStreamingService {
       completion(.success(.null))
 
     case "get_device_info":
-      var info: [String: RufletValue] = [
-        "os": .string(Self.platformName),
-        "os_version": .string(ProcessInfo.processInfo.operatingSystemVersionString),
-        "locale": .string(Locale.current.identifier)
-      ]
-      #if canImport(UIKit)
-        info["model"] = .string(UIDevice.current.model)
-        info["device_name"] = .string(UIDevice.current.name)
-      #elseif canImport(AppKit)
-        info["model"] = .string("Mac")
-        info["device_name"] = .string(Host.current().localizedName ?? "Mac")
-      #endif
-      completion(.success(.map(info)))
+      completion(.success(.map(FletAppleDeviceInfoSemantics.payload())))
 
     case "set_allowed_device_orientations":
       #if os(iOS)
