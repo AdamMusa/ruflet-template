@@ -68,14 +68,26 @@ final class TextTypographyParityTests: XCTestCase {
     XCTAssertEqual(style.weight, .bold)
   }
 
-  func testFontFamilyFallbackDoesNotReplaceFletFontFamily() {
-    // Flet 0.80.5 exposes this Python property but its TextControl does not
-    // pass it to Flutter TextStyle. Treating the first fallback as the primary
-    // face would therefore diverge from the pinned renderer.
+  func testFontFamilyFallbackPreservesOrderedFletCascade() {
+    let style = RufletTextStyle.forText(node: ControlNode(
+      id: 1, type: "Text",
+      props: [
+        "font_family": .string("Primary"),
+        "font_family_fallback": .array([
+          .string("Fallback A"), .string("Fallback B"), .string("Fallback A")
+        ])
+      ]))
+    XCTAssertEqual(style.fontFamily, "Primary")
+    XCTAssertEqual(style.fontFamilyFallback, ["Fallback A", "Fallback B", "Fallback A"])
+    XCTAssertEqual(style.resolvedFontFamilies, ["Primary", "Fallback A", "Fallback B"])
+  }
+
+  func testFontFamilyFallbackDoesNotBecomePrimaryWhenPrimaryIsOmitted() {
     let style = RufletTextStyle.forText(node: ControlNode(
       id: 1, type: "Text",
       props: ["font_family_fallback": .array([.string("Fallback")])]))
     XCTAssertNil(style.fontFamily)
+    XCTAssertEqual(style.resolvedFontFamilies, ["Fallback"])
   }
 
   func testUnknownThemeRoleDoesNotInventTypography() {

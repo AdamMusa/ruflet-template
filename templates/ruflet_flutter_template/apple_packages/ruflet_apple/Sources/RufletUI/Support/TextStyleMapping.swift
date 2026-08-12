@@ -1,6 +1,11 @@
 import RufletEngine
 import RufletProtocol
 import SwiftUI
+#if canImport(UIKit)
+  import UIKit
+#elseif canImport(AppKit)
+  import AppKit
+#endif
 
 /// Turns Flet's `TextStyle` vocabulary into SwiftUI font and colour modifiers.
 ///
@@ -14,6 +19,7 @@ public struct RufletTextStyle {
   public var color: Color?
   public var backgroundColor: Color?
   public var fontFamily: String?
+  public var fontFamilyFallback: [String]?
   public var letterSpacing: CGFloat?
   public var lineHeight: CGFloat?
   public var decoration: TextDecoration = []
@@ -61,6 +67,9 @@ public struct RufletTextStyle {
     if let family = node.string("font_family") {
       style.fontFamily = family
     }
+    if let fallback = node.array("font_family_fallback") {
+      style.fontFamilyFallback = fallback.map(\.stringValue).compactMap { $0 }
+    }
     if let color = MaterialPalette.color(node.string("color")) {
       style.color = color
     } else if hasSpans {
@@ -84,6 +93,7 @@ public struct RufletTextStyle {
     if let value = overlay.color { color = value }
     if let value = overlay.backgroundColor { backgroundColor = value }
     if let value = overlay.fontFamily { fontFamily = value }
+    if let value = overlay.fontFamilyFallback { fontFamilyFallback = value }
     if let value = overlay.letterSpacing { letterSpacing = value }
     if let value = overlay.lineHeight { lineHeight = value }
     if !overlay.decoration.isEmpty { decoration = overlay.decoration }
@@ -174,6 +184,9 @@ public struct RufletTextStyle {
       backgroundColor = color
     }
     if let value = map["font_family"]?.stringValue { fontFamily = value }
+    if let value = map["font_family_fallback"]?.arrayValue {
+      fontFamilyFallback = value.map(\.stringValue).compactMap { $0 }
+    }
     if let value = map["letter_spacing"]?.doubleValue { letterSpacing = CGFloat(value) }
     if let value = map["height"]?.doubleValue { lineHeight = CGFloat(value) }
     if let value = map["decoration"]?.intValue {
@@ -207,6 +220,11 @@ public struct RufletTextStyle {
   /// The resolved font: an explicit size wins, otherwise the theme ramp, and
   /// a custom family replaces the system face while keeping the size.
   public var font: Font {
+    #if canImport(UIKit)
+      if let native = nativeUIKitFont { return Font(native) }
+    #elseif canImport(AppKit)
+      if let native = nativeAppKitFont { return Font(native) }
+    #endif
     var base: Font
     if let size {
       base = fontFamily.map { Font.custom($0, size: size) } ?? Font.system(size: size)
@@ -224,6 +242,85 @@ public struct RufletTextStyle {
     if italic { base = base.italic() }
     return base
   }
+
+  /// The ordered family cascade Flet forwards to Flutter's TextStyle. An
+  /// explicit primary face is not duplicated in the fallback descriptors.
+  var resolvedFontFamilies: [String] {
+    var result = fontFamily.map { [$0] } ?? []
+    for family in fontFamilyFallback ?? [] where !family.isEmpty && !result.contains(family) {
+      result.append(family)
+    }
+    return result
+  }
+
+  private var resolvedPointSize: CGFloat {
+    size ?? materialThemeMetric?.size ?? themeStyle.map(Self.pointSize) ?? 17
+  }
+
+  #if canImport(UIKit)
+    private var nativeUIKitFont: UIFont? {
+      guard !(fontFamilyFallback ?? []).isEmpty else { return nil }
+      let pointSize = resolvedPointSize
+      let primary = fontFamily.flatMap { UIFont(name: $0, size: pointSize) }
+        ?? UIFont.systemFont(ofSize: pointSize, weight: uiFontWeight)
+      var descriptor = primary.fontDescriptor
+      if italic, let italicDescriptor = descriptor.withSymbolicTraits(
+        descriptor.symbolicTraits.union(.traitItalic))
+      {
+        descriptor = italicDescriptor
+      }
+      let fallbacks = (fontFamilyFallback ?? []).filter { !$0.isEmpty }.map {
+        UIFontDescriptor(name: $0, size: pointSize)
+      }
+      descriptor = descriptor.addingAttributes([.cascadeList: fallbacks])
+      return UIFont(descriptor: descriptor, size: pointSize)
+    }
+
+    private var uiFontWeight: UIFont.Weight {
+      switch weight {
+      case .thin: return .thin
+      case .ultraLight: return .ultraLight
+      case .light: return .light
+      case .medium: return .medium
+      case .semibold: return .semibold
+      case .bold: return .bold
+      case .heavy: return .heavy
+      case .black: return .black
+      default: return .regular
+      }
+    }
+  #elseif canImport(AppKit)
+    private var nativeAppKitFont: NSFont? {
+      guard !(fontFamilyFallback ?? []).isEmpty else { return nil }
+      let pointSize = resolvedPointSize
+      let primary = fontFamily.flatMap { NSFont(name: $0, size: pointSize) }
+        ?? NSFont.systemFont(ofSize: pointSize, weight: nsFontWeight)
+      var descriptor = primary.fontDescriptor
+      if italic {
+        descriptor = descriptor.withSymbolicTraits(
+          descriptor.symbolicTraits.union(.italic))
+      }
+      let fallbacks = (fontFamilyFallback ?? []).filter { !$0.isEmpty }.map {
+        NSFontDescriptor(name: $0, size: pointSize)
+      }
+      descriptor = descriptor.addingAttributes([.cascadeList: fallbacks])
+      return NSFont(descriptor: descriptor, size: pointSize)
+    }
+
+    private var nsFontWeight: NSFont.Weight {
+      switch weight {
+      case .thin: return .thin
+      case .ultraLight: return .ultraLight
+      case .light: return .light
+      case .medium: return .medium
+      case .semibold: return .semibold
+      case .bold: return .bold
+      case .heavy: return .heavy
+      case .black: return .black
+      default: return .regular
+      }
+    }
+  #endif
 
   /// SwiftUI's `lineSpacing` is the extra leading between nominal font boxes;
   /// Flutter's `height` is a multiplier and Material TextTheme supplies an
