@@ -8,19 +8,29 @@ final class ChromeOverlayParityTests: XCTestCase {
     let appBar = ChromeDefaults.appBar(ControlNode(id: 1, type: "AppBar"))
     XCTAssertEqual(appBar.toolbarHeight, 56)
     XCTAssertEqual(appBar.toolbarOpacity, 1)
+    XCTAssertEqual(appBar.titleSpacing, 16)
+    XCTAssertEqual(appBar.leadingWidth, 56)
+    XCTAssertEqual(appBar.scrolledUnderElevation, 3)
     XCTAssertFalse(appBar.excludeHeaderSemantics)
     XCTAssertFalse(appBar.forceMaterialTransparency)
 
     let bottom = ChromeDefaults.bottomAppBar(ControlNode(id: 2, type: "BottomAppBar"))
     XCTAssertEqual(bottom.notchMargin, 4)
-    XCTAssertNil(bottom.height)
+    XCTAssertEqual(bottom.height, 80)
+    XCTAssertEqual(bottom.elevation, 3)
+    XCTAssertEqual(bottom.padding.top, 12)
+    XCTAssertEqual(bottom.padding.leading, 16)
 
     let navigation = ChromeDefaults.navigationBar(ControlNode(id: 3, type: "NavigationBar"))
     XCTAssertEqual(navigation.height, 80)
+    XCTAssertEqual(navigation.elevation, 3)
+    XCTAssertEqual(navigation.labelPadding.top, 4)
+    XCTAssertEqual(navigation.labelPadding.bottom, 0)
     XCTAssertTrue(navigation.showsLabel(selected: false))
 
     let rail = ChromeDefaults.navigationRail(ControlNode(id: 4, type: "NavigationRail"))
-    XCTAssertEqual(rail.minWidth, 72)
+    XCTAssertEqual(rail.minWidth, 80)
+    XCTAssertEqual(rail.minExtendedWidth, 256)
     XCTAssertEqual(rail.groupAlignment, -1)
     XCTAssertTrue(rail.useIndicator)
     XCTAssertTrue(rail.showsLabel(extended: false, selected: false))
@@ -28,7 +38,7 @@ final class ChromeOverlayParityTests: XCTestCase {
 
   func testBottomAppBarNotchParsesFletNotchedShapeContract() {
     let absent = ChromeDefaults.bottomAppBarNotch(ControlNode(id: 1, type: "BottomAppBar"))
-    XCTAssertEqual(absent.kind, .none)
+    XCTAssertEqual(absent.kind, .automatic)
     XCTAssertEqual(absent.margin, 4)
 
     let circular = ChromeDefaults.bottomAppBarNotch(ControlNode(
@@ -45,6 +55,70 @@ final class ChromeOverlayParityTests: XCTestCase {
       id: 3, type: "BottomAppBar",
       props: ["shape": .map(["_type": .string("auto")])]))
     XCTAssertEqual(automatic.kind, .automatic)
+  }
+
+  func testNavigationMaterialThreeStatePalettesMatchFlutterDefaults() {
+    XCTAssertEqual(
+      ChromeDefaults.navigationBarItemPalette(selected: true, disabled: false),
+      .init(iconToken: "onsecondarycontainer", labelToken: "onsurface"))
+    XCTAssertEqual(
+      ChromeDefaults.navigationBarItemPalette(selected: false, disabled: false),
+      .init(iconToken: "onsurfacevariant", labelToken: "onsurfacevariant"))
+    XCTAssertEqual(
+      ChromeDefaults.navigationBarItemPalette(selected: true, disabled: true),
+      .init(iconToken: "onsurfacevariant,0.38", labelToken: "onsurfacevariant,0.38"))
+
+    XCTAssertEqual(
+      ChromeDefaults.navigationRailItemPalette(selected: true, disabled: true),
+      .init(iconToken: "onsurface,0.38", labelToken: "onsurface,0.38"))
+    XCTAssertEqual(
+      ChromeDefaults.navigationDrawerItemPalette(selected: true, disabled: false),
+      .init(iconToken: "onsecondarycontainer", labelToken: "onsecondarycontainer"))
+  }
+
+  func testBottomAppBarRoundedClipAndExplicitValuesPreserveFletProps() {
+    let values = ChromeDefaults.bottomAppBar(ControlNode(
+      id: 5, type: "BottomAppBar",
+      props: [
+        "padding": .double(5), "height": .double(96), "elevation": .double(7),
+        "border_radius": .map(["top_left": .double(12), "bottom_right": .double(4)]),
+        "clip_behavior": .string("none"),
+      ]))
+    XCTAssertEqual(values.padding.top, 5)
+    XCTAssertEqual(values.height, 96)
+    XCTAssertEqual(values.elevation, 7)
+    XCTAssertEqual(values.cornerRadii.topLeft, 12)
+    XCTAssertEqual(values.cornerRadii.bottomRight, 4)
+    // Flet's outer ClipRRect cannot use Clip.none and falls back to antiAlias.
+    XCTAssertEqual(values.clipBehavior, "antiAlias")
+  }
+
+  func testChromeOutlinedBorderParserCoversEveryFletShapeKind() {
+    let cases: [(String, ChromeOutlinedShapeKind)] = [
+      ("roundedrectangle", .roundedRectangle), ("stadium", .stadium),
+      ("circle", .circle), ("beveledrectangle", .beveledRectangle),
+      ("continuousrectangle", .continuousRectangle),
+    ]
+    for (raw, expected) in cases {
+      let value: RufletValue = .map([
+        "_type": .string(raw), "radius": .double(9),
+        "side": .map(["width": .double(2), "color": .string("red")]),
+      ])
+      let shape = ChromeDefaults.outlinedShape(value, defaultKind: .stadium)
+      XCTAssertEqual(shape.kind, expected, raw)
+      XCTAssertEqual(shape.radii.maximum, 9, raw)
+      XCTAssertEqual(shape.sideWidth, 2, raw)
+      XCTAssertEqual(shape.sideColorToken, "red", raw)
+    }
+  }
+
+  func testNavigationDrawerUsesFlutterMaterialThreeGeometry() {
+    let values = ChromeDefaults.navigationDrawer(ControlNode(id: 6, type: "NavigationDrawer"))
+    XCTAssertEqual(values.elevation, 1)
+    XCTAssertEqual(values.tilePadding.leading, 12)
+    XCTAssertEqual(values.tileHeight, 56)
+    XCTAssertEqual(values.indicatorWidth, 336)
+    XCTAssertEqual(values.indicatorHeight, 56)
   }
 
   func testPageNavigationUsesFletViewPopAndConfirmProtocols() {
