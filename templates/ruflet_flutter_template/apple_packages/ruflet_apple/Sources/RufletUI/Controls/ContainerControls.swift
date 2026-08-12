@@ -50,7 +50,12 @@ private struct ContainerInk: ViewModifier {
   @State private var pressed = false
 
   func body(content: Content) -> some View {
-    guard node.bool("ink") == true else { return AnyView(content) }
+    let interactive = node.handlesEvent("click") || node.handlesEvent("tap_down")
+      || node.handlesEvent("long_press") || node.handlesEvent("hover")
+      || node.string("url") != nil
+    guard node.bool("ink") == true, interactive, node.bool("disabled") != true else {
+      return AnyView(content)
+    }
     return AnyView(
       content
         .background(
@@ -62,6 +67,22 @@ private struct ContainerInk: ViewModifier {
           DragGesture(minimumDistance: 0)
             .onChanged { _ in pressed = true }
             .onEnded { _ in pressed = false }))
+  }
+}
+
+/// Flet opens `url` only when it is present. Keeping the gesture conditional
+/// preserves a non-interactive Container's native hit-testing behavior.
+private struct ContainerURLReporter: ViewModifier {
+  let rawURL: String?
+  @Environment(\.openURL) private var openURL
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if let rawURL, let url = URL(string: rawURL) {
+      content.onTapGesture { openURL(url) }
+    } else {
+      content
+    }
   }
 }
 
@@ -95,14 +116,23 @@ private struct ContainerColorFilter: ViewModifier {
 /// `foreground_decoration` paints over the child rather than behind it.
 private struct ContainerForeground: ViewModifier {
   let node: ControlNode
-  let radii: RufletCornerRadii
 
   func body(content: Content) -> some View {
     guard let decoration = node.map("foreground_decoration") else { return AnyView(content) }
-    let shape = RufletRoundedRectangle(radii: radii)
+    var props = decoration
+    // `parseBoxDecoration` names this list `shadows`; Container's own
+    // top-level property is singular `shadow`.
+    props["shadow"] = decoration["shadows"]
+    let decorationNode = ControlNode(id: node.id, type: "Container", props: props)
+    let semantics = RufletContainerSemantics(node: decorationNode)
     return AnyView(
       content.overlay(
-        shape.fill(MaterialPalette.color(decoration["color"]?.stringValue, default: .clear))))
+        ContainerDecorationLayer(semantics: semantics)
+          .blendMode(ControlProps.blendMode(semantics.blendMode))
+          .modifier(ContainerShadows(value: decoration["shadows"]))
+          .overlay(ContainerBorderLayer(
+            border: semantics.border, shape: semantics.shape, radii: semantics.radii))
+          .allowsHitTesting(false)))
   }
 }
 
@@ -112,16 +142,42 @@ private struct ContainerShadows: ViewModifier {
 
   func body(content: Content) -> some View {
     var result = AnyView(content)
-    for shadow in value?.arrayValue ?? [] {
-      guard let map = shadow.mapValue else { continue }
+    for shadow in RufletBoxShadowSpec.parseList(value) {
+      // Flutter's BoxShadow blur radius is sigma*2. SwiftUI's shadow radius
+      // is sigma, and a positive spread expands the painted silhouette.
+      let blurSigma = CGFloat(shadow.blurRadius) / 2
+      let spread = CGFloat(shadow.spreadRadius)
       result = AnyView(
         result.shadow(
-          color: MaterialPalette.color(map["color"]?.stringValue, default: .black.opacity(0.2)),
-          radius: CGFloat(map["blur_radius"]?.doubleValue ?? 0),
-          x: CGFloat(map["offset"]?.mapValue?["x"]?.doubleValue ?? 0),
-          y: CGFloat(map["offset"]?.mapValue?["y"]?.doubleValue ?? 0)))
+          color: MaterialPalette.color(shadow.colorToken, default: .black),
+          radius: max(blurSigma + spread, 0),
+          x: CGFloat(shadow.offsetX), y: CGFloat(shadow.offsetY)))
     }
     return result
+  }
+}
+
+struct RufletBoxShadowSpec: Equatable {
+  let colorToken: String?
+  let offsetX: Double
+  let offsetY: Double
+  let blurStyle: String
+  let blurRadius: Double
+  let spreadRadius: Double
+
+  init?(_ value: RufletValue?) {
+    guard let map = value?.mapValue else { return nil }
+    colorToken = map["color"]?.stringValue
+    offsetX = map["offset"]?.mapValue?["x"]?.doubleValue ?? 0
+    offsetY = map["offset"]?.mapValue?["y"]?.doubleValue ?? 0
+    blurStyle = map["blur_style"]?.stringValue?.lowercased() ?? "normal"
+    blurRadius = map["blur_radius"]?.doubleValue ?? 0
+    spreadRadius = map["spread_radius"]?.doubleValue ?? 0
+  }
+
+  static func parseList(_ value: RufletValue?) -> [RufletBoxShadowSpec] {
+    let values = value?.arrayValue ?? value.map { [$0] } ?? []
+    return values.compactMap(RufletBoxShadowSpec.init)
   }
 }
 
@@ -672,39 +728,39 @@ struct ContainerControlView: View {
   let axis: LayoutAxis
 
   @Environment(\.rufletEvents) private var events
-
   var body: some View {
-    let radii = ControlProps.cornerRadii(node.props["border_radius"])
-      ?? RufletCornerRadii(uniform: 0)
-    let border = ControlProps.borderSides(node.props["border"])
-    let alignment = ControlProps.continuousAlignment(node.props["alignment"])
+    let semantics = RufletContainerSemantics(node: node)
 
     content
-      .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets())
+      .padding(semantics.padding ?? EdgeInsets())
       // A ResponsiveRow supplies Flutter-tight horizontal constraints. Apply
       // them before painting the Container so its background, border and hit
       // target fill the grid cell instead of stopping at the text's intrinsic
       // width.
       .modifier(
         ContainerAlignmentModifier(
-          alignment: alignment,
+          alignment: semantics.alignment,
           requiresTightWidth: axis.requiresTightWidth)
       )
-      .background(background(radii: radii))
-      .overlay(borderStroke(border: border, radii: radii))
-      // Flutter's BoxShape: a circle ignores the radii entirely.
-      .clipShape(RufletRoundedRectangle(radii: containerRadii))
-      .contentShape(RufletRoundedRectangle(radii: containerRadii))
+      .background(
+        ContainerDecorationLayer(semantics: semantics)
+          .blendMode(ControlProps.blendMode(semantics.blendMode)))
+      .overlay(ContainerBorderLayer(
+        border: semantics.border, shape: semantics.shape, radii: semantics.radii))
+      .modifier(ContainerClip(
+        behavior: semantics.clipBehavior, shape: semantics.shape, radii: semantics.radii))
+      .modifier(ContainerContentShape(shape: semantics.shape, radii: semantics.radii))
       .modifier(TapReporter(node: node, events: events))
-      .modifier(ContainerInk(node: node, radii: radii))
-      .modifier(ContainerBlur(amount: node.double("blur")))
+      .modifier(ContainerURLReporter(rawURL: node.string("url")))
+      .modifier(ContainerInk(node: node, radii: semantics.radii))
+      .modifier(ContainerBlur(amount: semantics.blur.maximumSigma))
       .modifier(ContainerColorFilter(value: node.props["color_filter"]))
-      .modifier(ContainerForeground(node: node, radii: radii))
+      .modifier(ContainerForeground(node: node))
       .modifier(ContainerShadows(value: node.props["shadow"]))
       .modifier(
         MaterialThemeModifier(theme: node.map("theme"), darkTheme: node.map("dark_theme")))
       .preferredColorScheme(themeMode)
-      .animation(rufletAnimation(node.props["animate"]), value: node.bool("visible"))
+      .modifier(ContainerImplicitAnimation(node: node))
       .allowsHitTesting(!node.rufletBool("ignore_interactions"))
   }
 
@@ -729,30 +785,389 @@ struct ContainerControlView: View {
     }
   }
 
-  /// `shape` is Flutter's BoxShape; a circle rounds to half its side rather
-  /// than to whatever border_radius said.
-  private var containerRadii: RufletCornerRadii {
-    guard node.string("shape")?.lowercased() != "circle" else {
-      return RufletCornerRadii(uniform: 9_999)
+}
+
+struct RufletContainerAnimationSpec: Equatable {
+  let durationMilliseconds: Double
+  let curve: String
+
+  init?(_ value: RufletValue?) {
+    guard let value else { return nil }
+    if case .bool(true) = value {
+      durationMilliseconds = 1_000
+      curve = "linear"
+    } else if let duration = value.doubleValue {
+      durationMilliseconds = max(duration, 0)
+      curve = "linear"
+    } else if let map = value.mapValue {
+      durationMilliseconds = max(map["duration"]?.doubleValue ?? 0, 0)
+      curve = map["curve"]?.stringValue?.lowercased() ?? "linear"
+    } else {
+      return nil
     }
-    return ControlProps.cornerRadii(node.props["border_radius"])
-      ?? RufletCornerRadii(uniform: 0)
+  }
+
+  var animation: Animation {
+    RufletCurve.animation(curve, duration: durationMilliseconds / 1_000)
+  }
+}
+
+private struct ContainerImplicitAnimation: ViewModifier {
+  let node: ControlNode
+  @Environment(\.rufletEvents) private var events
+  @State private var pendingToken = UUID()
+
+  private var state: [RufletValue] {
+    ["width", "height", "margin", "alignment", "padding", "bgcolor", "gradient",
+     "border", "border_radius", "shadow", "shape", "blend_mode", "image",
+     "foreground_decoration"].map { node.props[$0] ?? .null }
+  }
+
+  func body(content: Content) -> some View {
+    guard let spec = RufletContainerAnimationSpec(node.props["animate"]) else {
+      return AnyView(content)
+    }
+    return AnyView(
+      content
+        .animation(spec.animation, value: state)
+        .onChange(of: state) { _ in
+          guard node.handlesEvent("animation_end") else { return }
+          let token = UUID()
+          pendingToken = token
+          DispatchQueue.main.asyncAfter(
+            deadline: .now() + spec.durationMilliseconds / 1_000
+          ) {
+            guard pendingToken == token else { return }
+            events.fire(node, "animation_end", data: .string("container"))
+          }
+        })
+  }
+}
+
+enum RufletContainerShape: String, Equatable {
+  case rectangle
+  case circle
+
+  init(_ raw: String?) {
+    self = raw?.lowercased() == "circle" ? .circle : .rectangle
+  }
+}
+
+enum RufletContainerClipBehavior: String, Equatable {
+  case none
+  case hardEdge
+  case antiAlias
+  case antiAliasWithSaveLayer
+
+  init(_ raw: String?, hasBorderRadius: Bool) {
+    let normalized = raw?.lowercased().replacingOccurrences(of: "_", with: "")
+    switch normalized {
+    case "none": self = .none
+    case "hardedge": self = .hardEdge
+    case "antialiaswithsavelayer": self = .antiAliasWithSaveLayer
+    case "antialias": self = .antiAlias
+    default: self = hasBorderRadius ? .antiAlias : .none
+    }
+  }
+}
+
+struct RufletContainerBlur: Equatable {
+  let sigmaX: Double
+  let sigmaY: Double
+  let tileMode: String?
+  var maximumSigma: Double? {
+    let value = max(sigmaX, sigmaY)
+    return value > 0 ? value : nil
+  }
+
+  init(_ value: RufletValue?) {
+    if let scalar = value?.doubleValue {
+      sigmaX = scalar
+      sigmaY = scalar
+      tileMode = nil
+    } else if let list = value?.arrayValue {
+      sigmaX = list.first?.doubleValue ?? 0
+      sigmaY = list.dropFirst().first?.doubleValue ?? list.first?.doubleValue ?? 0
+      tileMode = nil
+    } else if let map = value?.mapValue {
+      sigmaX = map["sigma_x"]?.doubleValue ?? 0
+      sigmaY = map["sigma_y"]?.doubleValue ?? 0
+      tileMode = map["tile_mode"]?.stringValue
+    } else {
+      sigmaX = 0
+      sigmaY = 0
+      tileMode = nil
+    }
+  }
+}
+
+struct RufletDecorationImageSpec: Equatable {
+  let source: RufletImageSource
+  let fit: String?
+  let alignment: RufletAlignment
+  let repeatMode: RufletImagePresentation.RepeatMode
+  let matchTextDirection: Bool
+  let scale: Double
+  let opacity: Double
+  let filterQuality: String
+  let invertColors: Bool
+  let antiAlias: Bool
+  let colorFilter: RufletValue?
+
+  init?(_ value: RufletValue?) {
+    guard let map = value?.mapValue else { return nil }
+    let source = RufletImageSource(value: map["src"])
+    guard source != .missing else { return nil }
+    self.source = source
+    fit = map["fit"]?.stringValue?.lowercased()
+    alignment = ControlProps.continuousAlignment(map["alignment"]) ?? .center
+    repeatMode = RufletImagePresentation.RepeatMode(map["repeat"]?.stringValue)
+    matchTextDirection = map["match_text_direction"]?.boolValue ?? false
+    scale = map["scale"]?.doubleValue ?? 1
+    opacity = map["opacity"]?.doubleValue ?? 1
+    filterQuality = map["filter_quality"]?.stringValue?.lowercased() ?? "medium"
+    invertColors = map["invert_colors"]?.boolValue ?? false
+    antiAlias = map["anti_alias"]?.boolValue ?? false
+    colorFilter = map["color_filter"]
+  }
+
+  var interpolation: Image.Interpolation {
+    switch filterQuality {
+    case "none": return .none
+    case "low": return .low
+    case "high": return .high
+    default: return .medium
+    }
+  }
+}
+
+struct RufletContainerSemantics {
+  let padding: EdgeInsets?
+  let alignment: RufletAlignment?
+  let radii: RufletCornerRadii
+  let hasBorderRadius: Bool
+  let shape: RufletContainerShape
+  let clipBehavior: RufletContainerClipBehavior
+  let border: RufletBorder?
+  let backgroundColorToken: String?
+  let blendMode: String?
+  let gradient: RufletGradientSpec?
+  let image: RufletDecorationImageSpec?
+  let blur: RufletContainerBlur
+
+  init(node: ControlNode) {
+    padding = ControlProps.edgeInsets(node.props["padding"])
+    alignment = ControlProps.continuousAlignment(node.props["alignment"])
+    let parsedRadii = ControlProps.cornerRadii(node.props["border_radius"])
+    hasBorderRadius = parsedRadii != nil
+    radii = parsedRadii ?? RufletCornerRadii(uniform: 0)
+    shape = RufletContainerShape(node.string("shape"))
+    clipBehavior = RufletContainerClipBehavior(
+      node.string("clip_behavior"), hasBorderRadius: hasBorderRadius)
+    border = RufletContainerBorderParser.parse(node.props["border"])
+    backgroundColorToken = node.string("bgcolor")
+    blendMode = node.string("blend_mode")
+    gradient = RufletGradientSpec(node.props["gradient"])
+    image = RufletDecorationImageSpec(node.props["image"])
+    blur = RufletContainerBlur(node.props["blur"])
+  }
+}
+
+/// Container passes `Theme.colorScheme.primary` as Flet's default side color.
+/// A present BorderSide also defaults to width 1 and solid style; absent sides
+/// remain `BorderSide.none` and therefore are not painted.
+private enum RufletContainerBorderParser {
+  static func parse(_ value: RufletValue?) -> RufletBorder? {
+    guard let map = value?.mapValue else { return nil }
+
+    func side(_ value: RufletValue?) -> RufletBorderSide? {
+      guard let map = value?.mapValue else { return nil }
+      if map["style"]?.stringValue?.lowercased() == "none" { return nil }
+      let width = CGFloat(map["width"]?.doubleValue ?? 1)
+      guard width > 0 else { return nil }
+      return RufletBorderSide(
+        color: MaterialPalette.color(map["color"]?.stringValue, default: .primary),
+        width: width)
+    }
+
+    // Keep accepting the compact uniform side emitted by older Ruflet Ruby
+    // clients while matching Flet's four-side map when present.
+    if map["width"] != nil || map["color"] != nil || map["style"] != nil {
+      guard let uniform = side(value) else { return nil }
+      return RufletBorder(top: uniform, right: uniform, bottom: uniform, left: uniform)
+    }
+    let border = RufletBorder(
+      top: side(map["top"]), right: side(map["right"]),
+      bottom: side(map["bottom"]), left: side(map["left"]))
+    return border.isEmpty ? nil : border
+  }
+}
+
+private struct ContainerClip: ViewModifier {
+  let behavior: RufletContainerClipBehavior
+  let shape: RufletContainerShape
+  let radii: RufletCornerRadii
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    switch (behavior, shape) {
+    case (.none, _): content
+    case (.hardEdge, .circle): content.clipShape(Circle(), style: FillStyle(antialiased: false))
+    case (.hardEdge, .rectangle):
+      content.clipShape(RufletRoundedRectangle(radii: radii), style: FillStyle(antialiased: false))
+    case (_, .circle): content.clipShape(Circle(), style: FillStyle(antialiased: true))
+    case (_, .rectangle):
+      content.clipShape(RufletRoundedRectangle(radii: radii), style: FillStyle(antialiased: true))
+    }
+  }
+}
+
+private struct ContainerContentShape: ViewModifier {
+  let shape: RufletContainerShape
+  let radii: RufletCornerRadii
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if shape == .circle { content.contentShape(Circle()) }
+    else { content.contentShape(RufletRoundedRectangle(radii: radii)) }
+  }
+}
+
+private struct ContainerDecorationLayer: View {
+  let semantics: RufletContainerSemantics
+
+  @ViewBuilder
+  var body: some View {
+    GeometryReader { geometry in
+      if semantics.shape == .circle {
+        ZStack {
+          Circle().fill(fillStyle(size: geometry.size))
+          if let image = semantics.image {
+            ContainerDecorationImage(spec: image).clipShape(Circle())
+          }
+        }
+      } else {
+        ZStack {
+          RufletRoundedRectangle(radii: semantics.radii).fill(fillStyle(size: geometry.size))
+          if let image = semantics.image {
+            ContainerDecorationImage(spec: image)
+              .clipShape(RufletRoundedRectangle(radii: semantics.radii))
+          }
+        }
+      }
+    }
+  }
+
+  private func fillStyle(size: CGSize) -> AnyShapeStyle {
+    if let gradient = semantics.gradient { return gradient.shapeStyle(size: size) }
+    if let color = MaterialPalette.color(semantics.backgroundColorToken) {
+      return AnyShapeStyle(color)
+    }
+    return AnyShapeStyle(Color.clear)
+  }
+}
+
+private struct ContainerDecorationImage: View {
+  let spec: RufletDecorationImageSpec
+  @Environment(\.layoutDirection) private var layoutDirection
+
+  var body: some View {
+    Group { image }
+      .modifier(DecorationImageFit(fit: spec.fit))
+      .opacity(spec.opacity)
+      .scaleEffect(
+        x: spec.matchTextDirection && layoutDirection == .rightToLeft ? -1 : 1,
+        y: 1)
+      .modifier(DecorationImageInvert(enabled: spec.invertColors))
+      .modifier(DecorationImageColorFilter(value: spec.colorFilter))
+      .allowsHitTesting(false)
   }
 
   @ViewBuilder
-  private func background(radii: RufletCornerRadii) -> some View {
-    let gradient = GradientProps.linear(node.props["gradient"])
-    if let gradient {
-      RufletRoundedRectangle(radii: radii).fill(gradient)
-    } else if let color = MaterialPalette.color(node.string("bgcolor")) {
-      RufletRoundedRectangle(radii: radii).fill(color)
+  private var image: some View {
+    switch spec.source {
+    case .binary(let data):
+      PlatformImageView(
+        data: data, repeatMode: spec.repeatMode, interpolation: spec.interpolation)
+    case .remote(let url) where url.isFileURL:
+      if let data = try? Data(contentsOf: url) {
+        PlatformImageView(
+          data: data, repeatMode: spec.repeatMode, interpolation: spec.interpolation)
+      }
+    case .remote(let url):
+      AsyncImage(url: url) { image in
+        image.resizable(resizingMode: spec.repeatMode.swiftUI).interpolation(spec.interpolation)
+      } placeholder: { Color.clear }
+    case .asset(let name):
+      if let data = RufletImageSource.packagedData(named: name) {
+        PlatformImageView(
+          data: data, repeatMode: spec.repeatMode, interpolation: spec.interpolation)
+      } else {
+        Image(name).resizable(resizingMode: spec.repeatMode.swiftUI).interpolation(spec.interpolation)
+      }
+    case .missing:
+      Color.clear
     }
   }
+}
+
+private struct DecorationImageInvert: ViewModifier {
+  let enabled: Bool
+  @ViewBuilder func body(content: Content) -> some View {
+    if enabled { content.colorInvert() } else { content }
+  }
+}
+
+private struct DecorationImageFit: ViewModifier {
+  let fit: String?
+
+  func body(content: Content) -> some View {
+    switch fit?.lowercased() {
+    case "cover": return AnyView(content.aspectRatio(contentMode: .fill))
+    case "fill": return AnyView(content)
+    case "none", "scaledown": return AnyView(content.fixedSize())
+    default: return AnyView(content.aspectRatio(contentMode: .fit))
+    }
+  }
+}
+
+private struct DecorationImageColorFilter: ViewModifier {
+  let value: RufletValue?
+
+  func body(content: Content) -> some View {
+    guard let map = value?.mapValue,
+      let color = MaterialPalette.color(map["color"]?.stringValue)
+    else { return AnyView(content) }
+    return AnyView(content.colorMultiply(color).blendMode(
+      ControlProps.blendMode(map["blend_mode"]?.stringValue)))
+  }
+}
+
+private extension RufletBorder {
+  var uniformSide: RufletBorderSide? {
+    guard let first = [top, right, bottom, left].compactMap({ $0 }).first else { return nil }
+    let sides = [top, right, bottom, left]
+    guard sides.allSatisfy({ side in
+      guard let side else { return false }
+      return side.width == first.width
+    }) else { return nil }
+    return first
+  }
+}
+
+private struct ContainerBorderLayer: View {
+  let border: RufletBorder?
+  let shape: RufletContainerShape
+  let radii: RufletCornerRadii
 
   @ViewBuilder
-  private func borderStroke(border: RufletBorder?, radii: RufletCornerRadii) -> some View {
+  var body: some View {
     if let border {
-      RufletBorderOverlay(border: border, radii: radii)
+      if shape == .circle, let side = border.uniformSide {
+        Circle().strokeBorder(side.color, lineWidth: side.width)
+      } else {
+        RufletBorderOverlay(border: border, radii: radii)
+      }
     }
   }
 }
@@ -1512,20 +1927,107 @@ struct PassthroughControlView: View {
   }
 }
 
-/// Flet's `LinearGradient` on a container background.
+/// Flet's three Flutter gradient constructors represented without renderer
+/// policy. Storing wire-level tokens makes omitted/default semantics directly
+/// testable and defers theme colour resolution until SwiftUI paints.
+enum RufletGradientSpec: Equatable {
+  case linear(
+    colors: [String], stops: [Double]?, begin: RufletAlignment, end: RufletAlignment,
+    tileMode: String, rotation: Double?)
+  case radial(
+    colors: [String], stops: [Double]?, center: RufletAlignment, radius: Double,
+    focal: RufletAlignment?, focalRadius: Double, tileMode: String, rotation: Double?)
+  case sweep(
+    colors: [String], stops: [Double]?, center: RufletAlignment,
+    startAngle: Double, endAngle: Double, tileMode: String, rotation: Double?)
+
+  init?(_ value: RufletValue?) {
+    guard let map = value?.mapValue else { return nil }
+    let colors = map["colors"]?.arrayValue?.compactMap(\.stringValue) ?? []
+    guard colors.count >= 2 else { return nil }
+    let stops = map["stops"]?.arrayValue?.compactMap(\.doubleValue)
+    let rotation = map["rotation"]?.doubleValue
+    let tileMode = map["tile_mode"]?.stringValue?.lowercased() ?? "clamp"
+    switch map["_type"]?.stringValue?.lowercased() {
+    case "linear":
+      self = .linear(
+        colors: colors, stops: stops,
+        begin: ControlProps.continuousAlignment(map["begin"]) ?? .centerLeft,
+        end: ControlProps.continuousAlignment(map["end"]) ?? .centerRight,
+        tileMode: tileMode, rotation: rotation)
+    case "radial":
+      self = .radial(
+        colors: colors, stops: stops,
+        center: ControlProps.continuousAlignment(map["center"]) ?? .center,
+        radius: map["radius"]?.doubleValue ?? 0.5,
+        focal: ControlProps.continuousAlignment(map["focal"]),
+        focalRadius: map["focal_radius"]?.doubleValue ?? 0,
+        tileMode: tileMode, rotation: rotation)
+    case "sweep":
+      self = .sweep(
+        colors: colors, stops: stops,
+        center: ControlProps.continuousAlignment(map["center"]) ?? .center,
+        startAngle: map["start_angle"]?.doubleValue ?? 0,
+        endAngle: map["end_angle"]?.doubleValue ?? 0,
+        tileMode: tileMode, rotation: rotation)
+    default:
+      return nil
+    }
+  }
+
+  func shapeStyle(size: CGSize) -> AnyShapeStyle {
+    switch self {
+    case .linear(let colors, let stops, let begin, let end, _, _):
+      return AnyShapeStyle(LinearGradient(
+        gradient: gradient(colors: colors, stops: stops),
+        startPoint: unitPoint(begin),
+        endPoint: unitPoint(end)))
+    case .radial(let colors, let stops, let center, let radius, _, _, _, _):
+      return AnyShapeStyle(RadialGradient(
+        gradient: gradient(colors: colors, stops: stops),
+        center: unitPoint(center),
+        startRadius: 0, endRadius: CGFloat(max(radius, 0)) * min(size.width, size.height)))
+    case .sweep(let colors, let stops, let center, let start, let end, _, _):
+      return AnyShapeStyle(AngularGradient(
+        gradient: gradient(colors: colors, stops: stops),
+        center: unitPoint(center),
+        startAngle: .radians(start), endAngle: .radians(end)))
+    }
+  }
+
+  private func gradient(colors: [String], stops: [Double]?) -> Gradient {
+    let resolved = colors.map { MaterialPalette.color($0, default: .clear) }
+    guard let stops, stops.count == resolved.count else { return Gradient(colors: resolved) }
+    return Gradient(stops: zip(resolved, stops).map {
+      Gradient.Stop(color: $0.0, location: $0.1)
+    })
+  }
+
+  private func unitPoint(_ alignment: RufletAlignment) -> UnitPoint {
+    let point = RufletGeometry.unitPoint(alignment: alignment)
+    return UnitPoint(x: point.x, y: point.y)
+  }
+}
+
+/// Compatibility entry point for controls that only accept a linear gradient.
 public enum GradientProps {
   public static func linear(_ value: RufletValue?) -> LinearGradient? {
-    guard let map = value?.mapValue else { return nil }
-    let colors = (map["colors"]?.arrayValue ?? [])
-      .compactMap { MaterialPalette.color($0.stringValue) }
-    guard colors.count >= 2 else { return nil }
-
-    let begin = RufletGeometry.unitPoint(
-      alignment: ControlProps.continuousAlignment(map["begin"]) ?? .topCenter)
-    let end = RufletGeometry.unitPoint(
-      alignment: ControlProps.continuousAlignment(map["end"]) ?? .bottomCenter)
+    guard case .linear(let tokens, let stops, let beginAlignment, let endAlignment, _, _)? =
+      RufletGradientSpec(value)
+    else { return nil }
+    let colors = tokens.map { MaterialPalette.color($0, default: .clear) }
+    let gradient: Gradient
+    if let stops, stops.count == colors.count {
+      gradient = Gradient(stops: zip(colors, stops).map {
+        Gradient.Stop(color: $0.0, location: $0.1)
+      })
+    } else {
+      gradient = Gradient(colors: colors)
+    }
+    let begin = RufletGeometry.unitPoint(alignment: beginAlignment)
+    let end = RufletGeometry.unitPoint(alignment: endAlignment)
     return LinearGradient(
-      colors: colors,
+      gradient: gradient,
       startPoint: UnitPoint(x: begin.x, y: begin.y),
       endPoint: UnitPoint(x: end.x, y: end.y))
   }
