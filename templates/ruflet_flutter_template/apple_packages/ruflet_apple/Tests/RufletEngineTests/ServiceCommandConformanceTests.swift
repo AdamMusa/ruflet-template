@@ -220,6 +220,59 @@ final class ServiceCommandConformanceTests: XCTestCase {
   }
 
   @MainActor
+  func testCoreServiceWireShapesMatchVendoredFletAdapters() {
+    XCTAssertEqual(FletCoreServiceSemantics.nullableString(nil), .null)
+    XCTAssertEqual(FletCoreServiceSemantics.nullableString(""), .string(""))
+    XCTAssertThrowsError(try FletCoreServiceSemantics.sharedPreferenceString(.int(1)))
+    XCTAssertEqual(
+      try? FletCoreServiceSemantics.sharedPreferenceString(.string("ruflet")), "ruflet")
+    XCTAssertEqual(FletCoreServiceSemantics.imageBytes(.binary([0, 127, 255])), [0, 127, 255])
+    XCTAssertEqual(FletCoreServiceSemantics.imageBytes(.array([.int(0), .int(255)])), [0, 255])
+    XCTAssertNil(FletCoreServiceSemantics.imageBytes(.array([.int(256)])))
+    XCTAssertNil(FletCoreServiceSemantics.imageBytes(.array([.string("1")])))
+    XCTAssertTrue(
+      FletCoreServiceSemantics.consoleLogPath()?.hasSuffix("/console.log") == true)
+
+    let storage = StoragePathsService()
+    for method in ["get_external_cache_directories", "get_external_storage_directories"] {
+      let reply = invoke(storage, type: "StoragePaths", method: method)
+      XCTAssertEqual(try? reply?.get(), .null, method)
+    }
+    let console = invoke(storage, type: "StoragePaths", method: "get_console_log_filename")
+    XCTAssertTrue((try? console?.get().stringValue?.hasSuffix("/console.log")) == true)
+  }
+
+  @MainActor
+  func testSharedPreferencesAcceptsOnlyFletStringValues() {
+    let service = SharedPreferencesService()
+    let key = "ruflet-parity-\(UUID().uuidString)"
+    defer {
+      _ = invoke(
+        service, type: "SharedPreferences", method: "remove",
+        args: .map(["key": .string(key)]))
+    }
+
+    let invalid = invoke(
+      service, type: "SharedPreferences", method: "set",
+      args: .map(["key": .string(key), "value": .int(7)]))
+    guard case .failure(let error)? = invalid else {
+      return XCTFail("non-string values must be rejected")
+    }
+    guard case .invalidArguments = error as? RufletServiceError else {
+      return XCTFail("unexpected error: \(error)")
+    }
+
+    let set = invoke(
+      service, type: "SharedPreferences", method: "set",
+      args: .map(["key": .string(key), "value": .string("value")]))
+    XCTAssertEqual(try? set?.get(), .bool(true))
+    let get = invoke(
+      service, type: "SharedPreferences", method: "get",
+      args: .map(["key": .string(key)]))
+    XCTAssertEqual(try? get?.get(), .string("value"))
+  }
+
+  @MainActor
   func testSemanticsFeaturesUseTheCompleteFletResultShape() {
     let reply = invoke(
       SemanticsAnnouncementService(), type: "SemanticsService",

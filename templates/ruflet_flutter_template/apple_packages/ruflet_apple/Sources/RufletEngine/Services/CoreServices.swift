@@ -10,6 +10,52 @@ import RufletProtocol
 #if canImport(AppKit)
   import AppKit
 #endif
+#if canImport(AudioToolbox)
+  import AudioToolbox
+#endif
+
+/// Small, source-derived value conversions shared by the native service
+/// adapters. Keeping them explicit prevents Apple framework convenience
+/// values (for example an empty pasteboard string) from changing Flet's wire
+/// result shape.
+public enum FletCoreServiceSemantics {
+  public static func nullableString(_ value: String?) -> RufletValue {
+    value.map(RufletValue.string) ?? .null
+  }
+
+  public static func sharedPreferenceString(_ value: RufletValue?) throws -> String {
+    guard case .string(let value)? = value else {
+      throw RufletServiceError.invalidArguments("value must be a string")
+    }
+    return value
+  }
+
+  public static func consoleLogPath(fileManager: FileManager = .default) -> String? {
+    fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first?
+      .appendingPathComponent("console.log").path
+  }
+
+  /// Mirrors Flet's `convertToUint8List`: MessagePack binary and arrays made
+  /// exclusively of byte-sized integers are accepted; every other shape is
+  /// rejected instead of being stringified by the generic value accessors.
+  public static func imageBytes(_ value: RufletValue?) -> [UInt8]? {
+    switch value {
+    case .binary(let bytes):
+      return bytes
+    case .array(let values):
+      let integers = values.compactMap { value -> Int? in
+        guard case .int(let integer) = value else { return nil }
+        return Int(integer)
+      }
+      guard integers.count == values.count,
+        integers.allSatisfy({ (0...255).contains($0) })
+      else { return nil }
+      return integers.map(UInt8.init)
+    default:
+      return nil
+    }
+  }
+}
 
 /// Page-level methods, invoked by Ruby against control id 1.
 ///
@@ -371,27 +417,32 @@ public final class ClipboardService: RufletService {
   ) {
     switch call.name {
     case "set":
-      let text = call.argument("data")?.stringValue ?? ""
+      let text: String?
+      if case .string(let value)? = call.argument("data") { text = value } else { text = nil }
       #if canImport(UIKit)
         UIPasteboard.general.string = text
       #elseif canImport(AppKit)
         NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(text, forType: .string)
+        if let text { NSPasteboard.general.setString(text, forType: .string) }
       #endif
       completion(.success(.null))
 
     case "get":
       #if canImport(UIKit)
-        completion(.success(.string(UIPasteboard.general.string ?? "")))
+        completion(.success(FletCoreServiceSemantics.nullableString(UIPasteboard.general.string)))
       #elseif canImport(AppKit)
-        completion(.success(.string(NSPasteboard.general.string(forType: .string) ?? "")))
+        completion(.success(FletCoreServiceSemantics.nullableString(
+          NSPasteboard.general.string(forType: .string))))
       #else
         completion(.success(.null))
       #endif
 
     case "set_files":
       let paths = (call.argument("files")?.arrayValue ?? []).compactMap(\.stringValue)
-      #if canImport(AppKit)
+      #if canImport(UIKit)
+        UIPasteboard.general.urls = paths.map { URL(fileURLWithPath: $0) }
+        completion(.success(.null))
+      #elseif canImport(AppKit)
         NSPasteboard.general.clearContents()
         NSPasteboard.general.writeObjects(paths.map { URL(fileURLWithPath: $0) as NSURL })
         completion(.success(.null))
@@ -401,7 +452,9 @@ public final class ClipboardService: RufletService {
       #endif
 
     case "get_files":
-      #if canImport(AppKit)
+      #if canImport(UIKit)
+        completion(.success(.array((UIPasteboard.general.urls ?? []).map { .string($0.path) })))
+      #elseif canImport(AppKit)
         let urls =
           NSPasteboard.general.readObjects(forClasses: [NSURL.self]) as? [URL] ?? []
         completion(.success(.array(urls.map { .string($0.path) })))
@@ -410,16 +463,18 @@ public final class ClipboardService: RufletService {
       #endif
 
     case "set_image":
+      guard let bytes = FletCoreServiceSemantics.imageBytes(call.argument("data")) else {
+        return completion(.failure(
+          RufletServiceError.invalidArguments("data must be image bytes")))
+      }
       #if canImport(UIKit)
-        if case .binary(let bytes)? = call.argument("data"),
-          let image = UIImage(data: Data(bytes))
+        if let image = UIImage(data: Data(bytes))
         {
           UIPasteboard.general.image = image
           return completion(.success(.null))
         }
       #elseif canImport(AppKit)
-        if case .binary(let bytes)? = call.argument("data"),
-          let image = NSImage(data: Data(bytes))
+        if let image = NSImage(data: Data(bytes))
         {
           NSPasteboard.general.clearContents()
           NSPasteboard.general.writeObjects([image])
@@ -471,14 +526,21 @@ public final class SharedPreferencesService: RufletService {
       guard let key = call.argument("key")?.stringValue else {
         return completion(.failure(RufletServiceError.invalidArguments("key is required")))
       }
-      defaults.set(plainValue(call.argument("value")), forKey: prefix + key)
+      let value: String
+      do {
+        value = try FletCoreServiceSemantics.sharedPreferenceString(call.argument("value"))
+      } catch {
+        return completion(.failure(error))
+      }
+      defaults.set(value, forKey: prefix + key)
       completion(.success(.bool(true)))
 
     case "get":
       guard let key = call.argument("key")?.stringValue else {
         return completion(.failure(RufletServiceError.invalidArguments("key is required")))
       }
-      completion(.success(rufletValue(defaults.object(forKey: prefix + key))))
+      completion(.success(FletCoreServiceSemantics.nullableString(
+        defaults.string(forKey: prefix + key))))
 
     case "contains_key":
       guard let key = call.argument("key")?.stringValue else {
@@ -513,29 +575,6 @@ public final class SharedPreferencesService: RufletService {
     }
   }
 
-  private func plainValue(_ value: RufletValue?) -> Any? {
-    switch value {
-    case .string(let text): return text
-    case .int(let number): return number
-    case .double(let number): return number
-    case .bool(let flag): return flag
-    case .array(let items): return items.compactMap { plainValue($0) }
-    case .map(let entries): return entries.compactMapValues { plainValue($0) }
-    default: return nil
-    }
-  }
-
-  private func rufletValue(_ value: Any?) -> RufletValue {
-    switch value {
-    case let text as String: return .string(text)
-    case let flag as Bool: return .bool(flag)
-    case let number as Int: return .int(Int64(number))
-    case let number as Double: return .double(number)
-    case let items as [Any]: return .array(items.map { rufletValue($0) })
-    case let entries as [String: Any]: return .map(entries.mapValues { rufletValue($0) })
-    default: return .null
-    }
-  }
 }
 
 /// `StoragePaths` — the standard directories, answered with the same names
@@ -571,12 +610,14 @@ public final class StoragePathsService: RufletService {
     case "get_temporary_directory":
       completion(.success(.string(NSTemporaryDirectory())))
     case "get_external_cache_directories", "get_external_storage_directories":
-      // Android-only in Flet; an empty list is the honest answer here.
-      completion(.success(.array([])))
+      // The Flet adapter returns null, rather than an empty collection, on
+      // every non-Android platform.
+      completion(.success(.null))
     case "get_external_storage_directory":
       completion(.success(.null))
     case "get_console_log_filename":
-      completion(.success(.null))
+      completion(.success(FletCoreServiceSemantics.nullableString(
+        FletCoreServiceSemantics.consoleLogPath())))
     default:
       completion(
         .failure(
@@ -664,7 +705,15 @@ public final class HapticFeedbackService: RufletService {
       case "medium_impact":
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
       case "heavy_impact", "vibrate":
-        UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+        if call.name == "vibrate" {
+          #if canImport(AudioToolbox)
+            AudioServicesPlaySystemSound(kSystemSoundID_Vibrate)
+          #else
+            UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+          #endif
+        } else {
+          UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+        }
       case "selection_click":
         UISelectionFeedbackGenerator().selectionChanged()
       default:
