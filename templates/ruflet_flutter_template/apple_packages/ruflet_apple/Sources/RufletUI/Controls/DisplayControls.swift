@@ -984,6 +984,10 @@ private struct RufletSVGDocumentView: View {
 /// rounds the ends, leaves a gap before the remaining track and puts a dot at
 /// the far end.
 struct RufletLinearProgressMetrics: Equatable {
+  /// Flutter ramps the 2024 track gap in over the first one percent so a
+  /// sliver of progress does not suddenly open a full four-point seam.
+  static let trackGapRampDownThreshold = 0.01
+
   let value: Double?
   let height: CGFloat
   let cornerRadius: CGFloat
@@ -1018,8 +1022,10 @@ struct RufletLinearProgressMetrics: Equatable {
   /// The gap closes while the bar is indeterminate and again once it is full,
   /// so a finished bar has no seam in it.
   var effectiveTrackGap: CGFloat {
-    guard let value, value < 1 else { return 0 }
-    return trackGap ?? 0
+    guard let value, value < 1, let trackGap, trackGap > 0 else { return 0 }
+    let ramp = min(max(value, 0), Self.trackGapRampDownThreshold)
+      / Self.trackGapRampDownThreshold
+    return trackGap * CGFloat(ramp)
   }
 
   func activeWidth(in width: CGFloat) -> CGFloat {
@@ -1029,7 +1035,9 @@ struct RufletLinearProgressMetrics: Equatable {
 
   /// The leading edge of the remaining track, which the gap pushes right.
   func trackOrigin(in width: CGFloat) -> CGFloat {
-    guard value != nil, effectiveTrackGap > 0 else { return 0 }
+    guard let value else { return 0 }
+    if value >= 1 { return width }
+    guard effectiveTrackGap > 0 else { return 0 }
     return min(width, activeWidth(in: width) + effectiveTrackGap)
   }
 
@@ -1057,7 +1065,7 @@ enum RufletProgressAppearance {
     [
       "color", "bgcolor", "bar_height", "border_radius", "track_gap",
       "stop_indicator_color", "stop_indicator_radius", "year_2023",
-    ].allSatisfy { node.props[$0] == nil }
+    ].allSatisfy { !hasExplicitValue(node.props[$0]) }
   }
 
   static func usesNativeCircular(_ node: ControlNode) -> Bool {
@@ -1065,11 +1073,16 @@ enum RufletProgressAppearance {
       "color", "bgcolor", "stroke_width", "stroke_align", "stroke_cap",
       "track_gap", "track_gap_fallback", "size_constraints", "padding", "year2023",
       "year_2023",
-    ].allSatisfy { node.props[$0] == nil }
+    ].allSatisfy { !hasExplicitValue(node.props[$0]) }
   }
 
   static func value(_ node: ControlNode) -> Double? {
     node.double("value").map { min(max($0, 0), 1) }
+  }
+
+  private static func hasExplicitValue(_ value: RufletValue?) -> Bool {
+    guard let value else { return false }
+    return !value.isNull
   }
 }
 
@@ -1080,6 +1093,7 @@ enum RufletProgressAppearance {
 struct ProgressBarControlView: View {
   let node: ControlNode
   @State private var sweep: CGFloat = 0
+  @Environment(\.layoutDirection) private var layoutDirection
 
   @ViewBuilder
   var body: some View {
@@ -1102,6 +1116,10 @@ struct ProgressBarControlView: View {
         ZStack(alignment: .leading) {
           bar(metrics, width: proxy.size.width)
         }
+        // Flutter's painter resolves its fractional endpoints through
+        // TextDirection. Mirroring the native drawing surface preserves the
+        // same leading edge and trailing stop-dot behavior in RTL.
+        .scaleEffect(x: layoutDirection == .rightToLeft ? -1 : 1, y: 1)
       }
       .frame(height: metrics.height)
       .modifier(ProgressSemanticsValue(node: node))
@@ -1474,6 +1492,25 @@ struct RufletCircleAvatarAppearance: Equatable {
   }
 }
 
+/// `buildTextOrWidget` accepts either a control or a scalar. Keeping that
+/// distinction outside the View makes the wire-provider behavior executable
+/// in focused tests.
+enum RufletCircleAvatarContent: Equatable {
+  case control(Int)
+  case text(String)
+  case empty
+
+  init(node: ControlNode) {
+    if let id = node.controlID(forKey: "content") {
+      self = .control(id)
+    } else if let text = node.string("content") {
+      self = .text(text)
+    } else {
+      self = .empty
+    }
+  }
+}
+
 /// `CircleAvatar` — an image, initials, or a coloured circle.
 ///
 /// Flutter layers the two images the way its decorations stack: the background
@@ -1488,14 +1525,22 @@ struct CircleAvatarControlView: View {
     let diameter = RufletCircleAvatarDiameter(node: node)
     let sources = RufletCircleAvatarImageSources(node: node)
     let appearance = RufletCircleAvatarAppearance(node: node)
+    let content = RufletCircleAvatarContent(node: node)
 
     ZStack {
       Circle().fill(backgroundColor(appearance))
 
       avatarImage(source: sources.background, slot: "background")
 
-      if let contentID = node.controlID(forKey: "content") {
+      switch content {
+      case .control(let contentID):
         ControlView(id: contentID, axis: .none)
+      case .text(let text):
+        // `buildTextOrWidget` wraps scalar values in Text instead of requiring
+        // a nested control on the wire.
+        Text(text)
+      case .empty:
+        EmptyView()
       }
 
       avatarImage(source: sources.foreground, slot: "foreground")
@@ -1503,42 +1548,61 @@ struct CircleAvatarControlView: View {
     .frame(
       minWidth: diameter.minimum, maxWidth: diameter.maximum,
       minHeight: diameter.minimum, maxHeight: diameter.maximum)
-    // The content slot remains Flet-owned; omitted typography and colour use
-    // Apple's native headline/label appearance.
-    .font(.headline)
+    // CircleAvatar installs Material titleMedium around its child and disables
+    // text scaling so initials cannot escape the circle. Both are semantic
+    // constructor behavior even though the actual font remains native.
+    .rufletTextStyle(RufletTextStyle(map: ["theme_style": .string("title_medium")]))
+    .dynamicTypeSize(.medium)
     .foregroundColor(foregroundColor(appearance))
+    .animation(.easeInOut(duration: 0.2), value: diameter)
+    .animation(.easeInOut(duration: 0.2), value: appearance)
   }
 
   @ViewBuilder
   private func avatarImage(source: RufletImageSource, slot: String) -> some View {
-    switch source {
-    case .binary(let data):
-      if RemoteImage.canDecode(data) {
-        PlatformImageView(data: data)
-          .aspectRatio(contentMode: .fill)
-          .clipShape(Circle())
-      } else {
-        Color.clear.onAppear { reportImageError(slot) }
+    Group {
+      switch source {
+      case .binary(let data):
+        if RemoteImage.canDecode(data) {
+          PlatformImageView(data: data)
+            .aspectRatio(contentMode: .fill)
+            .clipShape(Circle())
+        } else {
+          Color.clear.onAppear { reportImageError(slot) }
+        }
+      case .remote(let url):
+        if url.isFileURL {
+          LocalAvatarImage(url: url, slot: slot, node: node)
+        } else {
+          RemoteImage(
+            url: url,
+            errorContentID: nil,
+            onError: { _ in reportImageError(slot) })
+            .aspectRatio(contentMode: .fill)
+            .clipShape(Circle())
+        }
+      case .asset(let name):
+        if let data = RufletImageSource.packagedData(named: name),
+          RemoteImage.canDecode(data)
+        {
+          PlatformImageView(data: data)
+            .aspectRatio(contentMode: .fill)
+            .clipShape(Circle())
+        } else {
+          // Asset-catalog images remain a native Image lookup. Unlike a
+          // DecorationImage provider, SwiftUI exposes no failure callback.
+          Image(name)
+            .resizable()
+            .aspectRatio(contentMode: .fill)
+            .clipShape(Circle())
+        }
+      case .empty, .invalid, .missing:
+        EmptyView()
       }
-    case .remote(let url):
-      if url.isFileURL {
-        LocalAvatarImage(url: url, slot: slot, node: node)
-      } else {
-        RemoteImage(
-          url: url,
-          errorContentID: nil,
-          onError: { _ in reportImageError(slot) })
-          .aspectRatio(contentMode: .fill)
-          .clipShape(Circle())
-      }
-    case .asset(let name):
-      Image(name)
-        .resizable()
-        .aspectRatio(contentMode: .fill)
-        .clipShape(Circle())
-    case .empty, .invalid, .missing:
-      EmptyView()
     }
+    // Flutter's foreground/background DecorationImages are presentation, not
+    // separate semantic nodes; only the avatar's content should be announced.
+    .accessibilityHidden(true)
   }
 
   private func reportImageError(_ slot: String) {
@@ -1584,16 +1648,31 @@ struct BadgeControlView: View {
   @Environment(\.layoutDirection) private var layoutDirection
 
   var body: some View {
-    Group {
-      if let contentID = node.controlID(forKey: "content") {
-        ControlView(id: contentID, axis: .none)
-      }
+    if let contentID = node.controlID(forKey: "content") {
+      ControlView(id: contentID, axis: .none)
+        .overlay(alignment: ControlProps.alignment(node.props["alignment"]) ?? .topTrailing) {
+          marker
+        }
+    } else if let text = node.string("content") {
+      Text(text)
+        .overlay(alignment: ControlProps.alignment(node.props["alignment"]) ?? .topTrailing) {
+          marker
+        }
+    } else if RufletBadgeSemantics.isVisible(node) {
+      // Badge returns the marker directly when `child` is null; alignment and
+      // offset only participate in the child-backed Stack path.
+      RufletBadgeMarker(badge: node)
+    } else {
+      EmptyView()
     }
-    .overlay(alignment: ControlProps.alignment(node.props["alignment"]) ?? .topTrailing) {
-      if RufletBadgeSemantics.isVisible(node) {
-        RufletBadgeMarker(badge: node)
-          .offset(RufletBadgeSemantics.offset(node, layoutDirection: layoutDirection))
-      }
+  }
+
+  @ViewBuilder
+  private var marker: some View {
+    if RufletBadgeSemantics.isVisible(node) {
+      RufletBadgeMarker(badge: node)
+        .offset(RufletBadgeSemantics.markerOffset(
+          node, layoutDirection: layoutDirection))
     }
   }
 }

@@ -87,7 +87,8 @@ struct RufletBadgeModifier: ViewModifier {
       if RufletBadgeSemantics.isVisible(badge) {
         content.overlay(alignment: alignment(badge)) {
           RufletBadgeMarker(badge: badge)
-            .offset(RufletBadgeSemantics.offset(badge, layoutDirection: layoutDirection))
+            .offset(RufletBadgeSemantics.markerOffset(
+              badge, layoutDirection: layoutDirection))
         }
       } else {
         content
@@ -95,7 +96,8 @@ struct RufletBadgeModifier: ViewModifier {
     } else if let text = node.string("badge") {
       content.overlay(alignment: .topTrailing) {
         RufletBadgeMarker(fallbackLabel: text)
-          .offset(RufletBadgeSemantics.offset(nil, layoutDirection: layoutDirection))
+          .offset(RufletBadgeSemantics.labelOffset(
+            nil, layoutDirection: layoutDirection))
       }
     } else {
       content
@@ -152,12 +154,14 @@ struct RufletBadgeMarker: View {
   }
 
   private var textStyle: RufletTextStyle {
-    var style = badge.map { RufletTextStyle(node: $0, styleKey: "text_style") }
-      ?? RufletTextStyle()
-    if style.color == nil {
-      style.color = MaterialPalette.color(RufletBadgeSemantics.textColor(badge), default: .white)
+    // Badge defaults to Material labelSmall. An explicit `text_style` refines
+    // that type role, while `text_color` then wins over the style's colour —
+    // the precedence used by Badge's final `copyWith(color:)`.
+    var style = RufletTextStyle(map: ["theme_style": .string("label_small")])
+    if let badge {
+      style.merge(RufletTextStyle(node: badge, styleKey: "text_style"))
     }
-    if style.size == nil, style.themeStyle == nil { style.themeStyle = Font.TextStyle.caption2 }
+    style.color = MaterialPalette.color(RufletBadgeSemantics.textColor(badge), default: .white)
     return style
   }
 
@@ -188,7 +192,19 @@ enum RufletBadgeSemantics {
     nonEmpty(badge?.string("text_color")) ?? "onerror"
   }
 
-  static func offset(_ badge: ControlNode?, layoutDirection: LayoutDirection) -> CGSize {
+  /// Flutter deliberately ignores alignment and offset for a dot badge. Its
+  /// render object pins the dot at the aligned corner with `Offset.zero`;
+  /// only a labelled badge consumes the caller/default offset.
+  static func markerOffset(
+    _ badge: ControlNode?, layoutDirection: LayoutDirection
+  ) -> CGSize {
+    guard badge.map({ hasLabel($0) }) ?? true else { return .zero }
+    return labelOffset(badge, layoutDirection: layoutDirection)
+  }
+
+  static func labelOffset(
+    _ badge: ControlNode?, layoutDirection: LayoutDirection
+  ) -> CGSize {
     if let map = badge?.map("offset") {
       return CGSize(
         width: CGFloat(map["x"]?.doubleValue ?? 0),

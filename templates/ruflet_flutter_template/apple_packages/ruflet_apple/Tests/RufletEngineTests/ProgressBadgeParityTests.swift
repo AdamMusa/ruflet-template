@@ -20,6 +20,29 @@ final class ProgressBadgeParityTests: XCTestCase {
       id: 3, type: "ProgressBar", props: ["bar_height": .double(8)])))
     XCTAssertFalse(RufletProgressAppearance.usesNativeCircular(ControlNode(
       id: 4, type: "ProgressRing", props: ["stroke_width": .double(8)])))
+
+    XCTAssertTrue(RufletProgressAppearance.usesNativeLinear(ControlNode(
+      id: 5, type: "ProgressBar", props: ["bar_height": .null])))
+    XCTAssertTrue(RufletProgressAppearance.usesNativeCircular(ControlNode(
+      id: 6, type: "ProgressRing", props: ["padding": .null])))
+  }
+
+  func testCircleAvatarContentAcceptsFletScalarOrControlProviders() {
+    XCTAssertEqual(
+      RufletCircleAvatarContent(node: ControlNode(
+        id: 1, type: "CircleAvatar", props: ["content": .string("AM")])),
+      .text("AM"))
+    XCTAssertEqual(
+      RufletCircleAvatarContent(node: ControlNode(
+        id: 2, type: "CircleAvatar", props: ["content": .int(42)])),
+      .text("42"))
+    XCTAssertEqual(
+      RufletCircleAvatarContent(node: ControlNode(
+        id: 3, type: "CircleAvatar", props: ["content": .controlRef(9)])),
+      .control(9))
+    XCTAssertEqual(
+      RufletCircleAvatarContent(node: ControlNode(id: 4, type: "CircleAvatar")),
+      .empty)
   }
 
   func testNativeProgressControlsKeepFletThemeTokens() {
@@ -69,20 +92,35 @@ final class ProgressBadgeParityTests: XCTestCase {
   }
 
   func testBadgeDefaultOffsetFollowsFlutterTextDirection() {
-    let badge = ControlNode(id: 1, type: "Badge")
+    let badge = ControlNode(id: 1, type: "Badge", props: ["label": .string("1")])
     XCTAssertEqual(
-      RufletBadgeSemantics.offset(badge, layoutDirection: .leftToRight),
+      RufletBadgeSemantics.markerOffset(badge, layoutDirection: .leftToRight),
       CGSize(width: 4, height: -4))
     XCTAssertEqual(
-      RufletBadgeSemantics.offset(badge, layoutDirection: .rightToLeft),
+      RufletBadgeSemantics.markerOffset(badge, layoutDirection: .rightToLeft),
       CGSize(width: -4, height: -4))
 
     let explicit = ControlNode(
       id: 2, type: "Badge",
+      props: [
+        "label": .string("1"),
+        "offset": .map(["x": .double(7), "y": .double(3)])
+      ])
+    XCTAssertEqual(
+      RufletBadgeSemantics.markerOffset(explicit, layoutDirection: .rightToLeft),
+      CGSize(width: 7, height: 3))
+  }
+
+  func testDotBadgeIgnoresLabelOffsets() {
+    let dot = ControlNode(
+      id: 1, type: "Badge",
       props: ["offset": .map(["x": .double(7), "y": .double(3)])])
     XCTAssertEqual(
-      RufletBadgeSemantics.offset(explicit, layoutDirection: .rightToLeft),
-      CGSize(width: 7, height: 3))
+      RufletBadgeSemantics.markerOffset(dot, layoutDirection: .leftToRight),
+      .zero)
+    XCTAssertEqual(
+      RufletBadgeSemantics.markerOffset(dot, layoutDirection: .rightToLeft),
+      .zero)
   }
 
   func testProgressRingAcceptsRubyAndSerializedFletWireKeys() {
@@ -130,5 +168,18 @@ final class ProgressBadgeParityTests: XCTestCase {
     let clamped = ControlNode(
       id: 2, type: "ProgressBar", props: ["value": .double(5)])
     XCTAssertEqual(RufletProgressSemantics.spokenValue(clamped), "100")
+  }
+
+  func testLinearProgressGapRampsInAcrossTheFirstPercent() {
+    func metrics(_ value: Double) -> RufletLinearProgressMetrics {
+      RufletLinearProgressMetrics(node: ControlNode(
+        id: 1, type: "ProgressBar",
+        props: ["value": .double(value), "year_2023": .bool(false)]))
+    }
+
+    XCTAssertEqual(metrics(0).effectiveTrackGap, 0)
+    XCTAssertEqual(metrics(0.005).effectiveTrackGap, 2, accuracy: 0.0001)
+    XCTAssertEqual(metrics(0.01).effectiveTrackGap, 4, accuracy: 0.0001)
+    XCTAssertEqual(metrics(1).trackOrigin(in: 100), 100)
   }
 }
