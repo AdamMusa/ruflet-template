@@ -1780,9 +1780,10 @@ struct DataTableControlView: View {
   }
 
   /// SwiftUI does not expose a type-erased `TableColumn`, so Ruflet's dynamic
-  /// protocol columns use the native `Grid` layout primitive. Omitted spacing,
-  /// sizing, controls and separators remain nil/native; only DSL values are
-  /// applied here.
+  /// protocol columns use the native `Grid` layout primitive. The primitive is
+  /// Apple-native, while its resolved geometry remains the exact Flet/Flutter
+  /// constructor contract (explicit value -> theme default -> constructor
+  /// default). This deliberately separates semantics from visual imitation.
   @available(iOS 16.0, macOS 13.0, *)
   private func nativeDataTable(
     columns: [ControlNode], rows: [ControlNode], showsCheckboxes: Bool
@@ -1791,7 +1792,7 @@ struct DataTableControlView: View {
     return ScrollView(.horizontal, showsIndicators: true) {
       Grid(
         alignment: .leading,
-        horizontalSpacing: nativeMetrics.columnSpacing.map { CGFloat($0) },
+        horizontalSpacing: nativeMetrics.columnSpacing,
         verticalSpacing: nil
       ) {
         GridRow {
@@ -1807,7 +1808,7 @@ struct DataTableControlView: View {
                 checkboxVisible: showsCheckboxes))
           }
         }
-        .frame(height: nativeMetrics.headingRowHeight.map { CGFloat($0) })
+        .frame(height: nativeMetrics.headingRowHeight)
         .background(headingBackground)
         .rufletTextStyle(RufletTextStyle(node: node, styleKey: "heading_text_style"))
 
@@ -1831,8 +1832,8 @@ struct DataTableControlView: View {
             }
           }
           .frame(
-            minHeight: nativeMetrics.dataRowMinHeight.map { CGFloat($0) },
-            maxHeight: nativeMetrics.dataRowMaxHeight.map { CGFloat($0) })
+            minHeight: nativeMetrics.dataRowMinHeight,
+            maxHeight: nativeMetrics.dataRowMaxHeight)
           .frame(maxWidth: .infinity, alignment: .leading)
           .rufletTextStyle(RufletTextStyle(node: node, styleKey: "data_text_style"))
           .background(rowBackground(row))
@@ -2196,27 +2197,30 @@ struct DataTableControlView: View {
 
 enum DataTablePresentation {
   struct NativeMetrics: Equatable {
-    let columnSpacing: Double?
-    let horizontalMargin: Double?
-    let headingRowHeight: Double?
-    let dataRowMinHeight: Double?
-    let dataRowMaxHeight: Double?
-    let dividerThickness: Double?
-    let checkboxHorizontalMargin: Double?
+    let columnSpacing: CGFloat
+    let horizontalMargin: CGFloat
+    let headingRowHeight: CGFloat
+    let dataRowMinHeight: CGFloat
+    let dataRowMaxHeight: CGFloat
+    let dividerThickness: CGFloat
+    let checkboxMarginStart: CGFloat
+    let checkboxMarginEnd: CGFloat
   }
 
-  /// Values stay optional intentionally: nil means SwiftUI chooses the Apple
-  /// platform default. This is the native equivalent of Flet constructor
-  /// omission and prevents Material metrics leaking into every Ruflet app.
+  /// Resolves the same values passed to Flutter's `DataTable` constructor.
+  /// The renderer remains a SwiftUI `Grid`; these values are protocol
+  /// semantics, not a request to reproduce the Material widget's appearance.
   static func nativeMetrics(_ node: ControlNode) -> NativeMetrics {
-    NativeMetrics(
-      columnSpacing: node.double("column_spacing"),
-      horizontalMargin: node.double("horizontal_margin"),
-      headingRowHeight: node.double("heading_row_height"),
-      dataRowMinHeight: node.double("data_row_min_height"),
-      dataRowMaxHeight: node.double("data_row_max_height"),
-      dividerThickness: node.double("divider_thickness"),
-      checkboxHorizontalMargin: node.double("checkbox_horizontal_margin"))
+    let values = CollectionDefaults.dataTable(node)
+    return NativeMetrics(
+      columnSpacing: values.columnSpacing,
+      horizontalMargin: values.horizontalMargin,
+      headingRowHeight: values.headingRowHeight,
+      dataRowMinHeight: values.dataRowMinHeight,
+      dataRowMaxHeight: values.dataRowMaxHeight,
+      dividerThickness: values.dividerThickness,
+      checkboxMarginStart: values.checkboxMarginStart,
+      checkboxMarginEnd: values.checkboxMarginEnd)
   }
 
   static func tooltipMessage(_ column: ControlNode) -> String? {
@@ -2266,10 +2270,10 @@ private struct NativeDataTableCellPadding: ViewModifier {
   let checkboxVisible: Bool
 
   func body(content: Content) -> some View {
-    let margin = node.double("horizontal_margin").map { CGFloat($0) }
+    let margin = DataTablePresentation.nativeMetrics(node).horizontalMargin
     content
-      .padding(.leading, !checkboxVisible && column == 0 ? margin : nil)
-      .padding(.trailing, column == columnCount - 1 ? margin : nil)
+      .padding(.leading, !checkboxVisible && column == 0 ? margin : 0)
+      .padding(.trailing, column == columnCount - 1 ? margin : 0)
   }
 }
 
@@ -2277,11 +2281,10 @@ private struct NativeDataTableCheckboxMargin: ViewModifier {
   let node: ControlNode
 
   func body(content: Content) -> some View {
-    let checkboxMargin = node.double("checkbox_horizontal_margin").map { CGFloat($0) }
-    let outerMargin = node.double("horizontal_margin").map { CGFloat($0) }
+    let metrics = DataTablePresentation.nativeMetrics(node)
     content
-      .padding(.leading, checkboxMargin ?? outerMargin)
-      .padding(.trailing, checkboxMargin)
+      .padding(.leading, metrics.checkboxMarginStart)
+      .padding(.trailing, metrics.checkboxMarginEnd)
   }
 }
 
@@ -2290,7 +2293,7 @@ private struct NativeDataTableDivider: ViewModifier {
 
   @ViewBuilder
   func body(content: Content) -> some View {
-    let thickness = node.double("divider_thickness").map { CGFloat($0) }
+    let thickness = DataTablePresentation.nativeMetrics(node).dividerThickness
     if let color = MaterialPalette.color(node.string("divider_color")) {
       content
         .frame(height: thickness)

@@ -3,16 +3,17 @@ import XCTest
 @testable import RufletUI
 
 final class DataTableParityTests: XCTestCase {
-  func testStylelessDataTableLeavesAppleGeometryUnspecified() {
+  func testStylelessDataTablePreservesFletSemanticDefaults() {
     let values = DataTablePresentation.nativeMetrics(ControlNode(id: 1, type: "DataTable"))
 
-    XCTAssertNil(values.columnSpacing)
-    XCTAssertNil(values.horizontalMargin)
-    XCTAssertNil(values.headingRowHeight)
-    XCTAssertNil(values.dataRowMinHeight)
-    XCTAssertNil(values.dataRowMaxHeight)
-    XCTAssertNil(values.dividerThickness)
-    XCTAssertNil(values.checkboxHorizontalMargin)
+    XCTAssertEqual(values.columnSpacing, 56)
+    XCTAssertEqual(values.horizontalMargin, 24)
+    XCTAssertEqual(values.headingRowHeight, 56)
+    XCTAssertEqual(values.dataRowMinHeight, 48)
+    XCTAssertEqual(values.dataRowMaxHeight, 48)
+    XCTAssertEqual(values.dividerThickness, 1)
+    XCTAssertEqual(values.checkboxMarginStart, 24)
+    XCTAssertEqual(values.checkboxMarginEnd, 12)
   }
 
   func testDataTableExplicitMetricsAndCheckboxMarginOverrideDefaults() {
@@ -47,7 +48,8 @@ final class DataTableParityTests: XCTestCase {
     XCTAssertEqual(native.dataRowMinHeight, 37)
     XCTAssertEqual(native.dataRowMaxHeight, 73)
     XCTAssertEqual(native.dividerThickness, 2.5)
-    XCTAssertEqual(native.checkboxHorizontalMargin, 9)
+    XCTAssertEqual(native.checkboxMarginStart, 9)
+    XCTAssertEqual(native.checkboxMarginEnd, 9)
   }
 
   func testLegacyIOS15FallbackRetainsFletDataTableGeometry() {
