@@ -185,13 +185,7 @@ struct SemanticsControlView: View {
   }
 
   var body: some View {
-    Group {
-      if let contentID = node.controlID(forKey: "content") {
-        ControlView(id: contentID, axis: .none)
-      } else {
-        EmptyView()
-      }
-    }
+    EmptyView()
     .modifier(
       SemanticsOptionalText(
         label: configuration.label,
