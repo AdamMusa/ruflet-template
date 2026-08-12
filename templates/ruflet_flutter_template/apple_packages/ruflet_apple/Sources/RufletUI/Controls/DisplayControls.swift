@@ -692,6 +692,8 @@ struct RufletCircularProgressMetrics: Equatable {
   }
 
   let value: Double?
+  let width: CGFloat
+  let height: CGFloat
   let diameter: CGFloat
   let strokeWidth: CGFloat
   let strokeAlign: CGFloat
@@ -702,7 +704,10 @@ struct RufletCircularProgressMetrics: Equatable {
   let padding: EdgeInsets?
 
   init(node: ControlNode) {
-    let year2023 = node.bool("year_2023") != false
+    // Flet 0.80.5's ProgressRingControl reads this exact key (unlike
+    // ProgressBar, whose property is `year_2023`). Preserve that observable
+    // wire distinction instead of normalising the two controls here.
+    let year2023 = node.bool("year2023") != false
     let indeterminate = node.double("value") == nil
     if let raw = node.double("value") {
       value = min(max(raw, 0), 1)
@@ -715,19 +720,20 @@ struct RufletCircularProgressMetrics: Equatable {
     strokeAlign = node.double("stroke_align").map { CGFloat($0) } ?? (year2023 ? 0 : -1)
 
     let constraints = ControlProps.sizeConstraints(node.props["size_constraints"])
-    let minimum = constraints?.minWidth ?? constraints?.minHeight
-      ?? (year2023
-        ? RufletThemeDefaults.circularProgressLegacyDiameter
-        : RufletThemeDefaults.circularProgressDiameter)
+    let defaultMinimum = year2023
+      ? RufletThemeDefaults.circularProgressLegacyDiameter
+      : RufletThemeDefaults.circularProgressDiameter
     // Flet wraps the indicator in a SizedBox, whose tight constraint wins over
     // the ConstrainedBox minimum the widget carries.
-    let requested = node.double("width") ?? node.double("height")
-    let base = requested.map { CGFloat($0) } ?? minimum
-    if let ceiling = constraints?.maxWidth ?? constraints?.maxHeight {
-      diameter = min(base, ceiling)
-    } else {
-      diameter = base
-    }
+    width = Self.resolveDimension(
+      requested: node.double("width").map { CGFloat($0) },
+      minimum: constraints?.minWidth ?? defaultMinimum,
+      maximum: constraints?.maxWidth)
+    height = Self.resolveDimension(
+      requested: node.double("height").map { CGFloat($0) },
+      minimum: constraints?.minHeight ?? defaultMinimum,
+      maximum: constraints?.maxHeight)
+    diameter = min(width, height)
 
     let cap = RufletStrokeCap(node.string("stroke_cap"))
     if let cap {
@@ -763,6 +769,15 @@ struct RufletCircularProgressMetrics: Equatable {
       // applying it again here would double it.
       padding = nil
     }
+  }
+
+  private static func resolveDimension(
+    requested: CGFloat?, minimum: CGFloat, maximum: CGFloat?
+  ) -> CGFloat {
+    // The outer LayoutControl's tight width/height wins over the indicator's
+    // own ConstrainedBox. Without one, CustomPaint settles at its minimum.
+    if let requested { return requested }
+    return min(maximum ?? minimum, minimum)
   }
 
   /// Flutter offsets the arc's bounds by half the stroke against the align
@@ -850,7 +865,7 @@ struct ProgressRingControlView: View {
             value: rotation)
       }
     }
-    .frame(width: metrics.diameter, height: metrics.diameter)
+    .frame(width: metrics.width, height: metrics.height)
     .padding(metrics.padding ?? EdgeInsets())
     .modifier(ProgressSemanticsValue(node: node))
   }
@@ -860,7 +875,7 @@ struct ProgressRingControlView: View {
     from: CGFloat,
     to: CGFloat
   ) -> some Shape {
-    Circle()
+    Ellipse()
       .inset(by: metrics.strokeInset)
       .trim(from: from, to: to)
   }
@@ -881,10 +896,14 @@ struct ProgressRingControlView: View {
 /// Flutter defaults a determinate indicator's spoken value to its percentage;
 /// `semantics_value` replaces that, and an indeterminate indicator has none.
 enum RufletProgressSemantics {
+  static func label(_ node: ControlNode) -> String? {
+    node.string("semantics_label")
+  }
+
   static func spokenValue(_ node: ControlNode) -> String? {
     if let explicit = node.double("semantics_value") { return String(explicit) }
     guard let value = node.double("value") else { return nil }
-    return "\(Int((value * 100).rounded()))%"
+    return "\(Int((min(max(value, 0), 1) * 100).rounded()))"
   }
 }
 
@@ -893,7 +912,12 @@ private struct ProgressSemanticsValue: ViewModifier {
 
   @ViewBuilder
   func body(content: Content) -> some View {
-    if let spoken = RufletProgressSemantics.spokenValue(node) {
+    if let label = RufletProgressSemantics.label(node),
+      let spoken = RufletProgressSemantics.spokenValue(node) {
+      content.accessibilityLabel(label).accessibilityValue(spoken)
+    } else if let label = RufletProgressSemantics.label(node) {
+      content.accessibilityLabel(label)
+    } else if let spoken = RufletProgressSemantics.spokenValue(node) {
       content.accessibilityValue(spoken)
     } else {
       content

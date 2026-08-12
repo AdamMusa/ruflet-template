@@ -349,7 +349,7 @@ final class DisplayParityTests: XCTestCase {
     XCTAssertNil(legacy.padding)
 
     let revised = RufletCircularProgressMetrics(
-      node: node("ProgressRing", ["year_2023": .bool(false)]))
+      node: node("ProgressRing", ["year2023": .bool(false)]))
     XCTAssertEqual(revised.diameter, 40)
     XCTAssertEqual(revised.strokeAlign, -1)
     XCTAssertNotNil(revised.padding)
@@ -374,7 +374,7 @@ final class DisplayParityTests: XCTestCase {
         .strokeCap,
       .butt)
     XCTAssertEqual(
-      RufletCircularProgressMetrics(node: node("ProgressRing", ["year_2023": .bool(false)]))
+      RufletCircularProgressMetrics(node: node("ProgressRing", ["year2023": .bool(false)]))
         .strokeCap,
       .round)
     XCTAssertEqual(
@@ -397,8 +397,8 @@ final class DisplayParityTests: XCTestCase {
     XCTAssertNil(RufletCircularProgressMetrics(node: node("ProgressRing")).trackArc)
     XCTAssertNil(
       RufletCircularProgressMetrics(
-        node: node("ProgressRing", ["year_2023": .bool(false)])).trackArc)
-    let determinate = node("ProgressRing", ["year_2023": .bool(false), "value": .double(0.5)])
+        node: node("ProgressRing", ["year2023": .bool(false)])).trackArc)
+    let determinate = node("ProgressRing", ["year2023": .bool(false), "value": .double(0.5)])
     XCTAssertNotNil(RufletCircularProgressMetrics(node: determinate).trackArc)
     XCTAssertNotNil(
       RufletCircularProgressMetrics(
@@ -409,7 +409,7 @@ final class DisplayParityTests: XCTestCase {
   /// radius, leaving the same angular gap at each end of the active arc.
   func testProgressRingTrackIsInsetByTheGapAtBothEnds() {
     let metrics = RufletCircularProgressMetrics(
-      node: node("ProgressRing", ["year_2023": .bool(false), "value": .double(0.5)]))
+      node: node("ProgressRing", ["year2023": .bool(false), "value": .double(0.5)]))
     // A 40pt box with a 4pt stroke drawn inside gives an 18pt arc radius, so
     // the 4pt gap plus the stroke is (4 + 4) / 18 radians.
     let expected = (4 + 4) / 18.0 / (2 * Double.pi)
@@ -423,7 +423,7 @@ final class DisplayParityTests: XCTestCase {
   /// A ring that is nearly full leaves no room for a track between the gaps.
   func testProgressRingTrackDisappearsWhenTheGapsMeet() {
     let metrics = RufletCircularProgressMetrics(
-      node: node("ProgressRing", ["year_2023": .bool(false), "value": .double(0.99)]))
+      node: node("ProgressRing", ["year2023": .bool(false), "value": .double(0.99)]))
     XCTAssertNil(metrics.trackArc)
   }
 
@@ -453,7 +453,7 @@ final class DisplayParityTests: XCTestCase {
   func testProgressSpokenValueIsThePercentageUnlessOneWasGiven() {
     XCTAssertEqual(
       RufletProgressSemantics.spokenValue(node("ProgressBar", ["value": .double(0.256)])),
-      "26%")
+      "26")
     XCTAssertEqual(
       RufletProgressSemantics.spokenValue(
         node("ProgressBar", ["value": .double(0.5), "semantics_value": .double(42)])), "42.0")

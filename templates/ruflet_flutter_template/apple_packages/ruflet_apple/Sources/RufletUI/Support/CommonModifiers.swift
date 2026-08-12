@@ -75,18 +75,23 @@ enum RufletBaseControlDefaults {
 /// `badge` — the count or dot Material hangs off a control's corner.
 ///
 /// Flet takes either a Badge control or a bare value, which it wraps in a
-/// label; `wrapWithBadge` does both. A badge with no visible label is the
-/// small dot, which is Flutter's behaviour when `label_visible` is false.
+/// label; `wrapWithBadge` does both. A visible badge with no label is the
+/// small dot, while `label_visible: false` removes the badge altogether.
 struct RufletBadgeModifier: ViewModifier {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
+  @Environment(\.layoutDirection) private var layoutDirection
 
   func body(content: Content) -> some View {
     if let badge = badgeNode {
-      content.overlay(alignment: alignment(badge)) {
-        marker(badge).offset(offset(badge))
+      if RufletBadgeSemantics.isVisible(badge) {
+        content.overlay(alignment: alignment(badge)) {
+          marker(badge).offset(RufletBadgeSemantics.offset(badge, layoutDirection: layoutDirection))
+        }
+      } else {
+        content
       }
-    } else if let text = node.string("badge"), !text.isEmpty {
+    } else if let text = node.string("badge") {
       content.overlay(alignment: .topTrailing) {
         label(Text(text), on: nil).offset(x: 4, y: -4)
       }
@@ -101,16 +106,16 @@ struct RufletBadgeModifier: ViewModifier {
 
   @ViewBuilder
   private func marker(_ badge: ControlNode) -> some View {
-    if badge.bool("label_visible") == false {
+    if let labelID = badge.controlID(forKey: "label") {
+      label(AnyView(ControlView(id: labelID, axis: .none)), on: badge)
+    } else if let text = badge.string("label") {
+      label(Text(text), on: badge)
+    } else {
       Circle()
-        .fill(MaterialPalette.color(badge.string("bgcolor"), default: .red))
+        .fill(MaterialPalette.color(RufletBadgeSemantics.backgroundColor(badge), default: .red))
         .frame(
           width: CGFloat(badge.double("small_size") ?? 6),
           height: CGFloat(badge.double("small_size") ?? 6))
-    } else if let labelID = badge.controlID(forKey: "label") {
-      label(AnyView(ControlView(id: labelID, axis: .none)), on: badge)
-    } else {
-      label(Text(badge.string("label") ?? ""), on: badge)
     }
   }
 
@@ -123,14 +128,17 @@ struct RufletBadgeModifier: ViewModifier {
           ?? EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4))
       .frame(minWidth: large, minHeight: large)
       .background(
-        Capsule().fill(MaterialPalette.color(badge?.string("bgcolor"), default: .red)))
+        Capsule().fill(
+          MaterialPalette.color(
+            badge.map(RufletBadgeSemantics.backgroundColor) ?? "error", default: .red)))
   }
 
   private func textStyle(_ badge: ControlNode?) -> RufletTextStyle {
-    guard let badge else { return RufletTextStyle() }
-    var style = RufletTextStyle(node: badge, styleKey: "text_style")
+    var style = badge.map { RufletTextStyle(node: $0, styleKey: "text_style") }
+      ?? RufletTextStyle()
     if style.color == nil {
-      style.color = MaterialPalette.color(badge.string("text_color"), default: .white)
+      style.color = MaterialPalette.color(
+        badge.map(RufletBadgeSemantics.textColor) ?? "onerror", default: .white)
     }
     if style.size == nil, style.themeStyle == nil { style.themeStyle = Font.TextStyle.caption2 }
     return style
@@ -139,11 +147,38 @@ struct RufletBadgeModifier: ViewModifier {
   private func alignment(_ badge: ControlNode) -> Alignment {
     ControlProps.alignment(badge.props["alignment"]) ?? .topTrailing
   }
+}
 
-  private func offset(_ badge: ControlNode) -> CGSize {
-    guard let map = badge.map("offset") else { return CGSize(width: 4, height: -4) }
-    return CGSize(
-      width: CGFloat(map["x"]?.doubleValue ?? 4), height: CGFloat(map["y"]?.doubleValue ?? -4))
+/// Source-pinned behavior from Flutter's `Badge.build` and Flet's
+/// `wrapWithBadge`: `label_visible` hides the entire badge; a *missing* label
+/// selects the small-dot presentation. They are intentionally not the same
+/// state.
+enum RufletBadgeSemantics {
+  static func isVisible(_ badge: ControlNode) -> Bool {
+    badge.bool("label_visible") != false
+  }
+
+  static func hasLabel(_ badge: ControlNode) -> Bool {
+    badge.controlID(forKey: "label") != nil || badge.string("label") != nil
+  }
+
+  /// Flutter's Material 3 Badge defaults resolve through the ambient color
+  /// scheme rather than through fixed red/white literals.
+  static func backgroundColor(_ badge: ControlNode) -> String {
+    badge.string("bgcolor") ?? "error"
+  }
+
+  static func textColor(_ badge: ControlNode) -> String {
+    badge.string("text_color") ?? "onerror"
+  }
+
+  static func offset(_ badge: ControlNode, layoutDirection: LayoutDirection) -> CGSize {
+    if let map = badge.map("offset") {
+      return CGSize(
+        width: CGFloat(map["x"]?.doubleValue ?? 0),
+        height: CGFloat(map["y"]?.doubleValue ?? 0))
+    }
+    return CGSize(width: layoutDirection == .rightToLeft ? -4 : 4, height: -4)
   }
 }
 
