@@ -89,13 +89,17 @@ struct ButtonControlView: View {
     if let message = ButtonPresentation.validationMessage(
       node, variant: variant,
       content: node.controlID(forKey: "content").flatMap(store.node),
-      icon: node.controlID(forKey: "icon").flatMap(store.node))
+      icon: node.controlID(forKey: "icon").flatMap(store.node),
+      floatingActionSlots: variant == .floatingAction ? floatingActionSlots : nil)
     {
       Text(message).font(.caption).foregroundStyle(.red)
     } else if variant.isIconButton, node.bool("adaptive") == true {
       CupertinoButtonControlView(node: node)
     } else {
-      NativeButtonPresentation(node: node, variant: variant) {
+      NativeButtonPresentation(
+        node: node, variant: variant,
+        floatingActionSlots: variant == .floatingAction ? floatingActionSlots : nil)
+      {
         Button(action: activate) {
           label
         }
@@ -156,16 +160,19 @@ struct ButtonControlView: View {
         Text(caption)
       }
     } else if variant == .floatingAction {
+      let slots = floatingActionSlots
       HStack {
-        if icon != nil {
-          RufletIcon(value: icon, size: iconSize, color: nil)
+        if let iconID = slots.iconID {
+          ControlView(id: iconID, axis: .none)
+        } else if let iconValue = slots.iconValue {
+          RufletIcon(value: iconValue, size: iconSize, color: nil)
         }
         // The round FAB shows its icon *or* its content; only the extended one
         // shows both.
-        if icon == nil || FloatingActionPresentation(node: node).isExtended {
-          if let contentID = node.controlID(forKey: "content") {
+        if !slots.hasIcon || slots.isExtended {
+          if let contentID = slots.contentID {
             ControlView(id: contentID, axis: .none)
-          } else if let caption = captionText {
+          } else if let caption = slots.contentText {
             Text(caption)
           }
         }
@@ -185,6 +192,11 @@ struct ButtonControlView: View {
         }
       }
     }
+  }
+
+  private var floatingActionSlots: FloatingActionSlots {
+    FloatingActionSlots(
+      node: node, visibilityForID: { store.node($0)?.bool("visible") })
   }
 }
 
@@ -207,8 +219,22 @@ struct ButtonPresentation {
     _ node: ControlNode,
     variant: ButtonVariant,
     content: ControlNode? = nil,
-    icon: ControlNode? = nil
+    icon: ControlNode? = nil,
+    floatingActionSlots: FloatingActionSlots? = nil
   ) -> String? {
+    if variant == .floatingAction {
+      let slots = floatingActionSlots ?? FloatingActionSlots(
+        node: node,
+        visibilityForID: { id in
+          if content?.id == id { return RufletRequiredContent.isVisible(content) }
+          if icon?.id == id { return RufletRequiredContent.isVisible(icon) }
+          return nil
+        })
+      return slots.hasIcon || slots.hasContent
+        ? nil
+        : "FloatingActionButton has nothing to display. Provide at minimum one of these: icon, content"
+    }
+
     let hasContent: Bool = {
       if node.controlID(forKey: "content") != nil {
         return RufletRequiredContent.isVisible(content)
@@ -224,12 +250,6 @@ struct ButtonPresentation {
       return node.props["icon"] != nil
     }()
 
-    if variant == .floatingAction,
-      !hasIcon && !hasContent
-    {
-      return
-        "FloatingActionButton has nothing to display. Provide at minimum one of these: icon, content"
-    }
     if variant.isIconButton {
       if !hasIcon && !hasContent {
         return "IconButton must have either icon or a visible content specified."
@@ -390,7 +410,19 @@ struct ButtonPresentation {
 private struct NativeButtonPresentation<Content: View>: View {
   let node: ControlNode
   let variant: ButtonVariant
+  let floatingActionSlots: FloatingActionSlots?
   @ViewBuilder let content: () -> Content
+
+  init(
+    node: ControlNode, variant: ButtonVariant,
+    floatingActionSlots: FloatingActionSlots? = nil,
+    @ViewBuilder content: @escaping () -> Content
+  ) {
+    self.node = node
+    self.variant = variant
+    self.floatingActionSlots = floatingActionSlots
+    self.content = content
+  }
 
   @ViewBuilder
   var body: some View {
@@ -400,7 +432,7 @@ private struct NativeButtonPresentation<Content: View>: View {
       nativeButton(content(), appearance: NativeButtonAppearance.resolve(variant))
         .modifier(NativeFletButtonSemantics(presentation: presentation))
     case .floatingAction:
-      let geometry = FloatingActionPresentation(node: node)
+      let geometry = FloatingActionPresentation(node: node, slots: floatingActionSlots)
       if geometry.isExtended {
         content()
           .buttonStyle(.borderedProminent)
@@ -629,6 +661,12 @@ struct IconButtonPresentation {
 /// separately from the other button families.
 struct FloatingActionPresentation {
   let node: ControlNode
+  let slots: FloatingActionSlots?
+
+  init(node: ControlNode, slots: FloatingActionSlots? = nil) {
+    self.node = node
+    self.slots = slots
+  }
 
   var isMini: Bool { node.bool("mini") == true }
 
@@ -642,7 +680,9 @@ struct FloatingActionPresentation {
 
   /// A FAB carrying both an icon and content is `FloatingActionButton.extended`
   /// — a pill that grows with its label rather than a fixed square.
-  var isExtended: Bool { node.props["icon"] != nil && node.props["content"] != nil }
+  var isExtended: Bool {
+    slots?.isExtended ?? (node.props["icon"] != nil && node.props["content"] != nil)
+  }
 
   var side: CGFloat {
     isExtended
@@ -707,6 +747,44 @@ struct FloatingActionPresentation {
     if node.bool("disabled") == true { return elevation() }
     return node.double("highlight_elevation")
       ?? RufletThemeDefaults.floatingActionButtonHighlightElevation
+  }
+}
+
+/// The exact widget-producing subset of FAB's icon/content union slots.
+/// Flet's icon builder accepts an integer icon code or a visible Control;
+/// its text builder accepts a String or a visible Control.
+struct FloatingActionSlots: Equatable {
+  let iconID: Int?
+  let iconValue: RufletValue?
+  let contentID: Int?
+  let contentText: String?
+
+  var hasIcon: Bool { iconID != nil || iconValue != nil }
+  var hasContent: Bool { contentID != nil || contentText != nil }
+  var isExtended: Bool { hasIcon && hasContent }
+
+  init(node: ControlNode, visibilityForID: (Int) -> Bool?) {
+    if let id = node.controlID(forKey: "icon"), visibilityForID(id) == true {
+      iconID = id
+      iconValue = nil
+    } else if case .int = node.props["icon"] {
+      iconID = nil
+      iconValue = node.props["icon"]
+    } else {
+      iconID = nil
+      iconValue = nil
+    }
+
+    if let id = node.controlID(forKey: "content"), visibilityForID(id) == true {
+      contentID = id
+      contentText = nil
+    } else if case .string(let text) = node.props["content"] {
+      contentID = nil
+      contentText = text
+    } else {
+      contentID = nil
+      contentText = nil
+    }
   }
 }
 
