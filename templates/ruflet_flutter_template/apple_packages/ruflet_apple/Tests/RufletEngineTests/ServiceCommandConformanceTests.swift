@@ -145,11 +145,12 @@ final class ServiceCommandConformanceTests: XCTestCase {
   }
 
   @MainActor
-  func testBrowserContextMenuCommandsToggleTheNativeApplePolicy() {
+  func testBrowserContextMenuCommandsAreNoOpsOnApple() {
+    RufletBrowserContextMenuPolicy.setEnabled(true)
     let disableReply = invoke(
       BrowserContextMenuService(), type: "BrowserContextMenu", method: "disable_menu")
     XCTAssertEqual(try? disableReply?.get(), .null)
-    XCTAssertFalse(RufletBrowserContextMenuPolicy.isEnabled)
+    XCTAssertTrue(RufletBrowserContextMenuPolicy.isEnabled)
 
     let enableReply = invoke(
       BrowserContextMenuService(), type: "BrowserContextMenu", method: "enable_menu")

@@ -19,17 +19,105 @@ public enum RufletWindowAction: Equatable {
   case waitUntilReadyToShow
 }
 
+public enum RufletWindowEventType: String, CaseIterable, Equatable, Sendable {
+  case close
+  case focus
+  case blur
+  case hide
+  case show
+  case maximize
+  case unmaximize
+  case minimize
+  case restore
+  case resize
+  case resized
+  case move
+  case moved
+  case leaveFullScreen = "leave-full-screen"
+  case enterFullScreen = "enter-full-screen"
+}
+
+public struct RufletWindowStateSnapshot: Equatable {
+  public let maximized: Bool
+  public let minimized: Bool
+  public let fullScreen: Bool
+  public let alwaysOnTop: Bool
+  public let focused: Bool
+  public let visible: Bool
+  public let width: Double
+  public let height: Double
+  public let top: Double
+  public let left: Double
+  public let opacity: Double
+
+  public init(
+    maximized: Bool, minimized: Bool, fullScreen: Bool, alwaysOnTop: Bool,
+    focused: Bool, visible: Bool, width: Double, height: Double,
+    top: Double, left: Double, opacity: Double
+  ) {
+    self.maximized = maximized
+    self.minimized = minimized
+    self.fullScreen = fullScreen
+    self.alwaysOnTop = alwaysOnTop
+    self.focused = focused
+    self.visible = visible
+    self.width = width
+    self.height = height
+    self.top = top
+    self.left = left
+    self.opacity = opacity
+  }
+
+  /// Exact fields from Flet's pinned `WindowState.toMap()`.
+  public var wireProperties: [String: RufletValue] {
+    [
+      "maximized": .bool(maximized),
+      "minimized": .bool(minimized),
+      "full_screen": .bool(fullScreen),
+      "always_on_top": .bool(alwaysOnTop),
+      "focused": .bool(focused),
+      "visible": .bool(visible),
+      "width": .double(width),
+      "height": .double(height),
+      "top": .double(top),
+      "left": .double(left),
+      "opacity": .double(opacity),
+    ]
+  }
+}
+
+public struct RufletWindowEvent: Equatable {
+  public let type: RufletWindowEventType
+  public let state: RufletWindowStateSnapshot
+
+  public init(type: RufletWindowEventType, state: RufletWindowStateSnapshot) {
+    self.type = type
+    self.state = state
+  }
+}
+
 /// Injectable host boundary. It keeps command parsing independently testable
 /// and keeps AppKit/UIKit details out of the protocol session.
 @MainActor
 public protocol RufletWindowHost: AnyObject {
+  func configureLifecycle(
+    preventClose: Bool,
+    eventHandler: @escaping (RufletWindowEvent) -> Void)
+
   func perform(
     _ action: RufletWindowAction,
     completion: @escaping (Result<Void, Error>) -> Void)
 }
 
+extension RufletWindowHost {
+  public func configureLifecycle(
+    preventClose: Bool,
+    eventHandler: @escaping (RufletWindowEvent) -> Void
+  ) {}
+}
+
 @MainActor
-public final class WindowService: RufletService {
+public final class WindowService: RufletStreamingService {
   public static let wireType = "Window"
 
   private let host: RufletWindowHost
@@ -47,12 +135,20 @@ public final class WindowService: RufletService {
   /// the window reports back through `on_event` the way Flet's window service
   /// does.
   public func activate(node: ControlNode, context: RufletServiceContext) {
+    let target = node.id
+    host.configureLifecycle(preventClose: node.bool("prevent_close") ?? false) { event in
+      let operations = event.state.wireProperties.map {
+        ControlPatch.Operation.set(key: $0.key, value: $0.value)
+      }
+      context.store.apply(ControlPatch(controlID: target, operations: operations))
+      if context.store.node(target)?.handlesEvent("event") == true {
+        context.emitEvent(target, "event", .map(["type": .string(event.type.rawValue)]))
+      }
+    }
     #if canImport(AppKit)
-      let target = node.id
       DispatchQueue.main.async {
         guard let window = NSApplication.shared.windows.first else { return }
         Self.apply(node, to: window)
-        context.emitEvent(target, "event", .map(["type": .string("resized")]))
       }
     #endif
   }
@@ -110,9 +206,18 @@ public final class WindowService: RufletService {
       if wantsFullScreen != window.styleMask.contains(.fullScreen) {
         window.toggleFullScreen(nil)
       }
-      if node.bool("maximized") == true, !window.isZoomed { window.zoom(nil) }
-      if node.bool("minimized") == true, !window.isMiniaturized { window.miniaturize(nil) }
-      if node.bool("focused") == true { window.makeKeyAndOrderFront(nil) }
+      if let maximized = node.bool("maximized"), maximized != window.isZoomed {
+        window.zoom(nil)
+      }
+      if let minimized = node.bool("minimized"), minimized != window.isMiniaturized {
+        if minimized { window.miniaturize(nil) } else { window.deminiaturize(nil) }
+      }
+      if let visible = node.bool("visible"), visible != window.isVisible {
+        if visible { window.orderFront(nil) } else { window.orderOut(nil) }
+      }
+      if let focused = node.bool("focused"), focused != window.isKeyWindow {
+        if focused { window.makeKeyAndOrderFront(nil) } else { window.resignKey() }
+      }
 
       // `badge_label` is the dock tile's badge, which belongs to the app
       // rather than the window; `progress_bar` and `skip_task_bar` have no
@@ -121,7 +226,6 @@ public final class WindowService: RufletService {
       NSApplication.shared.dockTile.badgeLabel = node.string("badge_label")
       _ = node.double("progress_bar")
       _ = node.bool("skip_task_bar")
-      _ = node.bool("prevent_close")
     }
   #endif
 
@@ -161,10 +265,40 @@ public final class WindowService: RufletService {
   ]
 }
 
+#if canImport(AppKit)
+  @MainActor
+  private final class RufletWindowDelegateProxy: NSObject, NSWindowDelegate {
+    weak var forwardingDelegate: NSWindowDelegate?
+    var preventClose = false
+    var closeRequested: (() -> Void)?
+
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+      closeRequested?()
+      guard !preventClose else { return false }
+      return forwardingDelegate?.windowShouldClose?(sender) ?? true
+    }
+
+    override func responds(to selector: Selector!) -> Bool {
+      super.responds(to: selector) || forwardingDelegate?.responds(to: selector) == true
+    }
+
+    override func forwardingTarget(for selector: Selector!) -> Any? {
+      if forwardingDelegate?.responds(to: selector) == true { return forwardingDelegate }
+      return super.forwardingTarget(for: selector)
+    }
+  }
+#endif
+
 @MainActor
 public final class NativeRufletWindowHost: RufletWindowHost {
   #if canImport(AppKit)
     private var resizeMonitor: Any?
+    private weak var lifecycleWindow: NSWindow?
+    private var lifecycleObservers: [NSObjectProtocol] = []
+    private let delegateProxy = RufletWindowDelegateProxy()
+    private var lifecycleHandler: ((RufletWindowEvent) -> Void)?
+    private var lastZoomed = false
+    private var lastVisible = false
   #endif
 
   public init() {}
@@ -172,6 +306,26 @@ public final class NativeRufletWindowHost: RufletWindowHost {
   deinit {
     #if canImport(AppKit)
       if let resizeMonitor { NSEvent.removeMonitor(resizeMonitor) }
+      for observer in lifecycleObservers { NotificationCenter.default.removeObserver(observer) }
+      MainActor.assumeIsolated {
+        if let lifecycleWindow,
+          (lifecycleWindow.delegate as AnyObject?) === delegateProxy
+        {
+          lifecycleWindow.delegate = delegateProxy.forwardingDelegate
+        }
+      }
+    #endif
+  }
+
+  public func configureLifecycle(
+    preventClose: Bool,
+    eventHandler: @escaping (RufletWindowEvent) -> Void
+  ) {
+    #if canImport(AppKit)
+      lifecycleHandler = eventHandler
+      delegateProxy.preventClose = preventClose
+      installLifecycleIfPossible()
+      DispatchQueue.main.async { [weak self] in self?.installLifecycleIfPossible() }
     #endif
   }
 
@@ -190,6 +344,96 @@ public final class NativeRufletWindowHost: RufletWindowHost {
   }
 
   #if canImport(AppKit)
+    private func installLifecycleIfPossible() {
+      guard let window = NSApp.keyWindow ?? NSApp.mainWindow ?? NSApp.windows.first else { return }
+      delegateProxy.closeRequested = { [weak self] in self?.report(.close) }
+      guard lifecycleWindow !== window else { return }
+
+      if let lifecycleWindow,
+        (lifecycleWindow.delegate as AnyObject?) === delegateProxy
+      {
+        lifecycleWindow.delegate = delegateProxy.forwardingDelegate
+      }
+      for observer in lifecycleObservers { NotificationCenter.default.removeObserver(observer) }
+      lifecycleObservers.removeAll()
+
+      lifecycleWindow = window
+      lastZoomed = window.isZoomed
+      lastVisible = window.isVisible
+      if window.delegate !== delegateProxy {
+        delegateProxy.forwardingDelegate = window.delegate
+        window.delegate = delegateProxy
+      }
+
+      observe(NSWindow.didBecomeKeyNotification, as: .focus, window: window)
+      observe(NSWindow.didResignKeyNotification, as: .blur, window: window)
+      observe(NSWindow.didMiniaturizeNotification, as: .minimize, window: window)
+      observe(NSWindow.didDeminiaturizeNotification, as: .restore, window: window)
+      observe(NSWindow.didMoveNotification, as: .moved, window: window)
+      observe(NSWindow.didEnterFullScreenNotification, as: .enterFullScreen, window: window)
+      observe(NSWindow.didExitFullScreenNotification, as: .leaveFullScreen, window: window)
+      lifecycleObservers.append(NotificationCenter.default.addObserver(
+        forName: NSWindow.didChangeOcclusionStateNotification, object: window, queue: .main
+      ) { [weak self] _ in
+        Task { @MainActor in self?.reportVisibility() }
+      })
+      lifecycleObservers.append(NotificationCenter.default.addObserver(
+        forName: NSWindow.didResizeNotification, object: window, queue: .main
+      ) { [weak self] _ in
+        Task { @MainActor in self?.reportResize() }
+      })
+    }
+
+    private func observe(
+      _ name: Notification.Name,
+      as type: RufletWindowEventType,
+      window: NSWindow
+    ) {
+      lifecycleObservers.append(NotificationCenter.default.addObserver(
+        forName: name, object: window, queue: .main
+      ) { [weak self] _ in
+        Task { @MainActor in self?.report(type) }
+      })
+    }
+
+    private func reportResize() {
+      guard let window = lifecycleWindow else { return }
+      if window.isZoomed != lastZoomed {
+        lastZoomed = window.isZoomed
+        report(window.isZoomed ? .maximize : .unmaximize)
+      }
+      report(.resized)
+    }
+
+    private func reportVisibility() {
+      guard let window = lifecycleWindow, window.isVisible != lastVisible else { return }
+      lastVisible = window.isVisible
+      report(window.isVisible ? .show : .hide)
+    }
+
+    private func report(_ type: RufletWindowEventType) {
+      guard let window = lifecycleWindow else { return }
+      lifecycleHandler?(RufletWindowEvent(type: type, state: snapshot(of: window)))
+    }
+
+    private func snapshot(of window: NSWindow) -> RufletWindowStateSnapshot {
+      let frame = window.frame
+      let content = window.contentLayoutRect.size
+      let top = window.screen.map { Double($0.frame.maxY - frame.maxY) } ?? Double(frame.minY)
+      return RufletWindowStateSnapshot(
+        maximized: window.isZoomed,
+        minimized: window.isMiniaturized,
+        fullScreen: window.styleMask.contains(.fullScreen),
+        alwaysOnTop: window.level.rawValue > NSWindow.Level.normal.rawValue,
+        focused: window.isKeyWindow,
+        visible: window.isVisible,
+        width: Double(content.width),
+        height: Double(content.height),
+        top: top,
+        left: Double(frame.minX),
+        opacity: Double(window.alphaValue))
+    }
+
     private func performAppKit(
       _ action: RufletWindowAction,
       completion: @escaping (Result<Void, Error>) -> Void

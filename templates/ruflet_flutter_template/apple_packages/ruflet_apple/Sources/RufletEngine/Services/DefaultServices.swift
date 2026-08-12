@@ -20,6 +20,7 @@ extension ServiceRegistry {
     registerNamed("Pagelet") { PageService() }
     markStreaming([PageService.wireType, "View", "BasePage", "Pagelet"])
     register(WindowService.self) { WindowService() }
+    markStreaming([WindowService.wireType])
     register(BrowserContextMenuService.self) { BrowserContextMenuService() }
 
     register(ClipboardService.self) { ClipboardService() }

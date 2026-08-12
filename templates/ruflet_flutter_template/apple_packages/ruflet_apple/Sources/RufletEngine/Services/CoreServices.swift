@@ -511,9 +511,8 @@ public final class PageService: RufletStreamingService {
   #endif
 }
 
-/// Browser context-menu policy is a web-only host concern. Keeping it as a
-/// real service lets Ruby toggle the native edit/context menus exactly as the
-/// Flet service toggles Flutter's BrowserContextMenu policy.
+/// Native edit-menu policy. BrowserContextMenu is web-only in Flet, so its
+/// service never changes this value on Apple; native controls remain usable.
 @MainActor
 public enum RufletBrowserContextMenuPolicy {
   public private(set) static var isEnabled = true
@@ -536,10 +535,8 @@ public final class BrowserContextMenuService: RufletService {
   ) {
     switch call.name {
     case "disable_menu":
-      RufletBrowserContextMenuPolicy.setEnabled(false)
       completion(.success(.null))
     case "enable_menu":
-      RufletBrowserContextMenuPolicy.setEnabled(true)
       completion(.success(.null))
     default:
       completion(.failure(RufletServiceError.unsupportedMethod(
