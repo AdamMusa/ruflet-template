@@ -256,10 +256,8 @@ struct PageControlView: View {
     // dependency here also keeps the Page contract tied to its actual host,
     // rather than pretending those callbacks originate in a rendered view.
     _ = RufletNativeSceneRegistry.self
-    guard let nativeScene else { return node }
-    return node.controlIDs(forKey: "multi_views")
-      .compactMap(store.node)
-      .first(where: { $0.int("view_id") == nativeScene.id })
+    return PagePresentationSemantics.basePage(
+      root: node, nativeSceneID: nativeScene?.id, store: store)
   }
 
   /// Flutter's implied AppBar leading button asks the enclosing Navigator to
@@ -298,10 +296,33 @@ enum PageRouteSemantics {
   /// path/query/fragment. `ruflet://app/store?q=1#top` therefore becomes
   /// `/store?q=1#top`.
   static func normalizeExternalURL(_ url: URL) -> String {
-    var route = url.path.isEmpty ? "/" : url.path
-    if let query = url.query, !query.isEmpty { route += "?\(query)" }
-    if let fragment = url.fragment, !fragment.isEmpty { route += "#\(fragment)" }
+    // URL.path is decoded (for example `%20` becomes a literal space), while
+    // Dart's Uri.toString() restores the percent-encoded route. Keep the
+    // encoded components so Ruby receives exactly the same route string.
+    let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+    let path = components?.percentEncodedPath ?? url.path
+    var route = path.isEmpty ? "/" : path
+    if let query = components?.percentEncodedQuery, !query.isEmpty { route += "?\(query)" }
+    if let fragment = components?.percentEncodedFragment, !fragment.isEmpty {
+      route += "#\(fragment)"
+    }
     return route
+  }
+}
+
+enum PagePresentationSemantics {
+  /// Single-view Flet renders Page itself. Multi-view Flet renders only the
+  /// BasePage whose `view_id` belongs to the current platform view; it keeps
+  /// the startup surface mounted when Ruby has not supplied that BasePage yet.
+  static func basePage(
+    root: ControlNode,
+    nativeSceneID: Int?,
+    store: ControlStore
+  ) -> ControlNode? {
+    guard let nativeSceneID else { return root }
+    return root.controlIDs(forKey: "multi_views")
+      .compactMap(store.node)
+      .first(where: { $0.int("view_id") == nativeSceneID })
   }
 }
 
@@ -411,7 +432,6 @@ private struct PageEnvironment: ViewModifier {
   let node: ControlNode
   let eventNode: ControlNode
   @Environment(\.rufletEvents) private var events
-  @EnvironmentObject private var store: ControlStore
 
   func body(content: Content) -> some View {
     content
@@ -432,31 +452,11 @@ private struct PageEnvironment: ViewModifier {
         _ = node.controlID(forKey: "window")
         _ = node.string("sess")
         _ = node.array("multi_views")
-        viewRoutes = routes
       }
       .onDisappear {
         events.fire(eventNode, "disconnect")
         events.fire(eventNode, "close")
       }
-      .onChange(of: routes) { nextRoutes in
-        // Flet reports the route that the platform navigator popped. Preserve
-        // the route rather than reducing this to a count-only notification.
-        if nextRoutes.count < viewRoutes.count,
-          let popped = viewRoutes.dropFirst(nextRoutes.count).first
-        {
-          events.fire(eventNode, "view_pop", data: .map(["route": .string(popped)]))
-        }
-        viewRoutes = nextRoutes
-      }
-  }
-
-  @State private var viewRoutes: [String] = []
-
-  private var routes: [String] {
-    node.controlIDs(forKey: "views").map { id in
-      // A View's route defaults to its id in Flet's pop protocol.
-      store.node(id)?.string("route") ?? String(id)
-    }
   }
 
   /// `locale_configuration` carries the locales the app supports; the first is
