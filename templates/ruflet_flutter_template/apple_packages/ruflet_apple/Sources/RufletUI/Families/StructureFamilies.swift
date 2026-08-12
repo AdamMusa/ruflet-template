@@ -27,6 +27,8 @@ extension ControlRegistry {
       return AnyView(TabBarViewControlView(node: node))
     case "DataTable":
       return AnyView(DataTableControlView(node: node))
+    case "DataTable2":
+      return AnyView(MissingBundleControlView(node: node, bundle: "RufletDataTable2"))
     case "ExpansionPanel", "Tab", "DataColumn", "DataRow", "DataCell",
       "NavigationBarDestination", "NavigationRailDestination",
       "NavigationDrawerDestination", "ReorderableDragHandle":

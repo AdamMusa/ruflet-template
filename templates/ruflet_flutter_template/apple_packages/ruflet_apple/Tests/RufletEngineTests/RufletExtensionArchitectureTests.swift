@@ -56,6 +56,7 @@ final class RufletExtensionArchitectureTests: XCTestCase {
     XCTAssertEqual(mapping["flet_camera"], "RufletCamera")
     XCTAssertEqual(mapping["flet_charts"], "RufletCharts")
     XCTAssertEqual(mapping["flet_code_editor"], "RufletCodeEditor")
+    XCTAssertEqual(mapping["flet_datatable2"], "RufletDataTable2")
     XCTAssertEqual(mapping["flet_flashlight"], "RufletFlashlight")
     XCTAssertEqual(mapping["flet_geolocator"], "RufletGeolocator")
     XCTAssertEqual(mapping["flet_lottie"], "RufletLottie")
@@ -67,7 +68,7 @@ final class RufletExtensionArchitectureTests: XCTestCase {
     XCTAssertEqual(mapping["flet_video"], "RufletVideo")
     XCTAssertEqual(mapping["flet_webview"], "RufletWebView")
     XCTAssertEqual(mapping["ruflet_qrcode_scanner"], "RufletQRScanner")
-    XCTAssertEqual(mapping.count, 16)
+    XCTAssertEqual(mapping.count, 18)
   }
 
   @MainActor

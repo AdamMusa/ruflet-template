@@ -30,6 +30,7 @@ let package = Package(
     .library(name: "RufletLottie", targets: ["RufletLottie"]),
     .library(name: "RufletCharts", targets: ["RufletCharts"]),
     .library(name: "RufletMap", targets: ["RufletMap"]),
+    .library(name: "RufletDataTable2", targets: ["RufletDataTable2"]),
     .library(name: "RufletVideo", targets: ["RufletVideo"]),
     .library(name: "RufletWebView", targets: ["RufletWebView"]),
     .library(name: "RufletCodeEditor", targets: ["RufletCodeEditor"]),
@@ -95,6 +96,9 @@ let package = Package(
       name: "RufletMap",
       dependencies: ["RufletUI", "RufletEngine", "RufletProtocol"]),
     .target(
+      name: "RufletDataTable2",
+      dependencies: ["RufletUI", "RufletEngine", "RufletProtocol"]),
+    .target(
       name: "RufletVideo",
       dependencies: ["RufletUI", "RufletEngine", "RufletProtocol"]),
     .target(
@@ -123,6 +127,9 @@ let package = Package(
     .testTarget(
       name: "RufletMapTests",
       dependencies: ["RufletMap", "RufletUI", "RufletEngine", "RufletProtocol"]),
+    .testTarget(
+      name: "RufletDataTable2Tests",
+      dependencies: ["RufletDataTable2", "RufletUI", "RufletEngine", "RufletProtocol"]),
     .testTarget(
       name: "RufletCodeEditorTests",
       dependencies: ["RufletCodeEditor", "RufletUI", "RufletEngine", "RufletProtocol"]),

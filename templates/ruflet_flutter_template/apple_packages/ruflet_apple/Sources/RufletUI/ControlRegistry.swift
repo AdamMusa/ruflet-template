@@ -348,6 +348,10 @@ public enum ControlRegistry {
     add(["DataTable"], .visible, "DataTableControlView", .nativeView,
         events: ["double_tap", "long_press", "select_all", "select_change", "sort",
                  "tap", "tap_cancel", "tap_down"])
+    add(["DataTable2"], .visible, "RufletDataTable2.DataTable2ControlView",
+        .optionalBundle("RufletDataTable2"),
+        events: ["double_tap", "long_press", "secondary_tap", "secondary_tap_down",
+                 "select_all", "select_change", "sort", "tap", "tap_cancel", "tap_down"])
     add(["ExpansionPanel", "Tab"],
         .structuralChild, "Parent-owned collection metadata", .metadataOnly)
     add(["DataColumn"], .structuralChild, "Parent-owned DataColumn", .metadataOnly,
