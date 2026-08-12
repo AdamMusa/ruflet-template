@@ -132,6 +132,42 @@ final class SecureStorageExtensionParityTests: XCTestCase {
     XCTAssertNotNil(availability?.boolValue)
   }
 
+  func testDarwinReadsUseStrictUTF8AndNullForUndecodableData() throws {
+    XCTAssertEqual(
+      try SecureStorageService.readResult(
+        status: errSecSuccess, data: Data("ruflet".utf8)).get(),
+      .string("ruflet"))
+    XCTAssertEqual(
+      try SecureStorageService.readResult(
+        status: errSecSuccess, data: Data([0xFF])).get(),
+      .null)
+    XCTAssertEqual(
+      try SecureStorageService.readResult(status: errSecSuccess, data: nil).get(),
+      .null)
+    XCTAssertEqual(
+      try SecureStorageService.readResult(status: errSecItemNotFound, data: nil).get(),
+      .null)
+    XCTAssertThrowsError(
+      try SecureStorageService.readResult(status: errSecAuthFailed, data: nil).get())
+  }
+
+  func testDarwinReadAllSkipsMissingAndUndecodableValues() {
+    XCTAssertEqual(
+      SecureStorageService.decodedEntries([
+        [
+          kSecAttrAccount as String: "valid",
+          kSecValueData as String: Data("value".utf8),
+        ],
+        [
+          kSecAttrAccount as String: "invalid",
+          kSecValueData as String: Data([0xFF]),
+        ],
+        [kSecAttrAccount as String: "missing-data"],
+        [kSecValueData as String: Data("missing-key".utf8)],
+      ]),
+      ["valid": .string("value")])
+  }
+
   func testDualSynchronizableLookupAndDeleteStatusReductionMatchesDarwin() throws {
     XCTAssertTrue(try SecureStorageService.containsResult(
       synchronized: errSecSuccess, local: errSecItemNotFound).get())

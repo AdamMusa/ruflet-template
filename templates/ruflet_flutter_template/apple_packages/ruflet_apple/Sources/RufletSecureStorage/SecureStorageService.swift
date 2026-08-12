@@ -146,13 +146,7 @@ public final class SecureStorageService: RufletStreamingService {
       attributes[kSecMatchLimit as String] = kSecMatchLimitOne
       var result: CFTypeRef?
       let status = SecItemCopyMatching(attributes as CFDictionary, &result)
-      if status == errSecItemNotFound {
-        return completion(.success(.null))
-      }
-      guard status == errSecSuccess, let data = result as? Data else {
-        return completion(.failure(RufletServiceError.failed("Keychain error \(status)")))
-      }
-      completion(.success(.string(String(decoding: data, as: UTF8.self))))
+      completion(Self.readResult(status: status, data: result as? Data))
 
     case "contains_key":
       guard case .string(let key)? = call.argument("key") else {
@@ -182,16 +176,11 @@ public final class SecureStorageService: RufletStreamingService {
       if status == errSecItemNotFound {
         return completion(.success(.map([:])))
       }
-      guard status == errSecSuccess, let items = result as? [[String: Any]] else {
+      guard status == errSecSuccess else {
         return completion(.failure(RufletServiceError.failed("Keychain error \(status)")))
       }
-      var entries: [String: RufletValue] = [:]
-      for item in items {
-        guard let key = item[kSecAttrAccount as String] as? String else { continue }
-        let data = item[kSecValueData as String] as? Data ?? Data()
-        entries[key] = .string(String(decoding: data, as: UTF8.self))
-      }
-      completion(.success(.map(entries)))
+      let items = result as? [[String: Any]] ?? []
+      completion(.success(.map(Self.decodedEntries(items))))
 
     case "get_availability":
       completion(.success(.bool(Self.protectedDataAvailable)))
@@ -364,6 +353,34 @@ public final class SecureStorageService: RufletStreamingService {
       return .success(.null)
     }
     return .failure(RufletServiceError.failed("Keychain error \(status)"))
+  }
+
+  /// The pinned Darwin plug-in uses `String(data:encoding:)`: invalid or
+  /// absent bytes are a successful null read, not replacement-decoded text.
+  static func readResult(
+    status: OSStatus, data: Data?
+  ) -> Result<RufletValue, Error> {
+    if status == errSecItemNotFound { return .success(.null) }
+    guard status == errSecSuccess else {
+      return .failure(RufletServiceError.failed("Keychain error \(status)"))
+    }
+    guard let data, let value = String(data: data, encoding: .utf8) else {
+      return .success(.null)
+    }
+    return .success(.string(value))
+  }
+
+  /// `readAll` omits entries that do not contain a key or strict UTF-8 value.
+  static func decodedEntries(_ items: [[String: Any]]) -> [String: RufletValue] {
+    var entries: [String: RufletValue] = [:]
+    for item in items {
+      guard let key = item[kSecAttrAccount as String] as? String,
+        let data = item[kSecValueData as String] as? Data,
+        let value = String(data: data, encoding: .utf8)
+      else { continue }
+      entries[key] = .string(value)
+    }
+    return entries
   }
 
   static func containsResult(
