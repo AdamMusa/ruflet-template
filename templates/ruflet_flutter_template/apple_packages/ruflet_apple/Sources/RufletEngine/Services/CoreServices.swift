@@ -79,6 +79,17 @@ public enum FletCoreServiceSemantics {
   }
 }
 
+/// AppLifecycleListener names and payload used by Flet's Page control.
+public enum FletPageLifecycleSemantics {
+  public enum State: String, CaseIterable, Sendable {
+    case show, resume, hide, inactive, pause, detach, restart
+  }
+
+  public static func payload(_ state: State) -> RufletValue {
+    .map(["state": .string(state.rawValue)])
+  }
+}
+
 /// The directory mapping used by Flet's pinned `path_provider_foundation`
 /// adapter. Apple "temporary" storage is the base caches directory, while
 /// macOS scopes application cache/support paths below the application bundle id.
@@ -211,6 +222,7 @@ public final class PageService: RufletStreamingService {
   private var targetID: Int?
   private var context: RufletServiceContext?
   private var localeObserver: NSObjectProtocol?
+  private var lifecycleObservers: [NSObjectProtocol] = []
   #if canImport(AppKit)
     private var keyboardMonitor: Any?
   #endif
@@ -224,6 +236,10 @@ public final class PageService: RufletStreamingService {
   public func activate(node: ControlNode, context: RufletServiceContext) {
     targetID = node.id
     self.context = context
+
+    if node.type == "Page", lifecycleObservers.isEmpty {
+      installLifecycleObservers()
+    }
 
     if node.handlesEvent("locale_change"), localeObserver == nil {
       localeObserver = NotificationCenter.default.addObserver(
@@ -268,6 +284,7 @@ public final class PageService: RufletStreamingService {
 
   deinit {
     if let localeObserver { NotificationCenter.default.removeObserver(localeObserver) }
+    for observer in lifecycleObservers { NotificationCenter.default.removeObserver(observer) }
     #if canImport(AppKit)
       if let keyboardMonitor { NSEvent.removeMonitor(keyboardMonitor) }
     #endif
@@ -279,6 +296,39 @@ public final class PageService: RufletStreamingService {
         NotificationCenter.default.removeObserver(keyboardDisconnectObserver)
       }
       GCKeyboard.coalesced?.keyboardInput?.keyChangedHandler = nil
+    #endif
+  }
+
+  private func reportLifecycle(_ state: FletPageLifecycleSemantics.State) {
+    guard let targetID, let context else { return }
+    // Flet deliberately uses triggerEventWithoutSubscribers for lifecycle
+    // transitions; Ruby receives them even if the client-side handler flag was
+    // not present in the last patch.
+    context.emitEvent(targetID, "app_lifecycle_state_change",
+                      FletPageLifecycleSemantics.payload(state))
+  }
+
+  private func installLifecycleObservers() {
+    func observe(_ name: Notification.Name, _ state: FletPageLifecycleSemantics.State) {
+      lifecycleObservers.append(NotificationCenter.default.addObserver(
+        forName: name, object: nil, queue: .main
+      ) { [weak self] _ in
+        Task { @MainActor in self?.reportLifecycle(state) }
+      })
+    }
+
+    #if canImport(UIKit)
+      observe(UIApplication.willEnterForegroundNotification, .show)
+      observe(UIApplication.didBecomeActiveNotification, .resume)
+      observe(UIApplication.willResignActiveNotification, .inactive)
+      observe(UIApplication.didEnterBackgroundNotification, .pause)
+      observe(UIApplication.willTerminateNotification, .detach)
+    #elseif canImport(AppKit)
+      observe(NSApplication.didUnhideNotification, .show)
+      observe(NSApplication.didBecomeActiveNotification, .resume)
+      observe(NSApplication.didHideNotification, .hide)
+      observe(NSApplication.willResignActiveNotification, .inactive)
+      observe(NSApplication.willTerminateNotification, .detach)
     #endif
   }
 
