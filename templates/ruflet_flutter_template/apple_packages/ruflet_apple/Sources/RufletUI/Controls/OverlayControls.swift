@@ -121,11 +121,10 @@ struct DialogPresenter: ViewModifier {
 /// Keeping them explicit prevents Apple platform defaults from silently
 /// changing Flet's design-family and dismissal contracts.
 enum RufletOverlaySemantics {
-  /// Material's `showDialog` fallback is `Colors.black54`. Keep that exact
-  /// constructor default for the three Flet picker services while leaving the
-  /// pre-existing fallback for other overlay families untouched.
+  /// Material's `showDialog` fallback is `Colors.black54` for every Flet
+  /// dialog family. Native Apple presentation consumes this semantic value.
   static func defaultBarrierOpacity(_ node: ControlNode) -> Double {
-    ["DatePicker", "DateRangePicker", "TimePicker"].contains(node.type) ? 0.54 : 0.3
+    0.54
   }
 
   static func defaultBarrierColor(_ node: ControlNode) -> Color {
@@ -167,9 +166,7 @@ enum RufletOverlaySemantics {
   }
 }
 
-/// Native Apple presentation defaults. Explicit DSL values remain the source
-/// of truth; omitted appearance values inherit Apple geometry instead of
-/// silently importing Flutter Material theme constants.
+/// Pinned Flet/Flutter defaults consumed by native Apple overlay primitives.
 enum OverlayDefaults {
   struct DialogValues: Equatable {
     let radius: CGFloat
@@ -182,7 +179,7 @@ enum OverlayDefaults {
   struct SheetValues: Equatable {
     let radius: CGFloat
     let elevation: CGFloat
-    let maximumWidth: CGFloat?
+    let maximumWidth: CGFloat
     let dragHandleWidth: CGFloat
     let dragHandleHeight: CGFloat
     let useSafeArea: Bool
@@ -201,33 +198,34 @@ enum OverlayDefaults {
 
   static func dialog(_ node: ControlNode) -> DialogValues {
     DialogValues(
-      radius: ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? 14,
-      elevation: CGFloat(node.double("elevation") ?? 0),
+      radius: ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? 28,
+      elevation: CGFloat(node.double("elevation") ?? 6),
       inset: ControlProps.edgeInsets(node.props["inset_padding"])
-        ?? EdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 20),
+        ?? EdgeInsets(top: 24, leading: 40, bottom: 24, trailing: 40),
       content: ControlProps.edgeInsets(node.props["content_padding"])
-        ?? EdgeInsets(top: 8, leading: 20, bottom: 20, trailing: 20),
+        ?? EdgeInsets(top: 20, leading: 24, bottom: 24, trailing: 24),
       actions: ControlProps.edgeInsets(node.props["actions_padding"])
-        ?? EdgeInsets(top: 0, leading: 8, bottom: 8, trailing: 8))
+        ?? EdgeInsets(top: 0, leading: 24, bottom: 24, trailing: 24))
   }
 
   static func sheet(_ node: ControlNode) -> SheetValues {
     SheetValues(
-      radius: ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? 16,
-      elevation: CGFloat(node.double("elevation") ?? 0),
-      maximumWidth: nil,
-      dragHandleWidth: 36, dragHandleHeight: 5,
+      radius: ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? 28,
+      elevation: CGFloat(node.double("elevation") ?? 1),
+      maximumWidth: 640,
+      dragHandleWidth: 32, dragHandleHeight: 4,
       useSafeArea: node.bool("use_safe_area") != false,
       dismissible: node.bool("dismissible") != false)
   }
 
   static func snackBar(_ node: ControlNode) -> SnackBarValues {
+    let floating = node.string("behavior")?.lowercased() == "floating"
     return SnackBarValues(
-      elevation: CGFloat(node.double("elevation") ?? 0),
-      radius: ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? 12,
-      horizontalPadding: 16,
+      elevation: CGFloat(node.double("elevation") ?? 6),
+      radius: ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? (floating ? 4 : 0),
+      horizontalPadding: floating ? 16 : 24,
       inset: ControlProps.edgeInsets(node.props["margin"])
-        ?? EdgeInsets(top: 12, leading: 12, bottom: 12, trailing: 12),
+        ?? EdgeInsets(top: 5, leading: 15, bottom: 10, trailing: 15),
       durationMilliseconds: node.double("duration") ?? 4000,
       dismissDirection: node.string("dismiss_direction")?.lowercased() ?? "down",
       actionOverflowThreshold: node.double("action_overflow_threshold") ?? 0.25)
@@ -235,7 +233,11 @@ enum OverlayDefaults {
 
   static func bannerContentPadding(_ node: ControlNode) -> EdgeInsets {
     if let explicit = ControlProps.edgeInsets(node.props["content_padding"]) { return explicit }
-    return EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)
+    let singleRow = node.controlIDs(forKey: "actions").count == 1
+      && node.bool("force_actions_below") != true
+    return singleRow
+      ? EdgeInsets(top: 2, leading: 16, bottom: 0, trailing: 0)
+      : EdgeInsets(top: 24, leading: 16, bottom: 4, trailing: 16)
   }
 }
 
@@ -497,7 +499,7 @@ struct BottomSheetControlView: View {
     let content = VStack(spacing: 0) {
       if node.bool("show_drag_handle") == true {
         Capsule()
-          .fill(Color.secondary)
+          .fill(MaterialPalette.color("onsurfacevariant", default: .secondary))
           .frame(width: defaults.dragHandleWidth, height: defaults.dragHandleHeight)
           .frame(height: 44)
       }
@@ -562,7 +564,7 @@ struct BottomSheetControlView: View {
   ]
 
   private var sheetSurface: Color {
-    AppleChromeAppearance.barSurface
+    MaterialPalette.color("surfacecontainerlow", default: AppleChromeAppearance.barSurface)
   }
 
   private var cupertinoSheetSurface: Color {
@@ -657,7 +659,7 @@ struct SnackBarControlView: View {
         } label: {
           Image(systemName: "xmark")
             .foregroundColor(
-              AppleChromeAppearance.color(node.string("close_icon_color"), fallback: .secondary))
+              MaterialPalette.color(node.string("close_icon_color"), default: .white))
         }
         .buttonStyle(.plain)
       }
@@ -669,23 +671,18 @@ struct SnackBarControlView: View {
         trailing: node.controlID(forKey: "action") != nil
           || node.string("action") != nil || node.bool("show_close_icon") == true
           ? 0 : defaults.horizontalPadding))
-    .background {
-      RoundedRectangle(cornerRadius: defaults.radius, style: .continuous)
-        .fill(.regularMaterial)
-        .overlay {
-          if node.props["bgcolor"] != nil {
-            RoundedRectangle(cornerRadius: defaults.radius, style: .continuous)
-              .fill(AppleChromeAppearance.color(node.string("bgcolor"), fallback: .clear))
-          }
-        }
-    }
+    .background(
+      MaterialPalette.color(
+        node.string("bgcolor"),
+        default: MaterialPalette.color("inversesurface", default: .black)),
+      in: RoundedRectangle(cornerRadius: defaults.radius))
     .modifier(ChromeClipModifier(behavior: node.string("clip_behavior") ?? "hardEdge"))
     .shadow(
       color: AppleChromeAppearance.color(node.string("shadow_color"), fallback: .clear),
       radius: defaults.elevation)
     .frame(width: floating ? node.double("width").map { CGFloat($0) } : nil)
-    .foregroundColor(.primary)
-    .padding(floating ? floatingInsets(defaults) : defaults.inset)
+    .foregroundColor(MaterialPalette.color("oninversesurface", default: .white))
+    .padding(floating ? floatingInsets(defaults) : EdgeInsets())
     .modifier(SnackBarSwipe(node: node, events: events))
     // Flutter's SnackBar invokes `onVisible` when the presentation becomes
     // visible. The action click stays on SnackBarAction when it is a control;
@@ -740,14 +737,16 @@ struct BannerControlView: View {
       if !singleRow { actionBar }
       if elevation == 0 {
         Rectangle()
-          .fill(AppleChromeAppearance.color(
-            node.string("divider_color"), fallback: AppleChromeAppearance.separator))
+          .fill(MaterialPalette.color(
+            node.string("divider_color"),
+            default: MaterialPalette.color("outlinevariant", default: .secondary.opacity(0.25))))
           .frame(height: 1)
       }
     }
     .frame(maxWidth: .infinity)
-    .background(AppleChromeAppearance.color(
-      node.string("bgcolor"), fallback: AppleChromeAppearance.barSurface))
+    .background(MaterialPalette.color(
+      node.string("bgcolor"),
+      default: MaterialPalette.color("surfacecontainerlow", default: .white)))
     .shadow(
       color: AppleChromeAppearance.color(node.string("shadow_color"), fallback: .clear),
       radius: elevation)
@@ -771,7 +770,7 @@ struct BannerControlView: View {
       ControlList(ids: node.controlIDs(forKey: "actions"), axis: .horizontal)
     }
     .padding(.horizontal, 8)
-    .frame(minHeight: CGFloat(node.double("min_action_bar_height") ?? 44))
+    .frame(minHeight: CGFloat(node.double("min_action_bar_height") ?? 52))
   }
 }
 
