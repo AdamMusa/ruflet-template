@@ -43,17 +43,21 @@ public final class ControlStore: ObservableObject {
 
   /// Applies the `page_patch` from a `register_client` acknowledgement, which
   /// is a plain property map for the page control rather than an op list.
-  public func applyPageProperties(_ properties: [String: RufletValue]) {
+  @discardableResult
+  public func applyPageProperties(_ properties: [String: RufletValue]) -> Bool {
+    let previousNodes = nodes
     var touched: Set<Int> = [RufletWireID.page]
     var page = nodes[RufletWireID.page] ?? ControlNode(id: RufletWireID.page, type: "Page")
     for (key, value) in properties {
-      page.props[key] = materialize(value, touched: &touched)
+      page.props[key] = merge(value, into: page.props[key], touched: &touched)
     }
     nodes[RufletWireID.page] = page
-    finishApply(touched: touched)
+    return finishApply(touched: touched, previousNodes: previousNodes)
   }
 
-  public func apply(_ patch: ControlPatch) {
+  @discardableResult
+  public func apply(_ patch: ControlPatch) -> Bool {
+    let previousNodes = nodes
     var touched: Set<Int> = [patch.controlID]
 
     // A patch can arrive for a control the store has not seen when the runtime
@@ -70,14 +74,14 @@ public final class ControlStore: ObservableObject {
       case RufletControlKey.id:
         break
       case RufletControlKey.internals:
-        node.internals = value.mapValue ?? [:]
+        node.internals = mergeMap(value.mapValue ?? [:], into: node.internals, touched: &touched)
       default:
-        node.props[key] = materialize(value, touched: &touched)
+        node.props[key] = merge(value, into: node.props[key], touched: &touched)
       }
     }
 
     nodes[patch.controlID] = node
-    finishApply(touched: touched)
+    return finishApply(touched: touched, previousNodes: previousNodes)
   }
 
   /// Writes a value the renderer produced locally, without a round trip.
@@ -87,11 +91,12 @@ public final class ControlStore: ObservableObject {
   /// it agrees, sends back a patch carrying the same value — which lands here
   /// as a no-op. When Ruby's handler decides otherwise, its patch wins.
   public func setLocalProperty(_ id: Int, key: String, value: RufletValue) {
+    let previousNodes = nodes
     guard var node = nodes[id] else { return }
     guard node.props[key] != value else { return }
     node.props[key] = value
     nodes[id] = node
-    finishApply(touched: [id])
+    _ = finishApply(touched: [id], previousNodes: previousNodes)
   }
 
   public func reset() {
@@ -119,6 +124,64 @@ public final class ControlStore: ObservableObject {
     default:
       return value
     }
+  }
+
+  /// Flet's `Control.update()` recursively merges map-valued properties and
+  /// merges an inline control when its wire id is unchanged. Lists and scalar
+  /// values are replaced. This is deliberately separate from `register`,
+  /// which materializes a newly introduced control from its complete map.
+  private func merge(
+    _ value: RufletValue, into existing: RufletValue?, touched: inout Set<Int>
+  ) -> RufletValue {
+    guard case .map(let entries) = value else {
+      return materialize(value, touched: &touched)
+    }
+
+    if let id = entries[RufletControlKey.id]?.intValue {
+      if existing?.controlID == id, nodes[id] != nil {
+        mergeControl(id: id, from: entries, touched: &touched)
+      } else {
+        register(id: id, from: entries, touched: &touched)
+      }
+      return .controlRef(id)
+    }
+
+    return .map(mergeMap(entries, into: existing?.mapValue ?? [:], touched: &touched))
+  }
+
+  private func mergeMap(
+    _ updates: [String: RufletValue], into existing: [String: RufletValue],
+    touched: inout Set<Int>
+  ) -> [String: RufletValue] {
+    var result = existing
+    for (key, value) in updates {
+      result[key] = merge(value, into: result[key], touched: &touched)
+    }
+    return result
+  }
+
+  private func mergeControl(
+    id: Int, from entries: [String: RufletValue], touched: inout Set<Int>
+  ) {
+    guard var node = nodes[id] else {
+      register(id: id, from: entries, touched: &touched)
+      return
+    }
+    touched.insert(id)
+    for (key, value) in entries {
+      switch key {
+      case RufletControlKey.id:
+        continue
+      case RufletControlKey.type:
+        // Flet ignores `_c` when updating a control with the same id.
+        continue
+      case RufletControlKey.internals:
+        node.internals = mergeMap(value.mapValue ?? [:], into: node.internals, touched: &touched)
+      default:
+        node.props[key] = merge(value, into: node.props[key], touched: &touched)
+      }
+    }
+    nodes[id] = node
   }
 
   private func register(id: Int, from entries: [String: RufletValue], touched: inout Set<Int>) {
@@ -150,11 +213,21 @@ public final class ControlStore: ObservableObject {
 
   // MARK: - Removal
 
-  private func finishApply(touched: Set<Int>) {
-    lastChangedIDs = touched
+  private func finishApply(
+    touched: Set<Int>, previousNodes: [Int: ControlNode]
+  ) -> Bool {
+    let inheritedChanges = resolveInheritedBaseProperties()
     collectGarbage()
+    guard nodes != previousNodes else {
+      lastChangedIDs = []
+      return false
+    }
+    lastChangedIDs = Set(touched.union(inheritedChanges).filter {
+      previousNodes[$0] != nodes[$0]
+    })
     revision &+= 1
     objectWillChange.send()
+    return true
   }
 
   /// Drops controls no longer reachable from the page.
@@ -190,5 +263,50 @@ public final class ControlStore: ObservableObject {
     default:
       break
     }
+  }
+
+  /// Flet's base Control inherits `disabled` with logical OR and `adaptive`
+  /// with nearest-explicit-value semantics. Resolve those properties once per
+  /// patch for the entire tree; controls then read them through ControlNode's
+  /// ordinary typed accessors.
+  private func resolveInheritedBaseProperties() -> Set<Int> {
+    guard nodes[RufletWireID.page] != nil else { return [] }
+    var changed: Set<Int> = []
+    var visited: Set<Int> = []
+
+    func visit(_ id: Int, parentDisabled: Bool, parentAdaptive: Bool?) {
+      guard visited.insert(id).inserted, var node = nodes[id] else { return }
+
+      // Component wrappers are transparent in Flet's `Control.parent` getter.
+      let isComponent = node.type == "C"
+      let effectiveDisabled = isComponent
+        ? parentDisabled
+        : (node.props["disabled"]?.boolValue == true || parentDisabled)
+      let effectiveAdaptive = isComponent
+        ? parentAdaptive
+        : (node.props["adaptive"]?.boolValue ?? parentAdaptive)
+
+      let oldDisabled = node.internals["_flet_resolved_disabled"]?.boolValue
+      let oldAdaptive = node.internals["_flet_resolved_adaptive"]?.boolValue
+      node.internals["_flet_resolved_disabled"] = .bool(effectiveDisabled)
+      if let effectiveAdaptive {
+        node.internals["_flet_resolved_adaptive"] = .bool(effectiveAdaptive)
+      } else {
+        node.internals.removeValue(forKey: "_flet_resolved_adaptive")
+      }
+      if oldDisabled != effectiveDisabled || oldAdaptive != effectiveAdaptive {
+        nodes[id] = node
+        changed.insert(id)
+      }
+
+      var children: [Int] = []
+      for value in node.props.values { appendControlIDs(in: value, to: &children) }
+      for childID in children {
+        visit(childID, parentDisabled: effectiveDisabled, parentAdaptive: effectiveAdaptive)
+      }
+    }
+
+    visit(RufletWireID.page, parentDisabled: false, parentAdaptive: nil)
+    return changed
   }
 }

@@ -67,7 +67,16 @@ public struct ControlNode: Equatable {
   /// `control.getBool/getDouble/getString(..., default)` without duplicating
   /// fallback literals throughout RufletUI.
   public func value(_ key: String) -> RufletValue? {
+    // Flet resolves these two base-control properties through the parent
+    // chain. The store recomputes the effective values after every patch so
+    // every renderer sees the same result without duplicating ancestry logic.
+    if key == "disabled", internals["_flet_resolved_disabled"]?.boolValue == true {
+      return .bool(true)
+    }
     if let explicit = props[key], !explicit.isNull { return explicit }
+    if key == "adaptive", let inherited = internals["_flet_resolved_adaptive"] {
+      return inherited
+    }
     return RufletControlDefaults.value(for: type, property: key)
   }
 
