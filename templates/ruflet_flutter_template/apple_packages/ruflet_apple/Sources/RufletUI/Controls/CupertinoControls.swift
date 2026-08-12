@@ -1230,8 +1230,11 @@ struct CupertinoTextFieldControlView: View {
       maxWidth: presentation.fitsParent ? .infinity : nil,
       maxHeight: presentation.fitsParent ? .infinity : nil)
     .background(fieldDecoration)
+    .modifier(
+      CupertinoTextFieldShapeClip(
+        behavior: presentation.clipBehavior,
+        radii: presentation.cornerRadii))
     .overlay(borderStroke)
-    .modifier(ChromeClipModifier(behavior: presentation.clipBehavior))
     .modifier(CupertinoFieldShadows(value: node.props["shadows"]))
     .environment(\.layoutDirection, node.bool("rtl") == true ? .rightToLeft : .leftToRight)
     .disabled(node.bool("disabled") == true)
@@ -1398,6 +1401,23 @@ struct CupertinoTextFieldControlView: View {
   private var borderStroke: some View {
     if let border = presentation.border {
       CupertinoTextFieldBorderLayer(border: border, radii: presentation.cornerRadii)
+    }
+  }
+}
+
+/// The native UITextField/NSTextField is hosted as a rectangular platform
+/// view. CupertinoTextField clips the complete editable surface (not only its
+/// decoration) to the configured RRect; otherwise the platform view's backing
+/// surface leaks through as white wedges outside rounded corners.
+private struct CupertinoTextFieldShapeClip: ViewModifier {
+  let behavior: String
+  let radii: RufletCornerRadii
+
+  func body(content: Content) -> some View {
+    if behavior.lowercased() == "none" {
+      content
+    } else {
+      content.clipShape(RufletRoundedRectangle(radii: radii))
     }
   }
 }

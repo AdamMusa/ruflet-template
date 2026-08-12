@@ -428,6 +428,11 @@ enum RufletTextSelection {
       view.delegate = context.coordinator
       view.placeholder = placeholder
       view.borderStyle = nativeChrome ? .roundedRect : .none
+      // Container-backed Flet/Cupertino fields paint their own decoration.
+      // Keep UIKit's rectangular backing transparent so it cannot escape the
+      // SwiftUI rounded clip at the field corners.
+      if !nativeChrome { view.backgroundColor = .clear }
+      view.isOpaque = false
       configureLeadingAppearance(view)
       view.isSecureTextEntry = secure && !masksManually
       view.addTarget(context.coordinator, action: #selector(Coordinator.changed(_:)), for: .editingChanged)
@@ -445,6 +450,8 @@ enum RufletTextSelection {
       if view.text != shown { view.text = shown }
       view.placeholder = placeholder
       view.borderStyle = nativeChrome ? .roundedRect : .none
+      if !nativeChrome { view.backgroundColor = .clear }
+      view.isOpaque = false
       configureLeadingAppearance(view)
       view.isSecureTextEntry = secure && !masksManually
       view.traits = traits
