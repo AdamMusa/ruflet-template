@@ -210,8 +210,8 @@ public enum DataTable2ColumnSemantics {
     return column.map("tooltip")?["message"]?.stringValue
   }
 
-  public static func sortArrowSymbol(_ table: ControlNode) -> String {
-    IconMapping.symbol(for: table.props["sort_arrow_icon"]) ?? "arrow.up"
+  public static func sortArrowRendering(_ table: ControlNode) -> IconMapping.Rendering? {
+    IconMapping.rendering(for: table.props["sort_arrow_icon"])
   }
 
   /// The vendored adapter's fallback is intentionally 150 microseconds (not
@@ -310,7 +310,7 @@ public struct DataTable2ControlView: View {
       widths: widths, checkboxWidth: checkboxWidth, checkboxVisible: checkboxVisible)
       .frame(height: CGFloat(node.double("heading_row_height") ?? 56))
       .background(headingBackground)
-      .rufletTextStyle(RufletTextStyle(map: node.map("heading_text_style") ?? [:]))
+      .rufletTextStyle(headingTextStyle)
       .overlay(alignment: .bottom) { horizontalRule }
   }
 
@@ -324,7 +324,7 @@ public struct DataTable2ControlView: View {
       .frame(height: semantics.height(
         of: row, fallback: CGFloat(node.double("data_row_height") ?? 48)))
       .background(rowBackground(row))
-      .rufletTextStyle(RufletTextStyle(map: node.map("data_text_style") ?? [:]))
+      .rufletTextStyle(dataTextStyle)
       .contentShape(Rectangle())
       .modifier(DataTable2InteractionReporter(
         node: row, events: events,
@@ -404,13 +404,13 @@ public struct DataTable2ControlView: View {
         ? !(node.bool("sort_ascending") ?? false) : true
       events.fire(column, "sort", data: .map(["ci": .int(Int64(index)), "asc": .bool(ascending)]))
     } label: {
-      HStack(spacing: 4) {
+      HStack(spacing: 2) {
+        if column.bool("numeric") == true, column.handlesEvent("sort") {
+          sortArrow(index: index)
+        }
         content(column, key: "label")
-        if node.int("sort_column_index") == index {
-          Image(systemName: sortArrowName)
-            .foregroundColor(MaterialPalette.color(node.string("sort_arrow_icon_color")))
-            .rotationEffect((node.bool("sort_ascending") ?? false) ? .zero : .degrees(180))
-            .animation(sortArrowAnimation, value: node.bool("sort_ascending") ?? false)
+        if column.bool("numeric") != true, column.handlesEvent("sort") {
+          sortArrow(index: index)
         }
       }
       .frame(maxWidth: .infinity, alignment: headingAlignment(column))
@@ -425,11 +425,18 @@ public struct DataTable2ControlView: View {
     let cells = childNodes("cells", from: row)
     if cells.indices.contains(columnIndex) {
       let cell = cells[columnIndex]
-      content(cell, key: "content")
-        .opacity(cell.bool("placeholder") == true ? 0.55 : 1)
-        .overlay(alignment: .trailing) {
-          if cell.bool("show_edit_icon") == true { Image(systemName: "pencil") }
+      let numeric = childNodes("columns")[columnIndex].bool("numeric") == true
+      HStack(spacing: 0) {
+        if numeric, cell.bool("show_edit_icon") == true {
+          Image(systemName: "pencil").font(.system(size: 18))
         }
+        content(cell, key: "content")
+          .frame(maxWidth: .infinity, alignment: numeric ? .trailing : .leading)
+        if !numeric, cell.bool("show_edit_icon") == true {
+          Image(systemName: "pencil").font(.system(size: 18))
+        }
+      }
+        .opacity(cell.bool("placeholder") == true ? 0.6 : 1)
         .contentShape(Rectangle())
         .modifier(DataTable2InteractionReporter(node: cell, events: events))
     }
@@ -523,23 +530,51 @@ public struct DataTable2ControlView: View {
     }
   }
 
-  private var sortArrowName: String {
-    DataTable2ColumnSemantics.sortArrowSymbol(node)
-  }
-
   private var sortArrowAnimation: Animation? {
     let seconds = DataTable2ColumnSemantics.sortArrowDurationSeconds(node)
     guard seconds > 0 else { return nil }
     return .easeInOut(duration: seconds)
   }
 
-  private func rowColor(_ row: ControlNode) -> Color {
-    if let explicit = MaterialPalette.color(row.string("color")) { return explicit }
-    let state = node.map("data_row_color")
-    if row.bool("selected") == true {
-      return MaterialPalette.color(state?["selected"]?.stringValue, default: .clear)
+  private func sortArrow(index: Int) -> some View {
+    let sorted = node.int("sort_column_index") == index
+    return sortArrowGlyph
+      .rotationEffect((node.bool("sort_ascending") ?? false) ? .zero : .degrees(180))
+      .opacity(sorted ? 1 : 0)
+      .animation(sortArrowAnimation, value: sorted)
+      .animation(sortArrowAnimation, value: node.bool("sort_ascending") ?? false)
+  }
+
+  @ViewBuilder private var sortArrowGlyph: some View {
+    if let value = node.props["sort_arrow_icon"], !value.isNull {
+      RufletIcon(
+        value: value, size: 16,
+        color: MaterialPalette.color(node.string("sort_arrow_icon_color")))
+    } else {
+      Image(systemName: "arrow.up")
+        .font(.system(size: 16))
+        .foregroundColor(MaterialPalette.color(node.string("sort_arrow_icon_color")))
     }
-    return MaterialPalette.color(state?["default"]?.stringValue, default: .clear)
+  }
+
+  private func rowColor(_ row: ControlNode) -> Color {
+    if let explicit = stateColor(row.map("color"), selected: row.bool("selected") == true) {
+      return explicit
+    }
+    if let explicit = MaterialPalette.color(row.string("color")) { return explicit }
+    let state = stateColor(node.map("data_row_color"), selected: row.bool("selected") == true)
+    if let state { return state }
+    if row.bool("selected") == true {
+      return MaterialPalette.color("primary", default: .clear).opacity(0.08)
+    }
+    return .clear
+  }
+
+  private func stateColor(_ states: [String: RufletValue]?, selected: Bool) -> Color? {
+    let token = selected
+      ? states?["selected"]?.stringValue ?? states?["default"]?.stringValue
+      : states?["default"]?.stringValue
+    return MaterialPalette.color(token)
   }
 
   @ViewBuilder
@@ -573,8 +608,21 @@ public struct DataTable2ControlView: View {
         map: decoration,
         fallback: MaterialPalette.color(node.string("heading_row_color"), default: .clear))
     } else {
-      MaterialPalette.color(node.string("heading_row_color"), default: .clear)
+      stateColor(node.map("heading_row_color"), selected: false)
+        ?? MaterialPalette.color(node.string("heading_row_color"), default: .clear)
     }
+  }
+
+  private var headingTextStyle: RufletTextStyle {
+    var map = node.map("heading_text_style") ?? [:]
+    if map["size"] == nil, map["theme_style"] == nil { map["theme_style"] = .string("titleSmall") }
+    return RufletTextStyle(map: map)
+  }
+
+  private var dataTextStyle: RufletTextStyle {
+    var map = node.map("data_text_style") ?? [:]
+    if map["size"] == nil, map["theme_style"] == nil { map["theme_style"] = .string("bodyMedium") }
+    return RufletTextStyle(map: map)
   }
 
   @ViewBuilder private var horizontalRule: some View {
@@ -582,7 +630,8 @@ public struct DataTable2ControlView: View {
       Rectangle().fill(MaterialPalette.color(side["color"]?.stringValue, default: .clear))
         .frame(height: CGFloat(side["width"]?.doubleValue ?? 1))
     } else if (node.double("divider_thickness") ?? 1) > 0 {
-      Divider().frame(height: CGFloat(node.double("divider_thickness") ?? 1))
+      Rectangle().fill(MaterialPalette.color("outlinevariant", default: .gray.opacity(0.35)))
+        .frame(height: CGFloat(node.double("divider_thickness") ?? 1))
     }
   }
 
