@@ -3,7 +3,10 @@ import RufletAudio
 import RufletAudioRecorder
 import RufletCamera
 import RufletFlashlight
+import RufletGeolocator
+import RufletPermissionHandler
 import RufletProtocol
+import RufletSecureStorage
 import XCTest
 
 /// Behavioral service contracts mirrored from vendored Flet.
@@ -45,6 +48,9 @@ final class ServiceCommandConformanceTests: XCTestCase {
     RufletAudioRecorder.register(in: registry)
     RufletCamera.register(in: registry)
     RufletFlashlight.register(in: registry)
+    RufletGeolocator.register(in: registry)
+    RufletPermissionHandler.register(in: registry)
+    RufletSecureStorage.register(in: registry)
 
     for type in [
       "Page", "View", "BasePage", "Pagelet", "BrowserContextMenu", "Battery",
@@ -181,6 +187,7 @@ final class ServiceCommandConformanceTests: XCTestCase {
   func testRemainingPushServicesAreActivatedByDefaultRegistry() {
     let registry = ServiceRegistry()
     registry.registerDefaults()
+    registry.register(extension: RufletSecureStorage.self)
     let store = ControlStore()
     let nodes = [
       ControlNode(id: 1, type: "Page", props: ["on_locale_change": .bool(true)]),

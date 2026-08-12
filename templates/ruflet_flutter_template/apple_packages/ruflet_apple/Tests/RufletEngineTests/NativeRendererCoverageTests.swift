@@ -3,9 +3,12 @@ import RufletAudio
 import RufletAudioRecorder
 import RufletCamera
 import RufletFlashlight
+import RufletGeolocator
 import RufletLocation
+import RufletPermissionHandler
 import RufletQRScanner
 import RufletMotion
+import RufletSecureStorage
 @testable import RufletUI
 import XCTest
 
@@ -297,7 +300,9 @@ final class NativeRendererCoverageTests: XCTestCase {
     let registry = ServiceRegistry()
     registry.registerDefaults()
     registry.register(extensions: [
-      RufletMotion.self, RufletLocation.self, RufletAudio.self, RufletQRScanner.self,
+      RufletMotion.self, RufletLocation.self, RufletGeolocator.self,
+      RufletPermissionHandler.self, RufletSecureStorage.self,
+      RufletAudio.self, RufletQRScanner.self,
       RufletAudioRecorder.self, RufletCamera.self, RufletFlashlight.self,
     ])
 

@@ -24,8 +24,6 @@ extension ServiceRegistry {
 
     register(ClipboardService.self) { ClipboardService() }
     register(SharedPreferencesService.self) { SharedPreferencesService() }
-    register(SecureStorageService.self) { SecureStorageService() }
-    markStreaming([SecureStorageService.wireType])
     register(StoragePathsService.self) { StoragePathsService() }
     register(UrlLauncherService.self) { UrlLauncherService() }
     register(HapticFeedbackService.self) { HapticFeedbackService() }
@@ -36,7 +34,6 @@ extension ServiceRegistry {
     markStreaming([BatteryService.wireType])
     register(ConnectivityService.self) { ConnectivityService() }
     markStreaming([ConnectivityService.wireType])
-    register(PermissionHandlerService.self) { PermissionHandlerService() }
     register(ScreenBrightnessService.self) { ScreenBrightnessService() }
     markStreaming([ScreenBrightnessService.wireType])
 
@@ -52,7 +49,11 @@ extension ServiceRegistry {
       "shakedetector":
       return "RufletMotion"
     case "geolocator":
-      return "RufletLocation"
+      return "RufletGeolocator"
+    case "permissionhandler":
+      return "RufletPermissionHandler"
+    case "securestorage":
+      return "RufletSecureStorage"
     case "audio":
       return "RufletAudio"
     case "audiorecorder":

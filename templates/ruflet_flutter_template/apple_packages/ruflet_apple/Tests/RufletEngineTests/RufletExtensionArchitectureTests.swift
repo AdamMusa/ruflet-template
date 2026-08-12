@@ -3,8 +3,11 @@ import RufletAudio
 import RufletAudioRecorder
 import RufletCamera
 import RufletFlashlight
+import RufletGeolocator
+import RufletPermissionHandler
 import RufletQRScanner
 import RufletProtocol
+import RufletSecureStorage
 @testable import RufletUI
 import XCTest
 
@@ -131,6 +134,51 @@ final class RufletExtensionArchitectureTests: XCTestCase {
     XCTAssertEqual(packages["ruflet_qrcode_scanner"]?.status, .available)
   }
 
+  func testDedicatedServiceExtensionManifestEntriesAreAvailable() {
+    let packages = Dictionary(
+      uniqueKeysWithValues: RufletExtensionManifest.packages.map {
+        ($0.fletPackage, $0)
+      })
+    XCTAssertEqual(packages["flet_geolocator"]?.status, .available)
+    XCTAssertEqual(packages["flet_permission_handler"]?.status, .available)
+    XCTAssertEqual(packages["flet_secure_storage"]?.status, .available)
+  }
+
+  func testDedicatedServiceExtensionsRegisterOnlyTheirOwnBoundary() {
+    let geolocator = ServiceRegistry()
+    geolocator.register(extension: RufletGeolocator.self)
+    XCTAssertTrue(geolocator.hasExtension("RufletGeolocator"))
+    XCTAssertTrue(geolocator.handles("Geolocator"))
+    XCTAssertFalse(geolocator.handles("PermissionHandler"))
+    XCTAssertFalse(geolocator.handles("SecureStorage"))
+
+    let permission = ServiceRegistry()
+    permission.register(extension: RufletPermissionHandler.self)
+    XCTAssertTrue(permission.hasExtension("RufletPermissionHandler"))
+    XCTAssertTrue(permission.handles("PermissionHandler"))
+    XCTAssertFalse(permission.handles("Geolocator"))
+    XCTAssertFalse(permission.handles("SecureStorage"))
+
+    let storage = ServiceRegistry()
+    storage.register(extension: RufletSecureStorage.self)
+    XCTAssertTrue(storage.hasExtension("RufletSecureStorage"))
+    XCTAssertTrue(storage.handles("SecureStorage"))
+    XCTAssertFalse(storage.handles("Geolocator"))
+    XCTAssertFalse(storage.handles("PermissionHandler"))
+  }
+
+  func testCoreOmitsDedicatedServicesAndNamesTheirProducts() {
+    let core = ServiceRegistry()
+    core.registerDefaults()
+    XCTAssertFalse(core.handles("Geolocator"))
+    XCTAssertFalse(core.handles("PermissionHandler"))
+    XCTAssertFalse(core.handles("SecureStorage"))
+    XCTAssertEqual(ServiceRegistry.bundleProviding("Geolocator"), "RufletGeolocator")
+    XCTAssertEqual(
+      ServiceRegistry.bundleProviding("PermissionHandler"), "RufletPermissionHandler")
+    XCTAssertEqual(ServiceRegistry.bundleProviding("SecureStorage"), "RufletSecureStorage")
+  }
+
   @MainActor
   func testCameraExtensionReplacesOnlyTheCameraFallbackDescriptor() {
     XCTAssertEqual(
@@ -154,5 +202,9 @@ final class RufletExtensionArchitectureTests: XCTestCase {
     XCTAssertEqual(ServiceRegistry.bundleProviding("Camera"), "RufletCamera")
     XCTAssertEqual(ServiceRegistry.bundleProviding("Flashlight"), "RufletFlashlight")
     XCTAssertEqual(ServiceRegistry.bundleProviding("Audio"), "RufletAudio")
+    XCTAssertEqual(ServiceRegistry.bundleProviding("Geolocator"), "RufletGeolocator")
+    XCTAssertEqual(
+      ServiceRegistry.bundleProviding("PermissionHandler"), "RufletPermissionHandler")
+    XCTAssertEqual(ServiceRegistry.bundleProviding("SecureStorage"), "RufletSecureStorage")
   }
 }
