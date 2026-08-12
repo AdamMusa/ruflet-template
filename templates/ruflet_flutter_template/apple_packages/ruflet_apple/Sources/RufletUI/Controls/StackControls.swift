@@ -15,56 +15,50 @@ import SwiftUI
 /// are built from interleaved spacers the way Flutter's flex layout does.
 struct RowControlView: View {
   let node: ControlNode
-  @EnvironmentObject private var store: ControlStore
 
   var body: some View {
-    let main = ControlProps.MainAxisAlignment(node.rufletString("alignment"))
-    // Flutter/Flet Row defaults to a centred cross axis. Using `.start` here
-    // top-aligned every icon/text pair whose Ruby omitted the property.
-    let cross = ControlProps.CrossAxisAlignment(
-      node.rufletString("vertical_alignment"), default: .center)
-    let spacing = CGFloat(node.rufletDouble("spacing"))
+    let semantics = RufletLinearLayoutSemantics.row(node)
     let children = node.childIDs
-    let tight = node.rufletBool("tight")
 
     Group {
-      if node.bool("wrap") == true {
+      if semantics.wrap {
         WrappingStack(
-          ids: children, spacing: spacing,
-          runSpacing: CGFloat(node.rufletDouble("run_spacing")),
-          alignment: main,
-          runAlignment: ControlProps.MainAxisAlignment(node.rufletString("run_alignment")),
-          crossAlignment: RufletWrapMath.crossAlignment(
-            node.string("vertical_alignment"), default: .center))
-      } else if hasFlexChildren, #available(iOS 16.0, macOS 13.0, *) {
+          ids: children, spacing: semantics.spacing,
+          runSpacing: semantics.runSpacing,
+          alignment: semantics.mainAlignment,
+          runAlignment: semantics.runAlignment,
+          crossAlignment: semantics.wrapCrossAlignment)
+      } else if #available(iOS 16.0, macOS 13.0, *) {
+        // RenderFlex owns main-axis distribution even when no child expands.
+        // Using HStack for that case made spaceAround/spaceEvenly allocate
+        // equal edge and interior spacers instead of Flutter's half edges.
         RufletFlexLayout(
-          axis: .horizontal, spacing: spacing, mainAlignment: main,
-          crossAlignment: cross, tight: tight
+          axis: .horizontal, spacing: semantics.spacing,
+          mainAlignment: semantics.mainAlignment,
+          crossAlignment: semantics.crossAlignment,
+          tight: semantics.tight
         ) {
           ForEach(children, id: \.self) { id in
             RufletFlexChild(id: id, axis: .horizontal)
           }
         }
       } else {
-        HStack(alignment: cross.vertical, spacing: main.usesSpacers && !tight ? 0 : spacing) {
+        HStack(
+          alignment: semantics.crossAlignment.vertical,
+          spacing: semantics.mainAlignment.usesSpacers && !semantics.tight
+            ? 0 : semantics.spacing
+        ) {
           DistributedChildren(
-            ids: children, alignment: main, axis: .horizontal,
-            spacing: spacing, tight: tight)
+            ids: children, alignment: semantics.mainAlignment, axis: .horizontal,
+            spacing: semantics.spacing, tight: semantics.tight)
         }
       }
     }
     // `intrinsic_height` sizes the row to its tallest child rather than to
     // the space it was offered.
-    .fixedSize(horizontal: false, vertical: node.rufletBool("intrinsic_height"))
+    .fixedSize(horizontal: false, vertical: semantics.intrinsic)
     .modifier(ScrollableStack(
-      node: node, axis: node.rufletBool("wrap") ? .vertical : .horizontal))
-  }
-
-  private var hasFlexChildren: Bool {
-    node.childIDs.contains { id in
-      guard let child = store.node(id) else { return false }
-      return RufletFlexMath.flex(child.props["expand"]) > 0
-    }
+      node: node, axis: semantics.wrap ? .vertical : .horizontal))
   }
 }
 
@@ -72,63 +66,100 @@ struct RowControlView: View {
 /// `horizontal_alignment` the cross axis.
 struct ColumnControlView: View {
   let node: ControlNode
-  @EnvironmentObject private var store: ControlStore
 
   @ViewBuilder
   var body: some View {
-    let main = ControlProps.MainAxisAlignment(node.rufletString("alignment"))
-    let cross = ControlProps.CrossAxisAlignment(node.rufletString("horizontal_alignment"))
-    let spacing = CGFloat(node.rufletDouble("spacing"))
-    let tight = node.rufletBool("tight")
+    let semantics = RufletLinearLayoutSemantics.column(node)
 
     Group {
-      if node.rufletBool("wrap") {
+      if semantics.wrap {
         // A wrapping Column is Flutter's Wrap: children run down a column and
         // start a new one when the run is full, spaced by run_spacing and
         // placed by run_alignment.
         FlowLayout(
           axis: .vertical,
-          spacing: spacing,
-          runSpacing: CGFloat(node.rufletDouble("run_spacing")),
-          alignment: main,
-          runAlignment: ControlProps.MainAxisAlignment(node.rufletString("run_alignment")),
-          crossAlignment: RufletWrapMath.crossAlignment(
-            node.string("horizontal_alignment"), default: .start)
+          spacing: semantics.spacing,
+          runSpacing: semantics.runSpacing,
+          alignment: semantics.mainAlignment,
+          runAlignment: semantics.runAlignment,
+          crossAlignment: semantics.wrapCrossAlignment
         ) {
           ForEach(node.childIDs, id: \.self) { id in
             ControlView(id: id, axis: .none)
           }
         }
-      } else if hasFlexChildren, #available(iOS 16.0, macOS 13.0, *) {
+      } else if #available(iOS 16.0, macOS 13.0, *) {
         RufletFlexLayout(
-          axis: .vertical, spacing: spacing, mainAlignment: main,
-          crossAlignment: cross, tight: tight
+          axis: .vertical, spacing: semantics.spacing,
+          mainAlignment: semantics.mainAlignment,
+          crossAlignment: semantics.crossAlignment,
+          tight: semantics.tight
         ) {
           ForEach(node.childIDs, id: \.self) { id in
             RufletFlexChild(id: id, axis: .vertical)
           }
         }
       } else {
-        VStack(alignment: cross.horizontal, spacing: main.usesSpacers && !tight ? 0 : spacing) {
+        VStack(
+          alignment: semantics.crossAlignment.horizontal,
+          spacing: semantics.mainAlignment.usesSpacers && !semantics.tight
+            ? 0 : semantics.spacing
+        ) {
           DistributedChildren(
-            ids: node.childIDs, alignment: main, axis: .vertical,
-            spacing: spacing, tight: tight)
+            ids: node.childIDs, alignment: semantics.mainAlignment, axis: .vertical,
+            spacing: semantics.spacing, tight: semantics.tight)
         }
       }
     }
-    .modifier(CrossStretch(alignment: cross, axis: .vertical))
+    .modifier(CrossStretch(alignment: semantics.crossAlignment, axis: .vertical))
     // `intrinsic_width` sizes the column to its widest child rather than to
     // the space it was offered.
-    .fixedSize(horizontal: node.rufletBool("intrinsic_width"), vertical: false)
+    .fixedSize(horizontal: semantics.intrinsic, vertical: false)
     .modifier(ScrollableStack(
-      node: node, axis: node.rufletBool("wrap") ? .horizontal : .vertical))
+      node: node, axis: semantics.wrap ? .horizontal : .vertical))
+  }
+}
+
+struct RufletLinearLayoutSemantics: Equatable {
+  let mainAlignment: ControlProps.MainAxisAlignment
+  let crossAlignment: ControlProps.CrossAxisAlignment
+  let wrapCrossAlignment: ControlProps.CrossAxisAlignment
+  let runAlignment: ControlProps.MainAxisAlignment
+  let spacing: CGFloat
+  let runSpacing: CGFloat
+  let tight: Bool
+  let wrap: Bool
+  let intrinsic: Bool
+
+  static func row(_ node: ControlNode) -> Self {
+    let cross = ControlProps.CrossAxisAlignment(
+      node.rufletString("vertical_alignment"), default: .center)
+    return Self(
+      mainAlignment: ControlProps.MainAxisAlignment(node.rufletString("alignment")),
+      crossAlignment: cross,
+      wrapCrossAlignment: RufletWrapMath.crossAlignment(
+        node.string("vertical_alignment"), default: .center),
+      runAlignment: ControlProps.MainAxisAlignment(node.rufletString("run_alignment")),
+      spacing: CGFloat(node.rufletDouble("spacing")),
+      runSpacing: CGFloat(node.rufletDouble("run_spacing")),
+      tight: node.rufletBool("tight"),
+      wrap: node.rufletBool("wrap"),
+      intrinsic: node.rufletBool("intrinsic_height"))
   }
 
-  private var hasFlexChildren: Bool {
-    node.childIDs.contains { id in
-      guard let child = store.node(id) else { return false }
-      return RufletFlexMath.flex(child.props["expand"]) > 0
-    }
+  static func column(_ node: ControlNode) -> Self {
+    let cross = ControlProps.CrossAxisAlignment(node.rufletString("horizontal_alignment"))
+    return Self(
+      mainAlignment: ControlProps.MainAxisAlignment(node.rufletString("alignment")),
+      crossAlignment: cross,
+      wrapCrossAlignment: RufletWrapMath.crossAlignment(
+        node.string("horizontal_alignment"), default: .start),
+      runAlignment: ControlProps.MainAxisAlignment(node.rufletString("run_alignment")),
+      spacing: CGFloat(node.rufletDouble("spacing")),
+      runSpacing: CGFloat(node.rufletDouble("run_spacing")),
+      tight: node.rufletBool("tight"),
+      wrap: node.rufletBool("wrap"),
+      intrinsic: node.rufletBool("intrinsic_width"))
   }
 }
 
@@ -486,16 +517,17 @@ private struct StackScrollViewportKey: PreferenceKey {
 struct StackControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
+  @Environment(\.layoutDirection) private var layoutDirection
 
   var body: some View {
-    let alignment = ControlProps.continuousAlignment(node.props["alignment"]) ?? .topLeft
+    let semantics = RufletStackSemantics(node: node, layoutDirection: layoutDirection)
 
     ZStack {
       ForEach(node.childIDs, id: \.self) { childID in
         if let child = store.node(childID), isPositioned(child) {
-          PositionedChild(node: child, alignment: alignment)
+          PositionedChild(node: child, alignment: semantics.alignment)
         } else {
-          RufletStackAlignedChild(alignment: alignment, fit: stackFit) {
+          RufletStackAlignedChild(alignment: semantics.alignment, fit: semantics.fit) {
             ControlView(id: childID, axis: .none)
           }
             // `fit: expand` makes every non-positioned child fill the stack;
@@ -503,11 +535,7 @@ struct StackControlView: View {
         }
       }
     }
-    .modifier(StackClip(behavior: node.rufletString("clip_behavior")))
-  }
-
-  private var stackFit: RufletStackFit {
-    RufletStackFit(rawValue: node.string("fit")?.lowercased() ?? "loose") ?? .loose
+    .modifier(StackClip(behavior: semantics.clipBehavior))
   }
 
   private func isPositioned(_ child: ControlNode) -> Bool {
@@ -516,10 +544,53 @@ struct StackControlView: View {
   }
 }
 
+struct RufletStackSemantics: Equatable {
+  let alignment: RufletAlignment
+  let fit: RufletStackFit
+  let clipBehavior: RufletStackClipBehavior
+
+  init(node: ControlNode, layoutDirection: LayoutDirection) {
+    // Flutter's omitted Stack alignment is AlignmentDirectional.topStart.
+    // Explicit Flet Alignment values are absolute and must not be mirrored.
+    alignment = ControlProps.continuousAlignment(node.props["alignment"])
+      ?? (layoutDirection == .rightToLeft ? .topRight : .topLeft)
+    fit = RufletStackFit(
+      rawValue: node.string("fit")?.lowercased() ?? RufletStackFit.loose.rawValue) ?? .loose
+    clipBehavior = RufletStackClipBehavior(node.rufletString("clip_behavior"))
+  }
+}
+
+enum RufletStackClipBehavior: Equatable {
+  case none
+  case hardEdge
+  case antiAlias
+  case antiAliasWithSaveLayer
+
+  init(_ value: String) {
+    switch value.lowercased().replacingOccurrences(of: "_", with: "") {
+    case "none": self = .none
+    case "antialias": self = .antiAlias
+    case "antialiaswithsavelayer": self = .antiAliasWithSaveLayer
+    default: self = .hardEdge
+    }
+  }
+}
+
 private struct StackClip: ViewModifier {
-  let behavior: String
+  let behavior: RufletStackClipBehavior
+
+  @ViewBuilder
   func body(content: Content) -> some View {
-    behavior.lowercased() == "none" ? AnyView(content) : AnyView(content.clipped())
+    switch behavior {
+    case .none:
+      content
+    case .hardEdge:
+      content.clipped(antialiased: false)
+    case .antiAlias, .antiAliasWithSaveLayer:
+      // SwiftUI exposes antialiased clipping but not Flutter's explicit
+      // saveLayer compositing hint. Both preserve the requested edge quality.
+      content.clipped(antialiased: true)
+    }
   }
 }
 
@@ -578,7 +649,7 @@ private struct RufletStackAlignmentLayout: Layout {
   }
 }
 
-private enum RufletStackFit: String { case loose, expand, passthrough }
+enum RufletStackFit: String { case loose, expand, passthrough }
 
 /// A stack child that placed itself.
 private struct PositionedChild: View {
@@ -718,16 +789,17 @@ struct ResponsiveRowControlView: View {
 
   @ViewBuilder
   var body: some View {
+    let semantics = RufletResponsiveRowSemantics(node)
     if #available(iOS 16.0, macOS 13.0, tvOS 16.0, *) {
       ResponsiveGridLayout(
         spans: node.childIDs.map { store.node($0)?.props["col"] },
-        columns: node.props["columns"],
-        spacing: node.props["spacing"],
-        runSpacing: node.props["run_spacing"],
-        breakpoints: ResponsiveGridMath.breakpoints(node.props["breakpoints"]),
+        columns: semantics.columns,
+        spacing: semantics.spacing,
+        runSpacing: semantics.runSpacing,
+        breakpoints: semantics.breakpoints,
         breakpointWidth: viewWidth > 0 ? viewWidth : nil,
-        alignment: node.string("alignment") ?? "start",
-        verticalAlignment: node.string("vertical_alignment") ?? "start"
+        alignment: semantics.alignment,
+        verticalAlignment: semantics.verticalAlignment
       ) {
         ForEach(node.childIDs, id: \.self) { id in
           ControlView(id: id, axis: ResponsiveGridMath.childLayoutAxis)
@@ -745,7 +817,12 @@ struct ResponsiveRowControlView: View {
         if abs(viewWidth - width) > 0.5 { viewWidth = width }
       })
     } else {
-      VStack(alignment: .leading, spacing: 10) {
+      VStack(
+        alignment: .leading,
+        spacing: CGFloat(ResponsiveGridMath.value(
+          semantics.runSpacing, default: 10, width: viewWidth,
+          breakpoints: ResponsiveGridMath.defaultBreakpoints))
+      ) {
         ForEach(node.childIDs, id: \.self) { id in
           ControlView(id: id, axis: .none)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -753,6 +830,26 @@ struct ResponsiveRowControlView: View {
       }
       .frame(maxWidth: .infinity, alignment: .leading)
     }
+  }
+}
+
+struct RufletResponsiveRowSemantics: Equatable {
+  let columns: RufletValue?
+  let spacing: RufletValue?
+  let runSpacing: RufletValue?
+  let breakpoints: [String: Double]
+  let alignment: String
+  let verticalAlignment: String
+
+  init(_ node: ControlNode) {
+    // parseResponsiveNumber inserts the scalar unnamed default before the
+    // responsive resolver runs. Preserve those exact Flet defaults here.
+    columns = node.props["columns"] ?? .double(12)
+    spacing = node.props["spacing"] ?? .double(10)
+    runSpacing = node.props["run_spacing"] ?? .double(10)
+    breakpoints = ResponsiveGridMath.breakpoints(node.props["breakpoints"])
+    alignment = node.string("alignment") ?? "start"
+    verticalAlignment = node.string("vertical_alignment") ?? "start"
   }
 }
 
@@ -788,10 +885,9 @@ enum ResponsiveGridMath {
 
   static func breakpoints(_ value: RufletValue?) -> [String: Double] {
     guard let map = value?.mapValue else { return defaultBreakpoints }
-    let parsed = map.reduce(into: [String: Double]()) { result, entry in
+    return map.reduce(into: [String: Double]()) { result, entry in
       if let number = entry.value.doubleValue { result[entry.key] = number }
     }
-    return parsed.isEmpty ? defaultBreakpoints : parsed
   }
 
   /// Exact equivalent of Flet's `getBreakpointNumber`: start with the unnamed
@@ -804,14 +900,17 @@ enum ResponsiveGridMath {
     if let scalar = source?.doubleValue { return scalar }
     guard let map = source?.mapValue else { return defaultValue }
     var selected = map[""]?.doubleValue ?? defaultValue
-    var highest = -Double.infinity
+    // This intentionally starts at zero, matching Flet. A custom negative
+    // breakpoint does not replace the unnamed value even at a matching width.
+    var highest = 0.0
     for (name, candidate) in map {
       guard !name.isEmpty, let threshold = breakpoints[name],
-        CGFloat(threshold) <= width, threshold >= highest,
-        let number = candidate.doubleValue
+        CGFloat(threshold) <= width, threshold >= highest
       else { continue }
       highest = threshold
-      selected = number
+      // parseResponsiveNumber(value, default) converts invalid map values to
+      // zero rather than discarding the breakpoint entry.
+      selected = candidate.doubleValue ?? 0
     }
     return selected
   }
