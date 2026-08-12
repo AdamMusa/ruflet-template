@@ -584,6 +584,9 @@ struct RufletSliderScale {
   let minimum: Double
   let maximum: Double
   let divisions: Int?
+  /// Flutter resolves slider direction from the ambient text direction. In
+  /// RTL the minimum is on the right and every pointer delta is mirrored.
+  let reversed: Bool
   /// Half a thumb, which both ends of the track reserve so the thumb stays
   /// inside it at the extremes.
   let inset: CGFloat
@@ -595,11 +598,13 @@ struct RufletSliderScale {
     maximum: Double,
     divisions: Int?,
     width: CGFloat,
-    thumbWidth: CGFloat
+    thumbWidth: CGFloat,
+    reversed: Bool = false
   ) {
     self.minimum = minimum
     self.maximum = maximum
     self.divisions = (divisions ?? 0) > 0 ? divisions : nil
+    self.reversed = reversed
     self.inset = thumbWidth / 2
     self.travel = max(width - thumbWidth, 1)
   }
@@ -609,12 +614,15 @@ struct RufletSliderScale {
   /// Where a value's thumb centre sits, measured from the track's left edge.
   func position(of value: Double) -> CGFloat {
     let clamped = min(max(value, minimum), maximum)
-    return inset + travel * CGFloat((clamped - minimum) / span)
+    let logicalFraction = (clamped - minimum) / span
+    let visualFraction = reversed ? 1 - logicalFraction : logicalFraction
+    return inset + travel * CGFloat(visualFraction)
   }
 
   /// The value under a point, snapped to `divisions` when there are any.
   func value(at x: CGFloat) -> Double {
-    let fraction = min(max(Double((x - inset) / travel), 0), 1)
+    let visualFraction = min(max(Double((x - inset) / travel), 0), 1)
+    let fraction = reversed ? 1 - visualFraction : visualFraction
     let raw = minimum + fraction * span
     guard let divisions else { return raw }
     let step = span / Double(divisions)
@@ -624,7 +632,9 @@ struct RufletSliderScale {
   /// The slide-only modes preserve the thumb's pointer-down value and apply
   /// the drag delta instead of jumping the thumb to the pointer.
   func value(startingAt value: Double, translation: CGFloat) -> Double {
-    let raw = min(max(value + Double(translation / travel) * span, minimum), maximum)
+    let direction = reversed ? -1.0 : 1.0
+    let raw = min(
+      max(value + direction * Double(translation / travel) * span, minimum), maximum)
     guard let divisions else { return raw }
     let step = span / Double(divisions)
     return min(max(minimum + ((raw - minimum) / step).rounded() * step, minimum), maximum)
@@ -666,6 +676,7 @@ enum RufletSliderInteraction: String {
 struct SliderControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
+  @Environment(\.layoutDirection) private var layoutDirection
   @State private var dragging = false
 
   var body: some View {
@@ -707,7 +718,8 @@ struct SliderControlView: View {
   private func scale(width: CGFloat) -> RufletSliderScale {
     RufletSliderScale(
       minimum: minimum, maximum: maximum, divisions: node.int("divisions"), width: width,
-      thumbWidth: RufletThemeDefaults.sliderMetrics(year2023: node.bool("year_2023")).thumbWidth)
+      thumbWidth: RufletThemeDefaults.sliderMetrics(year2023: node.bool("year_2023")).thumbWidth,
+      reversed: layoutDirection == .rightToLeft)
   }
 
   /// Flet's `label` is a template: it substitutes the thumb's value, rounded
@@ -725,6 +737,7 @@ struct SliderControlView: View {
 struct RangeSliderControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
+  @Environment(\.layoutDirection) private var layoutDirection
   @State private var dragging = false
 
   var body: some View {
@@ -768,7 +781,8 @@ struct RangeSliderControlView: View {
   private func scale(width: CGFloat) -> RufletSliderScale {
     RufletSliderScale(
       minimum: minimum, maximum: maximum, divisions: node.int("divisions"), width: width,
-      thumbWidth: RufletThemeDefaults.sliderMetrics(year2023: nil).thumbWidth)
+      thumbWidth: RufletThemeDefaults.sliderMetrics(year2023: nil).thumbWidth,
+      reversed: layoutDirection == .rightToLeft)
   }
 
   private func bubbleTexts(start: Double, end: Double) -> [String?] {
