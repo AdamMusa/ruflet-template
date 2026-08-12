@@ -215,6 +215,7 @@ private struct MaterialSwitch: View {
 /// `Checkbox` — a tri-state box when `tristate` is set, matching Flutter.
 struct CheckboxControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
   @Environment(\.rufletListTileClicks) private var listTileClicks
 
@@ -241,9 +242,16 @@ struct CheckboxControlView: View {
     node.string("label_position")?.lowercased() == "left" ? .left : .right
   }
 
+  private var visibleLabelID: Int? {
+    RufletCheckboxLabel.visibleControlID(
+      node.controlID(forKey: "label"), visibilityForID: { id in
+        store.node(id).map { $0.bool("visible") != false }
+      })
+  }
+
   @ViewBuilder
   private var label: some View {
-    if let labelID = node.controlID(forKey: "label") {
+    if let labelID = visibleLabelID {
       ControlView(id: labelID, axis: .none)
     } else if let value = node.string("label") {
       Text(value)
@@ -314,6 +322,15 @@ struct CheckboxControlView: View {
         after: state, tristate: node.bool("tristate") == true),
       payload: .value,
       to: events)
+  }
+}
+
+enum RufletCheckboxLabel {
+  static func visibleControlID(
+    _ id: Int?, visibilityForID: (Int) -> Bool?
+  ) -> Int? {
+    guard let id, visibilityForID(id) != false else { return nil }
+    return id
   }
 }
 
