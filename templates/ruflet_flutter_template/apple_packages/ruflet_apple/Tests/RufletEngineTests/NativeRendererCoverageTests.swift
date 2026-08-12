@@ -203,6 +203,12 @@ final class NativeRendererCoverageTests: XCTestCase {
         // not fabricate a visual SwiftUI control.
         continue
       }
+      if case .optionalBundle = descriptor?.rendering {
+        // Optional products install their builder only when the app links and
+        // registers that extension. Core must retain just the fallback
+        // descriptor so unrelated SDKs are not bundled into RufletUI.
+        continue
+      }
       XCTAssertNotNil(
         ControlRegistry.build(node: node, axis: .none),
         "\(wireType) has no Apple renderer registry entry")
@@ -276,7 +282,7 @@ final class NativeRendererCoverageTests: XCTestCase {
   func testBehavioralControlsDeclareTheMethodsImplementedByTheirNativeHandlers() {
     XCTAssertEqual(
       ControlRegistry.builtInDescriptor(for: "TextField")?.supportedMethods,
-      ["blur", "focus"])
+      ["focus"])
     XCTAssertTrue(
       ControlRegistry.builtInDescriptor(for: "InteractiveViewer")?.supportedMethods
         .contains("restore_state") == true)

@@ -241,14 +241,20 @@ final class MediaPluginParityTests: XCTestCase {
     let node = ControlNode(id: 8, type: "AudioRecorder")
     let context = RufletServiceContext(store: ControlStore(), emitEvent: { _, _, _ in })
 
-    let expectedSupport: [String: RufletValue] = [
+    var expectedSupport: [String: RufletValue] = [
       "wav": .bool(true), "pcm16bits": .bool(true), "aacLc": .bool(true),
-      "aacEld": .bool(true), "opus": .bool(true), "flac": .bool(true),
+      "aacEld": .bool(true), "flac": .bool(true),
       "aacHe": .bool(false), "amrNb": .bool(false), "amrWb": .bool(false),
       // parseAudioEncoder has no default in this method, so an unknown name
       // falls through with Dart `null` rather than reporting false.
       "unknown": .null,
     ]
+#if os(macOS)
+    // record_macos deliberately omits Opus from isEncoderSupported.
+    expectedSupport["opus"] = .bool(false)
+#else
+    expectedSupport["opus"] = .bool(true)
+#endif
     for (encoder, supported) in expectedSupport {
       var result: Result<RufletValue, Error>?
       service.invoke(
