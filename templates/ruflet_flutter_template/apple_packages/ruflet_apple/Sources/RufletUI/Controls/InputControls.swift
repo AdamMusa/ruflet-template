@@ -2142,12 +2142,11 @@ struct DropdownControlView: View {
     return label.isEmpty ? (node.string("hint_text") ?? "") : label
   }
 
-  /// Options arrive under `options` on a Dropdown and `controls` on the M2
-  /// variant, so both are accepted.
+  /// `DropdownOption` is structural and therefore filtered here rather than
+  /// by a standalone ControlView.
   private var optionNodes: [ControlNode] {
-    node.controlIDs(forKey: "options").compactMap { store.node($0) }.filter {
-      $0.string("key") != nil || $0.string("text") != nil
-    }
+    DropdownMenuDefaults.visibleOptions(
+      node.controlIDs(forKey: "options").compactMap { store.node($0) })
   }
 
   private var optionSignature: String {
@@ -2195,6 +2194,16 @@ enum DropdownMenuDefaults {
   static let defaultMenuCornerRadius: CGFloat = 4
   static let defaultMenuVerticalPadding: CGFloat = 8
   static let defaultOptionTextSize: CGFloat = 14
+
+  /// DropdownOption is structural, so its parent owns both visibility and
+  /// validity filtering. This mirrors Dart's visible `children("options")`
+  /// followed by its null-entry removal.
+  static func visibleOptions(_ options: [ControlNode]) -> [ControlNode] {
+    options.filter {
+      $0.bool("visible") != false
+        && ($0.string("key") != nil || $0.string("text") != nil)
+    }
+  }
 
   static func filtersOptions(_ node: ControlNode) -> Bool {
     node.bool("enable_filter") == true
