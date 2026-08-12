@@ -891,17 +891,13 @@ enum RufletCardShapeKind: String, Equatable {
   case continuousRectangle = "continuousrectangle"
 }
 
-/// Values carried by Flet's Card wire contract.
-///
-/// The variant remains part of that contract, but it does not opt an Apple app
-/// into Material presentation. Omitted visuals are rendered by SwiftUI's
-/// native GroupBox. Only explicit surface properties select the custom shape
-/// path below.
+/// Values Card obtains from Flutter's constructor and Material 3 defaults.
+/// Flet forwards optional wire fields unchanged, so resolving the nil cases is
+/// native-renderer work rather than Ruby DSL policy.
 struct RufletCardMetrics: Equatable {
-  let usesNativeAppearance: Bool
   let variant: RufletCardVariant
-  let fillToken: String?
-  let shadowToken: String?
+  let fillToken: String
+  let shadowToken: String
   let elevation: CGFloat
   let margin: EdgeInsets
   let shapeKind: RufletCardShapeKind
@@ -916,19 +912,12 @@ struct RufletCardMetrics: Equatable {
   let showBorderOnForeground: Bool
 
   init(node: ControlNode) {
-    // Flet's wire contract tells us what the control means; it does not make
-    // Material the default presentation of an Apple renderer. When Ruby has
-    // not supplied any visual Card property, let SwiftUI's GroupBoxStyle own
-    // the platform appearance. An explicit visual property opts into the
-    // custom surface below so the DSL remains the source of truth.
-    usesNativeAppearance = ["bgcolor", "shadow_color", "elevation", "shape"]
-      .allSatisfy { node.props[$0] == nil }
     variant = RufletCardVariant(node.string("variant"))
-    fillToken = node.string("bgcolor")
-    shadowToken = node.string("shadow_color")
-    elevation = CGFloat(node.double("elevation") ?? 0)
+    fillToken = node.string("bgcolor") ?? Self.defaultFill(variant)
+    shadowToken = node.string("shadow_color") ?? "shadow"
+    elevation = CGFloat(node.double("elevation") ?? (variant == .elevated ? 1 : 0))
     margin = ControlProps.edgeInsets(node.props["margin"])
-      ?? EdgeInsets()
+      ?? EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4)
     clipBehavior = node.string("clip_behavior") ?? "none"
     semanticContainer = node.bool("semantic_container") != false
     showBorderOnForeground = node.bool("show_border_on_foreground") != false
@@ -940,7 +929,7 @@ struct RufletCardMetrics: Equatable {
     shapeKind = parsedKind ?? .roundedRectangle
     radii = shapeWasParsed
       ? (ControlProps.cornerRadii(shape?["radius"]) ?? RufletCornerRadii(uniform: 0))
-      : RufletCornerRadii(uniform: 0)
+      : RufletCornerRadii(uniform: 12)
     eccentricity = CGFloat(shape?["eccentricity"]?.doubleValue ?? 0)
 
     if shapeWasParsed, let side = shape?["side"]?.mapValue,
@@ -949,6 +938,10 @@ struct RufletCardMetrics: Equatable {
       outlineToken = side["color"]?.stringValue ?? "black"
       outlineWidth = CGFloat(side["width"]?.doubleValue ?? 1)
       outlineStrokeAlign = CGFloat(side["stroke_align"]?.doubleValue ?? -1)
+    } else if !shapeWasParsed, variant == .outlined {
+      outlineToken = "outlinevariant"
+      outlineWidth = 1
+      outlineStrokeAlign = -1
     } else {
       outlineToken = nil
       outlineWidth = 0
@@ -956,9 +949,17 @@ struct RufletCardMetrics: Equatable {
     }
   }
 
-  /// Compatibility for callers/tests interested in a uniform explicit shape.
-  /// Rendering uses all four values from `radii`.
+  /// Compatibility for callers/tests interested in the uniform Material
+  /// default. Rendering uses all four values from `radii`.
   var radius: CGFloat { radii.maximum }
+
+  private static func defaultFill(_ variant: RufletCardVariant) -> String {
+    switch variant {
+    case .elevated: return "surfacecontainerlow"
+    case .filled: return "surfacecontainerhighest"
+    case .outlined: return "surface"
+    }
+  }
 }
 
 /// ShapeBorder subset accepted by Flet's `parseShape`. All five names retain
@@ -1069,66 +1070,48 @@ private struct CardBorderLayer: View {
   }
 }
 
-/// `Card` — Flet's Card contract mapped to native Apple presentation.
+/// `Card` — Flet's elevated, filled and outlined Material surfaces.
 struct CardControlView: View {
   let node: ControlNode
 
-  @ViewBuilder
   var body: some View {
     let metrics = RufletCardMetrics(node: node)
-    if metrics.usesNativeAppearance {
-      GroupBox {
-        cardContent
-      }
-      .padding(metrics.margin)
-      .modifier(NativeCardClip(enabled: metrics.clipBehavior.lowercased() != "none"))
-      .accessibilityElement(children: metrics.semanticContainer ? .combine : .contain)
-    } else {
-      let shape = RufletCardShape(
-        kind: metrics.shapeKind, radii: metrics.radii,
-        eccentricity: metrics.eccentricity)
-      let outline = MaterialPalette.color(metrics.outlineToken, default: .clear)
-      let fill = MaterialPalette.color(metrics.fillToken) ?? AppleChromeAppearance.barSurface
-      let shadow = MaterialPalette.color(metrics.shadowToken) ?? .black
+    let shape = RufletCardShape(
+      kind: metrics.shapeKind, radii: metrics.radii,
+      eccentricity: metrics.eccentricity)
+    let outline = MaterialPalette.color(metrics.outlineToken, default: .clear)
 
-      ZStack {
-        shape
-          .fill(fill)
-          .shadow(
-            color: metrics.elevation > 0 ? shadow.opacity(0.2) : .clear,
-            radius: metrics.elevation)
-        if metrics.outlineWidth > 0, !metrics.showBorderOnForeground {
-          CardBorderLayer(
-            shape: shape, color: outline, width: metrics.outlineWidth,
-            strokeAlign: metrics.outlineStrokeAlign)
-        }
-        cardContent
-          .modifier(CardClip(metrics: metrics))
-        if metrics.outlineWidth > 0, metrics.showBorderOnForeground {
-          CardBorderLayer(
-            shape: shape, color: outline, width: metrics.outlineWidth,
-            strokeAlign: metrics.outlineStrokeAlign)
+    ZStack {
+      shape
+        .fill(MaterialPalette.color(metrics.fillToken, default: .clear))
+        .shadow(
+          color: MaterialPalette.color(metrics.shadowToken, default: .black).opacity(0.2),
+          radius: metrics.elevation)
+      if metrics.outlineWidth > 0, !metrics.showBorderOnForeground {
+        CardBorderLayer(
+          shape: shape, color: outline, width: metrics.outlineWidth,
+          strokeAlign: metrics.outlineStrokeAlign)
+      }
+      Group {
+        if let contentID = node.controlID(forKey: "content") {
+          ControlView(id: contentID, axis: .none)
         }
       }
-      .padding(metrics.margin)
-      .accessibilityElement(children: metrics.semanticContainer ? .combine : .contain)
+      .modifier(CardClip(metrics: metrics))
+      if metrics.outlineWidth > 0, metrics.showBorderOnForeground {
+        CardBorderLayer(
+          shape: shape, color: outline, width: metrics.outlineWidth,
+          strokeAlign: metrics.outlineStrokeAlign)
+      }
     }
-  }
-
-  @ViewBuilder
-  private var cardContent: some View {
-    if let contentID = node.controlID(forKey: "content") {
-      ControlView(id: contentID, axis: .none)
-    }
-  }
-}
-
-private struct NativeCardClip: ViewModifier {
-  let enabled: Bool
-
-  @ViewBuilder
-  func body(content: Content) -> some View {
-    if enabled { content.clipped() } else { content }
+    // Card.margin belongs to the Material widget itself. LayoutControl then
+    // applies the shared margin wrapper too unless Ruby marks it skipped,
+    // exactly mirroring the Flet control tree rather than painting the margin
+    // inside the card's fill.
+    .padding(metrics.margin)
+    // Flutter's `semanticContainer` decides whether the card is one element
+    // to a screen reader or a group of them.
+    .accessibilityElement(children: metrics.semanticContainer ? .combine : .contain)
   }
 }
 
@@ -1190,10 +1173,8 @@ struct DividerControlView: View {
     // not one logical point.
     let requested = node.double("thickness")
     let thickness = DividerGeometry.thickness(requested, displayScale: displayScale)
-    // Divider has a native Apple equivalent. Preserve the Flet geometry and
-    // explicit DSL color, but use the platform's adaptive separator tone when
-    // color is omitted instead of manufacturing a Material divider color.
-    let color = MaterialPalette.color(node.string("color")) ?? .secondary.opacity(0.35)
+    let color = MaterialPalette.color(
+      for: node, property: "color", default: .gray.opacity(0.3))
     let extent = CGFloat(node.double("height") ?? node.double("width") ?? 16)
     let leading = CGFloat(node.double("leading_indent") ?? 0)
     let trailing = CGFloat(node.double("trailing_indent") ?? 0)
@@ -1232,10 +1213,8 @@ struct PlaceholderControlView: View {
   let node: ControlNode
 
   var body: some View {
-    // Placeholder is a debugging surface rather than a Material widget on
-    // Apple. Its omitted stroke follows the native secondary label color;
-    // an explicit Ruflet color still wins.
-    let color = MaterialPalette.color(node.string("color")) ?? .secondary
+    let color = MaterialPalette.color(node.string("color"), default: Color(
+      red: 69.0 / 255.0, green: 90.0 / 255.0, blue: 100.0 / 255.0))
     ZStack {
       Rectangle().stroke(color, lineWidth: CGFloat(node.double("stroke_width") ?? 2))
       GeometryReader { proxy in

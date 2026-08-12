@@ -4,44 +4,39 @@ import SwiftUI
 @testable import RufletUI
 import XCTest
 
-/// Flet Card wire behavior mapped onto native Apple presentation. Omitted
-/// visuals stay native; explicit DSL visuals are resolved by the renderer.
+/// Translated from Flet's CardControl constructor and Flutter's Material 3
+/// Card defaults. These are engine contracts, not Explorer snapshot values.
 final class CardParityTests: XCTestCase {
   private func node(_ props: [String: RufletValue] = [:]) -> ControlNode {
     ControlNode(id: 1, type: "Card", props: props)
   }
 
-  func testOmittedCardVisualsUseNativeAppleAppearance() {
+  func testElevatedCardUsesMaterialThreeDefaults() {
     let metrics = RufletCardMetrics(node: node())
-    XCTAssertTrue(metrics.usesNativeAppearance)
     XCTAssertEqual(metrics.variant, .elevated)
-    XCTAssertNil(metrics.fillToken)
-    XCTAssertNil(metrics.shadowToken)
-    XCTAssertEqual(metrics.elevation, 0)
-    XCTAssertEqual(metrics.radius, 0)
+    XCTAssertEqual(metrics.fillToken, "surfacecontainerlow")
+    XCTAssertEqual(metrics.shadowToken, "shadow")
+    XCTAssertEqual(metrics.elevation, 1)
+    XCTAssertEqual(metrics.radius, 12)
     XCTAssertFalse(metrics.shapeWasParsed)
-    XCTAssertEqual(metrics.margin, EdgeInsets())
+    XCTAssertEqual(metrics.margin, EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4))
     XCTAssertNil(metrics.outlineToken)
     XCTAssertEqual(metrics.clipBehavior, "none")
     XCTAssertTrue(metrics.semanticContainer)
     XCTAssertTrue(metrics.showBorderOnForeground)
   }
 
-  func testVariantsPreserveWireMeaningWithoutForcingMaterialPresentation() {
+  func testFilledAndOutlinedVariantsResolveTheirOwnMaterialSurfaces() {
     let filled = RufletCardMetrics(node: node(["variant": .string("filled")]))
-    XCTAssertTrue(filled.usesNativeAppearance)
-    XCTAssertEqual(filled.variant, .filled)
-    XCTAssertNil(filled.fillToken)
+    XCTAssertEqual(filled.fillToken, "surfacecontainerhighest")
     XCTAssertEqual(filled.elevation, 0)
     XCTAssertNil(filled.outlineToken)
 
     let outlined = RufletCardMetrics(node: node(["variant": .string("outlined")]))
-    XCTAssertTrue(outlined.usesNativeAppearance)
-    XCTAssertEqual(outlined.variant, .outlined)
-    XCTAssertNil(outlined.fillToken)
+    XCTAssertEqual(outlined.fillToken, "surface")
     XCTAssertEqual(outlined.elevation, 0)
-    XCTAssertNil(outlined.outlineToken)
-    XCTAssertEqual(outlined.outlineWidth, 0)
+    XCTAssertEqual(outlined.outlineToken, "outlinevariant")
+    XCTAssertEqual(outlined.outlineWidth, 1)
   }
 
   func testExplicitCardConstructorValuesOverrideDefaults() {
@@ -94,7 +89,7 @@ final class CardParityTests: XCTestCase {
     XCTAssertEqual(side.outlineWidth, 3)
   }
 
-  func testUnknownShapeDoesNotInventAMaterialVariantBorder() {
+  func testUnknownShapeIsNilThenFlutterAppliesVariantDefault() {
     let metrics = RufletCardMetrics(
       node: node([
         "variant": .string("outlined"),
@@ -103,8 +98,8 @@ final class CardParityTests: XCTestCase {
     XCTAssertEqual(metrics.variant, .outlined)
     XCTAssertFalse(metrics.shapeWasParsed)
     XCTAssertEqual(metrics.shapeKind, .roundedRectangle)
-    XCTAssertEqual(metrics.radius, 0)
-    XCTAssertNil(metrics.outlineToken)
+    XCTAssertEqual(metrics.radius, 12)
+    XCTAssertEqual(metrics.outlineToken, "outlinevariant")
   }
 
   func testShapeParserPreservesIndependentRadiiCircleEccentricityAndStrokeAlign() {
