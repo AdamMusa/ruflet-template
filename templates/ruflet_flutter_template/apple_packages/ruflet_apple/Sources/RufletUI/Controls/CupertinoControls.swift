@@ -1019,8 +1019,10 @@ struct CupertinoCheckboxPresentation {
   var fillColor: Color {
     if let color = MaterialPalette.color(fillColorToken) { return color }
     if selected { return MaterialPalette.color(activeColorToken) ?? .accentColor }
-    if disabled { return .white.opacity(0.5) }
-    return .white
+    if disabled { return .secondary.opacity(0.35) }
+    // CupertinoCheckbox's omitted side is a dynamic separator/label colour.
+    // A literal white outline disappears on the default light Apple surface.
+    return .secondary
   }
   var markColor: Color {
     MaterialPalette.color(checkColorToken) ?? (disabled ? .secondary : .white)
@@ -1136,13 +1138,13 @@ struct CupertinoRadioPresentation {
     return selected ? "circle.inset.filled" : "circle"
   }
   var outerColor: Color {
-    if disabled { return .white.opacity(0.5) }
+    if disabled { return .secondary.opacity(0.35) }
     if selected { return MaterialPalette.color(activeColorToken) ?? .accentColor }
-    return MaterialPalette.color(inactiveColorToken) ?? .white
+    return MaterialPalette.color(inactiveColorToken) ?? .secondary
   }
   var innerColor: Color {
     if disabled && selected { return .secondary }
-    return MaterialPalette.color(fillColorToken) ?? .white
+    return MaterialPalette.color(fillColorToken) ?? .primary
   }
   var focusColor: Color {
     MaterialPalette.color(focusColorToken)
