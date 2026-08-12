@@ -336,6 +336,7 @@ final class CollectionParityTests: XCTestCase {
   func testStylelessTabBarUsesNativeAppleAppearance() {
     XCTAssertTrue(TabBarPresentation.usesNativeAppearance(ControlNode(
       id: 1, type: "TabBar")))
+    XCTAssertEqual(CollectionDefaults.tabIconSize, 24)
   }
 
   func testExplicitMaterialTabStripPropertiesPreserveCustomRoute() {

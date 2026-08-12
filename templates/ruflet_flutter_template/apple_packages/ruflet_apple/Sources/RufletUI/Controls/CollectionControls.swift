@@ -1712,13 +1712,13 @@ struct TabBarControlView: View {
     let icon = tab.props["icon"]
     if let label, let icon, !icon.isNull {
       HStack(spacing: 8) {
-        RufletIcon(value: icon, size: 18)
+        RufletIcon(value: icon, size: CollectionDefaults.tabIconSize)
         Text(label)
       }
     } else if let label {
       Text(label)
     } else if let icon, !icon.isNull {
-      RufletIcon(value: icon, size: 18)
+      RufletIcon(value: icon, size: CollectionDefaults.tabIconSize)
     } else if let labelID = tab.controlID(forKey: "label") {
       ControlView(id: labelID, axis: .none)
     }
@@ -2365,6 +2365,11 @@ private struct DataTableBorderLayer: View {
 /// theme data. Keeping the resolution pure makes explicit DSL values and
 /// upstream defaults follow the same path.
 enum CollectionDefaults {
+  /// Tab icons inherit Flutter's ambient IconTheme, whose Material default is
+  /// 24 logical pixels. The native SF Symbol renderer consumes that semantic
+  /// size instead of inferring a smaller value from Apple tab screenshots.
+  static let tabIconSize = RufletThemeDefaults.materialIconButtonSize
+
   struct ListViewValues {
     let horizontal: Bool
     let spacing: CGFloat
