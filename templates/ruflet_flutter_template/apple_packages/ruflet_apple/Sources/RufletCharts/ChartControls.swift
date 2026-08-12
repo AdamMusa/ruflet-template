@@ -39,6 +39,23 @@ public struct ChartControlSemantics {
       node.bool("show_max") ?? true)
   }
 
+  /// `title_size` and `label_size` are fl_chart reserved-layout extents, not
+  /// typography. The text keeps the style of the nested Flet Text control.
+  static func contentFontSize(
+    _ id: Int, node: (Int) -> ControlNode?, depth: Int = 0
+  ) -> CGFloat {
+    guard depth < 6, let current = node(id) else { return 14 }
+    if current.type == "Text" {
+      return CGFloat(current.map("style")?["size"]?.doubleValue
+        ?? current.double("size") ?? 14)
+    }
+    let children = current.controlIDs(forKey: "content") + current.childIDs
+    for child in children {
+      if node(child) != nil { return contentFontSize(child, node: node, depth: depth + 1) }
+    }
+    return 14
+  }
+
   static func tooltipDefaults(_ map: [String: RufletValue]?) ->
     (margin: CGFloat, maxWidth: CGFloat, rotation: Double,
      horizontalOffset: CGFloat, fitHorizontal: Bool, fitVertical: Bool) {
@@ -1070,7 +1087,7 @@ public struct ChartControlView: View {
       }
       if axisShowsLabels(forKey: "bottom_axis"), let label = bottomAxisLabel(for: group.x) {
         context.draw(
-          Text(label).font(axisLabelFont(forKey: "bottom_axis")),
+          Text(label.text).font(.system(size: label.fontSize)),
           at: CGPoint(x: centreX, y: chart.maxY + 8), anchor: .top)
       }
     }
@@ -1578,16 +1595,9 @@ public struct ChartControlView: View {
   /// labels while keeping the space.
   private func axisTitleFont(forKey key: String) -> Font {
     guard let axisID = node.controlID(forKey: key), let axis = store.node(axisID),
-      let size = axis.double("title_size")
-    else { return .caption2 }
-    return .system(size: CGFloat(size))
-  }
-
-  private func axisLabelFont(forKey key: String) -> Font {
-    guard let axisID = node.controlID(forKey: key), let axis = store.node(axisID),
-      let size = axis.double("label_size")
-    else { return .caption2 }
-    return .system(size: CGFloat(size))
+      let titleID = axis.controlID(forKey: "title")
+    else { return .system(size: 14) }
+    return .system(size: ChartControlSemantics.contentFontSize(titleID, node: store.node))
   }
 
   private func axisShowsLabels(forKey key: String) -> Bool {
@@ -1597,14 +1607,17 @@ public struct ChartControlView: View {
     return axis.bool("show_labels") != false
   }
 
-  private func bottomAxisLabel(for value: Double) -> String? {
+  private func bottomAxisLabel(for value: Double) -> (text: String, fontSize: CGFloat)? {
     guard let axisID = node.controlID(forKey: "bottom_axis"), let axis = store.node(axisID)
     else { return nil }
     for labelID in axis.controlIDs(forKey: "labels") {
       guard let label = store.node(labelID), abs((label.double("value") ?? .infinity) - value) < 0.0001,
         let contentID = label.controlID(forKey: "label")
       else { continue }
-      return controlText(contentID)
+      guard let text = controlText(contentID) else { continue }
+      return (
+        text,
+        ChartControlSemantics.contentFontSize(contentID, node: store.node))
     }
     return nil
   }

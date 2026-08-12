@@ -42,6 +42,27 @@ final class ChartsExtensionParityTests: XCTestCase {
     XCTAssertEqual(charts?.status, .available)
   }
 
+  func testAxisReservedSizesDoNotBecomeTextFontSizes() {
+    let nodes = [
+      1: ControlNode(
+        id: 1, type: "Container", props: ["content": .controlRef(2)]),
+      2: ControlNode(
+        id: 2, type: "Text",
+        props: ["value": .string("Fruit supply"), "style": .map(["size": .double(13)])]),
+    ]
+    XCTAssertEqual(
+      ChartControlSemantics.contentFontSize(1, node: { nodes[$0] }), 13)
+    XCTAssertEqual(
+      ChartControlSemantics.contentFontSize(99, node: { nodes[$0] }), 14)
+
+    let axis = ControlNode(
+      id: 3, type: "ChartAxis",
+      props: ["title_size": .double(40), "label_size": .double(40)])
+    let defaults = ChartControlSemantics.axisDefaults(axis)
+    XCTAssertEqual(defaults.titleSize, 40)
+    XCTAssertEqual(defaults.labelSize, 40)
+  }
+
   func testInteractionPayloadsMatchPinnedFletChartEventMaps() {
     XCTAssertEqual(
       ChartEventSemantics.bar(
