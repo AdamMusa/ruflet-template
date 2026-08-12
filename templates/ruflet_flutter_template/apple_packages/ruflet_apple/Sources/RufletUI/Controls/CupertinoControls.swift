@@ -1,6 +1,12 @@
 import RufletEngine
 import RufletProtocol
 import SwiftUI
+
+#if canImport(UIKit)
+  import UIKit
+#elseif canImport(AppKit)
+  import AppKit
+#endif
 #if canImport(UIKit)
   import UIKit
 #elseif canImport(AppKit)
@@ -363,103 +369,289 @@ struct CupertinoSwitchControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
   @Environment(\.rufletListTileClicks) private var listTileClicks
+  @Environment(\.rufletServerURL) private var serverURL
+  @FocusState private var focused: Bool
+  @State private var currentValue: Bool
+  @State private var hovered = false
+
+  init(node: ControlNode) {
+    self.node = node
+    _currentValue = State(initialValue: CupertinoSwitchPresentation(node: node).value)
+  }
 
   var body: some View {
+    let presentation = CupertinoSwitchPresentation(
+      node: node, value: currentValue, focused: focused, hovered: hovered)
     HStack(spacing: 8) {
-      if labelPosition == .left { label }
+      if presentation.labelPosition == .left { label(presentation) }
       Toggle("", isOn: binding)
         .labelsHidden()
         .toggleStyle(.switch)
-        // Ruby names the switch's colours after the parts they paint, the way
-        // Flutter's CupertinoSwitch does: the track when on is
-        // `active_track_color`, not the `active_color` the sliders and
-        // selection controls use.
-        .tint(trackColor)
-        .overlay(thumbOverlay)
-        .background(thumbImageValidation)
-        .modifier(SwitchTrackOutline(node: node))
-      if labelPosition == .right { label }
+        .modifier(OptionalTint(color: presentation.trackColor))
+        .overlay(thumbOverlay(presentation))
+        .modifier(SwitchTrackOutline(presentation: presentation))
+      if presentation.labelPosition == .right { label(presentation) }
     }
     .modifier(ListTileToggleListener(notifier: listTileClicks, action: toggleFromListTile))
-    .modifier(FocusReporter(node: node, events: events))
-    .disabled(node.bool("disabled") ?? false)
+    .focused($focused)
+    .onHover { hovered = $0 }
+    .onAppear {
+      currentValue = CupertinoSwitchPresentation(node: node).value
+      focused = presentation.autofocus
+    }
+    .onChange(of: node.bool("value")) { _ in
+      currentValue = CupertinoSwitchPresentation(node: node).value
+    }
+    .onChange(of: focused) { events.fire(node, $0 ? "focus" : "blur") }
+    .disabled(presentation.disabled)
   }
 
   private var binding: Binding<Bool> {
     Binding(
-      get: { node.bool("value") ?? false },
+      get: { currentValue },
       set: {
+        guard node.bool("disabled") != true else { return }
+        currentValue = $0
         RufletValueControlEvents.commit(
           node, value: .bool($0), payload: .none, to: events)
       })
   }
 
   private func toggleFromListTile() {
+    guard node.bool("disabled") != true else { return }
     binding.wrappedValue.toggle()
   }
 
-  private enum LabelPlacement { case left, right }
-
-  private var labelPosition: LabelPlacement {
-    node.string("label_position")?.lowercased() == "left" ? .left : .right
-  }
-
-  /// The on and off label colours tint the tiny I/O marks Cupertino draws
-  /// inside the track.
   @ViewBuilder
-  private var label: some View {
-    if let text = node.string("label") {
+  private func label(_ presentation: CupertinoSwitchPresentation) -> some View {
+    if let text = presentation.label {
       Text(text)
-        .foregroundColor(node.bool("disabled") == true ? .secondary : nil)
+        .foregroundColor(presentation.disabled ? .secondary : nil)
         .contentShape(Rectangle())
         .onTapGesture {
-          guard node.bool("disabled") != true else { return }
+          guard !presentation.disabled else { return }
           binding.wrappedValue.toggle()
         }
     }
   }
 
-  private var trackColor: Color? {
-    guard node.bool("value") ?? false else {
-      return MaterialPalette.color(node.string("inactive_track_color"))
-    }
-    return MaterialPalette.color(node.string("active_track_color"))
-  }
-
-  /// `thumb_icon` and the thumb colours paint the knob, which SwiftUI's Toggle
-  /// does not expose, so they are drawn over it.
   @ViewBuilder
-  private var thumbOverlay: some View {
-    let on = node.bool("value") ?? false
-    let tint = on
-      ? MaterialPalette.color(node.string("thumb_color"))
-      : MaterialPalette.color(node.string("inactive_thumb_color"))
-    if node.props["thumb_icon"] != nil || tint != nil {
+  private func thumbOverlay(_ presentation: CupertinoSwitchPresentation) -> some View {
+    if presentation.hasThumbDecoration {
       HStack {
-        if on { Spacer(minLength: 0) }
-        RufletIcon(value: node.props["thumb_icon"], size: 12, color: tint)
-        if !on { Spacer(minLength: 0) }
+        if presentation.value { Spacer(minLength: 0) }
+        ZStack {
+          Circle().fill(presentation.thumbColor ?? .white)
+          if !presentation.thumbImageSource.isMissing {
+            CupertinoSwitchThumbImage(
+              source: presentation.thumbImageSource, serverURL: serverURL,
+              onError: { events.fire(node, "image_error", data: .string($0)) })
+              .clipShape(Circle())
+          }
+          if let icon = presentation.thumbIcon {
+            RufletIcon(value: icon, size: 12, color: presentation.thumbIconColor)
+          }
+        }
+        .frame(width: 22, height: 22)
+        if !presentation.value { Spacer(minLength: 0) }
       }
-      .padding(.horizontal, 4)
+      .padding(.horizontal, 3)
       .allowsHitTesting(false)
     }
   }
+}
 
-  @ViewBuilder
-  private var thumbImageValidation: some View {
-    let source = node.bool("value") == true
-      ? node.string("active_thumb_image") ?? node.string("active_thumb_image_src")
-      : node.string("inactive_thumb_image") ?? node.string("inactive_thumb_image_src")
-    if let source, let url = URL(string: source), url.scheme != nil {
-      AsyncImage(url: url) { phase in
-        if case .failure(let error) = phase {
-          Color.clear.onAppear {
-            events.fire(node, "image_error", data: .string(error.localizedDescription))
-          }
-        }
+enum CupertinoSwitchLabelPosition: Equatable {
+  case left
+  case right
+}
+
+/// Exact Flet/Flutter value and widget-state resolution kept independently of
+/// SwiftUI's native switch rendering so it can be parity-tested.
+struct CupertinoSwitchPresentation {
+  let node: ControlNode
+  let value: Bool
+  let focused: Bool
+  let hovered: Bool
+
+  init(
+    node: ControlNode, value: Bool? = nil, focused: Bool = false, hovered: Bool = false
+  ) {
+    self.node = node
+    self.value = value ?? node.bool("value") ?? false
+    self.focused = focused
+    self.hovered = hovered
+  }
+
+  var disabled: Bool { node.bool("disabled") ?? false }
+  var autofocus: Bool { node.bool("autofocus") ?? false }
+
+  var label: String? {
+    guard let value = node.string("label"), !value.isEmpty else { return nil }
+    return value
+  }
+
+  var labelPosition: CupertinoSwitchLabelPosition {
+    node.string("label_position")?.lowercased() == "left" ? .left : .right
+  }
+
+  var states: Set<RufletWidgetState> {
+    var extra: Set<RufletWidgetState> = []
+    if focused { extra.insert(.focused) }
+    if hovered { extra.insert(.hovered) }
+    return node.widgetStates(selected: value, extra: extra)
+  }
+
+  var trackColorToken: String? {
+    value ? node.string("active_track_color") : node.string("inactive_track_color")
+  }
+  var trackColor: Color? { MaterialPalette.color(trackColorToken) }
+
+  var thumbColorToken: String {
+    if !value, let inactive = node.string("inactive_thumb_color") { return inactive }
+    return node.string("thumb_color") ?? "white"
+  }
+  var thumbColor: Color? { MaterialPalette.color(thumbColorToken) }
+
+  var thumbIcon: RufletValue? {
+    RufletWidgetStateProperty.resolve(node.props["thumb_icon"], in: states)
+  }
+  var thumbIconColor: Color? {
+    MaterialPalette.color(
+      RufletWidgetStateProperty.resolve(node.props["thumb_color"], in: states)?.stringValue)
+      ?? thumbColor
+  }
+
+  var trackOutlineColorToken: String? {
+    RufletWidgetStateProperty.resolve(node.props["track_outline_color"], in: states)?.stringValue
+  }
+  var trackOutlineColor: Color? { MaterialPalette.color(trackOutlineColorToken) }
+  var trackOutlineWidth: CGFloat? {
+    ControlProps.statefulDouble(node.props["track_outline_width"], in: states)
+  }
+
+  var focusColorToken: String? {
+    // Current Flet Python writes snake_case. Accept the historical renderer's
+    // camelCase spelling too so old recorded patches remain consumable.
+    node.string("focus_color") ?? node.string("focusColor")
+  }
+  var focusColor: Color? { MaterialPalette.color(focusColorToken) }
+
+  var onLabelColorToken: String? { node.string("on_label_color") }
+  var offLabelColorToken: String? { node.string("off_label_color") }
+  var activeLabelColor: Color? {
+    MaterialPalette.color(value ? onLabelColorToken : offLabelColorToken)
+  }
+
+  var thumbImageValue: RufletValue? {
+    if value {
+      return node.props["active_thumb_image_src"] ?? node.props["active_thumb_image"]
+    }
+    return node.props["inactive_thumb_image_src"] ?? node.props["inactive_thumb_image"]
+  }
+  var thumbImageSource: RufletImageSource { RufletImageSource(value: thumbImageValue) }
+
+  var hasThumbDecoration: Bool {
+    thumbIcon != nil || !thumbImageSource.isMissing
+      || node.props["thumb_color"] != nil || node.props["inactive_thumb_color"] != nil
+  }
+}
+
+extension RufletImageSource {
+  fileprivate var isMissing: Bool {
+    if case .missing = self { return true }
+    return false
+  }
+}
+
+private struct CupertinoSwitchThumbImage: View {
+  let source: RufletImageSource
+  let serverURL: URL?
+  let onError: (String) -> Void
+  @State private var data: Data?
+  @State private var failed = false
+
+  var body: some View {
+    Group {
+      if let data {
+        PlatformImageView(data: data)
+      } else {
+        Color.clear
       }
-      .frame(width: 0, height: 0)
-      .hidden()
+    }
+    .task(id: source) { await load() }
+  }
+
+  @MainActor
+  private func load() async {
+    data = nil
+    failed = false
+    do {
+      let loaded = try await resolve()
+      guard Self.canDecode(loaded) else { throw CupertinoSwitchImageError.invalidImage }
+      data = loaded
+    } catch is CancellationError {
+      return
+    } catch {
+      guard !failed else { return }
+      failed = true
+      onError(error.localizedDescription)
+    }
+  }
+
+  private func resolve() async throws -> Data {
+    switch source {
+    case .binary(let data): return data
+    case .remote(let url) where url.isFileURL:
+      return try Data(contentsOf: url)
+    case .remote(let url):
+      let (data, response) = try await URLSession.shared.data(from: url)
+      if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+        throw CupertinoSwitchImageError.httpStatus(http.statusCode)
+      }
+      return data
+    case .asset(let name):
+      if let data = RufletImageSource.packagedData(named: name) { return data }
+      if let url = RufletImageAssetURL.imageAsset(name, relativeTo: serverURL) {
+        let (data, response) = try await URLSession.shared.data(from: url)
+        if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+          throw CupertinoSwitchImageError.httpStatus(http.statusCode)
+        }
+        return data
+      }
+      throw CupertinoSwitchImageError.missingAsset(name)
+    case .empty: throw CupertinoSwitchImageError.emptySource
+    case .invalid(let description): throw CupertinoSwitchImageError.invalidSource(description)
+    case .missing: throw CupertinoSwitchImageError.emptySource
+    }
+  }
+
+  private static func canDecode(_ data: Data) -> Bool {
+    if RufletSVGDocument.isSVG(data) { return true }
+    #if canImport(UIKit)
+      return UIImage(data: data) != nil
+    #elseif canImport(AppKit)
+      return NSImage(data: data) != nil
+    #else
+      return false
+    #endif
+  }
+}
+
+private enum CupertinoSwitchImageError: LocalizedError {
+  case httpStatus(Int)
+  case invalidImage
+  case missingAsset(String)
+  case emptySource
+  case invalidSource(String)
+
+  var errorDescription: String? {
+    switch self {
+    case .httpStatus(let status): return "Image request failed with HTTP status \(status)."
+    case .invalidImage: return "Image data could not be decoded."
+    case .missingAsset(let name): return "Image asset \(name) could not be resolved."
+    case .emptySource: return "Image source is empty."
+    case .invalidSource(let description): return description
     }
   }
 }
@@ -467,16 +659,16 @@ struct CupertinoSwitchControlView: View {
 /// `track_outline_color` and `track_outline_width` stroke the track, which
 /// Cupertino draws around an off switch.
 private struct SwitchTrackOutline: ViewModifier {
-  let node: ControlNode
+  let presentation: CupertinoSwitchPresentation
 
   func body(content: Content) -> some View {
-    guard let color = MaterialPalette.color(node.string("track_outline_color")) else {
-      return AnyView(content)
-    }
-    return AnyView(
-      content.overlay(
-        Capsule().strokeBorder(
-          color, lineWidth: CGFloat(node.double("track_outline_width") ?? 1))))
+    content.overlay(
+      Capsule().strokeBorder(
+        presentation.trackOutlineColor
+          ?? (presentation.focused ? presentation.focusColor : nil)
+          ?? .clear,
+        lineWidth: presentation.trackOutlineWidth
+          ?? (presentation.focused && presentation.focusColor != nil ? 2 : 0)))
   }
 }
 
