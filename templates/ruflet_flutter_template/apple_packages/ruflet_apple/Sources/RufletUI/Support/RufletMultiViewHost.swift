@@ -92,7 +92,7 @@ public final class RufletMultiViewApplication {
   public let scenes = RufletNativeSceneRegistry()
 
   public init(
-    services: [any RufletServiceBundle.Type] = [],
+    extensions: [any RufletExtension.Type] = [],
     capabilities: ClientCapabilities = .current()
   ) {
     var capabilities = capabilities
@@ -103,7 +103,16 @@ public final class RufletMultiViewApplication {
     } else {
       source = .missingProject
     }
-    host = RufletHost(source: source, services: services, capabilities: capabilities)
+    host = RufletHost(
+      source: source, extensions: extensions, capabilities: capabilities)
+  }
+
+  @available(*, deprecated, message: "Use init(extensions:capabilities:)")
+  public convenience init(
+    services: [any RufletServiceBundle.Type],
+    capabilities: ClientCapabilities = .current()
+  ) {
+    self.init(extensions: services, capabilities: capabilities)
   }
 
   @discardableResult

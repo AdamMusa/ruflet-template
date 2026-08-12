@@ -1,7 +1,7 @@
 import Foundation
 import RufletApple
 
-// The optional service modules. `canImport` is what makes them optional: a
+// The optional extension modules. `canImport` is what makes them optional: a
 // target that does not link one simply compiles this file without it, so
 // dropping a module from the target's dependencies is all it takes to keep
 // CoreMotion, CoreLocation or AVFoundation capture — and the usage string each
@@ -16,7 +16,7 @@ import RufletApple
   import RufletMedia
 #endif
 
-/// Which renderer this app uses, and which services it carries.
+/// Which renderer this app uses, and which extensions it carries.
 ///
 /// The renderer is chosen by platform, and the choice is structural: this file
 /// compiles only into the iOS and macOS runners, so Android, web, Linux and
@@ -34,18 +34,25 @@ enum RufletEngineChoice {
     return true
   }
 
-  /// The optional service modules this target links.
-  static var services: [any RufletServiceBundle.Type] {
-    var bundles: [any RufletServiceBundle.Type] = []
+  /// The optional extension modules this target links.
+  ///
+  /// Each Flet extension has its own Swift product. As those products are
+  /// added to the app target, their `canImport` branches belong here; the core
+  /// renderer never imports their SDKs.
+  static var extensions: [any RufletExtension.Type] {
+    var extensions: [any RufletExtension.Type] = []
     #if canImport(RufletMotion)
-      bundles.append(RufletMotion.self)
+      extensions.append(RufletMotion.self)
     #endif
     #if canImport(RufletLocation)
-      bundles.append(RufletLocation.self)
+      extensions.append(RufletLocation.self)
     #endif
     #if canImport(RufletMedia)
-      bundles.append(RufletMedia.self)
+      extensions.append(RufletMedia.self)
     #endif
-    return bundles
+    return extensions
   }
+
+  @available(*, deprecated, renamed: "extensions")
+  static var services: [any RufletServiceBundle.Type] { extensions }
 }

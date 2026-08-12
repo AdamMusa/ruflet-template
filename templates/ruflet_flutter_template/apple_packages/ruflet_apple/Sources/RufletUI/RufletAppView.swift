@@ -15,15 +15,28 @@ public struct RufletAppView: View {
   /// app already knows.
   public init(
     serverURL: URL,
-    services: [any RufletServiceBundle.Type] = [],
+    extensions: [any RufletExtension.Type] = [],
     capabilities: ClientCapabilities = .current(),
     reconnectInterval: TimeInterval = 1,
     reconnectTimeout: TimeInterval? = nil
   ) {
     _host = StateObject(
       wrappedValue: RufletHost(
-        source: .server(serverURL), services: services, capabilities: capabilities,
+        source: .server(serverURL), extensions: extensions, capabilities: capabilities,
         reconnectInterval: reconnectInterval, reconnectTimeout: reconnectTimeout))
+  }
+
+  @available(*, deprecated, message: "Use init(serverURL:extensions:capabilities:reconnectInterval:reconnectTimeout:)")
+  public init(
+    serverURL: URL,
+    services: [any RufletServiceBundle.Type],
+    capabilities: ClientCapabilities = .current(),
+    reconnectInterval: TimeInterval = 1,
+    reconnectTimeout: TimeInterval? = nil
+  ) {
+    self.init(
+      serverURL: serverURL, extensions: services, capabilities: capabilities,
+      reconnectInterval: reconnectInterval, reconnectTimeout: reconnectTimeout)
   }
 
   /// Boots the embedded mruby VM from a project in the app bundle, then
@@ -33,12 +46,22 @@ public struct RufletAppView: View {
   /// bridge does for the Flutter engine.
   public init(
     embeddedProject configuration: EmbeddedRuntime.Configuration,
-    services: [any RufletServiceBundle.Type] = [],
+    extensions: [any RufletExtension.Type] = [],
     capabilities: ClientCapabilities = .current()
   ) {
     _host = StateObject(
       wrappedValue: RufletHost(
-        source: .embedded(configuration), services: services, capabilities: capabilities))
+        source: .embedded(configuration), extensions: extensions, capabilities: capabilities))
+  }
+
+  @available(*, deprecated, message: "Use init(embeddedProject:extensions:capabilities:)")
+  public init(
+    embeddedProject configuration: EmbeddedRuntime.Configuration,
+    services: [any RufletServiceBundle.Type],
+    capabilities: ClientCapabilities = .current()
+  ) {
+    self.init(
+      embeddedProject: configuration, extensions: services, capabilities: capabilities)
   }
 
   /// Boots the Ruby project packaged into the app bundle.
@@ -47,17 +70,17 @@ public struct RufletAppView: View {
   /// because a self-contained build without its project is a build mistake.
   /// Boots the Ruby project packaged into the app bundle.
   ///
-  /// `services` names the optional modules this target links —
+  /// `extensions` names the optional modules this target links —
   /// `RufletMotion`, `RufletLocation`, `RufletMedia`. Everything that touches
   /// no privacy-gated framework is always available; the rest is opt-in so an
   /// app that never uses the camera neither carries the code nor gets asked
   /// for a usage string.
   ///
   /// ```swift
-  /// RufletAppView(services: [RufletMedia.self])
+  /// RufletAppView(extensions: [RufletCamera.self, RufletVideo.self])
   /// ```
   public init(
-    services: [any RufletServiceBundle.Type] = [],
+    extensions: [any RufletExtension.Type] = [],
     capabilities: ClientCapabilities = .current()
   ) {
     let source: RufletHost.Source
@@ -67,7 +90,16 @@ public struct RufletAppView: View {
       source = .missingProject
     }
     _host = StateObject(
-      wrappedValue: RufletHost(source: source, services: services, capabilities: capabilities))
+      wrappedValue: RufletHost(
+        source: source, extensions: extensions, capabilities: capabilities))
+  }
+
+  @available(*, deprecated, message: "Use init(extensions:capabilities:)")
+  public init(
+    services: [any RufletServiceBundle.Type],
+    capabilities: ClientCapabilities = .current()
+  ) {
+    self.init(extensions: services, capabilities: capabilities)
   }
 
   public var body: some View {
@@ -182,7 +214,7 @@ public final class RufletHost: ObservableObject {
   @Published public private(set) var phase: Phase = .starting
 
   private let source: Source
-  private let services: [any RufletServiceBundle.Type]
+  private let extensions: [any RufletExtension.Type]
   private let capabilities: ClientCapabilities
   private let reconnectInterval: TimeInterval
   private let reconnectTimeout: TimeInterval?
@@ -190,16 +222,30 @@ public final class RufletHost: ObservableObject {
 
   public init(
     source: Source,
-    services: [any RufletServiceBundle.Type] = [],
+    extensions: [any RufletExtension.Type] = [],
     capabilities: ClientCapabilities,
     reconnectInterval: TimeInterval = 1,
     reconnectTimeout: TimeInterval? = nil
   ) {
     self.source = source
-    self.services = services
+    self.extensions = extensions
     self.capabilities = capabilities
     self.reconnectInterval = reconnectInterval
     self.reconnectTimeout = reconnectTimeout
+  }
+
+
+  @available(*, deprecated, message: "Use init(source:extensions:capabilities:reconnectInterval:reconnectTimeout:)")
+  public convenience init(
+    source: Source,
+    services: [any RufletServiceBundle.Type],
+    capabilities: ClientCapabilities,
+    reconnectInterval: TimeInterval = 1,
+    reconnectTimeout: TimeInterval? = nil
+  ) {
+    self.init(
+      source: source, extensions: services, capabilities: capabilities,
+      reconnectInterval: reconnectInterval, reconnectTimeout: reconnectTimeout)
   }
 
   public func start() async {
@@ -237,7 +283,7 @@ public final class RufletHost: ObservableObject {
     let session = RufletSession(
       serverURL: url, capabilities: capabilities,
       reconnectInterval: reconnectInterval, reconnectTimeout: reconnectTimeout)
-    session.services.register(bundles: services)
+    session.services.register(extensions: extensions)
     phase = .running(session)
     session.start()
   }

@@ -86,7 +86,7 @@ public enum RufletServiceError: LocalizedError, Equatable {
       return
         "\(type) is provided by the \(bundle) module, which this app does not link. "
         + "Add \(bundle) to the target's package dependencies and pass \(bundle).self "
-        + "to RufletAppView(services:)."
+        + "to RufletAppView(extensions:)."
     case .invalidArguments(let detail):
       return "Invalid arguments: \(detail)"
     case .platformUnsupported(let type, let method, let platform):
@@ -116,8 +116,21 @@ public protocol RufletStreamingService: RufletService {
 public final class ServiceRegistry {
   private var factories: [String: () -> RufletService] = [:]
   private var instances: [Int: RufletService] = [:]
+  private var registeredExtensions: Set<String> = []
 
   public init() {}
+
+  /// Returns true only for the first installation of an extension in this
+  /// session. Extension registration can have process-wide side effects (for
+  /// example installing a permission probe), so hosts must not replay it when
+  /// reconnecting the same session.
+  func markExtensionRegistered(_ name: String) -> Bool {
+    registeredExtensions.insert(name).inserted
+  }
+
+  public func hasExtension(_ name: String) -> Bool {
+    registeredExtensions.contains(name)
+  }
 
   public func register<S: RufletService>(_ type: S.Type, factory: @escaping () -> S) {
     factories[S.wireType.lowercased()] = factory

@@ -23,7 +23,7 @@ import UIKit
   }()
 
   @MainActor static let nativeApplication = RufletMultiViewApplication(
-    services: RufletEngineChoice.services)
+    extensions: RufletEngineChoice.extensions)
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -63,7 +63,7 @@ import UIKit
     guard AppDelegate.supportsNativeMultiView else {
       let nativeWindow = UIWindow(windowScene: windowScene)
       nativeWindow.rootViewController = UIHostingController(
-        rootView: RufletAppView(services: RufletEngineChoice.services))
+        rootView: RufletAppView(extensions: RufletEngineChoice.extensions))
       window = nativeWindow
       nativeWindow.makeKeyAndVisible()
       return

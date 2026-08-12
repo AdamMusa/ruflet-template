@@ -1,7 +1,7 @@
 import Foundation
 import RufletProtocol
 
-/// A group of services an application chooses to link.
+/// An optional Ruflet extension an application chooses to link.
 ///
 /// Ruflet's service surface reaches CoreMotion, CoreLocation and AVFoundation
 /// capture — frameworks Apple gates behind privacy usage strings and flags
@@ -10,24 +10,54 @@ import RufletProtocol
 /// are linked, not compiled in behind a flag: what you do not link is not in
 /// the binary at all.
 ///
+/// An extension may install service factories, native control builders, or
+/// both. Keeping this protocol in `RufletEngine` lets independent Swift
+/// package products such as `RufletCamera` and `RufletVideo` register with the
+/// host without making the core engine import those packages.
+///
 /// The core engine registers everything that touches no gated API.
 @MainActor
-public protocol RufletServiceBundle {
+public protocol RufletExtension {
   /// Human-readable name, used when the engine reports why a service is
   /// missing.
-  static var bundleName: String { get }
+  static var extensionName: String { get }
 
-  /// Adds this bundle's services to a session's registry.
+  /// Installs this extension into a session. Implementations can register
+  /// services directly and, when their module depends on `RufletUI`, native
+  /// control builders through `ControlRegistry`.
   static func register(in registry: ServiceRegistry)
 }
 
+public extension RufletExtension {
+  static var extensionName: String { String(describing: Self.self) }
+}
+
+/// Source-compatible name used by the first Apple renderer prototypes.
+///
+/// New extension products should conform to `RufletExtension`; keeping this
+/// alias means existing applications do not need a flag-day migration.
+@available(*, deprecated, renamed: "RufletExtension")
+public typealias RufletServiceBundle = RufletExtension
+
 extension ServiceRegistry {
-  public func register(bundle: any RufletServiceBundle.Type) {
-    bundle.register(in: self)
+  /// Installs an optional extension once for this session.
+  public func register(extension extensionType: any RufletExtension.Type) {
+    guard markExtensionRegistered(extensionType.extensionName) else { return }
+    extensionType.register(in: self)
   }
 
+  public func register(extensions: [any RufletExtension.Type]) {
+    for extensionType in extensions { register(extension: extensionType) }
+  }
+
+  @available(*, deprecated, renamed: "register(extension:)")
+  public func register(bundle: any RufletServiceBundle.Type) {
+    register(extension: bundle)
+  }
+
+  @available(*, deprecated, renamed: "register(extensions:)")
   public func register(bundles: [any RufletServiceBundle.Type]) {
-    for bundle in bundles { bundle.register(in: self) }
+    register(extensions: bundles)
   }
 }
 
