@@ -220,16 +220,58 @@ final class ServiceCommandConformanceTests: XCTestCase {
   func testDeviceServiceWireSemanticsMatchVendoredFletAdapters() {
     XCTAssertEqual(
       FletDeviceServiceSemantics.connectivityNames(
-        wifi: true, mobile: true, ethernet: false, vpn: false, satisfied: true),
+        wifi: true, mobile: true, ethernet: false, other: false, satisfied: true),
       ["wifi", "mobile"])
     XCTAssertEqual(
       FletDeviceServiceSemantics.connectivityNames(
-        wifi: false, mobile: false, ethernet: false, vpn: false, satisfied: false),
+        wifi: false, mobile: false, ethernet: false, other: false, satisfied: false),
       ["none"])
     XCTAssertEqual(
       FletDeviceServiceSemantics.connectivityNames(
-        wifi: false, mobile: false, ethernet: false, vpn: false, satisfied: true),
-      ["other"])
+        wifi: false, mobile: false, ethernet: false, other: false, satisfied: true),
+      ["none"])
+    XCTAssertEqual(
+      FletDeviceServiceSemantics.connectivityNames(
+        wifi: false, mobile: true, ethernet: false, other: true, satellite: true,
+        satisfied: true),
+      ["mobile", "other", "satellite"])
+
+    XCTAssertEqual(
+      FletDeviceServiceSemantics.batteryStateEvent("connectedNotCharging"),
+      .map(["state": .string("connectedNotCharging")]))
+    XCTAssertEqual(
+      FletDeviceServiceSemantics.connectivityEvent(["wifi", "ethernet"]),
+      .map(["connectivity": .array([.string("wifi"), .string("ethernet")])]))
+
+    XCTAssertEqual(FletDeviceServiceSemantics.batteryPercentage(fraction: 0.509), 50)
+    XCTAssertEqual(FletDeviceServiceSemantics.batteryPercentage(fraction: 1), 100)
+    XCTAssertNil(FletDeviceServiceSemantics.batteryPercentage(fraction: -1))
+    XCTAssertNil(FletDeviceServiceSemantics.batteryPercentage(fraction: nil))
+
+    XCTAssertEqual(
+      FletDeviceServiceSemantics.macBatteryStateName(
+        hasBattery: true, isFull: true, isCharging: false, onACPower: true),
+      "full")
+    XCTAssertEqual(
+      FletDeviceServiceSemantics.macBatteryStateName(
+        hasBattery: true, isFull: false, isCharging: true, onACPower: true),
+      "charging")
+    XCTAssertEqual(
+      FletDeviceServiceSemantics.macBatteryStateName(
+        hasBattery: true, isFull: false, isCharging: false, onACPower: true),
+      "connectedNotCharging")
+    XCTAssertEqual(
+      FletDeviceServiceSemantics.macBatteryStateName(
+        hasBattery: true, isFull: false, isCharging: false, onACPower: false),
+      "discharging")
+    XCTAssertEqual(
+      FletDeviceServiceSemantics.macBatteryStateName(
+        hasBattery: true, isFull: false, isCharging: nil, onACPower: false),
+      "unknown")
+    XCTAssertEqual(
+      FletDeviceServiceSemantics.macBatteryStateName(
+        hasBattery: false, isFull: nil, isCharging: nil, onACPower: true),
+      "connectedNotCharging")
 
     XCTAssertEqual(
       try? FletDeviceServiceSemantics.requiredBool(.bool(false), name: "value"), false)

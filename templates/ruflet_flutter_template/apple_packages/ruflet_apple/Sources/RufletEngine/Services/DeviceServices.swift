@@ -22,7 +22,8 @@ public enum FletDeviceServiceSemantics {
     wifi: Bool,
     mobile: Bool,
     ethernet: Bool,
-    vpn: Bool,
+    other: Bool,
+    satellite: Bool = false,
     satisfied: Bool
   ) -> [String] {
     guard satisfied else { return ["none"] }
@@ -30,8 +31,39 @@ public enum FletDeviceServiceSemantics {
     if wifi { values.append("wifi") }
     if mobile { values.append("mobile") }
     if ethernet { values.append("ethernet") }
-    if vpn { values.append("vpn") }
-    return values.isEmpty ? ["other"] : values
+    if other { values.append("other") }
+    if satellite { values.append("satellite") }
+    return values.isEmpty ? ["none"] : values
+  }
+
+  public static func batteryStateEvent(_ state: String) -> RufletValue {
+    .map(["state": .string(state)])
+  }
+
+  public static func connectivityEvent(_ names: [String]) -> RufletValue {
+    .map(["connectivity": .array(names.map(RufletValue.string))])
+  }
+
+  /// battery_plus converts UIDevice's fractional level with an integer cast,
+  /// so 50.9% is reported as 50 rather than rounded to 51.
+  public static func batteryPercentage(fraction: Double?) -> Int? {
+    guard let fraction, fraction.isFinite, fraction >= 0 else { return nil }
+    return Int(fraction * 100)
+  }
+
+  /// battery_plus's macOS adapter distinguishes external power without active
+  /// charging from a full battery and exposes Dart's camel-case enum name.
+  public static func macBatteryStateName(
+    hasBattery: Bool,
+    isFull: Bool?,
+    isCharging: Bool?,
+    onACPower: Bool
+  ) -> String {
+    guard hasBattery else { return "connectedNotCharging" }
+    if isFull == true { return "full" }
+    guard let isCharging else { return "unknown" }
+    if isCharging { return "charging" }
+    return onACPower ? "connectedNotCharging" : "discharging"
   }
 
   public static func requiredBool(_ value: RufletValue?, name: String) throws -> Bool {
@@ -59,6 +91,10 @@ public final class BatteryService: RufletStreamingService {
   private var stateObserver: NSObjectProtocol?
   private var targetID: Int?
   private var emitEvent: ((_ target: Int, _ name: String, _ data: RufletValue) -> Void)?
+  #if canImport(IOKit) && os(macOS)
+    private var powerSourceRunLoop: CFRunLoop?
+    private var powerSourceRunLoopSource: CFRunLoopSource?
+  #endif
 
   public init() {}
 
@@ -79,12 +115,23 @@ public final class BatteryService: RufletStreamingService {
         ) { [weak self] _ in
           Task { @MainActor in self?.reportBatteryState() }
         }
+        reportBatteryState()
       }
+    #elseif canImport(IOKit) && os(macOS)
+      startMacBatteryListening()
     #endif
   }
 
   deinit {
     if let stateObserver { NotificationCenter.default.removeObserver(stateObserver) }
+    #if os(iOS)
+      UIDevice.current.isBatteryMonitoringEnabled = false
+    #endif
+    #if canImport(IOKit) && os(macOS)
+      if let powerSourceRunLoop, let powerSourceRunLoopSource {
+        CFRunLoopRemoveSource(powerSourceRunLoop, powerSourceRunLoopSource, .defaultMode)
+      }
+    #endif
   }
 
   public func invoke(
@@ -100,9 +147,12 @@ public final class BatteryService: RufletStreamingService {
     case "get_battery_level":
       #if os(iOS)
         let level = UIDevice.current.batteryLevel
-        completion(.success(level < 0 ? .null : .int(Int64((level * 100).rounded()))))
+        completion(
+          .success(
+            FletDeviceServiceSemantics.batteryPercentage(fraction: Double(level))
+              .map { .int(Int64($0)) } ?? .null))
       #elseif canImport(IOKit)
-        completion(.success(Self.macBatteryPercentage().map { RufletValue.int(Int64($0)) } ?? .null))
+        completion(.success(Self.macBatteryLevel().map { RufletValue.int(Int64($0)) } ?? .null))
       #else
         completion(.success(.null))
       #endif
@@ -115,6 +165,8 @@ public final class BatteryService: RufletStreamingService {
         case .unplugged: completion(.success(.string("discharging")))
         default: completion(.success(.string("unknown")))
         }
+      #elseif canImport(IOKit) && os(macOS)
+        completion(.success(.string(Self.macBatteryState())))
       #else
         completion(.success(.string("unknown")))
       #endif
@@ -131,7 +183,13 @@ public final class BatteryService: RufletStreamingService {
   private func reportBatteryState() {
     guard let targetID, let emitEvent else { return }
     #if os(iOS)
-      emitEvent(targetID, "state_change", .map(["state": .string(Self.stateName(UIDevice.current.batteryState))]))
+      emitEvent(
+        targetID, "state_change",
+        FletDeviceServiceSemantics.batteryStateEvent(Self.stateName(UIDevice.current.batteryState)))
+    #elseif canImport(IOKit) && os(macOS)
+      emitEvent(
+        targetID, "state_change",
+        FletDeviceServiceSemantics.batteryStateEvent(Self.macBatteryState()))
     #endif
   }
 
@@ -142,6 +200,12 @@ public final class BatteryService: RufletStreamingService {
     emitEvent = nil
     #if os(iOS)
       UIDevice.current.isBatteryMonitoringEnabled = false
+    #elseif canImport(IOKit) && os(macOS)
+      if let powerSourceRunLoop, let powerSourceRunLoopSource {
+        CFRunLoopRemoveSource(powerSourceRunLoop, powerSourceRunLoopSource, .defaultMode)
+      }
+      powerSourceRunLoop = nil
+      powerSourceRunLoopSource = nil
     #endif
   }
 
@@ -158,22 +222,50 @@ public final class BatteryService: RufletStreamingService {
 
   #if canImport(IOKit) && os(macOS)
     /// Reads the charge percentage out of IOKit's power-source snapshot.
-    private static func macBatteryPercentage() -> Int? {
+    private static func macPowerSourceDescription() -> [String: Any]? {
       guard let snapshot = IOPSCopyPowerSourcesInfo()?.takeRetainedValue(),
         let sources = IOPSCopyPowerSourcesList(snapshot)?.takeRetainedValue() as? [CFTypeRef]
       else { return nil }
 
       for source in sources {
-        guard
-          let description = IOPSGetPowerSourceDescription(snapshot, source)?
-            .takeUnretainedValue() as? [String: Any],
-          let current = description[kIOPSCurrentCapacityKey] as? Int,
-          let maximum = description[kIOPSMaxCapacityKey] as? Int,
-          maximum > 0
-        else { continue }
-        return Int((Double(current) / Double(maximum) * 100).rounded())
+        if let description = IOPSGetPowerSourceDescription(snapshot, source)?
+          .takeUnretainedValue() as? [String: Any]
+        {
+          return description
+        }
       }
       return nil
+    }
+
+    private static func macBatteryLevel() -> Int? {
+      macPowerSourceDescription()?[kIOPSCurrentCapacityKey] as? Int
+    }
+
+    private static func macBatteryState() -> String {
+      guard let description = macPowerSourceDescription() else {
+        return FletDeviceServiceSemantics.macBatteryStateName(
+          hasBattery: false, isFull: nil, isCharging: nil, onACPower: true)
+      }
+      return FletDeviceServiceSemantics.macBatteryStateName(
+        hasBattery: true,
+        isFull: description[kIOPSIsChargedKey] as? Bool,
+        isCharging: description[kIOPSIsChargingKey] as? Bool,
+        onACPower: description[kIOPSPowerSourceStateKey] as? String == kIOPSACPowerValue)
+    }
+
+    private func startMacBatteryListening() {
+      guard powerSourceRunLoopSource == nil else { return }
+      let context = Unmanaged.passUnretained(self).toOpaque()
+      guard let source = IOPSNotificationCreateRunLoopSource({ context in
+        guard let context else { return }
+        let service = Unmanaged<BatteryService>.fromOpaque(context).takeUnretainedValue()
+        Task { @MainActor in service.reportBatteryState() }
+      }, context)?.takeRetainedValue() else { return }
+      let runLoop = CFRunLoopGetMain()
+      powerSourceRunLoop = runLoop
+      powerSourceRunLoopSource = source
+      CFRunLoopAddSource(runLoop, source, .defaultMode)
+      reportBatteryState()
     }
   #endif
 }
@@ -193,6 +285,12 @@ public final class ConnectivityService: RufletStreamingService {
 
   public init() {}
 
+  deinit {
+    #if canImport(Network)
+      monitor.cancel()
+    #endif
+  }
+
   public func activate(node: ControlNode, context: RufletServiceContext) {
     #if canImport(Network)
       if node.handlesEvent("change") {
@@ -210,7 +308,7 @@ public final class ConnectivityService: RufletStreamingService {
     completion: @escaping RufletMethodCompletion
   ) {
     #if canImport(Network)
-      startMonitoring(node: node, context: context)
+      startMonitoring(node: node, context: context, emitsChanges: node?.handlesEvent("change") == true)
       switch call.name {
       case "get_connectivity":
         completion(.success(.array(current.map(RufletValue.string))))
@@ -227,11 +325,20 @@ public final class ConnectivityService: RufletStreamingService {
   #if canImport(Network)
     /// Starts on first use and pushes `change` the way Flet's connectivity
     /// service does, so a Ruby `on_change` handler fires without polling.
-    private func startMonitoring(node: ControlNode?, context: RufletServiceContext) {
-      guard let node else { return }
-      targetID = node.id
-      emitEvent = context.emitEvent
-      guard !monitoring else { return }
+    private func startMonitoring(
+      node: ControlNode?, context: RufletServiceContext, emitsChanges: Bool = true
+    ) {
+      let startsListener = emitsChanges && targetID == nil
+      if emitsChanges, let node {
+        targetID = node.id
+        emitEvent = context.emitEvent
+      }
+      guard !monitoring else {
+        if startsListener, let targetID, let emitEvent {
+          emitEvent(targetID, "change", FletDeviceServiceSemantics.connectivityEvent(current))
+        }
+        return
+      }
       monitoring = true
       monitor.pathUpdateHandler = { [weak self] path in
         let values = Self.describe(path)
@@ -239,12 +346,14 @@ public final class ConnectivityService: RufletStreamingService {
           guard let self, values != self.current else { return }
           self.current = values
           guard let targetID = self.targetID, let emitEvent = self.emitEvent else { return }
-          emitEvent(targetID, "change", .map([
-            "connectivity": .array(values.map(RufletValue.string))
-          ]))
+          emitEvent(targetID, "change", FletDeviceServiceSemantics.connectivityEvent(values))
         }
       }
       monitor.start(queue: DispatchQueue(label: "com.izeesoft.ruflet.connectivity"))
+      current = Self.describe(monitor.currentPath)
+      if startsListener, let targetID, let emitEvent {
+        emitEvent(targetID, "change", FletDeviceServiceSemantics.connectivityEvent(current))
+      }
     }
 
     private func stopMonitoring() {
@@ -262,7 +371,11 @@ public final class ConnectivityService: RufletStreamingService {
         wifi: path.usesInterfaceType(.wifi),
         mobile: path.usesInterfaceType(.cellular),
         ethernet: path.usesInterfaceType(.wiredEthernet),
-        vpn: path.usesInterfaceType(.other),
+        other: path.usesInterfaceType(.other),
+        satellite: {
+          if #available(iOS 26.0, macOS 26.0, *) { return path.isUltraConstrained }
+          return false
+        }(),
         satisfied: path.status == .satisfied)
     }
   #endif
