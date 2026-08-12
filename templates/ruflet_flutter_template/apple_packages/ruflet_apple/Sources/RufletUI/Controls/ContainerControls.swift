@@ -2022,14 +2022,18 @@ struct PageletControlView: View {
 
   private func pagelet(contentID: Int) -> some View {
     let scaffold = VStack(spacing: 0) {
-      if let appBarID = node.controlID(forKey: "appbar") {
+      if let appBarID = presentation.visibleID(forKey: "appbar", nodeForID: store.node) {
         pageletAppBar(id: appBarID)
       }
       ControlView(id: contentID, axis: .vertical)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-      if let navigationID = node.controlID(forKey: "navigation_bar") {
+      if let navigationID = presentation.visibleID(
+        forKey: "navigation_bar", nodeForID: store.node)
+      {
         ControlView(id: navigationID, axis: .none)
-      } else if let bottomBarID = node.controlID(forKey: "bottom_appbar") {
+      } else if let bottomBarID = presentation.visibleID(
+        forKey: "bottom_appbar", nodeForID: store.node)
+      {
         ControlView(id: bottomBarID, axis: .none)
           .background(
             GeometryReader { proxy in
@@ -2050,7 +2054,7 @@ struct PageletControlView: View {
     }
     .environment(\.rufletScaffoldHost, scaffoldHost)
     .environment(\.rufletScaffoldSlots, scaffoldSlots)
-    .modifier(DrawerPresenter(node: node))
+    .modifier(DrawerPresenter(node: presentation.visibleScaffoldNode(nodeForID: store.node)))
     // A Pagelet's persistent bottom sheet is distinct from its modal drawers.
     .overlay(alignment: .bottom) { drawer(forKey: "bottom_sheet") }
     .rufletCommandHandler(node.id) { call, completion in
@@ -2081,7 +2085,7 @@ struct PageletControlView: View {
 
   @ViewBuilder
   private func pageletAppBar(id: Int) -> some View {
-    if let appBar = store.node(id) {
+    if let appBar = store.node(id), presentation.supportsAppBar(appBar) {
       let adapted = presentation.appBarNode(appBar)
       if adapted.type == appBar.type {
         ControlView(id: id, axis: .none)
@@ -2095,7 +2099,7 @@ struct PageletControlView: View {
 
   @ViewBuilder
   private func drawer(forKey key: String) -> some View {
-    if let id = node.controlID(forKey: key) {
+    if let id = presentation.visibleID(forKey: key, nodeForID: store.node) {
       ControlView(id: id, axis: .vertical)
     }
   }
@@ -2108,7 +2112,9 @@ struct PageletControlView: View {
 
   @ViewBuilder
   private var floatingActionButton: some View {
-    if let fabID = node.controlID(forKey: "floating_action_button") {
+    if let fabID = presentation.visibleID(
+      forKey: "floating_action_button", nodeForID: store.node)
+    {
       ControlView(id: fabID, axis: .none)
         .background(
           GeometryReader { proxy in
@@ -2129,7 +2135,10 @@ struct PageletControlView: View {
   }
 
   private var appBarHeight: CGFloat {
-    guard let id = node.controlID(forKey: "appbar"), let appBar = store.node(id) else { return 0 }
+    guard
+      let id = presentation.visibleID(forKey: "appbar", nodeForID: store.node),
+      let appBar = store.node(id), presentation.supportsAppBar(appBar)
+    else { return 0 }
     if appBar.type == "CupertinoAppBar" {
       return RufletCupertinoAppBarConfiguration(node: appBar).renderedHeight
     }
@@ -2140,14 +2149,14 @@ struct PageletControlView: View {
 
   private var scaffoldSlots: RufletScaffoldSlots {
     RufletScaffoldSlots(
-      hasDrawer: node.controlID(forKey: "drawer") != nil,
-      hasEndDrawer: node.controlID(forKey: "end_drawer") != nil,
+      hasDrawer: presentation.visibleID(forKey: "drawer", nodeForID: store.node) != nil,
+      hasEndDrawer: presentation.visibleID(forKey: "end_drawer", nodeForID: store.node) != nil,
       openDrawer: { setDrawerOpen(key: "drawer") },
       openEndDrawer: { setDrawerOpen(key: "end_drawer") })
   }
 
   private func setDrawerOpen(key: String) {
-    guard let id = node.controlID(forKey: key) else { return }
+    guard let id = presentation.visibleID(forKey: key, nodeForID: store.node) else { return }
     events.setLocal(id, "_open", .bool(true))
   }
 }
@@ -2172,6 +2181,36 @@ struct PageletPresentation {
     var adapted = appBar
     adapted.type = "CupertinoAppBar"
     return adapted
+  }
+
+  func supportsAppBar(_ appBar: ControlNode) -> Bool {
+    appBar.type == "AppBar" || appBar.type == "CupertinoAppBar"
+  }
+
+  /// Flet resolves every widget slot through `child`/`buildWidget`, both of
+  /// which omit unresolved and invisible controls. This is also what makes a
+  /// hidden navigation bar fall back to a visible bottom app bar.
+  func visibleID(
+    forKey key: String, nodeForID: (Int) -> ControlNode?
+  ) -> Int? {
+    guard let id = node.controlID(forKey: key), let child = nodeForID(id),
+      child.bool("visible") != false
+    else { return nil }
+    return id
+  }
+
+  func bottomBarID(nodeForID: (Int) -> ControlNode?) -> Int? {
+    visibleID(forKey: "navigation_bar", nodeForID: nodeForID)
+      ?? visibleID(forKey: "bottom_appbar", nodeForID: nodeForID)
+  }
+
+  func visibleScaffoldNode(nodeForID: (Int) -> ControlNode?) -> ControlNode {
+    var resolved = node
+    for key in ["drawer", "end_drawer"]
+    where visibleID(forKey: key, nodeForID: nodeForID) == nil {
+      resolved.props.removeValue(forKey: key)
+    }
+    return resolved
   }
 
   /// Flet's `buildWidget("content")` filters both unresolved references and
