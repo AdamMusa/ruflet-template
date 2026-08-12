@@ -1644,13 +1644,18 @@ struct ExpansionPanelListControlView: View {
   @ViewBuilder
   var body: some View {
     let presentation = ExpansionPanelListPresentation(node: node)
-    let panels = node.childIDs.compactMap { store.node($0) }
+    // Flet builds the list from `children("controls")`, which contains only
+    // visible controls. ExpansionPanel is structural and never reaches its
+    // own ControlView, so the list must apply visibility before layout and
+    // before assigning the callback index.
+    let panels = ExpansionPanelListPresentation.visiblePanels(
+      node.childIDs.compactMap { store.node($0) })
     if let message = presentation.validationMessage {
       Text(message).font(.caption).foregroundStyle(.red)
     } else {
       VStack(spacing: 0) {
         ForEach(Array(panels.enumerated()), id: \.element.id) { index, panel in
-          NativeExpansionPanelView(node: panel, list: node)
+          NativeExpansionPanelView(node: panel, list: node, visibleIndex: index)
             .shadow(
               color: panel.bool("expanded") == true ? .black.opacity(0.2) : .clear,
               radius: panel.bool("expanded") == true ? presentation.elevation : 0)
@@ -1697,6 +1702,10 @@ struct ExpansionPanelListPresentation {
   }
   var defaultExpandIconColorSemantic: String { "black54(light)/white60(dark)" }
 
+  static func visiblePanels(_ panels: [ControlNode]) -> [ControlNode] {
+    panels.filter { $0.bool("visible") != false }
+  }
+
   func hasGap(afterExpanded: Bool, beforeExpanded: Bool) -> Bool {
     // ExpansionPanelList inserts a MaterialGap on either side of an expanded
     // slice. Between two expanded slices the adjacent gaps merge into one.
@@ -1721,6 +1730,7 @@ struct ExpansionPanelPresentation {
 private struct NativeExpansionPanelView: View {
   let node: ControlNode
   let list: ControlNode
+  let visibleIndex: Int
   @Environment(\.rufletEvents) private var events
   @Environment(\.colorScheme) private var colorScheme
 
@@ -1770,7 +1780,7 @@ private struct NativeExpansionPanelView: View {
         events.update(node.id, ["expanded": .bool(next)])
         events.fire(
           list, "change",
-          data: .int(Int64(list.childIDs.firstIndex(of: node.id) ?? 0)))
+          data: .int(Int64(visibleIndex)))
       })
   }
 }
