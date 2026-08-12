@@ -64,6 +64,59 @@ class FletControlContractTest < Minitest::Test
     assert_equal "start", column.dig("primitive_defaults", "horizontal_alignment", "value")
   end
 
+  def test_every_vendored_flet_extension_has_an_available_swift_product
+    vendored = Dir.children(File.join(FletControlContract.template_root, "flet_packages"))
+      .grep(/\A(?:flet_|ruflet_)/)
+      .select { |name| File.directory?(File.join(FletControlContract.template_root, "flet_packages", name)) }
+      .sort
+
+    manifest_path = File.join(
+      FletControlContract.template_root,
+      "apple_packages/ruflet_apple/Sources/RufletEngine/RufletExtensionManifest.swift"
+    )
+    manifest = File.read(manifest_path)
+    native = manifest.scan(
+      /fletPackage:\s*"([^"]+)".*?swiftProduct:\s*"([^"]+)".*?status:\s*\.([a-z]+)/m
+    ).to_h { |flet_package, swift_product, status| [flet_package, [swift_product, status]] }
+
+    package_root = File.join(
+      FletControlContract.template_root,
+      "apple_packages/ruflet_apple"
+    )
+    package_swift = File.read(File.join(package_root, "Package.swift"))
+
+    assert_equal vendored, native.keys.sort,
+      "Every vendored Flet extension must own one native Swift product"
+    assert_equal native.keys.length, native.keys.uniq.length,
+      "A vendored Flet extension must map to exactly one native package"
+    assert_equal native.values.map(&:first).sort, native.values.map(&:first).uniq.sort,
+      "A native Swift product must not collapse multiple Flet extensions"
+    native.each do |flet_package, (swift_product, status)|
+      assert_equal "available", status, "#{flet_package} is not ported"
+      assert_match(/\ARuflet[A-Z]/, swift_product)
+
+      assert_match(
+        /\.library\(name:\s*"#{Regexp.escape(swift_product)}"\s*,\s*targets:\s*\["#{Regexp.escape(swift_product)}"\]\)/m,
+        package_swift,
+        "#{flet_package} has no #{swift_product} library product"
+      )
+      assert_match(
+        /\.target\(\s*name:\s*"#{Regexp.escape(swift_product)}"(?:\s*,|\s*\))/m,
+        package_swift,
+        "#{flet_package} has no #{swift_product} target"
+      )
+
+      source_root = File.join(package_root, "Sources", swift_product)
+      assert_path_exists source_root, "#{flet_package} has no dedicated source directory"
+      sources = Dir.glob(File.join(source_root, "**/*.swift")).map { |path| File.read(path) }.join("\n")
+      assert_match(
+        /\b#{Regexp.escape(swift_product)}\s*:\s*RufletExtension\b/,
+        sources,
+        "#{flet_package} does not expose a #{swift_product} RufletExtension entry point"
+      )
+    end
+  end
+
   private
 
   def assert_control(type, package:, classification:, renderer:)
