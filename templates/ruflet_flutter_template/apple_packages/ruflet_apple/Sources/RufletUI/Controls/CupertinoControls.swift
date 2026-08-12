@@ -710,37 +710,154 @@ struct CupertinoSegmentedControlView: View {
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
 
-  var body: some View {
-    let controls = node.childIDs.compactMap { store.node($0) }
+  private var configuration: RufletCupertinoSegmentedConfiguration {
+    RufletCupertinoSegmentedConfiguration(node: node)
+  }
 
+  private var visibleControls: [ControlNode] {
+    node.childIDs.compactMap { store.node($0) }.filter { $0.bool("visible") != false }
+  }
+
+  @ViewBuilder
+  var body: some View {
+    if let message = configuration.validationMessage(visibleCount: visibleControls.count) {
+      Text(message).foregroundColor(.red)
+    } else {
+      switch configuration.kind {
+      case .regular: regularControl
+      case .sliding: slidingControl
+      }
+    }
+  }
+
+  private var nativePicker: some View {
     Picker(
       "",
       selection: Binding(
-        get: { node.int("selected_index") ?? 0 },
-        set: { events.commit(node, key: "selected_index", value: .int(Int64($0))) })
+        // A regular CupertinoSegmentedControl accepts a nullable groupValue;
+        // -1 is only the native Picker's no-selection tag and never goes on
+        // the wire. The sliding variant has Flet's explicit zero default.
+        get: { configuration.selectedIndex ?? -1 },
+        set: { commitSelection($0) })
     ) {
-      ForEach(Array(controls.enumerated()), id: \.element.id) { index, control in
-        ControlView(id: control.id, axis: .none).tag(index)
+      ForEach(Array(visibleControls.enumerated()), id: \.element.id) { index, control in
+        ControlView(id: control.id, axis: .none)
+          // CupertinoSegmentedControl pads every segment's content. The
+          // sliding constructor instead pads between the native control and
+          // its moving segment, so its content remains untouched here.
+          .modifier(OptionalEdgeInsets(
+            insets: configuration.kind == .regular ? configuration.padding : nil))
+          .tag(index)
       }
     }
     .pickerStyle(.segmented)
     .labelsHidden()
-    // A sliding control can size its segments to their content rather than
-    // splitting the width evenly.
-    .fixedSize(horizontal: node.bool("proportional_width") == true, vertical: false)
-    // Cupertino's segmented control names its four colours separately; the
-    // selected one is the tint SwiftUI paints the active segment with.
-    .tint(MaterialPalette.color(node.string("selected_color")))
-    .background(MaterialPalette.color(node.string("unselected_color")))
-    .foregroundColor(foreground)
-    .modifier(SegmentedPressTint(color: MaterialPalette.color(node.string("click_color"))))
     .disabled(node.bool("disabled") ?? false)
   }
 
-  private var foreground: Color? {
+  private var regularControl: some View {
+    nativePicker
+      // SwiftUI's segmented Picker remains the native Apple primitive. These
+      // modifiers apply only explicit Flet overrides; omitted Cupertino
+      // dynamic colours remain owned by the platform control.
+      .tint(MaterialPalette.color(node.string("selected_color")))
+      .background(regularBackground)
+      .foregroundColor(regularForeground)
+      .modifier(
+        SegmentedPressTint(color: MaterialPalette.color(node.string("click_color"))))
+      .modifier(
+        CupertinoSegmentedBorder(color: MaterialPalette.color(node.string("border_color"))))
+  }
+
+  private var slidingControl: some View {
+    nativePicker
+      // CupertinoSlidingSegmentedControl names the selected surface
+      // `thumb_color`, not `selected_color`.
+      .tint(MaterialPalette.color(node.string("thumb_color")))
+      .fixedSize(horizontal: configuration.proportionalWidth, vertical: false)
+      // Applying the surface after padding makes this an inset between the
+      // segment and its control, matching CupertinoSlidingSegmentedControl.
+      .modifier(OptionalEdgeInsets(insets: configuration.padding))
+      .background(MaterialPalette.color(node.string("bgcolor")))
+  }
+
+  private var regularBackground: Color? {
+    if node.bool("disabled") == true {
+      return MaterialPalette.color(node.string("disabled_color"))
+        ?? MaterialPalette.color(node.string("unselected_color"))
+    }
+    return MaterialPalette.color(node.string("unselected_color"))
+  }
+
+  private var regularForeground: Color? {
     guard node.bool("disabled") == true else { return nil }
     return MaterialPalette.color(node.string("disabled_text_color"))
-      ?? MaterialPalette.color(node.string("disabled_color"))
+  }
+
+  private func commitSelection(_ index: Int) {
+    // Both pinned implementations send update_control before `change`, and
+    // carry the selected integer as event data. This still updates Ruby when
+    // no change handler is attached.
+    RufletValueControlEvents.commit(
+      node,
+      key: "selected_index",
+      value: .int(Int64(index)),
+      payload: .value,
+      to: events)
+  }
+}
+
+/// The two similarly named controls use different Flutter constructors and
+/// therefore different property namespaces. Keeping that distinction in one
+/// source-derived model prevents a renderer refactor from conflating them.
+struct RufletCupertinoSegmentedConfiguration {
+  enum Kind: Equatable {
+    case regular
+    case sliding
+  }
+
+  let kind: Kind
+  let selectedIndex: Int?
+  let proportionalWidth: Bool
+  let padding: EdgeInsets?
+
+  init(node: ControlNode) {
+    if node.type == "CupertinoSlidingSegmentedButton" {
+      kind = .sliding
+      selectedIndex = node.int("selected_index") ?? 0
+      proportionalWidth = node.bool("proportional_width") ?? false
+      padding = ControlProps.edgeInsets(node.props["padding"])
+        ?? EdgeInsets(top: 2, leading: 3, bottom: 2, trailing: 3)
+    } else {
+      kind = .regular
+      // CupertinoSegmentedControl.groupValue is nullable in the pinned Flet
+      // constructor, so omission means no selected segment.
+      selectedIndex = node.int("selected_index")
+      proportionalWidth = false
+      padding = ControlProps.edgeInsets(node.props["padding"])
+    }
+  }
+
+  func validationMessage(visibleCount: Int) -> String? {
+    guard visibleCount < 2 else { return nil }
+    switch kind {
+    case .regular:
+      return "CupertinoSegmentedButton must have at minimum two visible controls"
+    case .sliding:
+      return "CupertinoSlidingSegmentedButton must have at minimum two visible controls"
+    }
+  }
+}
+
+private struct CupertinoSegmentedBorder: ViewModifier {
+  let color: Color?
+
+  func body(content: Content) -> some View {
+    if let color {
+      content.overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(color, lineWidth: 1))
+    } else {
+      content
+    }
   }
 }
 

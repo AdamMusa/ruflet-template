@@ -172,4 +172,56 @@ final class CupertinoControlParityTests: XCTestCase {
     XCTAssertTrue(CupertinoPickerParity.shouldRecenter(400, count: 4))
     XCTAssertFalse(CupertinoPickerParity.shouldRecenter(0, count: 0))
   }
+
+  func testRegularSegmentedButtonPreservesNullableSelectionAndOptionalPadding() {
+    let configuration = RufletCupertinoSegmentedConfiguration(
+      node: ControlNode(id: 1, type: "CupertinoSegmentedButton"))
+
+    XCTAssertEqual(configuration.kind, .regular)
+    XCTAssertNil(configuration.selectedIndex)
+    XCTAssertFalse(configuration.proportionalWidth)
+    XCTAssertNil(configuration.padding)
+    XCTAssertEqual(
+      configuration.validationMessage(visibleCount: 1),
+      "CupertinoSegmentedButton must have at minimum two visible controls")
+    XCTAssertNil(configuration.validationMessage(visibleCount: 2))
+  }
+
+  func testSlidingSegmentedButtonUsesPinnedConstructorDefaults() {
+    let configuration = RufletCupertinoSegmentedConfiguration(
+      node: ControlNode(id: 1, type: "CupertinoSlidingSegmentedButton"))
+
+    XCTAssertEqual(configuration.kind, .sliding)
+    XCTAssertEqual(configuration.selectedIndex, 0)
+    XCTAssertFalse(configuration.proportionalWidth)
+    XCTAssertEqual(configuration.padding?.top, 2)
+    XCTAssertEqual(configuration.padding?.leading, 3)
+    XCTAssertEqual(configuration.padding?.bottom, 2)
+    XCTAssertEqual(configuration.padding?.trailing, 3)
+    XCTAssertEqual(
+      configuration.validationMessage(visibleCount: 0),
+      "CupertinoSlidingSegmentedButton must have at minimum two visible controls")
+  }
+
+  func testSegmentedButtonExplicitSelectionAndPaddingOverrideDefaults() {
+    let configuration = RufletCupertinoSegmentedConfiguration(
+      node: ControlNode(
+        id: 1,
+        type: "CupertinoSlidingSegmentedButton",
+        props: [
+          "selected_index": .int(3),
+          "proportional_width": .bool(true),
+          "padding": .map([
+            "top": .double(4), "right": .double(5),
+            "bottom": .double(6), "left": .double(7),
+          ]),
+        ]))
+
+    XCTAssertEqual(configuration.selectedIndex, 3)
+    XCTAssertTrue(configuration.proportionalWidth)
+    XCTAssertEqual(configuration.padding?.top, 4)
+    XCTAssertEqual(configuration.padding?.trailing, 5)
+    XCTAssertEqual(configuration.padding?.bottom, 6)
+    XCTAssertEqual(configuration.padding?.leading, 7)
+  }
 }
