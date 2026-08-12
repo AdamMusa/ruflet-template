@@ -362,23 +362,20 @@ struct RadioControlView: View {
 
   private var radio: some View {
     let disabled = node.bool("disabled") ?? false
+    let presentation = RadioPresentation(node: node, selected: isSelected)
 
     return HStack(spacing: 0) {
-      if labelPosition == .left { label }
-      radioMark
-        .contentShape(Rectangle())
-        .onTapGesture { if !disabled { select(toggleIfSelected: true) } }
-      if labelPosition == .right { label }
+      if presentation.labelPosition == .left { label }
+      Button { select(toggleIfSelected: true) } label: {
+        Image(systemName: presentation.systemImageName)
+      }
+      .buttonStyle(.borderless)
+      .foregroundColor(presentation.explicitTint)
+      if presentation.labelPosition == .right { label }
     }
     .modifier(ListTileToggleListener(notifier: listTileClicks, action: selectFromListTile))
     .modifier(FocusReporter(node: node, events: events))
     .disabled(disabled)
-  }
-
-  private enum LabelPlacement { case left, right }
-
-  private var labelPosition: LabelPlacement {
-    node.string("label_position")?.lowercased() == "left" ? .left : .right
   }
 
   @ViewBuilder
@@ -394,31 +391,6 @@ struct RadioControlView: View {
           if node.bool("disabled") != true { select(toggleIfSelected: false) }
         }
     }
-  }
-
-  private var states: Set<RufletWidgetState> { node.widgetStates(selected: isSelected) }
-
-  private var radioMark: some View {
-    let fill = MaterialPalette.color(stateful: node.props["fill_color"], in: states)
-      ?? MaterialPalette.color(for: node, property: "active_color", default: .accentColor)
-    let resting = MaterialPalette.color(for: node, property: "inactive_color", default: .secondary)
-    return ZStack {
-      Circle().strokeBorder(
-        isSelected ? fill : resting, lineWidth: RufletThemeDefaults.radioBorderWidth)
-      if isSelected {
-        Circle()
-          .fill(fill)
-          .frame(width: RufletThemeDefaults.radioDotSize, height: RufletThemeDefaults.radioDotSize)
-      }
-    }
-    .frame(width: RufletThemeDefaults.radioSize, height: RufletThemeDefaults.radioSize)
-    .frame(width: targetSide, height: targetSide)
-    .modifier(MaterialStateLayer(node: node, selected: isSelected, radius: targetSide / 2))
-    .modifier(VisualDensityPadding(value: node.props["visual_density"]))
-  }
-
-  private var targetSide: CGFloat {
-    node.double("splash_radius").map { CGFloat($0) * 2 } ?? RufletThemeDefaults.radioTargetSize
   }
 
   private var group: ControlNode? {
@@ -444,6 +416,33 @@ struct RadioControlView: View {
   private func selectFromListTile() {
     guard node.bool("disabled") != true else { return }
     select(toggleIfSelected: false)
+  }
+}
+
+struct RadioPresentation {
+  enum LabelPlacement { case left, right }
+
+  let node: ControlNode
+  let selected: Bool
+
+  var labelPosition: LabelPlacement {
+    node.string("label_position")?.lowercased() == "left" ? .left : .right
+  }
+
+  var systemImageName: String {
+    selected ? "circle.inset.filled" : "circle"
+  }
+
+  /// Material state colors remain part of the Flet semantic model. Apple can
+  /// represent an explicit radio tint, but omitted values retain the native
+  /// accent/secondary treatment rather than painting Material circles.
+  var explicitTint: Color? {
+    let states = node.widgetStates(selected: selected)
+    if node.props["fill_color"] != nil {
+      return MaterialPalette.color(stateful: node.props["fill_color"], in: states)
+    }
+    guard selected, node.props["active_color"] != nil else { return nil }
+    return MaterialPalette.color(node.string("active_color"))
   }
 }
 
