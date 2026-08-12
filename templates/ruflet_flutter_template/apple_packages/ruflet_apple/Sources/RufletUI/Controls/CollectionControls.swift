@@ -219,6 +219,7 @@ enum CollectionVisibleChildren {
 /// is what Flet's control reports.
 struct ReorderableListControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
   @State private var orderedIDs: [Int]
   @State private var dragOrigin: Int?
@@ -227,26 +228,48 @@ struct ReorderableListControlView: View {
 
   init(node: ControlNode) {
     self.node = node
-    _orderedIDs = State(initialValue: node.childIDs)
+    // The store is not available during init, but the named slot already
+    // excludes header/footer. Visibility is reconciled when body mounts.
+    _orderedIDs = State(initialValue: node.controlIDs(forKey: "controls"))
     _measuredPrototypeExtent = State(initialValue: nil)
   }
 
   var body: some View {
     let config = CollectionDefaults.reorderableListView(node)
     let axis: LayoutAxis = config.horizontal ? .horizontal : .vertical
+    let visibleIDs = ReorderableListParity.visibleControlIDs(node, in: store.nodes)
+    let effectiveOrder = ReorderableListParity.reconciledOrder(orderedIDs, with: visibleIDs)
+    let headerID = CollectionVisibleChildren.visibleID(config.headerID, in: store.nodes)
+    let footerID = CollectionVisibleChildren.visibleID(config.footerID, in: store.nodes)
     ScrollView(
       config.horizontal ? .horizontal : .vertical,
       showsIndicators: config.showsIndicators
     ) {
       Group {
         if config.horizontal, config.lazy {
-          LazyHStack(spacing: 0) { content(config: config, axis: axis) }
+          LazyHStack(spacing: 0) {
+            content(
+              config: config, axis: axis, ids: effectiveOrder,
+              headerID: headerID, footerID: footerID)
+          }
         } else if config.horizontal {
-          HStack(spacing: 0) { content(config: config, axis: axis) }
+          HStack(spacing: 0) {
+            content(
+              config: config, axis: axis, ids: effectiveOrder,
+              headerID: headerID, footerID: footerID)
+          }
         } else if config.lazy {
-          LazyVStack(spacing: 0) { content(config: config, axis: axis) }
+          LazyVStack(spacing: 0) {
+            content(
+              config: config, axis: axis, ids: effectiveOrder,
+              headerID: headerID, footerID: footerID)
+          }
         } else {
-          VStack(spacing: 0) { content(config: config, axis: axis) }
+          VStack(spacing: 0) {
+            content(
+              config: config, axis: axis, ids: effectiveOrder,
+              headerID: headerID, footerID: footerID)
+          }
         }
       }
       .padding(config.padding)
@@ -255,13 +278,14 @@ struct ReorderableListControlView: View {
     }
     .modifier(CollectionClip(behavior: config.clipBehavior))
     .onAppear {
+      orderedIDs = effectiveOrder
       // Apple owns the lazy prefetch and drag-edge velocity. Keep the exact
       // Flet inputs consumed without turning them into visible geometry.
       _ = config.anchor
       _ = config.cacheExtent
       _ = config.autoScrollerVelocityScalar
     }
-    .onChange(of: node.childIDs) { ids in
+    .onChange(of: visibleIDs) { ids in
       orderedIDs = ReorderableListParity.reconciledOrder(orderedIDs, with: ids)
     }
     .onPreferenceChange(CollectionPrototypeExtentKey.self) { extent in
@@ -276,14 +300,17 @@ struct ReorderableListControlView: View {
 
   @ViewBuilder
   private func content(
-    config: CollectionDefaults.ReorderableListValues, axis: LayoutAxis
+    config: CollectionDefaults.ReorderableListValues, axis: LayoutAxis,
+    ids: [Int], headerID: Int?, footerID: Int?
   ) -> some View {
-    if let headerID = config.headerID {
+    if let headerID {
       ControlView(id: headerID, axis: axis)
         .modifier(PageReverse(horizontal: config.horizontal, enabled: config.reverse))
     }
-    ForEach(orderedIDs, id: \.self) { childID in
-      reorderableRow(childID, config: config, axis: axis)
+    ForEach(ids, id: \.self) { childID in
+      reorderableRow(
+        childID, config: config, axis: axis,
+        isPrototype: config.firstItemPrototype && childID == ids.first)
         .onDrop(
           of: ["public.text"],
           delegate: ReorderableListDropDelegate(
@@ -293,7 +320,7 @@ struct ReorderableListControlView: View {
             dragOrigin: $dragOrigin,
             onDrop: finishReorder))
     }
-    if let footerID = config.footerID {
+    if let footerID {
       ControlView(id: footerID, axis: axis)
         .modifier(PageReverse(horizontal: config.horizontal, enabled: config.reverse))
     }
@@ -301,13 +328,14 @@ struct ReorderableListControlView: View {
 
   @ViewBuilder
   private func reorderableRow(
-    _ childID: Int, config: CollectionDefaults.ReorderableListValues, axis: LayoutAxis
+    _ childID: Int, config: CollectionDefaults.ReorderableListValues, axis: LayoutAxis,
+    isPrototype: Bool
   ) -> some View {
     let itemExtent = config.itemExtent
       ?? (config.firstItemPrototype ? measuredPrototypeExtent : nil)
     let row = ControlView(id: childID, axis: axis)
       .modifier(CollectionPrototypeMeasure(
-        enabled: config.firstItemPrototype && childID == orderedIDs.first,
+        enabled: isPrototype,
         horizontal: config.horizontal))
       .frame(
         width: config.horizontal ? itemExtent : nil,
@@ -461,6 +489,12 @@ private struct ReorderableListDropDelegate: DropDelegate {
 enum ReorderableListParity {
   /// Flutter's `reverse` changes the scroll direction, not the model order.
   static func orderedChildren(_ ids: [Int], reverse: Bool) -> [Int] { ids }
+
+  static func visibleControlIDs(
+    _ node: ControlNode, in nodes: [Int: ControlNode]
+  ) -> [Int] {
+    CollectionVisibleChildren.ids(node.controlIDs(forKey: "controls"), in: nodes)
+  }
 
   static func moving(_ ids: [Int], from source: Int, over destination: Int) -> [Int] {
     guard ids.indices.contains(source), ids.indices.contains(destination), source != destination
