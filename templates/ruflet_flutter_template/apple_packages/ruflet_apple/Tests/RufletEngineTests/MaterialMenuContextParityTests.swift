@@ -59,6 +59,33 @@ final class MaterialMenuContextParityTests: XCTestCase {
     }
   }
 
+  func testNativePointerEventsRespectEachFletButtonTrigger() {
+    let defaults = ControlNode(id: 22, type: "ContextMenu")
+    XCTAssertEqual(
+      RufletContextMenuDefaults.pointerAction(defaults, nativeEvent: "secondary_tap_down"),
+      .init(button: "secondary", gesture: "down"))
+    XCTAssertEqual(
+      RufletContextMenuDefaults.pointerAction(defaults, nativeEvent: "tertiary_tap_down"),
+      .init(button: "tertiary", gesture: "down"))
+    XCTAssertNil(RufletContextMenuDefaults.pointerAction(
+      defaults, nativeEvent: "secondary_long_press_start"))
+
+    let longPress = ControlNode(
+      id: 23, type: "ContextMenu",
+      props: [
+        "secondary_trigger": .string("long_press"),
+        "tertiary_trigger": .string("disabled"),
+      ])
+    XCTAssertNil(RufletContextMenuDefaults.pointerAction(
+      longPress, nativeEvent: "secondary_tap_down"))
+    XCTAssertEqual(
+      RufletContextMenuDefaults.pointerAction(
+        longPress, nativeEvent: "secondary_long_press_start"),
+      .init(button: "secondary", gesture: "longPress"))
+    XCTAssertNil(RufletContextMenuDefaults.pointerAction(
+      longPress, nativeEvent: "tertiary_tap_down"))
+  }
+
   func testProgrammaticOpenUsesSharedItemsWhilePointerUsesSpecificItems() {
     let node = ControlNode(
       id: 3,

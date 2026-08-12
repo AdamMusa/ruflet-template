@@ -960,6 +960,11 @@ enum MaterialMenuDefaults {
 /// button and reads the common `items` collection. This type deliberately
 /// keeps the distinction instead of collapsing both paths into "primary".
 enum RufletContextMenuDefaults {
+  struct PointerAction: Equatable {
+    let button: String
+    let gesture: String
+  }
+
   static func trigger(_ node: ControlNode, button: String?) -> String? {
     guard let button else { return nil }
     let explicit: String?
@@ -999,6 +1004,29 @@ enum RufletContextMenuDefaults {
 
   static func permitsGesture(_ node: ControlNode, button: String, gesture: String) -> Bool {
     trigger(node, button: button) == normalizedTrigger(gesture)
+  }
+
+  /// Maps the native monitor's source events back to the two Flet trigger
+  /// modes. Tap-down is intentionally used instead of tap-up: Dart opens the
+  /// menu from Listener.onPointerDown.
+  static func pointerAction(_ node: ControlNode, nativeEvent: String) -> PointerAction? {
+    let candidate: PointerAction?
+    switch nativeEvent {
+    case "secondary_tap_down":
+      candidate = PointerAction(button: "secondary", gesture: "down")
+    case "tertiary_tap_down":
+      candidate = PointerAction(button: "tertiary", gesture: "down")
+    case "secondary_long_press_start":
+      candidate = PointerAction(button: "secondary", gesture: "longPress")
+    case "tertiary_long_press_start":
+      candidate = PointerAction(button: "tertiary", gesture: "longPress")
+    default:
+      candidate = nil
+    }
+    guard let candidate,
+      permitsGesture(node, button: candidate.button, gesture: candidate.gesture)
+    else { return nil }
+    return candidate
   }
 
   static func point(_ value: RufletValue?) -> CGPoint? {
@@ -1109,6 +1137,7 @@ struct ContextMenuControlView: View {
   @State private var activeGlobalPosition = CGPoint.zero
   @State private var activeLocalPosition: CGPoint?
   @State private var contentFrame = CGRect.zero
+  @State private var primaryPressGlobalPosition: CGPoint?
 
   var body: some View {
     Group {
@@ -1120,16 +1149,22 @@ struct ContextMenuControlView: View {
       }
     }
     .contentShape(Rectangle())
+    .simultaneousGesture(
+      DragGesture(minimumDistance: 0, coordinateSpace: .global)
+        .onChanged { primaryPressGlobalPosition = $0.location }
+        .onEnded { primaryPressGlobalPosition = $0.location })
     .onLongPressGesture {
       guard RufletContextMenuDefaults.permitsGesture(
         node, button: "primary", gesture: "long_press") else { return }
-      open(button: "primary", global: nil, local: nil)
-    }
-    .contextMenu {
-      if RufletContextMenuDefaults.permitsGesture(node, button: "secondary", gesture: "down") {
-        nativeMenuItems(button: "secondary")
+      let global = primaryPressGlobalPosition
+      let local = global.map {
+        CGPoint(x: $0.x - contentFrame.minX, y: $0.y - contentFrame.minY)
       }
+      open(button: "primary", global: global, local: local)
     }
+    .modifier(ContextMenuPointerTriggers(node: node) { button, local in
+      open(button: button, global: nil, local: local)
+    })
     .background(
       GeometryReader { proxy in
         Color.clear.preference(
@@ -1188,12 +1223,6 @@ struct ContextMenuControlView: View {
   private func itemIDs(button: String?) -> [Int] {
     RufletContextMenuDefaults.popupItemIDs(node, button: button) {
       store.node($0)?.type
-    }
-  }
-
-  private func nativeMenuItems(button: String) -> some View {
-    ForEach(itemIDs(button: button), id: \.self) { itemID in
-      if let item = store.node(itemID) { contextItem(item, button: button) }
     }
   }
 
@@ -1267,4 +1296,29 @@ struct ContextMenuControlView: View {
 private struct ContextMenuFramePreference: PreferenceKey {
   static var defaultValue: CGRect = .zero
   static func reduce(value: inout CGRect, nextValue: () -> CGRect) { value = nextValue() }
+}
+
+/// Bridges the pointer channels used by Flet's ContextMenu GestureDetector.
+/// SwiftUI's `contextMenu` does not expose tertiary buttons, trigger timing,
+/// positions, or dismissal, while the existing native monitor does.
+private struct ContextMenuPointerTriggers: ViewModifier {
+  let node: ControlNode
+  let open: (String, CGPoint) -> Void
+
+  func body(content: Content) -> some View {
+    #if os(macOS)
+      content.overlay(
+        RufletNativePointerMonitor { name, payload in
+          guard let action = RufletContextMenuDefaults.pointerAction(
+            node, nativeEvent: name),
+            let localValue = payload.mapValue?["l"],
+            let local = RufletContextMenuDefaults.point(localValue)
+          else { return }
+          open(action.button, local)
+        }
+        .allowsHitTesting(false))
+    #else
+      content
+    #endif
+  }
 }
