@@ -16,6 +16,33 @@ import AppKit
 /// The values and events in this file deliberately follow the vendored Dart
 /// controls. In particular, ColorPicker writes `picker_color`, the simple
 /// pickers write `color`, and SlidePicker only emits `color_change`.
+enum ColorPickerSemantics {
+  private static let validLabels: Set<String> = ["hex", "rgb", "hsv", "hsl"]
+
+  static func labelTypes(_ values: [RufletValue]?, defaults: [String]) -> [String] {
+    guard let values else { return defaults }
+    return values.compactMap(\.stringValue).map { $0.lowercased() }
+      .filter(validLabels.contains)
+  }
+
+  static func synchronizedColor(_ node: ControlNode) -> RGBAColor {
+    if node.type == "ColorPicker", let hsv = node.map("hsv_color"),
+      let parsed = RGBAColor(hsv: hsv)
+    {
+      return parsed
+    }
+    return RGBAColor(token: node.string("color")) ?? .black
+  }
+
+  static func synchronizedSelections(
+    _ values: [RufletValue]?, current: [RGBAColor]
+  ) -> [RGBAColor] {
+    let parsed = values?.compactMap { RGBAColor(token: $0.stringValue) } ?? []
+    if !parsed.isEmpty { return parsed }
+    return current.isEmpty ? [.black] : current
+  }
+}
+
 public struct RufletColorPickerControlView: View {
   public let node: ControlNode
 
@@ -59,7 +86,7 @@ public struct RufletColorPickerControlView: View {
     return VStack(alignment: .leading, spacing: 12) {
       ColorSpectrum(
         color: $color,
-        mode: spectrumMode(paletteType),
+        mode: ColorSpectrum.Mode(paletteType),
         displaysThumbColor: showThumbColor,
         changed: commitColorPickerColor)
         .frame(width: width, height: areaHeight)
@@ -89,7 +116,7 @@ public struct RufletColorPickerControlView: View {
   @ViewBuilder
   private var colorLabels: some View {
     let raw = node.array("label_types")
-    let labels = raw?.compactMap(\.stringValue) ?? ["rgb", "hsv", "hsl"]
+    let labels = ColorPickerSemantics.labelTypes(raw, defaults: ["rgb", "hsv", "hsl"])
     if !labels.isEmpty {
       VStack(alignment: .leading, spacing: 3) {
         ForEach(labels, id: \.self) { label in
@@ -132,12 +159,12 @@ public struct RufletColorPickerControlView: View {
         HueRing(
           color: $color,
           strokeWidth: stroke,
-          displaysThumbColor: node.bool("display_thumb_color") ?? true,
+          displaysThumbColor: true,
           changed: commitSimpleColor)
         ColorSpectrum(
           color: $color,
           mode: .hsv,
-          displaysThumbColor: node.bool("display_thumb_color") ?? true,
+          displaysThumbColor: true,
           changed: commitSimpleColor)
           .frame(width: height / 1.6, height: height / 1.6)
           .clipShape(Circle())
@@ -159,7 +186,7 @@ public struct RufletColorPickerControlView: View {
     let indicator = parsedSize(
       node.map("indicator_size"), fallback: CGSize(width: 280, height: 50))
 
-    let labelTypes = node.array("label_types")?.compactMap(\.stringValue) ?? []
+    let labelTypes = ColorPickerSemantics.labelTypes(node.array("label_types"), defaults: [])
     let sliderTextStyle = RufletTextStyle(map: node.map("slider_text_style") ?? [:])
 
     return VStack(alignment: .center, spacing: 8) {
@@ -173,8 +200,10 @@ public struct RufletColorPickerControlView: View {
                 .init(color: color.swiftUIColor, location: 0.5),
                 .init(color: color.swiftUIColor, location: 1),
               ],
-              startPoint: parsedUnitPoint(node.map("indicator_alignment_begin"), fallback: .topLeading),
-              endPoint: parsedUnitPoint(node.map("indicator_alignment_end"), fallback: .bottomTrailing)))
+              startPoint: parsedUnitPoint(
+                node.map("indicator_alignment_begin"), fallback: UnitPoint(x: 0, y: -1)),
+              endPoint: parsedUnitPoint(
+                node.map("indicator_alignment_end"), fallback: UnitPoint(x: 1, y: 2))))
           .frame(width: indicator.width, height: indicator.height)
           .onTapGesture {
             color = initialColor
@@ -413,18 +442,12 @@ public struct RufletColorPickerControlView: View {
   // MARK: - Wire synchronization
 
   private func synchronizeFromNode() {
-    if node.type == "ColorPicker", let hsv = node.map("hsv_color"),
-      let parsed = RGBAColor(hsv: hsv)
-    {
-      color = parsed
-    } else if let parsed = RGBAColor(token: node.string("color")) {
-      color = parsed
-    }
+    color = ColorPickerSemantics.synchronizedColor(node)
     initialColor = color
 
     if node.type == "MultipleChoiceBlockPicker" {
-      let parsed = parsedColors(node.array("colors"))
-      selectedColors = parsed.isEmpty ? [.black] : parsed
+      selectedColors = ColorPickerSemantics.synchronizedSelections(
+        node.array("colors"), current: selectedColors)
     }
     history = parsedColors(node.array("color_history"))
     if let index = ColorPickerDefaults.materialPrimaries.firstIndex(where: {
@@ -520,14 +543,6 @@ public struct RufletColorPickerControlView: View {
 
   private func gridColumns(minimum: CGFloat) -> [GridItem] {
     [GridItem(.adaptive(minimum: minimum), spacing: 8)]
-  }
-
-  private func spectrumMode(_ type: String) -> ColorSpectrum.Mode {
-    switch type.replacingOccurrences(of: "_", with: "") {
-    case "hsl", "hslwithhue": return .hsl
-    case "rgb", "rgbwithblue", "rgbwithgreen", "rgbwithred": return .rgb
-    default: return .hsv
-    }
   }
 
   private func paletteSlider(
@@ -654,8 +669,28 @@ private struct SlideChannel {
 
 // MARK: - Spectrum
 
-private struct ColorSpectrum: View {
-  enum Mode { case hsv, hsl, rgb }
+struct ColorSpectrum: View {
+  enum Mode {
+    case hsv, hsvWithSaturation, hsvWithValue
+    case hsl, hslWithSaturation, hslWithLightness
+    case rgbWithRed, rgbWithGreen, rgbWithBlue
+    case hueWheel
+
+    init(_ raw: String) {
+      switch raw.replacingOccurrences(of: "_", with: "").lowercased() {
+      case "hsvwithsaturation": self = .hsvWithSaturation
+      case "hsvwithvalue": self = .hsvWithValue
+      case "hsl", "hslwithhue": self = .hsl
+      case "hslwithsaturation": self = .hslWithSaturation
+      case "hslwithlightness": self = .hslWithLightness
+      case "rgbwithred": self = .rgbWithRed
+      case "rgbwithgreen": self = .rgbWithGreen
+      case "rgbwithblue": self = .rgbWithBlue
+      case "huewheel": self = .hueWheel
+      default: self = .hsv
+      }
+    }
+  }
 
   @Binding var color: RGBAColor
   let mode: Mode
@@ -665,15 +700,14 @@ private struct ColorSpectrum: View {
   var body: some View {
     GeometryReader { proxy in
       ZStack {
-        LinearGradient(colors: [.white, hueColor], startPoint: .leading, endPoint: .trailing)
-        LinearGradient(colors: [.clear, .black], startPoint: .top, endPoint: .bottom)
+        paletteBackground
         Circle()
           .fill(displaysThumbColor ? color.swiftUIColor : .white)
           .overlay(Circle().stroke(.white, lineWidth: 2))
           .shadow(radius: 1)
           .frame(width: 20, height: 20)
-          .position(x: CGFloat(color.hsva.saturation) * proxy.size.width,
-                    y: CGFloat(1 - color.hsva.brightness) * proxy.size.height)
+          .position(x: thumbPosition(in: proxy.size).x,
+                    y: thumbPosition(in: proxy.size).y)
       }
       .contentShape(Rectangle())
       .gesture(
@@ -690,19 +724,106 @@ private struct ColorSpectrum: View {
     RGBAColor(hue: color.hsva.hue, saturation: 1, brightness: 1, alpha: 1).swiftUIColor
   }
 
+  @ViewBuilder
+  private var paletteBackground: some View {
+    if mode == .hueWheel {
+      Circle()
+        .fill(AngularGradient(
+          colors: stride(from: 0.0, through: 360.0, by: 30).map {
+            RGBAColor(hue: $0, saturation: 1, brightness: 1, alpha: 1).swiftUIColor
+          }, center: .center))
+        .overlay(Circle().fill(RadialGradient(
+          colors: [.white, .clear], center: .center, startRadius: 0, endRadius: 150)))
+    } else {
+      LinearGradient(colors: [.white, hueColor], startPoint: .leading, endPoint: .trailing)
+      LinearGradient(colors: [.clear, .black], startPoint: .top, endPoint: .bottom)
+    }
+  }
+
+  private func thumbPosition(in size: CGSize) -> CGPoint {
+    let hsv = color.hsva
+    let hsl = color.hsla
+    let components: (Double, Double)
+    switch mode {
+    case .hsv: components = (hsv.saturation, hsv.brightness)
+    case .hsvWithSaturation: components = (hsv.hue / 360, hsv.brightness)
+    case .hsvWithValue: components = (hsv.hue / 360, hsv.saturation)
+    case .hsl: components = (hsl.saturation, hsl.lightness)
+    case .hslWithSaturation: components = (hsl.hue / 360, hsl.lightness)
+    case .hslWithLightness: components = (hsl.hue / 360, hsl.saturation)
+    case .rgbWithRed: components = (color.blue, color.green)
+    case .rgbWithGreen: components = (color.blue, color.red)
+    case .rgbWithBlue: components = (color.red, color.green)
+    case .hueWheel:
+      // flutter_colorpicker places red at the right edge and advances hue
+      // counter-clockwise (green near the upper-left, blue lower-left).
+      let angle = -hsv.hue * .pi / 180
+      let radius = hsv.saturation * Double(min(size.width, size.height)) / 2
+      return CGPoint(
+        x: size.width / 2 + CGFloat(cos(angle) * radius),
+        y: size.height / 2 + CGFloat(sin(angle) * radius))
+    }
+    return CGPoint(
+      x: CGFloat(components.0) * size.width,
+      y: CGFloat(1 - components.1) * size.height)
+  }
+
   private func apply(_ location: CGPoint, in size: CGSize) {
     let horizontal = Double(max(0, min(1, location.x / max(1, size.width))))
     let vertical = Double(max(0, min(1, 1 - location.y / max(1, size.height))))
+    if mode != .hueWheel {
+      color = Self.adjustedColor(
+        mode: mode, current: color, horizontal: horizontal, vertical: vertical)
+      return
+    }
+    switch mode {
+    case .hueWheel:
+      let center = CGPoint(x: size.width / 2, y: size.height / 2)
+      let dx = location.x - center.x
+      let dy = location.y - center.y
+      let radius = max(1, min(size.width, size.height) / 2)
+      let saturation = min(1, hypot(dx, dy) / radius)
+      var hue = ((atan2(dx, dy) / .pi + 1) / 2 * 360 + 90)
+        .truncatingRemainder(dividingBy: 360)
+      if hue < 0 { hue += 360 }
+      color = RGBAColor(hue: hue, saturation: Double(saturation),
+                        brightness: color.hsva.brightness, alpha: color.alpha)
+    default: break
+    }
+  }
+
+  static func adjustedColor(
+    mode: Mode, current color: RGBAColor, horizontal: Double, vertical: Double
+  ) -> RGBAColor {
     switch mode {
     case .hsv:
-      color = RGBAColor(hue: color.hsva.hue, saturation: horizontal,
-                        brightness: vertical, alpha: color.alpha)
+      return RGBAColor(hue: color.hsva.hue, saturation: horizontal,
+                       brightness: vertical, alpha: color.alpha)
+    case .hsvWithSaturation:
+      return RGBAColor(hue: horizontal * 360, saturation: color.hsva.saturation,
+                       brightness: vertical, alpha: color.alpha)
+    case .hsvWithValue:
+      return RGBAColor(hue: horizontal * 360, saturation: vertical,
+                       brightness: color.hsva.brightness, alpha: color.alpha)
     case .hsl:
-      color = RGBAColor(hue: color.hsla.hue, saturation: horizontal,
-                        lightness: vertical, alpha: color.alpha)
-    case .rgb:
-      color = RGBAColor(red: horizontal, green: vertical, blue: color.blue,
-                        alpha: color.alpha)
+      return RGBAColor(hue: color.hsla.hue, saturation: horizontal,
+                       lightness: vertical, alpha: color.alpha)
+    case .hslWithSaturation:
+      return RGBAColor(hue: horizontal * 360, saturation: color.hsla.saturation,
+                       lightness: vertical, alpha: color.alpha)
+    case .hslWithLightness:
+      return RGBAColor(hue: horizontal * 360, saturation: vertical,
+                       lightness: color.hsla.lightness, alpha: color.alpha)
+    case .rgbWithRed:
+      return RGBAColor(red: color.red, green: vertical, blue: horizontal,
+                       alpha: color.alpha)
+    case .rgbWithGreen:
+      return RGBAColor(red: vertical, green: color.green, blue: horizontal,
+                       alpha: color.alpha)
+    case .rgbWithBlue:
+      return RGBAColor(red: horizontal, green: vertical, blue: color.blue,
+                       alpha: color.alpha)
+    case .hueWheel: return color
     }
   }
 }
@@ -775,6 +896,7 @@ public struct RGBAColor: Equatable, Hashable, Sendable {
   public var alpha: Double
 
   public static let black = RGBAColor(red: 0, green: 0, blue: 0, alpha: 1)
+  public static let white = RGBAColor(red: 1, green: 1, blue: 1, alpha: 1)
 
   public init(red: Double, green: Double, blue: Double, alpha: Double = 1) {
     self.red = max(0, min(1, red))
@@ -894,7 +1016,10 @@ public struct RGBAColor: Equatable, Hashable, Sendable {
   }
 
   public var materialShades: [RGBAColor] {
-    [0.88, 0.72, 0.52, 0.32, 0.12].map { amount in
+    // flutter_colorpicker deliberately exposes just black and white when the
+    // selected Material primary is black.
+    if self == .black { return [.black, .white] }
+    return [0.88, 0.72, 0.52, 0.32, 0.12].map { amount in
       RGBAColor(
         red: red + (1 - red) * amount,
         green: green + (1 - green) * amount,
@@ -945,7 +1070,7 @@ public struct HSLA: Equatable, Sendable {
   public let lightness: Double
 }
 
-private enum ColorPickerDefaults {
+enum ColorPickerDefaults {
   static let blockColors = [
     "#fff44336", "#ffe91e63", "#ff9c27b0", "#ff673ab7", "#ff3f51b5",
     "#ff2196f3", "#ff03a9f4", "#ff00bcd4", "#ff009688", "#ff4caf50",
@@ -957,7 +1082,7 @@ private enum ColorPickerDefaults {
     "#fff44336", "#ffe91e63", "#ff9c27b0", "#ff673ab7", "#ff3f51b5",
     "#ff2196f3", "#ff03a9f4", "#ff00bcd4", "#ff009688", "#ff4caf50",
     "#ff8bc34a", "#ffcddc39", "#ffffeb3b", "#ffffc107", "#ffff9800",
-    "#ffff5722", "#ff795548", "#ff9e9e9e", "#ff607d8b",
+    "#ffff5722", "#ff795548", "#ff9e9e9e", "#ff607d8b", "#ff000000",
   ].compactMap(RGBAColor.init(token:))
 }
 

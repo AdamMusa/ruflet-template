@@ -1,4 +1,4 @@
-import RufletColorPickers
+@testable import RufletColorPickers
 import RufletEngine
 @testable import RufletUI
 import XCTest
@@ -41,6 +41,65 @@ final class ColorPickerParityTests: XCTestCase {
   func testNamedMaterialColorsUseTheSharedFletPalette() throws {
     let color = try XCTUnwrap(RGBAColor(token: "blue"))
     XCTAssertEqual(color.hexARGB, "#ff2196f3")
+  }
+
+  func testLabelParsingFiltersUnknownValuesLikePinnedDartEnums() {
+    XCTAssertEqual(
+      ColorPickerSemantics.labelTypes(nil, defaults: ["rgb", "hsv", "hsl"]),
+      ["rgb", "hsv", "hsl"])
+    XCTAssertEqual(
+      ColorPickerSemantics.labelTypes(
+        [.string("HEX"), .string("unknown"), .int(7), .string("hSl")], defaults: []),
+      ["hex", "hsl"])
+    XCTAssertEqual(ColorPickerSemantics.labelTypes([], defaults: ["rgb"]), [])
+  }
+
+  func testNodeSynchronizationUsesBlackFallbackAndHsvPrecedence() {
+    XCTAssertEqual(
+      ColorPickerSemantics.synchronizedColor(ControlNode(id: 1, type: "SlidePicker")),
+      .black)
+    XCTAssertEqual(
+      ColorPickerSemantics.synchronizedColor(ControlNode(
+        id: 2, type: "ColorPicker", props: [
+          "color": .string("red"),
+          "hsv_color": .map([
+            "alpha": .double(1), "hue": .double(120),
+            "saturation": .double(1), "value": .double(1),
+          ]),
+        ])),
+      RGBAColor(red: 0, green: 1, blue: 0))
+  }
+
+  func testMultipleChoiceRetainsLocalSelectionForAbsentOrEmptyWireList() throws {
+    let blue = try XCTUnwrap(RGBAColor(token: "blue"))
+    XCTAssertEqual(
+      ColorPickerSemantics.synchronizedSelections(nil, current: [blue]), [blue])
+    XCTAssertEqual(
+      ColorPickerSemantics.synchronizedSelections([], current: [blue]), [blue])
+    XCTAssertEqual(
+      ColorPickerSemantics.synchronizedSelections([], current: []), [.black])
+  }
+
+  func testMaterialPrimaryListIncludesPinnedBlackEntry() {
+    XCTAssertEqual(ColorPickerDefaults.materialPrimaries.count, 20)
+    XCTAssertEqual(ColorPickerDefaults.materialPrimaries.last, .black)
+    XCTAssertEqual(RGBAColor.black.materialShades, [.black, .white])
+  }
+
+  func testPaletteModesMutateTheSameTwoChannelsAsFlutterColorPicker() {
+    let current = RGBAColor(hue: 210, saturation: 0.4, brightness: 0.8, alpha: 0.5)
+
+    let hsvValue = ColorSpectrum.adjustedColor(
+      mode: .hsvWithValue, current: current, horizontal: 0.25, vertical: 0.6)
+    XCTAssertEqual(hsvValue.hsva.hue, 90, accuracy: 0.0001)
+    XCTAssertEqual(hsvValue.hsva.saturation, 0.6, accuracy: 0.0001)
+    XCTAssertEqual(hsvValue.hsva.brightness, 0.8, accuracy: 0.0001)
+
+    let rgbRed = ColorSpectrum.adjustedColor(
+      mode: .rgbWithRed, current: current, horizontal: 0.2, vertical: 0.7)
+    XCTAssertEqual(rgbRed.red, current.red, accuracy: 0.0001)
+    XCTAssertEqual(rgbRed.green, 0.7, accuracy: 0.0001)
+    XCTAssertEqual(rgbRed.blue, 0.2, accuracy: 0.0001)
   }
 
   func testManifestAndCoreFallbackDeclareOptionalPackageBoundary() throws {
