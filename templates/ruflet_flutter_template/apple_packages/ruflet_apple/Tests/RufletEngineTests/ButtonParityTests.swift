@@ -42,116 +42,39 @@ final class ButtonParityTests: XCTestCase {
     XCTAssertEqual(ButtonVariant(wireType: "Button"), .elevated)
   }
 
-  // MARK: - Icon button palettes
+  // MARK: - Native icon-button appearance
 
-  func testStandardIconButtonHasNoContainerAndMovesOnlyItsGlyph() {
-    let resting = RufletThemeDefaults.iconButtonPalette(
-      control: "IconButton", selected: nil, disabled: false)
-    XCTAssertNil(resting.background)
-    XCTAssertNil(resting.outline)
-    XCTAssertEqual(resting.foreground, "onsurfacevariant")
-
-    let on = RufletThemeDefaults.iconButtonPalette(
-      control: "IconButton", selected: true, disabled: false)
-    XCTAssertNil(on.background)
-    XCTAssertEqual(on.foreground, "primary")
-  }
-
-  /// Flutter calls a button *toggleable* when `isSelected` was supplied at
-  /// all. A filled icon button that can be toggled is a tinted surface while
-  /// it is off; one that cannot is always the primary container.
-  func testFilledIconButtonDistinguishesToggleableFromPlain() {
-    let plain = RufletThemeDefaults.iconButtonPalette(
-      control: "FilledIconButton", selected: nil, disabled: false)
-    XCTAssertEqual(plain.background, "primary")
-    XCTAssertEqual(plain.foreground, "onprimary")
-
-    let off = RufletThemeDefaults.iconButtonPalette(
-      control: "FilledIconButton", selected: false, disabled: false)
-    XCTAssertEqual(off.background, "surfacecontainerhighest")
-    XCTAssertEqual(off.foreground, "primary")
-
-    let on = RufletThemeDefaults.iconButtonPalette(
-      control: "FilledIconButton", selected: true, disabled: false)
-    XCTAssertEqual(on.background, "primary")
-    XCTAssertEqual(on.foreground, "onprimary")
-  }
-
-  func testFilledTonalIconButtonUsesTheSecondaryContainer() {
-    let plain = RufletThemeDefaults.iconButtonPalette(
-      control: "FilledTonalIconButton", selected: nil, disabled: false)
-    XCTAssertEqual(plain.background, "secondarycontainer")
-    XCTAssertEqual(plain.foreground, "onsecondarycontainer")
-
-    let off = RufletThemeDefaults.iconButtonPalette(
-      control: "FilledTonalIconButton", selected: false, disabled: false)
-    XCTAssertEqual(off.background, "surfacecontainerhighest")
-    XCTAssertEqual(off.foreground, "onsurfacevariant")
-  }
-
-  /// The outlined button is the only one whose border disappears when it is
-  /// selected — the filled inverse surface takes the outline's place.
-  func testOutlinedIconButtonTradesItsOutlineForAFillWhenSelected() {
-    let off = RufletThemeDefaults.iconButtonPalette(
-      control: "OutlinedIconButton", selected: nil, disabled: false)
-    XCTAssertNil(off.background)
-    XCTAssertEqual(off.outline, "outline")
-    XCTAssertEqual(off.foreground, "onsurfacevariant")
-
-    let on = RufletThemeDefaults.iconButtonPalette(
-      control: "OutlinedIconButton", selected: true, disabled: false)
-    XCTAssertEqual(on.background, "inversesurface")
-    XCTAssertEqual(on.foreground, "oninversesurface")
-    XCTAssertNil(on.outline)
-  }
-
-  func testDisabledIconButtonsShareFlutterOpacitiesOnOnSurface() {
+  func testStylelessIconButtonsLeaveAppearanceToSwiftUI() {
     for type in ["IconButton", "FilledIconButton", "FilledTonalIconButton",
                  "OutlinedIconButton"] {
-      let palette = RufletThemeDefaults.iconButtonPalette(
-        control: type, selected: nil, disabled: true)
-      XCTAssertEqual(palette.foreground, "onsurface,0.38", type)
-      if type != "IconButton" && type != "OutlinedIconButton" {
-        XCTAssertEqual(palette.background, "onsurface,0.12", type)
-      }
+      XCTAssertFalse(IconButtonPresentation(node: node(type)).requiresCustomRendering, type)
     }
+    XCTAssertEqual(NativeButtonAppearance.resolve(.icon), .borderless)
+    XCTAssertEqual(NativeButtonAppearance.resolve(.filledIcon), .borderedProminent)
+    XCTAssertEqual(NativeButtonAppearance.resolve(.filledTonalIcon), .bordered)
+    XCTAssertEqual(NativeButtonAppearance.resolve(.outlinedIcon), .bordered)
   }
 
-  /// A `style` moves the button onto Flet's own `parseButtonStyle` default,
-  /// which is the primary role for every icon-button variant.
-  func testSuppliedStyleReplacesTheVariantForegroundWithFletsDefault() {
-    let styleless = IconButtonPresentation.palette(for: node("FilledIconButton"))
-    XCTAssertEqual(styleless.foreground, "onprimary")
-
-    let styled = IconButtonPresentation.palette(
-      for: node("FilledIconButton", internals: ["style": .map(["padding": .double(4)])]))
-    XCTAssertEqual(styled.foreground, "primary")
-    XCTAssertEqual(styled.background, "transparent")
-  }
-
-  func testDisabledStyledIconButtonKeepsTheDisabledForeground() {
-    let styled = IconButtonPresentation.palette(
-      for: node(
-        "IconButton",
-        ["disabled": .bool(true)],
-        internals: ["style": .map(["padding": .double(4)])]))
-    XCTAssertEqual(styled.foreground, "onsurface,0.38")
+  func testExplicitIconAppearanceOptsIntoCustomRendering() {
+    XCTAssertTrue(IconButtonPresentation(
+      node: node("IconButton", ["icon_color": .string("red")])).requiresCustomRendering)
+    XCTAssertTrue(IconButtonPresentation(
+      node: node("FilledIconButton", internals: [
+        "style": .map(["padding": .double(4)]),
+      ])).requiresCustomRendering)
   }
 
   // MARK: - Icon button geometry
 
-  func testIconButtonTargetIsMaterials40PointSquareWhenUnconstrained() {
+  func testIconButtonDoesNotApplyMaterialTargetWhenUnconstrained() {
     let presentation = IconButtonPresentation(node: node("IconButton"))
-    XCTAssertEqual(presentation.constraints.minWidth, 40)
-    XCTAssertEqual(presentation.constraints.minHeight, 40)
-    XCTAssertNil(presentation.constraints.maxWidth)
-    XCTAssertEqual(presentation.padding.leading, 8)
-    XCTAssertEqual(presentation.padding.top, 8)
+    XCTAssertFalse(presentation.requiresCustomRendering)
   }
 
   func testSplashRadiusNamesTheTargetUntilSizeConstraintsDo() {
     let splash = IconButtonPresentation(
       node: node("IconButton", ["splash_radius": .double(15)]))
+    XCTAssertTrue(splash.requiresCustomRendering)
     XCTAssertEqual(splash.constraints.minWidth, 30)
     XCTAssertEqual(splash.constraints.minHeight, 30)
 
@@ -181,19 +104,17 @@ final class ButtonParityTests: XCTestCase {
 
   // MARK: - Floating action button
 
-  func testRoundFloatingActionButtonUsesMaterial3SizeAndCorner() {
+  func testStylelessFloatingActionButtonUsesNativeProminentAppearance() {
     let regular = FloatingActionPresentation(
       node: node("FloatingActionButton", ["icon": .string("add")]))
     XCTAssertFalse(regular.isExtended)
-    XCTAssertEqual(regular.width, 56)
-    XCTAssertEqual(regular.height, 56)
-    XCTAssertEqual(regular.radius, 16)
-    XCTAssertEqual(regular.elevation(), 6)
+    XCTAssertFalse(regular.requiresCustomRendering)
+    XCTAssertEqual(NativeButtonAppearance.resolve(.floatingAction), .borderedProminent)
 
     let mini = FloatingActionPresentation(
       node: node("FloatingActionButton", ["icon": .string("add"), "mini": .bool(true)]))
-    XCTAssertEqual(mini.width, 40)
-    XCTAssertEqual(mini.radius, 12)
+    XCTAssertTrue(mini.isMini)
+    XCTAssertFalse(mini.requiresCustomRendering)
   }
 
   /// Flet reaches `FloatingActionButton.extended` only when both an icon and
@@ -210,12 +131,6 @@ final class ButtonParityTests: XCTestCase {
     XCTAssertFalse(contentOnly.isExtended)
     XCTAssertTrue(both.isExtended)
 
-    XCTAssertNil(both.width, "the extended button grows with its label")
-    XCTAssertEqual(both.height, 56)
-    XCTAssertEqual(both.radius, 28, "FloatingActionButton.extended uses a StadiumBorder")
-    XCTAssertEqual(both.padding.leading, 16)
-    XCTAssertEqual(both.padding.trailing, 20)
-    XCTAssertEqual(iconOnly.padding.leading, 0)
   }
 
   func testExtendedFloatingActionButtonIgnoresMiniLikeFlutterConstructor() {
@@ -223,8 +138,6 @@ final class ButtonParityTests: XCTestCase {
       "FloatingActionButton",
       ["icon": .string("add"), "content": .string("New"), "mini": .bool(true)]))
     XCTAssertTrue(extended.isExtended)
-    XCTAssertEqual(extended.height, 56)
-    XCTAssertEqual(extended.radius, 28)
   }
 
   func testFletButtonValidationMessagesArePreserved() {
@@ -249,12 +162,9 @@ final class ButtonParityTests: XCTestCase {
   }
 
   func testFloatingActionButtonElevationsFollowItsState() {
-    let resting = FloatingActionPresentation(node: node("FloatingActionButton"))
-    XCTAssertEqual(resting.elevation(), 6)
-    XCTAssertEqual(resting.pressedElevation, 6)
-
     let pressed = FloatingActionPresentation(
       node: node("FloatingActionButton", ["highlight_elevation": .double(12)]))
+    XCTAssertTrue(pressed.requiresCustomRendering)
     XCTAssertEqual(pressed.pressedElevation, 12)
 
     // A disabled FAB flattens, and stays flat while it is pressed.
@@ -266,14 +176,11 @@ final class ButtonParityTests: XCTestCase {
     XCTAssertEqual(disabled.pressedElevation, 1)
   }
 
-  func testFloatingActionButtonColorsResolveThroughTheMaterial3Roles() {
+  func testFloatingActionButtonColorsAreOnlyResolvedWhenExplicit() {
     let omitted = node("FloatingActionButton")
-    XCTAssertEqual(
-      RufletThemeDefaults.resolvedColorToken(for: omitted, property: "bgcolor"),
-      "primarycontainer")
-    XCTAssertEqual(
-      RufletThemeDefaults.resolvedColorToken(for: omitted, property: "foreground_color"),
-      "onprimarycontainer")
+    XCTAssertNil(RufletThemeDefaults.resolvedColorToken(for: omitted, property: "bgcolor"))
+    XCTAssertNil(RufletThemeDefaults.resolvedColorToken(
+      for: omitted, property: "foreground_color"))
 
     let explicit = node("FloatingActionButton", ["bgcolor": .string("red400")])
     XCTAssertEqual(

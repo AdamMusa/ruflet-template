@@ -44,6 +44,33 @@ enum ButtonVariant {
   }
 }
 
+/// The Apple-native button family used when the DSL did not supply a visual
+/// style. This is deliberately semantic rather than geometric: SwiftUI is
+/// responsible for the platform's padding, corner shape, colours and pressed
+/// appearance.
+enum NativeButtonAppearance: Equatable {
+  case automatic
+  case bordered
+  case borderedProminent
+  case plain
+  case borderless
+
+  static func resolve(_ variant: ButtonVariant) -> NativeButtonAppearance {
+    switch variant {
+    case .filled, .floatingAction, .filledIcon:
+      return .borderedProminent
+    case .elevated:
+      return .automatic
+    case .filledTonal, .outlined, .filledTonalIcon, .outlinedIcon:
+      return .bordered
+    case .text:
+      return .plain
+    case .icon:
+      return .borderless
+    }
+  }
+}
+
 /// Every Material button: `Button`, `TextButton`, `FilledButton`,
 /// `FilledTonalButton`, `OutlinedButton`, the icon buttons and the FAB.
 ///
@@ -101,8 +128,8 @@ struct ButtonControlView: View {
     return node.string("text") ?? node.string("label")
   }
 
-  private var iconSize: CGFloat {
-    node.double("icon_size").map { CGFloat($0) } ?? RufletThemeDefaults.materialIconButtonSize
+  private var iconSize: CGFloat? {
+    node.double("icon_size").map { CGFloat($0) }
   }
 
   @ViewBuilder
@@ -114,8 +141,6 @@ struct ButtonControlView: View {
       if let chosenID = chosenIcon?.controlID {
         ControlView(id: chosenID, axis: .none)
       } else if chosenIcon != nil {
-        // A selected icon button swaps both its glyph and its colour, which is
-        // what Material's isSelected does.
         RufletIcon(
           value: chosenIcon,
           size: iconSize,
@@ -126,7 +151,7 @@ struct ButtonControlView: View {
         Text(caption)
       }
     } else if variant == .floatingAction {
-      HStack(spacing: RufletThemeDefaults.floatingActionButtonExtendedIconSpacing) {
+      HStack {
         if icon != nil {
           RufletIcon(value: icon, size: iconSize, color: nil)
         }
@@ -141,7 +166,7 @@ struct ButtonControlView: View {
         }
       }
     } else {
-      HStack(spacing: RufletThemeDefaults.materialButtonIconSpacing) {
+      HStack {
         if icon != nil {
           RufletIcon(
             value: icon,
@@ -169,6 +194,7 @@ struct ButtonPresentation {
     node.internals["style"]?.mapValue ?? node.props["style"]?.mapValue
   }
   var hasExplicitStyle: Bool { style != nil }
+  var requiresCustomStyle: Bool { !(style?.isEmpty ?? true) }
 
   static func validationMessage(_ node: ControlNode, variant: ButtonVariant) -> String? {
     if variant == .floatingAction,
@@ -293,6 +319,9 @@ struct ButtonPresentation {
       if key == "bgcolor" { return MaterialPalette.color(backgroundToken) }
       if key == "overlay_color", state != nil { return MaterialPalette.color("primary,0.08") }
     }
+    // A styleless control must not receive Flutter's Material colour roles.
+    // Its native ButtonStyle resolves the Apple platform defaults instead.
+    guard hasExplicitStyle else { return nil }
     if key == "color" {
       if node.bool("disabled") == true { return MaterialPalette.color("onsurface,0.38") }
       return MaterialPalette.color(foregroundToken)
@@ -321,40 +350,110 @@ private struct NativeButtonPresentation<Content: View>: View {
   var body: some View {
     switch variant {
     case .filled, .filledTonal, .outlined, .text, .elevated:
-      content()
-        .buttonStyle(
-          RufletMaterialButtonStyle(
-            presentation: ButtonPresentation(node: node, variant: variant)))
+      let presentation = ButtonPresentation(node: node, variant: variant)
+      if presentation.requiresCustomStyle {
+        content().buttonStyle(RufletMaterialButtonStyle(presentation: presentation))
+      } else {
+        nativeButton(content(), appearance: NativeButtonAppearance.resolve(variant))
+      }
     case .floatingAction:
       let geometry = FloatingActionPresentation(node: node)
-      content()
-        .buttonStyle(
-          RufletFloatingActionStyle(
-            background: geometry.background,
-            foreground: geometry.foreground,
-            overlay: geometry.overlay,
-            radius: geometry.radius,
-            width: geometry.width,
-            height: geometry.height,
-            padding: geometry.padding,
-            elevation: geometry.elevation(),
-            hoverElevation: geometry.elevation(hovered: true),
-            pressedElevation: geometry.pressedElevation,
-            shadow: MaterialPalette.color(node.string("shadow_color"))))
+      if geometry.requiresCustomRendering {
+        content()
+          .buttonStyle(
+            RufletFloatingActionStyle(
+              background: geometry.background,
+              foreground: geometry.foreground,
+              overlay: geometry.overlay,
+              radius: geometry.radius,
+              width: geometry.width,
+              height: geometry.height,
+              padding: geometry.padding,
+              elevation: geometry.elevation(),
+              hoverElevation: geometry.elevation(hovered: true),
+              pressedElevation: geometry.pressedElevation,
+              shadow: MaterialPalette.color(node.string("shadow_color"))))
+      } else if geometry.isExtended {
+        content()
+          .buttonStyle(.borderedProminent)
+          .modifier(NativeButtonShape(circular: false))
+          .modifier(OptionalTint(color: geometry.background))
+          .modifier(OptionalForeground(color: geometry.foreground))
+      } else {
+        content()
+          .buttonStyle(.borderedProminent)
+          .modifier(NativeButtonShape(circular: true))
+          .controlSize(geometry.isMini ? .small : .regular)
+          .modifier(OptionalTint(color: geometry.background))
+          .modifier(OptionalForeground(color: geometry.foreground))
+      }
     case .icon, .filledIcon, .filledTonalIcon, .outlinedIcon:
       let presentation = IconButtonPresentation(node: node)
-      content()
-        .buttonStyle(
-          RufletIconButtonStyle(
-            foreground: presentation.foreground,
-            background: presentation.background,
-            outline: presentation.outline,
-            highlight: MaterialPalette.color(node.string("highlight_color")),
-            splash: MaterialPalette.color(node.string("splash_color")),
-            padding: presentation.padding,
-            alignment: presentation.alignment,
-            constraints: presentation.constraints))
+      if presentation.requiresCustomRendering {
+        content()
+          .buttonStyle(
+            RufletIconButtonStyle(
+              foreground: presentation.foreground,
+              background: presentation.background,
+              outline: presentation.outline,
+              highlight: MaterialPalette.color(node.string("highlight_color")),
+              splash: MaterialPalette.color(node.string("splash_color")),
+              padding: presentation.padding,
+              alignment: presentation.alignment,
+              constraints: presentation.constraints))
+      } else {
+        nativeIconButton(content(), appearance: NativeButtonAppearance.resolve(variant))
+      }
     }
+  }
+
+  @ViewBuilder
+  private func nativeButton<V: View>(_ view: V, appearance: NativeButtonAppearance) -> some View {
+    switch appearance {
+    case .automatic: view.buttonStyle(.automatic)
+    case .bordered: view.buttonStyle(.bordered)
+    case .borderedProminent: view.buttonStyle(.borderedProminent)
+    case .plain: view.buttonStyle(.plain)
+    case .borderless: view.buttonStyle(.borderless)
+    }
+  }
+
+  @ViewBuilder
+  private func nativeIconButton<V: View>(
+    _ view: V, appearance: NativeButtonAppearance
+  ) -> some View {
+    switch appearance {
+    case .automatic:
+      view.buttonStyle(.automatic)
+    case .bordered:
+      view.buttonStyle(.bordered).modifier(NativeButtonShape(circular: true))
+    case .borderedProminent:
+      view.buttonStyle(.borderedProminent).modifier(NativeButtonShape(circular: true))
+    case .plain:
+      view.buttonStyle(.plain)
+    case .borderless:
+      view.buttonStyle(.borderless)
+    }
+  }
+}
+
+/// `buttonBorderShape` gained a macOS deployment restriction after the iOS
+/// API. Keep the native shape where it is available and otherwise retain the
+/// native button's own shape instead of drawing a substitute.
+private struct NativeButtonShape: ViewModifier {
+  let circular: Bool
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    #if os(macOS)
+      if #available(macOS 14, *) {
+        content.buttonBorderShape(circular ? .circle : .capsule)
+      } else {
+        content
+      }
+    #else
+      content.buttonBorderShape(circular ? .circle : .capsule)
+    #endif
   }
 }
 
@@ -388,6 +487,14 @@ struct IconButtonPresentation {
   }
 
   private var palette: RufletThemeDefaults.IconButtonPalette { Self.palette(for: node) }
+
+  var requiresCustomRendering: Bool {
+    style?.isEmpty == false || [
+      "bgcolor", "icon_color", "disabled_color", "selected_icon_color",
+      "padding", "alignment", "size_constraints", "splash_radius",
+      "highlight_color", "splash_color",
+    ].contains { node.props[$0] != nil }
+  }
 
   var foreground: Color? {
     if node.bool("disabled") == true {
@@ -442,6 +549,14 @@ struct FloatingActionPresentation {
   let node: ControlNode
 
   var isMini: Bool { node.bool("mini") == true }
+
+  var requiresCustomRendering: Bool {
+    [
+      "shape", "elevation", "focus_elevation", "hover_elevation",
+      "highlight_elevation", "disabled_elevation", "splash_color",
+      "hover_color", "focus_color", "shadow_color",
+    ].contains { node.props[$0] != nil }
+  }
 
   /// A FAB carrying both an icon and content is `FloatingActionButton.extended`
   /// — a pill that grows with its label rather than a fixed square.
