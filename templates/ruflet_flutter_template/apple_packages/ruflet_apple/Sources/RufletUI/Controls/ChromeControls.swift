@@ -297,7 +297,7 @@ enum RufletBottomAppBarSlots {
   static func visibleContentID(
     _ id: Int?, visibilityForID: (Int) -> Bool?
   ) -> Int? {
-    guard let id, visibilityForID(id) != false else { return nil }
+    guard let id, visibilityForID(id) == true else { return nil }
     return id
   }
 }

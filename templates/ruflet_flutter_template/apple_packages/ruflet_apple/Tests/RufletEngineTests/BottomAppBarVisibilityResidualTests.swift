@@ -12,9 +12,9 @@ final class BottomAppBarVisibilityResidualTests: XCTestCase {
       3, visibilityForID: { _ in true }), 3)
   }
 
-  func testUnresolvedContentRemainsUntilStoreMaterialization() {
-    XCTAssertEqual(RufletBottomAppBarSlots.visibleContentID(
-      7, visibilityForID: { _ in nil }), 7)
+  func testUnresolvedContentMatchesFletBuildWidgetAbsence() {
+    XCTAssertNil(RufletBottomAppBarSlots.visibleContentID(
+      7, visibilityForID: { _ in nil }))
     XCTAssertNil(RufletBottomAppBarSlots.visibleContentID(
       nil, visibilityForID: { _ in true }))
   }
