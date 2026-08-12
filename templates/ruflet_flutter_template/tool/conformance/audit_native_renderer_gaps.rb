@@ -208,7 +208,11 @@ module NativeRendererGapAudit
           "classification" => "service",
           "implementation" => class_name,
           "rendering" => "serviceOnly",
-          "events" => implementation.scan(/\.emitEvent\([^,]+,\s*["']([^"']+)["']/m).flatten.uniq.sort,
+          # Event delivery can be invoked directly on RufletServiceContext or
+          # through a captured `emitEvent` closure when a platform callback is
+          # required to cross an actor boundary (Connectivity is one example).
+          # Both are the same live renderer contract.
+          "events" => implementation.scan(/\bemitEvent\([^,]+,\s*["']([^"']+)["']/m).flatten.uniq.sort,
           "methods" => (case_methods + compared_methods).uniq.sort
         }
         declarations[wire_type] = declaration

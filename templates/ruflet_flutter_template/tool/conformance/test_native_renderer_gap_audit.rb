@@ -48,8 +48,8 @@ class NativeRendererGapAuditTest < Minitest::Test
   end
 
   def test_registry_composed_type_lists_are_expanded()
-    assert_equal "SpinKitControlView", @surface.fetch("SpinKitRotatingPlain").fetch("implementation")
-    assert_equal "SpinKitControlView", @surface.fetch("SpinKitWaveSpinner").fetch("implementation")
+    assert_equal "RufletSpinKit.SpinKitControlView", @surface.fetch("SpinKitRotatingPlain").fetch("implementation")
+    assert_equal "RufletSpinKit.SpinKitControlView", @surface.fetch("SpinKitWaveSpinner").fetch("implementation")
     refute @report.fetch("missing_types").any? { |gap| gap.fetch("wire_type").start_with?("SpinKit") }
   end
 
