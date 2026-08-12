@@ -384,12 +384,7 @@ struct CupertinoSwitchControlView: View {
       node: node, value: currentValue, focused: focused, hovered: hovered)
     HStack(spacing: 8) {
       if presentation.labelPosition == .left { label(presentation) }
-      Toggle("", isOn: binding)
-        .labelsHidden()
-        .toggleStyle(.switch)
-        .modifier(OptionalTint(color: presentation.trackColor))
-        .overlay(thumbOverlay(presentation))
-        .modifier(SwitchTrackOutline(presentation: presentation))
+      nativeSwitch(presentation)
       if presentation.labelPosition == .right { label(presentation) }
     }
     .modifier(ListTileToggleListener(notifier: listTileClicks, action: toggleFromListTile))
@@ -415,6 +410,24 @@ struct CupertinoSwitchControlView: View {
         RufletValueControlEvents.commit(
           node, value: .bool($0), payload: .none, to: events)
       })
+  }
+
+  @ViewBuilder
+  private func nativeSwitch(_ presentation: CupertinoSwitchPresentation) -> some View {
+    #if canImport(UIKit)
+      RufletNativeSwitch(
+        isOn: binding, tint: presentation.trackColor,
+        enabled: !presentation.disabled)
+        .overlay(thumbOverlay(presentation))
+        .modifier(SwitchTrackOutline(presentation: presentation))
+    #else
+      Toggle("", isOn: binding)
+        .labelsHidden()
+        .toggleStyle(.switch)
+        .modifier(OptionalTint(color: presentation.trackColor))
+        .overlay(thumbOverlay(presentation))
+        .modifier(SwitchTrackOutline(presentation: presentation))
+    #endif
   }
 
   private func toggleFromListTile() {
@@ -898,13 +911,17 @@ private struct CupertinoCheckboxSelectionView: View {
   var body: some View {
     let presentation = CupertinoCheckboxPresentation(
       node: node, value: currentValue, focused: focused)
-    HStack(spacing: presentation.spacing) {
-      if presentation.labelPosition == .left { label(presentation) }
-      mark(presentation)
-      if presentation.labelPosition == .right { label(presentation) }
+    Button {
+      if !presentation.disabled { advance(presentation) }
+    } label: {
+      HStack(spacing: presentation.spacing) {
+        if presentation.labelPosition == .left { label(presentation) }
+        mark(presentation)
+        if presentation.labelPosition == .right { label(presentation) }
+      }
+      .contentShape(Rectangle())
     }
-    .contentShape(Rectangle())
-    .onTapGesture { if !presentation.disabled { advance(presentation) } }
+    .buttonStyle(.plain)
     .modifier(SelectionScaling(node: node, natural: CupertinoCheckboxPresentation.visualSize))
     .modifier(ListTileToggleListener(notifier: listTileClicks, action: advance))
     .focused($focused)

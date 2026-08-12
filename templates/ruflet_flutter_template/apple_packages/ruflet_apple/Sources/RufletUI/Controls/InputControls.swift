@@ -70,10 +70,7 @@ struct SwitchControlView: View {
 
     HStack(spacing: 0) {
       if presentation.labelPosition == .left { label(presentation) }
-      Toggle("", isOn: binding)
-        .labelsHidden()
-        .toggleStyle(.switch)
-        .modifier(OptionalTint(color: presentation.explicitTrackColor))
+      nativeSwitch(tint: presentation.explicitTrackColor)
         .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets())
       if presentation.labelPosition == .right { label(presentation) }
     }
@@ -92,6 +89,18 @@ struct SwitchControlView: View {
 
   private var binding: Binding<Bool> {
     Binding(get: { currentValue }, set: { commit($0) })
+  }
+
+  @ViewBuilder
+  private func nativeSwitch(tint: Color?) -> some View {
+    #if canImport(UIKit)
+      RufletNativeSwitch(isOn: binding, tint: tint, enabled: node.bool("disabled") != true)
+    #else
+      Toggle("", isOn: binding)
+        .labelsHidden()
+        .toggleStyle(.switch)
+        .modifier(OptionalTint(color: tint))
+    #endif
   }
 
   @ViewBuilder
@@ -362,6 +371,48 @@ struct SelectionScaling: ViewModifier {
         .frame(width: width, height: height))
   }
 }
+
+#if canImport(UIKit)
+  /// UIKit's switch owns the complete touch sequence. This avoids SwiftUI
+  /// gesture arbitration with surrounding Flet rows and produces exactly one
+  /// value change for one physical tap.
+  struct RufletNativeSwitch: UIViewRepresentable {
+    @Binding var isOn: Bool
+    let tint: Color?
+    let enabled: Bool
+
+    func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
+
+    func makeUIView(context: Context) -> UISwitch {
+      let control = UISwitch(frame: .zero)
+      control.addTarget(
+        context.coordinator, action: #selector(Coordinator.changed(_:)),
+        for: .valueChanged)
+      configure(control)
+      return control
+    }
+
+    func updateUIView(_ control: UISwitch, context: Context) {
+      context.coordinator.parent = self
+      configure(control)
+    }
+
+    private func configure(_ control: UISwitch) {
+      if control.isOn != isOn { control.setOn(isOn, animated: false) }
+      control.onTintColor = tint.map(UIColor.init)
+      control.isEnabled = enabled
+    }
+
+    final class Coordinator: NSObject {
+      var parent: RufletNativeSwitch
+      init(parent: RufletNativeSwitch) { self.parent = parent }
+
+      @objc func changed(_ sender: UISwitch) {
+        parent.isOn = sender.isOn
+      }
+    }
+  }
+#endif
 
 /// `Radio` — one option of a `RadioGroup`.
 ///
