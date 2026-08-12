@@ -17,8 +17,8 @@ public struct RufletAppView: View {
     serverURL: URL,
     services: [any RufletServiceBundle.Type] = [],
     capabilities: ClientCapabilities = .current(),
-    reconnectInterval: Duration = .seconds(1),
-    reconnectTimeout: Duration? = nil
+    reconnectInterval: TimeInterval = 1,
+    reconnectTimeout: TimeInterval? = nil
   ) {
     _host = StateObject(
       wrappedValue: RufletHost(
@@ -184,16 +184,16 @@ public final class RufletHost: ObservableObject {
   private let source: Source
   private let services: [any RufletServiceBundle.Type]
   private let capabilities: ClientCapabilities
-  private let reconnectInterval: Duration
-  private let reconnectTimeout: Duration?
+  private let reconnectInterval: TimeInterval
+  private let reconnectTimeout: TimeInterval?
   private var started = false
 
   public init(
     source: Source,
     services: [any RufletServiceBundle.Type] = [],
     capabilities: ClientCapabilities,
-    reconnectInterval: Duration = .seconds(1),
-    reconnectTimeout: Duration? = nil
+    reconnectInterval: TimeInterval = 1,
+    reconnectTimeout: TimeInterval? = nil
   ) {
     self.source = source
     self.services = services

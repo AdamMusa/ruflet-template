@@ -40,10 +40,10 @@ public final class RufletSession: ObservableObject {
   private let transport: RufletTransport
   private var reconnectAttempts = 0
   private let maxReconnectAttempts: Int
-  private let reconnectInterval: Duration
-  private let reconnectTimeout: Duration?
-  private var reconnectDelay: Duration
-  private var reconnectStartedAt: ContinuousClock.Instant?
+  private let reconnectInterval: TimeInterval
+  private let reconnectTimeout: TimeInterval?
+  private var reconnectDelay: TimeInterval
+  private var reconnectStartedAt: TimeInterval?
   private var reconnectTask: Task<Void, Never>?
   private var isStopping = false
 
@@ -52,8 +52,8 @@ public final class RufletSession: ObservableObject {
     capabilities: ClientCapabilities = .current(),
     store: ControlStore = ControlStore(),
     maxReconnectAttempts: Int = .max,
-    reconnectInterval: Duration = .seconds(1),
-    reconnectTimeout: Duration? = nil,
+    reconnectInterval: TimeInterval = 1,
+    reconnectTimeout: TimeInterval? = nil,
     serverURL: URL? = nil
   ) {
     self.transport = transport
@@ -83,8 +83,8 @@ public final class RufletSession: ObservableObject {
     capabilities: ClientCapabilities = .current(),
     store: ControlStore = ControlStore(),
     maxReconnectAttempts: Int = .max,
-    reconnectInterval: Duration = .seconds(1),
-    reconnectTimeout: Duration? = nil
+    reconnectInterval: TimeInterval = 1,
+    reconnectTimeout: TimeInterval? = nil
   ) {
     self.init(
       transport: WebSocketTransport(url: serverURL), capabilities: capabilities, store: store,
@@ -282,16 +282,19 @@ extension RufletSession: RufletTransportDelegate {
 
   private func scheduleReconnect() {
     guard reconnectTask == nil, reconnectAttempts < maxReconnectAttempts else { return }
-    let clock = ContinuousClock()
-    let started = reconnectStartedAt ?? clock.now
+    let now = ProcessInfo.processInfo.systemUptime
+    let started = reconnectStartedAt ?? now
     reconnectStartedAt = started
-    if let reconnectTimeout, started.duration(to: clock.now) >= reconnectTimeout { return }
+    if let reconnectTimeout, now - started >= reconnectTimeout { return }
     reconnectAttempts += 1
     let delay = reconnectDelay
     reconnectDelay *= 2
     reconnectTask = Task { @MainActor [weak self] in
       guard let self else { return }
-      try? await Task.sleep(for: delay)
+      // The Duration/Clock APIs are iOS 16-only. systemUptime above and this
+      // nanosecond sleep retain monotonic reconnect behavior on iOS 15.
+      let nanoseconds = UInt64(max(0, delay) * 1_000_000_000)
+      try? await Task.sleep(nanoseconds: nanoseconds)
       guard !Task.isCancelled, !self.isStopping else { return }
       self.reconnectTask = nil
       self.status = .connecting

@@ -39,8 +39,8 @@ private struct RufletNestedAppHost: View {
 
   init(node: ControlNode, endpoint: URL) {
     self.node = node
-    let interval = Duration.milliseconds(node.int("reconnect_interval_ms") ?? 1_000)
-    let timeout = node.int("reconnect_timeout_ms").map { Duration.milliseconds($0) }
+    let interval = Double(node.int("reconnect_interval_ms") ?? 1_000) / 1_000
+    let timeout = node.int("reconnect_timeout_ms").map { Double($0) / 1_000 }
     _host = StateObject(wrappedValue: RufletHost(
       source: .server(endpoint), capabilities: .current(),
       reconnectInterval: interval, reconnectTimeout: timeout))
