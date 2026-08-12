@@ -65,6 +65,23 @@ final class CameraPluginParityTests: XCTestCase {
     XCTAssertTrue(CameraWireSemantics.previewEnabled)
   }
 
+  func testAppleResolutionPresetKeepsPinnedCamelCaseNames() {
+    XCTAssertEqual(CameraWireSemantics.resolutionPreset(nil), "max")
+    XCTAssertEqual(CameraWireSemantics.resolutionPreset("VERYHIGH"), "veryHigh")
+    XCTAssertEqual(CameraWireSemantics.resolutionPreset("ultraHigh"), "ultraHigh")
+    XCTAssertEqual(CameraWireSemantics.resolutionPreset("very_high"), "max")
+    XCTAssertEqual(CameraWireSemantics.resolutionPreset("invented"), "max")
+  }
+
+  func testAppleStreamFormatsFollowCameraAvfoundationFallbacks() {
+    XCTAssertEqual(CameraWireSemantics.appleStreamFormat("yuv420"), "yuv420")
+    XCTAssertEqual(CameraWireSemantics.appleStreamFormat("bgra8888"), "bgra8888")
+    XCTAssertEqual(CameraWireSemantics.appleStreamFormat("jpeg"), "bgra8888")
+    XCTAssertEqual(CameraWireSemantics.appleStreamFormat("nv21"), "bgra8888")
+    XCTAssertEqual(CameraWireSemantics.appleStreamFormat("unknown"), "bgra8888")
+    XCTAssertEqual(CameraWireSemantics.appleStreamFormat(nil), "bgra8888")
+  }
+
   private var cameraDescription: RufletValue {
     .map([
       "name": .string("camera-id"), "lens_direction": .string("back"),

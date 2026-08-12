@@ -83,6 +83,25 @@ struct CameraInitializationOptions: Equatable {
 enum CameraWireSemantics {
   static let previewEnabled = true
 
+  static func resolutionPreset(_ value: String?) -> String {
+    switch value?.lowercased() {
+    case "low": return "low"
+    case "medium": return "medium"
+    case "high": return "high"
+    case "veryhigh": return "veryHigh"
+    case "ultrahigh": return "ultraHigh"
+    case "max", nil: return "max"
+    default: return "max"
+    }
+  }
+
+  /// `camera_avfoundation` supports BGRA and YUV420 for image streams. Its
+  /// pinned Dart adapter intentionally falls JPEG, NV21 and unknown back to
+  /// BGRA instead of selecting an arbitrary device pixel format.
+  static func appleStreamFormat(_ value: String?) -> String {
+    value?.lowercased() == "yuv420" ? "yuv420" : "bgra8888"
+  }
+
   static func flashMode(_ value: String?) -> String? {
     guard let value else { return nil }
     switch value.lowercased() {
@@ -171,7 +190,8 @@ final class CameraModel: NSObject, ObservableObject {
 
       session.beginConfiguration()
       defer { session.commitConfiguration() }
-      session.sessionPreset = Self.sessionPreset(resolutionPreset)
+      session.sessionPreset = Self.sessionPreset(
+        CameraWireSemantics.resolutionPreset(resolutionPreset))
 
       let requestedName = description?["name"]?.stringValue
         ?? description?["id"]?.stringValue
@@ -216,12 +236,12 @@ final class CameraModel: NSObject, ObservableObject {
     }
 
     private static func sessionPreset(_ value: String?) -> AVCaptureSession.Preset {
-      switch value?.lowercased() {
-      case "low": return .low
-      case "medium": return .medium
-      case "high": return .high
-      case "very_high": return .hd1280x720
-      case "ultra_high": return .hd1920x1080
+      switch value {
+      case "low": return .cif352x288
+      case "medium": return .vga640x480
+      case "high": return .hd1280x720
+      case "veryHigh": return .hd1920x1080
+      case "ultraHigh": return .hd4K3840x2160
       case "max": return .photo
       default: return .photo
       }
@@ -659,7 +679,8 @@ final class CameraModel: NSObject, ObservableObject {
       lastEnableAudio = options.enableAudio
       lastResolutionPreset = options.resolutionPreset
       lastFPS = options.fps
-      lastImageFormatGroup = options.imageFormatGroup.lowercased()
+      lastImageFormatGroup = CameraWireSemantics.appleStreamFormat(
+        options.imageFormatGroup)
       errorDescription = nil
       do {
         try configure(
@@ -809,11 +830,8 @@ final class CameraModel: NSObject, ObservableObject {
       videoOutput.alwaysDiscardsLateVideoFrames = true
       let pixelFormat: OSType
       switch lastImageFormatGroup {
-      case "bgra8888": pixelFormat = kCVPixelFormatType_32BGRA
       case "yuv420": pixelFormat = kCVPixelFormatType_420YpCbCr8BiPlanarFullRange
-      default:
-        pixelFormat = videoOutput.availableVideoPixelFormatTypes.first
-          ?? kCVPixelFormatType_32BGRA
+      default: pixelFormat = kCVPixelFormatType_32BGRA
       }
       videoOutput.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: pixelFormat]
       videoOutput.setSampleBufferDelegate(self, queue: videoQueue)
