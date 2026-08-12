@@ -27,18 +27,21 @@ final class CardParityTests: XCTestCase {
     XCTAssertTrue(metrics.showBorderOnForeground)
   }
 
-  func testFilledAndOutlinedVariantsResolveTheirOwnMaterialSurfaces() {
+  func testVariantsPreserveWireMeaningWithoutForcingMaterialPresentation() {
     let filled = RufletCardMetrics(node: node(["variant": .string("filled")]))
-    XCTAssertFalse(filled.usesNativeAppearance)
-    XCTAssertEqual(filled.fillToken, "surfacecontainerhighest")
+    XCTAssertTrue(filled.usesNativeAppearance)
+    XCTAssertEqual(filled.variant, .filled)
+    XCTAssertNil(filled.fillToken)
     XCTAssertEqual(filled.elevation, 0)
     XCTAssertNil(filled.outlineToken)
 
     let outlined = RufletCardMetrics(node: node(["variant": .string("outlined")]))
-    XCTAssertEqual(outlined.fillToken, "surface")
+    XCTAssertTrue(outlined.usesNativeAppearance)
+    XCTAssertEqual(outlined.variant, .outlined)
+    XCTAssertNil(outlined.fillToken)
     XCTAssertEqual(outlined.elevation, 0)
-    XCTAssertEqual(outlined.outlineToken, "outlinevariant")
-    XCTAssertEqual(outlined.outlineWidth, 1)
+    XCTAssertNil(outlined.outlineToken)
+    XCTAssertEqual(outlined.outlineWidth, 0)
   }
 
   func testExplicitCardConstructorValuesOverrideDefaults() {
@@ -91,7 +94,7 @@ final class CardParityTests: XCTestCase {
     XCTAssertEqual(side.outlineWidth, 3)
   }
 
-  func testUnknownShapeIsNilThenFlutterAppliesVariantDefault() {
+  func testUnknownShapeDoesNotInventAMaterialVariantBorder() {
     let metrics = RufletCardMetrics(
       node: node([
         "variant": .string("outlined"),
@@ -100,8 +103,8 @@ final class CardParityTests: XCTestCase {
     XCTAssertEqual(metrics.variant, .outlined)
     XCTAssertFalse(metrics.shapeWasParsed)
     XCTAssertEqual(metrics.shapeKind, .roundedRectangle)
-    XCTAssertEqual(metrics.radius, 12)
-    XCTAssertEqual(metrics.outlineToken, "outlinevariant")
+    XCTAssertEqual(metrics.radius, 0)
+    XCTAssertNil(metrics.outlineToken)
   }
 
   func testShapeParserPreservesIndependentRadiiCircleEccentricityAndStrokeAlign() {

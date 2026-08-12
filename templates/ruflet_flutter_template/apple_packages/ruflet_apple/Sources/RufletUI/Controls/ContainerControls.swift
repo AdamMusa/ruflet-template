@@ -891,9 +891,12 @@ enum RufletCardShapeKind: String, Equatable {
   case continuousRectangle = "continuousrectangle"
 }
 
-/// Values Card obtains from Flutter's constructor and Material 3 defaults.
-/// Flet forwards optional wire fields unchanged, so resolving the nil cases is
-/// native-renderer work rather than Ruby DSL policy.
+/// Values carried by Flet's Card wire contract.
+///
+/// The variant remains part of that contract, but it does not opt an Apple app
+/// into Material presentation. Omitted visuals are rendered by SwiftUI's
+/// native GroupBox. Only explicit surface properties select the custom shape
+/// path below.
 struct RufletCardMetrics: Equatable {
   let usesNativeAppearance: Bool
   let variant: RufletCardVariant
@@ -918,14 +921,12 @@ struct RufletCardMetrics: Equatable {
     // not supplied any visual Card property, let SwiftUI's GroupBoxStyle own
     // the platform appearance. An explicit visual property opts into the
     // custom surface below so the DSL remains the source of truth.
-    usesNativeAppearance = [
-      "variant", "bgcolor", "shadow_color", "elevation", "margin", "shape",
-      "clip_behavior", "show_border_on_foreground",
-    ].allSatisfy { node.props[$0] == nil }
+    usesNativeAppearance = ["bgcolor", "shadow_color", "elevation", "shape"]
+      .allSatisfy { node.props[$0] == nil }
     variant = RufletCardVariant(node.string("variant"))
-    fillToken = node.string("bgcolor") ?? (usesNativeAppearance ? nil : Self.defaultFill(variant))
-    shadowToken = node.string("shadow_color") ?? (usesNativeAppearance ? nil : "shadow")
-    elevation = CGFloat(node.double("elevation") ?? (usesNativeAppearance ? 0 : (variant == .elevated ? 1 : 0)))
+    fillToken = node.string("bgcolor")
+    shadowToken = node.string("shadow_color")
+    elevation = CGFloat(node.double("elevation") ?? 0)
     margin = ControlProps.edgeInsets(node.props["margin"])
       ?? EdgeInsets()
     clipBehavior = node.string("clip_behavior") ?? "none"
@@ -939,7 +940,7 @@ struct RufletCardMetrics: Equatable {
     shapeKind = parsedKind ?? .roundedRectangle
     radii = shapeWasParsed
       ? (ControlProps.cornerRadii(shape?["radius"]) ?? RufletCornerRadii(uniform: 0))
-      : RufletCornerRadii(uniform: usesNativeAppearance ? 0 : 12)
+      : RufletCornerRadii(uniform: 0)
     eccentricity = CGFloat(shape?["eccentricity"]?.doubleValue ?? 0)
 
     if shapeWasParsed, let side = shape?["side"]?.mapValue,
@@ -948,10 +949,6 @@ struct RufletCardMetrics: Equatable {
       outlineToken = side["color"]?.stringValue ?? "black"
       outlineWidth = CGFloat(side["width"]?.doubleValue ?? 1)
       outlineStrokeAlign = CGFloat(side["stroke_align"]?.doubleValue ?? -1)
-    } else if !usesNativeAppearance, !shapeWasParsed, variant == .outlined {
-      outlineToken = "outlinevariant"
-      outlineWidth = 1
-      outlineStrokeAlign = -1
     } else {
       outlineToken = nil
       outlineWidth = 0
@@ -959,17 +956,9 @@ struct RufletCardMetrics: Equatable {
     }
   }
 
-  /// Compatibility for callers/tests interested in the uniform Material
-  /// default. Rendering uses all four values from `radii`.
+  /// Compatibility for callers/tests interested in a uniform explicit shape.
+  /// Rendering uses all four values from `radii`.
   var radius: CGFloat { radii.maximum }
-
-  private static func defaultFill(_ variant: RufletCardVariant) -> String {
-    switch variant {
-    case .elevated: return "surfacecontainerlow"
-    case .filled: return "surfacecontainerhighest"
-    case .outlined: return "surface"
-    }
-  }
 }
 
 /// ShapeBorder subset accepted by Flet's `parseShape`. All five names retain
@@ -1080,7 +1069,7 @@ private struct CardBorderLayer: View {
   }
 }
 
-/// `Card` — Flet's elevated, filled and outlined Material surfaces.
+/// `Card` — Flet's Card contract mapped to native Apple presentation.
 struct CardControlView: View {
   let node: ControlNode
 
@@ -1091,18 +1080,22 @@ struct CardControlView: View {
       GroupBox {
         cardContent
       }
+      .padding(metrics.margin)
+      .modifier(NativeCardClip(enabled: metrics.clipBehavior.lowercased() != "none"))
       .accessibilityElement(children: metrics.semanticContainer ? .combine : .contain)
     } else {
       let shape = RufletCardShape(
         kind: metrics.shapeKind, radii: metrics.radii,
         eccentricity: metrics.eccentricity)
       let outline = MaterialPalette.color(metrics.outlineToken, default: .clear)
+      let fill = MaterialPalette.color(metrics.fillToken) ?? AppleChromeAppearance.barSurface
+      let shadow = MaterialPalette.color(metrics.shadowToken) ?? .black
 
       ZStack {
         shape
-          .fill(MaterialPalette.color(metrics.fillToken, default: .clear))
+          .fill(fill)
           .shadow(
-            color: MaterialPalette.color(metrics.shadowToken, default: .clear).opacity(0.2),
+            color: metrics.elevation > 0 ? shadow.opacity(0.2) : .clear,
             radius: metrics.elevation)
         if metrics.outlineWidth > 0, !metrics.showBorderOnForeground {
           CardBorderLayer(
@@ -1127,6 +1120,15 @@ struct CardControlView: View {
     if let contentID = node.controlID(forKey: "content") {
       ControlView(id: contentID, axis: .none)
     }
+  }
+}
+
+private struct NativeCardClip: ViewModifier {
+  let enabled: Bool
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if enabled { content.clipped() } else { content }
   }
 }
 
