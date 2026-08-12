@@ -110,6 +110,56 @@ final class DisplayParityTests: XCTestCase {
       .missing)
   }
 
+  func testImageResolvesInlineSVGAsDocumentBytes() {
+    let svg = "<svg xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M0 0\"/></svg>"
+    XCTAssertEqual(
+      RufletImageSource(node: node("Image", ["src": .string(svg)])),
+      .binary(Data(svg.utf8)))
+  }
+
+  func testImagePresentationUsesFletConstructorDefaults() {
+    let presentation = RufletImagePresentation(node: node("Image"))
+
+    XCTAssertEqual(presentation.repeatMode, .noRepeat)
+    XCTAssertEqual(presentation.filterQuality, "medium")
+    XCTAssertEqual(presentation.interpolation, .medium)
+    XCTAssertFalse(presentation.antiAlias)
+    XCTAssertFalse(presentation.gaplessPlayback)
+    XCTAssertEqual(presentation.fadeInDuration, 0.25, accuracy: 0.0001)
+    XCTAssertEqual(presentation.fadeInCurve, "easeinout")
+    XCTAssertEqual(presentation.fadeOutDuration, 0.15, accuracy: 0.0001)
+    XCTAssertEqual(presentation.fadeOutCurve, "easeout")
+  }
+
+  func testImagePresentationConsumesRepeatQualityAndAnimationForms() {
+    let presentation = RufletImagePresentation(node: node(
+      "Image",
+      [
+        "repeat": .string("repeat_x"),
+        "filter_quality": .string("high"),
+        "anti_alias": .bool(true),
+        "gapless_playback": .bool(true),
+        "fade_in_animation": .bool(true),
+        "placeholder_fade_out_animation": .map([
+          "duration": .int(300), "curve": .string("bounceOut"),
+        ]),
+      ]))
+
+    XCTAssertEqual(presentation.repeatMode, .repeatX)
+    XCTAssertEqual(presentation.interpolation, .high)
+    XCTAssertTrue(presentation.antiAlias)
+    XCTAssertTrue(presentation.gaplessPlayback)
+    XCTAssertEqual(presentation.fadeInDuration, 1, accuracy: 0.0001)
+    XCTAssertEqual(presentation.fadeInCurve, "linear")
+    XCTAssertEqual(presentation.fadeOutDuration, 0.3, accuracy: 0.0001)
+    XCTAssertEqual(presentation.fadeOutCurve, "bounceout")
+
+    let numeric = RufletImagePresentation(node: node(
+      "Image", ["fade_in_animation": .int(500)]))
+    XCTAssertEqual(numeric.fadeInDuration, 0.5, accuracy: 0.0001)
+    XCTAssertEqual(numeric.fadeInCurve, "linear")
+  }
+
   // MARK: - Icon
 
   /// Flutter only multiplies the icon by the text scaler when it was asked to,

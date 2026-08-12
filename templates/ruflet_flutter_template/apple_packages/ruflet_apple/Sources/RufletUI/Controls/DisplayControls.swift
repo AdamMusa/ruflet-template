@@ -302,6 +302,8 @@ struct ImageControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
 
+  private var presentation: RufletImagePresentation { RufletImagePresentation(node: node) }
+
   var body: some View {
     content
       .modifier(ImageFit(node: node))
@@ -314,26 +316,141 @@ struct ImageControlView: View {
   @ViewBuilder
   private var content: some View {
     if case .binary(let data) = RufletImageSource(node: node) {
-      PlatformImageView(data: data)
+      PlatformImageView(
+        data: data, repeatMode: presentation.repeatMode,
+        interpolation: presentation.interpolation)
     } else if case .remote(let url) = RufletImageSource(node: node) {
       if url.isFileURL, let data = try? Data(contentsOf: url) {
-        PlatformImageView(data: data)
+        PlatformImageView(
+          data: data, repeatMode: presentation.repeatMode,
+          interpolation: presentation.interpolation)
       } else {
         RemoteImage(
           url: url,
           errorContentID: node.controlID(forKey: "error_content"),
+          placeholder: placeholder,
+          presentation: presentation,
           onLoad: { events.fire(node, "load") },
           onError: { message in events.fire(node, "error", data: .string(message)) })
       }
     } else if case .asset(let name) = RufletImageSource(node: node) {
-      // A bundle resource, the way a packaged Ruby project ships its assets.
-      Image(name)
-        .resizable()
+      if let data = RufletImageSource.packagedData(named: name) {
+        PlatformImageView(
+          data: data, repeatMode: presentation.repeatMode,
+          interpolation: presentation.interpolation)
+      } else {
+        // Asset catalog lookup is the final packaged-asset fallback.
+        Image(name)
+          .resizable(resizingMode: presentation.repeatMode.swiftUI)
+          .interpolation(presentation.interpolation)
+      }
     } else {
       Text("Image must have \"src\" specified.")
         .font(.caption)
         .foregroundColor(.secondary)
     }
+  }
+
+  private var placeholder: AnyView? {
+    guard let value = node.props["placeholder_src"] else { return nil }
+    switch RufletImageSource(value: value) {
+    case .binary(let data):
+      return AnyView(PlatformImageView(
+        data: data, repeatMode: presentation.repeatMode,
+        interpolation: presentation.interpolation))
+    case .remote(let url) where url.isFileURL:
+      guard let data = try? Data(contentsOf: url) else { return nil }
+      return AnyView(PlatformImageView(
+        data: data, repeatMode: presentation.repeatMode,
+        interpolation: presentation.interpolation))
+    case .remote(let url):
+      // Flet resolves `placeholder_src` through the same image-provider path
+      // as `src`, including HTTP(S) images. Do not silently drop a remote
+      // placeholder just because the primary image is also asynchronous.
+      return AnyView(RemoteImage(url: url, errorContentID: nil, presentation: presentation))
+    case .asset(let name):
+      if let data = RufletImageSource.packagedData(named: name) {
+        return AnyView(PlatformImageView(
+          data: data, repeatMode: presentation.repeatMode,
+          interpolation: presentation.interpolation))
+      }
+      return AnyView(
+        Image(name)
+          .resizable(resizingMode: presentation.repeatMode.swiftUI)
+          .interpolation(presentation.interpolation))
+    default:
+      return nil
+    }
+  }
+}
+
+/// Constructor values used by Flutter's `Image` and Flet's frame-fade wrapper.
+/// Keeping them independent of the network loader makes omission/default
+/// semantics executable without snapshots or I/O.
+struct RufletImagePresentation: Equatable {
+  enum RepeatMode: String, Equatable {
+    case noRepeat = "norepeat"
+    case repeatImage = "repeat"
+    case repeatX = "repeatx"
+    case repeatY = "repeaty"
+
+    init(_ raw: String?) {
+      switch raw?.lowercased().replacingOccurrences(of: "_", with: "") {
+      case "repeat": self = .repeatImage
+      case "repeatx": self = .repeatX
+      case "repeaty": self = .repeatY
+      default: self = .noRepeat
+      }
+    }
+
+    var swiftUI: Image.ResizingMode { self == .noRepeat ? .stretch : .tile }
+  }
+
+  let repeatMode: RepeatMode
+  let filterQuality: String
+  let antiAlias: Bool
+  let gaplessPlayback: Bool
+  let fadeInDuration: Double
+  let fadeInCurve: String
+  let fadeOutDuration: Double
+  let fadeOutCurve: String
+
+  var interpolation: Image.Interpolation {
+    switch filterQuality {
+    case "none": return .none
+    case "low": return .low
+    case "high": return .high
+    default: return .medium
+    }
+  }
+
+  init(node: ControlNode) {
+    repeatMode = RepeatMode(node.string("repeat"))
+    filterQuality = node.string("filter_quality")?.lowercased() ?? "medium"
+    antiAlias = node.bool("anti_alias") ?? false
+    gaplessPlayback = node.bool("gapless_playback") ?? false
+    let fadeIn = Self.animation(node.props["fade_in_animation"], defaultMilliseconds: 250,
+                                defaultCurve: "easeinout")
+    let fadeOut = Self.animation(node.props["placeholder_fade_out_animation"],
+                                 defaultMilliseconds: 150, defaultCurve: "easeout")
+    fadeInDuration = fadeIn.duration
+    fadeInCurve = fadeIn.curve
+    fadeOutDuration = fadeOut.duration
+    fadeOutCurve = fadeOut.curve
+  }
+
+  private static func animation(
+    _ value: RufletValue?, defaultMilliseconds: Double, defaultCurve: String
+  ) -> (duration: Double, curve: String) {
+    guard let value else { return (defaultMilliseconds / 1000, defaultCurve) }
+    // RufletValue intentionally offers coercing accessors, but Flet's parser
+    // branches on the runtime type. An integer duration such as `500` must
+    // not be coerced to boolean true and turned into one second.
+    if case .bool(true) = value { return (1, "linear") }
+    if let milliseconds = value.doubleValue { return (max(milliseconds, 0) / 1000, "linear") }
+    return (
+      max(value["duration"]?.doubleValue ?? 0, 0) / 1000,
+      value["curve"]?.stringValue?.lowercased() ?? "linear")
   }
 }
 
@@ -378,6 +495,11 @@ enum RufletImageSource: Equatable {
     }
     if let data = Self.dataURI(source) {
       self = .binary(data)
+    } else if source.range(of: "<svg", options: [.caseInsensitive]) != nil {
+      // ResolvedAssetSource accepts inline SVG markup. Keep it byte-backed so
+      // the platform decoder/plugin boundary receives the actual document,
+      // rather than treating the XML as a packaged asset name.
+      self = .binary(Data(source.utf8))
     } else if let url = URL(string: source),
       let scheme = url.scheme?.lowercased(),
       scheme == "http" || scheme == "https" || scheme == "file"
@@ -401,6 +523,23 @@ enum RufletImageSource: Equatable {
     let payload = String(source[source.index(after: comma)...])
     if metadata.contains(";base64") { return Data(base64Encoded: payload) }
     return payload.removingPercentEncoding?.data(using: .utf8)
+  }
+
+  static func packagedData(named name: String) -> Data? {
+    let source = name.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+    let candidate = URL(fileURLWithPath: source)
+    let stem = candidate.deletingPathExtension().lastPathComponent
+    let ext = candidate.pathExtension.isEmpty ? nil : candidate.pathExtension
+    let directory = candidate.deletingLastPathComponent().path == "."
+      ? nil : candidate.deletingLastPathComponent().path
+    for bundle in [Bundle.main] + Bundle.allBundles + Bundle.allFrameworks {
+      if let url = bundle.url(forResource: stem, withExtension: ext, subdirectory: directory),
+        let data = try? Data(contentsOf: url)
+      {
+        return data
+      }
+    }
+    return nil
   }
 }
 
@@ -440,8 +579,13 @@ private struct ImageFit: ViewModifier {
   func body(content: Content) -> some View {
     // Flet's BoxFit; `contain` is Flutter's default for Image.
     switch node.string("fit")?.lowercased() {
-    case "cover", "fitwidth", "fitheight":
+    case "cover":
       return AnyView(content.aspectRatio(contentMode: .fill).clipped())
+    case "fitwidth", "fitheight":
+      // Unlike cover, fitWidth/fitHeight preserve the full image on the
+      // unconstrained axis. The common width/height wrapper supplies which
+      // dimension is tight.
+      return AnyView(content.aspectRatio(contentMode: .fit))
     case "fill":
       return AnyView(content)
     case "none", "scaledown":
@@ -457,27 +601,64 @@ private struct ImageFit: ViewModifier {
 private struct RemoteImage: View {
   let url: URL
   let errorContentID: Int?
+  let placeholder: AnyView?
+  let presentation: RufletImagePresentation
   var onLoad: () -> Void = {}
   var onError: (String) -> Void = { _ in }
+
+  init(
+    url: URL,
+    errorContentID: Int?,
+    placeholder: AnyView? = nil,
+    presentation: RufletImagePresentation = RufletImagePresentation(
+      node: ControlNode(id: 0, type: "Image")),
+    onLoad: @escaping () -> Void = {},
+    onError: @escaping (String) -> Void = { _ in }
+  ) {
+    self.url = url
+    self.errorContentID = errorContentID
+    self.placeholder = placeholder
+    self.presentation = presentation
+    self.onLoad = onLoad
+    self.onError = onError
+  }
 
   @State private var data: Data?
   @State private var failed = false
 
   var body: some View {
-    Group {
+    ZStack {
+      if data == nil && !failed, let placeholder {
+        placeholder
+          .transition(.opacity)
+          .animation(
+            RufletCurve.animation(
+              presentation.fadeOutCurve, duration: presentation.fadeOutDuration),
+            value: data == nil && !failed)
+      }
       if let data {
-        PlatformImageView(data: data)
+        PlatformImageView(
+          data: data, repeatMode: presentation.repeatMode,
+          interpolation: presentation.interpolation)
+          .transition(.opacity)
       } else if failed {
         if let errorContentID {
           ControlView(id: errorContentID, axis: .none)
         } else {
           Image(systemName: "photo").foregroundColor(.secondary)
         }
-      } else {
-        ProgressView()
+      } else if placeholder == nil {
+        Color.clear
       }
     }
     .task(id: url) { await load() }
+    .onChange(of: url) { _ in
+      failed = false
+      if !presentation.gaplessPlayback { data = nil }
+    }
+    .animation(
+      RufletCurve.animation(presentation.fadeInCurve, duration: presentation.fadeInDuration),
+      value: data != nil)
   }
 
   private func load() async {
@@ -521,15 +702,21 @@ private enum RemoteImageError: LocalizedError {
 /// Bridges raw bytes to an `Image` on both platforms.
 struct PlatformImageView: View {
   let data: Data
+  var repeatMode: RufletImagePresentation.RepeatMode = .noRepeat
+  var interpolation: Image.Interpolation = .medium
 
   var body: some View {
     #if canImport(UIKit)
       if let image = UIImage(data: data) {
-        Image(uiImage: image).resizable()
+        Image(uiImage: image)
+          .resizable(resizingMode: repeatMode.swiftUI)
+          .interpolation(interpolation)
       }
     #elseif canImport(AppKit)
       if let image = NSImage(data: data) {
-        Image(nsImage: image).resizable()
+        Image(nsImage: image)
+          .resizable(resizingMode: repeatMode.swiftUI)
+          .interpolation(interpolation)
       }
     #endif
   }
