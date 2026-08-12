@@ -65,6 +65,34 @@ final class WrapperControlParityTests: XCTestCase {
     XCTAssertEqual(RufletHeroTag(.int(7)), RufletHeroTag(.int(7)))
     XCTAssertNotEqual(RufletHeroTag(.int(7)), RufletHeroTag(.string("7")))
     XCTAssertNotEqual(RufletHeroTag(.bool(true)), RufletHeroTag(.string("true")))
+    XCTAssertNotEqual(RufletHeroTag(.binary([1, 2])), RufletHeroTag(.binary([3, 4])))
+    XCTAssertEqual(
+      RufletHeroTag(.map(["a": .int(1), "b": .string("two")])),
+      RufletHeroTag(.map(["b": .string("two"), "a": .int(1)])))
+    XCTAssertNotEqual(
+      RufletHeroTag(.array([.int(1), .string("2")])),
+      RufletHeroTag(.array([.string("1"), .int(2)])))
+  }
+
+  func testHeroValidationMatchesFletsContentThenTagOrder() {
+    XCTAssertEqual(
+      RufletHeroSemantics.validationError(
+        contentID: nil, contentIsVisible: false, tag: nil),
+      "Hero.content must be provided and visible")
+    XCTAssertEqual(
+      RufletHeroSemantics.validationError(
+        contentID: 2, contentIsVisible: false, tag: .string("avatar")),
+      "Hero.content must be provided and visible")
+    XCTAssertEqual(
+      RufletHeroSemantics.validationError(
+        contentID: 2, contentIsVisible: true, tag: nil),
+      "Hero.tag must be provided")
+    XCTAssertEqual(
+      RufletHeroSemantics.validationError(
+        contentID: 2, contentIsVisible: true, tag: .null),
+      "Hero.tag must be provided")
+    XCTAssertNil(RufletHeroSemantics.validationError(
+      contentID: 2, contentIsVisible: true, tag: .int(0)))
   }
 
   func testHeroTransitionOnUserGesturesKeepsFletDefaultAndExplicitValue() {
@@ -73,6 +101,11 @@ final class WrapperControlParityTests: XCTestCase {
     XCTAssertTrue(RufletHeroSemantics.transitionOnUserGestures(ControlNode(
       id: 2, type: "Hero",
       props: ["transition_on_user_gestures": .bool(true)])))
+  }
+
+  func testOnlyTheActiveNativeRouteProvidesSharedHeroGeometry() {
+    XCTAssertFalse(RufletHeroSemantics.providesGeometry(viewID: 10, activeViewID: 20))
+    XCTAssertTrue(RufletHeroSemantics.providesGeometry(viewID: 20, activeViewID: 20))
   }
 
   func testSelectionAreaEmitsFletsNullablePlainTextPayload() {

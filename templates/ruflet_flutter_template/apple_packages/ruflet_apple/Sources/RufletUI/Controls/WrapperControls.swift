@@ -722,22 +722,29 @@ struct ShaderMaskControlView: View {
 /// simply renders its content, which is the Flutter behaviour too.
 struct HeroControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @Namespace private var fallbackNamespace
   @Environment(\.rufletHeroNamespace) private var pageNamespace
+  @Environment(\.rufletHeroProvidesGeometry) private var providesGeometry
 
   @ViewBuilder
   var body: some View {
-    if node.controlID(forKey: "content") == nil {
-      RufletWrapperError("Hero.content must be provided and visible")
-    } else if node.props["tag"] == nil {
-      RufletWrapperError("Hero.tag must be provided")
-    } else if let contentID = node.controlID(forKey: "content") {
+    let contentID = node.controlID(forKey: "content")
+    let contentIsVisible = contentID.flatMap(store.node).map { $0.bool("visible") != false } ?? false
+    if let error = RufletHeroSemantics.validationError(
+      contentID: contentID,
+      contentIsVisible: contentIsVisible,
+      tag: node.props["tag"])
+    {
+      RufletWrapperError(error)
+    } else if let contentID, let tag = node.props["tag"] {
       Group {
         ControlView(id: contentID, axis: .none)
       }
       .matchedGeometryEffect(
-        id: RufletHeroTag(node.props["tag"]),
-        in: pageNamespace ?? fallbackNamespace)
+        id: RufletHeroTag(tag),
+        in: pageNamespace ?? fallbackNamespace,
+        isSource: providesGeometry)
       .modifier(HeroGestureTransition(
         enabled: RufletHeroSemantics.transitionOnUserGestures(node)))
     }
@@ -745,8 +752,25 @@ struct HeroControlView: View {
 }
 
 enum RufletHeroSemantics {
+  static let missingContentError = "Hero.content must be provided and visible"
+  static let missingTagError = "Hero.tag must be provided"
+
   static func transitionOnUserGestures(_ node: ControlNode) -> Bool {
     node.bool("transition_on_user_gestures") ?? false
+  }
+
+  static func providesGeometry(viewID: Int, activeViewID: Int) -> Bool {
+    viewID == activeViewID
+  }
+
+  static func validationError(
+    contentID: Int?,
+    contentIsVisible: Bool,
+    tag: RufletValue?
+  ) -> String? {
+    guard contentID != nil, contentIsVisible else { return missingContentError }
+    guard let tag, !tag.isNull else { return missingTagError }
+    return nil
   }
 }
 
@@ -767,16 +791,45 @@ private struct HeroGestureTransition: ViewModifier {
 /// Hero accepts any protocol value as its tag. Stringifying only string tags
 /// made the integer and boolean tags used by Flet collide on Apple.
 struct RufletHeroTag: Hashable {
-  private let value: String
+  private struct MapEntry: Hashable {
+    let key: String
+    let value: Identity
+  }
+
+  private indirect enum Identity: Hashable {
+    case null
+    case bool(Bool)
+    case int(Int64)
+    case double(Double)
+    case string(String)
+    case binary([UInt8])
+    case array([Identity])
+    case map([MapEntry])
+    case extended(Int8, String)
+    case controlRef(Int)
+  }
+
+  private let value: Identity
 
   init(_ value: RufletValue?) {
+    self.value = Self.identity(value ?? .null)
+  }
+
+  private static func identity(_ value: RufletValue) -> Identity {
     switch value {
-    case .string(let string): self.value = "string:\(string)"
-    case .int(let integer): self.value = "int:\(integer)"
-    case .double(let double): self.value = "double:\(double)"
-    case .bool(let bool): self.value = "bool:\(bool)"
-    case .null, nil: self.value = "null"
-    default: self.value = "value:\(String(describing: value!))"
+    case .null: return .null
+    case .bool(let value): return .bool(value)
+    case .int(let value): return .int(value)
+    case .double(let value): return .double(value)
+    case .string(let value): return .string(value)
+    case .binary(let value): return .binary(value)
+    case .array(let values): return .array(values.map(identity))
+    case .map(let values):
+      return .map(values.keys.sorted().map {
+        MapEntry(key: $0, value: identity(values[$0]!))
+      })
+    case .extended(let type, let value): return .extended(type, value)
+    case .controlRef(let id): return .controlRef(id)
     }
   }
 }
@@ -964,10 +1017,19 @@ private struct RufletHeroNamespaceKey: EnvironmentKey {
   static let defaultValue: Namespace.ID? = nil
 }
 
+private struct RufletHeroProvidesGeometryKey: EnvironmentKey {
+  static let defaultValue = true
+}
+
 extension EnvironmentValues {
   var rufletHeroNamespace: Namespace.ID? {
     get { self[RufletHeroNamespaceKey.self] }
     set { self[RufletHeroNamespaceKey.self] = newValue }
+  }
+
+  var rufletHeroProvidesGeometry: Bool {
+    get { self[RufletHeroProvidesGeometryKey.self] }
+    set { self[RufletHeroProvidesGeometryKey.self] = newValue }
   }
 }
 

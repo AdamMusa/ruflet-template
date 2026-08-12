@@ -183,9 +183,11 @@ struct RufletBoxShadowSpec: Equatable {
 
 /// `Page` — the session root, wire id 1.
 ///
-/// Its `views` prop is a navigator stack; Flet renders the top of it, and so
-/// does this. `_overlay`, `_dialogs` and `_services` hang off the page too, but
-/// they are presented by the active view rather than laid out inline.
+/// Its `views` prop is a navigator stack. As Flutter's Navigator does, the
+/// native host keeps earlier routes mounted offstage and exposes only the top
+/// route to interaction. That retained pair is also what lets Hero geometry
+/// move between routes. `_overlay`, `_dialogs` and `_services` hang off the
+/// page too, but are presented by the active view rather than laid out inline.
 struct PageControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
@@ -198,11 +200,24 @@ struct PageControlView: View {
     Group {
       if let presentationPage {
         Group {
-          if let viewID = presentationPage.controlIDs(forKey: "views").last {
-            ControlView(id: viewID, axis: .vertical)
-              .environment(
-                \.rufletNavigationContext,
-                navigationContext(page: presentationPage, viewID: viewID))
+          let viewIDs = presentationPage.controlIDs(forKey: "views")
+          if let activeViewID = viewIDs.last {
+            ZStack {
+              ForEach(viewIDs, id: \.self) { viewID in
+                let isActive = RufletHeroSemantics.providesGeometry(
+                  viewID: viewID, activeViewID: activeViewID)
+                ControlView(id: viewID, axis: .vertical)
+                  .environment(
+                    \.rufletNavigationContext,
+                    navigationContext(page: presentationPage, viewID: viewID))
+                  .environment(\.rufletHeroProvidesGeometry, isActive)
+                  .opacity(isActive ? 1 : 0)
+                  .allowsHitTesting(isActive)
+                  .accessibilityHidden(!isActive)
+                  .zIndex(isActive ? 1 : 0)
+              }
+            }
+            .animation(.default, value: activeViewID)
           } else {
             Color.clear
           }
