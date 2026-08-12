@@ -12,6 +12,15 @@ import XCTest
 /// unselected states, so each pairing is pinned here rather than left to a
 /// single shared fallback.
 final class ButtonParityTests: XCTestCase {
+  func testTapFeedbackRunsInsideNativeActivationWithoutOwningAGesture() {
+    var calls = 0
+    RufletTapFeedback.run(enabled: false) { calls += 1 }
+    XCTAssertEqual(calls, 0)
+
+    RufletTapFeedback.run(enabled: true) { calls += 1 }
+    XCTAssertEqual(calls, 1)
+  }
+
   private func node(
     _ type: String,
     _ props: [String: RufletValue] = [:],

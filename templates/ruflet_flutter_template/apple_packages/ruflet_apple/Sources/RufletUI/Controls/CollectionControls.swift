@@ -1145,6 +1145,7 @@ struct ListTileControlView: View {
   }
 
   private func nativeActivate() {
+    RufletTapFeedback.perform(enabled: node.bool("enable_feedback") != false)
     if node.bool("toggle_inputs") == true { tileClicks.click() }
     if let url = node.string("url").flatMap(URL.init(string:)) { openURL(url) }
     if node.handlesEvent("click") { events.fire(node, "click") }
@@ -1226,7 +1227,6 @@ struct ListTileControlView: View {
       node: node, events: events, openURL: openURL, tileClicks: tileClicks,
       pressed: $pressed))
     .modifier(VisualDensityPadding(value: node.props["visual_density"]))
-    .modifier(TapFeedback(enabled: node.bool("enable_feedback") != false))
     .disabled(node.bool("disabled") == true)
   }
 
@@ -1394,6 +1394,7 @@ private struct ListTileInteraction: ViewModifier {
   }
 
   private func activate() {
+    RufletTapFeedback.perform(enabled: node.bool("enable_feedback") != false)
     if node.bool("toggle_inputs") == true { tileClicks.click() }
     if let url = node.string("url").flatMap(URL.init(string:)) { openURL(url) }
     if node.handlesEvent("click") { events.fire(node, "click") }
@@ -1694,6 +1695,7 @@ struct ExpansionTileControlView: View {
       get: { expanded },
       set: { next in
         guard next != expanded else { return }
+        RufletTapFeedback.perform(enabled: presentation.enableFeedback)
         events.commit(node, key: "expanded", value: .bool(next), event: "change")
       })
   }
@@ -1719,7 +1721,6 @@ struct ExpansionTileControlView: View {
     .tint(MaterialPalette.color(presentation.currentIconColorToken))
     .disabled(node.bool("disabled") == true)
     .modifier(ChromeClipModifier(behavior: presentation.clipBehaviorToken))
-    .modifier(TapFeedback(enabled: presentation.enableFeedback))
     .animation(presentation.animation, value: expanded)
     .accessibilityHint(expanded ? "Collapse" : "Expand")
   }
@@ -2268,6 +2269,7 @@ struct TabBarControlView: View {
       get: { selection?.wrappedValue ?? 0 },
       set: { index in
         let resolved = CollectionParity.normalizedIndex(index, count: tabs.count)
+        RufletTapFeedback.perform(enabled: values.enableFeedback)
         selection?.wrappedValue = resolved
         events.fire(node, "click", data: .int(Int64(index)))
       })) {
@@ -2290,7 +2292,6 @@ struct TabBarControlView: View {
       }
       .labelsHidden()
       .pickerStyle(.segmented)
-      .modifier(TapFeedback(enabled: values.enableFeedback))
   }
 
   private func labelStyle(

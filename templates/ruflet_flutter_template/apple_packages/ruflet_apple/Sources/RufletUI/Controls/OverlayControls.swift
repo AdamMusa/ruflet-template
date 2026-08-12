@@ -1176,6 +1176,7 @@ struct PopupMenuControlView: View {
       // PopupMenuButtonState.showButtonMenu returns without firing onOpened
       // when the visible, type-filtered entry list is empty.
       guard !itemIDs.isEmpty else { return }
+      RufletTapFeedback.perform(enabled: node.bool("enable_feedback") != false)
       completedSelection = false
       presented = true
       events.fire(node, "open")
@@ -1215,7 +1216,6 @@ struct PopupMenuControlView: View {
     .modifier(ChromeClipModifier(behavior: MaterialMenuDefaults.popupClipBehavior(node)))
     .buttonStyle(.plain)
     .disabled(node.bool("disabled") ?? false)
-    .modifier(TapFeedback(enabled: node.bool("enable_feedback") != false))
     .popover(isPresented: $presented, attachmentAnchor: menuAnchor) {
       VStack(alignment: .leading, spacing: 0) {
         ForEach(itemIDs, id: \.self) { itemID in

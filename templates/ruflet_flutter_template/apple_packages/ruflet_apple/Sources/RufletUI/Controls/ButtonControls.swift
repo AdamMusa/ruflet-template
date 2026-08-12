@@ -1,6 +1,9 @@
 import RufletEngine
 import RufletProtocol
 import SwiftUI
+#if canImport(UIKit)
+  import UIKit
+#endif
 
 /// The Material button variants, mapped onto the native equivalent.
 ///
@@ -112,7 +115,6 @@ struct ButtonControlView: View {
       .modifier(LongPressReporter(node: node, events: events))
       .modifier(HoverReporter(node: node, events: events))
       .modifier(VisualDensityPadding(value: node.props["visual_density"]))
-      .modifier(TapFeedback(enabled: node.bool("enable_feedback") != false))
       .disabled(node.bool("disabled") ?? false)
     }
   }
@@ -120,6 +122,7 @@ struct ButtonControlView: View {
   /// `url` opens directly, the way Flet's buttons do, *and* still reports the
   /// click so a Ruby handler on the same control runs.
   private func activate() {
+    RufletTapFeedback.perform(enabled: node.bool("enable_feedback") != false)
     if let url = node.string("url").flatMap(URL.init(string:)) {
       openURL(url)
     }
@@ -825,21 +828,22 @@ struct FloatingActionSlots: Equatable {
   }
 }
 
-/// `enable_feedback` is the platform tap feedback Material plays on a control.
-struct TapFeedback: ViewModifier {
-  let enabled: Bool
+/// Material's `enable_feedback` belongs to the control's successful native
+/// activation. Attaching a second TapGesture to a Button makes SwiftUI
+/// arbitrate two recognizers, delaying or losing the first tap in a ScrollView.
+/// Run haptics from the existing Button/Picker activation instead.
+enum RufletTapFeedback {
+  static func run(enabled: Bool, feedback: () -> Void) {
+    guard enabled else { return }
+    feedback()
+  }
 
-  func body(content: Content) -> some View {
+  static func perform(enabled: Bool) {
     #if os(iOS)
-      if enabled {
-        return AnyView(
-          content.simultaneousGesture(
-            TapGesture().onEnded {
-              UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            }))
+      run(enabled: enabled) {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
       }
     #endif
-    return AnyView(content)
   }
 }
 

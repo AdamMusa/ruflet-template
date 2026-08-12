@@ -2597,6 +2597,7 @@ struct DropdownM2ControlView: View {
 
   var body: some View {
     Button {
+      RufletTapFeedback.perform(enabled: node.bool("enable_feedback") != false)
       focused = true
       events.fire(node, "click")
       menuPresented = true
@@ -2622,7 +2623,6 @@ struct DropdownM2ControlView: View {
     .buttonStyle(.plain)
     .modifier(DropdownM2FieldWidth(node: node))
     .focused($focused)
-    .modifier(TapFeedback(enabled: node.bool("enable_feedback") != false))
     .modifier(RufletFormFieldDecoration(node: node))
     .disabled(node.bool("disabled") ?? false)
     .popover(isPresented: $menuPresented, attachmentAnchor: .rect(.bounds)) {
