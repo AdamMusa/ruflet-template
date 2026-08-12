@@ -17,6 +17,16 @@ final class CupertinoDialogActionResidualParityTests: XCTestCase {
     XCTAssertEqual(
       hidden.validationError,
       "CupertinoDialogAction.content must be a string or visible Control")
+
+    let dangling = CupertinoDialogActionPresentation(
+      node: ControlNode(
+        id: 2, type: "CupertinoDialogAction",
+        props: ["content": .controlRef(11)]),
+      visibilityForID: { _ in nil })
+    XCTAssertNil(dangling.contentID)
+    XCTAssertEqual(
+      dangling.validationError,
+      CupertinoDialogActionPresentation.dialogMissingContentError)
   }
 
   func testStringContentMustStayAStringRatherThanCoercingOtherWireTypes() {

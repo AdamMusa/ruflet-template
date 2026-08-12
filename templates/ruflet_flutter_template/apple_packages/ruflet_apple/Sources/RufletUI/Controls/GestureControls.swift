@@ -1720,7 +1720,7 @@ struct CupertinoDialogActionPresentation: Equatable {
 
   init(node: ControlNode, visibilityForID: (Int) -> Bool? = { _ in nil }) {
     type = node.type
-    if let id = node.controlID(forKey: "content"), visibilityForID(id) != false {
+    if let id = node.controlID(forKey: "content"), visibilityForID(id) == true {
       contentID = id
       text = nil
     } else if case .string(let value) = node.props["content"] {
