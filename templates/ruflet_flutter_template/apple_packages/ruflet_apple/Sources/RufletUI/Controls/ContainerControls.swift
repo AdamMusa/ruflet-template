@@ -279,7 +279,6 @@ private struct PageLifecycle: ViewModifier {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
   @Environment(\.colorScheme) private var colorScheme
-  @Environment(\.scenePhase) private var scenePhase
 
   func body(content: Content) -> some View {
     content
@@ -291,7 +290,6 @@ private struct PageLifecycle: ViewModifier {
         })
       .onAppear { report(brightness: colorScheme) }
       .onChange(of: colorScheme) { report(brightness: $0) }
-      .onChange(of: scenePhase) { report(phase: $0) }
   }
 
   private func report(size: CGSize) {
@@ -313,19 +311,6 @@ private struct PageLifecycle: ViewModifier {
     events.fire(node, "platform_brightness_change", data: .string(name))
   }
 
-  /// SwiftUI collapses Flet's seven `AppLifecycleListener` callbacks into
-  /// three scene phases. Keep Flet's callback spelling (`resume`, `pause`),
-  /// rather than Flutter's enum spelling (`resumed`, `paused`).
-  private func report(phase: ScenePhase) {
-    let state: String
-    switch phase {
-    case .active: state = "resume"
-    case .inactive: state = "inactive"
-    case .background: state = "pause"
-    @unknown default: return
-    }
-    events.fire(node, "app_lifecycle_state_change", data: .map(["state": .string(state)]))
-  }
 }
 
 /// The rest of the page's own surface: the fonts it registers, the media it
