@@ -4,10 +4,10 @@ import SwiftUI
 /// Shared layout and behavior defaults used by the Apple renderer.
 ///
 /// Flet remains the authority for wire values, validation, child slots,
-/// events, commands, and layout behavior. It is not the visual toolkit on
-/// Apple platforms: when a visual property is absent, the native
-/// SwiftUI/UIKit/AppKit control must keep its platform appearance. Only an
-/// explicitly supplied DSL value may override that native appearance.
+/// events, commands, layout behavior, and omitted constructor/theme values.
+/// SwiftUI/UIKit/AppKit remain the visual toolkit on Apple: a Material token
+/// such as `primary` or a 24-point icon is resolved exactly, but does not make
+/// the renderer recreate Flutter's widget or ink painting.
 enum RufletThemeDefaults {
   /// View's Container uses `EdgeInsets.all(10)` when padding is omitted in
   /// Flet's pinned renderer. This is a widget-constructor default, not a Ruby
@@ -16,17 +16,25 @@ enum RufletThemeDefaults {
 
   static func colorToken(control: String, property: String) -> String? {
     switch (control, property) {
-    // Flet 0.80.5 passes these values to parseButtonStyle even when the Ruby
-    // control omitted `style`, `color`, and `bgcolor`. Keep the Material roles
-    // here rather than teaching each native button a local blue/gray fallback.
-    case ("Button", "color"), ("FilledButton", "color"),
-         ("FilledTonalButton", "color"), ("OutlinedButton", "color"),
+    // Flutter's generated Material 3 constructor/theme roles when Flet omits
+    // `style`, `color`, and `bgcolor`. Explicit (including empty) Flet style
+    // maps remain a separate parseButtonStyle contract in ButtonPresentation.
+    case ("Button", "color"), ("OutlinedButton", "color"),
          ("TextButton", "color"), ("SegmentedButton", "color"):
       return "primary"
-    case ("Button", "bgcolor"), ("FilledButton", "bgcolor"),
-         ("FilledTonalButton", "bgcolor"), ("OutlinedButton", "bgcolor"),
-         ("TextButton", "bgcolor"), ("SegmentedButton", "bgcolor"):
-      return "surface"
+    case ("FilledButton", "color"):
+      return "onprimary"
+    case ("FilledTonalButton", "color"):
+      return "onsecondarycontainer"
+    case ("Button", "bgcolor"):
+      return "surfacecontainerlow"
+    case ("FilledButton", "bgcolor"):
+      return "primary"
+    case ("FilledTonalButton", "bgcolor"):
+      return "secondarycontainer"
+    case ("OutlinedButton", "bgcolor"), ("TextButton", "bgcolor"),
+         ("SegmentedButton", "bgcolor"):
+      return "transparent"
     case ("Button", "overlay_color"), ("FilledButton", "overlay_color"),
          ("FilledTonalButton", "overlay_color"), ("OutlinedButton", "overlay_color"),
          ("TextButton", "overlay_color"), ("SegmentedButton", "overlay_color"):
@@ -106,20 +114,22 @@ enum RufletThemeDefaults {
     }
   }
 
-  /// Returns only an explicitly supplied wire colour.
-  ///
-  /// Do not fall back to `colorToken(control:property:)` here. That table is
-  /// retained as a compatibility description of Flutter's Material theme for
-  /// explicit Material emulation, but it is not the Apple renderer's default
-  /// appearance. A nil result deliberately lets the native control resolve
-  /// its own platform colour and state styling.
+  /// Resolves an explicit wire colour first, then the pinned Flet/Flutter
+  /// constructor or theme token. The returned value is semantic input to a
+  /// native Apple control; it does not select a Material renderer.
   static func resolvedColorToken(for node: ControlNode, property: String) -> String? {
-    if let explicit = node.props[property]?.stringValue,
-      !explicit.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-    {
-      return explicit
-    }
-    return nil
+    explicitColorToken(for: node, property: property)
+      ?? colorToken(control: node.type, property: property)
+  }
+
+  /// Some native APIs need to know whether the user explicitly overrode a
+  /// style even though the semantic resolver above still knows the omitted
+  /// Flet default. Keep that rendering-policy question separate.
+  static func explicitColorToken(for node: ControlNode, property: String) -> String? {
+    guard let value = node.props[property]?.stringValue else { return nil }
+    let explicit = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !explicit.isEmpty else { return nil }
+    return explicit
   }
 
   static let materialButtonPadding = EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8)

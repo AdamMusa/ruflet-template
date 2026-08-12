@@ -176,11 +176,14 @@ final class ButtonParityTests: XCTestCase {
     XCTAssertEqual(disabled.pressedElevation, 1)
   }
 
-  func testFloatingActionButtonColorsAreOnlyResolvedWhenExplicit() {
+  func testFloatingActionButtonColorsPreserveFletDefaultsAndExplicitOverrides() {
     let omitted = node("FloatingActionButton")
-    XCTAssertNil(RufletThemeDefaults.resolvedColorToken(for: omitted, property: "bgcolor"))
-    XCTAssertNil(RufletThemeDefaults.resolvedColorToken(
-      for: omitted, property: "foreground_color"))
+    XCTAssertEqual(
+      RufletThemeDefaults.resolvedColorToken(for: omitted, property: "bgcolor"),
+      "primarycontainer")
+    XCTAssertEqual(
+      RufletThemeDefaults.resolvedColorToken(for: omitted, property: "foreground_color"),
+      "onprimarycontainer")
 
     let explicit = node("FloatingActionButton", ["bgcolor": .string("red400")])
     XCTAssertEqual(

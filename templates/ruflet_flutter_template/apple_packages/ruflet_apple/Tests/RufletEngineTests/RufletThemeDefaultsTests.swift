@@ -47,11 +47,21 @@ final class RufletThemeDefaultsTests: XCTestCase {
     XCTAssertTrue(RufletThemeDefaults.appBarCentersTitle(trueNode))
   }
 
-  func testAppleControlsKeepNativeColorsWhenDSLColorsAreOmitted() {
-    for type in ["Button", "FilledButton", "FilledTonalButton", "OutlinedButton", "TextButton"] {
+  func testOmittedColorsPreserveFletThemeSemantics() {
+    let expected: [(String, String, String)] = [
+      ("Button", "primary", "surfacecontainerlow"),
+      ("FilledButton", "onprimary", "primary"),
+      ("FilledTonalButton", "onsecondarycontainer", "secondarycontainer"),
+      ("OutlinedButton", "primary", "transparent"),
+      ("TextButton", "primary", "transparent"),
+    ]
+    for (type, foreground, background) in expected {
       let node = ControlNode(id: 1, type: type)
-      XCTAssertNil(RufletThemeDefaults.resolvedColorToken(for: node, property: "color"))
-      XCTAssertNil(RufletThemeDefaults.resolvedColorToken(for: node, property: "bgcolor"))
+      XCTAssertEqual(
+        RufletThemeDefaults.resolvedColorToken(for: node, property: "color"), foreground)
+      XCTAssertEqual(
+        RufletThemeDefaults.resolvedColorToken(for: node, property: "bgcolor"), background)
+      XCTAssertNil(RufletThemeDefaults.explicitColorToken(for: node, property: "color"))
     }
   }
 
@@ -65,12 +75,15 @@ final class RufletThemeDefaultsTests: XCTestCase {
       RufletThemeDefaults.resolvedColorToken(for: node, property: "bgcolor"), "red400")
   }
 
-  func testSelectionColorsRemainNativeUnlessExplicit() {
+  func testSelectionColorsUseFletThemeUnlessExplicit() {
     let omitted = ControlNode(id: 1, type: "Checkbox")
     let explicit = ControlNode(
       id: 2, type: "Checkbox", props: ["active_color": .string("green")])
-    XCTAssertNil(RufletThemeDefaults.resolvedColorToken(for: omitted, property: "active_color"))
-    XCTAssertNil(RufletThemeDefaults.resolvedColorToken(for: omitted, property: "inactive_color"))
+    XCTAssertEqual(
+      RufletThemeDefaults.resolvedColorToken(for: omitted, property: "active_color"), "primary")
+    XCTAssertEqual(
+      RufletThemeDefaults.resolvedColorToken(for: omitted, property: "inactive_color"),
+      "onsurfacevariant")
     XCTAssertEqual(
       RufletThemeDefaults.resolvedColorToken(for: explicit, property: "active_color"), "green")
   }

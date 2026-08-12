@@ -80,17 +80,21 @@ final class ValueControlParityTests: XCTestCase {
 
   // MARK: - Switch
 
-  /// Omitted colours are presentation choices. The Apple renderer must leave
-  /// them unset so the native control resolves its own state appearance.
-  func testSwitchOmittedColorsRemainNative() {
+  /// Omitted colours remain Flet/Flutter semantic defaults even though the
+  /// visible control is implemented with native Apple primitives.
+  func testSwitchOmittedColorsPreserveFletSemantics() {
     let omitted = node("Switch")
-    XCTAssertNil(RufletThemeDefaults.resolvedColorToken(for: omitted, property: "active_color"))
-    XCTAssertNil(
-      RufletThemeDefaults.resolvedColorToken(for: omitted, property: "active_track_color"))
-    XCTAssertNil(
-      RufletThemeDefaults.resolvedColorToken(for: omitted, property: "inactive_thumb_color"))
-    XCTAssertNil(
-      RufletThemeDefaults.resolvedColorToken(for: omitted, property: "inactive_track_color"))
+    XCTAssertEqual(
+      RufletThemeDefaults.resolvedColorToken(for: omitted, property: "active_color"), "onprimary")
+    XCTAssertEqual(
+      RufletThemeDefaults.resolvedColorToken(for: omitted, property: "active_track_color"),
+      "primary")
+    XCTAssertEqual(
+      RufletThemeDefaults.resolvedColorToken(for: omitted, property: "inactive_thumb_color"),
+      "outline")
+    XCTAssertEqual(
+      RufletThemeDefaults.resolvedColorToken(for: omitted, property: "inactive_track_color"),
+      "surfacecontainerhighest")
   }
 
   func testSwitchTrackIsMaterialsFiftyTwoByThirtyTwo() {
