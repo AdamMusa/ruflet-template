@@ -17,50 +17,78 @@ struct ScreenshotControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
+  @Environment(\.displayScale) private var displayScale
 
   var body: some View {
-    content
-      .rufletCommandHandler(node.id) { call, completion in
-        capture(call, completion: completion)
+    Group {
+      if let error = RufletScreenshotSemantics.validationError(
+        contentID: contentID, contentIsVisible: contentIsVisible)
+      {
+        RufletWrapperError(error)
+      } else {
+        content
       }
+    }
+      .rufletCommandHandler(node.id) { call, completion in
+        handle(call, completion: completion)
+      }
+  }
+
+  private var contentID: Int? { node.controlID(forKey: "content") }
+
+  private var contentIsVisible: Bool {
+    guard let contentID, let content = store.node(contentID) else { return false }
+    return content.bool("visible") != false
   }
 
   @ViewBuilder
   private var content: some View {
-    if let contentID = node.controlID(forKey: "content") {
+    if let contentID {
       ControlView(id: contentID, axis: .none)
     } else {
-      ControlList(ids: node.childIDs, axis: .vertical)
+      EmptyView()
     }
   }
 
-  private func capture(_ call: RufletMethodCall, completion: @escaping RufletMethodCompletion) {
+  private func handle(_ call: RufletMethodCall, completion: @escaping RufletMethodCompletion) {
+    if let error = RufletScreenshotSemantics.commandError(call.name) {
+      return completion(.failure(error))
+    }
+    guard RufletScreenshotSemantics.validationError(
+      contentID: contentID, contentIsVisible: contentIsVisible) == nil
+    else {
+      return completion(.failure(RufletServiceError.failed(
+        RufletScreenshotSemantics.missingContentError)))
+    }
     guard #available(iOS 16.0, macOS 13.0, *) else {
       return completion(
-        .failure(RufletServiceError.unavailable("Screenshot capture needs iOS 16 / macOS 13")))
+        .failure(RufletServiceError.unavailable(RufletScreenshotSemantics.availabilityError)))
     }
 
-    let delay = RufletWrapperDefaults.screenshotDelay(call.argument("delay")?.doubleValue)
-    if delay > 0 {
-      DispatchQueue.main.asyncAfter(deadline: .now() + delay / 1_000) {
-        render(call, completion: completion)
+    let request = RufletScreenshotCaptureRequest(call: call)
+    if request.delayMilliseconds > 0 {
+      DispatchQueue.main.asyncAfter(deadline: .now() + request.delayMilliseconds / 1_000) {
+        render(request, completion: completion)
       }
     } else {
-      render(call, completion: completion)
+      render(request, completion: completion)
     }
   }
 
-  private func render(_ call: RufletMethodCall, completion: @escaping RufletMethodCompletion) {
+  private func render(
+    _ request: RufletScreenshotCaptureRequest,
+    completion: @escaping RufletMethodCompletion
+  ) {
     let renderer = ImageRenderer(
       content:
         content
         .environmentObject(store)
         .environment(\.rufletEvents, events))
-    if let ratio = call.argument("pixel_ratio")?.doubleValue { renderer.scale = ratio }
+    renderer.scale = request.pixelRatio ?? displayScale
 
     #if canImport(UIKit)
       guard let data = renderer.uiImage?.pngData() else {
-        return completion(.failure(RufletServiceError.failed("The view could not be rasterised")))
+        return completion(RufletScreenshotSemantics.captureResult(pngData: nil))
       }
     #elseif canImport(AppKit)
       guard let image = renderer.nsImage,
@@ -68,13 +96,77 @@ struct ScreenshotControlView: View {
         let bitmap = NSBitmapImageRep(data: tiff),
         let data = bitmap.representation(using: .png, properties: [:])
       else {
-        return completion(.failure(RufletServiceError.failed("The view could not be rasterised")))
+        return completion(RufletScreenshotSemantics.captureResult(pngData: nil))
       }
     #else
       let data = Data()
     #endif
 
-    completion(.success(.binary([UInt8](data))))
+    completion(RufletScreenshotSemantics.captureResult(pngData: data))
+  }
+}
+
+struct RufletScreenshotCaptureRequest: Equatable {
+  let delayMilliseconds: Double
+  let pixelRatio: CGFloat?
+
+  init(call: RufletMethodCall) {
+    delayMilliseconds = RufletScreenshotSemantics.delayMilliseconds(call.argument("delay"))
+    pixelRatio = call.argument("pixel_ratio")?.doubleValue.map { CGFloat($0) }
+  }
+}
+
+enum RufletScreenshotSemantics {
+  static let missingContentError = "Screenshot.content must be provided and visible"
+  static let availabilityError = "Screenshot capture needs iOS 16 / macOS 13"
+  static let rasterizationError = "The view could not be rasterised"
+
+  static func validationError(contentID: Int?, contentIsVisible: Bool) -> String? {
+    contentID != nil && contentIsVisible ? nil : missingContentError
+  }
+
+  static func commandError(_ name: String) -> RufletServiceError? {
+    name == "capture" ? nil : .unsupportedMethod(type: "Screenshot", method: name)
+  }
+
+  /// Flet's `parseDuration` treats a scalar as milliseconds and sums every
+  /// component of a Duration map. Duration extension values carry microseconds.
+  static func delayMilliseconds(_ value: RufletValue?) -> Double {
+    guard let value, !value.isNull else { return 20 }
+    switch value {
+    case .int(let milliseconds):
+      return Double(milliseconds)
+    case .double:
+      // `parseDuration` delegates to Dart's integer parser; a fractional
+      // numeric string does not parse as an Int and therefore becomes zero.
+      return 0
+    case .extended(type: 3, let microseconds):
+      return Double(Int64(microseconds) ?? 0) / 1_000
+    case .map(let components):
+      func integer(_ key: String) -> Int64 {
+        switch components[key] {
+        case .int(let value): return value
+        case .string(let value), .extended(_, let value): return Int64(value) ?? 0
+        default: return 0
+        }
+      }
+      let microseconds = integer("microseconds")
+        + 1_000 * integer("milliseconds")
+        + 1_000_000 * integer("seconds")
+        + 60_000_000 * integer("minutes")
+        + 3_600_000_000 * integer("hours")
+        + 86_400_000_000 * integer("days")
+      return Double(microseconds) / 1_000
+    default:
+      return 0
+    }
+  }
+
+  static func captureResult(pngData: Data?) -> Result<RufletValue, Error> {
+    guard let pngData else {
+      return .failure(RufletServiceError.failed(rasterizationError))
+    }
+    return .success(.binary([UInt8](pngData)))
   }
 }
 
