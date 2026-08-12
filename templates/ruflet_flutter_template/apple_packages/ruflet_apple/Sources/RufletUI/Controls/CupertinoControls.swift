@@ -2801,6 +2801,7 @@ enum RufletCupertinoActivityIndicatorMetrics {
 /// `CupertinoAppBar` — the iOS title bar.
 struct CupertinoAppBarControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletNavigationContext) private var navigation
   @Environment(\.rufletScaffoldHost) private var scaffold
   @Environment(\.rufletHeroNamespace) private var heroNamespace
@@ -2858,7 +2859,7 @@ struct CupertinoAppBarControlView: View {
 
   private var chromeRow: some View {
     HStack(spacing: 0) {
-      if let leadingID = node.controlID(forKey: "leading") {
+      if let leadingID = visibleSlotID("leading") {
         ControlView(id: leadingID, axis: .none)
           .padding(.leading, configuration.padding?.leading
             ?? RufletCupertinoAppBarDefaults.edgePadding)
@@ -2886,7 +2887,7 @@ struct CupertinoAppBarControlView: View {
       }
       Spacer(minLength: 0)
       HStack(spacing: 0) {
-        if let trailingID = node.controlID(forKey: "trailing") {
+        if let trailingID = visibleSlotID("trailing") {
           ControlView(id: trailingID, axis: .none)
         } else {
           ForEach(actionIDs, id: \.self) { ControlView(id: $0, axis: .none) }
@@ -2900,7 +2901,7 @@ struct CupertinoAppBarControlView: View {
 
   @ViewBuilder
   private var title: some View {
-    if let titleID = node.controlID(forKey: "title") {
+    if let titleID = visibleSlotID("title") {
       ControlView(id: titleID, axis: .none)
     } else if let scalarTitle = node.string("title") {
       Text(scalarTitle)
@@ -2908,11 +2909,21 @@ struct CupertinoAppBarControlView: View {
   }
 
   private var actionIDs: [Int] {
-    node.controlIDs(forKey: "actions")
+    RufletCupertinoAppBarSlots.visibleIDs(
+      node.controlIDs(forKey: "actions"), visibilityForID: visibilityForID)
   }
 
   private var hasTrailing: Bool {
-    node.controlID(forKey: "trailing") != nil || !actionIDs.isEmpty
+    visibleSlotID("trailing") != nil || !actionIDs.isEmpty
+  }
+
+  private func visibleSlotID(_ key: String) -> Int? {
+    RufletCupertinoAppBarSlots.visibleID(
+      node.controlID(forKey: key), visibilityForID: visibilityForID)
+  }
+
+  private func visibilityForID(_ id: Int) -> Bool? {
+    store.node(id).map { $0.bool("visible") != false }
   }
 
   @ViewBuilder
@@ -2953,6 +2964,24 @@ struct CupertinoAppBarControlView: View {
     case "dark": return .dark
     case "light": return .light
     default: return nil
+    }
+  }
+}
+
+enum RufletCupertinoAppBarSlots {
+  static func visibleID(
+    _ id: Int?, visibilityForID: (Int) -> Bool?
+  ) -> Int? {
+    guard let id, visibilityForID(id) != false else { return nil }
+    return id
+  }
+
+  static func visibleIDs(
+    _ ids: [Int], visibilityForID: (Int) -> Bool?
+  ) -> [Int] {
+    var seen = Set<Int>()
+    return ids.filter { id in
+      visibilityForID(id) != false && seen.insert(id).inserted
     }
   }
 }
