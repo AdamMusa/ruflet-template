@@ -145,18 +145,16 @@ final class ServiceCommandConformanceTests: XCTestCase {
   }
 
   @MainActor
-  func testUnsupportedPlatformCommandsAreClassifiedRatherThanUnknown() {
-    let browserReply = invoke(
+  func testBrowserContextMenuCommandsToggleTheNativeApplePolicy() {
+    let disableReply = invoke(
       BrowserContextMenuService(), type: "BrowserContextMenu", method: "disable_menu")
-    guard case .failure(let browserError)? = browserReply else {
-      return XCTFail("browser context menu must return a classified failure")
-    }
-    guard case .platformUnsupported(let type, let method, _) = browserError as? RufletServiceError else {
-      return XCTFail("unexpected error: \(browserError)")
-    }
-    XCTAssertEqual(type, "BrowserContextMenu")
-    XCTAssertEqual(method, "disable_menu")
+    XCTAssertEqual(try? disableReply?.get(), .null)
+    XCTAssertFalse(RufletBrowserContextMenuPolicy.isEnabled)
 
+    let enableReply = invoke(
+      BrowserContextMenuService(), type: "BrowserContextMenu", method: "enable_menu")
+    XCTAssertEqual(try? enableReply?.get(), .null)
+    XCTAssertTrue(RufletBrowserContextMenuPolicy.isEnabled)
   }
 
   @MainActor

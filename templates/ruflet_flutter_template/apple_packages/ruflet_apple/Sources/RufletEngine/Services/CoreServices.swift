@@ -423,8 +423,17 @@ public final class PageService: RufletStreamingService {
 }
 
 /// Browser context-menu policy is a web-only host concern. Keeping it as a
-/// real service means Ruby receives an immediate, classified answer instead
-/// of timing out or being told the method is unknown.
+/// real service lets Ruby toggle the native edit/context menus exactly as the
+/// Flet service toggles Flutter's BrowserContextMenu policy.
+@MainActor
+public enum RufletBrowserContextMenuPolicy {
+  public private(set) static var isEnabled = true
+
+  public static func setEnabled(_ enabled: Bool) {
+    isEnabled = enabled
+  }
+}
+
 @MainActor
 public final class BrowserContextMenuService: RufletService {
   public static let wireType = "BrowserContextMenu"
@@ -437,16 +446,12 @@ public final class BrowserContextMenuService: RufletService {
     completion: @escaping RufletMethodCompletion
   ) {
     switch call.name {
-    case "disable_menu", "enable_menu":
-      #if os(iOS)
-        let platform = "iOS"
-      #elseif os(macOS)
-        let platform = "macOS"
-      #else
-        let platform = "this Apple platform"
-      #endif
-      completion(.failure(RufletServiceError.platformUnsupported(
-        type: Self.wireType, method: call.name, platform: platform)))
+    case "disable_menu":
+      RufletBrowserContextMenuPolicy.setEnabled(false)
+      completion(.success(.null))
+    case "enable_menu":
+      RufletBrowserContextMenuPolicy.setEnabled(true)
+      completion(.success(.null))
     default:
       completion(.failure(RufletServiceError.unsupportedMethod(
         type: Self.wireType, method: call.name)))

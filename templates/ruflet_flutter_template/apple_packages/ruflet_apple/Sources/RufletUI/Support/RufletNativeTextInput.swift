@@ -293,7 +293,8 @@ enum RufletTextSelection {
     }
 
     override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
-      allowsInteractiveSelection && super.canPerformAction(action, withSender: sender)
+      allowsInteractiveSelection && RufletBrowserContextMenuPolicy.isEnabled
+        && super.canPerformAction(action, withSender: sender)
     }
 
     override func addGestureRecognizer(_ gestureRecognizer: UIGestureRecognizer) {
@@ -796,7 +797,8 @@ enum RufletTextSelection {
     }
 
     override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
-      allowsInteractiveSelection && super.canPerformAction(action, withSender: sender)
+      allowsInteractiveSelection && RufletBrowserContextMenuPolicy.isEnabled
+        && super.canPerformAction(action, withSender: sender)
     }
 
     override func addGestureRecognizer(_ gestureRecognizer: UIGestureRecognizer) {
