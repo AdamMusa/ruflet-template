@@ -77,6 +77,34 @@ module FletControlContract
     classes
   end
 
+  # A Dart source file commonly contains several independent Flet controls.
+  # Attribute defaults/events/methods only to the registered renderer and its
+  # private State implementation; scanning the entire file falsely assigns a
+  # sibling control's behavior to every wire type in that file (Tabs/TabBar is
+  # the canonical example).
+  def renderer_scope(source, renderer_class)
+    names = [renderer_class]
+    bodies = []
+    index = 0
+    while index < names.length
+      name = names[index]
+      signature = /\b(?:class|extension)\s+#{Regexp.escape(name)}\b/
+      offset = 0
+      while (match = source.match(signature, offset))
+        body = balanced_body(source[match.begin(0)..], signature)
+        break unless body
+
+        bodies << body
+        body.scan(/\bcreateState\s*\(\s*\)\s*=>\s*(\w+)\s*\(/).flatten.each do |state_name|
+          names << state_name unless names.include?(state_name)
+        end
+        offset = match.end(0) + body.length
+      end
+      index += 1
+    end
+    bodies.empty? ? source : bodies.join("\n")
+  end
+
   def registry_mappings(registry_path)
     # A commented switch case is documentation/TODO, not a wire type the Flet
     # engine can construct. In particular flet_ads keeps NativeAdControl's
@@ -258,6 +286,7 @@ module FletControlContract
       next unless renderer
 
       source = File.read(renderer[:path])
+      scope = renderer_scope(strip_dart_comments(source), mapping[:renderer_class])
       relative_source = renderer[:path].delete_prefix(template_root + "/")
       {
         "wire_type" => mapping[:wire_type],
@@ -271,9 +300,9 @@ module FletControlContract
         "family" => family,
         "classification" => mapping[:classification],
         "design_family" => design_family(mapping[:wire_type], mapping[:renderer_class]),
-        "primitive_defaults" => primitive_defaults(source),
-        "events" => events(source),
-        "methods" => methods(source)
+        "primitive_defaults" => primitive_defaults(scope),
+        "events" => events(scope),
+        "methods" => methods(scope)
       }
     end
   end

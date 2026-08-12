@@ -64,6 +64,17 @@ class FletControlContractTest < Minitest::Test
     assert_equal "start", column.dig("primitive_defaults", "horizontal_alignment", "value")
   end
 
+  def test_sibling_controls_do_not_inherit_each_others_events_and_methods
+    assert_equal ["change"], @controls.fetch("Tabs").fetch("events")
+    assert_equal ["move_to"], @controls.fetch("Tabs").fetch("methods")
+    assert_equal ["click", "hover"], @controls.fetch("TabBar").fetch("events")
+    assert_empty @controls.fetch("TabBar").fetch("methods")
+    assert_empty @controls.fetch("TabBarView").fetch("events")
+    assert_empty @controls.fetch("TabBarView").fetch("methods")
+    assert_empty @controls.fetch("Tab").fetch("events")
+    assert_empty @controls.fetch("Tab").fetch("methods")
+  end
+
   def test_every_vendored_flet_extension_has_an_available_swift_product
     vendored = Dir.children(File.join(FletControlContract.template_root, "flet_packages"))
       .grep(/\A(?:flet_|ruflet_)/)

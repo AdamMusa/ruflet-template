@@ -266,11 +266,13 @@ final class ChromeOverlayParityTests: XCTestCase {
     XCTAssertEqual(events[1].2, .null)
   }
 
-  func testTabsAlreadyExposeStructuralEventsAndMoveTo() {
-    for type in ["Tabs", "TabBar", "TabBarView"] {
-      XCTAssertEqual(events(type), ["change", "click", "hover"], type)
-      XCTAssertEqual(methods(type), ["move_to"], type)
-    }
+  func testTabEventsAndMethodsStayOnTheirFletOwners() {
+    XCTAssertEqual(events("Tabs"), ["change"])
+    XCTAssertEqual(methods("Tabs"), ["move_to"])
+    XCTAssertEqual(events("TabBar"), ["click", "hover"])
+    XCTAssertEqual(methods("TabBar"), [])
+    XCTAssertEqual(events("TabBarView"), [])
+    XCTAssertEqual(methods("TabBarView"), [])
   }
 
   func testAlertDialogPreservesAdaptiveWireFlagButAlwaysUsesNativeApplePresentation() {

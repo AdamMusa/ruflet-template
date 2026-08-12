@@ -2401,7 +2401,12 @@
       "events": [
         "upload"
       ],
-      "methods": []
+      "methods": [
+        "get_directory_path",
+        "pick_files",
+        "save_file",
+        "upload"
+      ]
     },
     {
       "wire_type": "FilledButton",
@@ -5935,7 +5940,18 @@
       "design_family": null,
       "primitive_defaults": {},
       "events": [],
-      "methods": []
+      "methods": [
+        "get_application_cache_directory",
+        "get_application_documents_directory",
+        "get_application_support_directory",
+        "get_console_log_filename",
+        "get_downloads_directory",
+        "get_external_cache_directories",
+        "get_external_storage_directories",
+        "get_external_storage_directory",
+        "get_library_directory",
+        "get_temporary_directory"
+      ]
     },
     {
       "wire_type": "SubmenuButton",
@@ -6002,44 +6018,9 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
-      "primitive_defaults": {
-        "clip_behavior": {
-          "type": "enum",
-          "value": "hardEdge"
-        },
-        "indicator_thickness": {
-          "type": "double",
-          "value": 2.0
-        },
-        "length": {
-          "type": "int",
-          "value": 0
-        },
-        "scrollable": {
-          "type": "bool",
-          "value": true
-        },
-        "secondary": {
-          "type": "bool",
-          "value": false
-        },
-        "selected_index": {
-          "type": "int",
-          "value": 0
-        },
-        "viewport_fraction": {
-          "type": "double",
-          "value": 1.0
-        }
-      },
-      "events": [
-        "change",
-        "click",
-        "hover"
-      ],
-      "methods": [
-        "move_to"
-      ]
+      "primitive_defaults": {},
+      "events": [],
+      "methods": []
     },
     {
       "wire_type": "TabBar",
@@ -6054,17 +6035,9 @@
       "classification": "widget",
       "design_family": null,
       "primitive_defaults": {
-        "clip_behavior": {
-          "type": "enum",
-          "value": "hardEdge"
-        },
         "indicator_thickness": {
           "type": "double",
           "value": 2.0
-        },
-        "length": {
-          "type": "int",
-          "value": 0
         },
         "scrollable": {
           "type": "bool",
@@ -6073,24 +6046,13 @@
         "secondary": {
           "type": "bool",
           "value": false
-        },
-        "selected_index": {
-          "type": "int",
-          "value": 0
-        },
-        "viewport_fraction": {
-          "type": "double",
-          "value": 1.0
         }
       },
       "events": [
-        "change",
         "click",
         "hover"
       ],
-      "methods": [
-        "move_to"
-      ]
+      "methods": []
     },
     {
       "wire_type": "TabBarView",
@@ -6109,39 +6071,13 @@
           "type": "enum",
           "value": "hardEdge"
         },
-        "indicator_thickness": {
-          "type": "double",
-          "value": 2.0
-        },
-        "length": {
-          "type": "int",
-          "value": 0
-        },
-        "scrollable": {
-          "type": "bool",
-          "value": true
-        },
-        "secondary": {
-          "type": "bool",
-          "value": false
-        },
-        "selected_index": {
-          "type": "int",
-          "value": 0
-        },
         "viewport_fraction": {
           "type": "double",
           "value": 1.0
         }
       },
-      "events": [
-        "change",
-        "click",
-        "hover"
-      ],
-      "methods": [
-        "move_to"
-      ]
+      "events": [],
+      "methods": []
     },
     {
       "wire_type": "Tabs",
@@ -6156,39 +6092,17 @@
       "classification": "widget",
       "design_family": null,
       "primitive_defaults": {
-        "clip_behavior": {
-          "type": "enum",
-          "value": "hardEdge"
-        },
-        "indicator_thickness": {
-          "type": "double",
-          "value": 2.0
-        },
         "length": {
           "type": "int",
           "value": 0
         },
-        "scrollable": {
-          "type": "bool",
-          "value": true
-        },
-        "secondary": {
-          "type": "bool",
-          "value": false
-        },
         "selected_index": {
           "type": "int",
           "value": 0
-        },
-        "viewport_fraction": {
-          "type": "double",
-          "value": 1.0
         }
       },
       "events": [
-        "change",
-        "click",
-        "hover"
+        "change"
       ],
       "methods": [
         "move_to"

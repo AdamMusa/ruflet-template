@@ -350,11 +350,10 @@ public enum ControlRegistry {
     add(["ExpansionPanelList"], .visible, "ExpansionPanelListControlView", .nativeView,
         events: ["change"])
     add(["Tabs"], .visible, "TabsControlView", .nativeView,
-        events: ["change", "click", "hover"], methods: ["move_to"])
+        events: ["change"], methods: ["move_to"])
     add(["TabBar"], .visible, "TabBarControlView", .nativeView,
-        events: ["change", "click", "hover"], methods: ["move_to"])
-    add(["TabBarView"], .visible, "TabBarViewControlView", .nativeView,
-        events: ["change", "click", "hover"], methods: ["move_to"])
+        events: ["click", "hover"])
+    add(["TabBarView"], .visible, "TabBarViewControlView", .nativeView)
     add(["DataTable"], .visible, "DataTableControlView", .nativeView,
         events: ["double_tap", "long_press", "select_all", "select_change", "sort",
                  "tap", "tap_cancel", "tap_down"])
