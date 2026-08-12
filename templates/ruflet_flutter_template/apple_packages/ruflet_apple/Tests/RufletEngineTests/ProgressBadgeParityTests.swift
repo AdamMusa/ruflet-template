@@ -22,6 +22,18 @@ final class ProgressBadgeParityTests: XCTestCase {
       id: 4, type: "ProgressRing", props: ["stroke_width": .double(8)])))
   }
 
+  func testNativeProgressControlsKeepFletThemeTokens() {
+    for type in ["ProgressBar", "ProgressRing"] {
+      let node = ControlNode(id: 1, type: type)
+      XCTAssertEqual(
+        RufletThemeDefaults.resolvedColorToken(for: node, property: "color"),
+        "primary", type)
+      XCTAssertEqual(
+        RufletThemeDefaults.resolvedColorToken(for: node, property: "bgcolor"),
+        "secondarycontainer", type)
+    }
+  }
+
   func testBadgeVisibilityAndMissingLabelAreDifferentStates() {
     let hidden = ControlNode(
       id: 1, type: "Badge", props: ["label_visible": .bool(false)])

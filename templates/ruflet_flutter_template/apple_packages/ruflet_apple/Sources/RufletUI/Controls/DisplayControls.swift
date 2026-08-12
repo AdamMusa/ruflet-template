@@ -829,6 +829,9 @@ struct ProgressBarControlView: View {
         }
       }
       .progressViewStyle(.linear)
+      // Keep the native ProgressView, but feed it Flutter's resolved semantic
+      // colour rather than replacing an omitted value with an Apple default.
+      .tint(progressColor)
       .modifier(ProgressSemanticsValue(node: node))
     } else {
       let metrics = RufletLinearProgressMetrics(node: node)
@@ -1067,6 +1070,7 @@ struct ProgressRingControlView: View {
         }
       }
       .progressViewStyle(.circular)
+      .tint(progressColor)
       .modifier(ProgressSemanticsValue(node: node))
     } else {
       let metrics = RufletCircularProgressMetrics(node: node)
