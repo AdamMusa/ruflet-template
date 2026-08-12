@@ -8,6 +8,13 @@ final class CollectionParityTests: XCTestCase {
     let list = CollectionDefaults.listView(ControlNode(id: 1, type: "ListView"))
     XCTAssertFalse(list.horizontal)
     XCTAssertEqual(list.spacing, 0)
+    XCTAssertEqual(list.dividerThickness, 0)
+    XCTAssertNil(list.itemExtent)
+    XCTAssertNil(list.cacheExtent)
+    XCTAssertNil(list.semanticChildCount)
+    XCTAssertFalse(list.reverse)
+    XCTAssertFalse(list.firstItemPrototype)
+    XCTAssertFalse(list.usesPrototype)
     XCTAssertTrue(list.lazy)
     XCTAssertEqual(list.clipBehavior, "hardEdge")
 
@@ -15,6 +22,11 @@ final class CollectionParityTests: XCTestCase {
     XCTAssertFalse(grid.horizontal)
     XCTAssertEqual(grid.spacing, 10)
     XCTAssertEqual(grid.runSpacing, 10)
+    XCTAssertEqual(grid.childAspectRatio, 1)
+    XCTAssertNil(grid.cacheExtent)
+    XCTAssertNil(grid.semanticChildCount)
+    XCTAssertFalse(grid.reverse)
+    XCTAssertTrue(grid.lazy)
     XCTAssertEqual(grid.runsCount, 1)
     XCTAssertNil(grid.maxExtent)
 
@@ -37,6 +49,58 @@ final class CollectionParityTests: XCTestCase {
     XCTAssertEqual(table.dataRowMaxHeight, 48)
     XCTAssertFalse(table.showBottomBorder)
     XCTAssertFalse(table.showCheckboxColumn)
+  }
+
+  func testListViewSeparatedConstructorSuppressesExtentAndPrototypeLikeFlet() {
+    let separated = CollectionDefaults.listView(ControlNode(
+      id: 1, type: "ListView", props: [
+        "spacing": .double(12),
+        "divider_thickness": .double(2),
+        "item_extent": .double(44),
+        "first_item_prototype": .bool(true),
+        "prototype_item": .controlRef(91),
+        "cache_extent": .double(320),
+        "semantic_child_count": .int(7),
+      ]))
+
+    XCTAssertEqual(separated.spacing, 12)
+    XCTAssertEqual(separated.dividerThickness, 2)
+    XCTAssertNil(separated.itemExtent)
+    XCTAssertFalse(separated.usesPrototype)
+    XCTAssertEqual(separated.cacheExtent, 320)
+    XCTAssertEqual(separated.semanticChildCount, 7)
+  }
+
+  func testListViewBuilderRetainsFletExtentAndPrototypeContractsWithoutFixedFallback() {
+    let fixed = CollectionDefaults.listView(ControlNode(
+      id: 1, type: "ListView", props: [
+        "item_extent": .double(44),
+        "first_item_prototype": .bool(true),
+        "prototype_item": .controlRef(91),
+        "reverse": .bool(true),
+      ]))
+
+    XCTAssertEqual(fixed.itemExtent, 44)
+    XCTAssertTrue(fixed.usesPrototype)
+    XCTAssertEqual(fixed.prototypeItemID, 91)
+    XCTAssertTrue(fixed.reverse)
+  }
+
+  func testGridViewPreservesPinnedDelegateAndBuilderInputs() {
+    let grid = CollectionDefaults.gridView(ControlNode(
+      id: 1, type: "GridView", props: [
+        "child_aspect_ratio": .double(1.75),
+        "cache_extent": .double(280),
+        "semantic_child_count": .int(9),
+        "reverse": .bool(true),
+        "build_controls_on_demand": .bool(false),
+      ]))
+
+    XCTAssertEqual(grid.childAspectRatio, 1.75)
+    XCTAssertEqual(grid.cacheExtent, 280)
+    XCTAssertEqual(grid.semanticChildCount, 9)
+    XCTAssertTrue(grid.reverse)
+    XCTAssertFalse(grid.lazy)
   }
 
   func testExplicitCollectionPropertiesOverrideEveryFoundationalDefault() {

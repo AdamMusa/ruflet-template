@@ -9,21 +9,18 @@ import SwiftUI
 struct ListViewControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
+  @State private var measuredPrototypeExtent: CGFloat?
 
-  /// A prototype row fixes the extent; `cache_extent` is how far beyond the
-  /// viewport Flutter keeps rows alive, which SwiftUI decides for itself.
-  private var prototypeExtent: CGFloat? {
-    guard node.controlID(forKey: "prototype_item") != nil
-      || node.bool("first_item_prototype") == true
-    else { return nil }
-    return CGFloat(node.double("cache_extent") ?? 44)
+  init(node: ControlNode) {
+    self.node = node
+    _measuredPrototypeExtent = State(initialValue: nil)
   }
 
   var body: some View {
     let config = CollectionDefaults.listView(node)
     let horizontal = config.horizontal
-    let spacing = config.spacing
     let axis: LayoutAxis = horizontal ? .horizontal : .vertical
+    let usesPrototype = config.usesPrototype
 
     ScrollView(
       horizontal ? .horizontal : .vertical,
@@ -31,30 +28,40 @@ struct ListViewControlView: View {
     ) {
       Group {
         if horizontal, config.lazy {
-          LazyHStack(spacing: spacing) { rows(axis: axis) }
+          LazyHStack(spacing: 0) { rows(axis: axis, usesPrototype: usesPrototype) }
         } else if horizontal {
-          HStack(spacing: spacing) { rows(axis: axis) }
+          HStack(spacing: 0) { rows(axis: axis, usesPrototype: usesPrototype) }
         } else if config.lazy {
-          LazyVStack(spacing: spacing) { rows(axis: axis) }
+          LazyVStack(spacing: 0) { rows(axis: axis, usesPrototype: usesPrototype) }
         } else {
-          VStack(spacing: spacing) { rows(axis: axis) }
+          VStack(spacing: 0) { rows(axis: axis, usesPrototype: usesPrototype) }
         }
       }
       .padding(config.padding)
       .modifier(CollectionClip(behavior: config.clipBehavior))
-      // `prototype_item` and `first_item_prototype` size every row from one
-      // sample, which is what fixes the extent for a lazy list. `cache_extent`
-      // is how far past the viewport Flutter keeps rows alive; SwiftUI decides
-      // that for itself, so it stands in as the sample's size.
-      .frame(
-        minWidth: horizontal ? prototypeExtent : nil,
-        minHeight: horizontal ? nil : prototypeExtent,
-        alignment: .topLeading)
+      .overlay(alignment: .topLeading) {
+        if usesPrototype, let prototype = node.controlID(forKey: "prototype_item") {
+          ControlView(id: prototype, axis: axis)
+            .fixedSize()
+            .opacity(0)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+            .modifier(CollectionPrototypeMeasure(horizontal: horizontal))
+        }
+      }
       .modifier(CollectionScrollContentProbe(node: node, horizontal: horizontal))
       .accessibilityElement(children: .contain)
       .accessibilityValue(
         node.int("semantic_child_count").map { "\($0)" } ?? "")
     }
+    .onPreferenceChange(CollectionPrototypeExtentKey.self) { extent in
+      guard extent > 0, usesPrototype else { return }
+      measuredPrototypeExtent = extent
+    }
+    // SwiftUI owns its own lazy-container prefetch window; reading the Flet
+    // value documents the exact native limitation without treating it as row
+    // geometry (the previous implementation incorrectly did so).
+    .onAppear { _ = config.cacheExtent }
     .modifier(CollectionAutoScroll(node: node, horizontal: horizontal))
     .modifier(CollectionScrollReporter(node: node, horizontal: horizontal, events: events))
   }
@@ -62,20 +69,26 @@ struct ListViewControlView: View {
   /// `divider_thickness` puts a rule between items — the one place a Flet list
   /// differs from a plain stack of children.
   @ViewBuilder
-  private func rows(axis: LayoutAxis) -> some View {
-    let thickness = node.double("divider_thickness") ?? 0
-    let children = (node.bool("reverse") ?? false) ? Array(node.childIDs.reversed()) : node.childIDs
-    let itemExtent = node.double("item_extent").map { CGFloat($0) }
+  private func rows(axis: LayoutAxis, usesPrototype: Bool) -> some View {
+    let config = CollectionDefaults.listView(node)
+    let spacing = config.spacing
+    let children = config.reverse ? Array(node.childIDs.reversed()) : node.childIDs
+    // Flet deliberately ignores item/prototype extents when separators are
+    // enabled because ListView.separated has no itemExtent/prototypeItem.
+    let itemExtent = measuredPrototypeExtent ?? config.itemExtent
 
     ForEach(children.indices, id: \.self) { index in
-      if thickness > 0, index > 0 {
-        Divider()
-          .frame(
-            width: axis == .horizontal ? CGFloat(thickness) : nil,
-            height: axis == .horizontal ? nil : CGFloat(thickness))
-          .background(MaterialPalette.color(node.string("divider_color")))
+      if spacing > 0, index > 0 {
+        CollectionListSeparator(
+          horizontal: axis == .horizontal,
+          extent: spacing,
+          thickness: config.dividerThickness,
+          color: MaterialPalette.color(node.string("divider_color")))
       }
       ControlView(id: children[index], axis: axis)
+        .modifier(CollectionPrototypeMeasure(
+          enabled: usesPrototype && node.controlID(forKey: "prototype_item") == nil && index == 0,
+          horizontal: axis == .horizontal))
         .frame(
           width: axis == .horizontal ? itemExtent : nil,
           height: axis == .vertical ? itemExtent : nil)
@@ -108,22 +121,23 @@ struct GridViewControlView: View {
       .modifier(CollectionClip(behavior: config.clipBehavior))
       .accessibilityElement(children: .contain)
       .accessibilityValue(node.int("semantic_child_count").map { "\($0)" } ?? "")
-      // `cache_extent` is how far past the viewport Flutter keeps cells
-      // alive; SwiftUI decides that itself, so it stands in as the grid's
-      // minimum extent.
-      .frame(minHeight: node.double("cache_extent").map { CGFloat($0) })
       .modifier(CollectionScrollContentProbe(node: node, horizontal: config.horizontal))
     }
+    // Native lazy grids choose their own prefetch window. `cache_extent`
+    // remains a consumed Flet contract value but must not change the visible
+    // grid's minimum height.
+    .onAppear { _ = config.cacheExtent }
     .modifier(CollectionAutoScroll(node: node, horizontal: config.horizontal))
     .modifier(CollectionScrollReporter(node: node, horizontal: config.horizontal, events: events))
   }
 
   @ViewBuilder
   private var gridChildren: some View {
-    let ids = (node.bool("reverse") ?? false) ? Array(node.childIDs.reversed()) : node.childIDs
+    let config = CollectionDefaults.gridView(node)
+    let ids = config.reverse ? Array(node.childIDs.reversed()) : node.childIDs
     ForEach(ids, id: \.self) { childID in
       ControlView(id: childID, axis: .none)
-        .aspectRatio(CGFloat(node.double("child_aspect_ratio") ?? 1), contentMode: .fit)
+        .aspectRatio(config.childAspectRatio, contentMode: .fit)
     }
   }
 
@@ -2354,16 +2368,35 @@ enum CollectionDefaults {
   struct ListViewValues {
     let horizontal: Bool
     let spacing: CGFloat
+    let dividerThickness: CGFloat
+    let itemExtent: CGFloat?
+    let cacheExtent: CGFloat?
+    let semanticChildCount: Int?
+    let reverse: Bool
+    let firstItemPrototype: Bool
+    let prototypeItemID: Int?
     let padding: EdgeInsets
     let lazy: Bool
     let showsIndicators: Bool
     let clipBehavior: String
+
+    /// Flutter switches to `ListView.separated` whenever spacing is positive,
+    /// and that constructor intentionally accepts neither itemExtent nor a
+    /// prototypeItem.
+    var usesPrototype: Bool {
+      spacing == 0 && (prototypeItemID != nil || firstItemPrototype)
+    }
   }
 
   struct GridViewValues {
     let horizontal: Bool
     let spacing: CGFloat
     let runSpacing: CGFloat
+    let childAspectRatio: CGFloat
+    let cacheExtent: CGFloat?
+    let semanticChildCount: Int?
+    let reverse: Bool
+    let lazy: Bool
     let padding: EdgeInsets
     let showsIndicators: Bool
     let clipBehavior: String
@@ -2427,6 +2460,14 @@ enum CollectionDefaults {
     ListViewValues(
       horizontal: node.bool("horizontal") ?? false,
       spacing: CGFloat(node.double("spacing") ?? 0),
+      dividerThickness: CGFloat(node.double("divider_thickness") ?? 0),
+      itemExtent: node.double("spacing") == 0
+        ? node.double("item_extent").map { CGFloat($0) } : nil,
+      cacheExtent: node.double("cache_extent").map { CGFloat($0) },
+      semanticChildCount: node.int("semantic_child_count"),
+      reverse: node.bool("reverse") ?? false,
+      firstItemPrototype: node.bool("first_item_prototype") ?? false,
+      prototypeItemID: node.controlID(forKey: "prototype_item"),
       padding: ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets(),
       lazy: node.bool("build_controls_on_demand") ?? true,
       showsIndicators: node.string("scroll") != "hidden",
@@ -2438,6 +2479,11 @@ enum CollectionDefaults {
       horizontal: node.bool("horizontal") ?? false,
       spacing: CGFloat(node.double("spacing") ?? 10),
       runSpacing: CGFloat(node.double("run_spacing") ?? 10),
+      childAspectRatio: CGFloat(node.double("child_aspect_ratio") ?? 1),
+      cacheExtent: node.double("cache_extent").map { CGFloat($0) },
+      semanticChildCount: node.int("semantic_child_count"),
+      reverse: node.bool("reverse") ?? false,
+      lazy: node.bool("build_controls_on_demand") ?? true,
       padding: ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets(),
       showsIndicators: node.string("scroll") != "hidden",
       clipBehavior: node.string("clip_behavior") ?? "hardEdge",
@@ -2521,6 +2567,71 @@ private struct CollectionClip: ViewModifier {
   let behavior: String
   func body(content: Content) -> some View {
     if behavior.lowercased() == "none" { content } else { content.clipped() }
+  }
+}
+
+/// Flet's separated list reserves exactly `spacing` points between adjacent
+/// controls and paints the optional divider inside that reserved extent.
+/// Keeping the clear extent separate from the rule prevents stack spacing
+/// from being counted twice.
+private struct CollectionListSeparator: View {
+  let horizontal: Bool
+  let extent: CGFloat
+  let thickness: CGFloat
+  let color: Color?
+
+  var body: some View {
+    Color.clear
+      .frame(
+        width: horizontal ? extent : nil,
+        height: horizontal ? nil : extent)
+      .overlay {
+        if thickness > 0 {
+          if let color {
+            Rectangle()
+              .fill(color)
+              .frame(
+                width: horizontal ? thickness : nil,
+                height: horizontal ? nil : thickness)
+          } else {
+            // Divider supplies the platform's native separator appearance
+            // whenever the DSL did not provide a colour.
+            Divider()
+              .frame(
+                width: horizontal ? thickness : nil,
+                height: horizontal ? nil : thickness)
+          }
+        }
+      }
+  }
+}
+
+private struct CollectionPrototypeExtentKey: PreferenceKey {
+  static var defaultValue: CGFloat = 0
+
+  static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+    value = max(value, nextValue())
+  }
+}
+
+/// Flutter's `prototypeItem` measures a real control and reuses that main-axis
+/// extent for every row. Geometry preferences provide the equivalent without
+/// inventing a fixed Apple or Material row height.
+private struct CollectionPrototypeMeasure: ViewModifier {
+  var enabled = true
+  let horizontal: Bool
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if enabled {
+      content.background(GeometryReader { proxy in
+        Color.clear.preference(
+          key: CollectionPrototypeExtentKey.self,
+          value: horizontal ? proxy.size.width : proxy.size.height)
+      })
+    } else {
+      content
+    }
   }
 }
 
