@@ -63,7 +63,16 @@ public enum IconMapping {
     {
       switch descriptor.family {
       case .material:
-        return .systemSymbol(symbol(forMaterialName: descriptor.name))
+        let symbol = symbol(forMaterialName: descriptor.name)
+        if symbol != placeholderSymbol { return .systemSymbol(symbol) }
+        if let codepoint = MaterialIconGlyphs.codepoint(forWireCodepoint: wireCodepoint) {
+          // SF Symbols does not contain an honest equivalent for every one of
+          // Flutter's 8,000+ Material icons. Preserve the exact Android/Web
+          // glyph in those cases instead of showing an unrelated question
+          // mark. Curated semantic matches above still use native artwork.
+          return .materialGlyph(codepoint: codepoint, name: descriptor.name)
+        }
+        return .systemSymbol(placeholderSymbol)
       case .cupertino:
         return .systemSymbol(symbol(forCupertinoName: descriptor.name))
       }
@@ -73,8 +82,11 @@ public enum IconMapping {
     if rawName.lowercased().hasPrefix("cupertinoicons.") {
       return .systemSymbol(symbol(forCupertinoName: rawName))
     }
-    if MaterialIconGlyphs.codepoint(forName: rawName) != nil {
-      return .systemSymbol(symbol(forMaterialName: rawName))
+    if let codepoint = MaterialIconGlyphs.codepoint(forName: rawName) {
+      let symbol = symbol(forMaterialName: rawName)
+      return symbol == placeholderSymbol
+        ? .materialGlyph(codepoint: codepoint, name: canonical(rawName).uppercased())
+        : .systemSymbol(symbol)
     }
     return .systemSymbol(symbol(forMaterialName: rawName))
   }

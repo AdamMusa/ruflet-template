@@ -84,7 +84,7 @@ struct GestureDetectorControlView: View {
       }
     }
     .contentShape(Rectangle())
-    .modifier(PrimaryGestureReporter(node: node, events: events))
+    .modifier(GesturePrimaryInteraction(node: node, events: events))
     .modifier(DragGestures(node: node, events: events))
     .modifier(ScaleGestures(node: node, events: events))
     .modifier(MultiTouchReporter(node: node, events: events))
@@ -104,6 +104,72 @@ enum RufletGestureDetectorSemantics {
     let hasEvent = events.contains { node.handlesEvent($0) }
     let hasCursor = !(node.string("mouse_cursor") ?? "").isEmpty
     return hasEvent || hasCursor ? nil : missingHandlerError
+  }
+
+  /// A plain onTap is Flutter's ordinary tap recognizer. Installing the full
+  /// zero-distance drag lifecycle for it makes ScrollView arbitrate every row
+  /// activation as a drag, producing delayed or lost taps on iOS.
+  static func usesNativeTapOnly(_ node: ControlNode) -> Bool {
+    guard node.handlesEvent("tap") else { return false }
+    let detailed: Set<String> = [
+      "tap_down", "tap_up", "tap_move", "tap_cancel",
+      "double_tap", "double_tap_down", "double_tap_cancel",
+      "long_press", "long_press_down", "long_press_cancel",
+      "long_press_start", "long_press_move_update", "long_press_up", "long_press_end",
+    ]
+    return !detailed.contains { node.handlesEvent($0) }
+  }
+}
+
+private struct GesturePrimaryInteraction: ViewModifier {
+  let node: ControlNode
+  let events: RufletEventSink
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if RufletGestureDetectorSemantics.usesNativeTapOnly(node) {
+      content.modifier(NativeSpatialTapReporter(node: node, events: events))
+    } else {
+      content.modifier(PrimaryGestureReporter(node: node, events: events))
+    }
+  }
+}
+
+/// SpatialTapGesture is Apple's native discrete recognizer. It retains Flet's
+/// local/global tap payload while avoiding the drag recognizer which fought
+/// the enclosing native ScrollView.
+private struct NativeSpatialTapReporter: ViewModifier {
+  let node: ControlNode
+  let events: RufletEventSink
+  @State private var globalOrigin = CGPoint.zero
+
+  func body(content: Content) -> some View {
+    let measured = content.overlay(
+      GeometryReader { proxy in
+        Color.clear
+          .allowsHitTesting(false)
+          .onAppear { globalOrigin = proxy.frame(in: .global).origin }
+          .onChange(of: proxy.frame(in: .global).origin) { globalOrigin = $0 }
+      })
+    if #available(iOS 16.0, macOS 13.0, *) {
+      measured.gesture(
+        SpatialTapGesture().onEnded { value in
+          events.fire(
+            node, "tap",
+            data: RufletInteractionParity.tap(
+              kind: "touch", local: value.location,
+              global: CGPoint(
+                x: value.location.x + globalOrigin.x,
+                y: value.location.y + globalOrigin.y)))
+        })
+    } else {
+      measured.onTapGesture {
+        events.fire(
+          node, "tap",
+          data: RufletInteractionParity.tap(
+            kind: "touch", local: .zero, global: globalOrigin))
+      }
+    }
   }
 }
 

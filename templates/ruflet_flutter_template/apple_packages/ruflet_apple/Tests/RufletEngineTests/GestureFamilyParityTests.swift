@@ -26,6 +26,16 @@ final class GestureFamilyParityTests: XCTestCase {
       id: 3, type: "GestureDetector", props: ["mouse_cursor": .string("click")])))
   }
 
+  func testTapOnlyDetectorUsesDiscreteNativeRecognizer() {
+    XCTAssertTrue(RufletGestureDetectorSemantics.usesNativeTapOnly(ControlNode(
+      id: 1, type: "GestureDetector", props: ["on_tap": .bool(true)])))
+    XCTAssertFalse(RufletGestureDetectorSemantics.usesNativeTapOnly(ControlNode(
+      id: 2, type: "GestureDetector",
+      props: ["on_tap": .bool(true), "on_tap_down": .bool(true)])))
+    XCTAssertFalse(RufletGestureDetectorSemantics.usesNativeTapOnly(ControlNode(
+      id: 3, type: "GestureDetector", props: ["on_pan_start": .bool(true)])))
+  }
+
   func testDismissibleUsesPinnedFletDurationsAndRufletAliases() {
     let omitted = ControlNode(id: 1, type: "Dismissible")
     XCTAssertEqual(RufletDismissibleDefaults.movementDuration(omitted), 200)

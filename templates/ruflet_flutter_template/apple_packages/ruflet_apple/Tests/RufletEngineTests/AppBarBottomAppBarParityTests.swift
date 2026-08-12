@@ -108,6 +108,15 @@ final class AppBarBottomAppBarParityTests: XCTestCase {
     XCTAssertTrue(circular.inverted)
   }
 
+  func testBottomAppBarUsesNativeAppleSurfaceOnlyForOmittedAppearance() {
+    XCTAssertTrue(ChromeDefaults.usesNativeBottomAppBarSurface(
+      ControlNode(id: 1, type: "BottomAppBar")))
+    for (index, key) in ["bgcolor", "shadow_color", "shape", "border_radius"].enumerated() {
+      XCTAssertFalse(ChromeDefaults.usesNativeBottomAppBarSurface(ControlNode(
+        id: 10 + index, type: "BottomAppBar", props: [key: .string("explicit")])))
+    }
+  }
+
   func testViewAndPageletFABLocationsShareScaffoldGeometry() {
     let size = CGSize(width: 56, height: 56)
 

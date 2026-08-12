@@ -617,14 +617,10 @@ struct ViewControlView: View {
       // bottomNavigationBar slot, never two stacked bars.
       if let navBarID = node.controlID(forKey: "navigation_bar") {
         ControlView(id: navBarID, axis: .none)
+          .modifier(ScaffoldBottomBarMeasurement(coordinateSpace: scaffoldCoordinateSpace))
       } else if let bottomBarID = node.controlID(forKey: "bottom_appbar") {
         ControlView(id: bottomBarID, axis: .none)
-          .background(
-            GeometryReader { proxy in
-              Color.clear.preference(
-                key: BottomBarFramePreferenceKey.self,
-                value: proxy.frame(in: .named(scaffoldCoordinateSpace)))
-            })
+          .modifier(ScaffoldBottomBarMeasurement(coordinateSpace: scaffoldCoordinateSpace))
       }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -787,6 +783,22 @@ enum RufletViewCommands {
 private struct BottomBarFramePreferenceKey: PreferenceKey {
   static var defaultValue: CGRect = .null
   static func reduce(value: inout CGRect, nextValue: () -> CGRect) { value = nextValue() }
+}
+
+/// Both of Scaffold's mutually-exclusive bottom slots participate in FAB
+/// placement. Measuring only BottomAppBar made a NavigationBar look absent to
+/// the placement algorithm, so floating FABs overlapped the selected tab.
+private struct ScaffoldBottomBarMeasurement: ViewModifier {
+  let coordinateSpace: String
+
+  func body(content: Content) -> some View {
+    content.background(
+      GeometryReader { proxy in
+        Color.clear.preference(
+          key: BottomBarFramePreferenceKey.self,
+          value: proxy.frame(in: .named(coordinateSpace)))
+      })
+  }
 }
 
 private struct FABFramePreferenceKey: PreferenceKey {
@@ -1776,14 +1788,14 @@ struct DividerControlView: View {
       node: node, isVertical: isVertical, displayScale: displayScale)
     if isVertical {
       HStack { Divider().frame(width: metrics.thickness) }
-        .modifier(DividerExplicitTint(color: DividerGeometry.explicitColor(node)))
+        .modifier(DividerExplicitTint(color: DividerGeometry.color(node)))
         .padding(.top, metrics.leadingIndent)
         .padding(.bottom, metrics.trailingIndent)
         .frame(width: metrics.extent)
     } else {
       Divider()
         .frame(height: metrics.thickness)
-        .modifier(DividerExplicitTint(color: DividerGeometry.explicitColor(node)))
+        .modifier(DividerExplicitTint(color: DividerGeometry.color(node)))
         .padding(.leading, metrics.leadingIndent)
         .padding(.trailing, metrics.trailingIndent)
         .frame(height: metrics.extent)
@@ -1824,6 +1836,14 @@ enum DividerGeometry {
   static func explicitColor(_ node: ControlNode) -> Color? {
     guard node.props["color"] != nil, !node.props["color"]!.isNull else { return nil }
     return MaterialPalette.color(node.string("color"))
+  }
+
+  /// Flutter resolves an omitted divider colour through Material 3's
+  /// outlineVariant. Native Divider's much lighter separator can disappear
+  /// entirely on the same surface, so feed it the resolved Flet colour.
+  static func color(_ node: ControlNode) -> Color? {
+    explicitColor(node)
+      ?? MaterialPalette.color(node.string("color") ?? "outlinevariant")
   }
 
   private static func nonNegative(_ requested: Double?) -> CGFloat? {
@@ -2008,16 +2028,12 @@ struct PageletControlView: View {
         forKey: "navigation_bar", nodeForID: store.node)
       {
         ControlView(id: navigationID, axis: .none)
+          .modifier(ScaffoldBottomBarMeasurement(coordinateSpace: scaffoldCoordinateSpace))
       } else if let bottomBarID = presentation.visibleID(
         forKey: "bottom_appbar", nodeForID: store.node)
       {
         ControlView(id: bottomBarID, axis: .none)
-          .background(
-            GeometryReader { proxy in
-              Color.clear.preference(
-                key: BottomBarFramePreferenceKey.self,
-                value: proxy.frame(in: .named(scaffoldCoordinateSpace)))
-            })
+          .modifier(ScaffoldBottomBarMeasurement(coordinateSpace: scaffoldCoordinateSpace))
       }
     }
     .background(MaterialPalette.color(node.string("bgcolor")) ?? Color.clear)
@@ -2076,8 +2092,14 @@ struct PageletControlView: View {
 
   @ViewBuilder
   private func drawer(forKey key: String) -> some View {
-    if let id = presentation.visibleID(forKey: key, nodeForID: store.node) {
-      ControlView(id: id, axis: .vertical)
+    if let id = presentation.visibleID(forKey: key, nodeForID: store.node),
+      let drawer = store.node(id)
+    {
+      if drawer.type == "BottomSheet" || drawer.type == "CupertinoBottomSheet" {
+        BottomSheetControlView(node: drawer)
+      } else {
+        ControlView(id: id, axis: .vertical)
+      }
     }
   }
 

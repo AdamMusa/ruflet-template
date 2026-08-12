@@ -282,14 +282,27 @@ struct BottomAppBarControlView: View {
     .padding(metrics.padding)
     .frame(height: metrics.height)
     .frame(maxWidth: .infinity)
-    .background(
+    .background { bottomBarSurface(shape: shape, metrics: metrics) }
+  }
+
+  @ViewBuilder
+  private func bottomBarSurface(
+    shape: BottomAppBarHostShape, metrics: ChromeDefaults.BottomAppBarValues
+  ) -> some View {
+    if ChromeDefaults.usesNativeBottomAppBarSurface(node) {
+      // Apple has no standalone arbitrary-content bottom-app-bar control. Its
+      // native toolbar surface is the system material; use that for omitted
+      // appearance while keeping Flet's content slot and scaffold geometry.
+      shape.fill(.regularMaterial, style: FillStyle(eoFill: true))
+    } else {
       shape.fill(
         MaterialPalette.color(node.string("bgcolor") ?? "surfacecontainer", default: .clear),
         style: FillStyle(eoFill: true))
         .shadow(
           color: AppleChromeAppearance.color(node.string("shadow_color"), fallback: .clear),
           radius: metrics.elevation > 0 ? metrics.elevation : 0,
-          y: metrics.elevation > 0 ? metrics.elevation / 2 : 0))
+          y: metrics.elevation > 0 ? metrics.elevation / 2 : 0)
+    }
   }
 
   private func visibilityForID(_ id: Int) -> Bool? {
@@ -305,6 +318,74 @@ enum RufletBottomAppBarSlots {
     return id
   }
 }
+
+#if canImport(UIKit)
+/// UITabBar owns the standard Apple bottom-navigation appearance, hit targets,
+/// accessibility and safe-area behavior. The SwiftUI renderer remains the
+/// fallback for arbitrary control icons which UITabBarItem cannot host.
+private struct RufletNativeNavigationBar: UIViewRepresentable {
+  let items: [ChromeDefaults.NativeNavigationItem]
+  let selectedIndex: Int
+  let disabled: Bool
+  let background: Color?
+  let onSelect: (Int) -> Void
+
+  func makeCoordinator() -> Coordinator { Coordinator(onSelect: onSelect) }
+
+  func makeUIView(context: Context) -> UITabBar {
+    let bar = UITabBar()
+    bar.delegate = context.coordinator
+    bar.itemPositioning = .fill
+    bar.isTranslucent = background == nil
+    return bar
+  }
+
+  func updateUIView(_ bar: UITabBar, context: Context) {
+    context.coordinator.onSelect = onSelect
+    let signature = items.map {
+      "\($0.title ?? "")|\($0.symbol)|\($0.selectedSymbol)|\($0.enabled)"
+    }.joined(separator: ";")
+    if context.coordinator.signature != signature {
+      bar.items = items.enumerated().map { index, item in
+        let tab = UITabBarItem(
+          title: item.title,
+          image: UIImage(systemName: item.symbol),
+          selectedImage: UIImage(systemName: item.selectedSymbol))
+        tab.tag = index
+        tab.isEnabled = item.enabled && !disabled
+        return tab
+      }
+      context.coordinator.signature = signature
+    } else {
+      bar.items?.enumerated().forEach { index, item in
+        item.isEnabled = items[index].enabled && !disabled
+      }
+    }
+    bar.selectedItem = bar.items?.first(where: { $0.tag == selectedIndex })
+
+    let appearance = UITabBarAppearance()
+    if let background {
+      appearance.configureWithOpaqueBackground()
+      appearance.backgroundColor = UIColor(background)
+    } else {
+      appearance.configureWithDefaultBackground()
+    }
+    bar.standardAppearance = appearance
+    if #available(iOS 15.0, *) { bar.scrollEdgeAppearance = appearance }
+  }
+
+  final class Coordinator: NSObject, UITabBarDelegate {
+    var onSelect: (Int) -> Void
+    var signature = ""
+
+    init(onSelect: @escaping (Int) -> Void) { self.onSelect = onSelect }
+
+    func tabBar(_ tabBar: UITabBar, didSelect item: UITabBarItem) {
+      onSelect(item.tag)
+    }
+  }
+}
+#endif
 
 /// `NavigationBar` — the bottom tab bar.
 ///
@@ -347,7 +428,25 @@ struct NavigationBarControlView: View {
       {
         ChromeNavigationValidationView(message: message)
       } else {
-        navigationBar(destinations: destinations, selected: selected, metrics: metrics)
+        #if canImport(UIKit)
+          if let items = ChromeDefaults.nativeNavigationItems(
+            destinations, parent: node, selected: selected, nodeForID: store.node)
+          {
+            RufletNativeNavigationBar(
+              items: items, selectedIndex: selected,
+              disabled: node.bool("disabled") == true,
+              background: node.string("bgcolor").map {
+                MaterialPalette.color($0, default: AppleChromeAppearance.barSurface)
+              },
+              onSelect: { index in
+                events.commit(node, key: "selected_index", value: .int(Int64(index)))
+              })
+          } else {
+            navigationBar(destinations: destinations, selected: selected, metrics: metrics)
+          }
+        #else
+          navigationBar(destinations: destinations, selected: selected, metrics: metrics)
+        #endif
       }
     }
     .frame(height: metrics.height)
@@ -748,6 +847,13 @@ enum ChromeDefaults {
     let labelToken: String
   }
 
+  struct NativeNavigationItem: Equatable {
+    let title: String?
+    let symbol: String
+    let selectedSymbol: String
+    let enabled: Bool
+  }
+
   struct NavigationRailValues {
     let elevation: CGFloat
     let groupAlignment: Double
@@ -908,6 +1014,12 @@ enum ChromeDefaults {
       notchMargin: CGFloat(node.double("notch_margin") ?? 4))
   }
 
+  static func usesNativeBottomAppBarSurface(_ node: ControlNode) -> Bool {
+    ["bgcolor", "shadow_color", "shape", "border_radius"].allSatisfy {
+      node.props[$0] == nil
+    }
+  }
+
   static func bottomAppBarNotch(_ node: ControlNode) -> BottomAppBarNotchValues {
     let shape = node.map("shape")
     let kind: BottomAppBarNotchKind = switch shape?["_type"]?.stringValue?.lowercased() {
@@ -955,6 +1067,49 @@ enum ChromeDefaults {
     return NavigationItemPalette(
       iconToken: selected ? "onsecondarycontainer" : "onsurfacevariant",
       labelToken: selected ? "onsurface" : "onsurfacevariant")
+  }
+
+  /// UITabBar can own a destination when its icon slot is an ordinary Icon or
+  /// scalar icon value. Arbitrary control slots retain the SwiftUI fallback.
+  static func nativeNavigationItems(
+    _ destinations: [ControlNode], parent: ControlNode, selected: Int,
+    nodeForID: (Int) -> ControlNode?
+  ) -> [NativeNavigationItem]? {
+    var result: [NativeNavigationItem] = []
+    for (index, destination) in destinations.enumerated() {
+      guard let normal = nativeIconValue(
+        destination, key: "icon", nodeForID: nodeForID),
+        let symbol = IconMapping.symbol(for: normal),
+        symbol != IconMapping.placeholderSymbol
+      else { return nil }
+      let selectedValue = nativeIconValue(
+        destination, key: "selected_icon", nodeForID: nodeForID) ?? normal
+      guard let selectedSymbol = IconMapping.symbol(for: selectedValue),
+        selectedSymbol != IconMapping.placeholderSymbol
+      else { return nil }
+      let metrics = navigationBar(parent)
+      result.append(NativeNavigationItem(
+        title: metrics.showsLabel(selected: index == selected)
+          ? (destination.string("label") ?? "") : nil,
+        symbol: symbol,
+        selectedSymbol: selectedSymbol,
+        enabled: destination.bool("disabled") != true))
+    }
+    return result
+  }
+
+  private static func nativeIconValue(
+    _ destination: ControlNode, key: String,
+    nodeForID: (Int) -> ControlNode?
+  ) -> RufletValue? {
+    guard let value = destination.props[key], !value.isNull else { return nil }
+    if let id = destination.controlID(forKey: key) {
+      guard let icon = nodeForID(id), icon.type == "Icon", icon.bool("visible") != false else {
+        return nil
+      }
+      return icon.props["name"] ?? icon.props["icon"]
+    }
+    return value
   }
 
   static func navigationRail(_ node: ControlNode) -> NavigationRailValues {

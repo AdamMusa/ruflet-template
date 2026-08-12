@@ -114,6 +114,20 @@ final class IconMappingTests: XCTestCase {
     XCTAssertEqual(IconMapping.symbol(forMaterialName: "chevron_right"), "chevron.right")
   }
 
+  func testUnmappedMaterialNamesKeepTheirExactFlutterGlyphInsteadOfAPlaceholder() throws {
+    let name = "AIRLINE_SEAT_INDIVIDUAL_SUITE"
+    let index = try XCTUnwrap(MaterialIconNames.material.firstIndex(of: name))
+    let wireCodepoint = MaterialIconNames.firstCodepoint + index
+    let glyphCodepoint = try XCTUnwrap(MaterialIconGlyphs.codepoint(forName: name))
+
+    XCTAssertEqual(
+      IconMapping.rendering(for: .int(Int64(wireCodepoint))),
+      .materialGlyph(codepoint: glyphCodepoint, name: name))
+    XCTAssertEqual(
+      IconMapping.rendering(for: .string(name)),
+      .materialGlyph(codepoint: glyphCodepoint, name: name))
+  }
+
   func testAppleIconSearchExposesOnlyTheCupertinoCatalog() {
     XCTAssertEqual(IconMapping.preferredFamily(forPlatform: "ios"), .cupertino)
     XCTAssertEqual(IconMapping.preferredFamily(forPlatform: "macos"), .cupertino)

@@ -34,6 +34,35 @@ final class NavigationFamilyParityTests: XCTestCase {
       .init(iconToken: "onsurfacevariant,0.38", labelToken: "onsurfacevariant,0.38"))
   }
 
+  func testStandardDestinationsCanUseNativeAppleTabBarItems() throws {
+    let parent = ControlNode(
+      id: 1, type: "NavigationBar",
+      props: ["label_behavior": .string("only_show_selected")])
+    let destinations = [
+      ControlNode(id: 2, type: "NavigationBarDestination", props: [
+        "icon": .string("home"), "selected_icon": .string("home_filled"),
+        "label": .string("Home"),
+      ]),
+      ControlNode(id: 3, type: "NavigationBarDestination", props: [
+        "icon": .string("search"), "label": .string("Search"),
+      ]),
+    ]
+    let items = try XCTUnwrap(ChromeDefaults.nativeNavigationItems(
+      destinations, parent: parent, selected: 1, nodeForID: { _ in nil }))
+    XCTAssertNil(items[0].title)
+    XCTAssertEqual(items[0].symbol, "house")
+    XCTAssertEqual(items[0].selectedSymbol, "house.fill")
+    XCTAssertEqual(items[1].title, "Search")
+    XCTAssertEqual(items[1].symbol, "magnifyingglass")
+
+    let customIcon = ControlNode(id: 9, type: "Container")
+    let customDestination = ControlNode(
+      id: 4, type: "NavigationBarDestination", props: ["icon": .controlRef(9)])
+    XCTAssertNil(ChromeDefaults.nativeNavigationItems(
+      [customDestination, destinations[1]], parent: parent, selected: 0,
+      nodeForID: { $0 == 9 ? customIcon : nil }))
+  }
+
   func testNavigationRailPreservesNullableSelectionAndGeometryInvariants() {
     let values = ChromeDefaults.navigationRail(ControlNode(id: 2, type: "NavigationRail"))
 

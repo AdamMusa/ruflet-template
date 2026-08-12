@@ -1458,6 +1458,10 @@ struct CircleAvatarControlView: View {
     .frame(
       minWidth: diameter.minimum, maxWidth: diameter.maximum,
       minHeight: diameter.minimum, maxHeight: diameter.maximum)
+    // Flutter's CircleAvatar clips the complete child stack, not only its
+    // image providers. Without this, a Container/Text child with a background
+    // paints a square over the circular fill.
+    .clipShape(Circle())
     // CircleAvatar installs Material titleMedium around its child and disables
     // text scaling so initials cannot escape the circle. Both are semantic
     // constructor behavior even though the actual font remains native.

@@ -20,10 +20,10 @@ struct DialogPresenter: ViewModifier {
       .overlay(alignment: .center) { modalLayer }
       .overlay(alignment: .top) { bannerLayer }
       .overlay(alignment: .bottom) { snackBarLayer }
-      .sheet(isPresented: pickerPresentation) {
-        if let picker = presentedPicker {
-          modalBody(picker)
-            .interactiveDismissDisabled(!RufletOverlaySemantics.allowsBarrierDismiss(picker))
+      .sheet(isPresented: nativeSheetPresentation) {
+        if let sheet = presentedNativeSheet {
+          nativeSheetBody(sheet)
+            .interactiveDismissDisabled(!RufletOverlaySemantics.allowsBarrierDismiss(sheet))
         }
       }
       .animation(.easeOut(duration: 0.2), value: store.revision)
@@ -42,7 +42,7 @@ struct DialogPresenter: ViewModifier {
   /// opened is on top, matching a navigator stack.
   @ViewBuilder
   private var modalLayer: some View {
-    if let dialog = presentedModal, !RufletOverlaySemantics.usesNativePickerSheet(dialog) {
+    if let dialog = presentedModal, !RufletOverlaySemantics.usesNativeSheet(dialog) {
       ZStack {
         // `modal` keeps the barrier from dismissing, and `barrier_color`
         // paints it — both are the dialog's own properties in Flet.
@@ -63,20 +63,29 @@ struct DialogPresenter: ViewModifier {
     openDialogs.last { $0.type != "SnackBar" && $0.type != "Banner" }
   }
 
-  private var presentedPicker: ControlNode? {
+  private var presentedNativeSheet: ControlNode? {
     guard let dialog = presentedModal,
-      RufletOverlaySemantics.usesNativePickerSheet(dialog)
+      RufletOverlaySemantics.usesNativeSheet(dialog)
     else { return nil }
     return dialog
   }
 
-  private var pickerPresentation: Binding<Bool> {
+  private var nativeSheetPresentation: Binding<Bool> {
     Binding(
-      get: { presentedPicker != nil },
+      get: { presentedNativeSheet != nil },
       set: { isPresented in
-        guard !isPresented, let picker = presentedPicker else { return }
-        dismiss(picker, barrierDismiss: true)
+        guard !isPresented, let sheet = presentedNativeSheet else { return }
+        dismiss(sheet, barrierDismiss: true)
       })
+  }
+
+  @ViewBuilder
+  private func nativeSheetBody(_ sheet: ControlNode) -> some View {
+    if sheet.type == "BottomSheet" || sheet.type == "CupertinoBottomSheet" {
+      BottomSheetControlView(node: sheet)
+    } else {
+      modalBody(sheet)
+    }
   }
 
   @ViewBuilder
@@ -146,15 +155,19 @@ struct DialogPresenter: ViewModifier {
 /// Keeping them explicit prevents Apple platform defaults from silently
 /// changing Flet's design-family and dismissal contracts.
 enum RufletOverlaySemantics {
-  private static let nativePickerTypes: Set<String> = [
-    "DatePicker", "DateRangePicker", "TimePicker",
+  private static let nativeSheetTypes: Set<String> = [
+    "BottomSheet", "CupertinoBottomSheet", "DatePicker", "DateRangePicker", "TimePicker",
   ]
 
   /// Apple's date and time controls belong in a native sheet. Rendering them
   /// directly in the page overlay leaves their transparent root floating over
   /// application content and also bypasses the platform dismissal lifecycle.
+  static func usesNativeSheet(_ dialog: ControlNode) -> Bool {
+    nativeSheetTypes.contains(dialog.type)
+  }
+
   static func usesNativePickerSheet(_ dialog: ControlNode) -> Bool {
-    nativePickerTypes.contains(dialog.type)
+    ["DatePicker", "DateRangePicker", "TimePicker"].contains(dialog.type)
   }
 
   /// Material's `showDialog` fallback is `Colors.black54` for every Flet

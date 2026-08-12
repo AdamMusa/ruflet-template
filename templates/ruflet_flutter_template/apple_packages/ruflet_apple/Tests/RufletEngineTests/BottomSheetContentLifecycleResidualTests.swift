@@ -5,6 +5,17 @@ import XCTest
 @testable import RufletUI
 
 final class BottomSheetContentLifecycleResidualTests: XCTestCase {
+  func testBottomSheetAndPickersUseNativeAppleSheetPresentation() {
+    XCTAssertTrue(RufletOverlaySemantics.usesNativeSheet(
+      ControlNode(id: 1, type: "BottomSheet")))
+    XCTAssertTrue(RufletOverlaySemantics.usesNativeSheet(
+      ControlNode(id: 2, type: "CupertinoBottomSheet")))
+    XCTAssertTrue(RufletOverlaySemantics.usesNativeSheet(
+      ControlNode(id: 3, type: "DatePicker")))
+    XCTAssertFalse(RufletOverlaySemantics.usesNativeSheet(
+      ControlNode(id: 4, type: "AlertDialog")))
+  }
+
   func testMaterialBottomSheetRequiresPresentAndVisibleContent() {
     let missing = BottomSheetPresentation(node: ControlNode(id: 1, type: "BottomSheet"))
     XCTAssertEqual(
