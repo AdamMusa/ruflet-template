@@ -45,7 +45,8 @@ final class CupertinoContextMenuResidualParityTests: XCTestCase {
     let node = ControlNode(
       id: 3, type: "CupertinoContextMenu",
       props: ["actions": .array([.controlRef(20)])])
-    let presentation = CupertinoContextMenuPresentation(node: node)
+    let presentation = CupertinoContextMenuPresentation(
+      node: node, visibilityForID: { $0 == 20 ? true : nil })
 
     XCTAssertFalse(presentation.enableHapticFeedback)
     XCTAssertEqual(
@@ -71,11 +72,36 @@ final class CupertinoContextMenuResidualParityTests: XCTestCase {
       CupertinoContextMenuActionPresentation.missingContentError,
       "content (string or visible Control) must be provided")
 
+    let dangling = CupertinoContextMenuActionPresentation(
+      node: ControlNode(
+        id: 9, type: "CupertinoContextMenuAction",
+        props: ["content": .controlRef(31)]),
+      visibilityForID: { _ in nil })
+    XCTAssertNil(dangling.text)
+    XCTAssertNil(dangling.contentID)
+
     let nonString = CupertinoContextMenuActionPresentation(node: ControlNode(
       id: 6, type: "CupertinoContextMenuAction",
       props: ["content": .int(123)]))
     XCTAssertNil(nonString.text)
     XCTAssertNil(nonString.contentID)
+  }
+
+  func testUnresolvedMenuSlotsAreAbsentLikeBuildWidgetResults() {
+    let node = ControlNode(
+      id: 10, type: "CupertinoContextMenu",
+      props: [
+        "content": .controlRef(11),
+        "actions": .array([.controlRef(12)]),
+      ])
+    let presentation = CupertinoContextMenuPresentation(
+      node: node, visibilityForID: { _ in nil })
+
+    XCTAssertNil(presentation.contentID)
+    XCTAssertEqual(presentation.actionIDs, [])
+    XCTAssertEqual(
+      presentation.validationError,
+      "at least one action in CupertinoContextMenu.actions must be visible")
   }
 
   func testActionClickIsDisabledGatedAndUsesNullData() {

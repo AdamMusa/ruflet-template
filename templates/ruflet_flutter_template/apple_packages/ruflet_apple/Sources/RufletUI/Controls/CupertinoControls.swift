@@ -3651,7 +3651,9 @@ struct CupertinoContextMenuControlView: View {
   @ViewBuilder
   var body: some View {
     let presentation = CupertinoContextMenuPresentation(
-      node: node, visibilityForID: { store.node($0)?.bool("visible") })
+      node: node, visibilityForID: { id in
+        store.node(id).map { $0.bool("visible") != false }
+      })
     if let error = presentation.validationError {
       Text(error)
         .foregroundColor(.red)
@@ -3687,7 +3689,9 @@ struct CupertinoContextMenuControlView: View {
   @ViewBuilder
   private func actionContent(_ action: ControlNode) -> some View {
     let presentation = CupertinoContextMenuActionPresentation(
-      node: action, visibilityForID: { store.node($0)?.bool("visible") })
+      node: action, visibilityForID: { id in
+        store.node(id).map { $0.bool("visible") != false }
+      })
     if let contentID = presentation.contentID {
       ControlView(id: contentID, axis: .none)
     } else if let text = presentation.text {
@@ -3711,10 +3715,10 @@ struct CupertinoContextMenuPresentation: Equatable {
 
   init(node: ControlNode, visibilityForID: (Int) -> Bool? = { _ in nil }) {
     contentID = node.controlID(forKey: "content").flatMap {
-      visibilityForID($0) == false ? nil : $0
+      visibilityForID($0) == true ? $0 : nil
     }
     actionIDs = RufletCupertinoPresentationDefaults.actionIDs(node).filter {
-      visibilityForID($0) != false
+      visibilityForID($0) == true
     }
     enableHapticFeedback = node.bool("enable_haptic_feedback") ?? false
   }
@@ -3735,7 +3739,7 @@ struct CupertinoContextMenuActionPresentation: Equatable {
   let text: String?
 
   init(node: ControlNode, visibilityForID: (Int) -> Bool? = { _ in nil }) {
-    if let id = node.controlID(forKey: "content"), visibilityForID(id) != false {
+    if let id = node.controlID(forKey: "content"), visibilityForID(id) == true {
       contentID = id
       text = nil
     } else if case .string(let value) = node.props["content"] {

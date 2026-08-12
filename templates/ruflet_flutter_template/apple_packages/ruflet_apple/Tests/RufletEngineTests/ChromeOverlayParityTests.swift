@@ -451,7 +451,8 @@ final class ChromeOverlayParityTests: XCTestCase {
 
     XCTAssertFalse(RufletCupertinoPresentationDefaults.isValidContextMenu(missingContent))
     XCTAssertFalse(RufletCupertinoPresentationDefaults.isValidContextMenu(missingActions))
-    XCTAssertTrue(RufletCupertinoPresentationDefaults.isValidContextMenu(complete))
+    XCTAssertTrue(RufletCupertinoPresentationDefaults.isValidContextMenu(
+      complete, visibilityForID: { _ in true }))
     XCTAssertEqual(RufletCupertinoPresentationDefaults.actionIDs(complete), [2, 3])
   }
 
