@@ -1635,28 +1635,45 @@ private struct CupertinoTextFieldBorderLayer: View {
   let radii: RufletCornerRadii
 
   var body: some View {
-    GeometryReader { geometry in
-      ZStack {
-        if let top = border.top {
-          top.color.frame(width: geometry.size.width, height: top.width)
-            .position(x: geometry.size.width / 2, y: top.width / 2)
-        }
-        if let right = border.right {
-          right.color.frame(width: right.width, height: geometry.size.height)
-            .position(x: geometry.size.width - right.width / 2, y: geometry.size.height / 2)
-        }
-        if let bottom = border.bottom {
-          bottom.color.frame(width: geometry.size.width, height: bottom.width)
-            .position(x: geometry.size.width / 2, y: geometry.size.height - bottom.width / 2)
-        }
-        if let left = border.left {
-          left.color.frame(width: left.width, height: geometry.size.height)
-            .position(x: left.width / 2, y: geometry.size.height / 2)
+    Group {
+      if let uniform = uniformSide {
+        // Drawing four clipped rectangles leaves tiny protruding end-caps at
+        // rounded corners. A native inset stroke is the exact outline shape.
+        RufletRoundedRectangle(radii: radii)
+          .stroke(uniform.color, lineWidth: uniform.width)
+      } else {
+        GeometryReader { geometry in
+          ZStack {
+            if let top = border.top {
+              top.color.frame(width: geometry.size.width, height: top.width)
+                .position(x: geometry.size.width / 2, y: top.width / 2)
+            }
+            if let right = border.right {
+              right.color.frame(width: right.width, height: geometry.size.height)
+                .position(x: geometry.size.width - right.width / 2, y: geometry.size.height / 2)
+            }
+            if let bottom = border.bottom {
+              bottom.color.frame(width: geometry.size.width, height: bottom.width)
+                .position(x: geometry.size.width / 2, y: geometry.size.height - bottom.width / 2)
+            }
+            if let left = border.left {
+              left.color.frame(width: left.width, height: geometry.size.height)
+                .position(x: left.width / 2, y: geometry.size.height / 2)
+            }
+          }
+          .clipShape(RufletRoundedRectangle(radii: radii))
         }
       }
-      .clipShape(RufletRoundedRectangle(radii: radii))
     }
     .allowsHitTesting(false)
+  }
+
+  private var uniformSide: RufletBorderSide? {
+    guard let top = border.top, let right = border.right,
+      let bottom = border.bottom, let left = border.left,
+      top.width == right.width, top.width == bottom.width, top.width == left.width
+    else { return nil }
+    return top
   }
 }
 
