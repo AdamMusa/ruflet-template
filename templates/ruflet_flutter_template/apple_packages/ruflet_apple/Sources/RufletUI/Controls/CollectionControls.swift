@@ -1336,12 +1336,8 @@ private struct ListTileInteraction: ViewModifier {
     var result = AnyView(content)
     if interactive && node.bool("disabled") != true {
       result = AnyView(
-        result
-          .onTapGesture(perform: activate)
-          .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-              .onChanged { _ in pressed = true }
-              .onEnded { _ in pressed = false }))
+        Button(action: activate) { result }
+          .buttonStyle(ListTileNativeButtonStyle(pressed: $pressed)))
     }
     if node.type == "ListTile", node.handlesEvent("long_press"),
       node.bool("disabled") != true
@@ -1360,6 +1356,19 @@ private struct ListTileInteraction: ViewModifier {
     if node.bool("toggle_inputs") == true { tileClicks.click() }
     if let url = node.string("url").flatMap(URL.init(string:)) { openURL(url) }
     if node.handlesEvent("click") { events.fire(node, "click") }
+  }
+}
+
+/// Let the platform button recognizer arbitrate a row tap against its parent
+/// ScrollView. Combining `onTapGesture` with a zero-distance DragGesture made
+/// a styled ListTile lose ordinary taps whenever scrolling won recognition.
+private struct ListTileNativeButtonStyle: ButtonStyle {
+  @Binding var pressed: Bool
+
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label
+      .onAppear { pressed = configuration.isPressed }
+      .onChange(of: configuration.isPressed) { pressed = $0 }
   }
 }
 

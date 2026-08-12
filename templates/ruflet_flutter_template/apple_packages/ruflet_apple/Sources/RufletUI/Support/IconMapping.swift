@@ -114,13 +114,15 @@ public enum IconMapping {
 
   public static func symbol(forMaterialName rawName: String) -> String {
     let name = canonical(rawName)
-    if let mapped = table[name] { return mapped }
+    if let mapped = table[name], isAvailable(mapped) { return mapped }
+    if let fallback = unavailableSymbolFallbacks[name], isAvailable(fallback) { return fallback }
 
     // Variants share a base icon: ADD_OUTLINED, ADD_ROUNDED, ADD_SHARP all
     // mean ADD, and Apple has no equivalent distinction.
     for suffix in ["_outlined", "_rounded", "_sharp"] where name.hasSuffix(suffix) {
       let base = String(name.dropLast(suffix.count))
-      if let mapped = table[base] { return mapped }
+      if let mapped = table[base], isAvailable(mapped) { return mapped }
+      if let fallback = unavailableSymbolFallbacks[base], isAvailable(fallback) { return fallback }
     }
 
     RufletLog.debug("No SF Symbol for Material icon `\(rawName)`")
@@ -454,7 +456,7 @@ public enum IconMapping {
     "local_cafe": "cup.and.saucer.fill", "fitness_center": "dumbbell.fill",
     "sports_esports": "gamecontroller.fill", "emoji_events": "trophy.fill",
     "auto_awesome": "sparkles", "animation": "circle.hexagongrid",
-    "rocket_launch": "paperplane.fill",
+    "rocket_launch": "rocket.fill",
     "psychology": "brain", "gavel": "hammer",
     "qr_code": "qrcode", "qr_code_scanner": "qrcode.viewfinder",
     "hub": "point.3.connected.trianglepath.dotted",
@@ -467,6 +469,13 @@ public enum IconMapping {
     "swap_horiz": "arrow.left.arrow.right", "swap_vert": "arrow.up.arrow.down",
     "open_in_full": "arrow.up.left.and.arrow.down.right",
     "close_fullscreen": "arrow.down.right.and.arrow.up.left",
+  ]
+
+  /// Semantic fallbacks for symbols introduced after Ruflet's deployment
+  /// floor. A current Apple OS should show the closest native meaning; older
+  /// systems still receive a visible native icon rather than a blank image.
+  private static let unavailableSymbolFallbacks: [String: String] = [
+    "rocket_launch": "paperplane.fill",
   ]
 }
 

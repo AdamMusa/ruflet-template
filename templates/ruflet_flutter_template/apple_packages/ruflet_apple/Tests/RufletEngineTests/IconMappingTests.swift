@@ -105,6 +105,15 @@ final class IconMappingTests: XCTestCase {
     }
   }
 
+  func testRubyMaterialNamesResolveToTheirNativeAppleMeaning() {
+    XCTAssertEqual(IconMapping.symbol(forMaterialName: "home"), "house")
+    XCTAssertTrue(
+      ["rocket.fill", "paperplane.fill"].contains(
+        IconMapping.symbol(forMaterialName: "rocket_launch")))
+    XCTAssertEqual(IconMapping.symbol(forMaterialName: "account_circle"), "person.crop.circle")
+    XCTAssertEqual(IconMapping.symbol(forMaterialName: "chevron_right"), "chevron.right")
+  }
+
   func testAppleIconSearchExposesOnlyTheCupertinoCatalog() {
     XCTAssertEqual(IconMapping.preferredFamily(forPlatform: "ios"), .cupertino)
     XCTAssertEqual(IconMapping.preferredFamily(forPlatform: "macos"), .cupertino)

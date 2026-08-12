@@ -7,6 +7,11 @@ import XCTest
 /// The display family — Icon, CircleAvatar, the two progress indicators and
 /// Markdown — against the widgets Flet builds.
 final class DisplayParityTests: XCTestCase {
+  func testExplicitImageSizeConstrainsOmittedFit() {
+    XCTAssertTrue(RufletImageLayoutSemantics.constrainsOmittedFit(hasExplicitSize: true))
+    XCTAssertFalse(RufletImageLayoutSemantics.constrainsOmittedFit(hasExplicitSize: false))
+  }
+
   private func node(_ type: String, _ props: [String: RufletValue] = [:]) -> ControlNode {
     ControlNode(id: 1, type: type, props: props)
   }

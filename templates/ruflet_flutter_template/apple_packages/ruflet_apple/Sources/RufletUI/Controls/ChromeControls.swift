@@ -107,6 +107,8 @@ struct AppBarControlView: View {
       if hasTitle {
         title
           .lineLimit(1)
+          .frame(maxHeight: metrics.toolbarHeight)
+          .clipped()
           .frame(maxWidth: .infinity, alignment: .leading)
           .padding(.leading, hasLeading ? 0 : metrics.titleSpacing)
           .padding(.trailing, slots.actions == .none ? metrics.titleSpacing : 0)
@@ -124,6 +126,8 @@ struct AppBarControlView: View {
     ZStack {
       title
         .lineLimit(1)
+        .frame(maxHeight: metrics.toolbarHeight)
+        .clipped()
         .padding(.horizontal, centeredTitleInset)
       HStack(spacing: metrics.titleSpacing) {
         leading

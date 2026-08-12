@@ -356,6 +356,9 @@ struct ImageControlView: View {
   @Environment(\.rufletServerURL) private var serverURL
 
   private var presentation: RufletImagePresentation { RufletImagePresentation(node: node) }
+  private var hasExplicitSize: Bool {
+    node.props["width"] != nil || node.props["height"] != nil
+  }
 
   var body: some View {
     content
@@ -371,21 +374,21 @@ struct ImageControlView: View {
         data: data, repeatMode: presentation.repeatMode,
         interpolation: presentation.interpolation,
         cacheWidth: presentation.cacheWidth, cacheHeight: presentation.cacheHeight)
-        .modifier(ImageFit(fit: presentation.fit))
+        .modifier(ImageFit(fit: presentation.fit, hasExplicitSize: hasExplicitSize))
     } else if case .remote(let url) = RufletImageSource(node: node) {
       if url.isFileURL, let data = try? Data(contentsOf: url) {
         PlatformImageView(
           data: data, repeatMode: presentation.repeatMode,
           interpolation: presentation.interpolation,
           cacheWidth: presentation.cacheWidth, cacheHeight: presentation.cacheHeight)
-          .modifier(ImageFit(fit: presentation.fit))
+          .modifier(ImageFit(fit: presentation.fit, hasExplicitSize: hasExplicitSize))
       } else {
         RemoteImage(
           url: url,
           errorContentID: node.controlID(forKey: "error_content"),
           placeholder: placeholder,
           presentation: presentation)
-          .modifier(ImageFit(fit: presentation.fit))
+          .modifier(ImageFit(fit: presentation.fit, hasExplicitSize: hasExplicitSize))
       }
     } else if case .asset(let name) = RufletImageSource(node: node) {
       if let data = RufletImageSource.packagedData(named: name) {
@@ -393,20 +396,20 @@ struct ImageControlView: View {
           data: data, repeatMode: presentation.repeatMode,
           interpolation: presentation.interpolation,
           cacheWidth: presentation.cacheWidth, cacheHeight: presentation.cacheHeight)
-          .modifier(ImageFit(fit: presentation.fit))
+          .modifier(ImageFit(fit: presentation.fit, hasExplicitSize: hasExplicitSize))
       } else if let url = RufletImageAssetURL.imageAsset(name, relativeTo: serverURL) {
         RemoteImage(
           url: url,
           errorContentID: node.controlID(forKey: "error_content"),
           placeholder: placeholder,
           presentation: presentation)
-          .modifier(ImageFit(fit: presentation.fit))
+          .modifier(ImageFit(fit: presentation.fit, hasExplicitSize: hasExplicitSize))
       } else {
         // Asset catalog lookup is the final packaged-asset fallback.
         Image(name)
           .resizable(resizingMode: presentation.repeatMode.swiftUI)
           .interpolation(presentation.interpolation)
-          .modifier(ImageFit(fit: presentation.fit))
+          .modifier(ImageFit(fit: presentation.fit, hasExplicitSize: hasExplicitSize))
       }
     } else if case .invalid = RufletImageSource(node: node),
       let errorContentID = node.controlID(forKey: "error_content")
@@ -435,39 +438,45 @@ struct ImageControlView: View {
         data: data, repeatMode: presentation.repeatMode,
         interpolation: presentation.interpolation,
         cacheWidth: presentation.cacheWidth, cacheHeight: presentation.cacheHeight)
-        .modifier(ImageFit(fit: presentation.placeholderFit)))
+        .modifier(ImageFit(
+          fit: presentation.placeholderFit, hasExplicitSize: hasExplicitSize)))
     case .remote(let url) where url.isFileURL:
       guard let data = try? Data(contentsOf: url) else { return nil }
       return AnyView(PlatformImageView(
         data: data, repeatMode: presentation.repeatMode,
         interpolation: presentation.interpolation,
         cacheWidth: presentation.cacheWidth, cacheHeight: presentation.cacheHeight)
-        .modifier(ImageFit(fit: presentation.placeholderFit)))
+        .modifier(ImageFit(
+          fit: presentation.placeholderFit, hasExplicitSize: hasExplicitSize)))
     case .remote(let url):
       // Flet resolves `placeholder_src` through the same image-provider path
       // as `src`, including HTTP(S) images. Do not silently drop a remote
       // placeholder just because the primary image is also asynchronous.
       return AnyView(
         RemoteImage(url: url, errorContentID: nil, presentation: presentation)
-          .modifier(ImageFit(fit: presentation.placeholderFit)))
+          .modifier(ImageFit(
+            fit: presentation.placeholderFit, hasExplicitSize: hasExplicitSize)))
     case .asset(let name):
       if let data = RufletImageSource.packagedData(named: name) {
         return AnyView(PlatformImageView(
           data: data, repeatMode: presentation.repeatMode,
           interpolation: presentation.interpolation,
           cacheWidth: presentation.cacheWidth, cacheHeight: presentation.cacheHeight)
-          .modifier(ImageFit(fit: presentation.placeholderFit)))
+          .modifier(ImageFit(
+            fit: presentation.placeholderFit, hasExplicitSize: hasExplicitSize)))
       }
       if let url = RufletImageAssetURL.imageAsset(name, relativeTo: serverURL) {
         return AnyView(
           RemoteImage(url: url, errorContentID: nil, presentation: presentation)
-            .modifier(ImageFit(fit: presentation.placeholderFit)))
+            .modifier(ImageFit(
+              fit: presentation.placeholderFit, hasExplicitSize: hasExplicitSize)))
       }
       return AnyView(
         Image(name)
           .resizable(resizingMode: presentation.repeatMode.swiftUI)
           .interpolation(presentation.interpolation)
-          .modifier(ImageFit(fit: presentation.placeholderFit)))
+          .modifier(ImageFit(
+            fit: presentation.placeholderFit, hasExplicitSize: hasExplicitSize)))
     default:
       return nil
     }
@@ -738,6 +747,7 @@ private struct ImageSemantics: ViewModifier {
 
 private struct ImageFit: ViewModifier {
   let fit: String?
+  let hasExplicitSize: Bool
 
   func body(content: Content) -> some View {
     // Flet's BoxFit; `contain` is Flutter's default for Image.
@@ -751,11 +761,28 @@ private struct ImageFit: ViewModifier {
       return AnyView(content.aspectRatio(contentMode: .fit))
     case "fill":
       return AnyView(content)
-    case "none", "scaledown", nil:
+    case "none":
       return AnyView(content.fixedSize())
+    case "scaledown", nil:
+      // Flutter's RenderImage resolves width/height as tight constraints even
+      // when fit is omitted. `fixedSize()` makes a resizable SwiftUI image
+      // ignore that later control frame, allowing a large decoded bitmap to
+      // paint and hit-test far outside a small Image control.
+      return RufletImageLayoutSemantics.constrainsOmittedFit(hasExplicitSize: hasExplicitSize)
+        ? AnyView(content.aspectRatio(contentMode: .fit))
+        : AnyView(content.fixedSize())
     default:
       return AnyView(content.aspectRatio(contentMode: .fit))
     }
+  }
+}
+
+enum RufletImageLayoutSemantics {
+  /// Flutter gives RenderImage tight width/height constraints independently
+  /// of BoxFit. SwiftUI must therefore avoid fixedSize when either explicit
+  /// dimension is present, or the decoded bitmap can escape its control.
+  static func constrainsOmittedFit(hasExplicitSize: Bool) -> Bool {
+    hasExplicitSize
   }
 }
 
