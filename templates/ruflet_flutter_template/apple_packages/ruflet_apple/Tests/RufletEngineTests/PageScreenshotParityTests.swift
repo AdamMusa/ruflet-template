@@ -25,4 +25,20 @@ final class PageScreenshotParityTests: XCTestCase {
       RufletScreenshotSemantics.delayMilliseconds(.extended(type: 3, string: "125000")),
       125)
   }
+
+  func testExternalRoutesMatchFletPathQueryFragmentNormalization() throws {
+    XCTAssertEqual(
+      PageRouteSemantics.normalizeExternalURL(
+        try XCTUnwrap(URL(string: "ruflet://app/store/item?q=red%20blue#details"))),
+      "/store/item?q=red%20blue#details")
+    XCTAssertEqual(
+      PageRouteSemantics.normalizeExternalURL(
+        try XCTUnwrap(URL(string: "ruflet://app"))),
+      "/")
+  }
+
+  func testPageDeclaresItsNativeRouteEvent() {
+    XCTAssertTrue(
+      ControlRegistry.descriptor(for: "Page")?.supportedEvents.contains("route_change") == true)
+  }
 }

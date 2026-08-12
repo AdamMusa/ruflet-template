@@ -231,6 +231,17 @@ struct PageControlView: View {
       }
     }
     .environment(\.rufletHeroNamespace, heroNamespace)
+    .onOpenURL { url in
+      applyClientRoute(PageRouteSemantics.normalizeExternalURL(url))
+    }
+    .rufletCommandHandler(node.id, method: "push_route") { call, completion in
+      guard let route = call.argument("route")?.stringValue else {
+        completion(.failure(RufletServiceError.invalidArguments("route is required")))
+        return
+      }
+      applyClientRoute(route)
+      completion(.success(.null))
+    }
     .modifier(
       PageScreenshotCaptureModifier(
         node: node, store: store, events: events, displayScale: displayScale))
@@ -270,6 +281,27 @@ struct PageControlView: View {
       confirmPop: { shouldPop in
         popCoordinator.confirm(shouldPop: shouldPop)
       })
+  }
+
+  /// Flet's route provider updates the Page locally, sends update_control, and
+  /// then emits route_change without checking for a subscribed handler.
+  private func applyClientRoute(_ route: String) {
+    guard store.node(node.id)?.string("route") != route else { return }
+    events.setLocal(node.id, "route", .string(route))
+    events.update(node.id, ["route": .string(route)])
+    events.send(node.id, "route_change", .map(["route": .string(route)]))
+  }
+}
+
+enum PageRouteSemantics {
+  /// Flet discards an external URI's scheme/authority and routes by its
+  /// path/query/fragment. `ruflet://app/store?q=1#top` therefore becomes
+  /// `/store?q=1#top`.
+  static func normalizeExternalURL(_ url: URL) -> String {
+    var route = url.path.isEmpty ? "/" : url.path
+    if let query = url.query, !query.isEmpty { route += "?\(query)" }
+    if let fragment = url.fragment, !fragment.isEmpty { route += "#\(fragment)" }
+    return route
   }
 }
 
@@ -405,9 +437,6 @@ private struct PageEnvironment: ViewModifier {
       .onDisappear {
         events.fire(eventNode, "disconnect")
         events.fire(eventNode, "close")
-      }
-      .onChange(of: node.string("route") ?? "") { route in
-        events.fire(eventNode, "route_change", data: .map(["route": .string(route)]))
       }
       .onChange(of: routes) { nextRoutes in
         // Flet reports the route that the platform navigator popped. Preserve

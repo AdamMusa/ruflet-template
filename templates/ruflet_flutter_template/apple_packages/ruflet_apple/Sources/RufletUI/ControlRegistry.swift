@@ -191,7 +191,7 @@ public enum ControlRegistry {
 
     // Page and presentation hosts.
     add(["Page"], .host, "PageControlView", .hostManaged,
-        events: ["app_lifecycle_state_change", "keyboard_event", "locale_change"])
+        events: ["app_lifecycle_state_change", "keyboard_event", "locale_change", "route_change"])
     add(["View", "BasePage"], .host, "ViewControlView", .hostManaged,
         events: ["confirm_pop", "scroll"], methods: RufletViewCommands.methods)
     add(["Overlay", "Dialogs", "ServiceRegistry"], .host,
