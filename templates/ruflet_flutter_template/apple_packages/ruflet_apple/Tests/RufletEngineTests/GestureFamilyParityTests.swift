@@ -139,4 +139,19 @@ final class GestureFamilyParityTests: XCTestCase {
     XCTAssertTrue(explicit.autofocus)
     XCTAssertFalse(explicit.includeSemantics)
   }
+
+  func testKeyboardListenerRejectsUnresolvedAndInvisibleContent() {
+    let presentation = KeyboardListenerPresentation(node: ControlNode(
+      id: 2, type: "KeyboardListener", props: ["content": .controlRef(3)]))
+
+    XCTAssertEqual(
+      presentation.validationError(content: nil),
+      KeyboardListenerPresentation.missingContentError)
+    XCTAssertEqual(
+      presentation.validationError(content: ControlNode(
+        id: 3, type: "Container", props: ["visible": .bool(false)])),
+      KeyboardListenerPresentation.missingContentError)
+    XCTAssertNil(
+      presentation.validationError(content: ControlNode(id: 3, type: "Container")))
+  }
 }

@@ -1151,11 +1151,15 @@ private struct InteractiveTrackpadScale: ViewModifier {
 /// `KeyboardListener` — reports physical key presses.
 struct KeyboardListenerControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
   @State private var focused = false
 
   var body: some View {
-    if let contentID = node.controlID(forKey: "content") {
+    let presentation = KeyboardListenerPresentation(node: node)
+    if let contentID = presentation.contentID,
+      presentation.validationError(content: store.node(contentID)) == nil
+    {
       ZStack {
         ControlView(id: contentID, axis: .none)
         RufletNativeKeyboardListener(
@@ -1187,8 +1191,16 @@ struct KeyboardListenerControlView: View {
 struct KeyboardListenerPresentation {
   static let missingContentError = "KeyboardListener control has no content."
   let node: ControlNode
+  var contentID: Int? { node.controlID(forKey: "content") }
   var autofocus: Bool { node.bool("autofocus") ?? false }
   var includeSemantics: Bool { node.bool("include_semantics") ?? true }
+
+  func validationError(content: ControlNode?) -> String? {
+    guard contentID != nil, let content, content.bool("visible") != false else {
+      return Self.missingContentError
+    }
+    return nil
+  }
 }
 
 /// Cupertino draws a sheet's default action heavier than the rest.
