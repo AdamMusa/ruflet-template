@@ -24,6 +24,13 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<!-- RufletAds is an optional renderer product but is linked by the full
+	     template. Google validates this key while its framework loads, before
+	     Ruflet can inspect the control tree. Keep the template launch-safe with
+	     Google's official sample application id; applications serving live ads
+	     must replace it with their own AdMob application id. -->
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-3940256099942544~1458002511</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<!-- A Ruflet backend runs on the developer's machine and is reached over the
