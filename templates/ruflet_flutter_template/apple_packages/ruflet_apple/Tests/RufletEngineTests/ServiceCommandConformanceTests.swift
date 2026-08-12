@@ -273,6 +273,35 @@ final class ServiceCommandConformanceTests: XCTestCase {
   }
 
   @MainActor
+  func testURLLauncherMatchesFletURLAndNativePopupSemantics() {
+    XCTAssertEqual(
+      FletURLLauncherSemantics.parseURL(.string("https://flet.dev"))?.url.absoluteString,
+      "https://flet.dev")
+    let parsed = FletURLLauncherSemantics.parseURL(.map([
+      "url": .string("https://flet.dev/docs"), "target": .string("_blank")
+    ]))
+    XCTAssertEqual(parsed?.target, "_blank")
+    XCTAssertEqual(
+      FletURLLauncherSemantics.resolvedMode(.platformDefault, target: parsed?.target),
+      .externalApplication)
+    XCTAssertEqual(
+      FletURLLauncherSemantics.Mode(wireValue: "in_app_web_view"), .inAppWebView)
+    XCTAssertEqual(
+      FletURLLauncherSemantics.Mode(wireValue: "not-a-mode"), .platformDefault)
+    XCTAssertNil(FletURLLauncherSemantics.parseURL(.int(1)))
+
+    // Flet's non-web platform adapter intentionally implements popup windows
+    // as a no-op and returns void, rather than launching another browser.
+    let popup = invoke(
+      UrlLauncherService(), type: "UrlLauncher", method: "open_window",
+      args: .map([
+        "url": .string("https://flet.dev"), "title": .string("Flet popup"),
+        "width": .int(480), "height": .int(640)
+      ]))
+    XCTAssertEqual(try? popup?.get(), .null)
+  }
+
+  @MainActor
   func testSemanticsFeaturesUseTheCompleteFletResultShape() {
     let reply = invoke(
       SemanticsAnnouncementService(), type: "SemanticsService",

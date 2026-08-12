@@ -4,6 +4,12 @@ import RufletProtocol
 #if canImport(UIKit)
   import UIKit
 #endif
+#if canImport(SafariServices)
+  import SafariServices
+#endif
+#if canImport(WebKit)
+  import WebKit
+#endif
 #if canImport(GameController)
   import GameController
 #endif
@@ -54,6 +60,52 @@ public enum FletCoreServiceSemantics {
     default:
       return nil
     }
+  }
+}
+
+public enum FletURLLauncherSemantics {
+  public enum Mode: String, CaseIterable {
+    case platformDefault = "platform_default"
+    case inAppWebView = "in_app_web_view"
+    case inAppBrowserView = "in_app_browser_view"
+    case externalApplication = "external_application"
+    case externalNonBrowserApplication = "external_non_browser_application"
+
+    public init(wireValue: String?) {
+      let normalized = wireValue?
+        .replacingOccurrences(of: "-", with: "_")
+        .lowercased()
+      self = Self(rawValue: normalized ?? "") ?? .platformDefault
+    }
+  }
+
+  public struct ParsedURL: Equatable {
+    public let url: URL
+    public let target: String?
+  }
+
+  public static func parseURL(_ value: RufletValue?) -> ParsedURL? {
+    let raw: String?
+    let target: String?
+    switch value {
+    case .string(let value):
+      raw = value
+      target = nil
+    case .map(let value):
+      if case .string(let string)? = value["url"] { raw = string } else { raw = nil }
+      if case .string(let string)? = value["target"] { target = string } else { target = nil }
+    default:
+      raw = nil
+      target = nil
+    }
+    guard let raw, let url = URL(string: raw) else { return nil }
+    return ParsedURL(url: url, target: target)
+  }
+
+  /// Flet resolves a `_blank` URL target to an external application only when
+  /// the caller left the mode at its platform default.
+  public static func resolvedMode(_ mode: Mode, target: String?) -> Mode {
+    mode == .platformDefault && target == "_blank" ? .externalApplication : mode
   }
 }
 
@@ -627,9 +679,48 @@ public final class StoragePathsService: RufletService {
 }
 
 /// `UrlLauncher` — opens links in the browser or an in-app view.
+#if canImport(UIKit) && canImport(WebKit)
+@MainActor
+private final class RufletURLWebViewController: UIViewController {
+  private let webView: WKWebView
+  private let request: URLRequest
+
+  init(url: URL, configuration: RufletValue?) {
+    let map = configuration?.mapValue ?? [:]
+    let webConfiguration = WKWebViewConfiguration()
+    let allowsJavaScript = map["enable_javascript"]?.boolValue ?? true
+    webConfiguration.defaultWebpagePreferences.allowsContentJavaScript = allowsJavaScript
+    if map["enable_dom_storage"]?.boolValue == false {
+      webConfiguration.websiteDataStore = .nonPersistent()
+    }
+    webView = WKWebView(frame: .zero, configuration: webConfiguration)
+    var request = URLRequest(url: url)
+    for (key, value) in map["headers"]?.mapValue ?? [:] {
+      request.setValue(value.stringValue, forHTTPHeaderField: key)
+    }
+    self.request = request
+    super.init(nibName: nil, bundle: nil)
+  }
+
+  @available(*, unavailable)
+  required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+  override func loadView() { view = webView }
+
+  override func viewDidLoad() {
+    super.viewDidLoad()
+    webView.load(request)
+  }
+}
+#endif
+
 @MainActor
 public final class UrlLauncherService: RufletService {
   public static let wireType = "UrlLauncher"
+
+  #if canImport(UIKit)
+  private var inAppController: UIViewController?
+  #endif
 
   public init() {}
 
@@ -640,42 +731,116 @@ public final class UrlLauncherService: RufletService {
     completion: @escaping RufletMethodCompletion
   ) {
     switch call.name {
-    case "launch_url", "open_window":
-      guard let raw = call.argument("url")?.stringValue, let url = URL(string: raw) else {
+    case "launch_url":
+      guard let parsed = FletURLLauncherSemantics.parseURL(call.argument("url")) else {
         return completion(.failure(RufletServiceError.invalidArguments("url is required")))
       }
+      let requestedMode = FletURLLauncherSemantics.Mode(
+        wireValue: call.argument("mode")?.stringValue)
+      let mode = FletURLLauncherSemantics.resolvedMode(requestedMode, target: parsed.target)
       #if canImport(UIKit)
-        UIApplication.shared.open(url, options: [:]) { opened in
-          completion(.success(.bool(opened)))
+        switch mode {
+        case .inAppWebView:
+          #if canImport(WebKit)
+            guard let presenter = RufletWindow.topViewController() else {
+              return completion(.failure(
+                RufletServiceError.unavailable("No window to present from")))
+            }
+            let controller = RufletURLWebViewController(
+              url: parsed.url,
+              configuration: call.argument("web_view_configuration"))
+            controller.modalPresentationStyle = .fullScreen
+            inAppController = controller
+            presenter.present(controller, animated: true) { completion(.success(.null)) }
+          #else
+            completion(.failure(RufletServiceError.platformUnsupported(
+              type: Self.wireType, method: call.name, platform: "iOS")))
+          #endif
+        case .inAppBrowserView:
+          #if canImport(SafariServices)
+            guard let presenter = RufletWindow.topViewController() else {
+              return completion(.failure(
+                RufletServiceError.unavailable("No window to present from")))
+            }
+            let controller = SFSafariViewController(url: parsed.url)
+            inAppController = controller
+            presenter.present(controller, animated: true) { completion(.success(.null)) }
+          #else
+            completion(.failure(RufletServiceError.platformUnsupported(
+              type: Self.wireType, method: call.name, platform: "iOS")))
+          #endif
+        case .platformDefault, .externalApplication, .externalNonBrowserApplication:
+          let options: [UIApplication.OpenExternalURLOptionsKey: Any] =
+            mode == .externalNonBrowserApplication ? [.universalLinksOnly: true] : [:]
+          UIApplication.shared.open(parsed.url, options: options) { _ in
+            // Flet's `openWebBrowser` intentionally discards launchUrl's Bool.
+            completion(.success(.null))
+          }
         }
       #elseif canImport(AppKit)
-        completion(.success(.bool(NSWorkspace.shared.open(url))))
+        switch mode {
+        case .platformDefault, .externalApplication, .externalNonBrowserApplication:
+          _ = NSWorkspace.shared.open(parsed.url)
+          completion(.success(.null))
+        case .inAppWebView, .inAppBrowserView:
+          completion(.failure(RufletServiceError.platformUnsupported(
+            type: Self.wireType, method: call.name, platform: "macOS")))
+        }
       #else
         completion(.failure(RufletServiceError.unavailable("No URL handler on this platform")))
       #endif
 
+    case "open_window":
+      guard FletURLLauncherSemantics.parseURL(call.argument("url")) != nil else {
+        return completion(.failure(RufletServiceError.invalidArguments("url is required")))
+      }
+      // Flet's non-web `openPopupBrowserWindow` is deliberately a no-op.
+      completion(.success(.null))
+
     case "can_launch_url":
-      guard let raw = call.argument("url")?.stringValue, let url = URL(string: raw) else {
+      guard let parsed = FletURLLauncherSemantics.parseURL(call.argument("url")) else {
         return completion(.success(.bool(false)))
       }
       #if canImport(UIKit)
-        completion(.success(.bool(UIApplication.shared.canOpenURL(url))))
+        completion(.success(.bool(UIApplication.shared.canOpenURL(parsed.url))))
       #elseif canImport(AppKit)
-        completion(.success(.bool(NSWorkspace.shared.urlForApplication(toOpen: url) != nil)))
+        completion(.success(.bool(NSWorkspace.shared.urlForApplication(toOpen: parsed.url) != nil)))
       #else
         completion(.success(.bool(false)))
       #endif
 
     case "close_in_app_web_view":
-      completion(.success(.null))
+      #if canImport(UIKit)
+        guard let controller = inAppController else {
+          return completion(.success(.null))
+        }
+        controller.dismiss(animated: true) { completion(.success(.null)) }
+        inAppController = nil
+      #else
+        completion(.success(.null))
+      #endif
 
     case "supports_launch_mode":
-      // Only the external browser is offered, so that is the only mode.
-      let mode = call.argument("mode")?.stringValue?.lowercased() ?? ""
-      completion(.success(.bool(mode.isEmpty || mode.contains("external"))))
+      let mode = FletURLLauncherSemantics.Mode(
+        wireValue: call.argument("mode")?.stringValue)
+      #if canImport(UIKit)
+        completion(.success(.bool(true)))
+      #elseif canImport(AppKit)
+        completion(.success(.bool(
+          mode == .platformDefault || mode == .externalApplication
+            || mode == .externalNonBrowserApplication)))
+      #else
+        completion(.success(.bool(false)))
+      #endif
 
     case "supports_close_for_launch_mode":
-      completion(.success(.bool(false)))
+      let mode = FletURLLauncherSemantics.Mode(
+        wireValue: call.argument("mode")?.stringValue)
+      #if canImport(UIKit)
+        completion(.success(.bool(mode == .inAppWebView)))
+      #else
+        completion(.success(.bool(false)))
+      #endif
 
     default:
       completion(
