@@ -306,7 +306,12 @@ struct NavigationBarControlView: View {
 
   private var nativeBar: some View {
     let metrics = ChromeDefaults.navigationBar(node)
-    let destinations = node.controlIDs(forKey: "destinations").compactMap { store.node($0) }
+    // NavigationBarDestination is structural and bypasses ControlView's
+    // ordinary visibility gate. Flet's buildWidgets() and Python validation
+    // both operate on visible destinations, so selection indices belong to
+    // this filtered sequence too.
+    let destinations = ChromeDefaults.visibleNavigationBarDestinations(
+      node.controlIDs(forKey: "destinations").compactMap { store.node($0) })
     let selected = node.int("selected_index") ?? 0
 
     return Group {
@@ -740,6 +745,10 @@ enum ChromeDefaults {
     let tileHeight: CGFloat
     let indicatorWidth: CGFloat
     let indicatorHeight: CGFloat
+  }
+
+  static func visibleNavigationBarDestinations(_ destinations: [ControlNode]) -> [ControlNode] {
+    destinations.filter { $0.bool("visible") != false }
   }
 
   static func navigationBarValidation(
