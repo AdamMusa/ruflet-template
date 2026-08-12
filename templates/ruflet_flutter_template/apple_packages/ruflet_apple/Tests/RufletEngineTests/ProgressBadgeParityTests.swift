@@ -8,6 +8,20 @@ import XCTest
 /// `progress_bar.dart`, and `progress_ring.dart`, plus the pinned Flutter
 /// widgets those files instantiate.
 final class ProgressBadgeParityTests: XCTestCase {
+  func testUnstyledProgressControlsUseNativeAppleAppearance() {
+    let linear = ControlNode(
+      id: 1, type: "ProgressBar",
+      props: ["value": .double(0.5), "semantics_label": .string("Loading")])
+    let circular = ControlNode(id: 2, type: "ProgressRing")
+    XCTAssertTrue(RufletProgressAppearance.usesNativeLinear(linear))
+    XCTAssertTrue(RufletProgressAppearance.usesNativeCircular(circular))
+
+    XCTAssertFalse(RufletProgressAppearance.usesNativeLinear(ControlNode(
+      id: 3, type: "ProgressBar", props: ["bar_height": .double(8)])))
+    XCTAssertFalse(RufletProgressAppearance.usesNativeCircular(ControlNode(
+      id: 4, type: "ProgressRing", props: ["stroke_width": .double(8)])))
+  }
+
   func testBadgeVisibilityAndMissingLabelAreDifferentStates() {
     let hidden = ControlNode(
       id: 1, type: "Badge", props: ["label_visible": .bool(false)])
