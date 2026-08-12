@@ -7,9 +7,6 @@ import RufletProtocol
 #if canImport(SafariServices)
   import SafariServices
 #endif
-#if canImport(WebKit)
-  import WebKit
-#endif
 #if canImport(GameController)
   import GameController
 #endif
@@ -56,7 +53,7 @@ public enum FletCoreServiceSemantics {
   }
 
   public static func consoleLogPath(fileManager: FileManager = .default) -> String? {
-    fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first?
+    FletStoragePathsSemantics.path(for: .applicationCache)?
       .appendingPathComponent("console.log").path
   }
 
@@ -82,20 +79,75 @@ public enum FletCoreServiceSemantics {
   }
 }
 
+/// The directory mapping used by Flet's pinned `path_provider_foundation`
+/// adapter. Apple "temporary" storage is the base caches directory, while
+/// macOS scopes application cache/support paths below the application bundle id.
+public enum FletStoragePathsSemantics {
+  public enum Directory: Equatable {
+    case applicationCache
+    case applicationDocuments
+    case applicationSupport
+    case downloads
+    case library
+    case temporary
+  }
+
+  public static func path(
+    for directory: Directory,
+    bundleIdentifier: String? = Bundle.main.bundleIdentifier
+  ) -> URL? {
+    let searchDirectory: FileManager.SearchPathDirectory
+    switch directory {
+    case .applicationCache, .temporary: searchDirectory = .cachesDirectory
+    case .applicationDocuments: searchDirectory = .documentDirectory
+    case .applicationSupport: searchDirectory = .applicationSupportDirectory
+    case .downloads: searchDirectory = .downloadsDirectory
+    case .library: searchDirectory = .libraryDirectory
+    }
+    guard let rawPath = NSSearchPathForDirectoriesInDomains(
+      searchDirectory, .userDomainMask, true).first else { return nil }
+    var url = URL(fileURLWithPath: rawPath, isDirectory: true)
+    #if os(macOS)
+      if (directory == .applicationCache || directory == .applicationSupport),
+        let bundleIdentifier, !bundleIdentifier.isEmpty
+      {
+        url.appendPathComponent(bundleIdentifier, isDirectory: true)
+      }
+    #endif
+    return url
+  }
+
+  public static func createsDirectory(_ directory: Directory) -> Bool {
+    directory == .applicationCache || directory == .applicationSupport
+  }
+}
+
 public enum FletURLLauncherSemantics {
   public enum Mode: String, CaseIterable {
-    case platformDefault = "platform_default"
-    case inAppWebView = "in_app_web_view"
-    case inAppBrowserView = "in_app_browser_view"
-    case externalApplication = "external_application"
-    case externalNonBrowserApplication = "external_non_browser_application"
+    case platformDefault = "platformDefault"
+    case inAppWebView = "inAppWebView"
+    case inAppBrowserView = "inAppBrowserView"
+    case externalApplication = "externalApplication"
+    case externalNonBrowserApplication = "externalNonBrowserApplication"
 
     public init(wireValue: String?) {
       let normalized = wireValue?
-        .replacingOccurrences(of: "-", with: "_")
+        .replacingOccurrences(of: "-", with: "")
+        .replacingOccurrences(of: "_", with: "")
         .lowercased()
-      self = Self(rawValue: normalized ?? "") ?? .platformDefault
+      switch normalized {
+      case "inappwebview": self = .inAppWebView
+      case "inappbrowserview": self = .inAppBrowserView
+      case "externalapplication": self = .externalApplication
+      case "externalnonbrowserapplication": self = .externalNonBrowserApplication
+      default: self = .platformDefault
+      }
     }
+  }
+
+  public enum ApplePlatform {
+    case iOS
+    case macOS
   }
 
   public struct ParsedURL: Equatable {
@@ -125,6 +177,24 @@ public enum FletURLLauncherSemantics {
   /// the caller left the mode at its platform default.
   public static func resolvedMode(_ mode: Mode, target: String?) -> Mode {
     mode == .platformDefault && target == "_blank" ? .externalApplication : mode
+  }
+
+  public static func nativeMode(_ mode: Mode, url: URL, platform: ApplePlatform) -> Mode {
+    guard platform == .iOS, mode == .platformDefault else { return mode }
+    return ["http", "https"].contains(url.scheme?.lowercased() ?? "")
+      ? .inAppBrowserView : .externalApplication
+  }
+
+  public static func supportsLaunch(_ mode: Mode, platform: ApplePlatform) -> Bool {
+    switch platform {
+    case .iOS: return true
+    case .macOS: return mode == .platformDefault || mode == .externalApplication
+    }
+  }
+
+  /// `url_launcher` 6.3.2 routes this query through `supportsMode`.
+  public static func supportsClose(_ mode: Mode, platform: ApplePlatform) -> Bool {
+    supportsLaunch(mode, platform: platform)
   }
 }
 
@@ -730,24 +800,36 @@ public final class StoragePathsService: RufletService {
     context: RufletServiceContext,
     completion: @escaping RufletMethodCompletion
   ) {
-    func path(_ directory: FileManager.SearchPathDirectory) -> RufletValue {
-      let urls = FileManager.default.urls(for: directory, in: .userDomainMask)
-      return urls.first.map { RufletValue.string($0.path) } ?? .null
+    func path(_ directory: FletStoragePathsSemantics.Directory, nullable: Bool = false) {
+      guard let url = FletStoragePathsSemantics.path(for: directory) else {
+        if nullable { return completion(.success(.null)) }
+        return completion(.failure(
+          RufletServiceError.unavailable("StoragePaths could not resolve \(directory)")))
+      }
+      if FletStoragePathsSemantics.createsDirectory(directory) {
+        do {
+          try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        } catch {
+          return completion(.failure(RufletServiceError.failed(
+            "Could not create storage directory at \(url.path): \(error.localizedDescription)")))
+        }
+      }
+      completion(.success(.string(url.path)))
     }
 
     switch call.name {
     case "get_application_cache_directory":
-      completion(.success(path(.cachesDirectory)))
+      path(.applicationCache)
     case "get_application_documents_directory":
-      completion(.success(path(.documentDirectory)))
+      path(.applicationDocuments)
     case "get_application_support_directory":
-      completion(.success(path(.applicationSupportDirectory)))
+      path(.applicationSupport)
     case "get_downloads_directory":
-      completion(.success(path(.downloadsDirectory)))
+      path(.downloads, nullable: true)
     case "get_library_directory":
-      completion(.success(path(.libraryDirectory)))
+      path(.library)
     case "get_temporary_directory":
-      completion(.success(.string(NSTemporaryDirectory())))
+      path(.temporary)
     case "get_external_cache_directories", "get_external_storage_directories":
       // The Flet adapter returns null, rather than an empty collection, on
       // every non-Android platform.
@@ -755,8 +837,17 @@ public final class StoragePathsService: RufletService {
     case "get_external_storage_directory":
       completion(.success(.null))
     case "get_console_log_filename":
-      completion(.success(FletCoreServiceSemantics.nullableString(
-        FletCoreServiceSemantics.consoleLogPath())))
+      guard let cache = FletStoragePathsSemantics.path(for: .applicationCache) else {
+        return completion(.failure(
+          RufletServiceError.unavailable("StoragePaths could not resolve application cache")))
+      }
+      do {
+        try FileManager.default.createDirectory(at: cache, withIntermediateDirectories: true)
+        completion(.success(.string(cache.appendingPathComponent("console.log").path)))
+      } catch {
+        completion(.failure(RufletServiceError.failed(
+          "Could not create storage directory at \(cache.path): \(error.localizedDescription)")))
+      }
     default:
       completion(
         .failure(
@@ -766,41 +857,6 @@ public final class StoragePathsService: RufletService {
 }
 
 /// `UrlLauncher` — opens links in the browser or an in-app view.
-#if canImport(UIKit) && canImport(WebKit)
-@MainActor
-private final class RufletURLWebViewController: UIViewController {
-  private let webView: WKWebView
-  private let request: URLRequest
-
-  init(url: URL, configuration: RufletValue?) {
-    let map = configuration?.mapValue ?? [:]
-    let webConfiguration = WKWebViewConfiguration()
-    let allowsJavaScript = map["enable_javascript"]?.boolValue ?? true
-    webConfiguration.defaultWebpagePreferences.allowsContentJavaScript = allowsJavaScript
-    if map["enable_dom_storage"]?.boolValue == false {
-      webConfiguration.websiteDataStore = .nonPersistent()
-    }
-    webView = WKWebView(frame: .zero, configuration: webConfiguration)
-    var request = URLRequest(url: url)
-    for (key, value) in map["headers"]?.mapValue ?? [:] {
-      request.setValue(value.stringValue, forHTTPHeaderField: key)
-    }
-    self.request = request
-    super.init(nibName: nil, bundle: nil)
-  }
-
-  @available(*, unavailable)
-  required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
-
-  override func loadView() { view = webView }
-
-  override func viewDidLoad() {
-    super.viewDidLoad()
-    webView.load(request)
-  }
-}
-#endif
-
 @MainActor
 public final class UrlLauncherService: RufletService {
   public static let wireType = "UrlLauncher"
@@ -824,26 +880,19 @@ public final class UrlLauncherService: RufletService {
       }
       let requestedMode = FletURLLauncherSemantics.Mode(
         wireValue: call.argument("mode")?.stringValue)
-      let mode = FletURLLauncherSemantics.resolvedMode(requestedMode, target: parsed.target)
+      let target = parsed.target ?? call.argument("web_only_window_name")?.stringValue
+      let resolvedMode = FletURLLauncherSemantics.resolvedMode(requestedMode, target: target)
+      if resolvedMode == .inAppWebView || resolvedMode == .inAppBrowserView {
+        guard ["http", "https"].contains(parsed.url.scheme?.lowercased() ?? "") else {
+          return completion(.failure(RufletServiceError.invalidArguments(
+            "in-app web views require an http(s) URL")))
+        }
+      }
       #if canImport(UIKit)
+        let mode = FletURLLauncherSemantics.nativeMode(
+          resolvedMode, url: parsed.url, platform: .iOS)
         switch mode {
-        case .inAppWebView:
-          #if canImport(WebKit)
-            guard let presenter = RufletWindow.topViewController() else {
-              return completion(.failure(
-                RufletServiceError.unavailable("No window to present from")))
-            }
-            let controller = RufletURLWebViewController(
-              url: parsed.url,
-              configuration: call.argument("web_view_configuration"))
-            controller.modalPresentationStyle = .fullScreen
-            inAppController = controller
-            presenter.present(controller, animated: true) { completion(.success(.null)) }
-          #else
-            completion(.failure(RufletServiceError.platformUnsupported(
-              type: Self.wireType, method: call.name, platform: "iOS")))
-          #endif
-        case .inAppBrowserView:
+        case .inAppWebView, .inAppBrowserView:
           #if canImport(SafariServices)
             guard let presenter = RufletWindow.topViewController() else {
               return completion(.failure(
@@ -865,14 +914,9 @@ public final class UrlLauncherService: RufletService {
           }
         }
       #elseif canImport(AppKit)
-        switch mode {
-        case .platformDefault, .externalApplication, .externalNonBrowserApplication:
-          _ = NSWorkspace.shared.open(parsed.url)
-          completion(.success(.null))
-        case .inAppWebView, .inAppBrowserView:
-          completion(.failure(RufletServiceError.platformUnsupported(
-            type: Self.wireType, method: call.name, platform: "macOS")))
-        }
+        // Unsupported preferences fall back to the sole macOS system-open mode.
+        _ = NSWorkspace.shared.open(parsed.url)
+        completion(.success(.null))
       #else
         completion(.failure(RufletServiceError.unavailable("No URL handler on this platform")))
       #endif
@@ -911,11 +955,11 @@ public final class UrlLauncherService: RufletService {
       let mode = FletURLLauncherSemantics.Mode(
         wireValue: call.argument("mode")?.stringValue)
       #if canImport(UIKit)
-        completion(.success(.bool(true)))
+        completion(.success(.bool(FletURLLauncherSemantics.supportsLaunch(
+          mode, platform: .iOS))))
       #elseif canImport(AppKit)
-        completion(.success(.bool(
-          mode == .platformDefault || mode == .externalApplication
-            || mode == .externalNonBrowserApplication)))
+        completion(.success(.bool(FletURLLauncherSemantics.supportsLaunch(
+          mode, platform: .macOS))))
       #else
         completion(.success(.bool(false)))
       #endif
@@ -924,7 +968,11 @@ public final class UrlLauncherService: RufletService {
       let mode = FletURLLauncherSemantics.Mode(
         wireValue: call.argument("mode")?.stringValue)
       #if canImport(UIKit)
-        completion(.success(.bool(mode == .inAppWebView)))
+        completion(.success(.bool(FletURLLauncherSemantics.supportsClose(
+          mode, platform: .iOS))))
+      #elseif canImport(AppKit)
+        completion(.success(.bool(FletURLLauncherSemantics.supportsClose(
+          mode, platform: .macOS))))
       #else
         completion(.success(.bool(false)))
       #endif
