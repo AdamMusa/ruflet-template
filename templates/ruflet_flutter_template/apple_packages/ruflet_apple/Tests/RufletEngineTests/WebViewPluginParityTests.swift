@@ -19,6 +19,16 @@ final class WebViewPluginParityTests: XCTestCase {
   }
 
   #if canImport(WebKit)
+    func testScrollIntegersMatchPinnedFletParseInt() {
+      XCTAssertEqual(WebViewSemantics.parseInt(.int(-12)), -12)
+      XCTAssertEqual(WebViewSemantics.parseInt(.string(" 42 ")), 42)
+      XCTAssertNil(WebViewSemantics.parseInt(nil))
+      XCTAssertNil(WebViewSemantics.parseInt(.string("12.0")))
+      XCTAssertNil(WebViewSemantics.parseInt(.double(12)))
+      XCTAssertNil(WebViewSemantics.parseInt(.bool(true)))
+      XCTAssertNil(WebViewSemantics.parseInt(.controlRef(12)))
+    }
+
     func testInitialRequestUsesFletURLAndMethodDefaults() throws {
       let request = try XCTUnwrap(WebViewRequestSpec(url: nil, method: nil))
       XCTAssertEqual(request.url.absoluteString, "https://flet.dev")

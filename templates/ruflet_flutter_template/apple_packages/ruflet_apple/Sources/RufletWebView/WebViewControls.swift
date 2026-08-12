@@ -199,7 +199,9 @@ public struct WebViewControlView: View {
           value, in: webView, ignoresUnsupportedResult: true,
           completion: completion)
       case "scroll_to", "scroll_by":
-        guard let x = call.argument("x")?.intValue, let y = call.argument("y")?.intValue else {
+        guard let x = WebViewSemantics.parseInt(call.argument("x")),
+          let y = WebViewSemantics.parseInt(call.argument("y"))
+        else {
           return completion(.success(.null))
         }
         scroll(
@@ -367,6 +369,17 @@ public struct WebViewControlView: View {
       WKWebsiteDataTypeOfflineWebApplicationCache,
     ]
     static let localStorageDataTypes: Set<String> = [WKWebsiteDataTypeLocalStorage]
+
+    /// Mirrors Flet's `parseInt` for scroll commands instead of RufletValue's
+    /// broader numeric/bool coercion.
+    static func parseInt(_ value: RufletValue?) -> Int? {
+      switch value {
+      case .int(let value): return Int(exactly: value)
+      case .string(let value):
+        return Int(value.trimmingCharacters(in: .whitespacesAndNewlines))
+      default: return nil
+      }
+    }
 
     static var consoleUserScript: WKUserScript {
       WKUserScript(
