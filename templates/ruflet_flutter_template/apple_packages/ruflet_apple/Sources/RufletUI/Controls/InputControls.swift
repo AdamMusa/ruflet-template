@@ -2973,7 +2973,7 @@ struct AutoCompleteControlView: View {
     suggestions.enumerated().compactMap { index, suggestion in
       // Flet filters on `selectionString()`, which is the key, while it
       // displays `toString()`, which is the value.
-      suggestion.key.localizedCaseInsensitiveContains(query)
+      suggestion.matches(query)
         ? RufletAutoCompleteMatch(index: index, suggestion: suggestion) : nil
     }
   }
@@ -3054,6 +3054,15 @@ struct RufletAutoCompleteSuggestion: Equatable {
 
   var wireValue: RufletValue {
     .map(["key": .string(key), "value": .string(value)])
+  }
+
+  /// Pinned Dart calls `toLowerCase()` on both strings before `contains`.
+  /// Foundation's localized case-insensitive comparison performs broader
+  /// locale/case folding (for example `ß` can match `SS`), which changes the
+  /// suggestion set and therefore the selected source index.
+  func matches(_ query: String) -> Bool {
+    guard !query.isEmpty else { return false }
+    return key.lowercased().contains(query.lowercased())
   }
 
   /// Suggestions are ordinary JSON maps in Flet 0.80.5, not child controls.
