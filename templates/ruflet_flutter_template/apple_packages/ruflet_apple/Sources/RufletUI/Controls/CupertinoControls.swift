@@ -698,7 +698,11 @@ struct CupertinoPickerControlView: View {
       initialValue: CupertinoPickerParity.initialIndex(
         selected: node.int("selected_index") ?? 0,
         count: node.childIDs.count,
-        looping: node.bool("looping") == true))
+        looping: node.bool("looping") ?? false))
+  }
+
+  private var configuration: RufletCupertinoPickerConfiguration {
+    RufletCupertinoPickerConfiguration(node: node)
   }
 
   var body: some View {
@@ -710,7 +714,7 @@ struct CupertinoPickerControlView: View {
           wheelIndex = newIndex
           let real = CupertinoPickerParity.realIndex(newIndex, count: node.childIDs.count)
           events.commit(node, key: "selected_index", value: .int(Int64(real)))
-          guard node.bool("looping") == true,
+          guard configuration.looping,
             CupertinoPickerParity.shouldRecenter(newIndex, count: node.childIDs.count)
           else { return }
           // Keep the wheel far from either finite edge. The jump is invisible
@@ -721,37 +725,40 @@ struct CupertinoPickerControlView: View {
           }
         })
     ) {
-      ForEach(0..<CupertinoPickerParity.itemCount(count: node.childIDs.count, looping: node.bool("looping") == true), id: \.self) { index in
+      ForEach(0..<CupertinoPickerParity.itemCount(count: node.childIDs.count, looping: configuration.looping), id: \.self) { index in
         if !node.childIDs.isEmpty {
           ControlView(
             id: node.childIDs[CupertinoPickerParity.realIndex(index, count: node.childIDs.count)],
             axis: .none
-          ).tag(index)
+          )
+          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+          .tag(index)
         }
       }
     }
     .modifier(WheelPickerStyle())
     .labelsHidden()
-    .frame(height: CGFloat(node.double("item_extent") ?? 32) * 5)
+    .frame(height: CGFloat(configuration.itemExtent) * 5)
     // Flutter's wheel geometry: the squeeze packs the rows, the diameter
     // ratio curves the drum, and the off-axis fraction tilts it.
     .scaleEffect(
-      x: 1, y: CGFloat(node.double("squeeze") ?? 1), anchor: .center)
+      x: 1, y: CGFloat(configuration.squeeze), anchor: .center)
     .rotation3DEffect(
-      .degrees(Double(node.double("off_axis_fraction") ?? 0) * 45),
+      .degrees(configuration.offAxisFraction * 45),
       axis: (x: 0, y: 1, z: 0),
-      perspective: 1 / max(node.double("diameter_ratio") ?? 1.07, 0.1))
+      perspective: 1 / max(configuration.diameterRatio, 0.1))
     .background(selectionOverlay)
+    .background(MaterialPalette.color(node.string("bgcolor")))
     .modifier(
       PickerMagnifier(
-        enabled: node.bool("use_magnifier") == true,
-        factor: node.double("magnification") ?? 1))
+        enabled: configuration.useMagnifier,
+        factor: configuration.magnification))
     .onChange(of: node.int("selected_index") ?? 0) { selected in
       let real = CupertinoPickerParity.realIndex(wheelIndex, count: node.childIDs.count)
       guard selected != real else { return }
       wheelIndex = CupertinoPickerParity.initialIndex(
         selected: selected, count: node.childIDs.count,
-        looping: node.bool("looping") == true)
+        looping: configuration.looping)
     }
   }
 
@@ -767,8 +774,28 @@ struct CupertinoPickerControlView: View {
           MaterialPalette.color(
             node.string("default_selection_overlay_bgcolor"),
             default: .gray.opacity(0.2)))
-        .frame(height: CGFloat(node.double("item_extent") ?? 32))
+        .frame(height: CGFloat(configuration.itemExtent))
     }
+  }
+}
+
+struct RufletCupertinoPickerConfiguration {
+  let diameterRatio: Double
+  let magnification: Double
+  let squeeze: Double
+  let offAxisFraction: Double
+  let itemExtent: Double
+  let useMagnifier: Bool
+  let looping: Bool
+
+  init(node: ControlNode) {
+    diameterRatio = node.double("diameter_ratio") ?? 1.07
+    magnification = node.double("magnification") ?? 1
+    squeeze = node.double("squeeze") ?? 1.45
+    offAxisFraction = node.double("off_axis_fraction") ?? 0
+    itemExtent = node.double("item_extent") ?? 32
+    useMagnifier = node.bool("use_magnifier") ?? false
+    looping = node.bool("looping") ?? false
   }
 }
 
@@ -828,7 +855,7 @@ struct CupertinoDatePickerControlView: View {
     self.timerMode = timerMode
     let formatter = ISO8601DateFormatter()
     _selection = State(initialValue: node.string("value").flatMap(formatter.date(from:)) ?? Date())
-    _timerSeconds = State(initialValue: max(node.int("value") ?? 0, 0))
+    _timerSeconds = State(initialValue: RufletCupertinoTimerModel.seconds(from: node.props["value"]))
   }
 
   @ViewBuilder
@@ -841,15 +868,34 @@ struct CupertinoDatePickerControlView: View {
   }
 
   private var datePicker: some View {
-    DatePicker("", selection: $selection, in: allowedRange, displayedComponents: components)
-      .modifier(WheelDatePickerStyle())
-      .labelsHidden()
-      .environment(\.locale, pickerLocale)
-      .frame(minHeight: node.double("item_extent").map { CGFloat($0) * 5 })
-      .background(MaterialPalette.color(node.string("bgcolor")))
-      .onChange(of: selection) { value in
-        events.commit(node, value: .string(ISO8601DateFormatter().string(from: value)))
+    VStack(spacing: 0) {
+      if dateConfiguration.showsWeekday {
+        Text(dateConfiguration.weekdayLabel(for: selection))
+          .font(.caption)
+          .foregroundStyle(.secondary)
       }
+      DatePicker("", selection: $selection, in: allowedRange, displayedComponents: components)
+        .modifier(WheelDatePickerStyle())
+        .labelsHidden()
+    }
+    .environment(\.locale, pickerLocale)
+    .frame(minHeight: CGFloat(dateConfiguration.itemExtent) * 5)
+    .background(MaterialPalette.color(node.string("bgcolor")))
+    .onChange(of: selection) { value in
+      let snapped = dateConfiguration.snapped(value)
+      if snapped != value {
+        selection = snapped
+        return
+      }
+      events.commit(node, value: .string(ISO8601DateFormatter().string(from: value)))
+    }
+    .onChange(of: node.string("value")) { wireValue in
+      guard let wireValue,
+        let next = ISO8601DateFormatter().date(from: wireValue),
+        next != selection
+      else { return }
+      selection = next
+    }
   }
 
   private var timerPicker: some View {
@@ -871,7 +917,15 @@ struct CupertinoDatePickerControlView: View {
       }
     }
     .frame(minHeight: CGFloat(node.double("item_extent") ?? 32) * 5)
+    .frame(
+      maxWidth: .infinity,
+      alignment: ControlProps.alignment(node.props["alignment"]) ?? .center)
     .background(MaterialPalette.color(node.string("bgcolor")))
+    .onChange(of: node.props["value"]) { value in
+      let seconds = RufletCupertinoTimerModel.seconds(from: value)
+      guard seconds != timerSeconds else { return }
+      timerSeconds = seconds
+    }
   }
 
   private func durationColumn(values: [Int], selection: Binding<Int>, suffix: String) -> some View {
@@ -920,11 +974,18 @@ struct CupertinoDatePickerControlView: View {
       + (minutes ?? (timerSeconds % 3_600) / 60) * 60
       + (seconds ?? timerSeconds % 60)
     timerSeconds = next
-    events.commit(node, value: .int(Int64(next)))
+    events.commit(
+      node,
+      value: RufletCupertinoTimerModel.wireValue(
+        seconds: next, preserving: node.props["value"]))
   }
 
   private var pickerLocale: Locale {
-    node.string("locale").map { Locale(identifier: $0) } ?? .current
+    dateConfiguration.locale
+  }
+
+  private var dateConfiguration: RufletCupertinoDatePickerConfiguration {
+    RufletCupertinoDatePickerConfiguration(node: node)
   }
 
   /// `first_date`/`last_date` bound the wheel; `minimum_year`/`maximum_year`
@@ -946,12 +1007,103 @@ struct CupertinoDatePickerControlView: View {
   }
 
   private var components: DatePickerComponents {
-    switch node.string("date_picker_mode")?.lowercased() {
-    case "time": return [.hourAndMinute]
-    case "date": return [.date]
-    case "date_and_time", "datetime": return [.date, .hourAndMinute]
-    default: return [.date, .hourAndMinute]
+    switch dateConfiguration.mode {
+    case .time: return [.hourAndMinute]
+    case .date, .monthYear: return [.date]
+    case .dateAndTime: return [.date, .hourAndMinute]
     }
+  }
+}
+
+enum RufletCupertinoDatePickerMode: Equatable {
+  case time
+  case date
+  case dateAndTime
+  case monthYear
+
+  init(_ value: String?) {
+    switch value?.lowercased().replacingOccurrences(of: "_", with: "") {
+    case "time": self = .time
+    case "date": self = .date
+    case "monthyear": self = .monthYear
+    default: self = .dateAndTime
+    }
+  }
+}
+
+enum RufletCupertinoDateOrder: String, Equatable {
+  case dmy
+  case mdy
+  case ymd
+  case ydm
+
+  init?(_ value: String?) {
+    guard let value,
+      let order = Self(rawValue: value.lowercased().replacingOccurrences(of: "_", with: ""))
+    else { return nil }
+    self = order
+  }
+}
+
+/// Source-derived `CupertinoDatePicker` constructor contract. The visible
+/// view reads this single model rather than accumulating local Apple defaults
+/// that drift from the Flet engine.
+struct RufletCupertinoDatePickerConfiguration {
+  let mode: RufletCupertinoDatePickerMode
+  let order: RufletCupertinoDateOrder?
+  let showDayOfWeek: Bool
+  let use24HourFormat: Bool
+  let itemExtent: Double
+  let minuteInterval: Int
+  let baseLocaleIdentifier: String
+
+  init(node: ControlNode) {
+    mode = RufletCupertinoDatePickerMode(node.string("date_picker_mode"))
+    order = RufletCupertinoDateOrder(node.string("date_order"))
+    showDayOfWeek = node.bool("show_day_of_week") ?? false
+    use24HourFormat = node.bool("use_24h_format") ?? false
+    itemExtent = node.double("item_extent") ?? 32
+    minuteInterval = max(node.int("minute_interval") ?? 1, 1)
+    baseLocaleIdentifier = node.string("locale") ?? Locale.current.identifier
+  }
+
+  var showsWeekday: Bool {
+    showDayOfWeek && mode != .time
+  }
+
+  /// Flutter receives `dateOrder` as a wheel-order override. SwiftUI exposes
+  /// that choice through Locale, so choose an ICU locale with the same order
+  /// and then apply Flet's independent 12/24-hour override.
+  var locale: Locale {
+    let ordered: String
+    switch order {
+    case .dmy: ordered = "en_GB"
+    case .mdy: ordered = "en_US"
+    case .ymd: ordered = "ja_JP"
+    case .ydm: ordered = "fa_IR"
+    case nil: ordered = baseLocaleIdentifier
+    }
+    guard use24HourFormat else { return Locale(identifier: ordered) }
+    return Locale(identifier: "\(ordered)@hours=h23")
+  }
+
+  func weekdayLabel(for date: Date) -> String {
+    let formatter = DateFormatter()
+    formatter.locale = locale
+    formatter.dateFormat = "EEEE"
+    return formatter.string(from: date)
+  }
+
+  /// CupertinoDatePicker only permits minute intervals that divide 60. Flet
+  /// passes the interval to Flutter's constructor; snapping here gives the
+  /// native wheel the same value contract even though SwiftUI does not expose
+  /// a `minuteInterval` parameter.
+  func snapped(_ date: Date, calendar: Calendar = .current) -> Date {
+    guard minuteInterval > 1 else { return date }
+    let minute = calendar.component(.minute, from: date)
+    let snappedMinute = (minute / minuteInterval) * minuteInterval
+    guard snappedMinute != minute else { return date }
+    return calendar.date(byAdding: .minute, value: snappedMinute - minute, to: date) ?? date
   }
 }
 
@@ -971,6 +1123,60 @@ enum RufletCupertinoTimerModel {
   static func snap(_ value: Int, interval: Int) -> Int {
     let interval = max(interval, 1)
     return min(max((value / interval) * interval, 0), values(interval: interval).last ?? 0)
+  }
+
+  /// Flet preserves the original wire representation when the timer changes:
+  /// numeric values remain seconds and Duration extension values remain
+  /// Duration values. Ruby uses MessagePack extension type 3 for Duration.
+  static func seconds(from value: RufletValue?) -> Int {
+    guard let value else { return 0 }
+    if let seconds = value.intValue { return max(seconds, 0) }
+    if case .extended(type: 3, let payload) = value {
+      return max(parseDurationPayload(payload), 0)
+    }
+    if let map = value.mapValue {
+      return max(
+        (map["days"]?.intValue ?? 0) * 86_400
+          + (map["hours"]?.intValue ?? 0) * 3_600
+          + (map["minutes"]?.intValue ?? 0) * 60
+          + (map["seconds"]?.intValue ?? 0),
+        0)
+    }
+    return 0
+  }
+
+  static func wireValue(seconds: Int, preserving original: RufletValue?) -> RufletValue {
+    let seconds = max(seconds, 0)
+    // The upstream engine checks `control.get("value") is int`, not whether
+    // the value can be converted to an integer. Maps, doubles and missing
+    // values therefore change to a Duration value after the first gesture.
+    if case .int = original { return .int(Int64(seconds)) }
+    return .extended(type: 3, string: durationPayload(seconds: seconds))
+  }
+
+  private static func parseDurationPayload(_ payload: String) -> Int {
+    // Ruby's duration extension is either a numeric seconds payload or an
+    // ISO-8601 duration. Accept both without changing the public wire type.
+    if let seconds = Int(payload) { return seconds }
+    let expression = try? NSRegularExpression(
+      pattern: #"^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$"#)
+    let range = NSRange(payload.startIndex..<payload.endIndex, in: payload)
+    guard let match = expression?.firstMatch(in: payload, range: range) else { return 0 }
+    func component(_ index: Int) -> Int {
+      let range = match.range(at: index)
+      guard range.location != NSNotFound, let swiftRange = Range(range, in: payload) else { return 0 }
+      return Int(payload[swiftRange]) ?? 0
+    }
+    return component(1) * 86_400 + component(2) * 3_600 + component(3) * 60 + component(4)
+  }
+
+  private static func durationPayload(seconds: Int) -> String {
+    let days = seconds / 86_400
+    let hours = (seconds % 86_400) / 3_600
+    let minutes = (seconds % 3_600) / 60
+    let remainder = seconds % 60
+    let dayPart = days == 0 ? "" : "\(days)D"
+    return "P\(dayPart)T\(hours)H\(minutes)M\(remainder)S"
   }
 }
 
