@@ -8,6 +8,18 @@ import XCTest
 /// Direct translations of the pinned `ruflet_qrcode_scanner` Dart tests,
 /// followed by executable checks for the remaining public plug-in contract.
 final class QRScannerPluginParityTests: XCTestCase {
+  func testCommandErrorPayloadIncludesPinnedStackTraceField() {
+    let error = RufletServiceError.invalidArguments("value is required")
+    XCTAssertEqual(
+      QRScannerErrorEvent.payload(error, stackTrace: "frame 0\nframe 1"),
+      .map([
+        "message": .string(String(describing: error)),
+        "type": .string(String(describing: type(of: error))),
+        "stack_trace": .string("frame 0\nframe 1"),
+      ]))
+    XCTAssertNil(QRScannerErrorEvent.payload(error)["stack_trace"])
+  }
+
   func testParsesScannerEnumsUsingRubySnakeCaseNames() {
     XCTAssertEqual(QRScannerConfiguration.parseCameraFacing("front"), .front)
     XCTAssertEqual(QRScannerConfiguration.parseCameraFacing("unknown"), .back)

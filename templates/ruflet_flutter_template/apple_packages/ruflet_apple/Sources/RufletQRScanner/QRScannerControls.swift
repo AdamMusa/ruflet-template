@@ -68,6 +68,19 @@ enum QRScannerBarcodeType: String, Equatable {
   }
 }
 
+enum QRScannerErrorEvent {
+  /// Pinned Dart's `_triggerError` always sends message/type, and adds the
+  /// caught stack trace for imperative method failures.
+  static func payload(_ error: Error, stackTrace: String? = nil) -> RufletValue {
+    var data: [String: RufletValue] = [
+      "message": .string(String(describing: error)),
+      "type": .string(String(describing: type(of: error))),
+    ]
+    if let stackTrace { data["stack_trace"] = .string(stackTrace) }
+    return .map(data)
+  }
+}
+
 enum QRScannerPlatformCapabilities {
   #if os(iOS)
   static let zoom = true
@@ -310,8 +323,10 @@ final class QRScannerModel: NSObject, ObservableObject {
           return fail(RufletServiceError.unavailable("QR scanner is not configured"), completion)
         }
         let facing: QRScannerCameraFacing = input?.device.position == .front ? .back : .front
-        replaceInput(facing: facing)
-        completion(.success(.bool(true)))
+        do {
+          try replaceInput(facing: facing)
+          completion(.success(.bool(true)))
+        } catch { fail(error, completion) }
       case "toggle_torch":
         do {
           guard let device = input?.device else {
@@ -434,12 +449,21 @@ final class QRScannerModel: NSObject, ObservableObject {
       input = next
     }
 
-    private func replaceInput(facing: QRScannerCameraFacing) {
+    private func replaceInput(facing: QRScannerCameraFacing) throws {
       let wasRunning = session.isRunning
+      let previousInput = input
       session.beginConfiguration()
-      if let input { session.removeInput(input) }
-      do { try addInput(facing: facing) }
-      catch { report(error) }
+      if let previousInput { session.removeInput(previousInput) }
+      do {
+        try addInput(facing: facing)
+      } catch {
+        if let previousInput, session.canAddInput(previousInput) {
+          session.addInput(previousInput)
+          input = previousInput
+        }
+        session.commitConfiguration()
+        throw error
+      }
       session.commitConfiguration()
       if wasRunning && !session.isRunning { start(completion: nil) }
     }
@@ -484,16 +508,15 @@ final class QRScannerModel: NSObject, ObservableObject {
     #endif
 
     private func fail(_ error: Error, _ completion: RufletMethodCompletion?) {
-      report(error)
+      // `_invokeMethod` catches with a Dart StackTrace before rethrowing.
+      // Preserve that event shape for every native imperative command error.
+      report(error, stackTrace: Thread.callStackSymbols.joined(separator: "\n"))
       completion?(.failure(error))
     }
 
-    private func report(_ error: Error) {
+    private func report(_ error: Error, stackTrace: String? = nil) {
       guard let control else { return }
-      events.fire(control, "error", data: .map([
-        "message": .string(String(describing: error)),
-        "type": .string(String(describing: type(of: error)))
-      ]))
+      events.fire(control, "error", data: QRScannerErrorEvent.payload(error, stackTrace: stackTrace))
     }
 
     static func visionSymbologies(_ formats: [QRScannerBarcodeFormat]) -> [VNBarcodeSymbology] {
