@@ -85,6 +85,35 @@ struct QRScannerRect: Equatable {
   let height: Double
 }
 
+/// Stateful translation of mobile_scanner's `noDuplicates` contract.
+/// Android is the pinned implementation that performs the comparison: raw
+/// values are sorted, an identical capture is suppressed, and a different
+/// capture makes the previous value eligible again. Nil-only captures remain
+/// eligible because the plug-in does not record an empty signature.
+struct QRScannerDetectionState: Equatable {
+  private(set) var lastScanned: [String]?
+
+  mutating func accepts(_ rawValues: [String?], speed: QRScannerDetectionSpeed) -> Bool {
+    guard speed == .noDuplicates else { return true }
+    let signature = rawValues.compactMap { $0 }.sorted()
+    guard signature != lastScanned else { return false }
+    if !signature.isEmpty { lastScanned = signature }
+    return true
+  }
+
+  mutating func reset() {
+    lastScanned = nil
+  }
+
+  static func shouldThrottle(
+    speed: QRScannerDetectionSpeed,
+    elapsedMilliseconds: Double,
+    timeoutMilliseconds: Int
+  ) -> Bool {
+    speed == .normal && elapsedMilliseconds < Double(timeoutMilliseconds)
+  }
+}
+
 struct QRScannerConfiguration: Equatable {
   let autoStart: Bool
   let autoZoom: Bool
@@ -232,7 +261,7 @@ final class QRScannerModel: NSObject, ObservableObject {
     private var events = RufletEventSink()
     private var lastImage: Data?
     private var lastDetection = Date.distantPast
-    private var detectedValues = Set<String>()
+    private var detectionState = QRScannerDetectionState()
     private var processingFrame = false
     private var visionRegionOfInterest: CGRect?
   #endif
@@ -285,11 +314,20 @@ final class QRScannerModel: NSObject, ObservableObject {
         completion(.success(.bool(true)))
       case "toggle_torch":
         do {
-          guard let device = input?.device, device.hasTorch else {
+          guard let device = input?.device else {
             throw RufletServiceError.unavailable("The selected camera has no torch")
           }
+          guard device.hasTorch else {
+            completion(.success(.bool(true)))
+            return
+          }
+          let nextMode: AVCaptureDevice.TorchMode = device.torchMode == .on ? .off : .on
+          guard device.isTorchModeSupported(nextMode) else {
+            completion(.success(.bool(true)))
+            return
+          }
           try device.lockForConfiguration()
-          device.torchMode = device.torchMode == .on ? .off : .on
+          device.torchMode = nextMode
           device.unlockForConfiguration()
           completion(.success(.bool(true)))
         } catch { fail(error, completion) }
@@ -299,7 +337,7 @@ final class QRScannerModel: NSObject, ObservableObject {
         }
         setZoom(value, completion: completion)
       case "reset_zoom_scale":
-        setZoom(0, method: "reset_zoom_scale", completion: completion)
+        setZoom(0, completion: completion)
       default:
         fail(rufletUnsupported(control?.type ?? "qrcode_scanner", call), completion)
       }
@@ -370,7 +408,7 @@ final class QRScannerModel: NSObject, ObservableObject {
       let wasRunning = session.isRunning
       stopSession()
       configured = false
-      detectedValues.removeAll()
+      detectionState.reset()
       processingFrame = false
       session.inputs.forEach(session.removeInput)
       session.outputs.forEach(session.removeOutput)
@@ -407,7 +445,7 @@ final class QRScannerModel: NSObject, ObservableObject {
     }
 
     private func apply(_ configuration: QRScannerConfiguration) {
-      setZoom(configuration.zoomScale, method: "set_zoom_scale", completion: nil)
+      setZoom(configuration.zoomScale, completion: nil)
       guard configuration.torchEnabled, let device = input?.device, device.hasTorch else { return }
       do {
         try device.lockForConfiguration()
@@ -416,10 +454,7 @@ final class QRScannerModel: NSObject, ObservableObject {
       } catch { report(error) }
     }
 
-    private func setZoom(
-      _ value: Double, method: String = "set_zoom_scale",
-      completion: RufletMethodCompletion?
-    ) {
+    private func setZoom(_ value: Double, completion: RufletMethodCompletion?) {
       #if os(iOS)
       do {
         guard let device = input?.device else {
@@ -431,10 +466,13 @@ final class QRScannerModel: NSObject, ObservableObject {
         completion?(.success(.bool(true)))
       } catch { fail(error, completion) }
       #else
-      completion?(.failure(
-        RufletServiceError.platformUnsupported(
-          type: control?.type ?? "qrcode_scanner", method: method,
-          platform: "macOS")))
+      // mobile_scanner exposes both commands on macOS. Its Darwin plug-in
+      // validates that a camera exists, then intentionally performs no zoom
+      // mutation outside iOS and completes successfully.
+      guard input?.device != nil else {
+        return fail(RufletServiceError.unavailable("QR scanner is not running"), completion)
+      }
+      completion?(.success(.bool(true)))
       #endif
     }
 
@@ -518,12 +556,14 @@ extension QRScannerModel: AVCaptureVideoDataOutputSampleBufferDelegate {
   private func process(_ buffer: CVPixelBuffer) {
     guard let configuration, let control, control.handlesEvent("detect") else { return }
     let now = Date()
-    if configuration.detectionSpeed != .unrestricted,
-      now.timeIntervalSince(lastDetection) * 1_000 < Double(configuration.detectionTimeoutMilliseconds)
+    if QRScannerDetectionState.shouldThrottle(
+      speed: configuration.detectionSpeed,
+      elapsedMilliseconds: now.timeIntervalSince(lastDetection) * 1_000,
+      timeoutMilliseconds: configuration.detectionTimeoutMilliseconds)
     { return }
-    guard !processingFrame else { return }
+    if configuration.detectionSpeed != .unrestricted, processingFrame { return }
     lastDetection = now
-    processingFrame = true
+    processingFrame = configuration.detectionSpeed != .unrestricted
 
     var image = CIImage(cvPixelBuffer: buffer)
     if configuration.invertImage {
@@ -565,11 +605,10 @@ extension QRScannerModel: AVCaptureVideoDataOutputSampleBufferDelegate {
     configuration: QRScannerConfiguration, control: ControlNode
   ) {
     guard !observations.isEmpty else { return }
-    let fresh = observations.filter { observation in
-      guard configuration.detectionSpeed == .noDuplicates else { return true }
-      return detectedValues.insert(observation.payloadStringValue ?? "").inserted
-    }
-    guard !fresh.isEmpty else { return }
+    guard detectionState.accepts(
+      observations.map(\.payloadStringValue), speed: configuration.detectionSpeed)
+    else { return }
+    let fresh = observations
     if configuration.autoZoom, let first = fresh.first { applyAutoZoom(first.boundingBox) }
     let serialized = fresh.map {
       QRScannerVisionBarcode(observation: $0, imageWidth: imageWidth, imageHeight: imageHeight,
@@ -641,15 +680,18 @@ struct QRScannerVisionBarcode {
   }
 
   var rufletValue: RufletValue {
-    .map([
+    var payload: [String: RufletValue] = [
       "raw_value": rawValue.map(RufletValue.string) ?? .null,
       "display_value": displayValue.map(RufletValue.string) ?? .null,
       "format": .string(format),
       "type": .string(type.rawValue),
-      "corners": .array(corners.map {
+    ]
+    if !corners.isEmpty {
+      payload["corners"] = .array(corners.map {
         .map(["x": .double($0.x), "y": .double($0.y)])
       })
-    ])
+    }
+    return .map(payload)
   }
 
   static func pixelCorners(

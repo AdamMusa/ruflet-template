@@ -101,6 +101,54 @@ final class QRScannerPluginParityTests: XCTestCase {
     #endif
   }
 
+  func testNoDuplicatesComparesTheSortedCurrentCaptureRatherThanAllHistory() {
+    var state = QRScannerDetectionState()
+
+    XCTAssertTrue(state.accepts(["two", "one"], speed: .noDuplicates))
+    XCTAssertFalse(state.accepts(["one", "two"], speed: .noDuplicates))
+    XCTAssertTrue(state.accepts(["three"], speed: .noDuplicates))
+    XCTAssertTrue(state.accepts(["one", "two"], speed: .noDuplicates))
+    XCTAssertTrue(state.accepts(["one", "two"], speed: .normal))
+  }
+
+  func testNoDuplicatesDoesNotRecordNilOnlyCaptures() {
+    var state = QRScannerDetectionState()
+
+    XCTAssertTrue(state.accepts([nil], speed: .noDuplicates))
+    XCTAssertTrue(state.accepts([nil], speed: .noDuplicates))
+    XCTAssertNil(state.lastScanned)
+  }
+
+  func testOnlyNormalDetectionUsesTheConfiguredTimeout() {
+    XCTAssertTrue(QRScannerDetectionState.shouldThrottle(
+      speed: .normal, elapsedMilliseconds: 249, timeoutMilliseconds: 250))
+    XCTAssertFalse(QRScannerDetectionState.shouldThrottle(
+      speed: .normal, elapsedMilliseconds: 250, timeoutMilliseconds: 250))
+    XCTAssertFalse(QRScannerDetectionState.shouldThrottle(
+      speed: .noDuplicates, elapsedMilliseconds: 0, timeoutMilliseconds: 250))
+    XCTAssertFalse(QRScannerDetectionState.shouldThrottle(
+      speed: .unrestricted, elapsedMilliseconds: 0, timeoutMilliseconds: 250))
+  }
+
+  func testBarcodeWirePayloadOmitsEmptyCornersLikePinnedWrapper() {
+    let withoutCorners = QRScannerVisionBarcode(
+      rawValue: nil, displayValue: nil, format: "unknown", type: .unknown,
+      corners: []).rufletValue
+    XCTAssertEqual(withoutCorners, .map([
+      "raw_value": .null,
+      "display_value": .null,
+      "format": "unknown",
+      "type": "unknown",
+    ]))
+
+    let withCorners = QRScannerVisionBarcode(
+      rawValue: "ruflet", displayValue: "ruflet", format: "qrCode", type: .text,
+      corners: [CGPoint(x: 2, y: 3)]).rufletValue
+    XCTAssertEqual(withCorners["corners"], .array([
+      .map(["x": 2.0, "y": 3.0])
+    ]))
+  }
+
   func testCreatesScannerForNormalizedAndLegacyWireTypes() throws {
     let normalized = try XCTUnwrap(ControlRegistry.builtInDescriptor(for: "QrcodeScanner"))
     let legacy = try XCTUnwrap(ControlRegistry.builtInDescriptor(for: "qrcode_scanner"))
