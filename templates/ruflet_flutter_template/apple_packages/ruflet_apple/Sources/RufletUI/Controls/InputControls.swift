@@ -1003,13 +1003,31 @@ struct CodeEditorControlView: View {
 
   var body: some View {
     #if canImport(UIKit) || canImport(AppKit)
-      HighlightedCodeTextView(
-        text: editorValue,
-        focused: $nativeFocused,
-        selection: $selection,
-        editable: node.bool("read_only") != true && folds.isEmpty,
-        dark: isDark,
-        fontSize: CGFloat(node.double("text_size") ?? 14))
+      ZStack(alignment: .topLeading) {
+        HighlightedCodeTextView(
+          text: editorValue,
+          focused: $nativeFocused,
+          selection: $selection,
+          configuration: configuration,
+          editable: !configuration.readOnly && !configuration.disabled && folds.isEmpty,
+          focusable: !configuration.disabled)
+        if configuration.gutter.visible {
+          CodeEditorGutterView(
+            source: editorValue.wrappedValue,
+            configuration: configuration,
+            folds: folds,
+            toggle: toggleFold)
+        }
+        if configuration.autocomplete, nativeFocused, !configuration.readOnly,
+          let completion = CodeEditorCompletion.current(
+            in: source, selection: selection,
+            words: configuration.autocompleteWords + CodeLanguageSyntax.resolve(configuration.language).keywords)
+        {
+          CodeEditorCompletionBar(completion: completion) { word in
+            applyCompletion(word, replacing: completion.range)
+          }
+        }
+      }
       .onChange(of: nativeFocused) { isFocused in
         events.fire(node, isFocused ? "focus" : "blur")
       }
@@ -1019,17 +1037,14 @@ struct CodeEditorControlView: View {
       .modifier(CodeEditorChrome(node: node, dark: isDark))
       .onAppear {
         selection = explicitSelection
-        if node.bool("autofocus") == true, node.bool("read_only") != true {
+        if configuration.autofocus, !configuration.disabled {
           nativeFocused = true
         }
       }
       .rufletCommandHandler(node.id) { call, completion in
         switch call.name {
         case "focus":
-          if node.bool("read_only") != true { nativeFocused = true }
-          completion(.success(.null))
-        case "blur":
-          nativeFocused = false
+          if !configuration.disabled { nativeFocused = true }
           completion(.success(.null))
         case "fold_at":
           toggleFold(at: call.argument("line_number")?.intValue ?? 0)
@@ -1046,28 +1061,29 @@ struct CodeEditorControlView: View {
       }
     #else
     Group {
-      if node.bool("read_only") == true {
+      if configuration.readOnly {
         ScrollView([.horizontal, .vertical]) {
           Text(node.string("value") ?? "")
             .font(editorFont)
             .foregroundColor(foreground)
             .frame(maxWidth: .infinity, alignment: .topLeading)
             .fixedSize(horizontal: false, vertical: true)
-            .padding(12)
+            .padding(configuration.padding)
         }
       } else {
         TextEditor(text: value)
           .font(editorFont)
           .foregroundColor(foreground)
           .focused($focused)
-          .padding(8)
+          .padding(configuration.padding)
           .colorScheme(isDark ? .dark : .light)
+          .disabled(configuration.disabled || !folds.isEmpty)
       }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     .background(background)
     .onAppear {
-      if node.bool("autofocus") == true, node.bool("read_only") != true {
+      if configuration.autofocus, !configuration.disabled {
         focused = true
       }
     }
@@ -1077,10 +1093,16 @@ struct CodeEditorControlView: View {
     .rufletCommandHandler(node.id) { call, completion in
       switch call.name {
       case "focus":
-        if node.bool("read_only") != true { focused = true }
+        if !configuration.disabled { focused = true }
         completion(.success(.null))
-      case "blur":
-        focused = false
+      case "fold_at":
+        toggleFold(at: call.argument("line_number")?.intValue ?? 0)
+        completion(.success(.null))
+      case "fold_comment_at_line_zero":
+        folds = CodeFoldProjection.leadingCommentRegion(in: source).map { [$0] } ?? []
+        completion(.success(.null))
+      case "fold_imports":
+        folds = CodeFoldProjection.importRegions(in: source)
         completion(.success(.null))
       default:
         completion(.failure(rufletUnsupported("CodeEditor", call)))
@@ -1097,6 +1119,8 @@ struct CodeEditorControlView: View {
 
   private var source: String { node.string("value") ?? "" }
 
+  private var configuration: CodeEditorConfiguration { CodeEditorConfiguration(node: node) }
+
   private var editorValue: Binding<String> {
     Binding(
       get: { CodeFoldProjection.project(source, folding: folds) },
@@ -1107,13 +1131,7 @@ struct CodeEditorControlView: View {
   }
 
   private var explicitSelection: NSRange {
-    guard let map = node.map("selection"),
-      let base = map["base_offset"]?.intValue,
-      let extent = map["extent_offset"]?.intValue
-    else { return NSRange(location: 0, length: 0) }
-    let start = max(0, min(base, extent))
-    let end = min(source.utf16.count, max(base, extent))
-    return NSRange(location: min(start, end), length: max(0, end - start))
+    CodeEditorSelection.range(from: node.props["selection"], text: source)
   }
 
   private func reportSelection(_ range: NSRange) {
@@ -1122,19 +1140,10 @@ struct CodeEditorControlView: View {
     let location = min(max(range.location, 0), length)
     let selectedLength = min(max(range.length, 0), length - location)
     let resolved = NSRange(location: location, length: selectedLength)
-    let selectionValue: RufletValue = .map([
-      "base_offset": .int(Int64(resolved.location)),
-      "extent_offset": .int(Int64(NSMaxRange(resolved))),
-      "affinity": .string("downstream"),
-      "directional": .bool(false),
-    ])
+    let selectionValue = CodeEditorSelection.value(resolved, text: source)
     events.setLocal(node.id, "selection", selectionValue)
     events.update(node.id, ["selection": selectionValue])
-    let selected = (source as NSString).substring(with: resolved)
-    events.fire(node, "selection_change", data: .map([
-      "selected_text": .string(selected),
-      "selection": selectionValue,
-    ]))
+    events.fire(node, "selection_change", data: CodeEditorSelection.event(resolved, text: source))
   }
 
   private func toggleFold(at line: Int) {
@@ -1147,13 +1156,21 @@ struct CodeEditorControlView: View {
     }
   }
 
-  private var editorFont: Font {
-    .system(size: CGFloat(node.double("text_size") ?? 14), design: .monospaced)
+  private func applyCompletion(_ word: String, replacing range: NSRange) {
+    guard folds.isEmpty else { return }
+    let next = (source as NSString).replacingCharacters(in: range, with: word)
+    selection = NSRange(location: range.location + word.utf16.count, length: 0)
+    events.commit(node, value: .string(next))
   }
 
-  private var isDark: Bool {
-    (node.string("code_theme") ?? "").lowercased().contains("dark")
+  private var editorFont: Font {
+    if let family = configuration.fontFamily {
+      return .custom(family, size: configuration.fontSize)
+    }
+    return .system(size: configuration.fontSize, design: .monospaced)
   }
+
+  private var isDark: Bool { configuration.dark }
 
   private var background: Color {
     MaterialPalette.color(node.string("bgcolor"), default: isDark ? Color(red: 0.16, green: 0.17, blue: 0.20) : .white)
@@ -1161,6 +1178,111 @@ struct CodeEditorControlView: View {
 
   private var foreground: Color {
     MaterialPalette.color(node.string("color"), default: isDark ? Color(red: 0.67, green: 0.70, blue: 0.75) : .primary)
+  }
+}
+
+private struct CodeEditorGutterView: View {
+  let source: String
+  let configuration: CodeEditorConfiguration
+  let folds: [CodeFoldRegion]
+  let toggle: (Int) -> Void
+
+  var body: some View {
+    VStack(alignment: .trailing, spacing: 0) {
+      ForEach(Array(source.components(separatedBy: "\n").indices), id: \.self) { line in
+        HStack(spacing: 3) {
+          if configuration.gutter.showFoldingHandles {
+            Button { toggle(line) } label: {
+              Image(systemName: folds.contains { $0.startLine == line } ? "chevron.right" : "chevron.down")
+                .opacity(CodeFoldProjection.blockRegion(in: source, startingAt: line) == nil ? 0 : 1)
+            }
+            .buttonStyle(.plain)
+          }
+          if configuration.gutter.showErrors {
+            Circle()
+              .fill(CodeEditorDiagnostics.lines(in: source).contains(line) ? Color.red : Color.clear)
+              .frame(width: 5, height: 5)
+          }
+          if configuration.gutter.showLineNumbers {
+            Text(String(line + 1)).monospacedDigit()
+          }
+        }
+        .font(.system(size: configuration.fontSize))
+        .foregroundColor(.secondary)
+        .frame(height: configuration.fontSize * 1.25)
+      }
+    }
+    .padding(.top, configuration.padding.top)
+    .padding(.leading, configuration.padding.leading)
+    .frame(width: configuration.gutter.width, alignment: .trailing)
+    .background(MaterialPalette.color(configuration.gutter.backgroundToken) ?? Color.clear)
+  }
+}
+
+struct CodeEditorCompletion: Equatable {
+  let range: NSRange
+  let suggestions: [String]
+
+  static func current(in source: String, selection: NSRange, words: [String]) -> CodeEditorCompletion? {
+    guard selection.length == 0, selection.location <= source.utf16.count else { return nil }
+    let prefixSource = (source as NSString).substring(to: selection.location)
+    let prefix = prefixSource.components(separatedBy: CharacterSet.alphanumerics.inverted).last ?? ""
+    guard !prefix.isEmpty else { return nil }
+    let matches = words.filter { $0.hasPrefix(prefix) && $0 != prefix }
+    guard !matches.isEmpty else { return nil }
+    return CodeEditorCompletion(
+      range: NSRange(location: selection.location - prefix.utf16.count, length: prefix.utf16.count),
+      suggestions: Array(matches.prefix(8)))
+  }
+}
+
+enum CodeEditorDiagnostics {
+  /// The Flutter plugin obtains parser errors from `CodeController`. Native
+  /// Apple text systems do not expose a language parser, but unmatched paired
+  /// delimiters are deterministic diagnostics and belong in the same gutter.
+  static func lines(in source: String) -> Set<Int> {
+    let pairs: [Character: Character] = [")": "(", "]": "[", "}": "{"]
+    var stack: [(Character, Int)] = []
+    var errors = Set<Int>()
+    var line = 0
+    var quote: Character?
+    var escaped = false
+    for character in source {
+      if character == "\n" { line += 1 }
+      if escaped { escaped = false; continue }
+      if character == "\\" { escaped = true; continue }
+      if character == "\"" || character == "'" {
+        if quote == character { quote = nil } else if quote == nil { quote = character }
+        continue
+      }
+      guard quote == nil else { continue }
+      if character == "(" || character == "[" || character == "{" {
+        stack.append((character, line))
+      } else if let expected = pairs[character] {
+        guard stack.last?.0 == expected else { errors.insert(line); continue }
+        stack.removeLast()
+      }
+    }
+    errors.formUnion(stack.map(\.1))
+    return errors
+  }
+}
+
+private struct CodeEditorCompletionBar: View {
+  let completion: CodeEditorCompletion
+  let apply: (String) -> Void
+
+  var body: some View {
+    ScrollView(.horizontal, showsIndicators: false) {
+      HStack {
+        ForEach(completion.suggestions, id: \.self) { word in
+          Button(word) { apply(word) }.buttonStyle(.bordered)
+        }
+      }
+      .padding(6)
+    }
+    .background(.regularMaterial)
+    .frame(maxWidth: .infinity, alignment: .leading)
   }
 }
 

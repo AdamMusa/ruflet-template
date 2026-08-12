@@ -281,7 +281,7 @@ public enum ControlRegistry {
         methods: ["blur", "focus"])
     add(["CodeEditor"], .visible, "CodeEditorControlView", .nativeView,
         events: ["blur", "change", "focus", "selection_change"],
-        methods: ["blur", "focus", "fold_at", "fold_comment_at_line_zero", "fold_imports"])
+        methods: ["focus", "fold_at", "fold_comment_at_line_zero", "fold_imports"])
     add(["SearchBar"], .visible, "SearchBarControlView", .nativeView,
         events: ["blur", "change", "focus", "submit", "tap", "tap_outside_bar"],
         methods: ["close_view", "focus", "open_view"])
