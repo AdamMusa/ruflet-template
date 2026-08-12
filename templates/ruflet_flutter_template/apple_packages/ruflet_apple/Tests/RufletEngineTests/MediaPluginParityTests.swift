@@ -83,11 +83,33 @@ final class MediaPluginParityTests: XCTestCase {
   func testVideoMediaParsesFletResourceAndHeaders() throws {
     let source = try XCTUnwrap(VideoMediaSource(.map([
       "resource": .string("https://example.test/movie.mp4"),
-      "http_headers": .map(["Authorization": .string("Bearer token")]),
+      "http_headers": .map([
+        "Authorization": .string("Bearer token"),
+        "X-Retry": .int(3),
+        "X-Enabled": .bool(true),
+      ]),
       "extras": .map(["platform-specific": .string("ignored by AVFoundation")]),
     ])))
     XCTAssertEqual(source.resource, "https://example.test/movie.mp4")
-    XCTAssertEqual(source.httpHeaders, ["Authorization": "Bearer token"])
+    XCTAssertEqual(source.httpHeaders["Authorization"], "Bearer token")
+    XCTAssertEqual(source.httpHeaders["X-Retry"], "3")
+    XCTAssertEqual(source.httpHeaders["X-Enabled"], "true")
+  }
+
+  func testVideoDurationArgumentsAndResultsUseFletDurationWireType() {
+    XCTAssertEqual(FletVideoDuration.milliseconds(.int(250)), 250)
+    XCTAssertEqual(FletVideoDuration.milliseconds(.double(4.5)), 0)
+    XCTAssertEqual(
+      FletVideoDuration.milliseconds(.extended(type: 3, string: "250000")), 250)
+    XCTAssertEqual(
+      FletVideoDuration.milliseconds(.map([
+        "minutes": .int(1), "seconds": .int(2), "milliseconds": .int(3),
+        "microseconds": .int(500),
+      ])),
+      62_003.5)
+    XCTAssertEqual(
+      FletVideoDuration.wireValue(milliseconds: 1_234),
+      .extended(type: 3, string: "1234000"))
   }
 
   func testVideoControllerConfigurationPreservesFletContractAndClassifiesMPVBoundary() {
@@ -105,6 +127,7 @@ final class MediaPluginParityTests: XCTestCase {
     XCTAssertEqual(options.height, 360)
     XCTAssertEqual(options.scale, 2)
     XCTAssertEqual(options.mpvProperties["cache"], "yes")
+    XCTAssertEqual(options.mpvProperties["demuxer-max-bytes"], "42")
     XCTAssertTrue(options.avFoundationUnsupportedKeys.isSuperset(of: [
       "output_driver", "hardware_decoding_api", "enable_hardware_acceleration",
       "width", "height", "scale", "mpv_properties.cache",
@@ -120,6 +143,9 @@ final class MediaPluginParityTests: XCTestCase {
     XCTAssertEqual(defaults.padding.bottom, 24)
 
     XCTAssertEqual(VideoSubtitleTrack(.map(["src": .string("auto")])), .automatic)
+    XCTAssertEqual(
+      VideoSubtitleTrack(.map(["src": .string("AUTO")])),
+      .external("AUTO"))
     XCTAssertEqual(
       VideoSubtitleTrack(.map(["src": .string("none")])),
       Optional(VideoSubtitleTrack.none))
@@ -159,6 +185,23 @@ final class MediaPluginParityTests: XCTestCase {
 
   #if canImport(AVKit)
     @MainActor
+    func testVideoInitialDurationMethodsReturnDurationZeroInsteadOfNull() throws {
+      let model = VideoPlayerModel()
+      func invoke(_ name: String) throws -> RufletValue {
+        var result: Result<RufletValue, Error>?
+        model.handle(
+          RufletMethodCall(
+            controlID: 1, callID: name, name: name, args: .map([:]))) { result = $0 }
+        return try XCTUnwrap(result).get()
+      }
+
+      XCTAssertEqual(
+        try invoke("get_current_position"), .extended(type: 3, string: "0"))
+      XCTAssertEqual(try invoke("get_duration"), .extended(type: 3, string: "0"))
+      XCTAssertEqual(try invoke("is_completed"), .bool(false))
+    }
+
+    @MainActor
     func testVideoVolumeUsesFletZeroToOneHundredScale() {
       let events = RufletEventSink()
       let onePercent = VideoPlayerModel()
@@ -170,6 +213,15 @@ final class MediaPluginParityTests: XCTestCase {
       let defaultVolume = VideoPlayerModel()
       defaultVolume.configure(from: ControlNode(id: 3, type: "Video"), events: events)
       XCTAssertEqual(defaultVolume.player.volume, 1, accuracy: 0.0001)
+
+      let invalidUpdate = VideoPlayerModel()
+      invalidUpdate.configure(
+        from: ControlNode(id: 4, type: "Video", props: ["volume": .double(25)]),
+        events: events)
+      invalidUpdate.configure(
+        from: ControlNode(id: 4, type: "Video", props: ["volume": .double(150)]),
+        events: events)
+      XCTAssertEqual(invalidUpdate.player.volume, 0.25, accuracy: 0.0001)
     }
 
     func testVideoNativeFullscreenEntryMirrorsPinnedFletProperties() {

@@ -52,11 +52,47 @@ enum VideoSubtitleTrack: Equatable {
 
   init?(_ value: RufletValue?) {
     guard let map = value?.mapValue, let source = map["src"]?.stringValue else { return nil }
-    switch source.lowercased() {
+    switch source {
     case "auto": self = .automatic
     case "none": self = .none
     default: self = .external(source)
     }
+  }
+}
+
+enum FletVideoDuration {
+  /// Flet's MessagePack duration extension stores total microseconds. Numeric
+  /// seek arguments remain milliseconds, while component maps are additive.
+  static func milliseconds(_ value: RufletValue?) -> Double? {
+    guard let value, !value.isNull else { return nil }
+    switch value {
+    case .int(let value): return Double(value)
+    // Dart's parseInt(4.5) fails and falls back to zero.
+    case .double: return 0
+    case .string(let value): return Double(Int64(value) ?? 0)
+    case .extended(type: 3, let microseconds):
+      return Double(Int64(microseconds) ?? 0) / 1_000
+    case .map(let fields):
+      func integer(_ key: String) -> Int64 {
+        switch fields[key] {
+        case .int(let value): return value
+        case .string(let value), .extended(_, let value): return Int64(value) ?? 0
+        default: return 0
+        }
+      }
+      let microseconds = integer("microseconds")
+        + 1_000 * integer("milliseconds")
+        + 1_000_000 * integer("seconds")
+        + 60_000_000 * integer("minutes")
+        + 3_600_000_000 * integer("hours")
+        + 86_400_000_000 * integer("days")
+      return Double(microseconds) / 1_000
+    default: return 0
+    }
+  }
+
+  static func wireValue(milliseconds: Int64) -> RufletValue {
+    .extended(type: 3, string: String(milliseconds * 1_000))
   }
 }
 
@@ -111,9 +147,13 @@ struct VideoControllerOptions: Equatable {
     height = map["height"]?.intValue
     scale = map["scale"]?.doubleValue ?? 1
     mpvProperties = map["mpv_properties"]?.mapValue?.reduce(into: [:]) { result, entry in
-      if let boolean = entry.value.boolValue { result[entry.key] = boolean ? "yes" : "no" }
-      else if let string = entry.value.stringValue { result[entry.key] = string }
-      else if let number = entry.value.doubleValue { result[entry.key] = String(number) }
+      switch entry.value {
+      case .bool(let value): result[entry.key] = value ? "yes" : "no"
+      case .string(let value): result[entry.key] = value
+      case .int(let value): result[entry.key] = String(value)
+      case .double(let value): result[entry.key] = String(value)
+      default: break
+      }
     } ?? [:]
   }
 
@@ -253,11 +293,14 @@ final class VideoPlayerModel: ObservableObject {
 
     #if canImport(AVKit)
       player.isMuted = node.bool("muted") ?? false
-      let volume = node.double("volume") ?? 100
-      player.volume = Float(max(0, min(volume / 100, 1)))
-      let newPlaybackRate = Float(node.double("playback_rate") ?? 1)
-      let rateChangedWhilePlaying = playbackRate != newPlaybackRate && player.rate != 0
-      playbackRate = newPlaybackRate
+      if let volume = node.double("volume"), (0...100).contains(volume) {
+        player.volume = Float(volume / 100)
+      }
+      let requestedPlaybackRate = node.double("playback_rate")
+      let newPlaybackRate = Float(requestedPlaybackRate ?? Double(playbackRate))
+      let rateChangedWhilePlaying = requestedPlaybackRate != nil
+        && playbackRate != newPlaybackRate && player.rate != 0
+      if requestedPlaybackRate != nil { playbackRate = newPlaybackRate }
       self.node = node
       self.events = events
       subtitleConfiguration = VideoSubtitleConfiguration(node.props["subtitle_configuration"])
@@ -272,8 +315,8 @@ final class VideoPlayerModel: ObservableObject {
         avFoundationUnsupportedProperties.insert("fit.\(presentation.fit)")
       }
       let newSubtitleTrack = VideoSubtitleTrack(node.props["subtitle_track"])
-      let subtitleChanged = newSubtitleTrack != subtitleTrack
-      subtitleTrack = newSubtitleTrack
+      let subtitleChanged = newSubtitleTrack != nil && newSubtitleTrack != subtitleTrack
+      if let newSubtitleTrack { subtitleTrack = newSubtitleTrack }
       let sourcesChanged = sources != playlist || !configured
       if sourcesChanged {
         playlist = sources
@@ -289,12 +332,18 @@ final class VideoPlayerModel: ObservableObject {
       // equivalent implementation and is therefore deliberately avoided.
       player.appliesMediaSelectionCriteriaAutomatically = true
       // Flutter's playlist modes: loop the item, loop the list, or stop.
-      playlistMode = node.string("playlist_mode")?.lowercased() ?? "none"
-      shuffles = node.bool("shuffle_playlist") == true
+      if let requestedMode = node.string("playlist_mode")?.lowercased(),
+        ["none", "single", "loop"].contains(requestedMode)
+      {
+        playlistMode = requestedMode
+      }
+      if let requestedShuffle = node.bool("shuffle_playlist") {
+        shuffles = requestedShuffle
+      }
       pausesInBackground = node.bool("pause_upon_entering_background_mode") ?? true
       resumesInForeground = node.bool("resume_upon_entering_foreground_mode") ?? false
       holdsWakelock = node.bool("wakelock") ?? true
-      setWakelock(holdsWakelock)
+      updateWakelock()
 
       if sourcesChanged, node.bool("autoplay") == true { play() }
       else if rateChangedWhilePlaying { play() }
@@ -313,6 +362,7 @@ final class VideoPlayerModel: ObservableObject {
   /// which is what Flet's video does at the end of an item.
   private func itemDidFinish() {
     #if canImport(AVKit)
+      setWakelock(false)
       if let node, let events {
         events.fire(node, "complete", data: .bool(true))
       }
@@ -344,6 +394,12 @@ final class VideoPlayerModel: ObservableObject {
   #if canImport(AVKit)
     private func play() {
       player.playImmediately(atRate: playbackRate)
+      updateWakelock()
+    }
+
+    private func pause() {
+      player.pause()
+      setWakelock(false)
     }
 
     private func load(at position: Int) {
@@ -459,14 +515,14 @@ final class VideoPlayerModel: ObservableObject {
         ?? ""
     }
 
-    private var positionMilliseconds: Int64? {
+    private var positionMilliseconds: Int64 {
       let seconds = player.currentTime().seconds
-      return seconds.isFinite ? Int64(seconds * 1000) : nil
+      return seconds.isFinite ? Int64(seconds * 1000) : 0
     }
 
-    private var durationMilliseconds: Int64? {
+    private var durationMilliseconds: Int64 {
       guard let seconds = player.currentItem?.duration.seconds, seconds.isFinite else {
-        return nil
+        return 0
       }
       return Int64(seconds * 1000)
     }
@@ -480,17 +536,17 @@ final class VideoPlayerModel: ObservableObject {
         play()
         completion(.success(.null))
       case "pause":
-        player.pause()
+        pause()
         completion(.success(.null))
       case "play_or_pause":
-        player.rate == 0 ? play() : player.pause()
+        player.rate == 0 ? play() : pause()
         completion(.success(.null))
       case "stop":
-        player.pause()
+        pause()
         if !playlist.isEmpty { load(at: 0) }
         completion(.success(.null))
       case "seek":
-        if let milliseconds = call.argument("position")?.doubleValue {
+        if let milliseconds = FletVideoDuration.milliseconds(call.argument("position")) {
           player.seek(to: CMTime(seconds: milliseconds / 1000, preferredTimescale: 600))
         }
         completion(.success(.null))
@@ -517,16 +573,14 @@ final class VideoPlayerModel: ObservableObject {
         }
         completion(.success(.null))
       case "get_current_position":
-        completion(.success(positionMilliseconds.map { RufletValue.int($0) } ?? .null))
+        completion(.success(FletVideoDuration.wireValue(milliseconds: positionMilliseconds)))
       case "get_duration":
-        completion(.success(durationMilliseconds.map { RufletValue.int($0) } ?? .null))
+        completion(.success(FletVideoDuration.wireValue(milliseconds: durationMilliseconds)))
       case "is_playing":
         completion(.success(.bool(player.rate != 0)))
       case "is_completed":
-        guard let position = positionMilliseconds, let duration = durationMilliseconds,
-          duration > 0
-        else { return completion(.success(.bool(false))) }
-        completion(.success(.bool(position >= duration)))
+        completion(.success(.bool(
+          durationMilliseconds > 0 && positionMilliseconds >= durationMilliseconds)))
       case "playlist_add":
         if let media = call.argument("media"), let source = VideoMediaSource(media) {
           playlist.append(source)
@@ -564,7 +618,7 @@ final class VideoPlayerModel: ObservableObject {
       case .background, .inactive:
         guard pausesInBackground else { return }
         wasPlayingBeforeBackground = player.rate != 0
-        player.pause()
+        pause()
       case .active:
         if resumesInForeground && wasPlayingBeforeBackground { play() }
         wasPlayingBeforeBackground = false
@@ -581,6 +635,12 @@ final class VideoPlayerModel: ObservableObject {
   private func setWakelock(_ enabled: Bool) {
     #if canImport(UIKit)
       UIApplication.shared.isIdleTimerDisabled = enabled
+    #endif
+  }
+
+  private func updateWakelock() {
+    #if canImport(AVKit)
+      setWakelock(holdsWakelock && player.rate != 0)
     #endif
   }
 
@@ -620,7 +680,14 @@ struct VideoMediaSource: Equatable {
         ?? map["src"]?.stringValue
     else { return nil }
     let headers = map["http_headers"]?.mapValue?.reduce(into: [String: String]()) {
-      if let string = $1.value.stringValue { $0[$1.key] = string }
+      switch $1.value {
+      case .string(let value): $0[$1.key] = value
+      case .bool(let value): $0[$1.key] = value ? "true" : "false"
+      case .int(let value): $0[$1.key] = String(value)
+      case .double(let value): $0[$1.key] = String(value)
+      case .null: $0[$1.key] = "null"
+      default: break
+      }
     } ?? [:]
     self.init(resource: resource, httpHeaders: headers)
   }
