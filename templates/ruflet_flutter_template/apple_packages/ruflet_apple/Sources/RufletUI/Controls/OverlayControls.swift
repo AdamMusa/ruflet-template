@@ -1210,7 +1210,7 @@ struct PopupMenuControlView: View {
   }
 
   private func visibility(_ id: Int) -> Bool? {
-    store.node(id)?.bool("visible")
+    store.node(id).map { $0.bool("visible") != false }
   }
 }
 
@@ -1237,7 +1237,7 @@ struct MenuBarControlView: View {
 
   private var visibleControlIDs: [Int] {
     MaterialMenuDefaults.visibleControlIDs(node, key: "controls") {
-      store.node($0)?.bool("visible")
+      store.node($0).map { $0.bool("visible") != false }
     }
   }
 }
@@ -1323,7 +1323,7 @@ struct SubmenuButtonControlView: View {
 
   private var controlIDs: [Int] {
     MaterialMenuDefaults.visibleControlIDs(node, key: "controls") {
-      store.node($0)?.bool("visible")
+      store.node($0).map { $0.bool("visible") != false }
     }
   }
 
@@ -1470,7 +1470,7 @@ private struct PopupMenuItemLabel: View {
   }
 
   private func visibility(_ id: Int) -> Bool? {
-    store.node(id)?.bool("visible")
+    store.node(id).map { $0.bool("visible") != false }
   }
 }
 
@@ -1548,7 +1548,7 @@ enum MaterialMenuDefaults {
     key: String,
     visibilityForID: (Int) -> Bool?
   ) -> Int? {
-    guard let id = node.controlID(forKey: key), visibilityForID(id) != false else { return nil }
+    guard let id = node.controlID(forKey: key), visibilityForID(id) == true else { return nil }
     return id
   }
 
@@ -1609,7 +1609,7 @@ enum MaterialMenuDefaults {
     key: String,
     visibilityForID: (Int) -> Bool?
   ) -> [Int] {
-    controlIDs(node, key: key).filter { visibilityForID($0) != false }
+    controlIDs(node, key: key).filter { visibilityForID($0) == true }
   }
 }
 
@@ -1667,7 +1667,7 @@ enum RufletContextMenuDefaults {
     button: String?,
     visibilityForID: (Int) -> Bool?
   ) -> [Int] {
-    itemIDs(node, button: button).filter { visibilityForID($0) != false }
+    itemIDs(node, button: button).filter { visibilityForID($0) == true }
   }
 
   static func visiblePopupItemIDs(
@@ -1989,7 +1989,7 @@ struct ContextMenuControlView: View {
   }
 
   private func visibility(_ id: Int) -> Bool? {
-    store.node(id)?.bool("visible")
+    store.node(id).map { $0.bool("visible") != false }
   }
 
   private func completeOpenCommand() {

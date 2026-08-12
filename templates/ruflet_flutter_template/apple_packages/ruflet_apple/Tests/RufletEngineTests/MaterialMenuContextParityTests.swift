@@ -16,11 +16,14 @@ final class MaterialMenuContextParityTests: XCTestCase {
       MaterialMenuDefaults.visibleControlIDs(node, key: "controls") { visibility[$0] },
       [11])
 
-    // A missing explicit `visible` property resolves to Flet's base-control
-    // default of true, not to hidden.
+    // Callers resolve an existing node's missing `visible` property through
+    // Flet's base-control default before passing it to this helper.
+    XCTAssertEqual(
+      MaterialMenuDefaults.visibleControlIDs(node, key: "controls") { _ in true },
+      [10, 11])
     XCTAssertEqual(
       MaterialMenuDefaults.visibleControlIDs(node, key: "controls") { _ in nil },
-      [10, 11])
+      [])
   }
 
   func testNamedMenuCollectionsDoNotAbsorbGenericChildren() {
@@ -212,6 +215,11 @@ final class MaterialMenuContextParityTests: XCTestCase {
         node, button: "secondary", typeForID: { types[$0] },
         visibilityForID: { visibility[$0] }),
       [10])
+
+    XCTAssertEqual(
+      RufletContextMenuDefaults.visibleItemIDs(
+        node, button: "secondary", visibilityForID: { _ in nil }),
+      [])
   }
 
   func testOpenPositionConversionAndCenterFallbackMatchFlet() {
