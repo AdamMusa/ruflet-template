@@ -494,6 +494,15 @@ private struct NativeButtonShape: ViewModifier {
       } else {
         content
       }
+    #elseif os(iOS)
+      if #available(iOS 17, *) {
+        content.buttonBorderShape(circular ? .circle : .capsule)
+      } else {
+        // `ButtonBorderShape.circle` is iOS 17-only. Capsule remains a native
+        // button shape and preserves Flet's round semantic without drawing a
+        // replacement on the iOS 15/16 compatibility path.
+        content.buttonBorderShape(.capsule)
+      }
     #else
       content.buttonBorderShape(circular ? .circle : .capsule)
     #endif

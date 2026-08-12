@@ -565,7 +565,7 @@ struct ListTileControlView: View {
     }
     .environment(\.rufletListTileClicks, node.bool("toggle_inputs") == true ? tileClicks : nil)
     .modifier(NativeListTileLongPress(node: node, events: events))
-    .focusable(node.bool("disabled") != true)
+    .modifier(NativeListTileFocusable(enabled: node.bool("disabled") != true))
     .focused($focused)
     .onAppear { if node.bool("autofocus") == true { focused = true } }
     .onChange(of: focused) { events.fire(node, $0 ? "focus" : "blur") }
@@ -686,7 +686,7 @@ struct ListTileControlView: View {
     .contentShape(shape)
     .environment(\.rufletListTileClicks, node.bool("toggle_inputs") == true ? tileClicks : nil)
     .onHover { hovered = $0 }
-    .focusable(node.bool("disabled") != true)
+    .modifier(NativeListTileFocusable(enabled: node.bool("disabled") != true))
     .focused($focused)
     .onAppear { if node.bool("autofocus") == true { focused = true } }
     .onChange(of: focused) { events.fire(node, $0 ? "focus" : "blur") }
@@ -758,6 +758,26 @@ struct ListTileControlView: View {
       node: node, events: events, openURL: openURL, tileClicks: tileClicks,
       pressed: $pressed))
     .disabled(node.bool("disabled") == true)
+  }
+}
+
+/// Focusable rows are native on macOS and iOS 17+. Earlier iOS releases do
+/// not expose SwiftUI's boolean focusability modifier; keep the row native and
+/// preserve its activation/disabled contract without inventing a focus ring.
+private struct NativeListTileFocusable: ViewModifier {
+  let enabled: Bool
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    #if os(iOS)
+      if #available(iOS 17, *) {
+        content.focusable(enabled)
+      } else {
+        content
+      }
+    #else
+      content.focusable(enabled)
+    #endif
   }
 }
 

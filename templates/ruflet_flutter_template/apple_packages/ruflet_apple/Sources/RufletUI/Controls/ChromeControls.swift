@@ -385,7 +385,7 @@ struct NavigationRailControlView: View {
           .padding(.bottom, 8)
       }
 
-      ChromeRailGroupAlignmentLayout(alignment: metrics.groupAlignment) {
+      ChromeRailGroupAlignment(alignment: metrics.groupAlignment) {
         VStack(spacing: 0) {
           ForEach(Array(destinations.enumerated()), id: \.element.id) { index, destination in
             let isSelected = index == selected
@@ -495,6 +495,32 @@ struct NavigationRailControlView: View {
 /// Flutter's `Align(alignment: Alignment(0, groupAlignment))` for the rail's
 /// destination/trailing group. A custom `Layout` preserves intermediate
 /// values such as -0.5; SwiftUI's top/center/bottom alignments cannot.
+private struct ChromeRailGroupAlignment<Content: View>: View {
+  let alignment: Double
+  @ViewBuilder let content: Content
+
+  init(alignment: Double, @ViewBuilder content: () -> Content) {
+    self.alignment = alignment
+    self.content = content()
+  }
+
+  @ViewBuilder
+  var body: some View {
+    #if os(iOS)
+      if #available(iOS 16, *) {
+        ChromeRailGroupAlignmentLayout(alignment: alignment) { content }
+      } else {
+        content.frame(
+          maxHeight: .infinity,
+          alignment: alignment <= -0.5 ? .top : (alignment >= 0.5 ? .bottom : .center))
+      }
+    #else
+      ChromeRailGroupAlignmentLayout(alignment: alignment) { content }
+    #endif
+  }
+}
+
+@available(iOS 16.0, *)
 private struct ChromeRailGroupAlignmentLayout: Layout {
   let alignment: Double
 
