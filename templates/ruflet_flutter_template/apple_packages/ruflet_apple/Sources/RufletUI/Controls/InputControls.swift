@@ -56,6 +56,12 @@ struct SwitchControlView: View {
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
   @Environment(\.rufletListTileClicks) private var listTileClicks
+  @State private var currentValue: Bool
+
+  init(node: ControlNode) {
+    self.node = node
+    _currentValue = State(initialValue: node.bool("value") ?? false)
+  }
 
   var body: some View {
     let disabled = node.bool("disabled") ?? false
@@ -80,12 +86,12 @@ struct SwitchControlView: View {
     .modifier(ListTileToggleListener(notifier: listTileClicks, action: toggle))
     .modifier(FocusReporter(node: node, events: events))
     .disabled(disabled)
+    .onAppear { currentValue = node.bool("value") ?? false }
+    .onChange(of: node.bool("value")) { currentValue = $0 ?? false }
   }
 
-  private var isOn: Bool { node.bool("value") ?? false }
-
   private var binding: Binding<Bool> {
-    Binding(get: { isOn }, set: { commit($0) })
+    Binding(get: { currentValue }, set: { commit($0) })
   }
 
   @ViewBuilder
@@ -109,11 +115,12 @@ struct SwitchControlView: View {
 
   private func toggle() {
     guard node.bool("disabled") != true else { return }
-    commit(!isOn)
+    commit(!currentValue)
   }
 
   private func commit(_ value: Bool) {
     guard node.bool("disabled") != true else { return }
+    currentValue = value
     RufletValueControlEvents.commit(
       node, value: .bool(value), payload: .value, to: events)
   }
@@ -160,10 +167,16 @@ struct CheckboxControlView: View {
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
   @Environment(\.rufletListTileClicks) private var listTileClicks
+  @State private var currentValue: Bool?
+
+  init(node: ControlNode) {
+    self.node = node
+    _currentValue = State(initialValue: RufletCheckboxState.resting(node))
+  }
 
   var body: some View {
     let disabled = node.bool("disabled") ?? false
-    let presentation = CheckboxPresentation(node: node)
+    let presentation = CheckboxPresentation(node: node, value: .some(currentValue))
 
     HStack(spacing: 0) {
       if presentation.labelPosition == .left { label }
@@ -179,6 +192,10 @@ struct CheckboxControlView: View {
     .modifier(FocusReporter(node: node, events: events))
     .modifier(SelectionAccessibilityLabel(label: RufletAccessibilitySemantics.label(node)))
     .disabled(disabled)
+    .onAppear { currentValue = RufletCheckboxState.resting(node) }
+    .onChange(of: node.props["value"]) { _ in
+      currentValue = RufletCheckboxState.resting(node)
+    }
   }
 
   private var visibleLabelID: Int? {
@@ -205,13 +222,13 @@ struct CheckboxControlView: View {
     }
   }
 
-  private var state: Bool? { RufletCheckboxState.resting(node) }
-
   private func advance() {
+    let next = RufletCheckboxState.next(
+      after: currentValue, tristate: node.bool("tristate") == true)
+    currentValue = next.boolValue
     RufletValueControlEvents.commit(
       node,
-      value: RufletCheckboxState.next(
-        after: state, tristate: node.bool("tristate") == true),
+      value: next,
       payload: .value,
       to: events)
   }
@@ -230,13 +247,19 @@ struct CheckboxPresentation {
   enum LabelPlacement { case left, right }
 
   let node: ControlNode
+  let value: Bool?
+
+  init(node: ControlNode, value: Bool?? = nil) {
+    self.node = node
+    self.value = value ?? RufletCheckboxState.resting(node)
+  }
 
   var labelPosition: LabelPlacement {
     node.string("label_position")?.lowercased() == "left" ? .left : .right
   }
 
   var systemImageName: String {
-    switch RufletCheckboxState.resting(node) {
+    switch value {
     case .some(true): return "checkmark.square.fill"
     case .some(false): return "square"
     case .none: return "minus.square.fill"
@@ -247,7 +270,7 @@ struct CheckboxPresentation {
   /// can be represented as the native symbol tint; Material border geometry,
   /// splash, and state overlays remain semantic values only.
   var explicitTint: Color? {
-    let selected = RufletCheckboxState.resting(node) != false
+    let selected = value != false
     let states = node.widgetStates(selected: selected)
     if node.props["fill_color"] != nil {
       return MaterialPalette.color(stateful: node.props["fill_color"], in: states)
