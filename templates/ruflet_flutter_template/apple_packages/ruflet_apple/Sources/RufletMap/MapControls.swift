@@ -94,7 +94,18 @@ struct MapControlSemantics {
         defaultMilliseconds: animationDurationMilliseconds), 0),
       curve: normalizedCurve(
         call.argument("curve")?.stringValue ?? node?.string("animation_curve")),
-      cancelOngoingAnimations: call.argument("cancel_ongoing_animations")?.boolValue ?? false)
+      cancelOngoingAnimations: parsedBool(call.argument("cancel_ongoing_animations")) ?? false)
+  }
+
+  /// Mirrors Flet's `parseBool`: booleans pass through; every other present
+  /// value is true only when its string form is exactly "true", ignoring case.
+  static func parsedBool(_ value: RufletValue?) -> Bool? {
+    guard let value, !value.isNull else { return nil }
+    switch value {
+    case .bool(let value): return value
+    case .string(let value): return value.lowercased() == "true"
+    default: return false
+    }
   }
 
   static func animationDuration(_ call: RufletMethodCall, node: ControlNode?) -> Double {

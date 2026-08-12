@@ -54,6 +54,20 @@ final class MapResidualParityTests: XCTestCase {
     XCTAssertTrue(overridden.cancelOngoingAnimations)
   }
 
+  func testCancelAnimationFlagMatchesPinnedFletParseBool() {
+    XCTAssertTrue(MapControlSemantics.parsedBool(.bool(true))!)
+    XCTAssertTrue(MapControlSemantics.parsedBool(.string("TRUE"))!)
+    XCTAssertFalse(MapControlSemantics.parsedBool(.bool(false))!)
+    XCTAssertFalse(MapControlSemantics.parsedBool(.string("yes"))!)
+    XCTAssertFalse(MapControlSemantics.parsedBool(.int(1))!)
+    XCTAssertNil(MapControlSemantics.parsedBool(nil))
+
+    let call = RufletMethodCall(
+      controlID: 1, callID: "move", name: "move_to",
+      args: .map(["cancel_ongoing_animations": .string("yes")]))
+    XCTAssertFalse(MapControlSemantics.methodOptions(call, node: nil).cancelOngoingAnimations)
+  }
+
   func testDurationParserUsesIntegerMillisecondsAndDurationMaps() {
     XCTAssertEqual(MapControlSemantics.durationSeconds(.int(500)), 0.5)
     XCTAssertEqual(MapControlSemantics.durationSeconds(.string("250")), 0.25)
