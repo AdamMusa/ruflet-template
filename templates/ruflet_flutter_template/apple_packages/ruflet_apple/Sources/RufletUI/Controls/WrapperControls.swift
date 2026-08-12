@@ -561,6 +561,7 @@ struct TransparentPointerControlView: View {
 /// `Shimmer` — a loading placeholder with a highlight sweeping across it.
 struct ShimmerControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @State private var phase: CGFloat = -1
 
   private var configuration: RufletShimmerConfiguration {
@@ -569,10 +570,8 @@ struct ShimmerControlView: View {
 
   @ViewBuilder
   var body: some View {
-    if node.controlID(forKey: "content") == nil {
-      RufletWrapperError("Shimmer.content must be specified")
-    } else if !configuration.hasValidColors {
-      RufletWrapperError("Shimmer requires either gradient or base/highlight colors")
+    if let error = configuration.validationError(contentIsVisible: contentIsVisible) {
+      RufletWrapperError(error)
     } else {
       content
         .overlay {
@@ -584,6 +583,11 @@ struct ShimmerControlView: View {
     }
   }
 
+  private var contentIsVisible: Bool {
+    guard let id = configuration.contentID, let content = store.node(id) else { return false }
+    return content.bool("visible") != false
+  }
+
   @ViewBuilder private var content: some View {
     if let contentID = node.controlID(forKey: "content") {
       ControlView(id: contentID, axis: .none)
@@ -591,13 +595,13 @@ struct ShimmerControlView: View {
   }
 
   private var shimmer: some View {
-    let gradient =
-      RufletWrapperGradient(node.props["gradient"])
+    let gradient = configuration.gradient
       ?? RufletWrapperGradient(
         colors: [
           configuration.baseColor!, configuration.highlightColor!, configuration.baseColor!,
         ],
-        stops: [0, 0.5, 1], begin: sweep.start, end: sweep.end)
+        stops: [0, 0.5, 1], begin: configuration.direction.start,
+        end: configuration.direction.end)
     return GeometryReader { proxy in
       gradient.view
         .overlay(Color.clear)
@@ -605,33 +609,66 @@ struct ShimmerControlView: View {
         // number of pixels. Measuring keeps the same speed and sweep on every
         // device and for every Ruflet layout.
         .offset(
-          x: sweep.horizontal ? phase * proxy.size.width : 0,
-          y: sweep.horizontal ? 0 : phase * proxy.size.height)
+          x: configuration.direction.horizontal
+            ? phase * configuration.direction.phaseMultiplier * proxy.size.width : 0,
+          y: configuration.direction.horizontal
+            ? 0 : phase * configuration.direction.phaseMultiplier * proxy.size.height)
     }
+    .id(configuration.animationIdentity)
     .onAppear {
       // `loop` is how many passes to make; Flutter treats zero as endless,
       // which is also the default.
-      let passes = configuration.repeats
-      let animation = Animation.linear(duration: configuration.period)
-      withAnimation(
-        passes != nil
-          ? animation.repeatCount(passes!, autoreverses: false)
-          : animation.repeatForever(autoreverses: false)
-      ) {
-        phase = 1
+      phase = -1
+      DispatchQueue.main.async {
+        let passes = configuration.repeats
+        let animation = Animation.linear(duration: configuration.period)
+        withAnimation(
+          passes != nil
+            ? animation.repeatCount(passes!, autoreverses: false)
+            : animation.repeatForever(autoreverses: false)
+        ) {
+          phase = 1
+        }
       }
     }
   }
+}
 
-  /// `direction` is the way the highlight travels across the content.
-  private var sweep: (start: UnitPoint, end: UnitPoint, horizontal: Bool) {
-    switch node.string("direction")?.lowercased().replacingOccurrences(of: "_", with: "") {
-    case "righttoleft", "rtl": return (.trailing, .leading, true)
-    case "toptobottom", "ttb": return (.top, .bottom, false)
-    case "bottomtotop", "btt": return (.bottom, .top, false)
-    default: return (.leading, .trailing, true)
+enum RufletShimmerDirection: String, Equatable {
+  case ltr
+  case rtl
+  case ttb
+  case btt
+
+  init(_ raw: String?) {
+    switch raw?.lowercased().replacingOccurrences(of: "_", with: "") {
+    case "rtl", "righttoleft": self = .rtl
+    case "ttb", "toptobottom": self = .ttb
+    case "btt", "bottomtotop": self = .btt
+    default: self = .ltr
     }
   }
+
+  var start: UnitPoint {
+    switch self {
+    case .ltr: return .leading
+    case .rtl: return .trailing
+    case .ttb: return .top
+    case .btt: return .bottom
+    }
+  }
+
+  var end: UnitPoint {
+    switch self {
+    case .ltr: return .trailing
+    case .rtl: return .leading
+    case .ttb: return .bottom
+    case .btt: return .top
+    }
+  }
+
+  var horizontal: Bool { self == .ltr || self == .rtl }
+  var phaseMultiplier: CGFloat { self == .rtl || self == .btt ? -1 : 1 }
 }
 
 enum RufletWrapperDefaults {
@@ -640,7 +677,7 @@ enum RufletWrapperDefaults {
   }
 
   static func shimmerPeriod(_ milliseconds: Double?) -> Double {
-    (milliseconds ?? 1500) / 1_000
+    max(milliseconds ?? 1500, 0) / 1_000
   }
 
   static func shimmerRepeats(_ loop: Int?) -> Int? {
@@ -660,24 +697,42 @@ enum RufletWrapperDefaults {
 /// widget. In particular, omitted colours are an error in Flet; inventing a
 /// grey/white pair here makes invalid Ruflet code appear valid only on Apple.
 struct RufletShimmerConfiguration {
+  static let missingContentError = "Shimmer.content must be specified"
+  static let missingColorsError = "Shimmer requires either gradient or base/highlight colors"
+
+  let contentID: Int?
   let baseColor: Color?
   let highlightColor: Color?
-  let hasGradient: Bool
+  let gradient: RufletWrapperGradient?
+  let direction: RufletShimmerDirection
   let period: Double
   let repeats: Int?
   let enabled: Bool
 
   init(node: ControlNode) {
+    contentID = node.controlID(forKey: "content")
     baseColor = MaterialPalette.color(node.string("base_color"))
     highlightColor = MaterialPalette.color(node.string("highlight_color"))
-    hasGradient = RufletWrapperGradient(node.props["gradient"]) != nil
-    period = RufletWrapperDefaults.shimmerPeriod(node.double("period"))
+    gradient = RufletWrapperGradient(node.props["gradient"])
+    direction = RufletShimmerDirection(node.string("direction"))
+    period = ControlProps.animationDurationSeconds(node.props["period"])
+      ?? RufletWrapperDefaults.shimmerPeriod(nil)
     repeats = RufletWrapperDefaults.shimmerRepeats(node.int("loop"))
     enabled = node.bool("disabled") != true
   }
 
   var hasValidColors: Bool {
-    hasGradient || (baseColor != nil && highlightColor != nil)
+    gradient != nil || (baseColor != nil && highlightColor != nil)
+  }
+
+  func validationError(contentIsVisible: Bool) -> String? {
+    guard contentID != nil, contentIsVisible else { return Self.missingContentError }
+    guard hasValidColors else { return Self.missingColorsError }
+    return nil
+  }
+
+  var animationIdentity: String {
+    "\(direction.rawValue):\(period):\(repeats.map(String.init) ?? "infinite"):\(enabled)"
   }
 }
 
@@ -690,18 +745,16 @@ struct ShaderMaskControlView: View {
 
   @ViewBuilder
   var body: some View {
-    if let shader = RufletWrapperGradient(node.props["shader"]) {
+    let presentation = RufletShaderMaskPresentation(node: node)
+    if let shader = presentation.shader {
       content
         .overlay {
-          shader.view.blendMode(
-            RufletWrapperDefaults.shaderBlendMode(node.string("blend_mode")))
+          shader.view.blendMode(presentation.blendMode)
         }
         .mask(content)
-        .clipShape(
-          RoundedRectangle(
-            cornerRadius: ControlProps.cornerRadius(node.props["border_radius"]) ?? 0))
+        .modifier(ShaderMaskCornerClip(radii: presentation.borderRadii))
     } else {
-      RufletWrapperError("ShaderMask.shader must be provided")
+      RufletWrapperError(RufletShaderMaskPresentation.missingShaderError)
     }
   }
 
@@ -713,6 +766,29 @@ struct ShaderMaskControlView: View {
     }
   }
 
+}
+
+struct RufletShaderMaskPresentation {
+  static let missingShaderError = "ShaderMask.shader must be provided"
+  let node: ControlNode
+
+  var shader: RufletWrapperGradient? { RufletWrapperGradient(node.props["shader"]) }
+  var blendModeToken: String { node.string("blend_mode") ?? "modulate" }
+  var blendMode: BlendMode { RufletWrapperDefaults.shaderBlendMode(blendModeToken) }
+  var borderRadii: RufletCornerRadii? { ControlProps.cornerRadii(node.props["border_radius"]) }
+  var contentID: Int? { node.controlID(forKey: "content") }
+}
+
+private struct ShaderMaskCornerClip: ViewModifier {
+  let radii: RufletCornerRadii?
+
+  func body(content: Content) -> some View {
+    if let radii {
+      content.clipShape(RufletRoundedRectangle(radii: radii))
+    } else {
+      content
+    }
+  }
 }
 
 /// `Hero` — a shared-element transition between screens.
@@ -845,9 +921,12 @@ struct RufletWrapperGradient {
   let end: UnitPoint
   let center: UnitPoint
   let radius: CGFloat
+  let focal: UnitPoint?
+  let focalRadius: CGFloat
   let startAngle: Angle
   let endAngle: Angle
   let rotation: Angle
+  let tileMode: String
 
   init?(_ value: RufletValue?) {
     guard let map = value?.mapValue else { return nil }
@@ -867,9 +946,12 @@ struct RufletWrapperGradient {
     end = Self.point(map["end"], fallback: .trailing)
     center = Self.point(map["center"], fallback: .center)
     radius = CGFloat(map["radius"]?.doubleValue ?? 0.5)
+    focal = Self.optionalPoint(map["focal"])
+    focalRadius = CGFloat(map["focal_radius"]?.doubleValue ?? 0)
     startAngle = .radians(map["start_angle"]?.doubleValue ?? 0)
-    endAngle = .radians(map["end_angle"]?.doubleValue ?? 0)
+    endAngle = .radians(map["end_angle"]?.doubleValue ?? Double.pi * 2)
     rotation = .radians(map["rotation"]?.doubleValue ?? 0)
+    tileMode = map["tile_mode"]?.stringValue?.lowercased() ?? "clamp"
   }
 
   init(colors: [Color], stops locations: [Double], begin: UnitPoint, end: UnitPoint) {
@@ -879,9 +961,12 @@ struct RufletWrapperGradient {
     self.end = end
     center = .center
     radius = 0.5
+    focal = nil
+    focalRadius = 0
     startAngle = .zero
-    endAngle = .zero
+    endAngle = .radians(Double.pi * 2)
     rotation = .zero
+    tileMode = "clamp"
   }
 
   @ViewBuilder var view: some View {
@@ -917,6 +1002,11 @@ struct RufletWrapperGradient {
 
   private static func point(_ value: RufletValue?, fallback: UnitPoint) -> UnitPoint {
     guard let alignment = ControlProps.continuousAlignment(value) else { return fallback }
+    return UnitPoint(x: (alignment.x + 1) / 2, y: (alignment.y + 1) / 2)
+  }
+
+  private static func optionalPoint(_ value: RufletValue?) -> UnitPoint? {
+    guard let alignment = ControlProps.continuousAlignment(value) else { return nil }
     return UnitPoint(x: (alignment.x + 1) / 2, y: (alignment.y + 1) / 2)
   }
 }
