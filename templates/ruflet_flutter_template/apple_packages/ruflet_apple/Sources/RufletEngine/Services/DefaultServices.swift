@@ -29,6 +29,7 @@ extension ServiceRegistry {
     register(HapticFeedbackService.self) { HapticFeedbackService() }
     register(WakelockService.self) { WakelockService() }
     register(SemanticsAnnouncementService.self) { SemanticsAnnouncementService() }
+    register(TesterService.self) { TesterService() }
 
     register(BatteryService.self) { BatteryService() }
     markStreaming([BatteryService.wireType])
