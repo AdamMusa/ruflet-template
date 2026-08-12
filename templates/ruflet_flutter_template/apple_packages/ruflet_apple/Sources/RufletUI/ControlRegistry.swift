@@ -234,9 +234,21 @@ public enum ControlRegistry {
         events: ["click", "error", "load"])
     add(["ProgressBar"], .visible, "ProgressBarControlView", .nativeView)
     add(["ProgressRing"], .visible, "ProgressRingControlView", .nativeView)
+    let spinKitWireTypes = [
+      "SpinKitRotatingPlain", "SpinKitDoubleBounce", "SpinKitWave",
+      "SpinKitWanderingCubes", "SpinKitFadingFour", "SpinKitFadingCube",
+      "SpinKitPulse", "SpinKitChasingDots", "SpinKitThreeBounce", "SpinKitCircle",
+      "SpinKitCubeGrid", "SpinKitFadingCircle", "SpinKitRotatingCircle",
+      "SpinKitFoldingCube", "SpinKitPumpingHeart", "SpinKitHourGlass",
+      "SpinKitPouringHourGlass", "SpinKitPouringHourGlassRefined", "SpinKitFadingGrid",
+      "SpinKitRing", "SpinKitRipple", "SpinKitDualRing", "SpinKitSpinningCircle",
+      "SpinKitSpinningLines", "SpinKitSquareCircle", "SpinKitThreeInOut",
+      "SpinKitDancingSquare", "SpinKitPianoWave", "SpinKitPulsingGrid",
+      "SpinKitWaveSpinner",
+    ]
     add(
-      ["RufletSpinKit"] + RufletSpinKitConfiguration.fletWireTypes,
-      .visible, "SpinKitControlView", .nativeView)
+      ["RufletSpinKit"] + spinKitWireTypes,
+      .visible, "RufletSpinKit.SpinKitControlView", .optionalBundle("RufletSpinKit"))
     add(["Rive"], .visible, "RufletRive.RiveControlView", .optionalBundle("RufletRive"))
     add(["Lottie"], .visible, "RufletLottie.LottieControlView", .optionalBundle("RufletLottie"),
         events: ["error", "load"])
@@ -279,7 +291,8 @@ public enum ControlRegistry {
     add(["TextField", "CupertinoTextField"], .visible, "Native text field", .nativeView,
         events: ["blur", "change", "click", "focus", "selection_change", "submit", "tap_outside"],
         methods: ["blur", "focus"])
-    add(["CodeEditor"], .visible, "CodeEditorControlView", .nativeView,
+    add(["CodeEditor"], .visible, "RufletCodeEditor.CodeEditorControlView",
+        .optionalBundle("RufletCodeEditor"),
         events: ["blur", "change", "focus", "selection_change"],
         methods: ["focus", "fold_at", "fold_comment_at_line_zero", "fold_imports"])
     add(["SearchBar"], .visible, "SearchBarControlView", .nativeView,

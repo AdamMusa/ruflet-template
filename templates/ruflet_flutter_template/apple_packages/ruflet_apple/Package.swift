@@ -24,6 +24,8 @@ let package = Package(
     .library(name: "RufletFlashlight", targets: ["RufletFlashlight"]),
     .library(name: "RufletRive", targets: ["RufletRive"]),
     .library(name: "RufletLottie", targets: ["RufletLottie"]),
+    .library(name: "RufletCodeEditor", targets: ["RufletCodeEditor"]),
+    .library(name: "RufletSpinKit", targets: ["RufletSpinKit"]),
 
     // Available separately for hosts that want the wire layer or the control
     // model without the SwiftUI renderer.
@@ -69,6 +71,12 @@ let package = Package(
         "RufletUI", "RufletEngine", "RufletProtocol",
         .product(name: "Lottie", package: "lottie-ios")
       ]),
+    .target(
+      name: "RufletCodeEditor",
+      dependencies: ["RufletUI", "RufletEngine", "RufletProtocol"]),
+    .target(
+      name: "RufletSpinKit",
+      dependencies: ["RufletUI", "RufletEngine", "RufletProtocol"]),
 
     .testTarget(
       name: "RufletEngineTests",
@@ -77,5 +85,11 @@ let package = Package(
         "RufletMotion", "RufletLocation", "RufletMedia",
         "RufletAudioRecorder", "RufletCamera", "RufletFlashlight",
         "RufletRive", "RufletLottie"
-      ])
+      ]),
+    .testTarget(
+      name: "RufletCodeEditorTests",
+      dependencies: ["RufletCodeEditor", "RufletUI", "RufletEngine", "RufletProtocol"]),
+    .testTarget(
+      name: "RufletSpinKitTests",
+      dependencies: ["RufletSpinKit", "RufletUI", "RufletEngine", "RufletProtocol"])
   ])

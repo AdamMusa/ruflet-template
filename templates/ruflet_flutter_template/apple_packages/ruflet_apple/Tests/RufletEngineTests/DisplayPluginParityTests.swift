@@ -30,7 +30,9 @@ final class DisplayPluginParityTests: XCTestCase {
       XCTAssertEqual(descriptor?.classification, .visible)
       XCTAssertEqual(descriptor?.rendering, .optionalBundle(bundle))
     }
-    XCTAssertEqual(ControlRegistry.builtInDescriptor(for: "RufletSpinKit")?.rendering, .nativeView)
+    XCTAssertEqual(
+      ControlRegistry.builtInDescriptor(for: "RufletSpinKit")?.rendering,
+      .optionalBundle("RufletSpinKit"))
   }
 
   @MainActor
