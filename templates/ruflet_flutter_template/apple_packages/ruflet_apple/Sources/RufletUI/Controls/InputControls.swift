@@ -1085,10 +1085,17 @@ struct TextFieldControlView: View {
   private var traits: RufletTextInputTraits {
     var traits = RufletTextInputTraits(node: node)
     if isMultiline { traits.keyboardType = "multiline" }
+    let style = fieldTextStyle
     // The field's own style wins over the traits' colour and size, so the two
     // cannot disagree about which one painted the text.
-    traits.textColor = fieldTextStyle.color
-    traits.fontSize = fieldTextStyle.size
+    traits.textColor = style.color ?? MaterialPalette.color("onsurface")
+    let resolvedSize = style.size ?? style.materialThemeMetric?.size
+      ?? RufletTextFieldDefaults.defaultTextSize
+    traits.fontSize = resolvedSize
+    traits.fontWeight = RufletTextFieldDefaults.fontWeight(node)
+    traits.lineHeight = style.lineHeight.map { $0 * resolvedSize }
+      ?? style.materialThemeMetric?.lineHeight
+      ?? RufletTextFieldDefaults.defaultTextLineHeight
     traits.caretScrollPadding = scrollPadding
     return traits
   }
@@ -1106,15 +1113,7 @@ struct TextFieldControlView: View {
   }
 
   private var nativeLineHeight: CGFloat {
-    #if canImport(UIKit)
-      if let size = fieldTextStyle.size { return UIFont.systemFont(ofSize: size).lineHeight }
-      return UIFont.preferredFont(forTextStyle: .body).lineHeight
-    #elseif canImport(AppKit)
-      return NSFont.systemFont(ofSize: fieldTextStyle.size ?? NSFont.systemFontSize)
-        .boundingRectForFont.height
-    #else
-      return fieldTextStyle.size ?? 17
-    #endif
+    traits.lineHeight ?? RufletTextFieldDefaults.defaultTextLineHeight
   }
 
   private var maximumHeight: CGFloat? {
@@ -1132,14 +1131,11 @@ struct TextFieldControlView: View {
     }
   }
 
-  /// `dense` and `collapsed` are Material's two tighter insets; anything else
-  /// takes `content_padding` when Ruby supplies it.
+  /// The resolved InputDecoration padding from Flutter 3.41.2. Flet defaults
+  /// the decoration to an OutlineInputBorder, so omission is the Material 3
+  /// outline inset rather than zero or a platform-text-field inset.
   private var contentPadding: EdgeInsets {
-    if let explicit = ControlProps.edgeInsets(node.props["content_padding"]) { return explicit }
-    if node.bool("collapsed") == true { return EdgeInsets() }
-    // Omitted decoration padding belongs to the native field. Recreating
-    // Flutter's Material inset here would make every Apple field Material.
-    return EdgeInsets()
+    RufletTextFieldDefaults.contentPadding(node)
   }
 
   private var hasError: Bool {
@@ -1149,8 +1145,8 @@ struct TextFieldControlView: View {
   @ViewBuilder
   private var borderStroke: some View {
     let radius = fieldRadius
-    if hasExplicitBorder, node.string("border")?.lowercased() != "none" {
-      if node.string("border")?.lowercased() == "underline" {
+    if RufletTextFieldDefaults.borderKind(node) != .none, borderWidth > 0 {
+      if RufletTextFieldDefaults.borderKind(node) == .underline {
         VStack(spacing: 0) {
           Spacer(minLength: 0)
           Rectangle().fill(borderColor).frame(height: borderWidth)
@@ -1162,40 +1158,29 @@ struct TextFieldControlView: View {
     }
   }
 
-  private var hasExplicitBorder: Bool {
-    node.props["border"] != nil || node.props["border_color"] != nil
-      || node.props["border_width"] != nil || node.props["border_radius"] != nil
-      || node.props["focused_border_color"] != nil
-      || node.props["focused_border_width"] != nil
-      || node.props["error_border_color"] != nil
-  }
-
   private var fieldRadius: CGFloat {
-    ControlProps.cornerRadius(node.props["border_radius"]) ?? (hasExplicitBorder ? 4 : 0)
+    RufletTextFieldDefaults.fieldCornerRadius(node)
   }
 
   private var usesNativeChrome: Bool {
-    !hasExplicitBorder && node.props["bgcolor"] == nil && node.props["fill_color"] == nil
-      && node.props["content_padding"] == nil && node.bool("filled") != true
+    // The native field supplies editing, selection and keyboard behavior. Its
+    // platform bezel must stay off because Flet always supplies an
+    // InputDecoration (outline by default) around that native primitive.
+    false
   }
 
   private var borderWidth: CGFloat {
-    let resting = node.double("border_width") ?? 1
-    guard focused else { return CGFloat(resting) }
-    return CGFloat(node.double("focused_border_width") ?? 2)
+    if hasError { return focused ? 2 : 1 }
+    return RufletTextFieldDefaults.borderWidth(node, focused: focused)
   }
 
   private var borderColor: Color {
     if hasError {
-      return MaterialPalette.color(for: node, property: "error_border_color", default: .red)
+      return MaterialPalette.color(
+        node.string("error_border_color") ?? "error", default: .red)
     }
-    if focused,
-      let focusedColor = MaterialPalette.color(
-        node.string("focused_border_color") ?? node.string("focus_color"))
-    {
-      return focusedColor
-    }
-    return MaterialPalette.color(node.string("border_color"), default: .black)
+    return MaterialPalette.color(
+      RufletTextFieldDefaults.borderColorToken(node, focused: focused), default: .black)
   }
 
   /// Material resolves a field's fill from its interaction state, so the
@@ -1264,6 +1249,98 @@ struct TextFieldControlView: View {
 /// Flet 0.80.5's constructor/build defaults, kept separate from the view so
 /// omission has one source of truth and can be tested without snapshots.
 enum RufletTextFieldDefaults {
+  enum BorderKind: String { case outline, underline, none }
+
+  /// Flet's buildInputDecoration() chooses outline even when the wire omits
+  /// `border`; this is independent of the native editor used on Apple.
+  static func borderKind(_ node: ControlNode) -> BorderKind {
+    BorderKind(rawValue: node.string("border")?.lowercased() ?? "outline") ?? .outline
+  }
+
+  static func fieldCornerRadius(_ node: ControlNode) -> CGFloat {
+    guard borderKind(node) == .outline else { return 0 }
+    return ControlProps.cornerRadius(node.props["border_radius"]) ?? 4
+  }
+
+  /// InputDecorator's Material 3 default contentPadding. ThemeData defaults
+  /// to Material 3 in the pinned Flutter used by Flet 0.80.5.
+  static func contentPadding(_ node: ControlNode) -> EdgeInsets {
+    if let explicit = ControlProps.edgeInsets(node.props["content_padding"]) { return explicit }
+    if node.bool("collapsed") == true { return EdgeInsets() }
+    let dense = node.bool("dense") == true
+    switch borderKind(node) {
+    case .outline:
+      return EdgeInsets(
+        top: dense ? 16 : 20, leading: 12,
+        bottom: dense ? 8 : 12, trailing: 12)
+    case .underline, .none:
+      if node.bool("filled") == true {
+        return EdgeInsets(
+          top: dense ? 4 : 8, leading: 12,
+          bottom: dense ? 4 : 8, trailing: 12)
+      }
+      return EdgeInsets(
+        top: dense ? 4 : 8, leading: 0,
+        bottom: dense ? 4 : 8, trailing: 0)
+    }
+  }
+
+  /// Flet only constructs a focusedBorder when any border override exists.
+  /// Without one, Flutter resolves the active M3 outline token; with one,
+  /// Flet's copied border uses the supplied values and exact fallbacks.
+  static func hasFocusedBorder(_ node: ControlNode) -> Bool {
+    node.props["border_color"] != nil || node.props["border_width"] != nil
+      || node.props["focused_border_color"] != nil
+      || node.props["focused_border_width"] != nil
+  }
+
+  static func borderWidth(_ node: ControlNode, focused: Bool) -> CGFloat {
+    // InputDecorator's Material 3 disabled default replaces the border side,
+    // including an explicitly configured enabledBorder width.
+    if node.bool("disabled") == true { return 1 }
+    let resting = CGFloat(node.double("border_width") ?? 1)
+    guard focused else { return resting }
+    guard hasFocusedBorder(node) else { return 2 }
+    return CGFloat(node.double("focused_border_width") ?? node.double("border_width") ?? 2)
+  }
+
+  static func borderColorToken(_ node: ControlNode, focused: Bool) -> String {
+    // `_getDefaultBorder` checks disabled before focused/error and resolves
+    // onSurface at 12% opacity for the outline variant.
+    if node.bool("disabled") == true { return "onsurface,0.12" }
+    if focused {
+      if hasFocusedBorder(node) {
+        return node.string("focused_border_color")
+          ?? node.string("border_color")
+          ?? "primary"
+      }
+      return "primary"
+    }
+    if let explicit = node.string("border_color") { return explicit }
+    // buildInputDecoration's bare outline/underline constructor uses black.
+    // Supplying only width takes its separate onSurface/38% fallback branch.
+    return node.props["border_width"] != nil ? "onsurface,0.38" : "black"
+  }
+
+  static let defaultTextSize: CGFloat = 16
+  static let defaultTextLineHeight: CGFloat = 24
+
+  /// TextField falls back to TextTheme.titleMedium (w500). An explicit style
+  /// retains its own weight, with Material theme roles resolved before the
+  /// native UIKit/AppKit font is created.
+  static func fontWeight(_ node: ControlNode) -> String {
+    let style = node.map("text_style")
+    if let explicit = style?["weight"]?.stringValue { return explicit }
+    switch style?["theme_style"]?.stringValue?.lowercased().replacingOccurrences(of: "_", with: "") {
+    case "titlemedium", "titlesmall", "labellarge", "labelmedium", "labelsmall":
+      return "w500"
+    case .some:
+      return "w400"
+    case nil:
+      return "w500"
+    }
+  }
+
   static func isMultiline(_ node: ControlNode) -> Bool {
     node.bool("multiline") == true || node.bool("shift_enter") == true
   }
@@ -1283,17 +1360,26 @@ enum RufletTextFieldDefaults {
   }
 
   static func counterText(_ template: String?, value: String, maxLength: Int?) -> String? {
+    // Dart String.length and TextSelection offsets are UTF-16 code units,
+    // even though maxLength enforcement counts grapheme clusters.
+    let valueLength = value.utf16.count
     if let template {
       return template
-        .replacingOccurrences(of: "{value_length}", with: String(value.count))
+        .replacingOccurrences(of: "{value_length}", with: String(valueLength))
         .replacingOccurrences(of: "{max_length}", with: maxLength.map(String.init) ?? "None")
         .replacingOccurrences(
           of: "{symbols_left}",
-          with: maxLength.map { String($0 - value.count) } ?? "None")
+          with: maxLength.map { String($0 - valueLength) } ?? "None")
     }
-    // UIKit/AppKit do not synthesize Material's max-length counter. An
-    // explicit DSL counter is still interpolated exactly.
-    return nil
+    // Flutter's default counter counts extended grapheme clusters, unlike
+    // Dart String.length used by Flet's explicit interpolation tokens.
+    guard let maxLength else { return nil }
+    let currentLength = value.count
+    return maxLength > 0 ? "\(currentLength)/\(maxLength)" : String(currentLength)
+  }
+
+  static func hasDefaultCounter(_ node: ControlNode) -> Bool {
+    node.int("max_length") != nil
   }
 
   private static func hasExpand(_ node: ControlNode) -> Bool {
@@ -1479,33 +1565,39 @@ struct SearchBarControlView: View {
             text: searchValue,
             focused: $nativeFocused,
             selection: $selection,
-            placeholder: node.string("view_hint_text") ?? "",
+            placeholder: "",
             secure: false,
-            nativeChrome: true,
+            nativeChrome: false,
             searchAppearance: node.controlID(forKey: "view_leading") == nil,
             traits: viewTraits,
             onTap: {},
             onTapOutside: {},
             onSubmit: { submit($0) })
+            .modifier(SearchHint(
+              node: node, textKey: "view_hint_text", fallbackTextKey: "bar_hint_text",
+              styleKey: "view_hint_text_style", fallbackStyleKey: "view_header_text_style",
+              showing: (node.string("value") ?? "").isEmpty))
         #else
           TextField(node.string("view_hint_text") ?? "", text: searchValue)
         #endif
         let trailing = node.controlIDs(forKey: "view_trailing")
         if !trailing.isEmpty { ControlList(ids: trailing, axis: .horizontal) }
       }
-      .frame(height: node.double("view_header_height").map { CGFloat($0) })
-      .padding(ControlProps.edgeInsets(node.props["view_bar_padding"]) ?? EdgeInsets())
-      if node.props["divider_color"] != nil {
-        Divider().background(MaterialPalette.color(node.string("divider_color")))
-      } else {
-        Divider()
-      }
+      .frame(height: CGFloat(
+        node.double("view_header_height")
+          ?? RufletSearchBarDefaults.viewHeaderHeight(fullScreen: node.bool("full_screen") == true)))
+      .padding(RufletSearchBarDefaults.viewBarPadding(node))
+      Divider().overlay(
+        MaterialPalette.color(node.string("divider_color") ?? "outline"))
       ControlList(ids: node.controlIDs(forKey: "controls"), axis: .vertical)
     }
     .padding(ControlProps.edgeInsets(node.props["view_padding"]) ?? EdgeInsets())
     .frame(maxWidth: node.bool("shrink_wrap") == true ? nil : .infinity, alignment: .leading)
+    .frame(
+      minWidth: RufletSearchBarDefaults.viewMinimumWidth(node),
+      minHeight: RufletSearchBarDefaults.viewMinimumHeight(node))
     .modifier(SlotSizeConstraints(value: node.props["view_size_constraints"]))
-    .modifier(ExplicitSearchSurface(node: node, prefix: "view"))
+    .modifier(SearchSurface(node: node, prefix: "view"))
   }
 
   private var bar: some View {
@@ -1517,10 +1609,10 @@ struct SearchBarControlView: View {
         RufletNativeTextInput(
             text: searchValue,
             focused: $nativeFocused,
-            selection: $selection,
-            placeholder: hasExplicitBarHintStyle ? "" : (node.string("bar_hint_text") ?? ""),
+          selection: $selection,
+          placeholder: "",
           secure: false,
-          nativeChrome: RufletSearchBarDefaults.usesNativeChrome(node),
+          nativeChrome: false,
           searchAppearance: node.controlID(forKey: "bar_leading") == nil,
           traits: barTraits,
           onTap: {
@@ -1529,7 +1621,10 @@ struct SearchBarControlView: View {
           },
           onTapOutside: { events.fire(node, "tap_outside_bar") },
           onSubmit: { submit($0) })
-          .modifier(SearchBarHint(node: node, showing: (node.string("value") ?? "").isEmpty))
+          .modifier(SearchHint(
+            node: node, textKey: "bar_hint_text", fallbackTextKey: nil,
+            styleKey: "bar_hint_text_style", fallbackStyleKey: nil,
+            showing: (node.string("value") ?? "").isEmpty))
       #else
         TextField(
           node.string("bar_hint_text") ?? node.string("view_hint_text") ?? "",
@@ -1543,11 +1638,15 @@ struct SearchBarControlView: View {
         ControlList(ids: trailing, axis: .horizontal)
       }
     }
-    .padding(ControlProps.edgeInsets(node.props["bar_padding"]) ?? EdgeInsets())
+    .padding(RufletSearchBarDefaults.barPadding(node))
     // `bar_scroll_padding` is the inset used when scrolling the page to keep
     // the caret visible. It is not layout padding around the search bar.
+    .frame(
+      minWidth: RufletSearchBarDefaults.barMinimumWidth(node),
+      maxWidth: RufletSearchBarDefaults.barMaximumWidth(node),
+      minHeight: RufletSearchBarDefaults.barMinimumHeight(node))
     .modifier(SlotSizeConstraints(value: node.props["bar_size_constraints"]))
-    .modifier(ExplicitSearchSurface(node: node, prefix: "bar"))
+    .modifier(SearchSurface(node: node, prefix: "bar"))
     .onChange(of: nativeFocused) { events.fire(node, $0 ? "focus" : "blur") }
   }
 
@@ -1555,8 +1654,15 @@ struct SearchBarControlView: View {
   private var barTraits: RufletTextInputTraits {
     var traits = RufletTextInputTraits(node: node)
     let style = RufletTextStyle(node: node, styleKey: "bar_text_style")
-    traits.textColor = style.color
-    traits.fontSize = style.size
+    traits.textColor = style.color ?? MaterialPalette.color("onsurface")
+    let resolvedSize = style.size ?? style.materialThemeMetric?.size
+      ?? RufletSearchBarDefaults.defaultTextSize
+    traits.fontSize = resolvedSize
+    traits.fontWeight = RufletSearchBarDefaults.fontWeight(
+      node.map("bar_text_style"), fallback: "w400")
+    traits.lineHeight = style.lineHeight.map { $0 * resolvedSize }
+      ?? style.materialThemeMetric?.lineHeight
+      ?? RufletSearchBarDefaults.defaultLineHeight
     if let overlay = MaterialPalette.color(node.string("bar_overlay_color")) {
       traits.selectionColor = overlay
     }
@@ -1567,8 +1673,15 @@ struct SearchBarControlView: View {
   private var viewTraits: RufletTextInputTraits {
     var traits = barTraits
     let style = RufletTextStyle(node: node, styleKey: "view_header_text_style")
-    if style.color != nil { traits.textColor = style.color }
-    if style.size != nil { traits.fontSize = style.size }
+    traits.textColor = style.color ?? MaterialPalette.color("onsurface")
+    let resolvedSize = style.size ?? style.materialThemeMetric?.size
+      ?? RufletSearchBarDefaults.defaultTextSize
+    traits.fontSize = resolvedSize
+    traits.fontWeight = RufletSearchBarDefaults.fontWeight(
+      node.map("view_header_text_style"), fallback: "w400")
+    traits.lineHeight = style.lineHeight.map { $0 * resolvedSize }
+      ?? style.materialThemeMetric?.lineHeight
+      ?? RufletSearchBarDefaults.defaultLineHeight
     return traits
   }
 
@@ -1580,10 +1693,6 @@ struct SearchBarControlView: View {
           $0, mode: node.string("capitalization"))
         RufletSearchBarEvents.change(value, on: node, to: events)
       })
-  }
-
-  private var hasExplicitBarHintStyle: Bool {
-    node.map("bar_hint_text_style") != nil
   }
 
   /// SearchController updates its backing property even when Ruby did not
@@ -1616,53 +1725,45 @@ struct SearchBarControlView: View {
   }
 }
 
-/// Apple supplies the ordinary search-field surface. Ruflet only wraps it
-/// when the DSL explicitly sets SearchBar/SearchView decoration properties.
-private struct ExplicitSearchSurface: ViewModifier {
+/// Resolves SearchBar/SearchView's constructor → theme → generated-default
+/// chain while the editable text itself remains UIKit/AppKit native.
+private struct SearchSurface: ViewModifier {
   let node: ControlNode
   let prefix: String
 
   func body(content: Content) -> some View {
-    guard hasExplicitChrome else { return AnyView(content) }
     let shapeKey = prefix == "bar" ? "bar_shape" : "view_shape"
     let sideKey = prefix == "bar" ? "bar_border_side" : "view_side"
-    let radius = ControlProps.cornerRadius(node.map(shapeKey)?["radius"]) ?? 0
+    let radius = ControlProps.cornerRadius(node.map(shapeKey)?["radius"])
+      ?? RufletSearchBarDefaults.cornerRadius(prefix: prefix, fullScreen: node.bool("full_screen") == true)
     let side = node.map(sideKey)
     return AnyView(
       content
         .background(
           RoundedRectangle(cornerRadius: radius)
-            .fill(MaterialPalette.color(node.string("\(prefix)_bgcolor"), default: .clear)))
+            .fill(MaterialPalette.color(
+              stateful: node.props["\(prefix)_bgcolor"], in: node.widgetStates())
+              ?? RufletSearchBarDefaults.backgroundColor))
         .overlay(
           RoundedRectangle(cornerRadius: radius)
             .strokeBorder(
               MaterialPalette.color(side?["color"]?.stringValue, default: .clear),
               lineWidth: CGFloat(side?["width"]?.doubleValue ?? 0)))
-        .modifier(ExplicitSearchShadow(node: node, prefix: prefix)))
-  }
-
-  private var hasExplicitChrome: Bool {
-    let shapeKey = prefix == "bar" ? "bar_shape" : "view_shape"
-    let sideKey = prefix == "bar" ? "bar_border_side" : "view_side"
-    return node.props[shapeKey] != nil || node.props[sideKey] != nil
-      || node.props["\(prefix)_bgcolor"] != nil
-      || node.props["\(prefix)_shadow_color"] != nil
-      || node.props["\(prefix)_elevation"] != nil
+        .modifier(SearchShadow(node: node, prefix: prefix)))
   }
 }
 
-private struct ExplicitSearchShadow: ViewModifier {
+private struct SearchShadow: ViewModifier {
   let node: ControlNode
   let prefix: String
 
   func body(content: Content) -> some View {
-    guard let elevation = node.double("\(prefix)_elevation") else {
-      return AnyView(content)
-    }
-    if let color = MaterialPalette.color(node.string("\(prefix)_shadow_color")) {
-      return AnyView(content.shadow(color: color, radius: CGFloat(elevation)))
-    }
-    return AnyView(content.shadow(radius: CGFloat(elevation)))
+    let elevation = CGFloat(node.double("\(prefix)_elevation")
+      ?? RufletSearchBarDefaults.defaultElevation)
+    let color = MaterialPalette.color(
+      stateful: node.props["\(prefix)_shadow_color"], in: node.widgetStates())
+      ?? MaterialPalette.color("shadow", default: .black)
+    return AnyView(content.shadow(color: color, radius: elevation))
   }
 }
 
@@ -1672,9 +1773,62 @@ private struct ExplicitSearchShadow: ViewModifier {
 /// capitalization mode before synchronizing `value`, and SearchBar's
 /// `scrollPadding` constructor keeps twenty logical pixels clear by default.
 enum RufletSearchBarDefaults {
-  static func usesNativeChrome(_ node: ControlNode) -> Bool {
-    node.props["bar_shape"] == nil && node.props["bar_bgcolor"] == nil
-      && node.props["bar_border_side"] == nil
+  // Flutter 3.41.2 generated Material 3 SearchBar/SearchView defaults.
+  static let defaultElevation: Double = 6
+  static let defaultTextSize: CGFloat = 16
+  static let defaultLineHeight: CGFloat = 24
+  static var backgroundColor: Color {
+    MaterialPalette.color("surfacecontainerhigh", default: .clear)
+  }
+
+  static func barPadding(_ node: ControlNode) -> EdgeInsets {
+    ControlProps.edgeInsets(
+      RufletWidgetStateProperty.resolve(node.props["bar_padding"], in: node.widgetStates()))
+      ?? EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8)
+  }
+
+  static func viewBarPadding(_ node: ControlNode) -> EdgeInsets {
+    ControlProps.edgeInsets(node.props["view_bar_padding"])
+      ?? EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8)
+  }
+
+  static func barMinimumWidth(_ node: ControlNode) -> CGFloat? {
+    ControlProps.sizeConstraints(node.props["bar_size_constraints"]) == nil ? 360 : nil
+  }
+
+  static func barMaximumWidth(_ node: ControlNode) -> CGFloat? {
+    ControlProps.sizeConstraints(node.props["bar_size_constraints"]) == nil ? 800 : nil
+  }
+
+  static func barMinimumHeight(_ node: ControlNode) -> CGFloat? {
+    ControlProps.sizeConstraints(node.props["bar_size_constraints"]) == nil ? 56 : nil
+  }
+
+  static func viewMinimumWidth(_ node: ControlNode) -> CGFloat? {
+    ControlProps.sizeConstraints(node.props["view_size_constraints"]) == nil ? 360 : nil
+  }
+
+  static func viewMinimumHeight(_ node: ControlNode) -> CGFloat? {
+    ControlProps.sizeConstraints(node.props["view_size_constraints"]) == nil ? 240 : nil
+  }
+
+  static func viewHeaderHeight(fullScreen: Bool) -> Double {
+    fullScreen ? 72 : 56
+  }
+
+  static func cornerRadius(prefix: String, fullScreen: Bool) -> CGFloat {
+    if prefix == "bar" { return 28 }
+    return fullScreen ? 0 : 28
+  }
+
+  static func fontWeight(_ style: [String: RufletValue]?, fallback: String) -> String {
+    if let explicit = style?["weight"]?.stringValue { return explicit }
+    switch style?["theme_style"]?.stringValue?.lowercased().replacingOccurrences(of: "_", with: "") {
+    case "titlemedium", "titlesmall", "labellarge", "labelmedium", "labelsmall":
+      return "w500"
+    default:
+      return fallback
+    }
   }
 
   static func scrollPadding(_ node: ControlNode) -> EdgeInsets {
@@ -1718,20 +1872,27 @@ enum RufletSearchBarEvents {
 
 /// `bar_hint_text_style` and `view_hint_text_style` style the placeholder,
 /// which neither platform field does directly.
-private struct SearchBarHint: ViewModifier {
+private struct SearchHint: ViewModifier {
   let node: ControlNode
+  let textKey: String
+  let fallbackTextKey: String?
+  let styleKey: String
+  let fallbackStyleKey: String?
   let showing: Bool
 
   func body(content: Content) -> some View {
-    guard node.map("bar_hint_text_style") != nil || node.map("view_hint_text_style") != nil
-    else { return AnyView(content) }
-    let key = node.map("bar_hint_text_style") != nil
-      ? "bar_hint_text_style" : "view_hint_text_style"
-    let text = node.string("bar_hint_text") ?? ""
+    let text = node.string(textKey) ?? fallbackTextKey.flatMap(node.string) ?? ""
+    guard !text.isEmpty else { return AnyView(content) }
+    let resolvedStyleKey = node.map(styleKey) != nil ? styleKey : (fallbackStyleKey ?? styleKey)
+    var style = RufletTextStyle(node: node, styleKey: resolvedStyleKey)
+    if style.color == nil { style.color = MaterialPalette.color("onsurfacevariant") }
+    if style.size == nil, style.materialThemeMetric == nil {
+      style.size = RufletSearchBarDefaults.defaultTextSize
+    }
     return AnyView(
       content.overlay(alignment: .leading) {
         Text(text)
-          .rufletTextStyle(RufletTextStyle(node: node, styleKey: key))
+          .rufletTextStyle(style)
           .opacity(showing ? 1 : 0)
           .allowsHitTesting(false)
       })

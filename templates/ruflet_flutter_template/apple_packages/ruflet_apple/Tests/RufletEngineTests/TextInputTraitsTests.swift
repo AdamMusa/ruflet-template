@@ -8,21 +8,21 @@ final class TextInputTraitsTests: XCTestCase {
     ControlNode(id: 1, type: "TextField", props: props)
   }
 
-  func testMaxLengthCountsUTF16TheWayFlutterDoes() {
+  func testMaxLengthCountsExtendedGraphemeClustersLikeFlutterFormatter() {
     var traits = RufletTextInputTraits()
     traits.maxLength = 5
     XCTAssertEqual(traits.limited("abc"), "abc")
     XCTAssertEqual(traits.limited("abcdefgh"), "abcde")
   }
 
-  func testMaxLengthNeverSplitsASurrogatePair() {
+  func testMaxLengthNeverSplitsAUnicodeGraphemeCluster() {
     var traits = RufletTextInputTraits()
-    // An emoji is two UTF-16 units, so a limit of 3 lands inside the second
-    // one; Flutter keeps the character whole rather than emitting half of it.
+    // LengthLimitingTextInputFormatter uses characters, while selection and
+    // counter offsets use UTF-16. Emoji therefore occupy one length slot.
     traits.maxLength = 3
-    XCTAssertEqual(traits.limited("ab😀"), "ab")
-    traits.maxLength = 4
     XCTAssertEqual(traits.limited("ab😀c"), "ab😀")
+    traits.maxLength = 1
+    XCTAssertEqual(traits.limited("👍🏽x"), "👍🏽")
   }
 
   func testAbsentMaxLengthLeavesTextAlone() {
@@ -44,6 +44,17 @@ final class TextInputTraitsTests: XCTestCase {
     XCTAssertTrue(traits.showCursor)
     XCTAssertTrue(traits.enableInteractiveSelection)
     XCTAssertFalse(traits.readOnly)
+
+    let readOnly = RufletTextInputTraits(node: node(["read_only": .bool(true)]))
+    XCTAssertFalse(readOnly.showCursor)
+    XCTAssertTrue(readOnly.enableInteractiveSelection)
+    let protected = RufletTextInputTraits(node: node([
+      "read_only": .bool(true), "password": .bool(true),
+    ]))
+    XCTAssertFalse(protected.enableInteractiveSelection)
+    XCTAssertTrue(RufletTextInputTraits(node: node([
+      "read_only": .bool(true), "show_cursor": .bool(true),
+    ])).showCursor)
   }
 
   private func filter(_ map: [String: RufletValue]) -> RufletTextInputTraits {
@@ -83,6 +94,17 @@ final class TextInputTraitsTests: XCTestCase {
     // Flutter orders its formatters the same way: filtering first, so the
     // limit counts what survived rather than what was typed.
     XCTAssertEqual(traits.formatted(oldValue: "", newValue: "a1b2c3"), "a1")
+  }
+
+  func testLengthLimitCanWaitUntilMarkedTextCompositionEnds() {
+    var traits = RufletTextInputTraits()
+    traits.maxLength = 2
+    XCTAssertEqual(
+      traits.formatted(oldValue: "", newValue: "かなa", enforceLength: false),
+      "かなa")
+    XCTAssertEqual(
+      traits.formatted(oldValue: "", newValue: "かなa", enforceLength: true),
+      "かな")
   }
 
   func testSmartSubstitutionOnlyTurnsOffOnTheDisabledEnum() {

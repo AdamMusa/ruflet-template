@@ -54,6 +54,21 @@ struct RufletFormFieldSlot: View {
   }
 }
 
+/// `FormField.icon` accepts either a control or an icon value. Keep that wire
+/// distinction intact instead of accidentally rendering a bare icon name as
+/// text when the native field is decorated.
+private struct RufletFormFieldIconSlot: View {
+  let node: ControlNode
+
+  var body: some View {
+    if let id = node.controlID(forKey: "icon") {
+      ControlView(id: id, axis: .none)
+    } else {
+      RufletIcon(value: node.props["icon"])
+    }
+  }
+}
+
 /// Wraps a field in its label, helper, error and counter.
 ///
 /// An error replaces the helper rather than joining it, which is what
@@ -70,8 +85,8 @@ struct RufletFormFieldDecoration: ViewModifier {
           .padding(.leading, node.bool("align_label_with_hint") == true ? labelInset : 0)
       }
       HStack(spacing: 8) {
-        if node.controlID(forKey: "icon") != nil {
-          RufletFormFieldSlot(node: node, key: "icon")
+        if node.props["icon"] != nil {
+          RufletFormFieldIconSlot(node: node)
         }
         content
       }
@@ -102,7 +117,7 @@ struct RufletFormFieldDecoration: ViewModifier {
   @ViewBuilder
   private var footer: some View {
     let showsError = has("error")
-    let showsCounter = has("counter")
+    let showsCounter = has("counter") || RufletTextFieldDefaults.hasDefaultCounter(node)
     if showsError || showsCounter || hasHelper {
       HStack(alignment: .top) {
         if showsError {
@@ -133,9 +148,9 @@ struct RufletFormFieldDecoration: ViewModifier {
   /// The label sits over the field's own content inset when it is aligned
   /// with the hint rather than with the decoration's edge.
   private var labelInset: CGFloat {
-    // Omitted padding belongs to the native text control.  Only mirror an
-    // inset here when the Ruflet DSL explicitly supplied one.
-    ControlProps.edgeInsets(node.props["content_padding"])?.leading ?? 0
+    // Match the InputDecorator inset, including its omitted Material 3
+    // outline default, while the editor remains the native Apple primitive.
+    RufletTextFieldDefaults.contentPadding(node).leading
   }
 }
 

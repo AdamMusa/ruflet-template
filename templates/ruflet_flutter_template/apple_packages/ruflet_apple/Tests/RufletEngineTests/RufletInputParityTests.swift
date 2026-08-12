@@ -45,12 +45,41 @@ final class RufletInputParityTests: XCTestCase {
     XCTAssertEqual(ControlRegistry.descriptor(for: "TextField")?.supportedMethods, ["focus"])
   }
 
-  func testTextFieldDefaultsMatchPinnedFletBehaviorWithoutMaterialChrome() {
+  func testTextFieldDefaultsMatchPinnedFletDecorationAndTypography() {
     let omitted = ControlNode(id: 1, type: "TextField")
     XCTAssertFalse(RufletTextFieldDefaults.isMultiline(omitted))
     XCTAssertEqual(RufletTextFieldDefaults.minLines(omitted), 1)
     XCTAssertEqual(RufletTextFieldDefaults.maxLines(omitted), 1)
     XCTAssertEqual(RufletTextFieldDefaults.defaultWidth(omitted), 300)
+    XCTAssertEqual(RufletTextFieldDefaults.borderKind(omitted), .outline)
+    XCTAssertEqual(RufletTextFieldDefaults.fieldCornerRadius(omitted), 4)
+    XCTAssertEqual(RufletTextFieldDefaults.borderWidth(omitted, focused: false), 1)
+    XCTAssertEqual(RufletTextFieldDefaults.borderWidth(omitted, focused: true), 2)
+    XCTAssertEqual(RufletTextFieldDefaults.borderColorToken(omitted, focused: false), "black")
+    XCTAssertEqual(RufletTextFieldDefaults.borderColorToken(omitted, focused: true), "primary")
+    XCTAssertEqual(RufletTextFieldDefaults.defaultTextSize, 16)
+    XCTAssertEqual(RufletTextFieldDefaults.defaultTextLineHeight, 24)
+    let padding = RufletTextFieldDefaults.contentPadding(omitted)
+    XCTAssertEqual(padding.top, 20)
+    XCTAssertEqual(padding.leading, 12)
+    XCTAssertEqual(padding.bottom, 12)
+    XCTAssertEqual(padding.trailing, 12)
+
+    let overridden = ControlNode(id: 5, type: "TextField", props: [
+      "border_width": .double(1),
+    ])
+    XCTAssertEqual(RufletTextFieldDefaults.borderColorToken(overridden, focused: false), "onsurface,0.38")
+    XCTAssertEqual(RufletTextFieldDefaults.borderColorToken(overridden, focused: true), "primary")
+    XCTAssertEqual(RufletTextFieldDefaults.borderWidth(overridden, focused: true), 1)
+
+    let disabled = ControlNode(id: 6, type: "TextField", props: [
+      "disabled": .bool(true),
+      "border_width": .double(4),
+      "border_color": .string("red"),
+    ])
+    XCTAssertEqual(RufletTextFieldDefaults.borderWidth(disabled, focused: false), 1)
+    XCTAssertEqual(
+      RufletTextFieldDefaults.borderColorToken(disabled, focused: false), "onsurface,0.12")
 
     let shifted = ControlNode(
       id: 2, type: "TextField",
@@ -79,11 +108,17 @@ final class RufletInputParityTests: XCTestCase {
       RufletTextFieldDefaults.counterText(
         "{value_length}/{max_length} ({symbols_left})", value: "ruby", maxLength: 10),
       "4/10 (6)")
-    XCTAssertNil(RufletTextFieldDefaults.counterText(nil, value: "ruby", maxLength: 10))
+    XCTAssertEqual(RufletTextFieldDefaults.counterText(nil, value: "ruby", maxLength: 10), "4/10")
+    XCTAssertEqual(RufletTextFieldDefaults.counterText(nil, value: "😀", maxLength: 10), "1/10")
+    XCTAssertEqual(RufletTextFieldDefaults.counterText(nil, value: "ruby", maxLength: -1), "4")
     XCTAssertEqual(
       RufletTextFieldDefaults.counterText(
         "{value_length}:{max_length}:{symbols_left}", value: "ruby", maxLength: nil),
       "4:None:None")
+    XCTAssertEqual(
+      RufletTextFieldDefaults.counterText(
+        "{value_length}", value: "😀", maxLength: nil),
+      "2")
   }
 
   func testTextFieldChangeUpdatesWireBeforeOptionalEvent() {
@@ -126,11 +161,28 @@ final class RufletInputParityTests: XCTestCase {
     XCTAssertEqual(DropdownMenuDefaults.menuHeight(explicit), 280)
   }
 
-  func testSearchUsesNativeChromeWhileDropdownPreservesFletDecorationDefaults() {
-    XCTAssertTrue(RufletSearchBarDefaults.usesNativeChrome(
-      ControlNode(id: 1, type: "SearchBar")))
-    XCTAssertFalse(RufletSearchBarDefaults.usesNativeChrome(ControlNode(
-      id: 2, type: "SearchBar", props: ["bar_bgcolor": .string("#ffffff")])))
+  func testSearchKeepsPinnedMaterialConstructorAndThemeDefaults() {
+    let search = ControlNode(id: 1, type: "SearchBar")
+    XCTAssertEqual(RufletSearchBarDefaults.defaultElevation, 6)
+    XCTAssertEqual(RufletSearchBarDefaults.defaultTextSize, 16)
+    XCTAssertEqual(RufletSearchBarDefaults.defaultLineHeight, 24)
+    XCTAssertEqual(RufletSearchBarDefaults.barMinimumWidth(search), 360)
+    XCTAssertEqual(RufletSearchBarDefaults.barMaximumWidth(search), 800)
+    XCTAssertEqual(RufletSearchBarDefaults.barMinimumHeight(search), 56)
+    XCTAssertEqual(RufletSearchBarDefaults.viewMinimumWidth(search), 360)
+    XCTAssertEqual(RufletSearchBarDefaults.viewMinimumHeight(search), 240)
+    XCTAssertEqual(RufletSearchBarDefaults.viewHeaderHeight(fullScreen: false), 56)
+    XCTAssertEqual(RufletSearchBarDefaults.viewHeaderHeight(fullScreen: true), 72)
+    XCTAssertEqual(RufletSearchBarDefaults.cornerRadius(prefix: "bar", fullScreen: false), 28)
+    XCTAssertEqual(RufletSearchBarDefaults.cornerRadius(prefix: "view", fullScreen: true), 0)
+    let padding = RufletSearchBarDefaults.barPadding(search)
+    XCTAssertEqual(padding.top, 0)
+    XCTAssertEqual(padding.leading, 8)
+    XCTAssertEqual(padding.bottom, 0)
+    XCTAssertEqual(padding.trailing, 8)
+  }
+
+  func testDropdownPreservesFletDecorationDefaults() {
 
     let dropdown = ControlNode(id: 3, type: "Dropdown")
     XCTAssertEqual(DropdownMenuDefaults.borderKind(dropdown), .outline)

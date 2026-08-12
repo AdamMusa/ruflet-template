@@ -120,12 +120,15 @@ struct RufletTextInputTraits {
     // TextField's maxLength does.
     maxLength = node.int("max_length").flatMap { $0 > 0 ? $0 : nil }
     textAlign = node.string("text_align")?.lowercased()
-    showCursor = node.bool("show_cursor") ?? true
+    // EditableText resolves a null showCursor to !readOnly.
+    showCursor = node.bool("show_cursor") ?? !readOnly
     cursorColor = MaterialPalette.color(node.string("cursor_color"))
     selectionColor = MaterialPalette.color(node.string("selection_color"))
     autofillHint = node.array("autofill_hints")?.first?.stringValue
       ?? node.string("autofill_hints")
-    enableInteractiveSelection = node.bool("enable_interactive_selection") ?? true
+    // TextField's constructor uses `!readOnly || !obscureText` when omitted.
+    enableInteractiveSelection = node.bool("enable_interactive_selection")
+      ?? (!readOnly || node.bool("password") != true)
     textColor = MaterialPalette.color(node.string("color"))
     fontSize = node.double("text_size").map { CGFloat($0) }
     canRequestFocus = node.bool("can_request_focus") ?? true
@@ -171,9 +174,10 @@ struct RufletTextInputTraits {
 
   /// The explicit formatters are applied in the same order as `textfield.dart`:
   /// input filter, capitalization, then TextFormField's length limit.
-  func formatted(oldValue: String, newValue: String) -> String {
+  func formatted(oldValue: String, newValue: String, enforceLength: Bool = true) -> String {
     let filtered = inputFilter?.apply(oldValue: oldValue, newValue: newValue) ?? newValue
-    return limited(capitalized(filtered))
+    let transformed = capitalized(filtered)
+    return enforceLength ? limited(transformed) : transformed
   }
 
   func formatted(_ text: String) -> String {
@@ -204,18 +208,12 @@ struct RufletTextInputTraits {
       + String(text[text.index(after: index)...])
   }
 
-  /// Truncates to `max_length` the way Flutter's `LengthLimitingTextInputFormatter`
-  /// does — by UTF-16 unit, which is what both platforms count in.
+  /// Truncates to `max_length` the way Flutter's
+  /// LengthLimitingTextInputFormatter does: extended grapheme clusters, not
+  /// UTF-16 offsets. Swift Character follows the same Unicode boundary model.
   func limited(_ text: String) -> String {
-    guard let maxLength, text.utf16.count > maxLength else { return text }
-    var cut = text.utf16.index(text.utf16.startIndex, offsetBy: maxLength)
-    // A limit that lands inside a surrogate pair has no character index, so
-    // step back rather than splitting the pair.
-    while cut > text.utf16.startIndex, String.Index(cut, within: text) == nil {
-      cut = text.utf16.index(before: cut)
-    }
-    guard let boundary = String.Index(cut, within: text) else { return text }
-    return String(text[..<boundary])
+    guard let maxLength, text.count > maxLength else { return text }
+    return String(text.prefix(maxLength))
   }
 }
 
@@ -290,6 +288,26 @@ enum RufletTextSelection {
 
     private let caret = CALayer()
     private var drawsOwnCaret = false
+    var allowsInteractiveSelection = true {
+      didSet { updateSelectionGestures() }
+    }
+
+    override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
+      allowsInteractiveSelection && super.canPerformAction(action, withSender: sender)
+    }
+
+    override func addGestureRecognizer(_ gestureRecognizer: UIGestureRecognizer) {
+      super.addGestureRecognizer(gestureRecognizer)
+      if !allowsInteractiveSelection, gestureRecognizer is UILongPressGestureRecognizer {
+        gestureRecognizer.isEnabled = false
+      }
+    }
+
+    private func updateSelectionGestures() {
+      gestureRecognizers?
+        .compactMap { $0 as? UILongPressGestureRecognizer }
+        .forEach { $0.isEnabled = allowsInteractiveSelection }
+    }
 
     override func caretRect(for position: UITextPosition) -> CGRect {
       var rect = super.caretRect(for: position)
@@ -457,6 +475,8 @@ enum RufletTextSelection {
     private func apply(_ traits: RufletTextInputTraits, to view: UITextField) {
       view.isEnabled = isEnabled
       view.isUserInteractionEnabled = isEnabled && !traits.ignorePointers
+      (view as? RufletTextFieldView)?.allowsInteractiveSelection =
+        traits.enableInteractiveSelection
       switch traits.keyboardBrightness {
       case "light": view.keyboardAppearance = .light
       case "dark": view.keyboardAppearance = .dark
@@ -539,7 +559,8 @@ enum RufletTextSelection {
       case "email": return .emailAddress
       case "url": return .URL
       case "datetime": return .numbersAndPunctuation
-      case "name", "streetaddress": return .namePhonePad
+      case "name": return .namePhonePad
+      case "streetaddress": return .default
       case "visiblepassword": return .asciiCapable
       case "websearch": return .webSearch
       case "twitter": return .twitter
@@ -592,10 +613,16 @@ enum RufletTextSelection {
 
     fileprivate static func contentType(_ hint: String) -> UITextContentType? {
       switch hint.lowercased() {
+      case "addresscity": return .addressCity
+      case "addressstate": return .addressState
       case "email": return .emailAddress
       case "name": return .name
       case "givenname": return .givenName
       case "familyname": return .familyName
+      case "middlename": return .middleName
+      case "nameprefix": return .namePrefix
+      case "namesuffix": return .nameSuffix
+      case "nickname": return .nickname
       case "telephonenumber": return .telephoneNumber
       case "password": return .password
       case "newpassword": return .newPassword
@@ -603,8 +630,26 @@ enum RufletTextSelection {
       case "username": return .username
       case "url": return .URL
       case "postalcode": return .postalCode
+      case "fullstreetaddress", "postaladdress": return .fullStreetAddress
       case "streetaddressline1": return .streetAddressLine1
+      case "streetaddressline2": return .streetAddressLine2
+      case "sublocality": return .sublocality
       case "countryname": return .countryName
+      case "organizationname": return .organizationName
+      case "jobtitle": return .jobTitle
+      case "creditcardname":
+        if #available(iOS 17.0, *) { return .creditCardName }
+        return UITextContentType(rawValue: "creditCardName")
+      case "creditcardnumber":
+        if #available(iOS 17.0, *) { return .creditCardNumber }
+        return UITextContentType(rawValue: "creditCardNumber")
+      // The strongly typed constant is newer than Ruflet's deployment
+      // target, while UITextContentType has always accepted raw identifiers.
+      case "creditcardexpirationdate":
+        return UITextContentType(rawValue: "creditCardExpiration")
+      case "creditcardsecuritycode":
+        if #available(iOS 17.0, *) { return .creditCardSecurityCode }
+        return UITextContentType(rawValue: "creditCardSecurityCode")
       default: return nil
       }
     }
@@ -640,7 +685,9 @@ enum RufletTextSelection {
         }
         let current = (textField.text ?? "") as NSString
         let candidate = current.replacingCharacters(in: range, with: string)
-        let formatted = parent.traits.formatted(oldValue: current as String, newValue: candidate)
+        let formatted = parent.traits.formatted(
+          oldValue: current as String, newValue: candidate,
+          enforceLength: textField.markedTextRange == nil)
         guard formatted != candidate else { return true }
         textField.text = formatted
         parent.text = formatted
@@ -744,6 +791,26 @@ enum RufletTextSelection {
     var repeatedTap: (() -> Void)?
     var allowsNextNewline = false
     private var focusedAtTouchStart = false
+    var allowsInteractiveSelection = true {
+      didSet { updateSelectionGestures() }
+    }
+
+    override func canPerformAction(_ action: Selector, withSender sender: Any?) -> Bool {
+      allowsInteractiveSelection && super.canPerformAction(action, withSender: sender)
+    }
+
+    override func addGestureRecognizer(_ gestureRecognizer: UIGestureRecognizer) {
+      super.addGestureRecognizer(gestureRecognizer)
+      if !allowsInteractiveSelection, gestureRecognizer is UILongPressGestureRecognizer {
+        gestureRecognizer.isEnabled = false
+      }
+    }
+
+    private func updateSelectionGestures() {
+      gestureRecognizers?
+        .compactMap { $0 as? UILongPressGestureRecognizer }
+        .forEach { $0.isEnabled = allowsInteractiveSelection }
+    }
 
     override func caretRect(for position: UITextPosition) -> CGRect {
       var rect = super.caretRect(for: position)
@@ -826,6 +893,7 @@ enum RufletTextSelection {
       view.repeatedTap = onTap
       view.isEditable = isEnabled && !traits.readOnly
       view.isSelectable = isEnabled && traits.enableInteractiveSelection
+      view.allowsInteractiveSelection = traits.enableInteractiveSelection
       view.isUserInteractionEnabled = isEnabled && !traits.ignorePointers
       view.autocorrectionType = traits.autocorrect ? .yes : .no
       view.spellCheckingType = traits.enableSuggestions ? .yes : .no
@@ -912,7 +980,8 @@ enum RufletTextSelection {
         let candidate = (textView.text as NSString).replacingCharacters(
           in: range, with: replacement)
         let formatted = parent.traits.formatted(
-          oldValue: lastAcceptedText, newValue: candidate)
+          oldValue: lastAcceptedText, newValue: candidate,
+          enforceLength: textView.markedTextRange == nil)
         guard formatted != candidate else { return true }
         textView.text = formatted
         lastAcceptedText = formatted
@@ -1079,7 +1148,7 @@ enum RufletTextSelection {
       view.isEnabled = isEnabled
       view.isEditable = !traits.readOnly && traits.canRequestFocus
       view.refusesFirstResponder = !traits.canRequestFocus
-      view.isSelectable = traits.enableInteractiveSelection || !traits.readOnly
+      view.isSelectable = traits.enableInteractiveSelection
       view.isAutomaticTextCompletionEnabled = traits.enableSuggestions
       view.alignment = Self.alignment(traits.textAlign)
       view.textColor = traits.textColor.map(NSColor.init) ?? .controlTextColor
@@ -1200,8 +1269,10 @@ enum RufletTextSelection {
 
       func controlTextDidChange(_ notification: Notification) {
         guard let field = notification.object as? NSTextField else { return }
+        let editor = field.currentEditor() as? NSTextView
         let limited = parent.traits.formatted(
-          oldValue: lastAcceptedText, newValue: field.stringValue)
+          oldValue: lastAcceptedText, newValue: field.stringValue,
+          enforceLength: !(editor?.hasMarkedText() ?? false))
         if field.stringValue != limited { field.stringValue = limited }
         lastAcceptedText = limited
         parent.text = limited
@@ -1346,7 +1417,8 @@ enum RufletTextSelection {
       func textDidChange(_ notification: Notification) {
         guard let view = notification.object as? NSTextView else { return }
         let formatted = parent.traits.formatted(
-          oldValue: lastAcceptedText, newValue: view.string)
+          oldValue: lastAcceptedText, newValue: view.string,
+          enforceLength: !view.hasMarkedText())
         if view.string != formatted { view.string = formatted }
         lastAcceptedText = formatted
         parent.text = formatted
