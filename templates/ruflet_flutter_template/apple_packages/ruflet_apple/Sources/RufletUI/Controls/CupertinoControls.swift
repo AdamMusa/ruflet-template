@@ -1888,11 +1888,14 @@ struct CupertinoPickerControlView: View {
 
   init(node: ControlNode) {
     self.node = node
+    let count = node.controlIDs(forKey: "controls").count
+    let looping = node.bool("looping") ?? false
     _wheelIndex = State(
       initialValue: CupertinoPickerParity.initialIndex(
-        selected: node.int("selected_index") ?? 0,
-        count: node.controlIDs(forKey: "controls").count,
-        looping: node.bool("looping") ?? false))
+        selected: CupertinoPickerParity.normalizedSelectedIndex(
+          node.int("selected_index") ?? 0, count: count, looping: looping),
+        count: count,
+        looping: looping))
   }
 
   private var configuration: RufletCupertinoPickerConfiguration {
@@ -1980,7 +1983,8 @@ struct CupertinoPickerControlView: View {
     let count = visibleControlIDs.count
     guard count > 0 else { return }
     wheelIndex = newIndex
-    let real = CupertinoPickerParity.realIndex(newIndex, count: count)
+    let real = CupertinoPickerParity.selectedIndex(
+      wheelIndex: newIndex, count: count, looping: configuration.looping)
     RufletValueControlEvents.commit(
       node,
       key: "selected_index",
@@ -2006,10 +2010,18 @@ struct CupertinoPickerControlView: View {
       return
     }
     let selected = node.int("selected_index") ?? 0
-    let real = CupertinoPickerParity.realIndex(wheelIndex, count: count)
-    guard selected != real else { return }
+    let normalized = CupertinoPickerParity.normalizedSelectedIndex(
+      selected, count: count, looping: configuration.looping)
+    let real = CupertinoPickerParity.selectedIndex(
+      wheelIndex: wheelIndex, count: count, looping: configuration.looping)
+    // A matching real item is not enough: changing visibility can make an
+    // old looping tag fall outside the newly rendered finite delegate.
+    guard normalized != real
+      || !CupertinoPickerParity.isValidWheelIndex(
+        wheelIndex, count: count, looping: configuration.looping)
+    else { return }
     wheelIndex = CupertinoPickerParity.initialIndex(
-      selected: selected, count: count, looping: configuration.looping)
+      selected: normalized, count: count, looping: configuration.looping)
   }
 }
 
@@ -2092,6 +2104,26 @@ enum CupertinoPickerParity {
   static func itemCount(count: Int, looping: Bool) -> Int {
     guard count > 0 else { return 0 }
     return looping ? count * cycles : count
+  }
+
+  static func normalizedSelectedIndex(_ selected: Int, count: Int, looping: Bool) -> Int {
+    guard count > 0 else { return 0 }
+    // FixedExtentScrollController rejects negative initial items. A finite
+    // wheel then settles at its nearest edge, while a looping delegate maps
+    // every non-negative logical item through modulo arithmetic.
+    let nonNegative = max(selected, 0)
+    return looping ? realIndex(nonNegative, count: count) : min(nonNegative, count - 1)
+  }
+
+  static func selectedIndex(wheelIndex: Int, count: Int, looping: Bool) -> Int {
+    guard count > 0 else { return 0 }
+    return looping
+      ? realIndex(max(wheelIndex, 0), count: count)
+      : min(max(wheelIndex, 0), count - 1)
+  }
+
+  static func isValidWheelIndex(_ index: Int, count: Int, looping: Bool) -> Bool {
+    index >= 0 && index < itemCount(count: count, looping: looping)
   }
 
   static func initialIndex(selected: Int, count: Int, looping: Bool) -> Int {
