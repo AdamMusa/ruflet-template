@@ -27,7 +27,7 @@ final class ProgressBadgeParityTests: XCTestCase {
       id: 6, type: "ProgressRing", props: ["padding": .null])))
   }
 
-  func testCircleAvatarContentAcceptsFletScalarOrControlProviders() {
+  func testCircleAvatarContentAcceptsFletStringOrControlProviders() {
     XCTAssertEqual(
       RufletCircleAvatarContent(node: ControlNode(
         id: 1, type: "CircleAvatar", props: ["content": .string("AM")])),
@@ -35,7 +35,7 @@ final class ProgressBadgeParityTests: XCTestCase {
     XCTAssertEqual(
       RufletCircleAvatarContent(node: ControlNode(
         id: 2, type: "CircleAvatar", props: ["content": .int(42)])),
-      .text("42"))
+      .empty)
     XCTAssertEqual(
       RufletCircleAvatarContent(node: ControlNode(
         id: 3, type: "CircleAvatar", props: ["content": .controlRef(9)])),

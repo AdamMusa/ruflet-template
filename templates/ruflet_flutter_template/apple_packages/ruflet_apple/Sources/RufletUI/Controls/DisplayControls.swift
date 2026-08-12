@@ -1516,10 +1516,10 @@ enum RufletCircleAvatarContent: Equatable {
   case text(String)
   case empty
 
-  init(node: ControlNode) {
-    if let id = node.controlID(forKey: "content") {
+  init(node: ControlNode, visibilityForID: (Int) -> Bool? = { _ in true }) {
+    if let id = node.controlID(forKey: "content"), visibilityForID(id) == true {
       self = .control(id)
-    } else if let text = node.string("content") {
+    } else if case .string(let text)? = node.props["content"] {
       self = .text(text)
     } else {
       self = .empty
@@ -1535,13 +1535,16 @@ enum RufletCircleAvatarContent: Equatable {
 /// the slot that failed rather than a message.
 struct CircleAvatarControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
 
   var body: some View {
     let diameter = RufletCircleAvatarDiameter(node: node)
     let sources = RufletCircleAvatarImageSources(node: node)
     let appearance = RufletCircleAvatarAppearance(node: node)
-    let content = RufletCircleAvatarContent(node: node)
+    let content = RufletCircleAvatarContent(
+      node: node,
+      visibilityForID: { id in store.node(id).map { $0.bool("visible") != false } })
 
     ZStack {
       Circle().fill(backgroundColor(appearance))
