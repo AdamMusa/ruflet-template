@@ -796,10 +796,15 @@ enum RufletRangeSliderLabels {
 struct TextFieldControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
+  @EnvironmentObject private var store: ControlStore
   @State private var focused = false
   @State private var hovering = false
   @State private var selection = NSRange(location: 0, length: 0)
   @State private var revealsPassword = false
+  /// UIKit/AppKit owns the live editing buffer. Reading every keystroke back
+  /// through the remotely-backed ControlNode makes a fast delete sequence
+  /// wait for SwiftUI/store reconciliation and can visibly restore old text.
+  @State private var localValue = ""
 
   var body: some View {
     HStack(alignment: verticalAlignment, spacing: 8) {
@@ -830,6 +835,7 @@ struct TextFieldControlView: View {
     .modifier(RufletFormFieldDecoration(node: node))
     .disabled(node.bool("disabled") == true)
     .onAppear {
+      localValue = node.string("value") ?? ""
       focused = node.string("blur") == nil
         && (node.bool("autofocus") == true || node.string("focus") != nil)
       selection = initialSelection
@@ -838,6 +844,10 @@ struct TextFieldControlView: View {
     .onChange(of: selection) { reportSelection($0) }
     .onChange(of: node.string("focus")) { if $0 != nil { focused = true } }
     .onChange(of: node.string("blur")) { if $0 != nil { focused = false } }
+    .onChange(of: node.string("value")) { value in
+      let external = value ?? ""
+      if localValue != external { localValue = external }
+    }
     .rufletCommandHandler(node.id) { call, completion in
       switch call.name {
       case "focus": focused = true; completion(.success(.null))
@@ -1019,8 +1029,9 @@ struct TextFieldControlView: View {
 
   private var nativePrefixSymbol: String? {
     guard usesNativeChrome, let value = node.props["prefix_icon"] else { return nil }
-    let symbol = IconMapping.symbol(for: value)
-    return symbol == IconMapping.placeholderSymbol ? nil : symbol
+    return RufletNativeTextFieldPrefix.symbol(
+      value: value,
+      referencedNode: value.controlID.flatMap(store.node))
   }
 
   private var embedsNativePrefix: Bool {
@@ -1068,8 +1079,13 @@ struct TextFieldControlView: View {
 
   private var binding: Binding<String> {
     Binding(
-      get: { node.string("value") ?? "" },
-      set: { RufletTextFieldEvents.change($0, on: node, to: events) })
+      get: { localValue },
+      set: {
+        // Update the native editing buffer before publishing to Ruby. This is
+        // the same controller-first ordering used by Flutter's TextField.
+        localValue = $0
+        RufletTextFieldEvents.change($0, on: node, to: events)
+      })
   }
 
   private var initialSelection: NSRange {
@@ -1107,6 +1123,24 @@ struct TextFieldControlView: View {
       }
       .buttonStyle(.plain)
     }
+  }
+}
+
+enum RufletNativeTextFieldPrefix {
+  static func symbol(value: RufletValue, referencedNode: ControlNode?) -> String? {
+    let iconValue: RufletValue?
+    if let referencedNode {
+      guard referencedNode.bool("visible") != false, referencedNode.type == "Icon" else {
+        return nil
+      }
+      iconValue = referencedNode.props["name"] ?? referencedNode.props["icon"]
+    } else {
+      iconValue = value
+    }
+    guard let symbol = IconMapping.symbol(for: iconValue),
+      symbol != IconMapping.placeholderSymbol
+    else { return nil }
+    return symbol
   }
 }
 

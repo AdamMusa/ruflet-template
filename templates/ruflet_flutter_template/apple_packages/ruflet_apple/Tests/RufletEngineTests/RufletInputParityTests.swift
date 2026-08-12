@@ -112,6 +112,22 @@ final class RufletInputParityTests: XCTestCase {
     XCTAssertFalse(RufletTextFieldDefaults.usesNativeApplePresentation(custom))
   }
 
+  func testNativeTextFieldEmbedsAnIconControlPrefix() {
+    let link = ControlNode(id: 7, type: "Icon", props: ["name": .string("link")])
+    XCTAssertEqual(
+      RufletNativeTextFieldPrefix.symbol(value: .controlRef(7), referencedNode: link),
+      "link")
+    XCTAssertNil(RufletNativeTextFieldPrefix.symbol(
+      value: .controlRef(8),
+      referencedNode: ControlNode(
+        id: 8, type: "Icon",
+        props: ["name": .string("link"), "visible": .bool(false)])))
+    XCTAssertNil(RufletNativeTextFieldPrefix.symbol(
+      value: .controlRef(9),
+      referencedNode: ControlNode(
+        id: 9, type: "Text", props: ["value": .string("link")])))
+  }
+
   func testOmittedAccessibilityLabelPreservesNativeInference() {
     XCTAssertNil(RufletAccessibilitySemantics.label(ControlNode(id: 1, type: "Checkbox")))
     XCTAssertEqual(RufletAccessibilitySemantics.label(ControlNode(
