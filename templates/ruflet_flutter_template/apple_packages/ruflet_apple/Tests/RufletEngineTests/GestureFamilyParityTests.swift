@@ -119,4 +119,24 @@ final class GestureFamilyParityTests: XCTestCase {
       try XCTUnwrap(ControlRegistry.descriptor(for: "KeyboardListener")).supportedMethods,
       ["focus"])
   }
+
+  func testKeyboardListenerKeepsPinnedDefaultsValidationAndPayload() {
+    let defaults = KeyboardListenerPresentation(node: ControlNode(
+      id: 1, type: "KeyboardListener"))
+    XCTAssertFalse(defaults.autofocus)
+    XCTAssertTrue(defaults.includeSemantics)
+    XCTAssertEqual(
+      KeyboardListenerPresentation.missingContentError,
+      "KeyboardListener control has no content.")
+    XCTAssertEqual(
+      RufletInteractionParity.key("Enter"),
+      .map(["key": .string("Enter")]))
+
+    let explicit = KeyboardListenerPresentation(node: ControlNode(
+      id: 2, type: "KeyboardListener", props: [
+        "autofocus": .bool(true), "include_semantics": .bool(false),
+      ]))
+    XCTAssertTrue(explicit.autofocus)
+    XCTAssertFalse(explicit.includeSemantics)
+  }
 }

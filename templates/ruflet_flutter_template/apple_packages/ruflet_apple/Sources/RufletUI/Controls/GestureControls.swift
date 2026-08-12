@@ -1112,30 +1112,40 @@ struct KeyboardListenerControlView: View {
   @State private var focused = false
 
   var body: some View {
-    ZStack {
-      if let contentID = node.controlID(forKey: "content") {
+    if let contentID = node.controlID(forKey: "content") {
+      ZStack {
         ControlView(id: contentID, axis: .none)
+        RufletNativeKeyboardListener(
+          focused: $focused,
+          includeSemantics: KeyboardListenerPresentation(node: node).includeSemantics,
+          onKeyDown: { events.fire(node, "key_down", data: RufletInteractionParity.key($0)) },
+          onKeyRepeat: { events.fire(node, "key_repeat", data: RufletInteractionParity.key($0)) },
+          onKeyUp: { events.fire(node, "key_up", data: RufletInteractionParity.key($0)) }
+        )
+        .frame(width: 1, height: 1)
+        .opacity(0.001)
       }
-      RufletNativeKeyboardListener(
-        focused: $focused,
-        includeSemantics: node.bool("include_semantics") ?? true,
-        onKeyDown: { events.fire(node, "key_down", data: RufletInteractionParity.key($0)) },
-        onKeyRepeat: { events.fire(node, "key_repeat", data: RufletInteractionParity.key($0)) },
-        onKeyUp: { events.fire(node, "key_up", data: RufletInteractionParity.key($0)) }
-      )
-      .frame(width: 1, height: 1)
-      .opacity(0.001)
-    }
-    .onAppear { focused = node.bool("autofocus") ?? false }
-    .rufletCommandHandler(node.id) { call, completion in
-      guard call.name == "focus" else {
-        completion(.failure(rufletUnsupported("KeyboardListener", call)))
-        return
+      .onAppear { focused = KeyboardListenerPresentation(node: node).autofocus }
+      .rufletCommandHandler(node.id) { call, completion in
+        guard call.name == "focus" else {
+          completion(.failure(rufletUnsupported("KeyboardListener", call)))
+          return
+        }
+        focused = true
+        completion(.success(.null))
       }
-      focused = true
-      completion(.success(.null))
+    } else {
+      Text(KeyboardListenerPresentation.missingContentError)
+        .font(.caption).foregroundStyle(.red)
     }
   }
+}
+
+struct KeyboardListenerPresentation {
+  static let missingContentError = "KeyboardListener control has no content."
+  let node: ControlNode
+  var autofocus: Bool { node.bool("autofocus") ?? false }
+  var includeSemantics: Bool { node.bool("include_semantics") ?? true }
 }
 
 /// Cupertino draws a sheet's default action heavier than the rest.
