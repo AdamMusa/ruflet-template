@@ -1621,7 +1621,7 @@ struct CupertinoPickerControlView: View {
     _wheelIndex = State(
       initialValue: CupertinoPickerParity.initialIndex(
         selected: node.int("selected_index") ?? 0,
-        count: node.childIDs.count,
+        count: node.controlIDs(forKey: "controls").count,
         looping: node.bool("looping") ?? false))
   }
 
@@ -1629,77 +1629,117 @@ struct CupertinoPickerControlView: View {
     RufletCupertinoPickerConfiguration(node: node)
   }
 
+  /// Flet's `children("controls")` drops invisible controls before passing
+  /// the list to CupertinoPicker. It also excludes `selection_overlay`, which
+  /// is a separate slot and must never consume a wheel index.
+  private var visibleControlIDs: [Int] {
+    node.controlIDs(forKey: "controls").filter { store.node($0)?.bool("visible") != false }
+  }
+
+  @ViewBuilder
   var body: some View {
-    Picker(
-      "",
-      selection: Binding(
-        get: { wheelIndex },
-        set: { newIndex in
-          wheelIndex = newIndex
-          let real = CupertinoPickerParity.realIndex(newIndex, count: node.childIDs.count)
-          events.commit(node, key: "selected_index", value: .int(Int64(real)))
-          guard configuration.looping,
-            CupertinoPickerParity.shouldRecenter(newIndex, count: node.childIDs.count)
-          else { return }
-          // Keep the wheel far from either finite edge. The jump is invisible
-          // because every repeated row has identical content.
-          DispatchQueue.main.async {
-            wheelIndex = CupertinoPickerParity.initialIndex(
-              selected: real, count: node.childIDs.count, looping: true)
-          }
-        })
-    ) {
-      ForEach(0..<CupertinoPickerParity.itemCount(count: node.childIDs.count, looping: configuration.looping), id: \.self) { index in
-        if !node.childIDs.isEmpty {
+    if let message = configuration.validationMessage {
+      Text(message).foregroundColor(.red)
+    } else if visibleControlIDs.isEmpty {
+      // CupertinoPicker accepts an empty concrete child list. Keep that
+      // behavior instead of manufacturing an error or a placeholder row.
+      EmptyView()
+    } else {
+      Picker(
+        "",
+        selection: Binding(
+          get: { wheelIndex },
+          set: { selectWheelIndex($0) })
+      ) {
+        ForEach(
+          0..<CupertinoPickerParity.itemCount(
+            count: visibleControlIDs.count, looping: configuration.looping),
+          id: \.self
+        ) { index in
           ControlView(
-            id: node.childIDs[CupertinoPickerParity.realIndex(index, count: node.childIDs.count)],
-            axis: .none
-          )
-          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-          .tag(index)
+            id: visibleControlIDs[
+              CupertinoPickerParity.realIndex(index, count: visibleControlIDs.count)],
+            axis: .none)
+            .frame(
+              maxWidth: .infinity,
+              minHeight: CGFloat(configuration.itemExtent),
+              maxHeight: CGFloat(configuration.itemExtent),
+              alignment: .center)
+            .tag(index)
         }
       }
-    }
-    .modifier(WheelPickerStyle())
-    .labelsHidden()
-    .frame(height: CGFloat(configuration.itemExtent) * 5)
-    // Flutter's wheel geometry: the squeeze packs the rows, the diameter
-    // ratio curves the drum, and the off-axis fraction tilts it.
-    .scaleEffect(
-      x: 1, y: CGFloat(configuration.squeeze), anchor: .center)
-    .rotation3DEffect(
-      .degrees(configuration.offAxisFraction * 45),
-      axis: (x: 0, y: 1, z: 0),
-      perspective: 1 / max(configuration.diameterRatio, 0.1))
-    .background(selectionOverlay)
-    .background(MaterialPalette.color(node.string("bgcolor")))
-    .modifier(
-      PickerMagnifier(
-        enabled: configuration.useMagnifier,
-        factor: configuration.magnification))
-    .onChange(of: node.int("selected_index") ?? 0) { selected in
-      let real = CupertinoPickerParity.realIndex(wheelIndex, count: node.childIDs.count)
-      guard selected != real else { return }
-      wheelIndex = CupertinoPickerParity.initialIndex(
-        selected: selected, count: node.childIDs.count,
-        looping: configuration.looping)
+      // Picker(.wheel) is Apple's native wheel on iOS. Its platform geometry
+      // stays native; Flet's Flutter-only cylinder tuning remains in the
+      // semantic configuration rather than distorting the entire native view.
+      .modifier(WheelPickerStyle())
+      .labelsHidden()
+      .background(MaterialPalette.color(configuration.backgroundToken))
+      .overlay(selectionOverlay)
+      .disabled(configuration.disabled)
+      .onAppear { synchronizeSelection() }
+      .onChange(of: node.int("selected_index") ?? 0) { _ in synchronizeSelection() }
+      .onChange(of: visibleControlIDs) { _ in synchronizeSelection() }
     }
   }
 
   /// `selection_overlay` is the band drawn behind the selected row; Flet lets
-  /// it be a control, and names the default band's colour separately.
+  /// it be a control. Flutter actually draws it above the wheel, constrains it
+  /// to itemExtent * magnification, and makes it ignore pointer input.
   @ViewBuilder
   private var selectionOverlay: some View {
-    if let overlayID = node.controlID(forKey: "selection_overlay") {
-      ControlView(id: overlayID, axis: .none)
-    } else {
-      RoundedRectangle(cornerRadius: 8)
-        .fill(
-          MaterialPalette.color(
-            node.string("default_selection_overlay_bgcolor"),
-            default: .gray.opacity(0.2)))
-        .frame(height: CGFloat(configuration.itemExtent))
+    VStack(spacing: 0) {
+      Spacer(minLength: 0)
+      Group {
+        if let overlayID = node.controlID(forKey: "selection_overlay"),
+          store.node(overlayID)?.bool("visible") != false
+        {
+          ControlView(id: overlayID, axis: .none)
+        } else {
+          RoundedRectangle(cornerRadius: RufletCupertinoPickerDefaults.overlayCornerRadius)
+            .fill(configuration.defaultSelectionOverlayColor)
+            .padding(.horizontal, RufletCupertinoPickerDefaults.overlayHorizontalMargin)
+        }
+      }
+      .frame(height: CGFloat(configuration.itemExtent * configuration.magnification))
+      Spacer(minLength: 0)
     }
+    .allowsHitTesting(false)
+  }
+
+  private func selectWheelIndex(_ newIndex: Int) {
+    let count = visibleControlIDs.count
+    guard count > 0 else { return }
+    wheelIndex = newIndex
+    let real = CupertinoPickerParity.realIndex(newIndex, count: count)
+    RufletValueControlEvents.commit(
+      node,
+      key: "selected_index",
+      value: .int(Int64(real)),
+      payload: .value,
+      to: events)
+    guard configuration.looping,
+      CupertinoPickerParity.shouldRecenter(newIndex, count: count)
+    else { return }
+    // SwiftUI has no looping child delegate. Repeat a finite set and move the
+    // native wheel back to an equivalent row near the middle before an edge
+    // can become visible.
+    DispatchQueue.main.async {
+      wheelIndex = CupertinoPickerParity.initialIndex(
+        selected: real, count: count, looping: true)
+    }
+  }
+
+  private func synchronizeSelection() {
+    let count = visibleControlIDs.count
+    guard count > 0 else {
+      wheelIndex = 0
+      return
+    }
+    let selected = node.int("selected_index") ?? 0
+    let real = CupertinoPickerParity.realIndex(wheelIndex, count: count)
+    guard selected != real else { return }
+    wheelIndex = CupertinoPickerParity.initialIndex(
+      selected: selected, count: count, looping: configuration.looping)
   }
 }
 
@@ -1711,6 +1751,10 @@ struct RufletCupertinoPickerConfiguration {
   let itemExtent: Double
   let useMagnifier: Bool
   let looping: Bool
+  let selectedIndex: Int
+  let disabled: Bool
+  let backgroundToken: String?
+  let defaultSelectionOverlayToken: String?
 
   init(node: ControlNode) {
     diameterRatio = node.double("diameter_ratio") ?? 1.07
@@ -1720,6 +1764,46 @@ struct RufletCupertinoPickerConfiguration {
     itemExtent = node.double("item_extent") ?? 32
     useMagnifier = node.bool("use_magnifier") ?? false
     looping = node.bool("looping") ?? false
+    selectedIndex = node.int("selected_index") ?? 0
+    disabled = node.bool("disabled") ?? false
+    backgroundToken = node.string("bgcolor")
+    defaultSelectionOverlayToken = node.string("default_selection_overlay_bgcolor")
+  }
+
+  var validationMessage: String? {
+    if squeeze <= 0 {
+      return "squeeze must be strictly greater than 0.0, got \(squeeze)"
+    }
+    if magnification <= 0 {
+      return "magnification must be strictly greater than 0.0, got \(magnification)"
+    }
+    if itemExtent <= 0 {
+      return "item_extent must be strictly greater than 0.0, got \(itemExtent)"
+    }
+    if diameterRatio <= 0 {
+      return "You can't set a diameterRatio of 0 or of a negative number. It would imply a cylinder of 0 in diameter in which case nothing will be drawn."
+    }
+    return nil
+  }
+
+  var defaultSelectionOverlayColor: Color {
+    MaterialPalette.color(defaultSelectionOverlayToken)
+      ?? RufletCupertinoPickerDefaults.tertiarySystemFill
+  }
+}
+
+enum RufletCupertinoPickerDefaults {
+  static let overlayHorizontalMargin: CGFloat = 9
+  static let overlayCornerRadius: CGFloat = 8
+
+  static var tertiarySystemFill: Color {
+    #if canImport(UIKit)
+      return Color(uiColor: .tertiarySystemFill)
+    #elseif canImport(AppKit)
+      return Color(nsColor: .unemphasizedSelectedContentBackgroundColor).opacity(0.3)
+    #else
+      return .gray.opacity(0.2)
+    #endif
   }
 }
 
@@ -1742,27 +1826,14 @@ enum CupertinoPickerParity {
 
   static func initialIndex(selected: Int, count: Int, looping: Bool) -> Int {
     guard count > 0 else { return 0 }
+    guard looping else { return selected }
     let real = realIndex(selected, count: count)
-    return looping ? (cycles / 2) * count + real : real
+    return (cycles / 2) * count + real
   }
 
   static func shouldRecenter(_ index: Int, count: Int) -> Bool {
     guard count > 0 else { return false }
     return index < count * 2 || index >= count * (cycles - 2)
-  }
-}
-
-/// `use_magnifier` scales the row under the selection band.
-private struct PickerMagnifier: ViewModifier {
-  let enabled: Bool
-  let factor: Double
-
-  func body(content: Content) -> some View {
-    if enabled {
-      content.scaleEffect(CGFloat(factor))
-    } else {
-      content
-    }
   }
 }
 

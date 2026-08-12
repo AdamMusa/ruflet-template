@@ -190,12 +190,69 @@ final class CupertinoControlParityTests: XCTestCase {
     XCTAssertEqual(configuration.itemExtent, 32)
     XCTAssertFalse(configuration.useMagnifier)
     XCTAssertFalse(configuration.looping)
+    XCTAssertEqual(configuration.selectedIndex, 0)
+    XCTAssertFalse(configuration.disabled)
+    XCTAssertNil(configuration.backgroundToken)
+    XCTAssertNil(configuration.defaultSelectionOverlayToken)
+    XCTAssertNil(configuration.validationMessage)
+    XCTAssertEqual(RufletCupertinoPickerDefaults.overlayHorizontalMargin, 9)
+    XCTAssertEqual(RufletCupertinoPickerDefaults.overlayCornerRadius, 8)
+  }
+
+  func testCupertinoPickerPreservesGeometryColorAndDisabledSemantics() {
+    let configuration = RufletCupertinoPickerConfiguration(
+      node: ControlNode(
+        id: 1, type: "CupertinoPicker",
+        props: [
+          "diameter_ratio": .double(2.4),
+          "magnification": .double(1.2),
+          "squeeze": .double(1.8),
+          "off_axis_fraction": .double(-0.25),
+          "item_extent": .double(44),
+          "use_magnifier": .bool(true),
+          "looping": .bool(true),
+          "selected_index": .int(3),
+          "disabled": .bool(true),
+          "bgcolor": .string("blue"),
+          "default_selection_overlay_bgcolor": .string("red"),
+        ]))
+
+    XCTAssertEqual(configuration.diameterRatio, 2.4)
+    XCTAssertEqual(configuration.magnification, 1.2)
+    XCTAssertEqual(configuration.squeeze, 1.8)
+    XCTAssertEqual(configuration.offAxisFraction, -0.25)
+    XCTAssertEqual(configuration.itemExtent, 44)
+    XCTAssertTrue(configuration.useMagnifier)
+    XCTAssertTrue(configuration.looping)
+    XCTAssertEqual(configuration.selectedIndex, 3)
+    XCTAssertTrue(configuration.disabled)
+    XCTAssertEqual(configuration.backgroundToken, "blue")
+    XCTAssertEqual(configuration.defaultSelectionOverlayToken, "red")
+  }
+
+  func testCupertinoPickerReportsPinnedPositiveValueValidation() {
+    XCTAssertEqual(
+      RufletCupertinoPickerConfiguration(node: ControlNode(
+        id: 1, type: "CupertinoPicker", props: ["squeeze": .double(0)])).validationMessage,
+      "squeeze must be strictly greater than 0.0, got 0.0")
+    XCTAssertEqual(
+      RufletCupertinoPickerConfiguration(node: ControlNode(
+        id: 1, type: "CupertinoPicker", props: ["magnification": .double(-1)])).validationMessage,
+      "magnification must be strictly greater than 0.0, got -1.0")
+    XCTAssertEqual(
+      RufletCupertinoPickerConfiguration(node: ControlNode(
+        id: 1, type: "CupertinoPicker", props: ["item_extent": .double(0)])).validationMessage,
+      "item_extent must be strictly greater than 0.0, got 0.0")
+    XCTAssertNotNil(
+      RufletCupertinoPickerConfiguration(node: ControlNode(
+        id: 1, type: "CupertinoPicker", props: ["diameter_ratio": .double(0)])).validationMessage)
   }
 
   func testLoopingPickerStartsInMiddleCycleAndMapsBackToRealChild() {
     XCTAssertEqual(CupertinoPickerParity.itemCount(count: 4, looping: false), 4)
     XCTAssertEqual(CupertinoPickerParity.itemCount(count: 4, looping: true), 404)
     XCTAssertEqual(CupertinoPickerParity.initialIndex(selected: 2, count: 4, looping: true), 202)
+    XCTAssertEqual(CupertinoPickerParity.initialIndex(selected: 6, count: 4, looping: false), 6)
     XCTAssertEqual(CupertinoPickerParity.realIndex(202, count: 4), 2)
     XCTAssertEqual(CupertinoPickerParity.realIndex(-1, count: 4), 3)
   }
@@ -205,6 +262,26 @@ final class CupertinoControlParityTests: XCTestCase {
     XCTAssertFalse(CupertinoPickerParity.shouldRecenter(202, count: 4))
     XCTAssertTrue(CupertinoPickerParity.shouldRecenter(400, count: 4))
     XCTAssertFalse(CupertinoPickerParity.shouldRecenter(0, count: 0))
+  }
+
+  func testCupertinoPickerChangeUpdatesWireBeforeEvent() {
+    let node = ControlNode(
+      id: 9, type: "CupertinoPicker", props: ["on_change": .bool(true)])
+    var calls: [String] = []
+    let sink = RufletEventSink(
+      send: { _, name, data in calls.append("event:\(name):\(data.intValue ?? -1)") },
+      setLocal: { _, key, value in calls.append("local:\(key):\(value.intValue ?? -1)") },
+      update: { _, props in
+        calls.append("update:selected_index:\(props["selected_index"]?.intValue ?? -1)")
+      })
+
+    RufletValueControlEvents.commit(
+      node, key: "selected_index", value: .int(2), payload: .value, to: sink)
+    XCTAssertEqual(calls, [
+      "local:selected_index:2",
+      "update:selected_index:2",
+      "event:change:2",
+    ])
   }
 
   func testRegularSegmentedButtonPreservesNullableSelectionAndOptionalPadding() {
