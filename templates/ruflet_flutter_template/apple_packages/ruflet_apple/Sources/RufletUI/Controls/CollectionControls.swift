@@ -549,9 +549,71 @@ struct ListTileControlView: View {
       Text(validationMessage).foregroundColor(.red)
     } else if node.type == "CupertinoListTile" {
       cupertinoTile
+    } else if !ListTilePresentation(node: node).requiresCustomRendering {
+      nativeTile
     } else {
       materialTile
     }
+  }
+
+  @ViewBuilder
+  private var nativeTile: some View {
+    Group {
+      if nativeInteractive {
+        Button(action: nativeActivate) { nativeTileContents }
+          .buttonStyle(.plain)
+      } else {
+        nativeTileContents
+      }
+    }
+    .environment(\.rufletListTileClicks, node.bool("toggle_inputs") == true ? tileClicks : nil)
+    .modifier(NativeListTileLongPress(node: node, events: events))
+    .focusable(node.bool("disabled") != true)
+    .focused($focused)
+    .onAppear { if node.bool("autofocus") == true { focused = true } }
+    .onChange(of: focused) { events.fire(node, $0 ? "focus" : "blur") }
+    .disabled(node.bool("disabled") == true)
+  }
+
+  private var nativeTileContents: some View {
+    HStack {
+      if let leadingID = node.controlID(forKey: "leading") {
+        ControlView(id: leadingID, axis: .none)
+      } else if node.props["leading"] != nil {
+        RufletIcon(value: node.props["leading"])
+      }
+
+      VStack(alignment: .leading) {
+        if let titleID = node.controlID(forKey: "title") {
+          ControlView(id: titleID, axis: .none)
+        } else if let title = node.string("title") {
+          Text(title)
+        }
+        if let subtitleID = node.controlID(forKey: "subtitle") {
+          ControlView(id: subtitleID, axis: .none).foregroundStyle(.secondary)
+        } else if let subtitle = node.string("subtitle") {
+          Text(subtitle).foregroundStyle(.secondary)
+        }
+      }
+      .frame(maxWidth: .infinity, alignment: .leading)
+
+      if let trailingID = node.controlID(forKey: "trailing") {
+        ControlView(id: trailingID, axis: .none)
+      } else if node.props["trailing"] != nil {
+        RufletIcon(value: node.props["trailing"])
+      }
+    }
+    .contentShape(Rectangle())
+  }
+
+  private var nativeInteractive: Bool {
+    node.handlesEvent("click") || node.bool("toggle_inputs") == true || node.string("url") != nil
+  }
+
+  private func nativeActivate() {
+    if node.bool("toggle_inputs") == true { tileClicks.click() }
+    if let url = node.string("url").flatMap(URL.init(string:)) { openURL(url) }
+    if node.handlesEvent("click") { events.fire(node, "click") }
   }
 
   private var materialTile: some View {
@@ -737,6 +799,19 @@ private struct ListTileInteraction: ViewModifier {
   }
 }
 
+private struct NativeListTileLongPress: ViewModifier {
+  let node: ControlNode
+  let events: RufletEventSink
+
+  func body(content: Content) -> some View {
+    if node.handlesEvent("long_press"), node.bool("disabled") != true {
+      content.onLongPressGesture { events.fire(node, "long_press") }
+    } else {
+      content
+    }
+  }
+}
+
 /// An omitted Flutter text-style slot inherits the constructor's theme style;
 /// applying an empty RufletTextStyle would incorrectly reset that style to
 /// SwiftUI's 17-point body font.
@@ -790,6 +865,18 @@ struct ListTilePresentation {
       outlineColor = MaterialPalette.color(side?["color"]?.stringValue, default: .clear)
       outlineWidth = CGFloat(side?["width"]?.doubleValue ?? 0)
     }
+  }
+
+  var requiresCustomRendering: Bool {
+    let materialVisualProperties = [
+      "content_padding", "horizontal_spacing", "min_leading_width",
+      "min_vertical_padding", "min_height", "dense", "is_three_line",
+      "visual_density", "title_alignment", "shape", "bgcolor", "focus_color",
+      "hover_color", "splash_color", "selected", "selected_color",
+      "selected_tile_color", "text_color", "icon_color", "title_text_style",
+      "subtitle_text_style", "leading_and_trailing_text_style", "enable_feedback",
+    ]
+    return materialVisualProperties.contains { node.props[$0] != nil }
   }
 
   static func validationMessage(_ node: ControlNode) -> String? {

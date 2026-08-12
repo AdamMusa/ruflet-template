@@ -161,6 +161,31 @@ final class CollectionParityTests: XCTestCase {
     XCTAssertEqual(dense.subtitleFontSize, 12)
   }
 
+  func testStylelessMaterialListTileUsesNativeAppleRow() {
+    XCTAssertFalse(ListTilePresentation(node: ControlNode(
+      id: 1, type: "ListTile", props: [
+        "title": .string("Settings"),
+        "subtitle": .string("Application preferences"),
+        "leading": .string("settings"),
+      ])).requiresCustomRendering)
+  }
+
+  func testExplicitMaterialListTileVisualsPreserveCustomRoute() {
+    for property in [
+      "content_padding", "horizontal_spacing", "min_height", "dense", "shape",
+      "bgcolor", "selected", "selected_color", "title_text_style", "visual_density",
+    ] {
+      let value: RufletValue
+      switch property {
+      case "dense", "selected": value = .bool(true)
+      case "horizontal_spacing", "min_height": value = .double(12)
+      default: value = .string("explicit")
+      }
+      XCTAssertTrue(ListTilePresentation(node: ControlNode(
+        id: 1, type: "ListTile", props: [property: value])).requiresCustomRendering, property)
+    }
+  }
+
   func testMaterialListTileShapePreservesFletShapeAndBorderSide() {
     let tile = ListTilePresentation(node: ControlNode(
       id: 1, type: "ListTile",
