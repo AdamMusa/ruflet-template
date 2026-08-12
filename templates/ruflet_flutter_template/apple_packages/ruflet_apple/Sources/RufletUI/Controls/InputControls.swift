@@ -1389,72 +1389,6 @@ private struct KeyboardType: ViewModifier {
   }
 }
 
-/// `hour_label_text` and `minute_label_text` caption the two fields a Material
-/// time picker shows in its typed-entry mode.
-private struct TimeFieldLabels: ViewModifier {
-  let node: ControlNode
-  let kind: DateTimePickerControlView.Kind
-
-  func body(content: Content) -> some View {
-    guard kind == .time,
-      node.string("hour_label_text") != nil || node.string("minute_label_text") != nil
-    else { return AnyView(content) }
-    return AnyView(
-      VStack(spacing: 4) {
-        content
-        HStack(spacing: 24) {
-          if let hour = node.string("hour_label_text") {
-            Text(hour).font(.caption2).foregroundColor(.secondary)
-          }
-          if let minute = node.string("minute_label_text") {
-            Text(minute).font(.caption2).foregroundColor(.secondary)
-          }
-        }
-      })
-  }
-}
-
-/// The validation strings a Material date picker shows under its field when
-/// what was typed cannot be parsed or falls outside the allowed range.
-private struct PickerValidation: ViewModifier {
-  let node: ControlNode
-  let kind: DateTimePickerControlView.Kind
-
-  func body(content: Content) -> some View {
-    VStack(alignment: .leading, spacing: 4) {
-      content
-      if let message = message {
-        Text(message).font(.caption2).foregroundColor(.red)
-      }
-      HStack(spacing: 12) {
-        if let start = node.string("field_start_hint_text") {
-          Text(start).font(.caption2).foregroundColor(.secondary)
-        }
-        if let end = node.string("field_end_hint_text") {
-          Text(end).font(.caption2).foregroundColor(.secondary)
-        }
-        if let hint = node.string("field_hint_text") {
-          Text(hint).font(.caption2).foregroundColor(.secondary)
-        }
-        if let label = node.string("field_label_text") {
-          Text(label).font(.caption2).foregroundColor(.secondary)
-        }
-        if let save = node.string("save_text") {
-          Text(save).font(.caption2).foregroundColor(.accentColor)
-        }
-      }
-    }
-  }
-
-  /// Flutter shows one of these at a time: the format complaint first, then
-  /// the out-of-range one, and for a range the invalid-range message.
-  private var message: String? {
-    node.string("error_format_text")
-      ?? node.string("error_invalid_text")
-      ?? node.string("error_invalid_range_text")
-  }
-}
-
 /// `SearchBar` — a text field that reports `change`, `submit` and `tap`, and
 /// answers Ruby's `focus`, `open_view` and `close_view`.
 struct SearchBarControlView: View {
@@ -2435,10 +2369,11 @@ private struct RufletAutoCompleteMatch: Identifiable {
 
 /// `DatePicker`, `TimePicker` and `DateRangePicker`.
 ///
-/// Ruflet drives these by flipping `open`; the native pickers are presented in
-/// a sheet so the control reads the same from Ruby.
+/// Ruflet drives these by flipping `open`. The picker primitives and buttons
+/// are native Apple controls; the surrounding state machine mirrors Flet's
+/// service-style dialogs without recreating Material dialog chrome.
 struct DateTimePickerControlView: View {
-  enum Kind { case date, time, dateRange }
+  enum Kind: Equatable { case date, time, dateRange }
 
   let node: ControlNode
   let kind: Kind
@@ -2457,26 +2392,17 @@ struct DateTimePickerControlView: View {
     // renderer contract rather than presenter-only bookkeeping.
     if node.bool("open") == true {
       picker
-        .padding(20)
-        .frame(maxWidth: 420)
-        .background(
-          RoundedRectangle(cornerRadius: 14)
-            .fill(MaterialPalette.color(node.string("bgcolor"), default: pickerSurface)))
-        .shadow(radius: 20)
-        .padding(ControlProps.edgeInsets(node.props["inset_padding"])
-          ?? EdgeInsets(top: 24, leading: 24, bottom: 24, trailing: 24))
         .environment(\.locale, pickerLocale)
-        .modifier(PickerValidation(node: node, kind: kind))
-        .modifier(TimeFieldLabels(node: node, kind: kind))
         .onAppear {
-          // `adaptive` chooses the platform picker on Apple. `modal` and
-          // `barrier_color` are consumed by DialogPresenter.
+          // These props influence the Flutter dialog host. Apple keeps their
+          // wire contract while delegating the visual primitive to DatePicker.
           _ = node.bool("adaptive")
           _ = node.string("orientation")
           _ = node.bool("modal")
           _ = node.string("barrier_color")
           _ = node.string("keyboard_type")
           _ = node.string("date_picker_mode")
+          events.setLocal(node.id, "_open", .bool(true))
         }
     }
   }
@@ -2496,22 +2422,30 @@ struct DateTimePickerControlView: View {
   /// and the typed-entry modes.
   @ViewBuilder
   var entryModeIcon: some View {
-    RufletIcon(value: entryModeIconValue, size: 20, color: nil)
+    let key = entryModeIconKey
+    if let id = node.controlID(forKey: key) {
+      ControlView(id: id, axis: .none)
+    } else {
+      RufletIcon(value: node.props[key], size: 20, color: nil)
+    }
   }
 
   /// A time picker swaps to a timer dial rather than a calendar, so it names
   /// its own icon for the mode switch.
   private var entryModeIconValue: RufletValue? {
-    guard entryMode == "input" else { return node.props["switch_to_input_icon"] }
-    if kind == .time, let timer = node.props["switch_to_timer_icon"] { return timer }
-    return node.props["switch_to_calendar_icon"]
+    node.props[entryModeIconKey]
+  }
+
+  private var entryModeIconKey: String {
+    guard entryMode == "input" else { return "switch_to_input_icon" }
+    return kind == .time ? "switch_to_timer_icon" : "switch_to_calendar_icon"
   }
 
   @ViewBuilder
   private var picker: some View {
-    VStack(spacing: 16) {
+    VStack {
       if let help = node.string("help_text"), !help.isEmpty {
-        Text(help).font(.headline).frame(maxWidth: .infinity, alignment: .leading)
+        Text(help).frame(maxWidth: .infinity, alignment: .leading)
       }
 
       switch kind {
@@ -2542,7 +2476,7 @@ struct DateTimePickerControlView: View {
           .labelsHidden()
         #endif
       case .dateRange:
-        VStack(spacing: 14) {
+        VStack {
           DatePicker(
             node.string("field_start_label_text") ?? "Start date",
             selection: $rangeStart,
@@ -2557,36 +2491,49 @@ struct DateTimePickerControlView: View {
         .datePickerStyle(.compact)
       }
 
-      if kind != .dateRange {
+      // DateRangePickerDialog also switches between calendar and input, but
+      // unlike the other two Flet does not expose an entry-mode-change event.
+      if supportsEntryModeSwitch {
         Button(action: toggleEntryMode) {
-          HStack(spacing: 6) {
+          HStack {
             if entryModeIconValue != nil {
               entryModeIcon
             } else {
-              Image(systemName: entryMode == "input" ? "calendar" : "keyboard")
+              Image(systemName: nativeEntryModeIcon)
             }
-            Text(entryMode == "input" ? "Calendar" : "Keyboard")
+            Text(nativeEntryModeLabel)
           }
         }
-        .buttonStyle(.plain)
         .accessibilityLabel(entryMode == "input" ? "Switch to picker mode" : "Switch to input mode")
       }
 
       HStack {
-        Button(node.string("cancel_text") ?? "Cancel") { close(cancelled: true) }
+        Button(node.string("cancel_text") ?? "Cancel", role: .cancel) { cancel() }
         Spacer()
         Button(confirmButtonText) { confirm() }
           .keyboardShortcut(.defaultAction)
       }
     }
-    .padding()
+    .padding(RufletPickerSemantics.contentInsets(node, kind: kind))
     .onAppear {
       let current = parsedValue(node.string("current_date")) ?? selection
       selection = parsedValue(node.string("value")) ?? current
       rangeStart = parsedValue(node.string("start_value")) ?? current
       rangeEnd = max(parsedValue(node.string("end_value")) ?? rangeStart, rangeStart)
-      entryMode = node.string("entry_mode") ?? (kind == .time ? "dial" : "calendar")
+      entryMode = RufletPickerSemantics.initialEntryMode(node, kind: kind)
     }
+  }
+
+  private var supportsEntryModeSwitch: Bool { true }
+
+  private var nativeEntryModeIcon: String {
+    guard entryMode != "input" else { return kind == .time ? "clock" : "calendar" }
+    return "keyboard"
+  }
+
+  private var nativeEntryModeLabel: String {
+    guard entryMode != "input" else { return kind == .time ? "Clock" : "Calendar" }
+    return "Keyboard"
   }
 
   private var confirmButtonText: String {
@@ -2598,39 +2545,23 @@ struct DateTimePickerControlView: View {
   private func toggleEntryMode() {
     let next = entryMode == "input" ? (kind == .time ? "dial" : "calendar") : "input"
     entryMode = next
-    events.setLocal(node.id, "entry_mode", .string(next))
-    events.update(node.id, ["entry_mode": .string(next)])
-    events.fire(node, "entry_mode_change", data: .map(["entry_mode": .string(next)]))
+    guard kind != .dateRange else { return }
+    RufletPickerEvents.entryModeChanged(next, on: node, to: events)
   }
 
   private func confirm() {
-    let data: RufletValue
-    var updates: [String: RufletValue] = ["open": .bool(false)]
     if kind == .dateRange {
       let start = formattedDate(rangeStart)
       let end = formattedDate(rangeEnd)
-      events.setLocal(node.id, "start_value", .string(start))
-      events.setLocal(node.id, "end_value", .string(end))
-      updates["start_value"] = .string(start)
-      updates["end_value"] = .string(end)
-      data = .map(["start_value": .string(start), "end_value": .string(end)])
+      RufletPickerEvents.confirmRange(start: start, end: end, on: node, to: events)
     } else {
       let value = kind == .time ? formattedTime(selection) : formattedDate(selection)
-      events.setLocal(node.id, "value", .string(value))
-      updates["value"] = .string(value)
-      data = .map(["value": .string(value)])
+      RufletPickerEvents.confirm(value: value, on: node, to: events)
     }
-    events.setLocal(node.id, "open", .bool(false))
-    events.update(node.id, updates)
-    events.fire(node, "change", data: data)
-    // Flet always follows the successful `change` with `dismiss(false)`.
-    events.fire(node, "dismiss", data: .bool(false))
   }
 
-  private func close(cancelled: Bool) {
-    events.setLocal(node.id, "open", .bool(false))
-    events.update(node.id, ["open": .bool(false)])
-    events.fire(node, "dismiss", data: .bool(cancelled))
+  private func cancel() {
+    RufletPickerEvents.cancel(node, to: events)
   }
 
   private var allowedDates: ClosedRange<Date> {
@@ -2653,16 +2584,6 @@ struct DateTimePickerControlView: View {
   private func formattedDate(_ date: Date) -> String { Self.dateFormatter.string(from: date) }
   private func formattedTime(_ date: Date) -> String { Self.timeFormatter.string(from: date) }
 
-  private var pickerSurface: Color {
-    #if canImport(UIKit)
-      return Color(UIColor.systemBackground)
-    #elseif canImport(AppKit)
-      return Color(NSColor.windowBackgroundColor)
-    #else
-      return .white
-    #endif
-  }
-
   private static let dateFormatter: DateFormatter = {
     let formatter = DateFormatter()
     formatter.calendar = Calendar(identifier: .gregorian)
@@ -2680,6 +2601,81 @@ struct DateTimePickerControlView: View {
   }()
 }
 
+/// The picker dialogs are service controls: closing them always clears both
+/// the public `open` bit and Flet's private `_open` edge-trigger bit. A
+/// successful selection reports `change` before `dismiss(false)`. Date and
+/// date-range cancellation preserve their prior values; Flet's TimePicker
+/// intentionally writes a null value. All cancellations report only
+/// `dismiss(true)`.
+enum RufletPickerEvents {
+  static func confirm(value: String, on node: ControlNode, to events: RufletEventSink) {
+    let wire = RufletValue.string(value)
+    beginClose(node, to: events)
+    events.setLocal(node.id, "value", wire)
+    events.setLocal(node.id, "open", .bool(false))
+    events.update(node.id, ["value": wire, "open": .bool(false)])
+    events.fire(node, "change", data: .map(["value": wire]))
+    events.fire(node, "dismiss", data: .bool(false))
+  }
+
+  static func confirmRange(
+    start: String, end: String, on node: ControlNode, to events: RufletEventSink
+  ) {
+    let startValue = RufletValue.string(start)
+    let endValue = RufletValue.string(end)
+    beginClose(node, to: events)
+    events.setLocal(node.id, "start_value", startValue)
+    events.setLocal(node.id, "end_value", endValue)
+    events.setLocal(node.id, "open", .bool(false))
+    events.update(node.id, [
+      "start_value": startValue, "end_value": endValue, "open": .bool(false),
+    ])
+    events.fire(node, "change", data: .map([
+      "start_value": startValue, "end_value": endValue,
+    ]))
+    events.fire(node, "dismiss", data: .bool(false))
+  }
+
+  static func cancel(_ node: ControlNode, to events: RufletEventSink) {
+    beginClose(node, to: events)
+    var values: [String: RufletValue] = ["open": .bool(false)]
+    switch node.type {
+    case "DateRangePicker":
+      values["start_value"] = node.props["start_value"] ?? .null
+      values["end_value"] = node.props["end_value"] ?? .null
+      events.setLocal(node.id, "start_value", values["start_value"]!)
+      events.setLocal(node.id, "end_value", values["end_value"]!)
+    case "DatePicker":
+      values["value"] = node.props["value"] ?? .null
+      events.setLocal(node.id, "value", values["value"]!)
+    case "TimePicker":
+      // `TimePickerControl.onClosed()` forwards the nullable dialog result
+      // directly, unlike DatePicker's `dateValue ?? value` behavior.
+      values["value"] = .null
+      events.setLocal(node.id, "value", .null)
+    default:
+      break
+    }
+    events.setLocal(node.id, "open", .bool(false))
+    events.update(node.id, values)
+    events.fire(node, "dismiss", data: .bool(true))
+  }
+
+  static func entryModeChanged(
+    _ mode: String, on node: ControlNode, to events: RufletEventSink
+  ) {
+    let wire = RufletValue.string(mode)
+    events.setLocal(node.id, "entry_mode", wire)
+    events.update(node.id, ["entry_mode": wire])
+    events.fire(node, "entry_mode_change", data: .map(["entry_mode": wire]))
+  }
+
+  private static func beginClose(_ node: ControlNode, to events: RufletEventSink) {
+    // Flet uses `python: false` for this private edge-trigger property.
+    events.setLocal(node.id, "_open", .bool(false))
+  }
+}
+
 enum RufletPickerSemantics {
   static let defaultFirstDate = date(year: 1900, month: 1, day: 1)
   static let defaultLastDate = date(year: 2050, month: 1, day: 1)
@@ -2688,6 +2684,23 @@ enum RufletPickerSemantics {
   /// services with no persistent visual body, so a missing value is closed.
   static func isPresented(_ node: ControlNode) -> Bool {
     node.bool("open") == true
+  }
+
+  /// Only DatePicker forwards an inset to its Flutter dialog constructor.
+  /// DateRangePicker and TimePicker expose no such property. Preserve the
+  /// exact 16×24 default while leaving the native controls themselves native.
+  static func contentInsets(_ node: ControlNode, kind: DateTimePickerControlView.Kind)
+    -> EdgeInsets
+  {
+    guard kind == .date else { return EdgeInsets() }
+    return ControlProps.edgeInsets(node.props["inset_padding"])
+      ?? EdgeInsets(top: 24, leading: 16, bottom: 24, trailing: 16)
+  }
+
+  static func initialEntryMode(
+    _ node: ControlNode, kind: DateTimePickerControlView.Kind
+  ) -> String {
+    node.string("entry_mode") ?? (kind == .time ? "dial" : "calendar")
   }
 
   private static func date(year: Int, month: Int, day: Int) -> Date {

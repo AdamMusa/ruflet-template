@@ -1,6 +1,7 @@
 import Foundation
 import RufletEngine
 import RufletProtocol
+import SwiftUI
 import XCTest
 @testable import RufletUI
 
@@ -287,5 +288,96 @@ final class RufletInputParityTests: XCTestCase {
     XCTAssertEqual(
       ControlRegistry.descriptor(for: "TimePicker")?.supportedEvents,
       ["change", "dismiss", "entry_mode_change"])
+  }
+
+  func testPickerDefaultsKeepExactFletModesAndDateInsets() {
+    let date = ControlNode(id: 1, type: "DatePicker")
+    let range = ControlNode(id: 2, type: "DateRangePicker")
+    let time = ControlNode(id: 3, type: "TimePicker")
+
+    XCTAssertEqual(RufletPickerSemantics.initialEntryMode(date, kind: .date), "calendar")
+    XCTAssertEqual(RufletPickerSemantics.initialEntryMode(range, kind: .dateRange), "calendar")
+    XCTAssertEqual(RufletPickerSemantics.initialEntryMode(time, kind: .time), "dial")
+
+    let inset = RufletPickerSemantics.contentInsets(date, kind: .date)
+    XCTAssertEqual(inset.top, 24)
+    XCTAssertEqual(inset.leading, 16)
+    XCTAssertEqual(inset.bottom, 24)
+    XCTAssertEqual(inset.trailing, 16)
+    XCTAssertEqual(
+      RufletPickerSemantics.contentInsets(range, kind: .dateRange), SwiftUI.EdgeInsets())
+    XCTAssertEqual(RufletPickerSemantics.contentInsets(time, kind: .time), SwiftUI.EdgeInsets())
+    XCTAssertEqual(RufletOverlaySemantics.defaultBarrierOpacity(date), 0.54)
+  }
+
+  func testPickerConfirmationUpdatesBeforeChangeAndDismiss() {
+    let node = ControlNode(id: 10, type: "DatePicker", props: [
+      "open": .bool(true), "on_change": .bool(true), "on_dismiss": .bool(true),
+    ])
+    var calls: [String] = []
+    let sink = RufletEventSink(
+      send: { _, name, data in
+        calls.append(
+          "event:\(name):\(data.mapValue?["value"]?.stringValue ?? data.boolValue.map { String($0) } ?? "")")
+      },
+      setLocal: { _, key, value in
+        let rendered = value.stringValue ?? value.boolValue.map { String($0) } ?? value.description
+        calls.append("local:\(key):\(rendered)")
+      },
+      update: { _, props in calls.append("update:\(props.keys.sorted().joined(separator: ","))") })
+
+    RufletPickerEvents.confirm(value: "2026-05-21", on: node, to: sink)
+    XCTAssertEqual(calls, [
+      "local:_open:false", "local:value:2026-05-21", "local:open:false",
+      "update:open,value", "event:change:2026-05-21", "event:dismiss:false",
+    ])
+  }
+
+  func testPickerCancellationPreservesRangeAndClearsBothOpenBits() {
+    let node = ControlNode(id: 11, type: "DateRangePicker", props: [
+      "open": .bool(true), "start_value": .string("2026-05-01"),
+      "end_value": .string("2026-05-21"), "on_dismiss": .bool(true),
+    ])
+    var updates: [[String: RufletValue]] = []
+    var locals: [String: RufletValue] = [:]
+    var dismissal: RufletValue?
+    let sink = RufletEventSink(
+      send: { _, name, data in if name == "dismiss" { dismissal = data } },
+      setLocal: { _, key, value in locals[key] = value },
+      update: { _, props in updates.append(props) })
+
+    RufletPickerEvents.cancel(node, to: sink)
+    XCTAssertEqual(locals["_open"], .bool(false))
+    XCTAssertEqual(locals["open"], .bool(false))
+    XCTAssertEqual(updates.last?["start_value"], .string("2026-05-01"))
+    XCTAssertEqual(updates.last?["end_value"], .string("2026-05-21"))
+    XCTAssertEqual(updates.last?["open"], .bool(false))
+    XCTAssertEqual(dismissal, .bool(true))
+  }
+
+  func testTimePickerCancellationMatchesFletNullableResult() {
+    let node = ControlNode(id: 13, type: "TimePicker", props: [
+      "open": .bool(true), "value": .string("19:30"), "on_dismiss": .bool(true),
+    ])
+    var update: [String: RufletValue] = [:]
+    let sink = RufletEventSink(
+      send: { _, _, _ in }, setLocal: { _, _, _ in }, update: { _, props in update = props })
+
+    RufletPickerEvents.cancel(node, to: sink)
+    XCTAssertEqual(update["value"], .null)
+    XCTAssertEqual(update["open"], .bool(false))
+  }
+
+  func testPickerEntryModeChangeUsesFletMapPayload() {
+    let node = ControlNode(id: 12, type: "TimePicker", props: [
+      "on_entry_mode_change": .bool(true),
+    ])
+    var event: RufletValue?
+    let sink = RufletEventSink(
+      send: { _, name, data in if name == "entry_mode_change" { event = data } },
+      setLocal: { _, _, _ in }, update: { _, _ in })
+
+    RufletPickerEvents.entryModeChanged("input", on: node, to: sink)
+    XCTAssertEqual(event, .map(["entry_mode": .string("input")]))
   }
 }

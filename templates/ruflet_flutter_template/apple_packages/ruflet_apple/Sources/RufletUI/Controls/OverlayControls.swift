@@ -41,7 +41,8 @@ struct DialogPresenter: ViewModifier {
       ZStack {
         // `modal` keeps the barrier from dismissing, and `barrier_color`
         // paints it — both are the dialog's own properties in Flet.
-        AppleChromeAppearance.color(dialog.string("barrier_color"), fallback: .black.opacity(0.3))
+        AppleChromeAppearance.color(
+          dialog.string("barrier_color"), fallback: RufletOverlaySemantics.defaultBarrierColor(dialog))
           .ignoresSafeArea()
           .onTapGesture {
             guard RufletOverlaySemantics.allowsBarrierDismiss(dialog) else { return }
@@ -106,6 +107,10 @@ struct DialogPresenter: ViewModifier {
   /// Tapping the scrim closes a dialog unless Ruby set `modal`.
   private func dismiss(_ dialog: ControlNode, barrierDismiss: Bool) {
     guard !barrierDismiss || RufletOverlaySemantics.allowsBarrierDismiss(dialog) else { return }
+    if ["DatePicker", "DateRangePicker", "TimePicker"].contains(dialog.type) {
+      RufletPickerEvents.cancel(dialog, to: events)
+      return
+    }
     events.setLocal(dialog.id, "open", .bool(false))
     events.update(dialog.id, ["open": .bool(false)])
     events.fire(dialog, "dismiss")
@@ -116,6 +121,17 @@ struct DialogPresenter: ViewModifier {
 /// Keeping them explicit prevents Apple platform defaults from silently
 /// changing Flet's design-family and dismissal contracts.
 enum RufletOverlaySemantics {
+  /// Material's `showDialog` fallback is `Colors.black54`. Keep that exact
+  /// constructor default for the three Flet picker services while leaving the
+  /// pre-existing fallback for other overlay families untouched.
+  static func defaultBarrierOpacity(_ node: ControlNode) -> Double {
+    ["DatePicker", "DateRangePicker", "TimePicker"].contains(node.type) ? 0.54 : 0.3
+  }
+
+  static func defaultBarrierColor(_ node: ControlNode) -> Color {
+    .black.opacity(defaultBarrierOpacity(node))
+  }
+
   /// This package is the Apple renderer, so an omitted `adaptive` flag still
   /// resolves to native Apple presentation. The flag remains on the wire for
   /// cross-platform clients; it is not a request for Material visuals here.
