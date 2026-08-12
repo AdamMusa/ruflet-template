@@ -12,9 +12,9 @@ final class CheckboxLabelVisibilityResidualTests: XCTestCase {
       3, visibilityForID: { _ in true }), 3)
   }
 
-  func testUnresolvedLabelRemainsUntilStoreMaterialization() {
-    XCTAssertEqual(RufletCheckboxLabel.visibleControlID(
-      7, visibilityForID: { _ in nil }), 7)
+  func testUnresolvedLabelMatchesBuildTextOrWidgetAbsence() {
+    XCTAssertNil(RufletCheckboxLabel.visibleControlID(
+      7, visibilityForID: { _ in nil }))
     XCTAssertNil(RufletCheckboxLabel.visibleControlID(
       nil, visibilityForID: { _ in true }))
   }

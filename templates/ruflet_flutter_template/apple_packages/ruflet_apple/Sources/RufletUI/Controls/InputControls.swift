@@ -163,25 +163,22 @@ struct CheckboxControlView: View {
 
   var body: some View {
     let disabled = node.bool("disabled") ?? false
+    let presentation = CheckboxPresentation(node: node)
 
     HStack(spacing: 0) {
-      if labelPosition == .left { label }
-      checkboxMark
-      if labelPosition == .right { label }
+      if presentation.labelPosition == .left { label }
+      Button(action: advance) {
+        Image(systemName: presentation.systemImageName)
+      }
+      .buttonStyle(.borderless)
+      .foregroundColor(presentation.explicitTint)
+      if presentation.labelPosition == .right { label }
     }
-    .contentShape(Rectangle())
-    .onTapGesture { if !disabled { advance() } }
     .modifier(SelectionScaling(node: node, natural: RufletThemeDefaults.checkboxTargetSize))
     .modifier(ListTileToggleListener(notifier: listTileClicks, action: advance))
     .modifier(FocusReporter(node: node, events: events))
     .modifier(SelectionAccessibilityLabel(label: RufletAccessibilitySemantics.label(node)))
     .disabled(disabled)
-  }
-
-  private enum LabelPlacement { case left, right }
-
-  private var labelPosition: LabelPlacement {
-    node.string("label_position")?.lowercased() == "left" ? .left : .right
   }
 
   private var visibleLabelID: Int? {
@@ -195,67 +192,20 @@ struct CheckboxControlView: View {
   private var label: some View {
     if let labelID = visibleLabelID {
       ControlView(id: labelID, axis: .none)
+        .contentShape(Rectangle())
+        .onTapGesture { if node.bool("disabled") != true { advance() } }
     } else if let value = node.string("label") {
       Text(value)
         .rufletTextStyle(RufletTextStyle(map: node.map("label_style") ?? [:]))
         .foregroundColor(
           node.bool("disabled") == true && node.map("label_style") != nil
             ? Color.secondary : nil)
+        .contentShape(Rectangle())
+        .onTapGesture { if node.bool("disabled") != true { advance() } }
     }
   }
 
   private var state: Bool? { RufletCheckboxState.resting(node) }
-
-  private var states: Set<RufletWidgetState> {
-    node.widgetStates(selected: state == true)
-  }
-
-  private var checkboxMark: some View {
-    let checked = state
-    let side = ControlProps.statefulBorderSide(node.props["border_side"], in: states)
-    let box = ChipShape(
-      radius: ControlProps.cornerRadius(node.map("shape")?["radius"])
-        ?? RufletThemeDefaults.checkboxCornerRadius)
-
-    return ZStack {
-      box.fill(checked == false ? .clear : fillColor)
-      box.strokeBorder(
-        checked == false ? (side?.color ?? outlineColor) : .clear,
-        lineWidth: side?.width ?? RufletThemeDefaults.checkboxBorderWidth)
-      // Flutter draws the tick when the box is checked and the dash when it is
-      // indeterminate, both in `check_color`; an unchecked box is empty.
-      if checked != false {
-        Image(systemName: checked == true ? "checkmark" : "minus")
-          .font(.system(size: RufletThemeDefaults.checkboxMarkSize, weight: .bold))
-          .foregroundColor(checkColor)
-      }
-    }
-    .frame(width: RufletThemeDefaults.checkboxSize, height: RufletThemeDefaults.checkboxSize)
-    .frame(width: targetSide, height: targetSide)
-    .modifier(MaterialStateLayer(node: node, selected: state == true, radius: targetSide / 2))
-    .modifier(VisualDensityPadding(value: node.props["visual_density"]))
-  }
-
-  /// `splash_radius` names the ripple, and with it the tap target Material
-  /// reserves around an 18pt box.
-  private var targetSide: CGFloat {
-    node.double("splash_radius").map { CGFloat($0) * 2 } ?? RufletThemeDefaults.checkboxTargetSize
-  }
-
-  private var fillColor: Color {
-    MaterialPalette.color(stateful: node.props["fill_color"], in: states)
-      ?? MaterialPalette.color(for: node, property: "active_color", default: .accentColor)
-  }
-
-  private var outlineColor: Color {
-    node.bool("error") == true
-      ? MaterialPalette.color("error", default: .red)
-      : MaterialPalette.color(for: node, property: "inactive_color", default: .secondary)
-  }
-
-  private var checkColor: Color {
-    MaterialPalette.color(node.string("check_color"), default: .white)
-  }
 
   private func advance() {
     RufletValueControlEvents.commit(
@@ -271,8 +221,44 @@ enum RufletCheckboxLabel {
   static func visibleControlID(
     _ id: Int?, visibilityForID: (Int) -> Bool?
   ) -> Int? {
-    guard let id, visibilityForID(id) != false else { return nil }
+    guard let id, visibilityForID(id) == true else { return nil }
     return id
+  }
+}
+
+struct CheckboxPresentation {
+  enum LabelPlacement { case left, right }
+
+  let node: ControlNode
+
+  var labelPosition: LabelPlacement {
+    node.string("label_position")?.lowercased() == "left" ? .left : .right
+  }
+
+  var systemImageName: String {
+    switch RufletCheckboxState.resting(node) {
+    case .some(true): return "checkmark.square.fill"
+    case .some(false): return "square"
+    case .none: return "minus.square.fill"
+    }
+  }
+
+  /// SF Symbols own the omitted appearance. Explicit active/fill/check colors
+  /// can be represented as the native symbol tint; Material border geometry,
+  /// splash, and state overlays remain semantic values only.
+  var explicitTint: Color? {
+    let selected = RufletCheckboxState.resting(node) != false
+    let states = node.widgetStates(selected: selected)
+    if node.props["fill_color"] != nil {
+      return MaterialPalette.color(stateful: node.props["fill_color"], in: states)
+    }
+    if selected, node.props["active_color"] != nil {
+      return MaterialPalette.color(node.string("active_color"))
+    }
+    if !selected, node.props["inactive_color"] != nil {
+      return MaterialPalette.color(node.string("inactive_color"))
+    }
+    return nil
   }
 }
 
