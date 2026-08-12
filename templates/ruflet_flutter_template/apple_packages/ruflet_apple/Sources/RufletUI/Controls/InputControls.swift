@@ -523,6 +523,17 @@ struct RadioControlView: View {
 /// order cannot stand in for ancestry: nested groups must win exactly as
 /// Flutter's `RadioGroup.maybeOf(context)` selects the nearest provider.
 enum RufletRadioGroupResolver {
+  static let missingContentError = "RadioGroup.content must be provided and visible"
+
+  static func visibleContentID(
+    of group: ControlNode, in nodes: [Int: ControlNode]
+  ) -> Int? {
+    guard let id = group.controlID(forKey: "content"),
+      let content = nodes[id], content.bool("visible") != false
+    else { return nil }
+    return id
+  }
+
   static func nearestGroup(
     containing radioID: Int,
     in nodes: [Int: ControlNode]
@@ -581,12 +592,11 @@ struct RadioGroupControlView: View {
   @EnvironmentObject private var store: ControlStore
 
   var body: some View {
-    if let contentID = node.controlID(forKey: "content"),
-      store.node(contentID)?.bool("visible") != false
-    {
+    if let contentID = RufletRadioGroupResolver.visibleContentID(
+      of: node, in: store.nodes) {
       ControlView(id: contentID, axis: .vertical)
     } else {
-      Text("RadioGroup.content must be provided and visible")
+      Text(RufletRadioGroupResolver.missingContentError)
         .foregroundColor(.red)
     }
   }
