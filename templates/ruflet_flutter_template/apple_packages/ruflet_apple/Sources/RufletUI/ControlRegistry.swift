@@ -385,7 +385,7 @@ public enum ControlRegistry {
                  "tertiary_tap_up", "vertical_drag_cancel", "vertical_drag_down",
                  "vertical_drag_end", "vertical_drag_start", "vertical_drag_update"])
     add(["Draggable"], .visible, "DraggableControlView", .nativeView,
-        events: ["drag_complete", "drag_end", "drag_start"])
+        events: ["drag_complete", "drag_start"])
     add(["DragTarget"], .visible, "DragTargetControlView", .nativeView,
         events: ["accept", "leave", "move", "will_accept"])
     add(["Dismissible"], .visible, "DismissibleControlView", .nativeView,

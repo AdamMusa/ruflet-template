@@ -2,6 +2,26 @@ import RufletEngine
 import RufletProtocol
 import SwiftUI
 
+/// Defaults and wire shapes pinned to Flet 0.80.5. Keeping them beside the
+/// native controls makes drift from the Dart client testable without adding
+/// application-specific styling or layout policy.
+enum RufletGestureParity {
+  static let dragGroup = "default"
+  static let dismissThreshold = 0.4
+  static let interactionUpdateInterval = 200
+  static let interactiveMinScale = 0.8
+  static let interactiveMaxScale = 2.5
+  static let interactiveFriction = 0.0000135
+  static let interactiveScaleFactor = 200.0
+
+  static func dragPayload(sourceID: Int, location: CGPoint) -> RufletValue {
+    .map([
+      "src_id": .int(Int64(sourceID)),
+      "x": .double(location.x), "y": .double(location.y),
+    ])
+  }
+}
+
 /// `GestureDetector` — the full Flet gesture surface over arbitrary content.
 ///
 /// Each gesture is attached only when Ruby declared a handler, and the payloads
@@ -31,7 +51,57 @@ struct GestureDetectorControlView: View {
     .modifier(MultiTouchReporter(node: node, events: events))
     .modifier(GestureHoverReporter(node: node, events: events))
     .modifier(SecondaryPointerReporter(node: node, events: events))
+    .modifier(GestureTrackpadScale(node: node, events: events))
     .accessibilityHidden(node.bool("exclude_from_semantics") ?? false)
+  }
+}
+
+/// Flet's GestureDetector can convert trackpad scrolling into the same scale
+/// lifecycle as a pinch while still reporting the raw pointer signal.
+private struct GestureTrackpadScale: ViewModifier {
+  let node: ControlNode
+  let events: RufletEventSink
+  @State private var scale = 1.0
+  @State private var active = false
+  @State private var endWork: DispatchWorkItem?
+
+  func body(content: Content) -> some View {
+    #if os(macOS)
+      if node.bool("trackpad_scroll_causes_scale") == true {
+        content.overlay(
+          RufletNativePointerMonitor { name, payload in
+            guard name == "scroll",
+              let delta = payload.mapValue?["sd"]?.mapValue?["y"]?.doubleValue
+            else { return }
+            if !active {
+              active = true
+              events.fire(
+                node, "scale_start",
+                data: RufletInteractionParity.scaleStart(
+                  local: .zero, global: .zero,
+                  timestamp: Date().timeIntervalSince1970 * 1_000))
+            }
+            scale *= exp(-delta / RufletGestureParity.interactiveScaleFactor)
+            events.fire(
+              node, "scale_update",
+              data: RufletInteractionParity.scaleUpdate(
+                scale: scale, local: .zero, global: .zero, previousLocal: .zero,
+                timestamp: Date().timeIntervalSince1970 * 1_000))
+            endWork?.cancel()
+            let work = DispatchWorkItem {
+              active = false
+              scale = 1
+              events.fire(node, "scale_end", data: RufletInteractionParity.scaleEnd())
+            }
+            endWork = work
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12, execute: work)
+          }.allowsHitTesting(false))
+      } else {
+        content
+      }
+    #else
+      content
+    #endif
   }
 }
 
@@ -165,6 +235,8 @@ private struct PrimaryGestureReporter: ViewModifier {
   @State private var previous = CGPoint.zero
   @State private var globalOrigin = CGPoint.zero
   @State private var longPressStarted = false
+  @State private var longPressCancelled = false
+  @State private var longPressWork: DispatchWorkItem?
 
   func body(content: Content) -> some View {
     content
@@ -184,6 +256,7 @@ private struct PrimaryGestureReporter: ViewModifier {
             if !began {
               began = true
               moved = false
+              longPressCancelled = false
               start = value.location
               previous = value.location
               let payload = RufletInteractionParity.tap(
@@ -191,6 +264,23 @@ private struct PrimaryGestureReporter: ViewModifier {
               events.fire(node, "tap_down", data: payload)
               events.fire(node, "double_tap_down", data: payload)
               events.fire(node, "long_press_down", data: payload)
+              let work = DispatchWorkItem {
+                guard began, !moved else { return }
+                longPressStarted = true
+                let local = previous
+                let global = CGPoint(x: local.x + globalOrigin.x, y: local.y + globalOrigin.y)
+                events.fire(
+                  node, "long_press_start",
+                  data: .map([
+                    "l": RufletInteractionParity.point(local),
+                    "g": RufletInteractionParity.point(global),
+                  ]))
+                events.fire(node, "long_press")
+              }
+              longPressWork = work
+              DispatchQueue.main.asyncAfter(
+                deadline: .now() + (node.double("long_press_duration") ?? 500) / 1_000,
+                execute: work)
             } else if value.location != previous {
               let delta = CGPoint(
                 x: value.location.x - previous.x, y: value.location.y - previous.y)
@@ -214,9 +304,16 @@ private struct PrimaryGestureReporter: ViewModifier {
               }
               previous = value.location
               moved = hypot(value.location.x - start.x, value.location.y - start.y) > 18
+              if moved, !longPressStarted, !longPressCancelled {
+                longPressWork?.cancel()
+                longPressCancelled = true
+                events.fire(node, "long_press_cancel")
+              }
             }
           }
           .onEnded { value in
+            longPressWork?.cancel()
+            longPressWork = nil
             let global = CGPoint(
               x: value.location.x + globalOrigin.x, y: value.location.y + globalOrigin.y)
             let payload = RufletInteractionParity.tap(
@@ -224,7 +321,7 @@ private struct PrimaryGestureReporter: ViewModifier {
             if moved {
               events.fire(node, "tap_cancel")
               events.fire(node, "double_tap_cancel")
-              if !longPressStarted { events.fire(node, "long_press_cancel") }
+              if !longPressStarted, !longPressCancelled { events.fire(node, "long_press_cancel") }
             } else {
               events.fire(node, "tap_up", data: payload)
               events.fire(node, "tap", data: RufletInteractionParity.tap(
@@ -243,21 +340,8 @@ private struct PrimaryGestureReporter: ViewModifier {
             }
             began = false
             longPressStarted = false
+            longPressCancelled = false
           })
-      .simultaneousGesture(
-        LongPressGesture(
-          minimumDuration: (node.double("long_press_duration") ?? 500) / 1000,
-          maximumDistance: 18
-        ).onEnded { _ in
-          longPressStarted = true
-          let local = previous
-          let global = CGPoint(x: local.x + globalOrigin.x, y: local.y + globalOrigin.y)
-          let payload: RufletValue = .map([
-            "l": RufletInteractionParity.point(local), "g": RufletInteractionParity.point(global),
-          ])
-          events.fire(node, "long_press_start", data: payload)
-          events.fire(node, "long_press")
-        })
       .modifier(DoubleTapReporter(node: node, events: events))
       .modifier(SecondaryTapReporter(node: node, events: events))
   }
@@ -433,26 +517,60 @@ private struct ScaleGestures: ViewModifier {
 struct DraggableControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
+  @State private var dragging = false
 
   var body: some View {
-    Group {
-      if let contentID = node.controlID(forKey: "content") {
+    let source = Group {
+      if dragging, let draggingID = node.controlID(forKey: "content_when_dragging") {
+        ControlView(id: draggingID, axis: .none)
+      } else if let contentID = node.controlID(forKey: "content") {
         ControlView(id: contentID, axis: .none)
       }
     }
-    .onDrag {
-      events.fire(node, "drag_start")
-      let group = node.string("group") ?? ""
-      return NSItemProvider(object: "\(group)|\(node.id)" as NSString)
+    if (node.int("max_simultaneous_drags") ?? 1) == 0 {
+      source
+    } else {
+      source.onDrag {
+        dragging = true
+        RufletDragSession.current = .init(
+          sourceID: node.id, group: node.string("group") ?? RufletGestureParity.dragGroup,
+          completed: {
+            dragging = false
+            events.fire(
+              node, "drag_complete",
+              data: .string(node.string("group") ?? RufletGestureParity.dragGroup))
+          })
+        events.fire(node, "drag_start")
+        return NSItemProvider(
+          object: "\(node.string("group") ?? RufletGestureParity.dragGroup)|\(node.id)" as NSString)
+      } preview: {
+        if let feedbackID = node.controlID(forKey: "content_feedback") {
+          ControlView(id: feedbackID, axis: .none)
+        } else if let contentID = node.controlID(forKey: "content") {
+          ControlView(id: contentID, axis: .none).opacity(0.5)
+        }
+      }
     }
   }
+}
+
+/// SwiftUI's item provider does not expose the source view to a target. Flet's
+/// drag events do, so the active native drag keeps that identity for the
+/// duration of the platform drag session.
+private enum RufletDragSession {
+  struct Active {
+    let sourceID: Int
+    let group: String
+    let completed: () -> Void
+  }
+  static var current: Active?
 }
 
 /// `DragTarget` — accepts a `Draggable` from the same group.
 struct DragTargetControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
-  @State private var targeted = false
+  @State private var globalOrigin = CGPoint.zero
 
   var body: some View {
     Group {
@@ -460,25 +578,62 @@ struct DragTargetControlView: View {
         ControlView(id: contentID, axis: .none)
       }
     }
-    .onDrop(of: ["public.text"], isTargeted: $targeted) { providers in
-      guard let provider = providers.first else { return false }
-      _ = provider.loadObject(ofClass: NSString.self) { value, _ in
-        guard let payload = value as? String else { return }
-        let parts = payload.split(separator: "|", maxSplits: 1)
-        let group = parts.first.map(String.init) ?? ""
-        guard group == (node.string("group") ?? "") else { return }
-        Task { @MainActor in
-          events.send(
-            node.id, "accept",
-            .map([
-              "src_id": .string(parts.count > 1 ? String(parts[1]) : ""),
-              "group": .string(group)
-            ]))
-        }
-      }
-      return true
-    }
-    .opacity(targeted ? 0.7 : 1)
+    .background(
+      GeometryReader { proxy in
+        Color.clear
+          .onAppear { globalOrigin = proxy.frame(in: .global).origin }
+          .onChange(of: proxy.frame(in: .global).origin) { globalOrigin = $0 }
+      })
+    .onDrop(
+      of: ["public.text"],
+      delegate: RufletDragTargetDropDelegate(
+        node: node, events: events, globalOrigin: globalOrigin))
+  }
+}
+
+private struct RufletDragTargetDropDelegate: DropDelegate {
+  let node: ControlNode
+  let events: RufletEventSink
+  let globalOrigin: CGPoint
+
+  private var active: RufletDragSession.Active? { RufletDragSession.current }
+  private var accepts: Bool {
+    active?.group == (node.string("group") ?? RufletGestureParity.dragGroup)
+  }
+
+  func validateDrop(info: DropInfo) -> Bool { accepts }
+
+  func dropEntered(info: DropInfo) {
+    guard let active else { return }
+    events.fire(
+      node, "will_accept",
+      data: .map(["accept": .bool(accepts), "src_id": .int(Int64(active.sourceID))]))
+  }
+
+  func dropUpdated(info: DropInfo) -> DropProposal? {
+    guard accepts, let active else { return DropProposal(operation: .forbidden) }
+    events.fire(node, "move", data: payload(active, at: info.location))
+    return DropProposal(operation: .move)
+  }
+
+  func dropExited(info: DropInfo) {
+    guard let active else { return }
+    events.fire(
+      node, "leave", data: .map(["src_id": .int(Int64(active.sourceID))]))
+  }
+
+  func performDrop(info: DropInfo) -> Bool {
+    guard accepts, let active else { return false }
+    events.fire(node, "accept", data: payload(active, at: info.location))
+    active.completed()
+    RufletDragSession.current = nil
+    return true
+  }
+
+  private func payload(_ active: RufletDragSession.Active, at point: CGPoint) -> RufletValue {
+    RufletGestureParity.dragPayload(
+      sourceID: active.sourceID,
+      location: CGPoint(x: point.x + globalOrigin.x, y: point.y + globalOrigin.y))
   }
 }
 
@@ -489,8 +644,11 @@ struct DismissibleControlView: View {
   @Environment(\.layoutDirection) private var layoutDirection
   @State private var translation = CGSize.zero
   @State private var pendingDirection: String?
+  @State private var confirmTimeout: DispatchWorkItem?
   @State private var thresholdReached = false
   @State private var dismissed = false
+  @State private var collapsing = false
+  @State private var dismissedDirection: String?
   @State private var measuredSize = CGSize.zero
 
   var body: some View {
@@ -506,11 +664,17 @@ struct DismissibleControlView: View {
         .gesture(dismissGesture(size: measuredSize))
       }
     }
+    .frame(
+      width: collapsing && ["up", "down"].contains(dismissedDirection ?? "") ? 0 : nil,
+      height: collapsing && !["up", "down"].contains(dismissedDirection ?? "") ? 0 : nil)
     .background(
       GeometryReader { proxy in
         Color.clear
           .onAppear { measuredSize = proxy.size }
-          .onChange(of: proxy.size) { measuredSize = $0 }
+          .onChange(of: proxy.size) {
+            measuredSize = $0
+            if collapsing { events.fire(node, "resize") }
+          }
       }
     )
     .rufletCommandHandler(node.id) { call, completion in
@@ -520,6 +684,8 @@ struct DismissibleControlView: View {
       }
       let allow = call.argument("dismiss")?.boolValue ?? false
       if let direction = pendingDirection {
+        confirmTimeout?.cancel()
+        confirmTimeout = nil
         pendingDirection = nil
         allow ? finishDismiss(direction: direction) : resetDismiss()
       }
@@ -576,6 +742,15 @@ struct DismissibleControlView: View {
           pendingDirection = direction
           events.fire(
             node, "confirm_dismiss", data: .map(["direction": .string(direction)]))
+          // The Flet client waits at most five minutes for the asynchronous
+          // server confirmation. A lost connection must not strand the row.
+          let timeout = DispatchWorkItem {
+            guard pendingDirection != nil else { return }
+            pendingDirection = nil
+            resetDismiss()
+          }
+          confirmTimeout = timeout
+          DispatchQueue.main.asyncAfter(deadline: .now() + 300, execute: timeout)
         } else {
           finishDismiss(direction: direction)
         }
@@ -594,14 +769,17 @@ struct DismissibleControlView: View {
   }
 
   private func dismissThreshold(for direction: String) -> Double {
-    guard let values = node.props["dismiss_thresholds"]?.mapValue else { return 0.4 }
-    return values[direction]?.doubleValue ?? 0.4
+    guard let values = node.props["dismiss_thresholds"]?.mapValue else {
+      return RufletGestureParity.dismissThreshold
+    }
+    return values[direction]?.doubleValue ?? RufletGestureParity.dismissThreshold
   }
 
   /// `cross_axis_end_offset` shifts the row across its own axis as it leaves,
   /// which Flutter measures in fractions of the row's height.
-  private var crossAxisEndOffset: CGFloat {
-    CGFloat(node.double("cross_axis_end_offset") ?? 0) * measuredSize.height
+  private func crossAxisEndOffset(for direction: String) -> CGFloat {
+    let fraction = CGFloat(node.double("cross_axis_end_offset") ?? 0)
+    return fraction * (direction == "up" || direction == "down" ? measuredSize.width : measuredSize.height)
   }
 
   private func finishDismiss(direction: String) {
@@ -613,17 +791,29 @@ struct DismissibleControlView: View {
     case "down": target = CGSize(width: 0, height: distance)
     default: target = CGSize(width: 0, height: -distance)
     }
-    // Flutter splits the exit in two: the row slides away over
-    // `movement_duration`, then its space collapses over `resize_duration`.
-    let seconds = (node.double("movement_duration") ?? node.double("duration") ?? 200) / 1_000
-    let collapse = (node.double("resize_duration") ?? 300) / 1_000
+    // Pinned Flet currently supplies the same `duration` property to Flutter's
+    // movement and resize phases, retaining their 200/300 ms defaults when it
+    // is absent.
+    let seconds = (node.double("duration") ?? 200) / 1_000
+    let collapse = (node.double("duration") ?? 300) / 1_000
+    let cross = crossAxisEndOffset(for: direction)
+    dismissedDirection = direction
     withAnimation(.easeOut(duration: seconds)) {
-      translation = CGSize(width: target.width, height: target.height + crossAxisEndOffset)
+      if direction == "up" || direction == "down" {
+        translation = CGSize(width: target.width + cross, height: target.height)
+      } else {
+        translation = CGSize(width: target.width, height: target.height + cross)
+      }
     }
     DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
-      withAnimation(.easeOut(duration: collapse)) { dismissed = true }
+      withAnimation(.easeOut(duration: collapse)) {
+        collapsing = true
+        dismissed = true
+      }
       events.fire(node, "resize")
-      events.fire(node, "dismiss", data: .map(["direction": .string(direction)]))
+      DispatchQueue.main.asyncAfter(deadline: .now() + collapse) {
+        events.fire(node, "dismiss", data: .map(["direction": .string(direction)]))
+      }
     }
   }
 
@@ -631,7 +821,7 @@ struct DismissibleControlView: View {
     thresholdReached = false
     withAnimation(
       .easeOut(
-        duration: (node.double("movement_duration") ?? node.double("duration") ?? 200) / 1_000)
+        duration: (node.double("duration") ?? 200) / 1_000)
     ) {
       translation = .zero
     }
@@ -645,6 +835,9 @@ struct InteractiveViewerControlView: View {
   @State private var scale: CGFloat = 1
   @State private var offset: CGSize = .zero
   @State private var interacting = false
+  @State private var gestureStartScale: CGFloat?
+  @State private var gestureStartOffset: CGSize?
+  @State private var viewportSize = CGSize.zero
   @State private var lastReport = Date.distantPast
   /// `save_state`/`restore_state` are a matched pair in Flet's API.
   @State private var saved: (scale: CGFloat, offset: CGSize)?
@@ -653,17 +846,56 @@ struct InteractiveViewerControlView: View {
   /// throttles its own; start and end are never dropped.
   private func report(event name: String) {
     if name == "interaction_update" {
-      let interval = TimeInterval(node.int("interaction_update_interval") ?? 0) / 1_000
+      let interval = TimeInterval(
+        node.int("interaction_update_interval") ?? RufletGestureParity.interactionUpdateInterval
+      ) / 1_000
       guard Date().timeIntervalSince(lastReport) >= interval else { return }
       lastReport = Date()
     }
-    events.fire(
-      node, name,
-      data: .map([
-        "scale": .double(scale),
-        "pan_x": .double(offset.width),
-        "pan_y": .double(offset.height),
-      ]))
+    let timestamp = Date().timeIntervalSince1970 * 1_000
+    switch name {
+    case "interaction_start":
+      events.fire(
+        node, name,
+        data: RufletInteractionParity.scaleStart(
+          local: .zero, global: .zero, timestamp: timestamp))
+    case "interaction_update":
+      events.fire(
+        node, name,
+        data: RufletInteractionParity.scaleUpdate(
+          scale: scale, local: .zero, global: .zero,
+          previousLocal: CGPoint(x: -offset.width, y: -offset.height), timestamp: timestamp))
+    default:
+      events.fire(node, name, data: RufletInteractionParity.scaleEnd())
+    }
+  }
+
+  private func startInteractionIfNeeded() {
+    guard !interacting else { return }
+    interacting = true
+    report(event: "interaction_start")
+  }
+
+  private var transformAnchor: UnitPoint {
+    let alignment = ControlProps.alignment(node.props["alignment"]) ?? .center
+    if alignment == .topLeading { return .topLeading }
+    if alignment == .top { return .top }
+    if alignment == .topTrailing { return .topTrailing }
+    if alignment == .leading { return .leading }
+    if alignment == .trailing { return .trailing }
+    if alignment == .bottomLeading { return .bottomLeading }
+    if alignment == .bottom { return .bottom }
+    if alignment == .bottomTrailing { return .bottomTrailing }
+    return .center
+  }
+
+  private func clampedOffset(_ candidate: CGSize) -> CGSize {
+    let margin = ControlProps.edgeInsets(node.props["boundary_margin"]) ?? EdgeInsets()
+    let overflowX = max(0, (scale - 1) * viewportSize.width / 2)
+    let overflowY = max(0, (scale - 1) * viewportSize.height / 2)
+    return CGSize(
+      width: min(max(candidate.width, -overflowX - margin.trailing), overflowX + margin.leading),
+      height: min(max(candidate.height, -overflowY - margin.bottom), overflowY + margin.top))
   }
 
   var body: some View {
@@ -672,58 +904,100 @@ struct InteractiveViewerControlView: View {
         ControlView(id: contentID, axis: .none)
       }
     }
-    .scaleEffect(scale)
+    .scaleEffect(scale, anchor: transformAnchor)
     .offset(offset)
-    // `constrained: false` lets the content exceed the viewport, which is what
-    // Flutter's flag means; `boundary_margin` is the slack beyond it.
-    .padding(ControlProps.edgeInsets(node.props["boundary_margin"]) ?? EdgeInsets())
     .fixedSize(
       horizontal: node.bool("constrained") == false,
       vertical: node.bool("constrained") == false)
+    .background(
+      GeometryReader { proxy in
+        Color.clear
+          .onAppear { viewportSize = proxy.size }
+          .onChange(of: proxy.size) { viewportSize = $0 }
+      })
     .gesture(
       SimultaneousGesture(
         MagnificationGesture().onChanged { value in
-          guard node.bool("scale_enabled") != false else { return }
-          let minimum = CGFloat(node.double("min_scale") ?? 0.8)
-          let maximum = CGFloat(node.double("max_scale") ?? 2.5)
-          let factor = CGFloat(node.double("scale_factor") ?? 1)
-          scale = min(max(value * factor, minimum), maximum)
+          guard node.bool("disabled") != true, node.bool("scale_enabled") != false else { return }
+          startInteractionIfNeeded()
+          let minimum = CGFloat(node.double("min_scale") ?? RufletGestureParity.interactiveMinScale)
+          let maximum = CGFloat(node.double("max_scale") ?? RufletGestureParity.interactiveMaxScale)
+          if gestureStartScale == nil { gestureStartScale = scale }
+          scale = min(max((gestureStartScale ?? 1) * value, minimum), maximum)
           report(event: "interaction_update")
         },
         DragGesture().onChanged { value in
-          guard node.bool("pan_enabled") != false else { return }
-          if !interacting {
-            interacting = true
-            report(event: "interaction_start")
-          }
-          offset = value.translation
+          guard node.bool("disabled") != true, node.bool("pan_enabled") != false else { return }
+          startInteractionIfNeeded()
+          if gestureStartOffset == nil { gestureStartOffset = offset }
+          offset = clampedOffset(CGSize(
+            width: (gestureStartOffset ?? .zero).width + value.translation.width,
+            height: (gestureStartOffset ?? .zero).height + value.translation.height))
           report(event: "interaction_update")
         }
       )
-      .onEnded { _ in
+      .onEnded { value in
+        guard interacting else { return }
         interacting = false
         // Flutter keeps gliding after the finger lifts; the friction
         // coefficient is how quickly that settles.
-        let friction = node.double("interaction_end_friction_coefficient") ?? 0.0000135
-        withAnimation(.easeOut(duration: min(max(friction * 1_000, 0.1), 1))) {
-          report(event: "interaction_end")
+        let friction =
+          node.double("interaction_end_friction_coefficient")
+          ?? RufletGestureParity.interactiveFriction
+        let duration = min(max(friction * 1_000, 0.1), 1)
+        if node.bool("pan_enabled") != false, let drag = value.second {
+          let origin = gestureStartOffset ?? offset
+          let projected = clampedOffset(
+            CGSize(
+              width: origin.width + drag.predictedEndTranslation.width,
+              height: origin.height + drag.predictedEndTranslation.height))
+          withAnimation(.easeOut(duration: duration)) { offset = projected }
         }
-        _ = node.bool("trackpad_scroll_causes_scale")
+        gestureStartScale = nil
+        gestureStartOffset = nil
+        report(event: "interaction_end")
       })
-    .clipped()
+    .modifier(ChromeClipModifier(behavior: node.string("clip_behavior") ?? "hardEdge"))
+    .modifier(
+      InteractiveTrackpadScale(
+        node: node, scale: $scale,
+        began: { startInteractionIfNeeded() },
+        updated: { report(event: "interaction_update") },
+        ended: {
+          guard interacting else { return }
+          interacting = false
+          report(event: "interaction_end")
+        }))
     .rufletCommandHandler(node.id) { call, completion in
       switch call.name {
       case "zoom":
-        scale = CGFloat(call.argument("factor")?.doubleValue ?? 1)
+        let factor = CGFloat(call.argument("factor")?.doubleValue ?? 1)
+        scale = min(
+          max(
+            scale * factor,
+            CGFloat(node.double("min_scale") ?? RufletGestureParity.interactiveMinScale)),
+          CGFloat(node.double("max_scale") ?? RufletGestureParity.interactiveMaxScale))
         completion(.success(.null))
       case "pan":
-        offset = CGSize(
-          width: call.argument("dx")?.doubleValue ?? offset.width,
-          height: call.argument("dy")?.doubleValue ?? offset.height)
+        // Flet exposes a z delta for matrix parity. The native Apple viewer is
+        // two-dimensional, but dx/dy retain the same additive semantics.
+        _ = call.argument("dz")?.doubleValue ?? 0
+        offset = clampedOffset(CGSize(
+          width: offset.width + CGFloat(call.argument("dx")?.doubleValue ?? 0),
+          height: offset.height + CGFloat(call.argument("dy")?.doubleValue ?? 0)))
         completion(.success(.null))
       case "reset":
-        scale = 1
-        offset = .zero
+        let reset = {
+          scale = 1
+          offset = .zero
+        }
+        if let milliseconds = call.argument("animation_duration")?.doubleValue,
+          milliseconds > 0
+        {
+          withAnimation(.easeInOut(duration: milliseconds / 1_000), reset)
+        } else {
+          reset()
+        }
         completion(.success(.null))
       case "save_state":
         saved = (scale, offset)
@@ -738,6 +1012,41 @@ struct InteractiveViewerControlView: View {
         completion(.failure(rufletUnsupported("InteractiveViewer", call)))
       }
     }
+  }
+}
+
+/// Flutter uses `scale_factor` only when a trackpad scroll is converted to a
+/// scale gesture. Direct pinches must not be multiplied by it.
+private struct InteractiveTrackpadScale: ViewModifier {
+  let node: ControlNode
+  @Binding var scale: CGFloat
+  let began: () -> Void
+  let updated: () -> Void
+  let ended: () -> Void
+  @State private var endWork: DispatchWorkItem?
+
+  func body(content: Content) -> some View {
+    #if os(macOS)
+      content.overlay(
+        RufletNativePointerMonitor { name, payload in
+          guard name == "scroll", node.bool("disabled") != true,
+            node.bool("trackpad_scroll_causes_scale") == true,
+            let delta = payload.mapValue?["sd"]?.mapValue?["y"]?.doubleValue
+          else { return }
+          began()
+          let factor = node.double("scale_factor") ?? RufletGestureParity.interactiveScaleFactor
+          let minimum = node.double("min_scale") ?? RufletGestureParity.interactiveMinScale
+          let maximum = node.double("max_scale") ?? RufletGestureParity.interactiveMaxScale
+          scale = CGFloat(min(max(Double(scale) * exp(-delta / factor), minimum), maximum))
+          updated()
+          endWork?.cancel()
+          let work = DispatchWorkItem(block: ended)
+          endWork = work
+          DispatchQueue.main.asyncAfter(deadline: .now() + 0.12, execute: work)
+        }.allowsHitTesting(false))
+    #else
+      content
+    #endif
   }
 }
 
