@@ -248,16 +248,16 @@ final class DisplayParityTests: XCTestCase {
     XCTAssertEqual(capped.maximum, 60)
   }
 
-  func testAvatarOmittedColorsUseNativeAppleAppearance() {
+  func testAvatarResolvesPinnedFlutterThemeRoles() {
     let omitted = node("CircleAvatar")
     let omittedAppearance = RufletCircleAvatarAppearance(node: omitted)
-    XCTAssertNil(omittedAppearance.explicitBackgroundColor)
-    XCTAssertNil(omittedAppearance.explicitForegroundColor)
+    XCTAssertEqual(omittedAppearance.backgroundColorToken, "primarycontainer")
+    XCTAssertEqual(omittedAppearance.foregroundColorToken, "onprimarycontainer")
 
     let explicit = RufletCircleAvatarAppearance(node: node(
       "CircleAvatar", ["bgcolor": .string("red"), "color": .string("white")]))
-    XCTAssertEqual(explicit.explicitBackgroundColor, "red")
-    XCTAssertEqual(explicit.explicitForegroundColor, "white")
+    XCTAssertEqual(explicit.backgroundColorToken, "red")
+    XCTAssertEqual(explicit.foregroundColorToken, "white")
   }
 
   func testImageTintIsExplicitOnly() {

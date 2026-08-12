@@ -113,9 +113,8 @@ struct RufletBadgeModifier: ViewModifier {
 
 /// Apple has no public standalone badge view which can host an arbitrary
 /// SwiftUI control (the native `.badge` API is limited to rows and tabs).
-/// This is therefore a semantic adapter: Flet still owns the label slot and
-/// explicit geometry, while omitted appearance comes from Apple's system red
-/// notification badge and native text styles rather than Material roles.
+/// This adapter keeps that native boundary while consuming the exact Flet /
+/// Flutter semantic defaults for its arbitrary label slot.
 struct RufletBadgeMarker: View {
   var badge: ControlNode?
   var fallbackLabel: String?
@@ -143,20 +142,20 @@ struct RufletBadgeMarker: View {
       .rufletTextStyle(textStyle)
       .padding(
         ControlProps.edgeInsets(badge?.props["padding"])
-          ?? EdgeInsets(top: 0, leading: 5, bottom: 0, trailing: 5))
+          ?? EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4))
       .frame(minWidth: largeSize, minHeight: largeSize)
       .background(Capsule().fill(backgroundColor))
   }
 
   private var backgroundColor: Color {
-    MaterialPalette.color(RufletBadgeSemantics.explicitBackgroundColor(badge)) ?? .red
+    MaterialPalette.color(RufletBadgeSemantics.backgroundColor(badge), default: .red)
   }
 
   private var textStyle: RufletTextStyle {
     var style = badge.map { RufletTextStyle(node: $0, styleKey: "text_style") }
       ?? RufletTextStyle()
     if style.color == nil {
-      style.color = MaterialPalette.color(RufletBadgeSemantics.explicitTextColor(badge)) ?? .white
+      style.color = MaterialPalette.color(RufletBadgeSemantics.textColor(badge), default: .white)
     }
     if style.size == nil, style.themeStyle == nil { style.themeStyle = Font.TextStyle.caption2 }
     return style
@@ -165,8 +164,7 @@ struct RufletBadgeMarker: View {
   /// Six points is the native notification-dot size used by Apple surfaces.
   private var smallSize: CGFloat { CGFloat(badge?.double("small_size") ?? 6) }
 
-  /// The system's compact notification badge has an 18-point minimum pill.
-  private var largeSize: CGFloat { CGFloat(badge?.double("large_size") ?? 18) }
+  private var largeSize: CGFloat { CGFloat(badge?.double("large_size") ?? 16) }
 }
 
 /// Source-pinned behavior from Flutter's `Badge.build` and Flet's
@@ -182,15 +180,12 @@ enum RufletBadgeSemantics {
     badge.controlID(forKey: "label") != nil || badge.string("label") != nil
   }
 
-  /// Only a value sent by the DSL is a portable colour contract. When absent,
-  /// the Apple renderer deliberately lets `RufletBadgeMarker` use the native
-  /// notification appearance instead of synthesising Material `error` roles.
-  static func explicitBackgroundColor(_ badge: ControlNode?) -> String? {
-    nonEmpty(badge?.string("bgcolor"))
+  static func backgroundColor(_ badge: ControlNode?) -> String {
+    nonEmpty(badge?.string("bgcolor")) ?? "error"
   }
 
-  static func explicitTextColor(_ badge: ControlNode?) -> String? {
-    nonEmpty(badge?.string("text_color"))
+  static func textColor(_ badge: ControlNode?) -> String {
+    nonEmpty(badge?.string("text_color")) ?? "onerror"
   }
 
   static func offset(_ badge: ControlNode?, layoutDirection: LayoutDirection) -> CGSize {

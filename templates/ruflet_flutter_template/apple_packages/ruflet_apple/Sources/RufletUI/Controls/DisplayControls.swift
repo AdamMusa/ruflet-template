@@ -1192,22 +1192,18 @@ struct RufletCircleAvatarImageSources: Equatable {
   }
 }
 
-/// Explicit CircleAvatar colours are part of the Ruflet DSL. The Material
-/// `primaryContainer`/`onPrimaryContainer` pair is not: it is a Flutter theme
-/// fallback and must not leak into the Apple renderer.
+/// CircleAvatar colours after resolving explicit Ruflet values over the
+/// pinned Flutter theme roles. The native Apple view consumes these semantic
+/// defaults; they are not inferred from a screenshot.
 struct RufletCircleAvatarAppearance: Equatable {
-  let explicitBackgroundColor: String?
-  let explicitForegroundColor: String?
+  let backgroundColorToken: String?
+  let foregroundColorToken: String?
 
   init(node: ControlNode) {
-    explicitBackgroundColor = Self.nonEmpty(node.string("bgcolor"))
-    explicitForegroundColor = Self.nonEmpty(node.string("color"))
-  }
-
-  private static func nonEmpty(_ value: String?) -> String? {
-    guard let value = value?.trimmingCharacters(in: .whitespacesAndNewlines), !value.isEmpty
-    else { return nil }
-    return value
+    backgroundColorToken = RufletThemeDefaults.resolvedDisplayColorToken(
+      for: node, property: "bgcolor")
+    foregroundColorToken = RufletThemeDefaults.resolvedDisplayColorToken(
+      for: node, property: "color")
   }
 }
 
@@ -1283,11 +1279,11 @@ struct CircleAvatarControlView: View {
   }
 
   private func backgroundColor(_ appearance: RufletCircleAvatarAppearance) -> Color {
-    MaterialPalette.color(appearance.explicitBackgroundColor) ?? Color.secondary.opacity(0.18)
+    MaterialPalette.color(appearance.backgroundColorToken, default: .clear)
   }
 
-  private func foregroundColor(_ appearance: RufletCircleAvatarAppearance) -> Color {
-    MaterialPalette.color(appearance.explicitForegroundColor) ?? .primary
+  private func foregroundColor(_ appearance: RufletCircleAvatarAppearance) -> Color? {
+    MaterialPalette.color(appearance.foregroundColorToken)
   }
 }
 

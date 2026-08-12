@@ -38,22 +38,22 @@ final class ProgressBadgeParityTests: XCTestCase {
     XCTAssertFalse(RufletBadgeSemantics.hasLabel(nullLabel))
   }
 
-  func testBadgeOmittedColorsUseNativeAppleAppearance() {
+  func testBadgeDefaultsUsePinnedFlutterThemeRoles() {
     let defaults = ControlNode(id: 1, type: "Badge")
-    XCTAssertNil(RufletBadgeSemantics.explicitBackgroundColor(defaults))
-    XCTAssertNil(RufletBadgeSemantics.explicitTextColor(defaults))
+    XCTAssertEqual(RufletBadgeSemantics.backgroundColor(defaults), "error")
+    XCTAssertEqual(RufletBadgeSemantics.textColor(defaults), "onerror")
 
     let explicit = ControlNode(
       id: 2, type: "Badge",
       props: ["bgcolor": .string("blue"), "text_color": .string("yellow")])
-    XCTAssertEqual(RufletBadgeSemantics.explicitBackgroundColor(explicit), "blue")
-    XCTAssertEqual(RufletBadgeSemantics.explicitTextColor(explicit), "yellow")
+    XCTAssertEqual(RufletBadgeSemantics.backgroundColor(explicit), "blue")
+    XCTAssertEqual(RufletBadgeSemantics.textColor(explicit), "yellow")
 
     let blanks = ControlNode(
       id: 3, type: "Badge",
       props: ["bgcolor": .string("  "), "text_color": .string("")])
-    XCTAssertNil(RufletBadgeSemantics.explicitBackgroundColor(blanks))
-    XCTAssertNil(RufletBadgeSemantics.explicitTextColor(blanks))
+    XCTAssertEqual(RufletBadgeSemantics.backgroundColor(blanks), "error")
+    XCTAssertEqual(RufletBadgeSemantics.textColor(blanks), "onerror")
   }
 
   func testBadgeDefaultOffsetFollowsFlutterTextDirection() {
