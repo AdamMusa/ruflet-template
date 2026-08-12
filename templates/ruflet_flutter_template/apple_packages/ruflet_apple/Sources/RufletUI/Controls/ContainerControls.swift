@@ -2053,6 +2053,10 @@ struct PageletPresentation {
 /// `AnimatedSwitcher` — cross-fades whenever its content changes.
 struct AnimatedSwitcherControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
+  @State private var current: AnimatedSwitcherEntry?
+  @State private var outgoing: [AnimatedSwitcherEntry] = []
+  @State private var removalTasks: [UUID: Task<Void, Never>] = [:]
 
   private var presentation: AnimatedSwitcherPresentation {
     AnimatedSwitcherPresentation(node: node)
@@ -2060,11 +2064,28 @@ struct AnimatedSwitcherControlView: View {
 
   @ViewBuilder
   var body: some View {
-    if let contentID = node.controlID(forKey: "content") {
-      ControlView(id: contentID, axis: .none)
-        .id(contentID)
-        .transition(transition)
-        .animation(switchAnimation, value: contentID)
+    if let contentID = presentation.contentID,
+      let content = store.node(contentID), content.bool("visible") != false
+    {
+      ZStack {
+        ForEach(outgoing) { entry in
+          switcherContent(entry)
+            .transition(.identity)
+        }
+        if let current {
+          switcherContent(current)
+            .transition(.identity)
+        }
+      }
+      .clipped()
+      .onAppear { install(contentID: contentID, animated: false) }
+      .onChange(of: contentIdentity) { _ in
+        install(contentID: contentID, animated: true)
+      }
+      .onDisappear {
+        removalTasks.values.forEach { $0.cancel() }
+        removalTasks.removeAll()
+      }
     } else {
       Text(AnimatedSwitcherPresentation.missingContentError)
         .font(.caption)
@@ -2072,34 +2093,51 @@ struct AnimatedSwitcherControlView: View {
     }
   }
 
-  /// Flet's `AnimatedSwitcherTransition`. Flutter's default is a cross-fade,
-  /// and the scale and rotation forms pair with it rather than replace it.
-  private var transition: AnyTransition {
-    switch presentation.transition {
-    case "scale":
-      return .asymmetric(
-        insertion: .scale.combined(with: .opacity),
-        removal: .scale.combined(with: .opacity))
-    case "rotation":
-      return .asymmetric(
-        insertion: .scale(scale: 0.8).combined(with: .opacity),
-        removal: .scale(scale: 1.2).combined(with: .opacity))
-    default:
-      return .opacity
+  private func install(contentID: Int, animated: Bool) {
+    let next = AnimatedSwitcherEntry(
+      controlID: contentID, identity: contentIdentity)
+    guard current?.identity != next.identity else { return }
+    if let previous = current {
+      outgoing.append(previous)
+      scheduleRemoval(previous)
+    }
+    current = next
+    guard animated else { return }
+    current?.progress = 0
+    withAnimation(presentation.inAnimation) { current?.progress = 1 }
+    for index in outgoing.indices where outgoing[index].identity != next.identity {
+      withAnimation(presentation.outAnimation) { outgoing[index].progress = 0 }
     }
   }
 
-  /// `switch_in_curve` and `switch_out_curve` are separate in Flutter, and
-  /// `reverse_duration` times the outgoing child. SwiftUI applies one
-  /// animation to the transition, so the incoming pair wins and the outgoing
-  /// duration stands in when only it was given.
-  private var switchAnimation: Animation {
-    // SwiftUI applies one animation to a transition rather than independent
-    // incoming/outgoing curves; preserve both exact Flet durations in the
-    // semantic model and use the longer live transition window.
-    let seconds = max(presentation.duration, presentation.reverseDuration)
-    let name = presentation.switchInCurve
-    return RufletCurve.animation(name, duration: seconds)
+  private var contentIdentity: AnimatedSwitcherIdentity {
+    let contentID = presentation.contentID
+    return AnimatedSwitcherIdentity(
+      controlID: contentID,
+      revision: contentID.flatMap {
+        store.node($0)?.internals["_flet_animated_switcher_revision"]?.intValue
+      } ?? 0)
+  }
+
+  private func scheduleRemoval(_ entry: AnimatedSwitcherEntry) {
+    removalTasks[entry.id]?.cancel()
+    removalTasks[entry.id] = Task { @MainActor in
+      let nanos = UInt64(max(0, presentation.reverseDuration) * 1_000_000_000)
+      try? await Task.sleep(nanoseconds: nanos)
+      guard !Task.isCancelled else { return }
+      outgoing.removeAll { $0.id == entry.id }
+      removalTasks[entry.id] = nil
+    }
+  }
+
+  @ViewBuilder
+  private func switcherContent(_ entry: AnimatedSwitcherEntry) -> some View {
+    ControlView(id: entry.controlID, axis: .none)
+      .id(entry.identity)
+      .opacity(presentation.transition == "fade" ? entry.progress : 1)
+      .scaleEffect(presentation.transition == "scale" ? entry.progress : 1)
+      .rotationEffect(.degrees(
+        presentation.transition == "rotation" ? Double(entry.progress) * 360 : 0))
   }
 }
 
@@ -2107,11 +2145,53 @@ struct AnimatedSwitcherPresentation {
   static let missingContentError = "AnimatedSwitcher.content must be provided and visible"
 
   let node: ControlNode
-  var duration: Double { (node.double("duration") ?? 1_000) / 1_000 }
-  var reverseDuration: Double { (node.double("reverse_duration") ?? 1_000) / 1_000 }
+  var contentID: Int? { node.controlID(forKey: "content") }
+  var duration: Double { Self.durationSeconds(node.props["duration"], default: 1) }
+  var reverseDuration: Double {
+    Self.durationSeconds(node.props["reverse_duration"], default: 1)
+  }
   var switchInCurve: String { node.string("switch_in_curve") ?? "linear" }
   var switchOutCurve: String { node.string("switch_out_curve") ?? "linear" }
   var transition: String { node.string("transition")?.lowercased() ?? "fade" }
+  var inAnimation: Animation { RufletCurve.animation(switchInCurve, duration: duration) }
+  var outAnimation: Animation {
+    RufletCurve.animation(switchOutCurve, duration: reverseDuration)
+  }
+
+  static func durationSeconds(_ value: RufletValue?, default defaultValue: Double) -> Double {
+    guard let value, !value.isNull else { return defaultValue }
+    if case .int(let milliseconds) = value { return Double(milliseconds) / 1_000 }
+    if case .double(let milliseconds) = value { return Double(Int(milliseconds)) / 1_000 }
+    if case .string(let raw) = value { return Double(Int(raw) ?? 0) / 1_000 }
+    guard let map = value.mapValue else { return 0 }
+    func integer(_ key: String) -> Int {
+      switch map[key] {
+      case .int(let value): return Int(value)
+      case .double(let value): return Int(value)
+      case .string(let value): return Int(value) ?? 0
+      default: return 0
+      }
+    }
+    let microseconds = integer("microseconds")
+      + 1_000 * integer("milliseconds")
+      + 1_000_000 * integer("seconds")
+      + 60_000_000 * integer("minutes")
+      + 3_600_000_000 * integer("hours")
+      + 86_400_000_000 * integer("days")
+    return Double(microseconds) / 1_000_000
+  }
+}
+
+struct AnimatedSwitcherIdentity: Hashable {
+  let controlID: Int?
+  let revision: Int
+}
+
+private struct AnimatedSwitcherEntry: Identifiable {
+  let id = UUID()
+  let controlID: Int
+  let identity: AnimatedSwitcherIdentity
+  var progress: CGFloat = 1
 }
 
 /// A wrapper with no Apple-side behaviour of its own: render the content.

@@ -34,6 +34,26 @@ final class ContainerCoreParityTests: XCTestCase {
     XCTAssertEqual(explicit.switchInCurve, "easeIn")
     XCTAssertEqual(explicit.switchOutCurve, "easeOut")
     XCTAssertEqual(explicit.transition, "rotation")
+
+    let componentDuration = AnimatedSwitcherPresentation(node: ControlNode(
+      id: 10, type: "AnimatedSwitcher", props: [
+        "duration": .map([
+          "seconds": .int(1), "milliseconds": .int(250), "microseconds": .int(500),
+        ]),
+        "reverse_duration": .string("750"),
+      ]))
+    XCTAssertEqual(componentDuration.duration, 1.2505)
+    XCTAssertEqual(componentDuration.reverseDuration, 0.75)
+    XCTAssertEqual(AnimatedSwitcherPresentation.durationSeconds(.double(2.5), default: 1), 0.002)
+  }
+
+  func testAnimatedSwitcherIdentityChangesForEveryParentPatchRevision() {
+    XCTAssertNotEqual(
+      AnimatedSwitcherIdentity(controlID: 3, revision: 10),
+      AnimatedSwitcherIdentity(controlID: 3, revision: 11))
+    XCTAssertNotEqual(
+      AnimatedSwitcherIdentity(controlID: 3, revision: 10),
+      AnimatedSwitcherIdentity(controlID: 4, revision: 10))
   }
 
   func testOmittedContainerPropertiesStayAbsentAndUseFletClipDefault() {

@@ -455,7 +455,7 @@ public final class ControlStore: ObservableObject {
   private func finishApply(
     touched: Set<Int>, previousNodes: [Int: ControlNode]
   ) -> Bool {
-    let inheritedChanges = resolveInheritedBaseProperties()
+    let inheritedChanges = resolveInheritedBaseProperties(touched: touched)
     collectGarbage()
     guard nodes != previousNodes else {
       lastChangedIDs = []
@@ -508,13 +508,13 @@ public final class ControlStore: ObservableObject {
   /// with nearest-explicit-value semantics. Resolve those properties once per
   /// patch for the entire tree; controls then read them through ControlNode's
   /// ordinary typed accessors.
-  private func resolveInheritedBaseProperties() -> Set<Int> {
+  private func resolveInheritedBaseProperties(touched: Set<Int>) -> Set<Int> {
     guard nodes[RufletWireID.page] != nil else { return [] }
     var changed: Set<Int> = []
     var visited: Set<Int> = []
 
     func visit(
-      _ id: Int, parentDisabled: Bool, parentAdaptive: Bool?, parentType: String?
+      _ id: Int, parentID: Int?, parentDisabled: Bool, parentAdaptive: Bool?, parentType: String?
     ) {
       guard visited.insert(id).inserted, var node = nodes[id] else { return }
 
@@ -529,6 +529,7 @@ public final class ControlStore: ObservableObject {
 
       let oldDisabled = node.internals["_flet_resolved_disabled"]?.boolValue
       let oldAdaptive = node.internals["_flet_resolved_adaptive"]?.boolValue
+      let oldSwitcherRevision = node.internals["_flet_animated_switcher_revision"]?.intValue
       node.internals["_flet_resolved_disabled"] = .bool(effectiveDisabled)
       if let effectiveAdaptive {
         node.internals["_flet_resolved_adaptive"] = .bool(effectiveAdaptive)
@@ -540,7 +541,19 @@ public final class ControlStore: ObservableObject {
       } else {
         node.internals.removeValue(forKey: "_flet_parent_type")
       }
-      if oldDisabled != effectiveDisabled || oldAdaptive != effectiveAdaptive {
+      if parentType == "AnimatedSwitcher",
+        touched.contains(id) || parentID.map(touched.contains) == true
+      {
+        node.internals["_flet_animated_switcher_revision"] = .int(Int64(revision &+ 1))
+      } else {
+        if parentType != "AnimatedSwitcher" {
+          node.internals.removeValue(forKey: "_flet_animated_switcher_revision")
+        }
+      }
+      let nextSwitcherRevision = node.internals["_flet_animated_switcher_revision"]?.intValue
+      if oldDisabled != effectiveDisabled || oldAdaptive != effectiveAdaptive
+        || oldSwitcherRevision != nextSwitcherRevision
+      {
         nodes[id] = node
         changed.insert(id)
       }
@@ -549,13 +562,14 @@ public final class ControlStore: ObservableObject {
       for value in node.props.values { appendControlIDs(in: value, to: &children) }
       for childID in children {
         visit(
-          childID, parentDisabled: effectiveDisabled, parentAdaptive: effectiveAdaptive,
+          childID, parentID: id, parentDisabled: effectiveDisabled,
+          parentAdaptive: effectiveAdaptive,
           parentType: isComponent ? parentType : node.type)
       }
     }
 
     visit(
-      RufletWireID.page, parentDisabled: false, parentAdaptive: nil,
+      RufletWireID.page, parentID: nil, parentDisabled: false, parentAdaptive: nil,
       parentType: nil)
     return changed
   }
