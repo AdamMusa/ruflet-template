@@ -383,6 +383,16 @@ final class CollectionParityTests: XCTestCase {
     XCTAssertEqual(CollectionParity.normalizedIndex(99, count: 4), 3)
   }
 
+  func testTabsLengthObserverClampsAgainstDeliveredLength() {
+    XCTAssertEqual(TabsPresentation.preservedIndex(4, forDeliveredLength: 2), 1)
+    XCTAssertEqual(TabsPresentation.preservedIndex(1, forDeliveredLength: 5), 1)
+  }
+
+  func testAutoScrollTargetsTheDeliveredChildCollection() {
+    XCTAssertEqual(CollectionAutoScrollTarget.lastID(in: [10, 20, 30]), 30)
+    XCTAssertNil(CollectionAutoScrollTarget.lastID(in: []))
+  }
+
   func testTabsKeepPinnedFletControllerDefaultsAndValidation() {
     let defaults = TabsPresentation(node: ControlNode(
       id: 1, type: "Tabs", props: [

@@ -568,14 +568,18 @@ private struct CollectionAutoScroll: ViewModifier {
     return AnyView(
       ScrollViewReader { proxy in
         content
-          .onChange(of: node.childIDs.count) { _ in
-            guard let last = node.childIDs.last else { return }
+          .onChange(of: node.childIDs) { childIDs in
+            guard let last = CollectionAutoScrollTarget.lastID(in: childIDs) else { return }
             withAnimation {
               proxy.scrollTo(last, anchor: horizontal ? .trailing : .bottom)
             }
           }
       })
   }
+}
+
+enum CollectionAutoScrollTarget {
+  static func lastID(in deliveredChildIDs: [Int]) -> Int? { deliveredChildIDs.last }
 }
 
 /// Parsed form of `ScrollableControl.scroll_to` shared by ListView and
@@ -2032,6 +2036,10 @@ struct TabsPresentation {
     max(node.double("animation_duration") ?? 100, 0) / 1_000
   }
 
+  static func preservedIndex(_ current: Int, forDeliveredLength length: Int) -> Int {
+    CollectionParity.normalizedIndex(current, count: length)
+  }
+
   static func validationMessage(_ node: ControlNode) -> String? {
     validationMessage(node, contentIsVisible: node.controlID(forKey: "content") != nil)
   }
@@ -2165,11 +2173,11 @@ struct TabsControlView: View {
     .onChange(of: node.int("selected_index") ?? 0) { value in
       move(to: value, curve: "ease", duration: TabsPresentation(node: node).animationDuration)
     }
-    .onChange(of: node.int("length") ?? 0) { _ in
+    .onChange(of: node.int("length") ?? 0) { length in
       // Flet recreates its TabController when length changes and preserves the
       // current mounted index, clamped to the new range.
-      let preserved = CollectionParity.normalizedIndex(
-        selectedIndex, count: node.int("length") ?? 0)
+      let preserved = TabsPresentation.preservedIndex(
+        selectedIndex, forDeliveredLength: length)
       guard preserved != selectedIndex else { return }
       selectedIndex = preserved
       events.setLocal(node.id, "selected_index", .int(Int64(preserved)))

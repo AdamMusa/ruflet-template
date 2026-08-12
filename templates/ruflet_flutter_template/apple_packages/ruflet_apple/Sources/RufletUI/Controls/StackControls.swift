@@ -466,8 +466,10 @@ struct ScrollableStack: ViewModifier {
       }
       // `auto_scroll` keeps the end in view as children arrive, which is what
       // Flet's auto-scrolling controller does.
-      .onChange(of: node.childIDs.count) { _ in
-        guard node.bool("auto_scroll") == true, let last = node.childIDs.last else { return }
+      .onChange(of: node.childIDs) { childIDs in
+        guard node.bool("auto_scroll") == true,
+          let last = CollectionAutoScrollTarget.lastID(in: childIDs)
+        else { return }
         withAnimation { proxy.scrollTo(last, anchor: axis == .horizontal ? .trailing : .bottom) }
       }
       .onChange(of: pageScrollCommand) { command in
