@@ -333,8 +333,10 @@ public enum ControlRegistry {
     add(["PageView"], .visible, "PageViewControlView", .nativeView,
         events: ["change"],
         methods: ["go_to_page", "jump_to", "jump_to_page", "next_page", "previous_page"])
-    add(["ListTile", "CupertinoListTile"], .visible, "ListTileControlView", .nativeView,
-        events: ["click", "long_press"])
+    add(["ListTile"], .visible, "ListTileControlView", .nativeView,
+        events: ["blur", "click", "focus", "long_press"])
+    add(["CupertinoListTile"], .visible, "ListTileControlView", .nativeView,
+        events: ["click"])
     add(["ExpansionTile"], .visible, "ExpansionTileControlView", .nativeView,
         events: ["change"])
     add(["ExpansionPanelList"], .visible, "ExpansionPanelListControlView", .nativeView,

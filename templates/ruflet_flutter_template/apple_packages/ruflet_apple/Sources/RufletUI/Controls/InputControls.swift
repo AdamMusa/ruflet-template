@@ -17,6 +17,7 @@ import SwiftUI
 struct SwitchControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
+  @Environment(\.rufletListTileClicks) private var listTileClicks
 
   var body: some View {
     let disabled = node.bool("disabled") ?? false
@@ -43,6 +44,7 @@ struct SwitchControlView: View {
         natural: CGSize(
           width: RufletThemeDefaults.switchTrackWidth,
           height: RufletThemeDefaults.switchTrackHeight)))
+    .modifier(ListTileToggleListener(notifier: listTileClicks, action: toggle))
     .modifier(FocusReporter(node: node, events: events))
     .disabled(disabled)
   }
@@ -166,6 +168,7 @@ private struct MaterialSwitch: View {
 struct CheckboxControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
+  @Environment(\.rufletListTileClicks) private var listTileClicks
 
   var body: some View {
     let disabled = node.bool("disabled") ?? false
@@ -178,6 +181,7 @@ struct CheckboxControlView: View {
     .contentShape(Rectangle())
     .onTapGesture { if !disabled { advance() } }
     .modifier(SelectionScaling(node: node, natural: RufletThemeDefaults.checkboxTargetSize))
+    .modifier(ListTileToggleListener(notifier: listTileClicks, action: advance))
     .modifier(FocusReporter(node: node, events: events))
     .accessibilityLabel(node.string("semantics_label") ?? "")
     .disabled(disabled)
@@ -323,6 +327,7 @@ struct RadioControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
+  @Environment(\.rufletListTileClicks) private var listTileClicks
 
   var body: some View {
     let disabled = node.bool("disabled") ?? false
@@ -335,6 +340,7 @@ struct RadioControlView: View {
     .contentShape(Rectangle())
     .onTapGesture { if !disabled { select() } }
     .modifier(SelectionScaling(node: node, natural: RufletThemeDefaults.radioTargetSize))
+    .modifier(ListTileToggleListener(notifier: listTileClicks, action: selectFromListTile))
     .modifier(FocusReporter(node: node, events: events))
     .disabled(disabled)
   }
@@ -418,6 +424,13 @@ struct RadioControlView: View {
     } else {
       events.commit(node, key: "selected", value: .bool(true), event: "change")
     }
+  }
+
+  /// Flet's Radio is the one inherited selection control that explicitly
+  /// ignores a ListTile click while the radio itself is disabled.
+  private func selectFromListTile() {
+    guard node.bool("disabled") != true else { return }
+    select()
   }
 }
 

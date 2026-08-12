@@ -133,6 +133,7 @@ private struct OptionalMinimumSize: ViewModifier {
 struct CupertinoSwitchControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
+  @Environment(\.rufletListTileClicks) private var listTileClicks
 
   var body: some View {
     HStack(spacing: 8) {
@@ -150,6 +151,7 @@ struct CupertinoSwitchControlView: View {
         .modifier(SwitchTrackOutline(node: node))
       if labelPosition == .right { label }
     }
+    .modifier(ListTileToggleListener(notifier: listTileClicks, action: toggleFromListTile))
     .modifier(FocusReporter(node: node, events: events))
     .disabled(node.bool("disabled") ?? false)
   }
@@ -158,6 +160,10 @@ struct CupertinoSwitchControlView: View {
     Binding(
       get: { node.bool("value") ?? false },
       set: { events.commit(node, value: .bool($0)) })
+  }
+
+  private func toggleFromListTile() {
+    binding.wrappedValue.toggle()
   }
 
   private enum LabelPlacement { case left, right }
@@ -318,6 +324,7 @@ struct CupertinoSelectionControlView: View {
   let node: ControlNode
   let kind: Kind
   @Environment(\.rufletEvents) private var events
+  @Environment(\.rufletListTileClicks) private var listTileClicks
 
   var body: some View {
     Button(action: advance) {
@@ -327,6 +334,13 @@ struct CupertinoSelectionControlView: View {
       }
     }
     .buttonStyle(.plain)
+    // Flet's CupertinoCheckbox subscribes to ListTileClicks. CupertinoRadio
+    // deliberately does not; its Dart renderer only changes through its
+    // RadioGroup.
+    .modifier(
+      ListTileToggleListener(
+        notifier: kind == .checkbox ? listTileClicks : nil,
+        action: advance))
     .modifier(FocusReporter(node: node, events: events))
     .disabled(node.bool("disabled") ?? false)
   }

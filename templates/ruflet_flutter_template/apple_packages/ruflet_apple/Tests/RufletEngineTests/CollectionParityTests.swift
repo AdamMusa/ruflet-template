@@ -138,6 +138,101 @@ final class CollectionParityTests: XCTestCase {
       72)
   }
 
+  func testMaterialListTileUsesPinnedMaterial3ConstructorAndThemeDefaults() {
+    let base = ListTilePresentation(node: ControlNode(id: 1, type: "ListTile"))
+    XCTAssertEqual(base.contentPadding.top, 0)
+    XCTAssertEqual(base.contentPadding.leading, 16)
+    XCTAssertEqual(base.contentPadding.bottom, 0)
+    XCTAssertEqual(base.contentPadding.trailing, 24)
+    XCTAssertEqual(base.horizontalTitleGap, 16)
+    XCTAssertEqual(base.minLeadingWidth, 24)
+    XCTAssertEqual(base.minHeight, 56)
+    XCTAssertEqual(base.titleFontSize, 16)
+    XCTAssertEqual(base.subtitleFontSize, 14)
+    XCTAssertEqual(base.leadingTrailingFontSize, 11)
+    XCTAssertEqual(base.shapeKind, .roundedRectangle)
+    XCTAssertEqual(base.radii, RufletCornerRadii(uniform: 0))
+
+    let dense = ListTilePresentation(node: ControlNode(
+      id: 2, type: "ListTile",
+      props: ["dense": .bool(true), "subtitle": .string("Details")]))
+    XCTAssertEqual(dense.minHeight, 64)
+    XCTAssertEqual(dense.titleFontSize, 13)
+    XCTAssertEqual(dense.subtitleFontSize, 12)
+  }
+
+  func testMaterialListTileShapePreservesFletShapeAndBorderSide() {
+    let tile = ListTilePresentation(node: ControlNode(
+      id: 1, type: "ListTile",
+      props: [
+        "shape": .map([
+          "_type": .string("stadium"),
+          "radius": .double(13),
+          "side": .map([
+            "color": .string("red"), "width": .double(3),
+            "style": .string("solid")
+          ])
+        ])
+      ]))
+    XCTAssertEqual(tile.shapeKind, .stadium)
+    XCTAssertEqual(tile.radii, RufletCornerRadii(uniform: 13))
+    XCTAssertEqual(tile.outlineWidth, 3)
+  }
+
+  func testCupertinoListTileUsesEachFlutterNativeLayoutVariant() {
+    let base = CupertinoListTilePresentation(node: ControlNode(
+      id: 1, type: "CupertinoListTile", props: ["title": .string("Title")]))
+    XCTAssertEqual(base.leadingSize, 28)
+    XCTAssertEqual(base.leadingToTitle, 16)
+    XCTAssertEqual(base.minHeight, 44)
+    XCTAssertEqual(base.contentPadding.leading, 20)
+    XCTAssertEqual(base.contentPadding.trailing, 14)
+
+    let baseSubtitle = CupertinoListTilePresentation(node: ControlNode(
+      id: 2, type: "CupertinoListTile",
+      props: ["title": .string("Title"), "subtitle": .string("Subtitle")]))
+    XCTAssertEqual(baseSubtitle.minHeight, 48)
+    XCTAssertEqual(baseSubtitle.subtitleFontSize, 12)
+
+    let notchedLeading = CupertinoListTilePresentation(node: ControlNode(
+      id: 3, type: "CupertinoListTile",
+      props: [
+        "title": .string("Title"), "subtitle": .string("Subtitle"),
+        "leading": .string("settings"), "notched": .bool(true)
+      ]))
+    XCTAssertEqual(notchedLeading.leadingSize, 30)
+    XCTAssertEqual(notchedLeading.leadingToTitle, 12)
+    XCTAssertEqual(notchedLeading.minHeight, 54)
+    XCTAssertEqual(notchedLeading.contentPadding.leading, 14)
+    XCTAssertEqual(notchedLeading.subtitleFontSize, 14)
+
+    let notchedWithoutLeading = CupertinoListTilePresentation(node: ControlNode(
+      id: 4, type: "CupertinoListTile",
+      props: ["title": .string("Title"), "notched": .bool(true)]))
+    XCTAssertEqual(notchedWithoutLeading.minHeight, 50)
+    XCTAssertEqual(notchedWithoutLeading.contentPadding.top, 10)
+    XCTAssertEqual(notchedWithoutLeading.contentPadding.leading, 28)
+    XCTAssertEqual(notchedWithoutLeading.contentPadding.bottom, 10)
+  }
+
+  func testCupertinoListTileRequiresVisibleTitleLikeFletErrorControl() {
+    XCTAssertEqual(
+      ListTilePresentation.validationMessage(ControlNode(id: 1, type: "CupertinoListTile")),
+      "CupertinoListTile.title must be provided and visible")
+    XCTAssertNil(ListTilePresentation.validationMessage(ControlNode(
+      id: 2, type: "CupertinoListTile", props: ["title": .string("Settings")])))
+    XCTAssertNil(ListTilePresentation.validationMessage(ControlNode(id: 3, type: "ListTile")))
+  }
+
+  func testListTileClicksNotifierIsInheritedEdgeTriggeredState() {
+    let notifier = RufletListTileClickNotifier()
+    XCTAssertEqual(notifier.generation, 0)
+    notifier.click()
+    XCTAssertEqual(notifier.generation, 1)
+    notifier.click()
+    XCTAssertEqual(notifier.generation, 2)
+  }
+
   func testReorderUsesFlutterFinalIndexWhenMovingDown() {
     XCTAssertEqual(CollectionParity.reorderDestination(from: 1, insertionSlot: 4), 3)
     XCTAssertEqual(CollectionParity.reorderDestination(from: 4, insertionSlot: 1), 1)
@@ -191,5 +286,11 @@ final class CollectionParityTests: XCTestCase {
     XCTAssertEqual(
       ControlRegistry.descriptor(for: "DataColumn")?.supportedEvents,
       Set(["sort"]))
+    XCTAssertEqual(
+      ControlRegistry.descriptor(for: "ListTile")?.supportedEvents,
+      Set(["blur", "click", "focus", "long_press"]))
+    XCTAssertEqual(
+      ControlRegistry.descriptor(for: "CupertinoListTile")?.supportedEvents,
+      Set(["click"]))
   }
 }

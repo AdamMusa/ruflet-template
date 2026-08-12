@@ -537,120 +537,219 @@ private struct PagedTabStyle: ViewModifier {
 struct ListTileControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
+  @Environment(\.openURL) private var openURL
+  @StateObject private var tileClicks = RufletListTileClickNotifier()
+  @State private var hovered = false
+  @State private var pressed = false
+  @FocusState private var focused: Bool
 
+  @ViewBuilder
   var body: some View {
-    let metrics = CollectionDefaults.listTile(node)
-    HStack(alignment: rowAlignment, spacing: leadingGap ?? metrics.horizontalTitleGap) {
+    if let validationMessage = ListTilePresentation.validationMessage(node) {
+      Text(validationMessage).foregroundColor(.red)
+    } else if node.type == "CupertinoListTile" {
+      cupertinoTile
+    } else {
+      materialTile
+    }
+  }
+
+  private var materialTile: some View {
+    let presentation = ListTilePresentation(node: node)
+    let shape = presentation.shape
+    return HStack(
+      alignment: presentation.rowAlignment,
+      spacing: presentation.horizontalTitleGap
+    ) {
       if let leadingID = node.controlID(forKey: "leading") {
         ControlView(id: leadingID, axis: .none)
-          .frame(
-            width: node.double("leading_size").map { CGFloat($0) },
-            height: node.double("leading_size").map { CGFloat($0) })
-          .frame(minWidth: metrics.minLeadingWidth)
+          .font(.system(size: presentation.leadingTrailingFontSize))
+          .foregroundColor(presentation.leadingTrailingColor)
+          .modifier(OptionalListTileTextStyle(style: presentation.leadingTrailingTextStyle))
+          .frame(minWidth: presentation.minLeadingWidth)
       } else if node.props["leading"] != nil {
         RufletIcon(
-          value: node.props["leading"], size: 22,
-          color: MaterialPalette.color(node.string("icon_color")))
-          .frame(minWidth: metrics.minLeadingWidth)
+          value: node.props["leading"], size: 24,
+          color: presentation.iconColor)
+          .frame(minWidth: presentation.minLeadingWidth)
       }
 
-      VStack(alignment: .leading, spacing: 2) {
+      VStack(alignment: .leading, spacing: presentation.textSpacing) {
         if let titleID = node.controlID(forKey: "title") {
           ControlView(id: titleID, axis: .none)
+            .font(.system(size: presentation.titleFontSize))
+            .foregroundColor(presentation.titleColor)
+            .modifier(OptionalListTileTextStyle(style: presentation.titleTextStyle))
         } else if let title = node.string("title") {
-          Text(title).rufletTextStyle(RufletTextStyle(node: node, styleKey: "title_text_style"))
+          Text(title)
+            .font(.system(size: presentation.titleFontSize))
+            .foregroundColor(presentation.titleColor)
+            .modifier(OptionalListTileTextStyle(style: presentation.titleTextStyle))
         }
         if let subtitleID = node.controlID(forKey: "subtitle") {
           ControlView(id: subtitleID, axis: .none)
-            .font(.subheadline)
-            .foregroundColor(.secondary)
+            .font(.system(size: presentation.subtitleFontSize))
+            .foregroundColor(presentation.subtitleColor)
+            .modifier(OptionalListTileTextStyle(style: presentation.subtitleTextStyle))
         } else if let subtitle = node.string("subtitle") {
           Text(subtitle)
-            .font(.subheadline)
-            .foregroundColor(.secondary)
-            .rufletTextStyle(RufletTextStyle(node: node, styleKey: "subtitle_text_style"))
+            .font(.system(size: presentation.subtitleFontSize))
+            .foregroundColor(presentation.subtitleColor)
+            .modifier(OptionalListTileTextStyle(style: presentation.subtitleTextStyle))
         }
       }
       .frame(maxWidth: .infinity, alignment: .leading)
 
       if let trailingID = node.controlID(forKey: "trailing") {
         ControlView(id: trailingID, axis: .none)
-      } else if let trailingText = node.string("trailing") {
-        Text(trailingText)
-          .rufletTextStyle(RufletTextStyle(node: node, styleKey: "leading_and_trailing_text_style"))
+          .font(.system(size: presentation.leadingTrailingFontSize))
+          .foregroundColor(presentation.leadingTrailingColor)
+          .modifier(OptionalListTileTextStyle(style: presentation.leadingTrailingTextStyle))
       } else if node.props["trailing"] != nil {
         RufletIcon(
-          value: node.props["trailing"], size: 22,
-          color: MaterialPalette.color(node.string("icon_color")))
-      } else if let info = node.controlID(forKey: "additional_info") {
-        // Cupertino puts a second, quieter value before the chevron.
-        ControlView(id: info, axis: .none).foregroundColor(.secondary)
-      }
-      // `toggle_inputs` lets a tap anywhere on the row drive the switch or
-      // checkbox it carries, rather than only the control itself.
-      if node.bool("toggle_inputs") == true, let toggleID = node.controlID(forKey: "leading") {
-        Color.clear.frame(width: 0).onTapGesture { events.fire(node, "click") }
-          .accessibilityHidden(true)
-          .id(toggleID)
+          value: node.props["trailing"], size: 24,
+          color: presentation.iconColor)
       }
     }
-    .padding(metrics.contentPadding)
-    .padding(.vertical, metrics.minVerticalPadding)
-    .frame(minHeight: metrics.minHeight)
-    .background(
-      (node.bool("selected") ?? false)
-        ? MaterialPalette.color(node.string("selected_tile_color") ?? "secondarycontainer")
-        : MaterialPalette.color(node.string("bgcolor")))
-    .foregroundColor(MaterialPalette.color(
-      (node.bool("selected") ?? false) ? node.string("selected_color") : node.string("text_color"),
-      default: .primary))
-    .opacity(node.bool("disabled") == true ? 0.45 : 1)
-    .allowsHitTesting(node.bool("disabled") != true)
-    .clipShape(RoundedRectangle(cornerRadius: tileRadius))
-    .modifier(
-      ListTileSplash(
-        color: MaterialPalette.color(node.string("bgcolor_activated"))))
-    .overlay(alignment: .bottom) {
-      if isNotched {
-        Rectangle()
-          .fill(Color.secondary.opacity(0.25))
-          .frame(height: 0.5)
-          .padding(.leading, leadingGap ?? 16)
-      }
-    }
+    .padding(presentation.contentPadding)
+    .padding(.vertical, presentation.minVerticalPadding)
+    .frame(minHeight: presentation.minHeight)
+    .background(shape.fill(
+      pressed
+        ? MaterialPalette.color(node.string("splash_color"), default: .clear)
+        : presentation.backgroundColor(hovered: hovered, focused: focused)))
+    .overlay(shape.stroke(presentation.outlineColor, lineWidth: presentation.outlineWidth))
+    .contentShape(shape)
+    .environment(\.rufletListTileClicks, node.bool("toggle_inputs") == true ? tileClicks : nil)
+    .onHover { hovered = $0 }
+    .focusable(node.bool("disabled") != true)
+    .focused($focused)
+    .onAppear { if node.bool("autofocus") == true { focused = true } }
+    .onChange(of: focused) { events.fire(node, $0 ? "focus" : "blur") }
+    .modifier(ListTileInteraction(
+      node: node, events: events, openURL: openURL, tileClicks: tileClicks,
+      pressed: $pressed))
     .modifier(VisualDensityPadding(value: node.props["visual_density"]))
-    .contentShape(Rectangle())
     .modifier(TapFeedback(enabled: node.bool("enable_feedback") != false))
-    .modifier(ListTileSplash(color: MaterialPalette.color(node.string("splash_color"))))
-    .modifier(TapReporter(node: node, events: events))
+    .disabled(node.bool("disabled") == true)
   }
 
-  /// `title_alignment` places the leading and trailing slots against the title
-  /// block rather than centring them on the row.
-  private var rowAlignment: VerticalAlignment {
-    switch node.string("title_alignment")?.lowercased() {
-    case "top", "titlehigh": return .top
-    case "bottom": return .bottom
-    default: return .center
+  private var cupertinoTile: some View {
+    let presentation = CupertinoListTilePresentation(node: node)
+    return HStack(spacing: 0) {
+      if let leadingID = node.controlID(forKey: "leading") {
+        ControlView(id: leadingID, axis: .none)
+          .frame(width: presentation.leadingSize, height: presentation.leadingSize)
+        Spacer().frame(width: presentation.leadingToTitle)
+      } else if node.props["leading"] != nil {
+        RufletIcon(value: node.props["leading"], size: presentation.leadingSize, color: nil)
+          .frame(width: presentation.leadingSize, height: presentation.leadingSize)
+        Spacer().frame(width: presentation.leadingToTitle)
+      } else {
+        // Flutter retains the leading slot's height even when it has no child.
+        Color.clear.frame(width: 0, height: presentation.leadingSize)
+      }
+
+      VStack(alignment: .leading, spacing: presentation.titleSubtitleSpacing) {
+        if let titleID = node.controlID(forKey: "title") {
+          ControlView(id: titleID, axis: .none)
+            .font(presentation.titleFont)
+            .lineLimit(1)
+        } else if let title = node.string("title") {
+          Text(title).font(presentation.titleFont).lineLimit(1)
+        }
+        if let subtitleID = node.controlID(forKey: "subtitle") {
+          ControlView(id: subtitleID, axis: .none)
+            .font(.system(size: presentation.subtitleFontSize))
+            .foregroundColor(.secondary)
+            .lineLimit(1)
+        } else if let subtitle = node.string("subtitle") {
+          Text(subtitle)
+            .font(.system(size: presentation.subtitleFontSize))
+            .foregroundColor(.secondary)
+            .lineLimit(1)
+        }
+      }
+      .frame(maxWidth: .infinity, alignment: .leading)
+
+      if let infoID = node.controlID(forKey: "additional_info") {
+        ControlView(id: infoID, axis: .none).foregroundColor(.secondary).lineLimit(1)
+        if node.props["trailing"] != nil { Spacer().frame(width: 6) }
+      } else if let info = node.string("additional_info") {
+        Text(info).foregroundColor(.secondary).lineLimit(1)
+        if node.props["trailing"] != nil { Spacer().frame(width: 6) }
+      }
+      if let trailingID = node.controlID(forKey: "trailing") {
+        ControlView(id: trailingID, axis: .none)
+      } else if node.props["trailing"] != nil {
+        RufletIcon(value: node.props["trailing"], size: 17, color: nil)
+      }
     }
+    .padding(presentation.contentPadding)
+    .frame(maxWidth: .infinity, minHeight: presentation.minHeight)
+    .background(pressed ? presentation.activatedColor : presentation.backgroundColor)
+    .contentShape(Rectangle())
+    .environment(\.rufletListTileClicks, node.bool("toggle_inputs") == true ? tileClicks : nil)
+    .modifier(ListTileInteraction(
+      node: node, events: events, openURL: openURL, tileClicks: tileClicks,
+      pressed: $pressed))
+    .disabled(node.bool("disabled") == true)
   }
-
-  private var tileRadius: CGFloat {
-    ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? 0
-  }
-
-  /// `leading_to_title` is Cupertino's own gap between the leading slot and
-  /// the title, which it names separately from Material's.
-  private var leadingGap: CGFloat? {
-    node.double("leading_to_title").map { CGFloat($0) }
-  }
-
-  /// A notched Cupertino tile insets its separator to start at the title, and
-  /// `bgcolor_activated` is the fill while it is held.
-  private var isNotched: Bool { node.bool("notched") == true }
 }
 
-/// Material fills a pressed tile with its splash colour.
+/// Activation is attached only when the Flet constructor would give the tile
+/// an `onTap`; merely rendering a tile must not turn it into a button.
+private struct ListTileInteraction: ViewModifier {
+  let node: ControlNode
+  let events: RufletEventSink
+  let openURL: OpenURLAction
+  let tileClicks: RufletListTileClickNotifier
+  @Binding var pressed: Bool
+
+  func body(content: Content) -> some View {
+    var result = AnyView(content)
+    if interactive && node.bool("disabled") != true {
+      result = AnyView(
+        result
+          .onTapGesture(perform: activate)
+          .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+              .onChanged { _ in pressed = true }
+              .onEnded { _ in pressed = false }))
+    }
+    if node.type == "ListTile", node.handlesEvent("long_press"),
+      node.bool("disabled") != true
+    {
+      result = AnyView(result.simultaneousGesture(
+        LongPressGesture().onEnded { _ in events.fire(node, "long_press") }))
+    }
+    return result
+  }
+
+  private var interactive: Bool {
+    node.handlesEvent("click") || node.bool("toggle_inputs") == true || node.string("url") != nil
+  }
+
+  private func activate() {
+    if node.bool("toggle_inputs") == true { tileClicks.click() }
+    if let url = node.string("url").flatMap(URL.init(string:)) { openURL(url) }
+    if node.handlesEvent("click") { events.fire(node, "click") }
+  }
+}
+
+/// An omitted Flutter text-style slot inherits the constructor's theme style;
+/// applying an empty RufletTextStyle would incorrectly reset that style to
+/// SwiftUI's 17-point body font.
+private struct OptionalListTileTextStyle: ViewModifier {
+  let style: RufletTextStyle?
+
+  func body(content: Content) -> some View {
+    if let style { content.rufletTextStyle(style) } else { content }
+  }
+}
+
+/// Generic pressed fill retained for collection controls such as
+/// ExpansionPanel that share Material's list-row state layer.
 private struct ListTileSplash: ViewModifier {
   let color: Color?
   @State private var pressed = false
@@ -664,6 +763,166 @@ private struct ListTileSplash: ViewModifier {
           DragGesture(minimumDistance: 0)
             .onChanged { _ in pressed = true }
             .onEnded { _ in pressed = false }))
+  }
+}
+
+/// Constructor and Material-3 theme fallbacks used by `ListTile`.
+struct ListTilePresentation {
+  let node: ControlNode
+  let metrics: CollectionDefaults.ListTileValues
+  let shapeKind: RufletCardShapeKind
+  let radii: RufletCornerRadii
+  let outlineColor: Color
+  let outlineWidth: CGFloat
+
+  init(node: ControlNode) {
+    self.node = node
+    metrics = CollectionDefaults.listTile(node)
+    let shapeMap = node.map("shape")
+    shapeKind = RufletCardShapeKind(
+      rawValue: shapeMap?["_type"]?.stringValue?.lowercased() ?? "") ?? .roundedRectangle
+    radii = ControlProps.cornerRadii(shapeMap?["radius"]) ?? RufletCornerRadii(uniform: 0)
+    let side = shapeMap?["side"]?.mapValue
+    if side?["style"]?.stringValue?.lowercased() == "none" {
+      outlineColor = .clear
+      outlineWidth = 0
+    } else {
+      outlineColor = MaterialPalette.color(side?["color"]?.stringValue, default: .clear)
+      outlineWidth = CGFloat(side?["width"]?.doubleValue ?? 0)
+    }
+  }
+
+  static func validationMessage(_ node: ControlNode) -> String? {
+    guard node.type == "CupertinoListTile" else { return nil }
+    let hasTitle = node.controlID(forKey: "title") != nil || node.string("title") != nil
+    return hasTitle ? nil : "CupertinoListTile.title must be provided and visible"
+  }
+
+  var shape: RufletCardShape {
+    RufletCardShape(kind: shapeKind, radii: radii, eccentricity: 0)
+  }
+  var contentPadding: EdgeInsets { metrics.contentPadding }
+  var horizontalTitleGap: CGFloat { metrics.horizontalTitleGap }
+  var minLeadingWidth: CGFloat { metrics.minLeadingWidth }
+  var minVerticalPadding: CGFloat { metrics.minVerticalPadding }
+  var minHeight: CGFloat { metrics.minHeight }
+  var dense: Bool { node.bool("dense") == true }
+  var titleFontSize: CGFloat { dense ? 13 : 16 }
+  var subtitleFontSize: CGFloat { dense ? 12 : 14 }
+  var leadingTrailingFontSize: CGFloat { 11 }
+  var textSpacing: CGFloat { node.props["subtitle"] == nil ? 0 : 2 }
+
+  var rowAlignment: VerticalAlignment {
+    switch node.string("title_alignment")?.lowercased() {
+    case "top": return .top
+    case "bottom": return .bottom
+    // M3's default `threeLine` is top only for an actual three-line tile.
+    case "threeline" where node.bool("is_three_line") == true: return .top
+    default: return .center
+    }
+  }
+
+  private var explicitStateTextColor: Color? {
+    if node.bool("disabled") == true {
+      return MaterialPalette.color("onsurface", default: .secondary).opacity(0.38)
+    }
+    if node.bool("selected") == true {
+      return MaterialPalette.color(
+        node.string("selected_color"),
+        default: MaterialPalette.color("primary", default: .accentColor))
+    }
+    return MaterialPalette.color(node.string("text_color"))
+  }
+
+  var titleColor: Color {
+    explicitStateTextColor ?? MaterialPalette.color("onsurface", default: .primary)
+  }
+  var subtitleColor: Color {
+    explicitStateTextColor ?? MaterialPalette.color("onsurfacevariant", default: .secondary)
+  }
+  var leadingTrailingColor: Color {
+    explicitStateTextColor ?? MaterialPalette.color("onsurfacevariant", default: .secondary)
+  }
+  var titleTextStyle: RufletTextStyle? {
+    node.map("title_text_style").map(RufletTextStyle.init(map:))
+  }
+  var subtitleTextStyle: RufletTextStyle? {
+    node.map("subtitle_text_style").map(RufletTextStyle.init(map:))
+  }
+  var leadingTrailingTextStyle: RufletTextStyle? {
+    node.map("leading_and_trailing_text_style").map(RufletTextStyle.init(map:))
+  }
+
+  var iconColor: Color {
+    if node.bool("disabled") == true { return .secondary.opacity(0.38) }
+    if node.bool("selected") == true {
+      return MaterialPalette.color(
+        node.string("selected_color"),
+        default: MaterialPalette.color("primary", default: .accentColor))
+    }
+    return MaterialPalette.color(node.string("icon_color") ?? "onsurfacevariant", default: .secondary)
+  }
+
+  func backgroundColor(hovered: Bool, focused: Bool) -> Color {
+    if focused, let focus = MaterialPalette.color(node.string("focus_color")) { return focus }
+    if hovered, let hover = MaterialPalette.color(node.string("hover_color")) { return hover }
+    if node.bool("selected") == true,
+      let selected = MaterialPalette.color(node.string("selected_tile_color"))
+    { return selected }
+    return MaterialPalette.color(node.string("bgcolor"), default: .clear)
+  }
+}
+
+/// Flutter's CupertinoListTile constants are part of its native constructor,
+/// not app-specific styling. Ruflet forwards nil for these values and the
+/// Apple renderer resolves the same four layout variants here.
+struct CupertinoListTilePresentation {
+  let node: ControlNode
+  let notched: Bool
+  let hasLeading: Bool
+  let hasSubtitle: Bool
+
+  init(node: ControlNode) {
+    self.node = node
+    notched = node.bool("notched") == true
+    hasLeading = node.props["leading"] != nil || node.controlID(forKey: "leading") != nil
+    hasSubtitle = node.props["subtitle"] != nil || node.controlID(forKey: "subtitle") != nil
+  }
+
+  var leadingSize: CGFloat { CGFloat(node.double("leading_size") ?? (notched ? 30 : 28)) }
+  var leadingToTitle: CGFloat { CGFloat(node.double("leading_to_title") ?? (notched ? 12 : 16)) }
+  var titleSubtitleSpacing: CGFloat { hasSubtitle ? 3 : 0 }
+  var subtitleFontSize: CGFloat { notched ? 14 : 12 }
+  var titleFont: Font {
+    if notched && hasSubtitle {
+      return .system(size: hasLeading ? 17 : 16, weight: .semibold)
+    }
+    return .body
+  }
+
+  var minHeight: CGFloat {
+    if !notched { return hasSubtitle ? 48 : 44 }
+    return hasLeading ? 54 : 50
+  }
+
+  var contentPadding: EdgeInsets {
+    if let explicit = ControlProps.edgeInsets(node.props["content_padding"]) { return explicit }
+    if !notched { return EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 14) }
+    if hasLeading { return EdgeInsets(top: 0, leading: 14, bottom: 0, trailing: 14) }
+    return EdgeInsets(top: 10, leading: 28, bottom: 10, trailing: 14)
+  }
+
+  var backgroundColor: Color {
+    MaterialPalette.color(node.string("bgcolor"), default: .clear)
+  }
+
+  var activatedColor: Color {
+    if let explicit = MaterialPalette.color(node.string("bgcolor_activated")) { return explicit }
+    #if os(iOS)
+      return Color(uiColor: .systemGray4)
+    #else
+      return Color(nsColor: .lightGray).opacity(0.55)
+    #endif
   }
 }
 
