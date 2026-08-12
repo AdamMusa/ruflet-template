@@ -124,13 +124,30 @@ final class IconMappingTests: XCTestCase {
   func testRubyMaterialNamesResolveToTheirNativeAppleMeaning() {
     XCTAssertEqual(IconMapping.symbol(forMaterialName: "home"), "house")
     XCTAssertTrue(
-      ["rocket.fill", "paperplane.fill"].contains(
+      ["rocket.fill", "airplane.departure"].contains(
         IconMapping.symbol(forMaterialName: "rocket_launch")))
     XCTAssertEqual(IconMapping.symbol(forMaterialName: "account_circle"), "person.crop.circle")
     XCTAssertEqual(IconMapping.symbol(forMaterialName: "chevron_right"), "chevron.right")
     XCTAssertEqual(
       IconMapping.symbol(forMaterialName: "cameraswitch"),
       "arrow.triangle.2.circlepath.camera")
+  }
+
+  func testExplorerGalleryCategoriesUseClosestNativeAppleArtwork() {
+    let expected: [String: String] = [
+      "view_module": "square.grid.3x3",
+      "widgets": "square.grid.2x2.fill",
+      "image": "photo.fill",
+      "show_chart": "chart.line.uptrend.xyaxis",
+      "animation": "circle.grid.cross",
+      "auto_awesome": "sparkles",
+      "settings": "gearshape",
+    ]
+
+    for (materialName, nativeSymbol) in expected {
+      XCTAssertEqual(IconMapping.symbol(forMaterialName: materialName), nativeSymbol)
+      XCTAssertTrue(IconMapping.nativeSymbolExists(nativeSymbol))
+    }
   }
 
   func testLessCommonMaterialNamesStillUseNativeAppleArtwork() throws {

@@ -397,7 +397,7 @@ public enum IconMapping {
     "chevron_left": "chevron.left", "chevron_right": "chevron.right",
     "first_page": "chevron.left.2", "last_page": "chevron.right.2",
     "menu": "line.3.horizontal", "more_vert": "ellipsis", "more_horiz": "ellipsis",
-    "apps": "square.grid.2x2", "widgets": "square.grid.2x2", "dashboard": "square.grid.2x2.fill",
+    "apps": "square.grid.2x2", "widgets": "square.grid.2x2.fill", "dashboard": "square.grid.2x2.fill",
     "home": "house", "home_filled": "house.fill",
 
     // Actions
@@ -473,7 +473,7 @@ public enum IconMapping {
     "audiotrack": "music.note", "music_note": "music.note", "library_music": "music.note.list",
     "camera": "camera.fill", "camera_alt": "camera.fill",
     "cameraswitch": "arrow.triangle.2.circlepath.camera",
-    "photo_camera": "camera.fill", "photo": "photo", "image": "photo",
+    "photo_camera": "camera.fill", "photo": "photo", "image": "photo.fill",
     "photo_library": "photo.on.rectangle", "collections": "square.stack",
     "movie": "film", "video_library": "film.stack", "album": "square.stack.fill",
 
@@ -485,7 +485,7 @@ public enum IconMapping {
     "list": "list.bullet", "list_alt": "list.bullet.rectangle",
     "format_list_bulleted": "list.bullet", "format_list_numbered": "list.number",
     "table_chart": "tablecells", "grid_view": "square.grid.2x2",
-    "view_list": "list.bullet", "view_module": "square.grid.3x2",
+    "view_list": "list.bullet", "view_module": "square.grid.3x3",
     "view_column": "rectangle.split.3x1", "view_stream": "rectangle.split.1x2",
     "tab": "rectangle.split.3x1", "crop_square": "square.dashed",
     "attach_money": "dollarsign.circle", "receipt": "receipt",
@@ -552,7 +552,7 @@ public enum IconMapping {
     "local_fire_department": "flame.fill", "restaurant": "fork.knife",
     "local_cafe": "cup.and.saucer.fill", "fitness_center": "dumbbell.fill",
     "sports_esports": "gamecontroller.fill", "emoji_events": "trophy.fill",
-    "auto_awesome": "sparkles", "animation": "circle.hexagongrid",
+    "auto_awesome": "sparkles", "animation": "circle.grid.cross",
     "rocket_launch": "rocket.fill",
     "psychology": "brain", "gavel": "hammer",
     "qr_code": "qrcode", "qr_code_scanner": "qrcode.viewfinder",
@@ -572,7 +572,7 @@ public enum IconMapping {
   /// floor. A current Apple OS should show the closest native meaning; older
   /// systems still receive a visible native icon rather than a blank image.
   private static let unavailableSymbolFallbacks: [String: String] = [
-    "rocket_launch": "paperplane.fill",
+    "rocket_launch": "airplane.departure",
   ]
 }
 
