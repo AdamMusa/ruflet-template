@@ -372,8 +372,9 @@ public final class PageService: RufletStreamingService {
         }
         completion(.success(.null))
       #else
-        completion(.failure(RufletServiceError.platformUnsupported(
-          type: node?.type ?? "Page", method: call.name, platform: Self.platformName)))
+        // Pinned Flet calls SystemChrome only on a mobile platform and still
+        // completes the Page method successfully everywhere else.
+        completion(.success(.null))
       #endif
 
     case "take_screenshot":
