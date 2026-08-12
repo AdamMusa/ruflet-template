@@ -15,7 +15,9 @@ struct RufletAppControlView: View {
       RufletStatusView(message: error, isError: true)
     } else if let url = RufletAppEndpoint.resolve(configuration.url, inheriting: parentServerURL) {
       RufletNestedAppHost(
-        node: node, endpoint: url, configuration: configuration, extensions: extensions)
+        node: node, endpoint: url,
+        pageName: RufletAppEndpoint.pageName(configuration.url, inheriting: parentServerURL),
+        configuration: configuration, extensions: extensions)
         .id(url)
     } else {
       RufletStatusView(
@@ -36,7 +38,34 @@ enum RufletAppEndpoint {
     components.scheme = scheme == "https" ? "wss" : "ws"
     let pagePath = components.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
     components.path = pagePath.isEmpty ? "/ws" : "/\(pagePath)/ws"
+    // FletWebSocketBackendChannel constructs a fresh endpoint from scheme,
+    // authority and path. Query and fragment belong to the page URL and are
+    // intentionally absent from the socket handshake URL.
+    components.query = nil
+    components.fragment = nil
     return components.url
+  }
+
+  /// Flet's register payload identifies an app by at most the first two page
+  /// path segments. An inherited native endpoint already ends in `/ws`, which
+  /// is transport syntax and therefore not part of the page identity.
+  static func pageName(_ raw: String?, inheriting parent: URL?) -> String {
+    let source: URL
+    let hasExplicitURL: Bool
+    if let raw, !raw.isEmpty {
+      guard let explicit = URL(string: raw) else { return "" }
+      source = explicit
+      hasExplicitURL = true
+    } else {
+      guard let parent else { return "" }
+      source = parent
+      hasExplicitURL = false
+    }
+    var segments = source.path.split(separator: "/").map(String.init)
+    if !hasExplicitURL, segments.last?.lowercased() == "ws" {
+      segments.removeLast()
+    }
+    return segments.prefix(2).joined(separator: "/")
   }
 }
 
@@ -105,13 +134,16 @@ private struct RufletNestedAppHost: View {
   init(
     node: ControlNode,
     endpoint: URL,
+    pageName: String,
     configuration: RufletAppConfiguration,
     extensions: [any RufletExtension.Type]
   ) {
     self.node = node
     self.configuration = configuration
+    var capabilities = ClientCapabilities.current()
+    capabilities.pageName = pageName
     _host = StateObject(wrappedValue: RufletHost(
-      source: .server(endpoint), extensions: extensions, capabilities: .current(),
+      source: .server(endpoint), extensions: extensions, capabilities: capabilities,
       reconnectInterval: configuration.reconnectInterval,
       reconnectTimeout: configuration.reconnectTimeout))
   }
@@ -164,9 +196,49 @@ private struct RufletNestedSessionView: View {
         .environment(\.rufletEvents, RufletEventSink.connected(to: session))
         .environment(\.rufletCommands, session.commands)
         .environment(\.rufletServerURL, session.serverURL)
-      if case .crashed(let message) = session.status {
-        RufletStatusView(message: configuration.formatError(message), isError: true)
+      switch RufletAppPresentation.state(
+        for: session.status, configuration: configuration,
+        hasContent: session.store.node(RufletWireID.page)?
+          .controlIDs(forKey: "views").isEmpty == false
+      ) {
+      case .content, .empty:
+        EmptyView()
+      case .loading(let message):
+        RufletStatusView(message: message, isError: false)
+      case .error(let message):
+        RufletStatusView(message: message, isError: true)
       }
+    }
+  }
+}
+
+enum RufletAppPresentation {
+  enum State: Equatable {
+    case empty
+    case loading(String)
+    case error(String)
+    case content
+  }
+
+  static func state(
+    for status: RufletSession.Status, configuration: RufletAppConfiguration,
+    hasContent: Bool = false
+  ) -> State {
+    // Once Flet has views it keeps them mounted through reconnects and runtime
+    // failures; the loading/error placeholder is only the empty-page branch.
+    if hasContent { return .content }
+    switch status {
+    case .connected:
+      return .content
+    case .crashed(let message):
+      return configuration.showStartupScreen
+        ? .error(configuration.formatError(message)) : .empty
+    case .idle, .connecting, .disconnected, .failed:
+      // Flet keeps `isLoading` true while reconnecting, including after a
+      // transient channel error. The configured startup page remains visible
+      // until registration succeeds; without it the placeholder stays empty.
+      return configuration.showStartupScreen
+        ? .loading(configuration.startupMessage) : .empty
     }
   }
 }

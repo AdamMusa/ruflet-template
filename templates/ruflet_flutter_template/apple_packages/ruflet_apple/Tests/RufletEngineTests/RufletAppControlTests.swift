@@ -9,6 +9,7 @@ final class RufletAppControlTests: XCTestCase {
 
     XCTAssertEqual(canonical?.classification, .visible)
     XCTAssertEqual(canonical?.implementation, "RufletAppControlView")
+    XCTAssertTrue(canonical?.supportedEvents.contains("error") == true)
     XCTAssertNil(ControlRegistry.descriptor(for: "FletApp"))
   }
 
@@ -26,6 +27,29 @@ final class RufletAppControlTests: XCTestCase {
       RufletAppEndpoint.resolve("https://example.test/ruflet", inheriting: nil)?.absoluteString,
       "wss://example.test/ruflet/ws")
     XCTAssertNil(RufletAppEndpoint.resolve("ftp://example.test/ruflet", inheriting: nil))
+  }
+
+  func testSocketEndpointKeepsPagePathButDropsPageQueryAndFragment() {
+    XCTAssertEqual(
+      RufletAppEndpoint.resolve(
+        "https://example.test/apps/demo?token=secret#section", inheriting: nil
+      )?.absoluteString,
+      "wss://example.test/apps/demo/ws")
+  }
+
+  func testRegistrationPageNameMatchesFletFirstTwoPathSegments() {
+    XCTAssertEqual(
+      RufletAppEndpoint.pageName(
+        "https://example.test/apps/demo/deep?token=secret", inheriting: nil),
+      "apps/demo")
+    XCTAssertEqual(
+      RufletAppEndpoint.pageName(
+        nil, inheriting: URL(string: "wss://example.test/parent/app/ws")!),
+      "parent/app")
+    XCTAssertEqual(
+      RufletAppEndpoint.pageName(
+        "https://example.test", inheriting: URL(string: "wss://ignored.test/root/ws")!),
+      "")
   }
 
   func testConfigurationPreservesPinnedFletDefaultsAndDurations() {
@@ -77,5 +101,39 @@ final class RufletAppControlTests: XCTestCase {
       ]))
     XCTAssertEqual(custom.formatError("Boom\ntrace"), "Failed: Boom\ntrace")
     XCTAssertEqual(custom.formatError("Boom"), "Failed: Boom")
+  }
+
+  func testStartupPresentationTracksFletLoadingAndErrorStates() {
+    let hidden = RufletAppConfiguration(node: ControlNode(id: 1, type: "RufletApp"))
+    XCTAssertEqual(
+      RufletAppPresentation.state(for: .connecting, configuration: hidden), .empty)
+    XCTAssertEqual(
+      RufletAppPresentation.state(for: .failed("offline"), configuration: hidden), .empty)
+    XCTAssertEqual(
+      RufletAppPresentation.state(for: .crashed("boom"), configuration: hidden), .empty)
+    XCTAssertEqual(
+      RufletAppPresentation.state(for: .connected, configuration: hidden), .content)
+
+    let shown = RufletAppConfiguration(node: ControlNode(
+      id: 1, type: "RufletApp", props: [
+        "show_app_startup_screen": true,
+        "app_startup_screen_message": "Connecting…",
+      ]))
+    XCTAssertEqual(
+      RufletAppPresentation.state(for: .idle, configuration: shown),
+      .loading("Connecting…"))
+    XCTAssertEqual(
+      RufletAppPresentation.state(for: .disconnected, configuration: shown),
+      .loading("Connecting…"))
+    XCTAssertEqual(
+      RufletAppPresentation.state(for: .failed("offline"), configuration: shown),
+      .loading("Connecting…"))
+    XCTAssertEqual(
+      RufletAppPresentation.state(for: .crashed("Boom\ntrace"), configuration: shown),
+      .error("The application encountered an error: Boom\n\ntrace"))
+    XCTAssertEqual(
+      RufletAppPresentation.state(
+        for: .failed("offline"), configuration: shown, hasContent: true),
+      .content)
   }
 }
