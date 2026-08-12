@@ -694,64 +694,86 @@ struct SliderPresentation {
 struct RangeSliderControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
-  @Environment(\.layoutDirection) private var layoutDirection
-  @State private var dragging = false
 
   var body: some View {
-    let values = RufletThemeDefaults.rangeSliderValues(node)
-    let start = min(max(values.start, minimum), maximum)
-    let end = min(max(values.end, start), maximum)
-
-    MaterialSliderTrack(
-      node: node,
-      thumbs: [start, end],
-      secondary: nil,
-      activeRange: start...end,
-      interaction: .tapAndSlide,
-      bubbles: dragging ? bubbleTexts(start: start, end: end) : [nil, nil],
-      scale: scale(width:),
-      shapeYear2023: nil,
-      thumbColorProperty: nil,
-      onEdit: { editing, _ in
-        dragging = editing
-        events.fire(node, editing ? "change_start" : "change_end")
-      },
-      onMove: { index, proposed in
-        // Each thumb clamps against the other, so the pair stays ordered even
-        // when one is dragged past its neighbour.
-        if index == 0 {
-          let actual = min(proposed, end)
-          commit(start: actual, end: end)
-          return actual
-        } else {
-          let actual = max(proposed, start)
-          commit(start: start, end: actual)
-          return actual
-        }
-      })
+    let presentation = RangeSliderPresentation(node: node)
+    VStack(spacing: 0) {
+      nativeSlider(value: startBinding, upperBound: presentation.end)
+        .accessibilityLabel(Text(presentation.labels[0] ?? "Range start"))
+      nativeSlider(value: endBinding, lowerBound: presentation.start)
+        .accessibilityLabel(Text(presentation.labels[1] ?? "Range end"))
+    }
+      .modifier(OptionalTint(color: presentation.explicitTint))
       .disabled(node.bool("disabled") ?? false)
   }
 
-  private var minimum: Double { node.double("min") ?? 0 }
-  private var maximum: Double { node.double("max") ?? 1 }
-
-  private func scale(width: CGFloat) -> RufletSliderScale {
-    RufletSliderScale(
-      minimum: minimum, maximum: maximum, divisions: node.int("divisions"), width: width,
-      thumbWidth: RufletThemeDefaults.sliderMetrics(year2023: nil).thumbWidth,
-      reversed: layoutDirection == .rightToLeft)
+  @ViewBuilder
+  private func nativeSlider(
+    value: Binding<Double>, lowerBound: Double? = nil, upperBound: Double? = nil
+  ) -> some View {
+    let presentation = RangeSliderPresentation(node: node)
+    let bounds = (lowerBound ?? presentation.minimum)...(upperBound ?? presentation.maximum)
+    if let step = presentation.step {
+      Slider(value: value, in: bounds, step: step, onEditingChanged: editingChanged)
+    } else {
+      Slider(value: value, in: bounds, onEditingChanged: editingChanged)
+    }
   }
 
-  private func bubbleTexts(start: Double, end: Double) -> [String?] {
-    RufletRangeSliderLabels.resolve(
-      template: node.string("label") ?? "", start: start, end: end,
-      digits: node.int("round") ?? 0)
+  private var startBinding: Binding<Double> {
+    Binding(
+      get: { RangeSliderPresentation(node: node).start },
+      set: { value in
+        let presentation = RangeSliderPresentation(node: node)
+        commit(start: min(value, presentation.end), end: presentation.end)
+      })
+  }
+
+  private var endBinding: Binding<Double> {
+    Binding(
+      get: { RangeSliderPresentation(node: node).end },
+      set: { value in
+        let presentation = RangeSliderPresentation(node: node)
+        commit(start: presentation.start, end: max(value, presentation.start))
+      })
+  }
+
+  private func editingChanged(_ editing: Bool) {
+    events.fire(node, editing ? "change_start" : "change_end")
   }
 
   /// `Page#apply_event_value_to_control` looks for a `start_value`/`end_value`
   /// pair in the event data and writes both back, so send them together.
   private func commit(start: Double, end: Double) {
     RufletValueControlEvents.commitRange(node, start: start, end: end, to: events)
+  }
+}
+
+struct RangeSliderPresentation {
+  let node: ControlNode
+
+  var minimum: Double { node.double("min") ?? 0 }
+  var requestedMaximum: Double { node.double("max") ?? 1 }
+  var maximum: Double { max(requestedMaximum, minimum + .ulpOfOne) }
+  private var values: (start: Double, end: Double) {
+    RufletThemeDefaults.rangeSliderValues(node)
+  }
+  var start: Double { min(max(values.start, minimum), maximum) }
+  var end: Double { min(max(values.end, start), maximum) }
+  var step: Double? {
+    guard let divisions = node.int("divisions"), divisions > 0,
+      requestedMaximum > minimum
+    else { return nil }
+    return (requestedMaximum - minimum) / Double(divisions)
+  }
+  var labels: [String?] {
+    RufletRangeSliderLabels.resolve(
+      template: node.string("label") ?? "", start: start, end: end,
+      digits: node.int("round") ?? 0)
+  }
+  var explicitTint: Color? {
+    guard node.props["active_color"] != nil else { return nil }
+    return MaterialPalette.color(node.string("active_color"))
   }
 }
 
@@ -763,164 +785,6 @@ enum RufletRangeSliderLabels {
         of: RufletThemeDefaults.sliderLabelValueToken,
         with: String(format: format, value))
     }
-  }
-}
-
-/// Material's slider track, shared by `Slider` and `RangeSlider`.
-///
-/// `thumbs` is one value or two; `activeRange` is the stretch drawn in the
-/// active colour, which is min…value for one thumb and start…end for two.
-private struct MaterialSliderTrack: View {
-  let node: ControlNode
-  let thumbs: [Double]
-  let secondary: Double?
-  let activeRange: ClosedRange<Double>
-  let interaction: RufletSliderInteraction
-  /// One value indicator per thumb. Flutter's `RangeSlider` creates two
-  /// independent `RangeLabels`; combining them over the trailing thumb loses
-  /// both the start thumb's label and the template semantics.
-  let bubbles: [String?]
-  let scale: (CGFloat) -> RufletSliderScale
-  let shapeYear2023: Bool?
-  let thumbColorProperty: RufletValue?
-  let onEdit: (Bool, [Double]) -> Void
-  let onMove: (Int, Double) -> Double
-
-  @State private var held: Int?
-  @State private var gestureStartThumbs: [Double] = []
-  @State private var latestThumbs: [Double] = []
-
-  /// The 2023 or 2024 slider shape, chosen by `year_2023`.
-  private var shape: RufletThemeDefaults.SliderMetrics {
-    RufletThemeDefaults.sliderMetrics(year2023: shapeYear2023)
-  }
-
-  var body: some View {
-    GeometryReader { proxy in
-      let scale = self.scale(proxy.size.width)
-      ZStack(alignment: .leading) {
-        Capsule()
-          .fill(inactiveColor)
-          .frame(height: shape.trackHeight)
-        if let secondary {
-          segment(from: activeRange.lowerBound, to: secondary, in: scale)
-            .fill(secondaryColor)
-        }
-        segment(from: activeRange.lowerBound, to: activeRange.upperBound, in: scale)
-          .fill(activeColor)
-        ForEach(Array(thumbs.enumerated()), id: \.offset) { index, value in
-          thumb(bubble: index < bubbles.count ? bubbles[index] : nil)
-            .offset(x: scale.position(of: value) - shape.thumbWidth / 2)
-        }
-      }
-      .frame(maxHeight: .infinity)
-      .contentShape(Rectangle())
-      .gesture(gesture(in: scale))
-    }
-    .frame(height: shape.height)
-  }
-
-  private func gesture(in scale: RufletSliderScale) -> some Gesture {
-    DragGesture(minimumDistance: 0)
-      .onChanged { drag in
-        if held == nil {
-          // Which thumb a gesture owns is decided once, where it went down,
-          // and the same thumb keeps it for the whole drag.
-          guard let claimed = claim(at: drag.startLocation.x, in: scale) else { return }
-          held = claimed
-          gestureStartThumbs = thumbs
-          latestThumbs = thumbs
-          onEdit(true, thumbs)
-        }
-        guard interaction.acceptsSlide || drag.translation == .zero else { return }
-        let index = held ?? 0
-        let proposed = interaction.jumpsOnContact
-          ? scale.value(at: drag.location.x)
-          : scale.value(
-            startingAt: gestureStartThumbs.indices.contains(index)
-              ? gestureStartThumbs[index]
-              : thumbs[index],
-            translation: drag.translation.width)
-        let actual = onMove(index, proposed)
-        if latestThumbs.indices.contains(index) { latestThumbs[index] = actual }
-      }
-      .onEnded { _ in
-        guard held != nil else { return }
-        held = nil
-        onEdit(false, latestThumbs.isEmpty ? thumbs : latestThumbs)
-      }
-  }
-
-  /// The thumb a gesture starting at `x` moves, or nil when the interaction
-  /// mode refuses it.
-  private func claim(at x: CGFloat, in scale: RufletSliderScale) -> Int? {
-    let distances = thumbs.enumerated().map { ($0.offset, abs(scale.position(of: $0.element) - x)) }
-    guard let nearest = distances.min(by: { $0.1 < $1.1 }) else { return nil }
-    // Material's thumb is easier to grab than it is wide, so the hit slop is
-    // the overlay radius rather than the drawn thumb.
-    let onThumb = nearest.1 <= shape.overlayRadius
-    guard onThumb || interaction.acceptsTrackGestures else { return nil }
-    return nearest.0
-  }
-
-  private func segment(
-    from lower: Double, to upper: Double, in scale: RufletSliderScale
-  ) -> some Shape {
-    let start = scale.position(of: min(lower, upper))
-    let end = scale.position(of: max(lower, upper))
-    return SliderSegment(start: start, width: max(end - start, 0), height: shape.trackHeight)
-  }
-
-  private func thumb(bubble: String?) -> some View {
-    Capsule()
-      .fill(thumbColor)
-      .frame(width: shape.thumbWidth, height: shape.thumbHeight)
-      .shadow(radius: 1)
-      .modifier(
-        MaterialStateLayer(node: node, selected: false, radius: shape.overlayRadius))
-      .overlay(alignment: .top) {
-        if let bubble {
-          Text(bubble)
-            .font(.caption)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(Capsule().fill(activeColor))
-            .foregroundColor(.white)
-            .fixedSize()
-            .offset(y: -shape.thumbHeight - 8)
-        }
-      }
-  }
-
-  private var states: Set<RufletWidgetState> { node.widgetStates(selected: false) }
-
-  private var activeColor: Color {
-    MaterialPalette.color(for: node, property: "active_color", default: .accentColor)
-  }
-
-  private var inactiveColor: Color {
-    MaterialPalette.color(for: node, property: "inactive_color", default: .secondary.opacity(0.25))
-  }
-
-  private var secondaryColor: Color {
-    MaterialPalette.color(for: node, property: "secondary_active_color", default: activeColor)
-  }
-
-  private var thumbColor: Color {
-    MaterialPalette.color(stateful: thumbColorProperty, in: states) ?? activeColor
-  }
-}
-
-/// A stretch of the track, positioned from its left edge.
-private struct SliderSegment: Shape {
-  let start: CGFloat
-  let width: CGFloat
-  let height: CGFloat
-
-  func path(in rect: CGRect) -> Path {
-    let bounds = CGRect(
-      x: start, y: rect.midY - height / 2, width: width, height: height)
-    return Capsule().path(in: bounds)
   }
 }
 
