@@ -2606,8 +2606,8 @@ struct DropdownM2ControlView: View {
   }
 
   private var optionNodes: [ControlNode] {
-    node.controlIDs(forKey: "options").compactMap { store.node($0) }
-      .filter { $0.string("key") != nil || $0.string("text") != nil }
+    DropdownM2Defaults.visibleOptions(
+      node.controlIDs(forKey: "options").compactMap { store.node($0) })
   }
 
   @ViewBuilder
@@ -2648,6 +2648,16 @@ enum DropdownM2Defaults {
   static let minimumItemHeight: CGFloat = 48
   static let defaultSelectIconSize: CGFloat = 24
   static let defaultElevation: CGFloat = 8
+
+  /// `DropdownOption` is structural, so its parent owns visibility filtering.
+  /// This matches Dart's default-visible `children("options")` lookup before
+  /// each remaining entry is converted into a `DropdownMenuItem`.
+  static func visibleOptions(_ options: [ControlNode]) -> [ControlNode] {
+    options.filter {
+      $0.bool("visible") != false
+        && ($0.string("key") != nil || $0.string("text") != nil)
+    }
+  }
 
   static func optionsFillHorizontally(_ node: ControlNode) -> Bool {
     node.bool("options_fill_horizontally") ?? true
