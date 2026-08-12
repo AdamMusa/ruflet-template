@@ -1661,15 +1661,18 @@ private struct LocalAvatarImage: View {
 /// `Badge` — a count or dot anchored to its content's corner.
 struct BadgeControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @Environment(\.layoutDirection) private var layoutDirection
 
   var body: some View {
-    if let contentID = node.controlID(forKey: "content") {
+    if let contentID = BadgeContentSlots.visibleControlID(
+      node, visibilityForID: { id in store.node(id).map { $0.bool("visible") != false } })
+    {
       ControlView(id: contentID, axis: .none)
         .overlay(alignment: ControlProps.alignment(node.props["alignment"]) ?? .topTrailing) {
           marker
         }
-    } else if let text = node.string("content") {
+    } else if case .string(let text)? = node.props["content"] {
       Text(text)
         .overlay(alignment: ControlProps.alignment(node.props["alignment"]) ?? .topTrailing) {
           marker
@@ -1690,6 +1693,17 @@ struct BadgeControlView: View {
         .offset(RufletBadgeSemantics.markerOffset(
           node, layoutDirection: layoutDirection))
     }
+  }
+}
+
+enum BadgeContentSlots {
+  static func visibleControlID(
+    _ node: ControlNode, visibilityForID: (Int) -> Bool?
+  ) -> Int? {
+    guard let id = node.controlID(forKey: "content"), visibilityForID(id) == true else {
+      return nil
+    }
+    return id
   }
 }
 
