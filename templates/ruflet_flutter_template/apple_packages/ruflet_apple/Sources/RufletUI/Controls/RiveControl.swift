@@ -27,7 +27,7 @@ struct RiveControlView: View {
       } else if let placeholderID = node.controlID(forKey: "placeholder") {
         ControlView(id: placeholderID, axis: .none)
       } else {
-        ProgressView()
+        Color.clear
       }
     }
     .modifier(
@@ -41,8 +41,13 @@ struct RiveControlView: View {
   }
 
   private var configurationKey: String {
-    [
+    let headers = (node.map("headers") ?? [:])
+      .sorted { $0.key < $1.key }
+      .map { "\($0.key)=\($0.value.stringValue ?? "")" }
+      .joined(separator: "&")
+    return [
       node.string("src") ?? "",
+      headers,
       node.string("art_board") ?? "",
       stringList("animations").joined(separator: ","),
       stringList("state_machines").joined(separator: ","),
@@ -67,24 +72,27 @@ struct RiveControlView: View {
       let data = try await sourceData(source)
       let file = try RiveFile(data: data, loadCdn: true)
       let model = RiveModel(riveFile: file)
-      let stateMachine = stringList("state_machines").first
-      let animation = stringList("animations").first
-      let result: RufletRiveViewModel
-      if let stateMachine {
-        result = RufletRiveViewModel(
-          model,
-          stateMachineName: stateMachine,
-          fit: riveFit,
-          alignment: riveAlignment,
-          artboardName: node.string("art_board"))
-      } else {
-        result = RufletRiveViewModel(
-          model,
-          animationName: animation,
-          fit: riveFit,
-          alignment: riveAlignment,
-          artboardName: node.string("art_board"))
+      let requestedAnimations = stringList("animations")
+      let requestedStateMachines = stringList("state_machines")
+      let probeArtboard = try node.string("art_board").map {
+        try file.artboard(fromName: $0)
+      } ?? file.artboard()
+      var animations = requestedAnimations.filter { probeArtboard.animationNames().contains($0) }
+      var stateMachines = requestedStateMachines.filter { probeArtboard.stateMachineNames().contains($0) }
+      if requestedAnimations.isEmpty, requestedStateMachines.isEmpty {
+        if let defaultMachine = probeArtboard.defaultStateMachine() {
+          stateMachines = [defaultMachine.name()]
+        } else if let first = probeArtboard.animationNames().first {
+          animations = [first]
+        }
       }
+      let result = RufletRiveViewModel(
+        model,
+        animationNames: animations,
+        stateMachineNames: stateMachines,
+        fit: riveFit,
+        alignment: riveAlignment,
+        artboardName: node.string("art_board"))
       result.speedMultiplier = node.double("speed_multiplier") ?? 1
       artboardSize = model.artboard.bounds().size
       viewModel = result
@@ -183,7 +191,7 @@ private struct RiveGeometry: ViewModifier {
     if let clipRect {
       return AnyView(sized.clipShape(RiveClipShape(rect: clipRect.rect)))
     }
-    return AnyView(sized.clipped(antialiased: true))
+    return sized
   }
 }
 
@@ -200,13 +208,163 @@ private struct RiveClipShape: Shape {
 /// tick before handing it to the runtime.
 private final class RufletRiveView: RiveView {
   var speedMultiplier = 1.0
+  private let modelReference: RiveModel?
+  private let configuredFit: RiveFit
+  private let configuredAlignment: RiveAlignment
+  private var additionalAnimations: [RiveLinearAnimationInstance] = []
+  private var additionalStateMachines: [RiveStateMachineInstance] = []
+
+  init(
+    model: RiveModel,
+    autoPlay: Bool,
+    animationNames: [String],
+    stateMachineNames: [String],
+    fit: RiveFit,
+    alignment: RiveAlignment
+  ) {
+    modelReference = model
+    configuredFit = fit
+    configuredAlignment = alignment
+    super.init()
+    try? setModel(model, autoPlay: autoPlay)
+
+    // The high-level RiveModel owns the first active controller. The pinned
+    // Flet painter advances every other requested controller on the same
+    // artboard as well, including animations and state machines together.
+    let firstState = stateMachineNames.first
+    let firstAnimation = firstState == nil ? animationNames.first : nil
+    additionalAnimations = animationNames.compactMap { name in
+      if name == firstAnimation { return nil }
+      return try? model.artboard.animation(fromName: name)
+    }
+    additionalStateMachines = stateMachineNames.compactMap { name in
+      if name == firstState { return nil }
+      return try? model.artboard.stateMachine(fromName: name)
+    }
+  }
+
+  override init() {
+    modelReference = nil
+    configuredFit = .contain
+    configuredAlignment = .center
+    super.init()
+  }
+
+  required init(coder: NSCoder) {
+    modelReference = nil
+    configuredFit = .contain
+    configuredAlignment = .center
+    super.init(coder: coder)
+  }
 
   override func advance(delta: Double) {
-    super.advance(delta: delta * max(0, speedMultiplier))
+    let scaled = delta * max(0, speedMultiplier)
+    super.advance(delta: scaled)
+    for animation in additionalAnimations { _ = animation.advance(by: scaled) }
+    for machine in additionalStateMachines { _ = machine.advance(by: scaled) }
   }
+
+  private func pointerLocation(_ location: CGPoint) -> CGPoint? {
+    guard let artboard = modelReference?.artboard else { return nil }
+    return RiveControlSemantics.artboardLocation(
+      location,
+      container: bounds.size,
+      artboard: artboard.bounds(),
+      fit: configuredFit,
+      alignment: configuredAlignment)
+  }
+
+  #if os(iOS) || os(visionOS) || os(tvOS)
+  override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+    super.touchesBegan(touches, with: event)
+    guard let touch = touches.first, let point = pointerLocation(touch.location(in: self)) else { return }
+    for machine in additionalStateMachines { _ = machine.touchBegan(atLocation: point) }
+  }
+
+  override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+    super.touchesMoved(touches, with: event)
+    guard let touch = touches.first, let point = pointerLocation(touch.location(in: self)) else { return }
+    for machine in additionalStateMachines { _ = machine.touchMoved(atLocation: point) }
+  }
+
+  override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+    super.touchesEnded(touches, with: event)
+    guard let touch = touches.first, let point = pointerLocation(touch.location(in: self)) else { return }
+    for machine in additionalStateMachines { _ = machine.touchEnded(atLocation: point) }
+  }
+
+  override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
+    super.touchesCancelled(touches, with: event)
+    guard let touch = touches.first, let point = pointerLocation(touch.location(in: self)) else { return }
+    for machine in additionalStateMachines { _ = machine.touchCancelled(atLocation: point) }
+  }
+  #elseif os(macOS)
+  override func mouseDown(with event: NSEvent) {
+    super.mouseDown(with: event)
+    forward(event) { $0.touchBegan(atLocation: $1) }
+  }
+
+  override func mouseMoved(with event: NSEvent) {
+    super.mouseMoved(with: event)
+    forward(event) { $0.touchMoved(atLocation: $1) }
+  }
+
+  override func mouseDragged(with event: NSEvent) {
+    super.mouseDragged(with: event)
+    forward(event) { $0.touchMoved(atLocation: $1) }
+  }
+
+  override func mouseUp(with event: NSEvent) {
+    super.mouseUp(with: event)
+    forward(event) { $0.touchEnded(atLocation: $1) }
+  }
+
+  override func mouseExited(with event: NSEvent) {
+    super.mouseExited(with: event)
+    forward(event) { $0.touchCancelled(atLocation: $1) }
+  }
+
+  private func forward(
+    _ event: NSEvent,
+    _ action: (RiveStateMachineInstance, CGPoint) -> RiveHitResult
+  ) {
+    let local = convert(event.locationInWindow, from: nil)
+    let flipped = CGPoint(x: local.x, y: bounds.height - local.y)
+    guard let point = pointerLocation(flipped) else { return }
+    for machine in additionalStateMachines { _ = action(machine, point) }
+  }
+  #endif
 }
 
 private final class RufletRiveViewModel: RiveViewModel {
+  private let animationNames: [String]
+  private let stateMachineNames: [String]
+  private let configuredFit: RiveFit
+  private let configuredAlignment: RiveAlignment
+
+  init(
+    _ model: RiveModel,
+    animationNames: [String],
+    stateMachineNames: [String],
+    fit: RiveFit,
+    alignment: RiveAlignment,
+    artboardName: String?
+  ) {
+    self.animationNames = animationNames
+    self.stateMachineNames = stateMachineNames
+    configuredFit = fit
+    configuredAlignment = alignment
+    if let stateMachine = stateMachineNames.first {
+      super.init(
+        model, stateMachineName: stateMachine, fit: fit,
+        alignment: alignment, artboardName: artboardName)
+    } else {
+      super.init(
+        model, animationName: animationNames.first, fit: fit,
+        alignment: alignment, artboardName: artboardName)
+    }
+  }
+
   var speedMultiplier = 1.0 {
     didSet { (riveView as? RufletRiveView)?.speedMultiplier = speedMultiplier }
   }
@@ -214,7 +372,13 @@ private final class RufletRiveViewModel: RiveViewModel {
   override func createRiveView() -> RiveView {
     let view: RufletRiveView
     if let model = riveModel {
-      view = RufletRiveView(model: model, autoPlay: autoPlay)
+      view = RufletRiveView(
+        model: model,
+        autoPlay: autoPlay,
+        animationNames: animationNames,
+        stateMachineNames: stateMachineNames,
+        fit: configuredFit,
+        alignment: configuredAlignment)
     } else {
       view = RufletRiveView()
     }
@@ -226,5 +390,52 @@ private final class RufletRiveViewModel: RiveViewModel {
   override func update(view: RiveView) {
     super.update(view: view)
     (view as? RufletRiveView)?.speedMultiplier = speedMultiplier
+  }
+}
+
+enum RiveControlSemantics {
+  static func artboardLocation(
+    _ point: CGPoint,
+    container: CGSize,
+    artboard: CGRect,
+    fit: RiveFit,
+    alignment: RiveAlignment
+  ) -> CGPoint {
+    let sx = container.width / max(artboard.width, .leastNonzeroMagnitude)
+    let sy = container.height / max(artboard.height, .leastNonzeroMagnitude)
+    let scales: (CGFloat, CGFloat)
+    switch fit {
+    case .fill: scales = (sx, sy)
+    case .cover: scales = (max(sx, sy), max(sx, sy))
+    case .fitWidth: scales = (sx, sx)
+    case .fitHeight: scales = (sy, sy)
+    case .scaleDown:
+      let scale = min(1, min(sx, sy)); scales = (scale, scale)
+    case .noFit: scales = (1, 1)
+    default:
+      let scale = min(sx, sy); scales = (scale, scale)
+    }
+    let rendered = CGSize(width: artboard.width * scales.0, height: artboard.height * scales.1)
+    let factor = alignmentFactor(alignment)
+    let origin = CGPoint(
+      x: (container.width - rendered.width) * factor.x,
+      y: (container.height - rendered.height) * factor.y)
+    return CGPoint(
+      x: artboard.minX + (point.x - origin.x) / scales.0,
+      y: artboard.minY + (point.y - origin.y) / scales.1)
+  }
+
+  private static func alignmentFactor(_ alignment: RiveAlignment) -> CGPoint {
+    switch alignment {
+    case .topLeft: return CGPoint(x: 0, y: 0)
+    case .topCenter: return CGPoint(x: 0.5, y: 0)
+    case .topRight: return CGPoint(x: 1, y: 0)
+    case .centerLeft: return CGPoint(x: 0, y: 0.5)
+    case .centerRight: return CGPoint(x: 1, y: 0.5)
+    case .bottomLeft: return CGPoint(x: 0, y: 1)
+    case .bottomCenter: return CGPoint(x: 0.5, y: 1)
+    case .bottomRight: return CGPoint(x: 1, y: 1)
+    default: return CGPoint(x: 0.5, y: 0.5)
+    }
   }
 }

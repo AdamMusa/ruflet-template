@@ -46,6 +46,72 @@ final class DisplayPluginParityTests: XCTestCase {
     ])))
   }
 
+  func testRivePointerCoordinatesHonorFlutterFitAndAlignment() {
+    let centered = RiveControlSemantics.artboardLocation(
+      CGPoint(x: 100, y: 50),
+      container: CGSize(width: 200, height: 100),
+      artboard: CGRect(x: 0, y: 0, width: 100, height: 100),
+      fit: .contain,
+      alignment: .center)
+    XCTAssertEqual(centered.x, 50, accuracy: 0.001)
+    XCTAssertEqual(centered.y, 50, accuracy: 0.001)
+
+    let bottomRight = RiveControlSemantics.artboardLocation(
+      CGPoint(x: 100, y: 50),
+      container: CGSize(width: 200, height: 100),
+      artboard: CGRect(x: 10, y: 20, width: 100, height: 50),
+      fit: .noFit,
+      alignment: .bottomRight)
+    XCTAssertEqual(bottomRight.x, 10, accuracy: 0.001)
+    XCTAssertEqual(bottomRight.y, 20, accuracy: 0.001)
+  }
+
+  func testLottieReverseMatchesPinnedFlutterBehavior() {
+    XCTAssertEqual(LottieControlSemantics.loopMode(repeat: true, reverse: false), .loop)
+    XCTAssertEqual(LottieControlSemantics.loopMode(repeat: true, reverse: true), .autoReverse)
+    // Pinned Flet docs: reverse has no effect unless repeat is enabled.
+    XCTAssertEqual(LottieControlSemantics.loopMode(repeat: false, reverse: true), .playOnce)
+  }
+
+  func testLottieImplementsEveryFlutterBoxFitAndAlignment() {
+    let intrinsic = CGSize(width: 100, height: 50)
+    let container = CGSize(width: 200, height: 200)
+    XCTAssertEqual(
+      LottieControlSemantics.layout(
+        intrinsic: intrinsic, container: container, fit: "fill", alignment: "center").size,
+      container)
+    XCTAssertEqual(
+      LottieControlSemantics.layout(
+        intrinsic: intrinsic, container: container, fit: "fit_width", alignment: "center").size,
+      CGSize(width: 200, height: 100))
+    XCTAssertEqual(
+      LottieControlSemantics.layout(
+        intrinsic: intrinsic, container: container, fit: "fit_height", alignment: "center").size,
+      CGSize(width: 400, height: 200))
+    XCTAssertEqual(
+      LottieControlSemantics.layout(
+        intrinsic: intrinsic, container: container, fit: "none", alignment: "bottom_right"),
+      LottieControlSemantics.Layout(
+        origin: CGPoint(x: 100, y: 150), size: intrinsic))
+    XCTAssertEqual(
+      LottieControlSemantics.layout(
+        intrinsic: CGSize(width: 400, height: 100),
+        container: container,
+        fit: "scale_down",
+        alignment: "top_left"),
+      LottieControlSemantics.Layout(
+        origin: .zero, size: CGSize(width: 200, height: 50)))
+  }
+
+  func testLottieMapsFlutterFilterQualityAndClassifiesRuntimeOptions() {
+    XCTAssertEqual(LottieControlSemantics.layerFilter("none"), .nearest)
+    XCTAssertEqual(LottieControlSemantics.layerFilter("low"), .linear)
+    XCTAssertEqual(LottieControlSemantics.layerFilter("medium"), .trilinear)
+    XCTAssertEqual(LottieControlSemantics.layerFilter("high"), .linear)
+    XCTAssertEqual(LottieControlSemantics.mergePathsSupport, .nativeRuntimeAlwaysOn)
+    XCTAssertEqual(LottieControlSemantics.applyingLayerOpacitySupport, .nativeRuntimeAlwaysOn)
+  }
+
   func testCanvasCaptureBufferReturnsFletBinaryAndClearsIt() {
     var capture = CanvasCaptureBuffer()
     XCTAssertEqual(capture.wireValue, .null)

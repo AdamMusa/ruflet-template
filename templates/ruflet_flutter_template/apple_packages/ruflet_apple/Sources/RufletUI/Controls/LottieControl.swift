@@ -1,5 +1,6 @@
 import Foundation
 import Lottie
+import QuartzCore
 import RufletEngine
 import RufletProtocol
 import SwiftUI
@@ -25,7 +26,7 @@ struct LottieControlView: View {
           .font(.caption)
           .foregroundColor(.secondary)
       } else {
-        ProgressView()
+        Color.clear
       }
     }
     .task(id: configurationKey) { await load() }
@@ -36,48 +37,66 @@ struct LottieControlView: View {
       .sorted { $0.key < $1.key }
       .map { "\($0.key)=\($0.value.stringValue ?? "")" }
       .joined(separator: "&")
-    return "\(node.string("src") ?? "")|\(headers)"
+    let source: String
+    switch node.props["src"] {
+    case .binary(let bytes): source = "binary:\(Data(bytes).base64EncodedString())"
+    default: source = node.string("src") ?? ""
+    }
+    return "\(source)|\(headers)"
   }
 
   private func animationView(_ animation: LottieAnimation) -> AnyView {
     let repeating = node.rufletBool("repeat")
     let reverse = node.rufletBool("reverse")
     let animate = node.rufletBool("animate")
-    let loopMode: LottieLoopMode = repeating ? .loop : .playOnce
-    let start = reverse ? 1.0 : 0.0
-    let end = reverse ? 0.0 : 1.0
+    let loopMode = LottieControlSemantics.loopMode(repeat: repeating, reverse: reverse)
+    let start = 0.0
+    let end = 1.0
 
     let view = LottieView(animation: animation)
       .resizable()
-      .configure { configureContentMode($0) }
+      .configure { configureNativeView($0) }
+    let playback: AnyView
     if animate {
-      return AnyView(
-        view.playing(.fromProgress(start, toProgress: end, loopMode: loopMode))
-          .frame(
-            maxWidth: .infinity,
-            maxHeight: .infinity,
-            alignment: ControlProps.alignment(node.value("alignment")) ?? .center))
+      playback = AnyView(view.playing(.fromProgress(start, toProgress: end, loopMode: loopMode)))
+    } else {
+      playback = AnyView(view.paused(at: .progress(0)))
     }
+
     return AnyView(
-      view.paused(at: .progress(start))
-        .frame(
-          maxWidth: .infinity,
-          maxHeight: .infinity,
-          alignment: ControlProps.alignment(node.value("alignment")) ?? .center))
+      GeometryReader { proxy in
+        let layout = LottieControlSemantics.layout(
+          intrinsic: animation.size,
+          container: proxy.size,
+          fit: node.string("fit"),
+          alignment: node.string("alignment"))
+        playback
+          .frame(width: layout.size.width, height: layout.size.height)
+          .position(
+            x: layout.origin.x + layout.size.width / 2,
+            y: layout.origin.y + layout.size.height / 2)
+      }
+      .clipped())
   }
 
   @MainActor
   private func load() async {
     animation = nil
     errorMessage = nil
-    guard let source = node.string("src"), !source.isEmpty else {
+    guard let sourceValue = node.props["src"], !sourceValue.isNull else {
       fail("Lottie must have \"src\" specified.")
       return
     }
 
     do {
-      let data = try await sourceData(source)
-      animation = try LottieAnimation.from(data: data)
+      let data = try await sourceData(sourceValue)
+      if node.bool("background_loading") == true {
+        animation = try await Task.detached(priority: .userInitiated) {
+          try LottieAnimation.from(data: data)
+        }.value
+      } else {
+        animation = try LottieAnimation.from(data: data)
+      }
       events.fire(node, "load")
     } catch {
       fail(error.localizedDescription)
@@ -90,7 +109,11 @@ struct LottieControlView: View {
     events.fire(node, "error", data: .string(message))
   }
 
-  private func sourceData(_ source: String) async throws -> Data {
+  private func sourceData(_ value: RufletValue) async throws -> Data {
+    if case .binary(let bytes) = value { return Data(bytes) }
+    guard let source = value.stringValue, !source.isEmpty else {
+      throw LottieSourceError.missingSource
+    }
     if source.lowercased().hasPrefix("data:") {
       guard let comma = source.firstIndex(of: ",") else { throw LottieSourceError.invalidDataURI }
       let metadata = source[..<comma].lowercased()
@@ -134,33 +157,106 @@ struct LottieControlView: View {
     return try Data(contentsOf: URL(fileURLWithPath: path))
   }
 
-  private func configureContentMode(_ view: LottieAnimationView) {
-    let fit = node.string("fit")?.lowercased().replacingOccurrences(of: "_", with: "")
-    #if os(iOS)
-    switch fit {
-    case "fill": view.contentMode = .scaleToFill
-    case "cover": view.contentMode = .scaleAspectFill
-    case "none": view.contentMode = .center
-    default: view.contentMode = .scaleAspectFit
+  private func configureNativeView(_ view: LottieAnimationView) {
+    // GeometryReader gives the native view the exact Flutter BoxFit rectangle,
+    // so the runtime should fill that rectangle rather than fitting it again.
+    view.contentMode = .scaleToFill
+    let filter = LottieControlSemantics.layerFilter(node.string("filter_quality"))
+    view.layer?.magnificationFilter = filter
+    view.layer?.minificationFilter = filter
+  }
+}
+
+/// Source-driven behavior shared by the renderer and exact parity tests.
+enum LottieControlSemantics {
+  struct Layout: Equatable {
+    let origin: CGPoint
+    let size: CGSize
+  }
+
+  enum NativeOptionSupport: String, Equatable {
+    case nativeRuntimeAlwaysOn
+  }
+
+  static let mergePathsSupport = NativeOptionSupport.nativeRuntimeAlwaysOn
+  static let applyingLayerOpacitySupport = NativeOptionSupport.nativeRuntimeAlwaysOn
+
+  static func loopMode(repeat repeating: Bool, reverse: Bool) -> LottieLoopMode {
+    guard repeating else { return .playOnce }
+    return reverse ? .autoReverse : .loop
+  }
+
+  static func layerFilter(_ value: String?) -> CALayerContentsFilter {
+    switch normalized(value) {
+    case "none": return .nearest
+    case "medium": return .trilinear
+    default: return .linear // Flutter low (default) and high use interpolation.
     }
-    #elseif os(macOS)
-    switch fit {
-    case "fill": view.contentMode = .scaleToFill
-    case "cover": view.contentMode = .scaleAspectFill
-    case "none": view.contentMode = .center
-    default: view.contentMode = .scaleAspectFit
+  }
+
+  static func layout(
+    intrinsic: CGSize,
+    container: CGSize,
+    fit: String?,
+    alignment: String?
+  ) -> Layout {
+    guard intrinsic.width > 0, intrinsic.height > 0,
+          container.width.isFinite, container.height.isFinite
+    else { return Layout(origin: .zero, size: .zero) }
+
+    let sx = container.width / intrinsic.width
+    let sy = container.height / intrinsic.height
+    let scales: (CGFloat, CGFloat)
+    switch normalized(fit) {
+    case "fill": scales = (sx, sy)
+    case "cover": scales = (max(sx, sy), max(sx, sy))
+    case "fitwidth": scales = (sx, sx)
+    case "fitheight": scales = (sy, sy)
+    case "none": scales = (1, 1)
+    case "scaledown":
+      let scale = min(1, min(sx, sy))
+      scales = (scale, scale)
+    default:
+      let scale = min(sx, sy)
+      scales = (scale, scale)
     }
-    #endif
+    let size = CGSize(width: intrinsic.width * scales.0, height: intrinsic.height * scales.1)
+    let factor = alignmentFactor(alignment)
+    return Layout(
+      origin: CGPoint(
+        x: (container.width - size.width) * factor.x,
+        y: (container.height - size.height) * factor.y),
+      size: size)
+  }
+
+  private static func alignmentFactor(_ value: String?) -> CGPoint {
+    switch normalized(value) {
+    case "topleft": return CGPoint(x: 0, y: 0)
+    case "topcenter": return CGPoint(x: 0.5, y: 0)
+    case "topright": return CGPoint(x: 1, y: 0)
+    case "centerleft": return CGPoint(x: 0, y: 0.5)
+    case "centerright": return CGPoint(x: 1, y: 0.5)
+    case "bottomleft": return CGPoint(x: 0, y: 1)
+    case "bottomcenter": return CGPoint(x: 0.5, y: 1)
+    case "bottomright": return CGPoint(x: 1, y: 1)
+    default: return CGPoint(x: 0.5, y: 0.5)
+    }
+  }
+
+  private static func normalized(_ value: String?) -> String {
+    value?.lowercased().replacingOccurrences(of: "_", with: "") ?? ""
   }
 }
 
 private enum LottieSourceError: LocalizedError {
   case invalidDataURI
+  case missingSource
   case httpStatus(Int)
 
   var errorDescription: String? {
     switch self {
     case .invalidDataURI: return "Invalid Lottie data URI."
+    case .missingSource: return "Lottie must have \"src\" specified."
     case .httpStatus(let status): return "Lottie request failed with HTTP status \(status)."
     }
   }
