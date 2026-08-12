@@ -75,6 +75,7 @@ struct ScreenshotControlView: View {
     }
   }
 
+  @available(iOS 16.0, macOS 13.0, *)
   private func render(
     _ request: RufletScreenshotCaptureRequest,
     completion: @escaping RufletMethodCompletion

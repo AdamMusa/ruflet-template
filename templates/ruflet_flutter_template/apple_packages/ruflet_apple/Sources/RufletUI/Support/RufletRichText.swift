@@ -292,7 +292,7 @@ struct RufletSelectableMarkdownText: View {
     let hover: (Int, Bool) -> Void
 
     func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
-    func makeUIView(context: Context) -> UITextView {
+    func makeUIView(context: Context) -> RufletIntrinsicTextView {
       let view = RufletIntrinsicTextView()
       view.backgroundColor = .clear
       view.isEditable = false
@@ -310,7 +310,7 @@ struct RufletSelectableMarkdownText: View {
       return view
     }
 
-    func updateUIView(_ view: UITextView, context: Context) {
+    func updateUIView(_ view: RufletIntrinsicTextView, context: Context) {
       context.coordinator.parent = self
       let rendered = NSAttributedString(attributed)
       if !view.attributedText.isEqual(to: rendered) { view.attributedText = rendered }

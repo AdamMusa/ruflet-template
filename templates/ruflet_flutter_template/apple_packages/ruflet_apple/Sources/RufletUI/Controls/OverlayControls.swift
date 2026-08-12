@@ -623,6 +623,7 @@ struct BottomSheetControlView: View {
   private var nativeSheet: some View {
     let defaults = OverlayDefaults.sheet(node)
     let presentation = materialPresentation
+    let sheetShape = BottomSheetTopRoundedShape(radius: defaults.radius)
     let content = VStack(spacing: 0) {
       if node.bool("show_drag_handle") == true {
         Capsule()
@@ -636,15 +637,10 @@ struct BottomSheetControlView: View {
     }
     .frame(maxWidth: .infinity)
     .frame(maxHeight: presentation.fullscreen ? .infinity : nil)
-    .background(
-      MaterialPalette.color(node.string("bgcolor"), default: sheetSurface),
-      in: UnevenRoundedRectangle(
-        topLeadingRadius: defaults.radius, bottomLeadingRadius: 0,
-        bottomTrailingRadius: 0, topTrailingRadius: defaults.radius))
+    .background(MaterialPalette.color(node.string("bgcolor"), default: sheetSurface))
+    .clipShape(sheetShape)
     .overlay(
-      UnevenRoundedRectangle(
-        topLeadingRadius: defaults.radius, bottomLeadingRadius: 0,
-        bottomTrailingRadius: 0, topTrailingRadius: defaults.radius)
+      sheetShape
         .strokeBorder(
           MaterialPalette.color(node.map("shape")?["side"]?.mapValue?["color"]?.stringValue,
                                 default: .clear),
@@ -704,6 +700,37 @@ struct BottomSheetControlView: View {
     #else
       return .white
     #endif
+  }
+}
+
+/// `UnevenRoundedRectangle` starts at iOS 16. This equivalent path keeps the
+/// package's iOS 15 deployment floor while rounding only the sheet's top edge.
+private struct BottomSheetTopRoundedShape: InsettableShape {
+  let radius: CGFloat
+  var insetAmount: CGFloat = 0
+
+  func path(in rect: CGRect) -> Path {
+    let insetRect = rect.insetBy(dx: insetAmount, dy: insetAmount)
+    let r = min(max(0, radius - insetAmount), insetRect.width / 2, insetRect.height)
+    var path = Path()
+    path.move(to: CGPoint(x: insetRect.minX, y: insetRect.maxY))
+    path.addLine(to: CGPoint(x: insetRect.minX, y: insetRect.minY + r))
+    path.addQuadCurve(
+      to: CGPoint(x: insetRect.minX + r, y: insetRect.minY),
+      control: CGPoint(x: insetRect.minX, y: insetRect.minY))
+    path.addLine(to: CGPoint(x: insetRect.maxX - r, y: insetRect.minY))
+    path.addQuadCurve(
+      to: CGPoint(x: insetRect.maxX, y: insetRect.minY + r),
+      control: CGPoint(x: insetRect.maxX, y: insetRect.minY))
+    path.addLine(to: CGPoint(x: insetRect.maxX, y: insetRect.maxY))
+    path.closeSubpath()
+    return path
+  }
+
+  func inset(by amount: CGFloat) -> BottomSheetTopRoundedShape {
+    var copy = self
+    copy.insetAmount += amount
+    return copy
   }
 }
 

@@ -245,8 +245,13 @@ struct LottieControlView: View {
     // so the runtime should fill that rectangle rather than fitting it again.
     view.contentMode = .scaleToFill
     let filter = LottieControlSemantics.layerFilter(node.string("filter_quality"))
-    view.layer?.magnificationFilter = filter
-    view.layer?.minificationFilter = filter
+    #if canImport(UIKit)
+      view.layer.magnificationFilter = filter
+      view.layer.minificationFilter = filter
+    #elseif canImport(AppKit)
+      view.layer?.magnificationFilter = filter
+      view.layer?.minificationFilter = filter
+    #endif
   }
 
   private var runtimeLogger: LottieLogger {
