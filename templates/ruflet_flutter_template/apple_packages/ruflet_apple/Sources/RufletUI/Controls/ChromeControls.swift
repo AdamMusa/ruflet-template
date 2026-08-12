@@ -454,7 +454,11 @@ struct NavigationRailControlView: View {
 
   var body: some View {
     let metrics = ChromeDefaults.navigationRail(node)
-    let destinations = node.controlIDs(forKey: "destinations").compactMap { store.node($0) }
+    // NavigationRailDestination is rendered by this parent rather than its
+    // own ControlView. Match Flet's `children("destinations")` visibility
+    // filter so selection and change indices refer to the visible sequence.
+    let destinations = ChromeDefaults.visibleNavigationRailDestinations(
+      node.controlIDs(forKey: "destinations").compactMap { store.node($0) })
     let selected = node.int("selected_index")
     let extended = node.bool("extended") ?? false
 
@@ -748,6 +752,10 @@ enum ChromeDefaults {
   }
 
   static func visibleNavigationBarDestinations(_ destinations: [ControlNode]) -> [ControlNode] {
+    destinations.filter { $0.bool("visible") != false }
+  }
+
+  static func visibleNavigationRailDestinations(_ destinations: [ControlNode]) -> [ControlNode] {
     destinations.filter { $0.bool("visible") != false }
   }
 
