@@ -47,42 +47,30 @@ enum RufletValueControlEvents {
   }
 }
 
-/// `Switch` — Material's switch, drawn.
+/// `Switch` — Flet's Material contract through Apple's native switch.
 ///
-/// A platform `Toggle` cannot take Flet's thumb, track, outline and thumb-icon
-/// colours: SwiftUI exposes only `tint`, and on Apple it renders as the
-/// Cupertino switch, which is the shape `adaptive: true` is supposed to opt
-/// *into*. So the Material switch is drawn here, next to the hand-drawn
-/// checkbox and radio, and `CupertinoSwitch` stays native.
-///
-/// The value is written locally the instant the switch flips, so the control
-/// tracks the finger, and a `change` event follows. `Page#dispatch_event`
-/// applies the same value to the Ruby control before running the handler, so
-/// the two sides agree without a second round trip.
+/// Material constructor values remain available through `SwitchPresentation`,
+/// while the visible chrome and interaction belong to SwiftUI/UIKit/AppKit.
 struct SwitchControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
   @Environment(\.rufletListTileClicks) private var listTileClicks
 
   var body: some View {
     let disabled = node.bool("disabled") ?? false
+    let presentation = SwitchPresentation(
+      node: node, labelNode: node.controlID(forKey: "label").flatMap(store.node))
 
     HStack(spacing: 0) {
-      if labelPosition == .left { label }
-      MaterialSwitch(node: node, isOn: isOn)
-        .modifier(
-          MaterialStateLayer(
-            node: node,
-            selected: isOn,
-            radius: node.double("splash_radius").map { CGFloat($0) }
-              ?? RufletThemeDefaults.switchTrackHeight / 2))
+      if presentation.labelPosition == .left { label(presentation) }
+      Toggle("", isOn: binding)
+        .labelsHidden()
+        .toggleStyle(.switch)
+        .modifier(OptionalTint(color: presentation.explicitTrackColor))
         .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets())
-      if labelPosition == .right { label }
+      if presentation.labelPosition == .right { label(presentation) }
     }
-    // Flutter wraps a labelled switch in a GestureDetector, so tapping the
-    // label flips it too.
-    .contentShape(Rectangle())
-    .onTapGesture { if !disabled { toggle() } }
     .modifier(
       SelectionScaling(
         node: node,
@@ -94,19 +82,19 @@ struct SwitchControlView: View {
     .disabled(disabled)
   }
 
-  private enum LabelPlacement { case left, right }
-
-  private var labelPosition: LabelPlacement {
-    node.string("label_position")?.lowercased() == "left" ? .left : .right
-  }
-
   private var isOn: Bool { node.bool("value") ?? false }
 
+  private var binding: Binding<Bool> {
+    Binding(get: { isOn }, set: { commit($0) })
+  }
+
   @ViewBuilder
-  private var label: some View {
-    if let labelID = node.controlID(forKey: "label") {
+  private func label(_ presentation: SwitchPresentation) -> some View {
+    if let labelID = presentation.labelControlID {
       ControlView(id: labelID, axis: .none)
-    } else if let value = node.string("label") {
+        .contentShape(Rectangle())
+        .onTapGesture { toggle() }
+    } else if let value = presentation.labelText {
       Text(value)
         .rufletTextStyle(RufletTextStyle(map: node.map("label_text_style") ?? [:]))
         // Flutter recolours a disabled label with the theme's disabled colour
@@ -114,101 +102,55 @@ struct SwitchControlView: View {
         .foregroundColor(
           node.bool("disabled") == true && node.map("label_text_style") != nil
             ? Color.secondary : nil)
+        .contentShape(Rectangle())
+        .onTapGesture { toggle() }
     }
   }
 
   private func toggle() {
+    guard node.bool("disabled") != true else { return }
+    commit(!isOn)
+  }
+
+  private func commit(_ value: Bool) {
+    guard node.bool("disabled") != true else { return }
     RufletValueControlEvents.commit(
-      node, value: .bool(!isOn), payload: .value, to: events)
+      node, value: .bool(value), payload: .value, to: events)
   }
 }
 
-/// Material's switch: a 52×32 track carrying a thumb that grows from 16pt to
-/// 24pt when it is on, which is Flutter's `_SwitchConfigM3`.
-private struct MaterialSwitch: View {
+struct SwitchPresentation {
+  enum LabelPlacement { case left, right }
+
   let node: ControlNode
-  let isOn: Bool
+  let labelNode: ControlNode?
 
-  private var states: Set<RufletWidgetState> { node.widgetStates(selected: isOn) }
+  var labelPosition: LabelPlacement {
+    node.string("label_position")?.lowercased() == "left" ? .left : .right
+  }
 
-  var body: some View {
-    ZStack(alignment: isOn ? .trailing : .leading) {
-      Capsule()
-        .fill(trackColor)
-        .overlay(Capsule().strokeBorder(outlineColor, lineWidth: outlineWidth))
-        .frame(
-          width: RufletThemeDefaults.switchTrackWidth,
-          height: RufletThemeDefaults.switchTrackHeight)
-      thumb
-        .padding(.horizontal, RufletThemeDefaults.switchThumbInset)
+  var labelControlID: Int? {
+    guard case .controlRef(let id)? = node.props["label"], labelNode?.id == id,
+      labelNode?.bool("visible") != false
+    else { return nil }
+    return id
+  }
+
+  var labelText: String? {
+    guard case .string(let text)? = node.props["label"] else { return nil }
+    return text
+  }
+
+  /// Apple exposes the enabled-track tint but not Material's per-state thumb,
+  /// outline, overlay, or thumb-icon APIs. Apply tint only when the DSL
+  /// explicitly asks for a representable color; omissions stay native.
+  var explicitTrackColor: Color? {
+    let states = node.widgetStates(selected: node.bool("value") == true)
+    if node.props["track_color"] != nil {
+      return MaterialPalette.color(stateful: node.props["track_color"], in: states)
     }
-    .frame(
-      width: RufletThemeDefaults.switchTrackWidth,
-      height: RufletThemeDefaults.switchTrackHeight)
-    .animation(.easeInOut(duration: 0.2), value: isOn)
-  }
-
-  private var thumb: some View {
-    let size = isOn
-      ? RufletThemeDefaults.switchSelectedThumbSize
-      : RufletThemeDefaults.switchThumbSize
-    return Circle()
-      .fill(thumbColor)
-      .frame(width: size, height: size)
-      .overlay { thumbIcon }
-      .shadow(radius: isOn ? 1 : 0)
-  }
-
-  /// `thumb_icon` is a widget-state icon: Flet's usual `{selected: …}` table,
-  /// so the glyph can differ between on and off.
-  @ViewBuilder
-  private var thumbIcon: some View {
-    if let icon = RufletWidgetStateProperty.resolve(node.props["thumb_icon"], in: states) {
-      RufletIcon(value: icon, size: RufletThemeDefaults.switchThumbIconSize, color: trackColor)
-    }
-  }
-
-  /// Flet names the track twice: `track_color` is the stateful spelling and
-  /// `active_track_color`/`inactive_track_color` the plain ones. Flutter
-  /// resolves the stateful property first, then the side-specific one, then
-  /// the theme role.
-  private var trackColor: Color {
-    if let stateful = MaterialPalette.color(stateful: node.props["track_color"], in: states) {
-      return stateful
-    }
-    return MaterialPalette.color(
-      for: node,
-      property: isOn ? "active_track_color" : "inactive_track_color",
-      default: .accentColor)
-  }
-
-  /// `active_color` is Flutter's `activeThumbColor` — the thumb, not the
-  /// track it slides along.
-  private var thumbColor: Color {
-    if let stateful = MaterialPalette.color(stateful: node.props["thumb_color"], in: states) {
-      return stateful
-    }
-    return MaterialPalette.color(
-      for: node,
-      property: isOn ? "active_color" : "inactive_thumb_color",
-      default: .white)
-  }
-
-  /// Material outlines the track only while the switch is off; once it is on
-  /// the filled track is the boundary.
-  private var outlineColor: Color {
-    if let stateful = MaterialPalette.color(
-      stateful: node.props["track_outline_color"], in: states)
-    {
-      return stateful
-    }
-    return isOn ? .clear : MaterialPalette.color(for: node, property: "track_outline_color",
-                                                 default: .secondary)
-  }
-
-  private var outlineWidth: CGFloat {
-    ControlProps.statefulDouble(node.props["track_outline_width"], in: states)
-      ?? RufletThemeDefaults.switchTrackOutlineWidth
+    guard node.bool("value") == true, node.props["active_track_color"] != nil else { return nil }
+    return MaterialPalette.color(node.string("active_track_color"))
   }
 }
 
