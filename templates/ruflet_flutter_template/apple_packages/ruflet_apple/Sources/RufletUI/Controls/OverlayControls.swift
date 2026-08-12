@@ -586,12 +586,18 @@ struct PopupMenuControlView: View {
     } label: {
       if let contentID = node.controlID(forKey: "content") {
         ControlView(id: contentID, axis: .none)
+      } else if let content = node.string("content") {
+        Text(content)
       } else if node.props["icon"] == nil {
         // Flutter's PopupMenuButton falls back to Icons.moreVert when neither
         // an icon nor child was supplied. Use the native semantic equivalent.
         Image(systemName: "ellipsis")
           .font(.system(size: iconSize))
           .foregroundColor(MaterialPalette.color(node.string("icon_color")))
+          .frame(width: splashSide ?? 40, height: splashSide ?? 40)
+          .contentShape(Rectangle())
+      } else if let iconID = node.controlID(forKey: "icon") {
+        ControlView(id: iconID, axis: .none)
           .frame(width: splashSide ?? 40, height: splashSide ?? 40)
           .contentShape(Rectangle())
       } else {
@@ -603,7 +609,6 @@ struct PopupMenuControlView: View {
       }
     }
     .padding(MaterialMenuDefaults.popupPadding(node))
-    .modifier(SlotSizeConstraints(value: node.props["size_constraints"]))
     .modifier(MaterialMenuButtonStyle(value: node.props["style"]))
     .modifier(ChromeClipModifier(behavior: MaterialMenuDefaults.popupClipBehavior(node)))
     .buttonStyle(.plain)
@@ -618,6 +623,9 @@ struct PopupMenuControlView: View {
       .padding(ControlProps.edgeInsets(node.props["menu_padding"])
         ?? EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
       .frame(minWidth: 180)
+      // PopupMenuButton.constraints constrains the popup route, not the
+      // anchor button which opens it.
+      .modifier(SlotSizeConstraints(value: node.props["size_constraints"]))
       .background(
         RoundedRectangle(cornerRadius: menuRadius)
           .fill(MaterialPalette.color(node.string("bgcolor"), default: .clear)))
@@ -662,7 +670,7 @@ struct PopupMenuControlView: View {
     let hasContent = item.controlID(forKey: "content") != nil
       || item.string("content") != nil || item.string("text") != nil
     let hasIcon = item.props["icon"] != nil
-    if item.bool("_divider") == true || (!hasContent && !hasIcon) {
+    if !hasContent && !hasIcon {
       Divider()
     } else {
       Button {
@@ -687,7 +695,9 @@ struct PopupMenuControlView: View {
             }
             .frame(width: 18)
           }
-          if item.props["icon"] != nil {
+          if let iconID = item.controlID(forKey: "icon") {
+            ControlView(id: iconID, axis: .none)
+          } else if item.props["icon"] != nil {
             RufletIcon(value: item.props["icon"], size: 16, color: nil)
           }
           if let contentID = item.controlID(forKey: "content") {
@@ -708,17 +718,28 @@ struct PopupMenuControlView: View {
 /// `MenuBar` — a row of `SubmenuButton`s.
 struct MenuBarControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
 
+  @ViewBuilder
   var body: some View {
-    HStack(spacing: 4) {
-      ControlList(ids: controlIDs, axis: .horizontal)
+    if visibleControlIDs.isEmpty {
+      // Flet renders ErrorControl here rather than silently accepting an
+      // empty MenuBar. Keep the same failure visible to app developers.
+      Text("MenuBar must have at minimum one visible child control")
+        .foregroundColor(.red)
+    } else {
+      HStack(spacing: 4) {
+        ControlList(ids: visibleControlIDs, axis: .horizontal)
+      }
+      .modifier(MenuSurfaceStyle(value: node.props["style"]))
+      .modifier(ChromeClipModifier(behavior: MaterialMenuDefaults.menuBarClipBehavior(node)))
     }
-    .modifier(MenuSurfaceStyle(value: node.props["style"]))
-    .modifier(ChromeClipModifier(behavior: MaterialMenuDefaults.menuBarClipBehavior(node)))
   }
 
-  private var controlIDs: [Int] {
-    MaterialMenuDefaults.controlIDs(node, key: "controls")
+  private var visibleControlIDs: [Int] {
+    MaterialMenuDefaults.visibleControlIDs(node, key: "controls") {
+      store.node($0)?.bool("visible")
+    }
   }
 }
 
@@ -749,7 +770,7 @@ struct SubmenuButtonControlView: View {
         if let contentID = node.controlID(forKey: "content") {
           ControlView(id: contentID, axis: .none)
         } else {
-          Text(node.string("text") ?? "")
+          Text(node.string("content") ?? node.string("text") ?? "")
         }
         if let trailingID = node.controlID(forKey: "trailing") {
           ControlView(id: trailingID, axis: .none)
@@ -768,9 +789,11 @@ struct SubmenuButtonControlView: View {
       ControlList(ids: controlIDs, axis: .vertical)
         .padding(.vertical, 6)
         .frame(minWidth: 180)
+        // Flutter applies alignment_offset and menu_style to the submenu
+        // surface, not to the button which opened it.
+        .offset(submenuOffset)
+        .modifier(MenuSurfaceStyle(value: node.props["menu_style"]))
     }
-    .offset(submenuOffset)
-    .modifier(MenuSurfaceStyle(value: node.props["menu_style"]))
     .onChange(of: presented) { open in
       guard node.bool("disabled") != true else { return }
       if open, MaterialMenuDefaults.shouldEmit(node, event: "open") {
@@ -787,6 +810,12 @@ struct SubmenuButtonControlView: View {
     }
     .onChange(of: focused) { isFocused in
       events.fire(node, isFocused ? "focus" : "blur")
+    }
+    .onAppear {
+      if node.string("focus") != nil { focused = true }
+    }
+    .onChange(of: node.string("focus")) { value in
+      if value != nil { focused = true }
     }
   }
 
@@ -828,6 +857,8 @@ struct MenuItemButtonControlView: View {
         }
         if let contentID = node.controlID(forKey: "content") {
           ControlView(id: contentID, axis: .none)
+        } else {
+          Text(node.string("content") ?? node.string("text") ?? "")
         }
         if let trailingID = node.controlID(forKey: "trailing_icon")
           ?? node.controlID(forKey: "trailing") {
@@ -838,11 +869,16 @@ struct MenuItemButtonControlView: View {
     .buttonStyle(.plain)
     .modifier(MaterialMenuButtonStyle(value: node.props["style"], appliesConstructorDefaults: true))
     .modifier(ChromeClipModifier(behavior: MaterialMenuDefaults.menuItemClipBehavior(node)))
-    .disabled(node.bool("disabled") ?? false)
+    // Flutter receives a nil `onPressed` when no click handler is attached,
+    // which makes the MenuItemButton disabled even if `disabled` is false.
+    .disabled(!MaterialMenuDefaults.shouldEmit(node, event: "click"))
     .focused($focused)
     .modifier(MenuSemanticLabel(value: node.string("semantics_label") ?? node.string("semantic_label")))
     .onAppear {
-      if node.bool("autofocus") == true { focused = true }
+      if node.bool("autofocus") == true || node.string("focus") != nil { focused = true }
+    }
+    .onChange(of: node.string("focus")) { value in
+      if value != nil { focused = true }
     }
     .onHover { inside in
       if inside, MaterialMenuDefaults.menuItemFocusesOnHover(node) { focused = true }
@@ -902,7 +938,120 @@ enum MaterialMenuDefaults {
   }
 
   static func controlIDs(_ node: ControlNode, key: String) -> [Int] {
-    orderedUnique(node.controlIDs(forKey: key) + node.childIDs)
+    // `control.children(key)` reads exactly the named Flet slot. Pulling the
+    // generic `controls` collection into an `items` slot can silently render
+    // unrelated controls in a popup.
+    orderedUnique(node.controlIDs(forKey: key))
+  }
+
+  static func visibleControlIDs(
+    _ node: ControlNode,
+    key: String,
+    visibilityForID: (Int) -> Bool?
+  ) -> [Int] {
+    controlIDs(node, key: key).filter { visibilityForID($0) != false }
+  }
+}
+
+/// Source-derived behavior shared by every native `ContextMenu` presentation.
+///
+/// Flet distinguishes an explicit pointer button from a programmatic `open`:
+/// button gestures read that button's item collection, while `open` passes no
+/// button and reads the common `items` collection. This type deliberately
+/// keeps the distinction instead of collapsing both paths into "primary".
+enum RufletContextMenuDefaults {
+  static func trigger(_ node: ControlNode, button: String?) -> String? {
+    guard let button else { return nil }
+    let explicit: String?
+    let fallback: String
+    switch button.lowercased() {
+    case "secondary":
+      explicit = node.string("secondary_trigger")
+      fallback = "down"
+    case "tertiary":
+      explicit = node.string("tertiary_trigger")
+      fallback = "down"
+    default:
+      explicit = node.string("primary_trigger")
+      fallback = "disabled"
+    }
+    return normalizedTrigger(explicit ?? fallback)
+  }
+
+  static func itemIDs(_ node: ControlNode, button: String?) -> [Int] {
+    guard let button else {
+      return orderedUnique(node.controlIDs(forKey: "items"))
+    }
+    switch button.lowercased() {
+    case "secondary": return orderedUnique(node.controlIDs(forKey: "secondary_items"))
+    case "tertiary": return orderedUnique(node.controlIDs(forKey: "tertiary_items"))
+    default: return orderedUnique(node.controlIDs(forKey: "primary_items"))
+    }
+  }
+
+  static func popupItemIDs(
+    _ node: ControlNode,
+    button: String?,
+    typeForID: (Int) -> String?
+  ) -> [Int] {
+    itemIDs(node, button: button).filter { typeForID($0) == "PopupMenuItem" }
+  }
+
+  static func permitsGesture(_ node: ControlNode, button: String, gesture: String) -> Bool {
+    trigger(node, button: button) == normalizedTrigger(gesture)
+  }
+
+  static func point(_ value: RufletValue?) -> CGPoint? {
+    guard let map = value?.mapValue,
+          let x = map["x"]?.doubleValue,
+          let y = map["y"]?.doubleValue else { return nil }
+    return CGPoint(x: x, y: y)
+  }
+
+  /// Mirrors Flet's local/global conversion and center fallback for `open`.
+  static func positions(
+    global: CGPoint?, local: CGPoint?, frame: CGRect
+  ) -> (global: CGPoint, local: CGPoint) {
+    if let local, global == nil {
+      return (CGPoint(x: frame.minX + local.x, y: frame.minY + local.y), local)
+    }
+    if let global, local == nil {
+      return (global, CGPoint(x: global.x - frame.minX, y: global.y - frame.minY))
+    }
+    if let global, let local { return (global, local) }
+    let localCenter = CGPoint(x: frame.width / 2, y: frame.height / 2)
+    return (
+      CGPoint(x: frame.minX + localCenter.x, y: frame.minY + localCenter.y),
+      localCenter)
+  }
+
+  static func eventPayload(
+    node: ControlNode,
+    button: String?,
+    global: CGPoint,
+    local: CGPoint?,
+    itemID: Int? = nil,
+    itemIndex: Int? = nil,
+    itemCount: Int
+  ) -> [String: RufletValue] {
+    [
+      "b": button.map(RufletValue.string) ?? .null,
+      "tr": trigger(node, button: button).map(RufletValue.string) ?? .null,
+      "id": itemID.map { .int(Int64($0)) } ?? .null,
+      "idx": itemIndex.map { .int(Int64($0)) } ?? .null,
+      "ic": .int(Int64(itemCount)),
+      "g": .map(["x": .double(Double(global.x)), "y": .double(Double(global.y))]),
+      "l": local.map {
+        .map(["x": .double(Double($0.x)), "y": .double(Double($0.y))])
+      } ?? .null,
+    ]
+  }
+
+  private static func normalizedTrigger(_ value: String) -> String {
+    let compact = value.replacingOccurrences(of: "_", with: "")
+      .replacingOccurrences(of: "-", with: "")
+      .lowercased()
+    return compact == "longpress" ? "longPress" : compact
   }
 }
 
@@ -956,24 +1105,39 @@ struct ContextMenuControlView: View {
   @Environment(\.rufletEvents) private var events
   @State private var presented = false
   @State private var completedSelection = false
-  @State private var activeButton = "primary"
+  @State private var activeButton: String?
+  @State private var activeGlobalPosition = CGPoint.zero
+  @State private var activeLocalPosition: CGPoint?
+  @State private var contentFrame = CGRect.zero
 
   var body: some View {
     Group {
       if let contentID = node.controlID(forKey: "content") {
         ControlView(id: contentID, axis: .none)
+      } else {
+        Text("ContextMenu.content must be visible")
+          .foregroundColor(.red)
       }
     }
     .contentShape(Rectangle())
     .onLongPressGesture {
-      let gesture = trigger(for: "primary")
-      guard gesture == "long_press" || gesture == "longpress" else { return }
-      open(button: "primary")
+      guard RufletContextMenuDefaults.permitsGesture(
+        node, button: "primary", gesture: "long_press") else { return }
+      open(button: "primary", global: nil, local: nil)
     }
     .contextMenu {
-      nativeMenuItems(button: "secondary")
+      if RufletContextMenuDefaults.permitsGesture(node, button: "secondary", gesture: "down") {
+        nativeMenuItems(button: "secondary")
+      }
     }
-    .popover(isPresented: $presented) {
+    .background(
+      GeometryReader { proxy in
+        Color.clear.preference(
+          key: ContextMenuFramePreference.self,
+          value: proxy.frame(in: .global))
+      })
+    .onPreferenceChange(ContextMenuFramePreference.self) { contentFrame = $0 }
+    .popover(isPresented: $presented, attachmentAnchor: popoverAnchor) {
       VStack(alignment: .leading, spacing: 0) {
         popoverMenuItems(button: activeButton)
       }
@@ -990,40 +1154,40 @@ struct ContextMenuControlView: View {
         completion(.failure(rufletUnsupported(node.type, call)))
         return
       }
-      open(button: call.argument("button")?.stringValue ?? "primary")
+      let positions = RufletContextMenuDefaults.positions(
+        global: RufletContextMenuDefaults.point(call.argument("global_position")),
+        local: RufletContextMenuDefaults.point(call.argument("local_position")),
+        frame: contentFrame)
+      open(button: nil, global: positions.global, local: positions.local)
       completion(.success(.null))
     }
   }
 
-  private func open(button: String) {
+  private var popoverAnchor: PopoverAttachmentAnchor {
+    guard let local = activeLocalPosition,
+          contentFrame.width > 0, contentFrame.height > 0 else { return .rect(.bounds) }
+    return .point(UnitPoint(
+      x: min(max(local.x / contentFrame.width, 0), 1),
+      y: min(max(local.y / contentFrame.height, 0), 1)))
+  }
+
+  private func open(button: String?, global: CGPoint?, local: CGPoint?) {
+    let positions = RufletContextMenuDefaults.positions(
+      global: global, local: local, frame: contentFrame)
     activeButton = button
+    activeGlobalPosition = positions.global
+    activeLocalPosition = positions.local
     completedSelection = false
+    if itemIDs(button: button).isEmpty {
+      events.fire(node, "dismiss", data: .map(eventPayload(button: button)))
+      return
+    }
     presented = true
   }
 
-  private func itemIDs(button: String) -> [Int] {
-    let specific = itemIDs(for: button)
-    if !specific.isEmpty { return specific }
-    return node.controlIDs(forKey: "items") + node.childIDs
-  }
-
-  @ViewBuilder
-  /// The three pointer buttons each carry their own item list and trigger.
-  /// Spelling the keys out keeps them greppable, which an interpolated
-  /// `"\(button)_items"` did not.
-  private func itemIDs(for button: String) -> [Int] {
-    switch button {
-    case "secondary": return node.controlIDs(forKey: "secondary_items")
-    case "tertiary": return node.controlIDs(forKey: "tertiary_items")
-    default: return node.controlIDs(forKey: "primary_items")
-    }
-  }
-
-  private func trigger(for button: String) -> String {
-    switch button {
-    case "secondary": return node.string("secondary_trigger") ?? "disabled"
-    case "tertiary": return node.string("tertiary_trigger") ?? "disabled"
-    default: return node.string("primary_trigger") ?? "disabled"
+  private func itemIDs(button: String?) -> [Int] {
+    RufletContextMenuDefaults.popupItemIDs(node, button: button) {
+      store.node($0)?.type
     }
   }
 
@@ -1034,28 +1198,33 @@ struct ContextMenuControlView: View {
   }
 
   @ViewBuilder
-  private func popoverMenuItems(button: String) -> some View {
+  private func popoverMenuItems(button: String?) -> some View {
     ForEach(itemIDs(button: button), id: \.self) { itemID in
       if let item = store.node(itemID) { contextItem(item, button: button) }
     }
   }
 
   @ViewBuilder
-  private func contextItem(_ item: ControlNode, button: String) -> some View {
-    if item.bool("_divider") == true {
+  private func contextItem(_ item: ControlNode, button: String?) -> some View {
+    let hasContent = item.controlID(forKey: "content") != nil
+      || item.string("content") != nil || item.string("text") != nil
+    let hasIcon = item.props["icon"] != nil
+    if !hasContent && !hasIcon {
       Divider()
     } else {
       Button {
         select(item, button: button)
       } label: {
         HStack(spacing: 8) {
-          if item.props["icon"] != nil {
+          if let iconID = item.controlID(forKey: "icon") {
+            ControlView(id: iconID, axis: .none)
+          } else if item.props["icon"] != nil {
             RufletIcon(value: item.props["icon"], size: 16, color: nil)
           }
           if let contentID = item.controlID(forKey: "content") {
             ControlView(id: contentID, axis: .none)
           } else {
-            Text(item.string("content") ?? item.string("text") ?? item.string("value") ?? "")
+            Text(item.string("content") ?? item.string("text") ?? "")
           }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -1067,23 +1236,35 @@ struct ContextMenuControlView: View {
     }
   }
 
-  private func select(_ item: ControlNode, button: String) {
+  private func select(_ item: ControlNode, button: String?) {
     completedSelection = true
     let ids = itemIDs(button: button)
     var payload = eventPayload(button: button)
     payload["id"] = .int(Int64(item.id))
     payload["idx"] = .int(Int64(ids.firstIndex(of: item.id) ?? 0))
+    // PopupMenuItem.onTap runs before showMenu's Future completes and the
+    // parent receives `select`, so preserve that observable event order.
+    if let checked = item.bool("checked") {
+      events.fire(item, "click", data: .bool(!checked))
+    } else {
+      events.fire(item, "click")
+    }
     events.fire(node, "select", data: .map(payload))
-    events.fire(item, "click")
     presented = false
   }
 
-  private func eventPayload(button: String) -> [String: RufletValue] {
+  private func eventPayload(button: String?) -> [String: RufletValue] {
     let ids = itemIDs(button: button)
-    return [
-      "b": .string(button),
-      "tr": .string(node.string("\(button)_trigger") ?? "disabled"),
-      "ic": .int(Int64(ids.count)),
-    ]
+    return RufletContextMenuDefaults.eventPayload(
+      node: node,
+      button: button,
+      global: activeGlobalPosition,
+      local: activeLocalPosition,
+      itemCount: ids.count)
   }
+}
+
+private struct ContextMenuFramePreference: PreferenceKey {
+  static var defaultValue: CGRect = .zero
+  static func reduce(value: inout CGRect, nextValue: () -> CGRect) { value = nextValue() }
 }
