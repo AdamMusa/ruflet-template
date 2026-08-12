@@ -11,7 +11,7 @@ import RufletEngine
 /// RufletAppView(services: [RufletMotion.self])
 /// ```
 @MainActor
-public enum RufletMotion: RufletServiceBundle {
+public enum RufletMotion: RufletExtension {
   public static let bundleName = "RufletMotion"
 
   public static func register(in registry: ServiceRegistry) {
