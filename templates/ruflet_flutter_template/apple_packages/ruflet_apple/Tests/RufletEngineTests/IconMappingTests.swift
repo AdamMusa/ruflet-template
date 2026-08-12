@@ -42,6 +42,23 @@ final class IconMappingTests: XCTestCase {
     XCTAssertTrue(MaterialIconGlyphs.codepoints.allSatisfy { UnicodeScalar($0) != nil })
   }
 
+  func testEveryMaterialWireIconHasVisibleAppleRendering() {
+    for (index, name) in MaterialIconNames.material.enumerated() {
+      let wire = MaterialIconNames.firstCodepoint + index
+      guard let rendering = IconMapping.rendering(for: .int(Int64(wire))) else {
+        return XCTFail("Material icon \(name) resolved to no Apple rendering")
+      }
+      switch rendering {
+      case .systemSymbol(let symbol):
+        XCTAssertNotEqual(symbol, IconMapping.placeholderSymbol, "Placeholder for \(name)")
+        XCTAssertTrue(IconMapping.nativeSymbolExists(symbol), "Unavailable SF Symbol \(symbol) for \(name)")
+      case .materialGlyph(let codepoint, let resolvedName):
+        XCTAssertEqual(resolvedName, name)
+        XCTAssertEqual(codepoint, MaterialIconGlyphs.codepoints[index])
+      }
+    }
+  }
+
   func testMaterialAndCupertinoWireIconsResolveToNativeAppleSymbols() throws {
     let homeIndex = try XCTUnwrap(MaterialIconNames.material.firstIndex(of: "HOME"))
     let homeCodepoint = MaterialIconNames.firstCodepoint + homeIndex
