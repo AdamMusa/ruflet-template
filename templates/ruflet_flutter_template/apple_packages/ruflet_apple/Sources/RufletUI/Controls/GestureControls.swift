@@ -1,3 +1,4 @@
+import Foundation
 import RufletEngine
 import RufletProtocol
 import SwiftUI
@@ -584,12 +585,13 @@ struct DraggableControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
-  @State private var dragging = false
+  @State private var activeDragCount = 0
+  @State private var latestTranslation = CGSize.zero
 
   var body: some View {
     let contentID = node.controlID(forKey: "content")
     let validation = RufletDraggableSemantics.validationError(
-      contentID: contentID, content: contentID.flatMap(store.node))
+      node: node, contentID: contentID, content: contentID.flatMap(store.node))
     if let validation {
       Text(validation).font(.caption).foregroundStyle(.red)
     } else {
@@ -599,36 +601,53 @@ struct DraggableControlView: View {
 
   private var draggable: some View {
     let source = Group {
-      if dragging, let draggingID = node.controlID(forKey: "content_when_dragging") {
+      if activeDragCount > 0,
+        let draggingID = node.controlID(forKey: "content_when_dragging")
+      {
         ControlView(id: draggingID, axis: .none)
       } else if let contentID = node.controlID(forKey: "content") {
         ControlView(id: contentID, axis: .none)
       }
     }
     return Group {
-    if (node.int("max_simultaneous_drags") ?? 1) == 0 {
+    if RufletDraggableSemantics.maximumDrags(node) == 0 {
       source
     } else {
-      source.onDrag {
-        dragging = true
-        RufletDragSession.current = .init(
-          sourceID: node.id, group: node.string("group") ?? RufletGestureParity.dragGroup,
-          completed: {
-            dragging = false
-            events.fire(
-              node, "drag_complete",
-              data: .string(node.string("group") ?? RufletGestureParity.dragGroup))
-          })
-        events.fire(node, "drag_start")
-        return NSItemProvider(
-          object: "\(node.string("group") ?? RufletGestureParity.dragGroup)|\(node.id)" as NSString)
-      } preview: {
-        if let feedbackID = node.controlID(forKey: "content_feedback") {
-          ControlView(id: feedbackID, axis: .none)
-        } else if let contentID = node.controlID(forKey: "content") {
-          ControlView(id: contentID, axis: .none).opacity(0.5)
+      source
+        .simultaneousGesture(
+          DragGesture(minimumDistance: 0)
+            .onChanged { latestTranslation = $0.translation }
+            .onEnded { _ in latestTranslation = .zero })
+        .onDrag {
+          guard RufletDraggableSemantics.allowsAnotherDrag(
+            maximum: RufletDraggableSemantics.maximumDrags(node),
+            active: activeDragCount),
+            RufletDraggableSemantics.affinityMatches(
+              node.string("affinity"), translation: latestTranslation)
+          else { return NSItemProvider() }
+
+          let group = node.string("group") ?? RufletGestureParity.dragGroup
+          let token = UUID().uuidString
+          activeDragCount += 1
+          let active = RufletDragSession.Active(
+            token: token, sourceID: node.id, group: group,
+            axis: RufletDraggableSemantics.axis(node.string("axis")),
+            ended: { accepted in
+              activeDragCount = max(0, activeDragCount - 1)
+              if accepted {
+                events.fire(node, "drag_complete", data: .string(group))
+              }
+            })
+          let provider = RufletDragSession.register(active)
+          events.fire(node, "drag_start")
+          return provider
+        } preview: {
+          if let feedbackID = node.controlID(forKey: "content_feedback") {
+            ControlView(id: feedbackID, axis: .none)
+          } else if let contentID = node.controlID(forKey: "content") {
+            ControlView(id: contentID, axis: .none).opacity(0.5)
+          }
         }
-      }
     }
     }
   }
@@ -636,6 +655,47 @@ struct DraggableControlView: View {
 
 enum RufletDraggableSemantics {
   static let missingContentError = "Draggable.content must be visible"
+
+  enum Axis: String, Equatable {
+    case horizontal
+    case vertical
+  }
+
+  static func axis(_ value: String?) -> Axis? {
+    switch value?.lowercased() {
+    case "horizontal": return .horizontal
+    case "vertical": return .vertical
+    default: return nil
+    }
+  }
+
+  static func maximumDrags(_ node: ControlNode) -> Int? {
+    node.props["max_simultaneous_drags"]?.intValue
+  }
+
+  static func allowsAnotherDrag(maximum: Int?, active: Int) -> Bool {
+    maximum.map { active < $0 } ?? true
+  }
+
+  static func affinityMatches(_ value: String?, translation: CGSize) -> Bool {
+    guard let affinity = axis(value), translation != .zero else { return true }
+    switch affinity {
+    case .horizontal: return abs(translation.width) >= abs(translation.height)
+    case .vertical: return abs(translation.height) >= abs(translation.width)
+    }
+  }
+
+  static func validationError(
+    node: ControlNode, contentID: Int?, content: ControlNode?
+  ) -> String? {
+    if let contentError = validationError(contentID: contentID, content: content) {
+      return contentError
+    }
+    if let maximum = maximumDrags(node), maximum < 0 {
+      return "max_simultaneous_drags must be greater than or equal to 0, got \(maximum)"
+    }
+    return nil
+  }
 
   static func validationError(contentID: Int?, content: ControlNode?) -> String? {
     RufletRequiredContent.validationError(
@@ -646,13 +706,85 @@ enum RufletDraggableSemantics {
 /// SwiftUI's item provider does not expose the source view to a target. Flet's
 /// drag events do, so the active native drag keeps that identity for the
 /// duration of the platform drag session.
-private enum RufletDragSession {
-  struct Active {
+@MainActor
+enum RufletDragSession {
+  final class Active {
+    let token: String
     let sourceID: Int
     let group: String
-    let completed: () -> Void
+    let axis: RufletDraggableSemantics.Axis?
+    private let ended: (Bool) -> Void
+    private var hasEnded = false
+    private var firstGlobalLocation: CGPoint?
+
+    init(
+      token: String, sourceID: Int, group: String,
+      axis: RufletDraggableSemantics.Axis?, ended: @escaping (Bool) -> Void
+    ) {
+      self.token = token
+      self.sourceID = sourceID
+      self.group = group
+      self.axis = axis
+      self.ended = ended
+    }
+
+    func globalLocation(_ location: CGPoint) -> CGPoint {
+      let first = firstGlobalLocation ?? location
+      firstGlobalLocation = first
+      switch axis {
+      case .horizontal: return CGPoint(x: location.x, y: first.y)
+      case .vertical: return CGPoint(x: first.x, y: location.y)
+      case nil: return location
+      }
+    }
+
+    func finish(accepted: Bool) {
+      guard !hasEnded else { return }
+      hasEnded = true
+      ended(accepted)
+    }
   }
-  static var current: Active?
+
+  private static var sessions: [String: Active] = [:]
+
+  static func register(_ active: Active) -> NSItemProvider {
+    sessions[active.token] = active
+    let provider = NSItemProvider(object: "\(active.group)|\(active.sourceID)" as NSString)
+    provider.suggestedName = active.token
+    let lifetime = RufletDragLifetime(token: active.token)
+    provider.registerDataRepresentation(
+      forTypeIdentifier: "com.izeesoft.ruflet.drag-session",
+      visibility: .ownProcess
+    ) { completion in
+      _ = lifetime
+      completion(Data(), nil)
+      return nil
+    }
+    return provider
+  }
+
+  static func active(for info: DropInfo) -> Active? {
+    for provider in info.itemProviders(for: ["public.text"]) {
+      if let token = provider.suggestedName, let active = sessions[token] {
+        return active
+      }
+    }
+    return nil
+  }
+
+  static func finish(_ token: String, accepted: Bool) {
+    guard let active = sessions.removeValue(forKey: token) else { return }
+    active.finish(accepted: accepted)
+  }
+
+  private final class RufletDragLifetime: @unchecked Sendable {
+    let token: String
+    init(token: String) { self.token = token }
+    deinit {
+      let token = token
+      DispatchQueue.main.async { RufletDragSession.finish(token, accepted: false) }
+    }
+  }
 }
 
 /// `DragTarget` — accepts a `Draggable` from the same group.
@@ -691,6 +823,10 @@ struct DragTargetControlView: View {
 enum RufletDragTargetSemantics {
   static let missingContentError = "DragTarget.content must be visible"
 
+  static func accepts(sourceGroup: String, targetGroup: String?) -> Bool {
+    sourceGroup == (targetGroup ?? RufletGestureParity.dragGroup)
+  }
+
   static func validationError(contentID: Int?, content: ControlNode?) -> String? {
     RufletRequiredContent.validationError(
       contentID: contentID, content: content, message: missingContentError)
@@ -702,44 +838,49 @@ private struct RufletDragTargetDropDelegate: DropDelegate {
   let events: RufletEventSink
   let globalOrigin: CGPoint
 
-  private var active: RufletDragSession.Active? { RufletDragSession.current }
-  private var accepts: Bool {
-    active?.group == (node.string("group") ?? RufletGestureParity.dragGroup)
+  private func active(_ info: DropInfo) -> RufletDragSession.Active? {
+    RufletDragSession.active(for: info)
   }
-
-  func validateDrop(info: DropInfo) -> Bool { accepts }
+  func validateDrop(info: DropInfo) -> Bool { active(info) != nil }
 
   func dropEntered(info: DropInfo) {
-    guard let active else { return }
+    guard let active = active(info) else { return }
+    let accepts = RufletDragTargetSemantics.accepts(
+      sourceGroup: active.group, targetGroup: node.string("group"))
     events.fire(
       node, "will_accept",
       data: .map(["accept": .bool(accepts), "src_id": .int(Int64(active.sourceID))]))
   }
 
   func dropUpdated(info: DropInfo) -> DropProposal? {
-    guard accepts, let active else { return DropProposal(operation: .forbidden) }
+    guard let active = active(info) else { return DropProposal(operation: .forbidden) }
     events.fire(node, "move", data: payload(active, at: info.location))
-    return DropProposal(operation: .move)
+    let accepts = RufletDragTargetSemantics.accepts(
+      sourceGroup: active.group, targetGroup: node.string("group"))
+    return DropProposal(operation: accepts ? .move : .forbidden)
   }
 
   func dropExited(info: DropInfo) {
-    guard let active else { return }
+    guard let active = active(info) else { return }
     events.fire(
       node, "leave", data: .map(["src_id": .int(Int64(active.sourceID))]))
   }
 
   func performDrop(info: DropInfo) -> Bool {
-    guard accepts, let active else { return false }
+    guard let active = active(info),
+      RufletDragTargetSemantics.accepts(
+        sourceGroup: active.group, targetGroup: node.string("group"))
+    else { return false }
     events.fire(node, "accept", data: payload(active, at: info.location))
-    active.completed()
-    RufletDragSession.current = nil
+    RufletDragSession.finish(active.token, accepted: true)
     return true
   }
 
   private func payload(_ active: RufletDragSession.Active, at point: CGPoint) -> RufletValue {
-    RufletGestureParity.dragPayload(
+    let global = CGPoint(x: point.x + globalOrigin.x, y: point.y + globalOrigin.y)
+    return RufletGestureParity.dragPayload(
       sourceID: active.sourceID,
-      location: CGPoint(x: point.x + globalOrigin.x, y: point.y + globalOrigin.y))
+      location: active.globalLocation(global))
   }
 }
 
