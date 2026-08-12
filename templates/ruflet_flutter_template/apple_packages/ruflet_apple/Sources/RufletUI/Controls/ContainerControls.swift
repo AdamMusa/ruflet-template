@@ -1775,13 +1775,14 @@ struct DividerControlView: View {
     let metrics = DividerGeometry.metrics(
       node: node, isVertical: isVertical, displayScale: displayScale)
     if isVertical {
-      HStack { Divider() }
+      HStack { Divider().frame(width: metrics.thickness) }
         .modifier(DividerExplicitTint(color: DividerGeometry.explicitColor(node)))
         .padding(.top, metrics.leadingIndent)
         .padding(.bottom, metrics.trailingIndent)
         .frame(width: metrics.extent)
     } else {
       Divider()
+        .frame(height: metrics.thickness)
         .modifier(DividerExplicitTint(color: DividerGeometry.explicitColor(node)))
         .padding(.leading, metrics.leadingIndent)
         .padding(.trailing, metrics.trailingIndent)
