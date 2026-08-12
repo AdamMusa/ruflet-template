@@ -303,9 +303,12 @@ public enum ControlRegistry {
         events: ["blur", "change", "change_end", "change_start", "focus"])
     add(["RangeSlider"], .visible, "RangeSliderControlView", .nativeView,
         events: ["change", "change_end", "change_start"])
-    add(["TextField", "CupertinoTextField"], .visible, "Native text field", .nativeView,
+    add(["TextField"], .visible, "Native text field", .nativeView,
         events: ["blur", "change", "click", "focus", "selection_change", "submit", "tap_outside"],
-        methods: ["blur", "focus"])
+        methods: ["focus"])
+    add(["CupertinoTextField"], .visible, "Native Cupertino text field", .nativeView,
+        events: ["blur", "change", "click", "focus", "selection_change", "submit", "tap_outside"],
+        methods: ["focus"])
     add(["CodeEditor"], .visible, "RufletCodeEditor.CodeEditorControlView",
         .optionalBundle("RufletCodeEditor"),
         events: ["blur", "change", "focus", "selection_change"],

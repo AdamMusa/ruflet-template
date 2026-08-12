@@ -41,6 +41,61 @@ final class RufletInputParityTests: XCTestCase {
     XCTAssertEqual(
       ControlRegistry.descriptor(for: "DatePicker")?.supportedEvents,
       ["change", "dismiss", "entry_mode_change"])
+    XCTAssertEqual(ControlRegistry.descriptor(for: "TextField")?.supportedMethods, ["focus"])
+  }
+
+  func testTextFieldDefaultsMatchPinnedFletBehaviorWithoutMaterialChrome() {
+    let omitted = ControlNode(id: 1, type: "TextField")
+    XCTAssertFalse(RufletTextFieldDefaults.isMultiline(omitted))
+    XCTAssertEqual(RufletTextFieldDefaults.minLines(omitted), 1)
+    XCTAssertEqual(RufletTextFieldDefaults.maxLines(omitted), 1)
+    XCTAssertEqual(RufletTextFieldDefaults.defaultWidth(omitted), 300)
+
+    let shifted = ControlNode(
+      id: 2, type: "TextField",
+      props: ["shift_enter": .bool(true)])
+    XCTAssertTrue(RufletTextFieldDefaults.isMultiline(shifted))
+    XCTAssertEqual(RufletTextFieldDefaults.minLines(shifted), 1)
+    XCTAssertNil(RufletTextFieldDefaults.maxLines(shifted))
+
+    XCTAssertNil(RufletTextFieldDefaults.defaultWidth(ControlNode(
+      id: 3, type: "TextField", props: ["expand": .int(1)])))
+    XCTAssertNil(RufletTextFieldDefaults.defaultWidth(ControlNode(
+      id: 4, type: "TextField", props: ["width": .double(240)])))
+  }
+
+  func testTextFieldCounterInterpolatesFletTokens() {
+    XCTAssertEqual(
+      RufletTextFieldDefaults.counterText(
+        "{value_length}/{max_length} ({symbols_left})", value: "ruby", maxLength: 10),
+      "4/10 (6)")
+    XCTAssertNil(RufletTextFieldDefaults.counterText(nil, value: "ruby", maxLength: 10))
+    XCTAssertEqual(
+      RufletTextFieldDefaults.counterText(
+        "{value_length}:{max_length}:{symbols_left}", value: "ruby", maxLength: nil),
+      "4:None:None")
+  }
+
+  func testTextFieldChangeUpdatesWireBeforeOptionalEvent() {
+    let node = ControlNode(
+      id: 9, type: "TextField",
+      props: ["on_change": .bool(true)])
+    var calls: [String] = []
+    let sink = RufletEventSink(
+      send: { _, name, data in
+        calls.append("event:\(name):\(data.stringValue ?? "")")
+      },
+      setLocal: { _, key, value in
+        calls.append("local:\(key):\(value.stringValue ?? "")")
+      },
+      update: { _, props in
+        calls.append("update:value:\(props["value"]?.stringValue ?? "")")
+      })
+
+    RufletTextFieldEvents.change("native", on: node, to: sink)
+    XCTAssertEqual(calls, [
+      "local:value:native", "update:value:native", "event:change:native",
+    ])
   }
 
   func testDropdownKeepsFletFieldAndPopupGeometryIndependent() {

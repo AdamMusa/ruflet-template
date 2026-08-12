@@ -35,7 +35,13 @@ struct RufletFormFieldSlot: View {
   }
 
   private var resolvedText: String? {
-    node.string(key) ?? node.string("\(key)_text")
+    if key == "counter" {
+      return RufletTextFieldDefaults.counterText(
+        node.string(key) ?? node.string("\(key)_text"),
+        value: node.string("value") ?? "",
+        maxLength: node.int("max_length"))
+    }
+    return node.string(key) ?? node.string("\(key)_text")
   }
 
   private var style: RufletTextStyle {
@@ -127,8 +133,9 @@ struct RufletFormFieldDecoration: ViewModifier {
   /// The label sits over the field's own content inset when it is aligned
   /// with the hint rather than with the decoration's edge.
   private var labelInset: CGFloat {
-    ControlProps.edgeInsets(node.props["content_padding"])?.leading
-      ?? (node.bool("dense") == true ? 4 : 8)
+    // Omitted padding belongs to the native text control.  Only mirror an
+    // inset here when the Ruflet DSL explicitly supplied one.
+    ControlProps.edgeInsets(node.props["content_padding"])?.leading ?? 0
   }
 }
 

@@ -41,7 +41,16 @@ struct RufletTextInputTraits {
   var hasError = false
   var alwaysCallOnTap = false
   var stylusHandwriting = true
+  var imePersonalizedLearning = true
   var ignoresUpDownKeys = false
+  var fontWeight: String?
+  var fontFamily: String?
+  var italic = false
+  var letterSpacing: CGFloat?
+  var backgroundColor: Color?
+  var underline = false
+  var strikethrough = false
+  var lineHeight: CGFloat?
   /// Flutter's `StrutStyle` forces a minimum line box. Only the metrics that
   /// have a paragraph-style counterpart are carried.
   var strutHeight: CGFloat?
@@ -63,12 +72,11 @@ struct RufletTextInputTraits {
     cursorWidth != 2 || cursorHeight != nil || cursorRadius != nil || !animateCursorOpacity
   }
 
-  /// Flet's `input_filter`, which is a `FilteringTextInputFormatter` built
-  /// from a regular expression.
-  ///
-  /// Allowing keeps the runs that match and rewrites everything between them;
-  /// denying does the opposite. Both substitute `replacement_string`, which is
-  /// empty by default and so simply drops the rejected text.
+  /// Flet 0.80.5's `CustomFilteringTextInputFormatter` deliberately overrides
+  /// Flutter's filtering implementation: an edit is accepted whole when its
+  /// resulting value contains a regex match and rejected whole otherwise.
+  /// The source still parses allow/replacement for constructor compatibility,
+  /// but its override never applies either value.
   struct InputFilter {
     let expression: NSRegularExpression
     let allow: Bool
@@ -90,22 +98,9 @@ struct RufletTextInputTraits {
       replacement = map["replacement_string"]?.stringValue ?? ""
     }
 
-    func apply(to text: String) -> String {
-      let full = NSRange(location: 0, length: (text as NSString).length)
-      guard allow else {
-        return expression.stringByReplacingMatches(
-          in: text, range: full, withTemplate: NSRegularExpression.escapedTemplate(for: replacement))
-      }
-      let source = text as NSString
-      var kept = ""
-      var cursor = 0
-      for match in expression.matches(in: text, range: full) {
-        if match.range.location > cursor { kept += replacement }
-        kept += source.substring(with: match.range)
-        cursor = NSMaxRange(match.range)
-      }
-      if cursor < source.length { kept += replacement }
-      return kept
+    func apply(oldValue: String, newValue: String) -> String {
+      let full = NSRange(location: 0, length: (newValue as NSString).length)
+      return expression.firstMatch(in: newValue, range: full) == nil ? oldValue : newValue
     }
   }
 
@@ -116,8 +111,10 @@ struct RufletTextInputTraits {
     capitalization = node.string("capitalization")?.lowercased()
     autocorrect = node.bool("autocorrect") ?? true
     enableSuggestions = node.bool("enable_suggestions") ?? true
-    smartDashes = node.string("smart_dashes_type")?.lowercased() != "disabled"
-    smartQuotes = node.string("smart_quotes_type")?.lowercased() != "disabled"
+    smartDashes = node.bool("smart_dashes_type")
+      ?? (node.string("smart_dashes_type")?.lowercased() != "disabled")
+    smartQuotes = node.bool("smart_quotes_type")
+      ?? (node.string("smart_quotes_type")?.lowercased() != "disabled")
     readOnly = node.bool("read_only") ?? false
     // Flet treats a non-positive max_length as "no limit", the way
     // TextField's maxLength does.
@@ -139,23 +136,72 @@ struct RufletTextInputTraits {
     cursorHeight = node.double("cursor_height").map { CGFloat($0) }
     cursorRadius = ControlProps.cornerRadius(node.props["cursor_radius"])
     cursorErrorColor = MaterialPalette.color(node.string("cursor_error_color"))
-    animateCursorOpacity = node.bool("animate_cursor_opacity") ?? true
+    #if os(iOS)
+      animateCursorOpacity = node.bool("animate_cursor_opacity") ?? true
+    #else
+      animateCursorOpacity = node.bool("animate_cursor_opacity") ?? false
+    #endif
     obscuringCharacter = node.string("obscuring_character") ?? "•"
     hasError = node.controlID(forKey: "error") != nil
       || !(node.string("error") ?? node.string("error_text") ?? "").isEmpty
     alwaysCallOnTap = node.bool("always_call_on_tap") ?? false
     stylusHandwriting = node.bool("enable_stylus_handwriting") ?? true
+    imePersonalizedLearning = node.bool("enable_ime_personalized_learning") ?? true
     ignoresUpDownKeys = node.bool("ignore_up_down_keys") ?? false
+    if let style = node.map("text_style") {
+      fontWeight = style["weight"]?.stringValue
+      fontFamily = style["font_family"]?.stringValue
+      italic = style["italic"]?.boolValue ?? false
+      letterSpacing = style["letter_spacing"]?.doubleValue.map { CGFloat($0) }
+      backgroundColor = MaterialPalette.color(style["bgcolor"]?.stringValue)
+      let decoration = style["decoration"]?.intValue ?? 0
+      underline = decoration & 1 != 0
+      strikethrough = decoration & 4 != 0
+      if let height = style["height"]?.doubleValue,
+        let size = style["size"]?.doubleValue
+      {
+        lineHeight = CGFloat(height * size)
+      }
+    }
     if let strut = node.map("strut_style") {
       strutHeight = strut["height"]?.doubleValue.map { CGFloat($0) }
       strutLeading = strut["leading"]?.doubleValue.map { CGFloat($0) }
     }
   }
 
-  /// The filter and the length limit in the order Flutter applies its
-  /// formatters: the input filter first, then the length limit.
+  /// The explicit formatters are applied in the same order as `textfield.dart`:
+  /// input filter, capitalization, then TextFormField's length limit.
+  func formatted(oldValue: String, newValue: String) -> String {
+    let filtered = inputFilter?.apply(oldValue: oldValue, newValue: newValue) ?? newValue
+    return limited(capitalized(filtered))
+  }
+
   func formatted(_ text: String) -> String {
-    limited(inputFilter?.apply(to: text) ?? text)
+    formatted(oldValue: "", newValue: text)
+  }
+
+  func capitalized(_ text: String) -> String {
+    switch capitalization {
+    case "characters":
+      return text.uppercased()
+    case "words":
+      return text
+        .split(separator: " ", omittingEmptySubsequences: true)
+        .map { Self.capitalizedFirst(String($0)) }
+        .joined(separator: " ")
+    case "sentences":
+      return text.split(separator: ".", omittingEmptySubsequences: false)
+        .map { Self.capitalizedFirst(String($0)) }
+        .joined(separator: ".")
+    default:
+      return text
+    }
+  }
+
+  private static func capitalizedFirst(_ text: String) -> String {
+    guard let index = text.firstIndex(where: { $0 != " " }) else { return text }
+    return String(text[..<index]) + String(text[index]).uppercased()
+      + String(text[text.index(after: index)...])
   }
 
   /// Truncates to `max_length` the way Flutter's `LengthLimitingTextInputFormatter`
@@ -332,11 +378,13 @@ enum RufletTextSelection {
   }
 
   struct RufletNativeTextInput: UIViewRepresentable {
+    @Environment(\.isEnabled) private var isEnabled
     @Binding var text: String
     @Binding var focused: Bool
     @Binding var selection: NSRange
     let placeholder: String
     let secure: Bool
+    var nativeChrome = false
     var traits = RufletTextInputTraits()
     let onTap: () -> Void
     let onTapOutside: () -> Void
@@ -358,6 +406,7 @@ enum RufletTextSelection {
       let view = RufletTextFieldView(frame: .zero)
       view.delegate = context.coordinator
       view.placeholder = placeholder
+      view.borderStyle = nativeChrome ? .roundedRect : .none
       view.isSecureTextEntry = secure && !masksManually
       view.addTarget(context.coordinator, action: #selector(Coordinator.changed(_:)), for: .editingChanged)
       view.addTarget(context.coordinator, action: #selector(Coordinator.began(_:)), for: .editingDidBegin)
@@ -373,6 +422,7 @@ enum RufletTextSelection {
       let shown = displayed(text)
       if view.text != shown { view.text = shown }
       view.placeholder = placeholder
+      view.borderStyle = nativeChrome ? .roundedRect : .none
       view.isSecureTextEntry = secure && !masksManually
       view.traits = traits
       apply(traits, to: view)
@@ -386,8 +436,8 @@ enum RufletTextSelection {
     }
 
     private func apply(_ traits: RufletTextInputTraits, to view: UITextField) {
-      view.isEnabled = !traits.readOnly
-      view.isUserInteractionEnabled = !traits.ignorePointers && traits.canRequestFocus
+      view.isEnabled = isEnabled
+      view.isUserInteractionEnabled = isEnabled && !traits.ignorePointers
       switch traits.keyboardBrightness {
       case "light": view.keyboardAppearance = .light
       case "dark": view.keyboardAppearance = .dark
@@ -398,6 +448,7 @@ enum RufletTextSelection {
       view.smartDashesType = traits.smartDashes ? .yes : .no
       view.smartQuotesType = traits.smartQuotes ? .yes : .no
       view.keyboardType = Self.keyboardType(traits.keyboardType)
+      view.inputView = traits.keyboardType == "none" ? UIView(frame: .zero) : nil
       view.autocapitalizationType = Self.capitalization(traits.capitalization)
       view.textAlignment = Self.alignment(traits.textAlign)
       if let hint = traits.autofillHint {
@@ -411,8 +462,23 @@ enum RufletTextSelection {
       // There is no switch for hiding the caret, but a clear tint hides it
       // without disabling selection, which is what show_cursor means.
       if !traits.showCursor { view.tintColor = .clear }
-      if let color = traits.textColor { view.textColor = UIColor(color) }
-      if let size = traits.fontSize { view.font = .systemFont(ofSize: size) }
+      view.textColor = traits.textColor.map(UIColor.init) ?? .label
+      view.font = Self.font(
+        traits, fallback: UIFont.preferredFont(forTextStyle: .body))
+      if let spacing = traits.letterSpacing {
+        view.defaultTextAttributes[.kern] = spacing
+      } else {
+        view.defaultTextAttributes.removeValue(forKey: .kern)
+      }
+      if let background = traits.backgroundColor {
+        view.defaultTextAttributes[.backgroundColor] = UIColor(background)
+      } else {
+        view.defaultTextAttributes.removeValue(forKey: .backgroundColor)
+      }
+      view.defaultTextAttributes[.underlineStyle] = traits.underline
+        ? NSUnderlineStyle.single.rawValue : nil
+      view.defaultTextAttributes[.strikethroughStyle] = traits.strikethrough
+        ? NSUnderlineStyle.single.rawValue : nil
       // Scribble is on by default; `enable_stylus_handwriting: false` turns it
       // off, which UIKit expresses by refusing the interaction.
       if #available(iOS 14.0, *) {
@@ -447,7 +513,7 @@ enum RufletTextSelection {
       ) -> Bool { false }
     }
 
-    private static func keyboardType(_ value: String?) -> UIKeyboardType {
+    fileprivate static func keyboardType(_ value: String?) -> UIKeyboardType {
       switch value {
       case "number": return .numberPad
       case "phone": return .phonePad
@@ -462,17 +528,41 @@ enum RufletTextSelection {
       }
     }
 
-    private static func capitalization(_ value: String?) -> UITextAutocapitalizationType {
+    fileprivate static func capitalization(_ value: String?) -> UITextAutocapitalizationType {
       switch value {
       case "characters": return .allCharacters
       case "words": return .words
       case "sentences": return .sentences
       case "none": return .none
-      default: return .sentences
+      default: return .none
       }
     }
 
-    private static func alignment(_ value: String?) -> NSTextAlignment {
+    fileprivate static func font(_ traits: RufletTextInputTraits, fallback: UIFont?) -> UIFont {
+      let size = traits.fontSize ?? fallback?.pointSize ?? UIFont.systemFontSize
+      let weight: UIFont.Weight
+      switch traits.fontWeight?.lowercased() {
+      case "w100", "thin": weight = .ultraLight
+      case "w200", "extralight": weight = .thin
+      case "w300", "light": weight = .light
+      case "w500", "medium": weight = .medium
+      case "w600", "semibold": weight = .semibold
+      case "w700", "bold": weight = .bold
+      case "w800", "extrabold": weight = .heavy
+      case "w900", "black": weight = .black
+      default: weight = .regular
+      }
+      var font = traits.fontFamily.flatMap { UIFont(name: $0, size: size) }
+        ?? UIFont.systemFont(ofSize: size, weight: weight)
+      if traits.italic,
+        let descriptor = font.fontDescriptor.withSymbolicTraits(.traitItalic)
+      {
+        font = UIFont(descriptor: descriptor, size: size)
+      }
+      return font
+    }
+
+    fileprivate static func alignment(_ value: String?) -> NSTextAlignment {
       switch value {
       case "center": return .center
       case "right", "end": return .right
@@ -481,7 +571,7 @@ enum RufletTextSelection {
       }
     }
 
-    private static func contentType(_ hint: String) -> UITextContentType? {
+    fileprivate static func contentType(_ hint: String) -> UITextContentType? {
       switch hint.lowercased() {
       case "email": return .emailAddress
       case "name": return .name
@@ -512,8 +602,10 @@ enum RufletTextSelection {
 
       @objc func changed(_ sender: UITextField) {
         guard !parent.masksManually else { return }
-        let limited = parent.traits.formatted(sender.text ?? "")
+        let limited = parent.traits.formatted(
+          oldValue: plainText, newValue: sender.text ?? "")
         if sender.text != limited { sender.text = limited }
+        plainText = limited
         parent.text = limited
       }
 
@@ -523,12 +615,23 @@ enum RufletTextSelection {
         _ textField: UITextField, shouldChangeCharactersIn range: NSRange,
         replacementString string: String
       ) -> Bool {
+        guard !parent.traits.readOnly else { return false }
         if parent.masksManually {
           return maskedEdit(textField, range: range, replacement: string)
         }
-        guard let maximum = parent.traits.maxLength else { return true }
         let current = (textField.text ?? "") as NSString
-        return current.replacingCharacters(in: range, with: string).utf16.count <= maximum
+        let candidate = current.replacingCharacters(in: range, with: string)
+        let formatted = parent.traits.formatted(oldValue: current as String, newValue: candidate)
+        guard formatted != candidate else { return true }
+        textField.text = formatted
+        parent.text = formatted
+        let location = min(range.location + (string as NSString).length, formatted.utf16.count)
+        if let caret = textField.position(
+          from: textField.beginningOfDocument, offset: location)
+        {
+          textField.selectedTextRange = textField.textRange(from: caret, to: caret)
+        }
+        return false
       }
 
       @objc func began(_ sender: UITextField) {
@@ -543,6 +646,10 @@ enum RufletTextSelection {
       /// `always_call_on_tap` reports a tap on a field that already has focus,
       /// which `editingDidBegin` alone would miss.
       func textFieldShouldBeginEditing(_ textField: UITextField) -> Bool {
+        guard parent.traits.canRequestFocus else {
+          parent.onTap()
+          return false
+        }
         if parent.traits.alwaysCallOnTap, textField.isFirstResponder { parent.onTap() }
         return true
       }
@@ -568,8 +675,8 @@ enum RufletTextSelection {
       private func maskedEdit(
         _ textField: UITextField, range: NSRange, replacement: String
       ) -> Bool {
-        let updated = parent.traits.formatted(
-          (plainText as NSString).replacingCharacters(in: range, with: replacement))
+        let candidate = (plainText as NSString).replacingCharacters(in: range, with: replacement)
+        let updated = parent.traits.formatted(oldValue: plainText, newValue: candidate)
         plainText = updated
         textField.text = String(
           repeating: parent.traits.obscuringCharacter, count: updated.count)
@@ -603,6 +710,220 @@ enum RufletTextSelection {
           let end = field.position(from: start, offset: range.length)
         else { return }
         field.selectedTextRange = field.textRange(from: start, to: end)
+        lastSelection = range
+      }
+    }
+  }
+
+  /// UIKit's multiline peer. Flet still uses one TextFormField/controller for
+  /// both modes, so this bridge deliberately carries the same traits, value,
+  /// selection, focus and event callbacks as the single-line field.
+  final class RufletTextView: UITextView {
+    var traits = RufletTextInputTraits()
+    var submitOnReturn = false
+    var submit: (() -> Void)?
+    var repeatedTap: (() -> Void)?
+    var allowsNextNewline = false
+    private var focusedAtTouchStart = false
+
+    override func caretRect(for position: UITextPosition) -> CGRect {
+      var rect = super.caretRect(for: position)
+      rect.size.width = traits.cursorWidth
+      if let height = traits.cursorHeight {
+        rect.origin.y += (rect.height - height) / 2
+        rect.size.height = height
+      }
+      return rect
+    }
+
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+      focusedAtTouchStart = isFirstResponder
+      super.touchesBegan(touches, with: event)
+    }
+
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+      super.touchesEnded(touches, with: event)
+      if focusedAtTouchStart, traits.alwaysCallOnTap { repeatedTap?() }
+    }
+
+    override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+      guard submitOnReturn,
+        let key = presses.compactMap(\.key).first,
+        key.charactersIgnoringModifiers == "\r" || key.charactersIgnoringModifiers == "\n"
+      else {
+        super.pressesBegan(presses, with: event)
+        return
+      }
+      if key.modifierFlags.contains(.shift) {
+        allowsNextNewline = true
+        super.pressesBegan(presses, with: event)
+      } else {
+        submit?()
+      }
+    }
+  }
+
+  struct RufletNativeMultilineTextInput: UIViewRepresentable {
+    @Environment(\.isEnabled) private var isEnabled
+    @Binding var text: String
+    @Binding var focused: Bool
+    @Binding var selection: NSRange
+    var traits = RufletTextInputTraits()
+    let submitOnReturn: Bool
+    let onTap: () -> Void
+    let onTapOutside: () -> Void
+    let onSubmit: () -> Void
+
+    func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
+
+    func makeUIView(context: Context) -> RufletTextView {
+      let view = RufletTextView()
+      view.delegate = context.coordinator
+      view.backgroundColor = .clear
+      view.textContainerInset = .zero
+      view.textContainer.lineFragmentPadding = 0
+      configure(view)
+      return view
+    }
+
+    func updateUIView(_ view: RufletTextView, context: Context) {
+      context.coordinator.parent = self
+      context.coordinator.lastAcceptedText = text
+      if view.text != text { view.text = text }
+      configure(view)
+      if focused, !view.isFirstResponder {
+        DispatchQueue.main.async { view.becomeFirstResponder() }
+      } else if !focused, view.isFirstResponder {
+        context.coordinator.programmaticBlur = true
+        view.resignFirstResponder()
+      }
+      context.coordinator.apply(selection, to: view)
+    }
+
+    private func configure(_ view: RufletTextView) {
+      view.traits = traits
+      view.submitOnReturn = submitOnReturn
+      view.submit = onSubmit
+      view.repeatedTap = onTap
+      view.isEditable = isEnabled && !traits.readOnly
+      view.isSelectable = isEnabled && traits.enableInteractiveSelection
+      view.isUserInteractionEnabled = isEnabled && !traits.ignorePointers
+      view.autocorrectionType = traits.autocorrect ? .yes : .no
+      view.spellCheckingType = traits.enableSuggestions ? .yes : .no
+      view.smartDashesType = traits.smartDashes ? .yes : .no
+      view.smartQuotesType = traits.smartQuotes ? .yes : .no
+      view.keyboardType = RufletNativeTextInput.keyboardType(traits.keyboardType)
+      view.inputView = traits.keyboardType == "none" ? UIView(frame: .zero) : nil
+      view.autocapitalizationType = RufletNativeTextInput.capitalization(traits.capitalization)
+      view.textAlignment = RufletNativeTextInput.alignment(traits.textAlign)
+      view.font = RufletNativeTextInput.font(
+        traits, fallback: UIFont.preferredFont(forTextStyle: .body))
+      view.textColor = traits.textColor.map(UIColor.init) ?? .label
+      view.tintColor = traits.showCursor
+        ? UIColor(traits.resolvedCursorColor ?? .accentColor) : .clear
+      switch traits.keyboardBrightness {
+      case "light": view.keyboardAppearance = .light
+      case "dark": view.keyboardAppearance = .dark
+      default: view.keyboardAppearance = .default
+      }
+      if let hint = traits.autofillHint {
+        view.textContentType = RufletNativeTextInput.contentType(hint)
+      }
+      if let spacing = traits.letterSpacing {
+        view.typingAttributes[.kern] = spacing
+      } else {
+        view.typingAttributes.removeValue(forKey: .kern)
+      }
+      if let background = traits.backgroundColor {
+        view.typingAttributes[.backgroundColor] = UIColor(background)
+      } else {
+        view.typingAttributes.removeValue(forKey: .backgroundColor)
+      }
+      view.typingAttributes[.underlineStyle] = traits.underline
+        ? NSUnderlineStyle.single.rawValue : nil
+      view.typingAttributes[.strikethroughStyle] = traits.strikethrough
+        ? NSUnderlineStyle.single.rawValue : nil
+      if let lineHeight = traits.lineHeight {
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.minimumLineHeight = lineHeight
+        view.typingAttributes[.paragraphStyle] = paragraph
+      }
+    }
+
+    final class Coordinator: NSObject, UITextViewDelegate {
+      var parent: RufletNativeMultilineTextInput
+      var programmaticBlur = false
+      var lastAcceptedText = ""
+      private var lastSelection = NSRange(location: NSNotFound, length: 0)
+
+      init(parent: RufletNativeMultilineTextInput) { self.parent = parent }
+
+      func textViewShouldBeginEditing(_ textView: UITextView) -> Bool {
+        guard parent.traits.canRequestFocus else {
+          parent.onTap()
+          return false
+        }
+        return true
+      }
+
+      func textViewDidBeginEditing(_ textView: UITextView) {
+        parent.focused = true
+        parent.onTap()
+        reportSelection(textView)
+      }
+
+      func textViewDidEndEditing(_ textView: UITextView) {
+        parent.focused = false
+        if programmaticBlur { programmaticBlur = false } else { parent.onTapOutside() }
+      }
+
+      func textView(
+        _ textView: UITextView, shouldChangeTextIn range: NSRange,
+        replacementText replacement: String
+      ) -> Bool {
+        guard !parent.traits.readOnly else { return false }
+        if parent.submitOnReturn, replacement == "\n" {
+          if let view = textView as? RufletTextView, view.allowsNextNewline {
+            view.allowsNextNewline = false
+          } else {
+            parent.onSubmit()
+            return false
+          }
+        }
+        let candidate = (textView.text as NSString).replacingCharacters(
+          in: range, with: replacement)
+        let formatted = parent.traits.formatted(
+          oldValue: lastAcceptedText, newValue: candidate)
+        guard formatted != candidate else { return true }
+        textView.text = formatted
+        lastAcceptedText = formatted
+        parent.text = formatted
+        return false
+      }
+
+      func textViewDidChange(_ textView: UITextView) {
+        let formatted = parent.traits.formatted(
+          oldValue: lastAcceptedText, newValue: textView.text)
+        if textView.text != formatted { textView.text = formatted }
+        lastAcceptedText = formatted
+        parent.text = formatted
+      }
+
+      func textViewDidChangeSelection(_ textView: UITextView) {
+        reportSelection(textView)
+      }
+
+      private func reportSelection(_ textView: UITextView) {
+        guard textView.selectedRange != lastSelection else { return }
+        lastSelection = textView.selectedRange
+        parent.selection = textView.selectedRange
+      }
+
+      func apply(_ range: NSRange, to view: UITextView) {
+        guard range.location != NSNotFound, range != lastSelection,
+          NSMaxRange(range) <= view.text.utf16.count
+        else { return }
+        view.selectedRange = range
         lastSelection = range
       }
     }
@@ -675,11 +996,13 @@ enum RufletTextSelection {
   }
 
   struct RufletNativeTextInput: NSViewRepresentable {
+    @Environment(\.isEnabled) private var isEnabled
     @Binding var text: String
     @Binding var focused: Bool
     @Binding var selection: NSRange
     let placeholder: String
     let secure: Bool
+    var nativeChrome = false
     var traits = RufletTextInputTraits()
     let onTap: () -> Void
     let onTapOutside: () -> Void
@@ -703,8 +1026,9 @@ enum RufletTextSelection {
         field.cell = cell
       }
       field.delegate = context.coordinator
-      field.isBordered = false
-      field.drawsBackground = false
+      field.isBordered = nativeChrome
+      field.drawsBackground = nativeChrome
+      field.bezelStyle = .roundedBezel
       field.placeholderString = placeholder
       apply(traits, to: field)
       return field
@@ -712,8 +1036,11 @@ enum RufletTextSelection {
 
     func updateNSView(_ view: NSTextField, context: Context) {
       context.coordinator.parent = self
+      context.coordinator.lastAcceptedText = text
       if view.stringValue != text { view.stringValue = text }
       view.placeholderString = placeholder
+      view.isBordered = nativeChrome
+      view.drawsBackground = nativeChrome
       apply(traits, to: view)
       if focused, view.window?.firstResponder !== view.currentEditor() {
         DispatchQueue.main.async { view.window?.makeFirstResponder(view) }
@@ -727,13 +1054,15 @@ enum RufletTextSelection {
     }
 
     private func apply(_ traits: RufletTextInputTraits, to view: NSTextField) {
+      view.isEnabled = isEnabled
       view.isEditable = !traits.readOnly && traits.canRequestFocus
       view.refusesFirstResponder = !traits.canRequestFocus
       view.isSelectable = traits.enableInteractiveSelection || !traits.readOnly
       view.isAutomaticTextCompletionEnabled = traits.enableSuggestions
       view.alignment = Self.alignment(traits.textAlign)
-      if let color = traits.textColor { view.textColor = NSColor(color) }
-      if let size = traits.fontSize { view.font = .systemFont(ofSize: size) }
+      view.textColor = traits.textColor.map(NSColor.init) ?? .controlTextColor
+      view.font = Self.font(
+        traits, fallback: NSFont.systemFont(ofSize: NSFont.systemFontSize))
       // Flutter's strut sets a floor under the line box: `height` multiplies
       // the font size and `leading` adds to it.
       if traits.strutHeight != nil || traits.strutLeading != nil {
@@ -743,6 +1072,30 @@ enum RufletTextSelection {
           + (traits.strutLeading ?? 0) * size
         view.attributedStringValue = NSAttributedString(
           string: view.stringValue, attributes: [.paragraphStyle: paragraph])
+      }
+      var attributes: [NSAttributedString.Key: Any] = [:]
+      if let spacing = traits.letterSpacing { attributes[.kern] = spacing }
+      if let background = traits.backgroundColor {
+        attributes[.backgroundColor] = NSColor(background)
+      }
+      if traits.underline { attributes[.underlineStyle] = NSUnderlineStyle.single.rawValue }
+      if traits.strikethrough {
+        attributes[.strikethroughStyle] = NSUnderlineStyle.single.rawValue
+      }
+      if let lineHeight = traits.lineHeight {
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.minimumLineHeight = lineHeight
+        attributes[.paragraphStyle] = paragraph
+      }
+      if !attributes.isEmpty {
+        if let font = view.font { attributes[.font] = font }
+        if let color = view.textColor { attributes[.foregroundColor] = color }
+      }
+      if let editor = view.currentEditor() as? NSTextView {
+        editor.typingAttributes.merge(attributes) { _, explicit in explicit }
+      } else if !attributes.isEmpty {
+        view.attributedStringValue = NSAttributedString(
+          string: view.stringValue, attributes: attributes)
       }
       // AppKit paints the caret and selection from the field editor, which is
       // shared per window, so the colours are set when this field owns it.
@@ -790,9 +1143,32 @@ enum RufletTextSelection {
       }
     }
 
+    fileprivate static func font(_ traits: RufletTextInputTraits, fallback: NSFont?) -> NSFont {
+      let size = traits.fontSize ?? fallback?.pointSize ?? NSFont.systemFontSize
+      let weight: NSFont.Weight
+      switch traits.fontWeight?.lowercased() {
+      case "w100", "thin": weight = .ultraLight
+      case "w200", "extralight": weight = .thin
+      case "w300", "light": weight = .light
+      case "w500", "medium": weight = .medium
+      case "w600", "semibold": weight = .semibold
+      case "w700", "bold": weight = .bold
+      case "w800", "extrabold": weight = .heavy
+      case "w900", "black": weight = .black
+      default: weight = .regular
+      }
+      var font = traits.fontFamily.flatMap { NSFont(name: $0, size: size) }
+        ?? NSFont.systemFont(ofSize: size, weight: weight)
+      if traits.italic {
+        font = NSFontManager.shared.convert(font, toHaveTrait: .italicFontMask)
+      }
+      return font
+    }
+
     final class Coordinator: NSObject, NSTextFieldDelegate {
       var parent: RufletNativeTextInput
       var programmaticBlur = false
+      var lastAcceptedText = ""
       init(parent: RufletNativeTextInput) { self.parent = parent }
 
       func controlTextDidBeginEditing(_ notification: Notification) {
@@ -802,8 +1178,10 @@ enum RufletTextSelection {
 
       func controlTextDidChange(_ notification: Notification) {
         guard let field = notification.object as? NSTextField else { return }
-        let limited = parent.traits.formatted(field.stringValue)
+        let limited = parent.traits.formatted(
+          oldValue: lastAcceptedText, newValue: field.stringValue)
         if field.stringValue != limited { field.stringValue = limited }
+        lastAcceptedText = limited
         parent.text = limited
         if let editor = field.currentEditor() as? NSTextView { parent.selection = editor.selectedRange() }
       }
@@ -822,6 +1200,149 @@ enum RufletTextSelection {
       func textViewDidChangeSelection(_ notification: Notification) {
         guard let editor = notification.object as? NSTextView else { return }
         parent.selection = editor.selectedRange()
+      }
+    }
+  }
+
+  struct RufletNativeMultilineTextInput: NSViewRepresentable {
+    @Environment(\.isEnabled) private var isEnabled
+    @Binding var text: String
+    @Binding var focused: Bool
+    @Binding var selection: NSRange
+    var traits = RufletTextInputTraits()
+    let submitOnReturn: Bool
+    let onTap: () -> Void
+    let onTapOutside: () -> Void
+    let onSubmit: () -> Void
+
+    func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
+
+    func makeNSView(context: Context) -> NSScrollView {
+      let scroll = NSScrollView()
+      let view = RufletFieldEditor()
+      view.delegate = context.coordinator
+      view.drawsBackground = false
+      view.isRichText = false
+      view.isVerticallyResizable = true
+      view.isHorizontallyResizable = false
+      view.autoresizingMask = [.width]
+      view.textContainer?.widthTracksTextView = true
+      view.textContainerInset = .zero
+      scroll.drawsBackground = false
+      scroll.borderType = .noBorder
+      scroll.hasVerticalScroller = true
+      scroll.documentView = view
+      configure(view)
+      return scroll
+    }
+
+    func updateNSView(_ scroll: NSScrollView, context: Context) {
+      guard let view = scroll.documentView as? RufletFieldEditor else { return }
+      context.coordinator.parent = self
+      context.coordinator.lastAcceptedText = text
+      if view.string != text { view.string = text }
+      configure(view)
+      if focused, view.window?.firstResponder !== view {
+        DispatchQueue.main.async { view.window?.makeFirstResponder(view) }
+      } else if !focused, view.window?.firstResponder === view {
+        context.coordinator.programmaticBlur = true
+        view.window?.makeFirstResponder(nil)
+      }
+      if selection.location != NSNotFound, NSMaxRange(selection) <= view.string.utf16.count,
+        view.selectedRange() != selection
+      {
+        view.setSelectedRange(selection)
+      }
+    }
+
+    private func configure(_ view: RufletFieldEditor) {
+      view.traits = traits
+      view.isEditable = isEnabled && !traits.readOnly
+      view.isSelectable = isEnabled && traits.enableInteractiveSelection
+      view.font = RufletNativeTextInput.font(
+        traits, fallback: NSFont.systemFont(ofSize: NSFont.systemFontSize))
+      view.textColor = traits.textColor.map(NSColor.init) ?? .controlTextColor
+      view.alignment = {
+        switch traits.textAlign {
+        case "center": return .center
+        case "right", "end": return .right
+        case "justify": return .justified
+        default: return .left
+        }
+      }()
+      view.insertionPointColor = traits.showCursor
+        ? NSColor(traits.resolvedCursorColor ?? .accentColor) : .clear
+      if let selection = traits.selectionColor {
+        view.selectedTextAttributes = [.backgroundColor: NSColor(selection)]
+      }
+      if let spacing = traits.letterSpacing {
+        view.typingAttributes[.kern] = spacing
+      } else {
+        view.typingAttributes.removeValue(forKey: .kern)
+      }
+      if let background = traits.backgroundColor {
+        view.typingAttributes[.backgroundColor] = NSColor(background)
+      } else {
+        view.typingAttributes.removeValue(forKey: .backgroundColor)
+      }
+      view.typingAttributes[.underlineStyle] = traits.underline
+        ? NSUnderlineStyle.single.rawValue : nil
+      view.typingAttributes[.strikethroughStyle] = traits.strikethrough
+        ? NSUnderlineStyle.single.rawValue : nil
+      if let lineHeight = traits.lineHeight {
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.minimumLineHeight = lineHeight
+        view.typingAttributes[.paragraphStyle] = paragraph
+      }
+    }
+
+    final class Coordinator: NSObject, NSTextViewDelegate {
+      var parent: RufletNativeMultilineTextInput
+      var programmaticBlur = false
+      var lastAcceptedText = ""
+
+      init(parent: RufletNativeMultilineTextInput) { self.parent = parent }
+
+      func textShouldBeginEditing(_ textObject: NSText) -> Bool {
+        guard parent.traits.canRequestFocus else {
+          parent.onTap()
+          return false
+        }
+        return true
+      }
+
+      func textDidBeginEditing(_ notification: Notification) {
+        parent.focused = true
+        parent.onTap()
+      }
+
+      func textDidEndEditing(_ notification: Notification) {
+        parent.focused = false
+        if programmaticBlur { programmaticBlur = false } else { parent.onTapOutside() }
+      }
+
+      func textDidChange(_ notification: Notification) {
+        guard let view = notification.object as? NSTextView else { return }
+        let formatted = parent.traits.formatted(
+          oldValue: lastAcceptedText, newValue: view.string)
+        if view.string != formatted { view.string = formatted }
+        lastAcceptedText = formatted
+        parent.text = formatted
+        parent.selection = view.selectedRange()
+      }
+
+      func textViewDidChangeSelection(_ notification: Notification) {
+        guard let view = notification.object as? NSTextView else { return }
+        parent.selection = view.selectedRange()
+      }
+
+      func textView(_ textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+        guard parent.submitOnReturn,
+          commandSelector == #selector(NSResponder.insertNewline(_:)),
+          !NSEvent.modifierFlags.contains(.shift)
+        else { return false }
+        parent.onSubmit()
+        return true
       }
     }
   }

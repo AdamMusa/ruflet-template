@@ -1,6 +1,11 @@
 import RufletEngine
 import RufletProtocol
 import SwiftUI
+#if canImport(UIKit)
+  import UIKit
+#elseif canImport(AppKit)
+  import AppKit
+#endif
 
 /// Flet's value controls do two distinct wire operations for every user edit:
 /// first `updateProperties(..., notify: true)`, then `triggerEvent(...)`.
@@ -938,22 +943,24 @@ struct TextFieldControlView: View {
   @State private var focused = false
   @State private var hovering = false
   @State private var selection = NSRange(location: 0, length: 0)
+  @State private var revealsPassword = false
 
   var body: some View {
     HStack(alignment: verticalAlignment, spacing: 8) {
-      RufletFormFieldSlot(node: node, key: "prefix_icon")
-        .modifier(SlotSizeConstraints(value: node.props["prefix_icon_size_constraints"]))
+      formIcon("prefix_icon")
+        .modifier(SlotSizeConstraints(value: node.props["prefix_icon_constraints"]))
       RufletFormFieldSlot(node: node, key: "prefix", styleKey: "prefix_style")
       field
       RufletFormFieldSlot(node: node, key: "suffix", styleKey: "suffix_style")
-      RufletFormFieldSlot(node: node, key: "suffix_icon")
-        .modifier(SlotSizeConstraints(value: node.props["suffix_icon_size_constraints"]))
+      suffixIcon
+        .modifier(SlotSizeConstraints(value: node.props["suffix_icon_constraints"]))
     }
     .textFieldStyle(.plain)
     .padding(contentPadding)
+    .frame(width: RufletTextFieldDefaults.defaultWidth(node))
     .frame(maxWidth: fitsParent ? .infinity : nil, maxHeight: fitsParent ? .infinity : nil)
     .background(
-      RoundedRectangle(cornerRadius: ControlProps.cornerRadius(node.props["border_radius"]) ?? 8)
+      RoundedRectangle(cornerRadius: fieldRadius)
         .fill(fieldBackground))
     .overlay(borderStroke)
     // Flutter clips a decorated field to its border; hardEdge is the default.
@@ -961,16 +968,19 @@ struct TextFieldControlView: View {
       ChromeClipModifier(behavior: node.string("clip_behavior") ?? "hardEdge"))
     .modifier(FieldHoverTracker(hovering: $hovering))
     .modifier(RufletFormFieldDecoration(node: node))
+    .disabled(node.bool("disabled") == true)
     .onAppear {
-      focused = node.bool("autofocus") == true
-      selection = explicitSelection
+      focused = node.string("blur") == nil
+        && (node.bool("autofocus") == true || node.string("focus") != nil)
+      selection = initialSelection
     }
     .onChange(of: focused) { events.fire(node, $0 ? "focus" : "blur") }
     .onChange(of: selection) { reportSelection($0) }
+    .onChange(of: node.string("focus")) { if $0 != nil { focused = true } }
+    .onChange(of: node.string("blur")) { if $0 != nil { focused = false } }
     .rufletCommandHandler(node.id) { call, completion in
       switch call.name {
       case "focus": focused = true; completion(.success(.null))
-      case "blur": focused = false; completion(.success(.null))
       default: completion(.failure(rufletUnsupported(node.type, call)))
       }
     }
@@ -979,15 +989,11 @@ struct TextFieldControlView: View {
   /// `shift_enter` implies multiline, exactly as Flet's textfield.dart reads
   /// it. `min_lines` only constrains the field after that decision; it does
   /// not itself change the keyboard or submit semantics.
-  private var isMultiline: Bool {
-    node.bool("multiline") == true || node.bool("shift_enter") == true
-  }
+  private var isMultiline: Bool { RufletTextFieldDefaults.isMultiline(node) }
 
   /// Flutter defaults max_lines to one for a single-line field and leaves a
   /// multiline one unbounded.
-  private var maxLines: Int? {
-    node.int("max_lines") ?? (isMultiline ? nil : 1)
-  }
+  private var maxLines: Int? { RufletTextFieldDefaults.maxLines(node) }
 
   @ViewBuilder
   private var field: some View {
@@ -996,13 +1002,32 @@ struct TextFieldControlView: View {
     // keeps fixed-height fields from clipping a separate label row.
     let prompt = node.string("hint_text") ?? node.string("label") ?? ""
     if isMultiline {
-      TextEditor(text: binding)
-        .rufletTextStyle(fieldTextStyle)
-        .lineLimit(maxLines)
-        .frame(minHeight: CGFloat((node.int("min_lines") ?? 3) * 20))
-        // Flutter scrolls a multiline field with this padding held clear of
-        // the caret; the inset is the closest equivalent.
-        .modifier(ScrollInset(insets: scrollPadding))
+      #if canImport(UIKit) || canImport(AppKit)
+        RufletNativeMultilineTextInput(
+          text: binding,
+          focused: $focused,
+          selection: $selection,
+          traits: traits,
+          submitOnReturn: node.bool("shift_enter") == true,
+          onTap: { events.fire(node, "click") },
+          onTapOutside: { events.fire(node, "tap_outside") },
+          onSubmit: { events.fire(node, "submit") })
+          .frame(minHeight: minimumHeight, maxHeight: maximumHeight)
+          .overlay(alignment: .topLeading) {
+            if binding.wrappedValue.isEmpty, !prompt.isEmpty {
+              Text(prompt)
+                .lineLimit(node.int("hint_max_lines"))
+                .rufletTextStyle(RufletTextStyle(node: node, styleKey: "hint_style"))
+                .allowsHitTesting(false)
+            }
+          }
+      #else
+        TextEditor(text: binding)
+          .rufletTextStyle(fieldTextStyle)
+          .lineLimit(maxLines)
+          .frame(minHeight: minimumHeight, maxHeight: maximumHeight)
+          .modifier(ScrollInset(insets: scrollPadding))
+      #endif
     } else {
       #if canImport(UIKit) || canImport(AppKit)
         RufletNativeTextInput(
@@ -1010,7 +1035,8 @@ struct TextFieldControlView: View {
           focused: $focused,
           selection: $selection,
           placeholder: prompt,
-          secure: node.bool("password") == true,
+          secure: node.bool("password") == true && !revealsPassword,
+          nativeChrome: usesNativeChrome,
           traits: traits,
           onTap: { events.fire(node, "click") },
           onTapOutside: { events.fire(node, "tap_outside") },
@@ -1037,6 +1063,7 @@ struct TextFieldControlView: View {
 
   private var traits: RufletTextInputTraits {
     var traits = RufletTextInputTraits(node: node)
+    if isMultiline { traits.keyboardType = "multiline" }
     // The field's own style wins over the traits' colour and size, so the two
     // cannot disagree about which one painted the text.
     traits.textColor = fieldTextStyle.color
@@ -1051,6 +1078,28 @@ struct TextFieldControlView: View {
   }
 
   private var fitsParent: Bool { node.bool("fit_parent_size") == true }
+
+  private var minimumHeight: CGFloat? {
+    guard !fitsParent else { return nil }
+    return CGFloat(RufletTextFieldDefaults.minLines(node)) * nativeLineHeight
+  }
+
+  private var nativeLineHeight: CGFloat {
+    #if canImport(UIKit)
+      if let size = fieldTextStyle.size { return UIFont.systemFont(ofSize: size).lineHeight }
+      return UIFont.preferredFont(forTextStyle: .body).lineHeight
+    #elseif canImport(AppKit)
+      return NSFont.systemFont(ofSize: fieldTextStyle.size ?? NSFont.systemFontSize)
+        .boundingRectForFont.height
+    #else
+      return fieldTextStyle.size ?? 17
+    #endif
+  }
+
+  private var maximumHeight: CGFloat? {
+    guard !fitsParent, let maxLines else { return nil }
+    return CGFloat(maxLines) * nativeLineHeight
+  }
 
   /// `text_vertical_align` runs -1 (top) to 1 (bottom) the way Flutter's
   /// alignment axes do.
@@ -1067,8 +1116,9 @@ struct TextFieldControlView: View {
   private var contentPadding: EdgeInsets {
     if let explicit = ControlProps.edgeInsets(node.props["content_padding"]) { return explicit }
     if node.bool("collapsed") == true { return EdgeInsets() }
-    let inset: CGFloat = node.bool("dense") == true ? 4 : 8
-    return EdgeInsets(top: inset, leading: inset, bottom: inset, trailing: inset)
+    // Omitted decoration padding belongs to the native field. Recreating
+    // Flutter's Material inset here would make every Apple field Material.
+    return EdgeInsets()
   }
 
   private var hasError: Bool {
@@ -1077,17 +1127,41 @@ struct TextFieldControlView: View {
 
   @ViewBuilder
   private var borderStroke: some View {
-    let radius = ControlProps.cornerRadius(node.props["border_radius"]) ?? 8
-    if node.string("border")?.lowercased() != "none" {
-      RoundedRectangle(cornerRadius: radius)
-        .strokeBorder(borderColor, lineWidth: borderWidth)
+    let radius = fieldRadius
+    if hasExplicitBorder, node.string("border")?.lowercased() != "none" {
+      if node.string("border")?.lowercased() == "underline" {
+        VStack(spacing: 0) {
+          Spacer(minLength: 0)
+          Rectangle().fill(borderColor).frame(height: borderWidth)
+        }
+      } else {
+        RoundedRectangle(cornerRadius: radius)
+          .strokeBorder(borderColor, lineWidth: borderWidth)
+      }
     }
+  }
+
+  private var hasExplicitBorder: Bool {
+    node.props["border"] != nil || node.props["border_color"] != nil
+      || node.props["border_width"] != nil || node.props["border_radius"] != nil
+      || node.props["focused_border_color"] != nil
+      || node.props["focused_border_width"] != nil
+      || node.props["error_border_color"] != nil
+  }
+
+  private var fieldRadius: CGFloat {
+    ControlProps.cornerRadius(node.props["border_radius"]) ?? (hasExplicitBorder ? 4 : 0)
+  }
+
+  private var usesNativeChrome: Bool {
+    !hasExplicitBorder && node.props["bgcolor"] == nil && node.props["fill_color"] == nil
+      && node.props["content_padding"] == nil && node.bool("filled") != true
   }
 
   private var borderWidth: CGFloat {
     let resting = node.double("border_width") ?? 1
     guard focused else { return CGFloat(resting) }
-    return CGFloat(node.double("focused_border_width") ?? resting)
+    return CGFloat(node.double("focused_border_width") ?? 2)
   }
 
   private var borderColor: Color {
@@ -1100,7 +1174,7 @@ struct TextFieldControlView: View {
     {
       return focusedColor
     }
-    return MaterialPalette.color(for: node, property: "border_color", default: .clear)
+    return MaterialPalette.color(node.string("border_color"), default: .black)
   }
 
   /// Material resolves a field's fill from its interaction state, so the
@@ -1112,25 +1186,110 @@ struct TextFieldControlView: View {
     if hovering, let hover = MaterialPalette.color(node.string("hover_color")) {
       return hover
     }
-    if let explicit = MaterialPalette.color(node.props["bgcolor"]?.stringValue) {
-      return explicit
+    if node.bool("filled") == true {
+      if let explicit = MaterialPalette.color(node.props["bgcolor"]?.stringValue) {
+        return explicit
+      }
+      if let fill = MaterialPalette.color(node.string("fill_color")) { return fill }
+      return MaterialPalette.color(RufletThemeDefaults.backgroundToken(for: node)) ?? .clear
     }
-    if node.bool("filled") == true, let fill = MaterialPalette.color(node.string("fill_color")) {
-      return fill
-    }
-    return MaterialPalette.color(RufletThemeDefaults.backgroundToken(for: node)) ?? .clear
+    return .clear
   }
 
   private var binding: Binding<String> {
     Binding(
       get: { node.string("value") ?? "" },
-      set: { events.commit(node, value: .string($0)) })
+      set: { RufletTextFieldEvents.change($0, on: node, to: events) })
   }
 
-  private var explicitSelection: NSRange { RufletTextSelection.explicit(on: node) }
+  private var initialSelection: NSRange {
+    guard node.map("selection") != nil else {
+      return NSRange(location: (node.string("value") ?? "").utf16.count, length: 0)
+    }
+    return RufletTextSelection.explicit(on: node)
+  }
 
   private func reportSelection(_ range: NSRange) {
+    guard node.bool("on_selection_change") == true || node.handlesEvent("selection_change") else {
+      return
+    }
     RufletTextSelection.report(range, on: node, to: events)
+  }
+
+  @ViewBuilder
+  private func formIcon(_ key: String) -> some View {
+    if let id = node.controlID(forKey: key) {
+      ControlView(id: id, axis: .none)
+    } else if let value = node.props[key] {
+      RufletIcon(value: value)
+    }
+  }
+
+  @ViewBuilder
+  private var suffixIcon: some View {
+    if node.controlID(forKey: "suffix_icon") != nil || node.props["suffix_icon"] != nil {
+      formIcon("suffix_icon")
+    } else if node.bool("password") == true && node.bool("can_reveal_password") == true {
+      Button {
+        revealsPassword.toggle()
+      } label: {
+        RufletIcon(value: .string(revealsPassword ? "visibility_off" : "visibility"))
+      }
+      .buttonStyle(.plain)
+    }
+  }
+}
+
+/// Flet 0.80.5's constructor/build defaults, kept separate from the view so
+/// omission has one source of truth and can be tested without snapshots.
+enum RufletTextFieldDefaults {
+  static func isMultiline(_ node: ControlNode) -> Bool {
+    node.bool("multiline") == true || node.bool("shift_enter") == true
+  }
+
+  static func minLines(_ node: ControlNode) -> Int { node.int("min_lines") ?? 1 }
+
+  static func maxLines(_ node: ControlNode) -> Int? {
+    node.int("max_lines") ?? (isMultiline(node) ? nil : 1)
+  }
+
+  static func defaultWidth(_ node: ControlNode) -> CGFloat? {
+    guard node.double("width") == nil,
+      node.bool("fit_parent_size") != true,
+      !hasExpand(node)
+    else { return nil }
+    return 300
+  }
+
+  static func counterText(_ template: String?, value: String, maxLength: Int?) -> String? {
+    if let template {
+      return template
+        .replacingOccurrences(of: "{value_length}", with: String(value.count))
+        .replacingOccurrences(of: "{max_length}", with: maxLength.map(String.init) ?? "None")
+        .replacingOccurrences(
+          of: "{symbols_left}",
+          with: maxLength.map { String($0 - value.count) } ?? "None")
+    }
+    // UIKit/AppKit do not synthesize Material's max-length counter. An
+    // explicit DSL counter is still interpolated exactly.
+    return nil
+  }
+
+  private static func hasExpand(_ node: ControlNode) -> Bool {
+    guard let value = node.props["expand"] else { return false }
+    if value.boolValue == true { return true }
+    return (value.intValue ?? 0) > 0
+  }
+}
+
+enum RufletTextFieldEvents {
+  static func change(_ value: String, on node: ControlNode, to events: RufletEventSink) {
+    let wire = RufletValue.string(value)
+    events.setLocal(node.id, "value", wire)
+    events.update(node.id, ["value": wire])
+    if node.bool("on_change") == true || node.handlesEvent("change") {
+      events.fire(node, "change", data: wire)
+    }
   }
 }
 

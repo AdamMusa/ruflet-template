@@ -50,36 +50,25 @@ final class TextInputTraitsTests: XCTestCase {
     RufletTextInputTraits(node: node(["input_filter": .map(map)]))
   }
 
-  func testAllowingKeepsOnlyTheMatchingRuns() {
+  func testPinnedFletFilterAcceptsTheWholeEditWhenRegexMatches() {
     let traits = filter(["regex_string": .string("[0-9]")])
-    XCTAssertEqual(traits.inputFilter?.apply(to: "a1b2c3"), "123")
-    XCTAssertEqual(traits.inputFilter?.apply(to: "abc"), "")
+    XCTAssertEqual(
+      traits.inputFilter?.apply(oldValue: "12", newValue: "a1b2c3"), "a1b2c3")
+    XCTAssertEqual(traits.inputFilter?.apply(oldValue: "12", newValue: "abc"), "12")
   }
 
-  func testDenyingDropsTheMatchingRuns() {
+  func testPinnedFletOverrideParsesButDoesNotApplyAllowOrReplacement() {
     let traits = filter(["regex_string": .string("[0-9]"), "allow": .bool(false)])
-    XCTAssertEqual(traits.inputFilter?.apply(to: "a1b2c3"), "abc")
-  }
-
-  func testReplacementStringStandsInForRejectedText() {
-    let allow = filter([
-      "regex_string": .string("[0-9]+"), "replacement_string": .string("-"),
-    ])
-    XCTAssertEqual(allow.inputFilter?.apply(to: "ab12cd34"), "-12-34")
-    let deny = filter([
-      "regex_string": .string("[0-9]+"), "allow": .bool(false),
-      "replacement_string": .string("#"),
-    ])
-    XCTAssertEqual(deny.inputFilter?.apply(to: "ab12cd34"), "ab#cd#")
+    XCTAssertEqual(traits.inputFilter?.apply(oldValue: "x", newValue: "a1b2c3"), "a1b2c3")
   }
 
   func testCaseSensitivityFollowsTheFlag() {
     let sensitive = filter(["regex_string": .string("[a-z]")])
-    XCTAssertEqual(sensitive.inputFilter?.apply(to: "aBcD"), "ac")
+    XCTAssertEqual(sensitive.inputFilter?.apply(oldValue: "old", newValue: "aBcD"), "aBcD")
     let insensitive = filter([
       "regex_string": .string("[a-z]"), "case_sensitive": .bool(false),
     ])
-    XCTAssertEqual(insensitive.inputFilter?.apply(to: "aBcD"), "aBcD")
+    XCTAssertEqual(insensitive.inputFilter?.apply(oldValue: "old", newValue: "aBcD"), "aBcD")
   }
 
   func testAnInvalidOrAbsentPatternLeavesNoFilter() {
@@ -93,7 +82,7 @@ final class TextInputTraitsTests: XCTestCase {
     traits.maxLength = 2
     // Flutter orders its formatters the same way: filtering first, so the
     // limit counts what survived rather than what was typed.
-    XCTAssertEqual(traits.formatted("a1b2c3"), "12")
+    XCTAssertEqual(traits.formatted(oldValue: "", newValue: "a1b2c3"), "a1")
   }
 
   func testSmartSubstitutionOnlyTurnsOffOnTheDisabledEnum() {
@@ -101,5 +90,27 @@ final class TextInputTraitsTests: XCTestCase {
       RufletTextInputTraits(node: node(["smart_dashes_type": .string("disabled")])).smartDashes)
     XCTAssertTrue(
       RufletTextInputTraits(node: node(["smart_quotes_type": .string("enabled")])).smartQuotes)
+  }
+
+  func testCapitalizationFormatterMatchesPinnedFletUtility() {
+    XCTAssertEqual(
+      RufletTextInputTraits(node: node(["capitalization": .string("characters")]))
+        .capitalized("Ruflet native"),
+      "RUFLET NATIVE")
+    XCTAssertEqual(
+      RufletTextInputTraits(node: node(["capitalization": .string("words")]))
+        .capitalized("rUFLET   nATIVE"),
+      "RUFLET NATIVE")
+    XCTAssertEqual(
+      RufletTextInputTraits(node: node(["capitalization": .string("sentences")]))
+        .capitalized("hELLO. nATIVE WORLD"),
+      "HELLO. NATIVE WORLD")
+  }
+
+  func testBooleanAndLegacyEnumSmartSubstitutionFormsAreAccepted() {
+    XCTAssertFalse(
+      RufletTextInputTraits(node: node(["smart_dashes_type": .bool(false)])).smartDashes)
+    XCTAssertTrue(
+      RufletTextInputTraits(node: node(["smart_quotes_type": .bool(true)])).smartQuotes)
   }
 }
