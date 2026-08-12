@@ -164,6 +164,21 @@ enum RufletOverlaySemantics {
     events.update(node.id, ["open": .bool(false)])
     events.fire(node, "dismiss")
   }
+
+  /// ScaffoldMessenger overlays have an additional one-shot lifecycle bit in
+  /// pinned Flet. Native swipe/close/timeout dismissal publishes `_dismissed`
+  /// first, clears the private `_open` edge without sending it to Ruby, then
+  /// clears public `open` and finally emits `dismiss`.
+  static func dismissMessengerOverlay(
+    _ node: ControlNode, through events: RufletEventSink
+  ) {
+    events.setLocal(node.id, "_dismissed", .bool(true))
+    events.update(node.id, ["_dismissed": .bool(true)])
+    events.setLocal(node.id, "_open", .bool(false))
+    events.setLocal(node.id, "open", .bool(false))
+    events.update(node.id, ["open": .bool(false)])
+    events.fire(node, "dismiss")
+  }
 }
 
 /// Pinned Flet/Flutter defaults consumed by native Apple overlay primitives.
@@ -652,7 +667,9 @@ private struct SnackBarSwipe: ViewModifier {
           case "vertical": matches = !horizontal
           default: matches = true
           }
-          if matches { RufletOverlaySemantics.dismiss(node, through: events) }
+          if matches {
+            RufletOverlaySemantics.dismissMessengerOverlay(node, through: events)
+          }
         }))
   }
 }
@@ -691,7 +708,7 @@ struct SnackBarControlView: View {
       // Flutter offers a close affordance when the bar is not transient.
       if node.bool("show_close_icon") == true {
         Button {
-          RufletOverlaySemantics.dismiss(node, through: events)
+          RufletOverlaySemantics.dismissMessengerOverlay(node, through: events)
         } label: {
           Image(systemName: "xmark")
             .foregroundColor(
@@ -746,7 +763,7 @@ struct SnackBarControlView: View {
     guard milliseconds > 0 else { return }
     try? await Task.sleep(nanoseconds: UInt64(milliseconds * 1_000_000))
     guard !Task.isCancelled else { return }
-    RufletOverlaySemantics.dismiss(node, through: events)
+    RufletOverlaySemantics.dismissMessengerOverlay(node, through: events)
   }
 }
 
