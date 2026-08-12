@@ -1,4 +1,5 @@
 import Foundation
+import ImageIO
 import Lottie
 import QuartzCore
 import RufletEngine
@@ -14,16 +15,23 @@ struct LottieControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
   @State private var animation: LottieAnimation?
-  @State private var errorMessage: String?
+  @State private var dotLottieFile: DotLottieFile?
+  @State private var imageDirectory: String?
+  @State private var remoteImages: [String: Data] = [:]
+  @State private var failure: LottieFailure?
 
   var body: some View {
     Group {
       if let animation {
-        animationView(animation)
-      } else if errorMessage != nil, let errorID = node.controlID(forKey: "error_content") {
+        animationView(animation: animation, dotLottieFile: nil)
+      } else if let dotLottieFile, let animation = dotLottieFile.animations.first?.animation {
+        animationView(animation: animation, dotLottieFile: dotLottieFile)
+      } else if failure?.usesErrorContent == true,
+        let errorID = node.controlID(forKey: "error_content")
+      {
         ControlView(id: errorID, axis: .none)
-      } else if let errorMessage {
-        Text("Error loading Lottie: \(errorMessage)")
+      } else if let failure {
+        Text(failure.detail.isEmpty ? failure.title : "\(failure.title): \(failure.detail)")
           .font(.caption)
           .foregroundColor(.secondary)
       } else {
@@ -38,15 +46,14 @@ struct LottieControlView: View {
       .sorted { $0.key < $1.key }
       .map { "\($0.key)=\($0.value.stringValue ?? "")" }
       .joined(separator: "&")
-    let source: String
-    switch node.props["src"] {
-    case .binary(let bytes): source = "binary:\(Data(bytes).base64EncodedString())"
-    default: source = node.string("src") ?? ""
-    }
+    let source = LottieSource.resolve(node.props["src"]).identity
     return "\(source)|\(headers)"
   }
 
-  private func animationView(_ animation: LottieAnimation) -> AnyView {
+  private func animationView(
+    animation: LottieAnimation,
+    dotLottieFile: DotLottieFile?
+  ) -> AnyView {
     let repeating = node.rufletBool("repeat")
     let reverse = node.rufletBool("reverse")
     let animate = node.rufletBool("animate")
@@ -54,14 +61,29 @@ struct LottieControlView: View {
     let start = 0.0
     let end = 1.0
 
-    let view = LottieView(animation: animation)
+    let view: LottieView<EmptyView>
+    if let dotLottieFile {
+      view = LottieView(dotLottieFile: dotLottieFile)
+    } else {
+      view = LottieView(animation: animation)
+    }
+    var configuredView = view
       .resizable()
+      .logger(runtimeLogger)
       .configure { configureNativeView($0) }
+    if let imageDirectory {
+      configuredView = configuredView.imageProvider(
+        FilepathImageProvider(filepath: imageDirectory))
+    } else if !remoteImages.isEmpty {
+      configuredView = configuredView.imageProvider(
+        RufletNetworkLottieImageProvider(images: remoteImages))
+    }
     let playback: AnyView
     if animate {
-      playback = AnyView(view.playing(.fromProgress(start, toProgress: end, loopMode: loopMode)))
+      playback = AnyView(
+        configuredView.playing(.fromProgress(start, toProgress: end, loopMode: loopMode)))
     } else {
-      playback = AnyView(view.paused(at: .progress(0)))
+      playback = AnyView(configuredView.paused(at: .progress(0)))
     }
 
     return AnyView(
@@ -83,52 +105,66 @@ struct LottieControlView: View {
   @MainActor
   private func load() async {
     animation = nil
-    errorMessage = nil
-    guard let sourceValue = node.props["src"], !sourceValue.isNull else {
-      fail("Lottie must have \"src\" specified.")
+    dotLottieFile = nil
+    imageDirectory = nil
+    remoteImages = [:]
+    failure = nil
+    let source = LottieSource.resolve(node.props["src"])
+    switch source {
+    case .empty:
+      showFailure(
+        title: "Lottie must have \"src\" specified.", detail: "",
+        emitsEvent: false, usesErrorContent: false)
       return
+    case .unsupported(let detail):
+      showFailure(
+        title: "Error decoding src", detail: detail,
+        emitsEvent: false, usesErrorContent: true)
+      return
+    case .bytes, .uri:
+      break
     }
 
     do {
-      let data = try await sourceData(sourceValue)
-      if node.bool("background_loading") == true {
+      let resource = try await sourceData(source)
+      imageDirectory = resource.imageDirectory
+      let networkAssets = await loadNetworkImages(for: resource)
+      remoteImages = networkAssets.images
+      if resource.isZip {
+        dotLottieFile = try await loadDotLottie(resource.data)
+      } else if node.bool("background_loading") == true {
         animation = try await Task.detached(priority: .userInitiated) {
-          try LottieAnimation.from(data: data)
+          try LottieAnimation.from(data: resource.data)
         }.value
       } else {
-        animation = try LottieAnimation.from(data: data)
+        animation = try LottieAnimation.from(data: resource.data)
+      }
+      for warning in networkAssets.warnings {
+        events.fire(node, "error", data: .string(warning))
       }
       events.fire(node, "load")
     } catch {
-      fail(error.localizedDescription)
+      showFailure(
+        title: "Error loading Lottie", detail: error.localizedDescription,
+        emitsEvent: true, usesErrorContent: true)
     }
   }
 
   @MainActor
-  private func fail(_ message: String) {
-    errorMessage = message
-    events.fire(node, "error", data: .string(message))
+  private func showFailure(
+    title: String,
+    detail: String,
+    emitsEvent: Bool,
+    usesErrorContent: Bool
+  ) {
+    failure = LottieFailure(
+      title: title, detail: detail, usesErrorContent: usesErrorContent, emitsEvent: emitsEvent)
+    if emitsEvent { events.fire(node, "error", data: .string(detail)) }
   }
 
-  private func sourceData(_ value: RufletValue) async throws -> Data {
-    if case .binary(let bytes) = value { return Data(bytes) }
-    guard let source = value.stringValue, !source.isEmpty else {
-      throw LottieSourceError.missingSource
-    }
-    if source.lowercased().hasPrefix("data:") {
-      guard let comma = source.firstIndex(of: ",") else { throw LottieSourceError.invalidDataURI }
-      let metadata = source[..<comma].lowercased()
-      let payload = String(source[source.index(after: comma)...])
-      if metadata.contains(";base64") {
-        guard let data = Data(base64Encoded: payload) else { throw LottieSourceError.invalidDataURI }
-        return data
-      }
-      guard let decoded = payload.removingPercentEncoding?.data(using: .utf8) else {
-        throw LottieSourceError.invalidDataURI
-      }
-      return decoded
-    }
-
+  private func sourceData(_ source: LottieSource) async throws -> LottieResource {
+    if case .bytes(let bytes) = source { return LottieResource(data: Data(bytes)) }
+    guard case .uri(let source) = source else { throw LottieSourceError.missingSource }
     if let url = URL(string: source), let scheme = url.scheme?.lowercased(),
        scheme == "http" || scheme == "https" {
       var request = URLRequest(url: url)
@@ -139,10 +175,13 @@ struct LottieControlView: View {
       if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
         throw LottieSourceError.httpStatus(http.statusCode)
       }
-      return data
+      return LottieResource(data: data, networkBaseURL: url)
     }
 
-    if let url = URL(string: source), url.isFileURL { return try Data(contentsOf: url) }
+    if let url = URL(string: source), url.isFileURL {
+      return LottieResource(
+        data: try Data(contentsOf: url), imageDirectory: url.deletingLastPathComponent().path)
+    }
     let manager = FileManager.default
     var candidates: [String] = source.hasPrefix("/") ? [source] : []
     if let project = BundledProject.locate() {
@@ -155,7 +194,50 @@ struct LottieControlView: View {
     guard let path = candidates.first(where: { manager.fileExists(atPath: $0) }) else {
       throw CocoaError(.fileNoSuchFile)
     }
-    return try Data(contentsOf: URL(fileURLWithPath: path))
+    let url = URL(fileURLWithPath: path)
+    return LottieResource(
+      data: try Data(contentsOf: url), imageDirectory: url.deletingLastPathComponent().path)
+  }
+
+  private func loadDotLottie(_ data: Data) async throws -> DotLottieFile {
+    try await withCheckedThrowingContinuation { continuation in
+      DotLottieFile.loadedFrom(data: data, filename: "ruflet-lottie") {
+        continuation.resume(with: $0)
+      }
+    }
+  }
+
+  private func loadNetworkImages(
+    for resource: LottieResource
+  ) async -> (images: [String: Data], warnings: [String]) {
+    guard !resource.isZip, let baseURL = resource.networkBaseURL,
+      let object = try? JSONSerialization.jsonObject(with: resource.data),
+      let json = object as? [String: Any], let assets = json["assets"] as? [[String: Any]]
+    else { return ([:], []) }
+
+    var images: [String: Data] = [:]
+    var warnings: [String] = []
+    for asset in assets {
+      guard let name = asset["p"] as? String, !name.hasPrefix("data:") else { continue }
+      let directory = asset["u"] as? String ?? ""
+      let reference = directory + name
+      guard let url = URL(string: reference, relativeTo: baseURL)?.absoluteURL else {
+        warnings.append("Failed to load image \(asset["id"] as? String ?? name): invalid URL")
+        continue
+      }
+      do {
+        let (data, response) = try await URLSession.shared.data(from: url)
+        if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+          throw LottieSourceError.httpStatus(http.statusCode)
+        }
+        images[name] = data
+        images[reference] = data
+      } catch {
+        warnings.append(
+          "Failed to load image \(asset["id"] as? String ?? name): \(error.localizedDescription)")
+      }
+    }
+    return (images, warnings)
   }
 
   private func configureNativeView(_ view: LottieAnimationView) {
@@ -165,6 +247,100 @@ struct LottieControlView: View {
     let filter = LottieControlSemantics.layerFilter(node.string("filter_quality"))
     view.layer?.magnificationFilter = filter
     view.layer?.minificationFilter = filter
+  }
+
+  private var runtimeLogger: LottieLogger {
+    LottieLogger(warn: { message, _, _ in
+      events.fire(node, "error", data: .string(message()))
+    })
+  }
+}
+
+struct LottieFailure: Equatable {
+  let title: String
+  let detail: String
+  let usesErrorContent: Bool
+  let emitsEvent: Bool
+}
+
+struct LottieResource: Equatable {
+  let data: Data
+  var imageDirectory: String? = nil
+  var networkBaseURL: URL? = nil
+
+  var isZip: Bool {
+    data.count >= 2 && data[data.startIndex] == 0x50 && data[data.index(after: data.startIndex)] == 0x4B
+  }
+}
+
+struct RufletNetworkLottieImageProvider: AnimationImageProvider, Equatable {
+  let images: [String: Data]
+
+  func imageForAsset(asset: ImageAsset) -> CGImage? {
+    let data = images[asset.directory + asset.name] ?? images[asset.name]
+    guard let data,
+      let source = CGImageSourceCreateWithData(data as CFData, nil)
+    else { return nil }
+    return CGImageSourceCreateImageAtIndex(source, 0, nil)
+  }
+}
+
+enum LottieSource: Equatable {
+  case empty
+  case bytes([UInt8])
+  case uri(String)
+  case unsupported(String)
+
+  static func resolve(_ value: RufletValue?) -> LottieSource {
+    guard let value, !value.isNull else { return .empty }
+    switch value {
+    case .binary(let bytes):
+      return bytes.isEmpty ? .empty : .bytes(bytes)
+    case .array(let values):
+      guard values.allSatisfy({ if case .int = $0 { return true }; return false }) else {
+        return .unsupported("src is not a supported source type.")
+      }
+      let bytes = values.compactMap { value -> UInt8? in
+        guard case .int(let byte) = value else { return nil }
+        return UInt8(truncatingIfNeeded: byte)
+      }
+      return bytes.isEmpty ? .empty : .bytes(bytes)
+    case .string(let raw):
+      let source = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+      guard !source.isEmpty else { return .empty }
+      if source.hasPrefix("http://") || source.hasPrefix("https://")
+        || source.hasPrefix("www.") || source.contains(".")
+      {
+        return .uri(source)
+      }
+      var payload = source
+      if source.hasPrefix("data:"), let comma = source.firstIndex(of: ",") {
+        payload = String(source[source.index(after: comma)...])
+      }
+      if let data = decodeBase64(payload) { return .bytes(Array(data)) }
+      return .uri(source)
+    default:
+      return .unsupported("src is not a supported source type.")
+    }
+  }
+
+  var identity: String {
+    switch self {
+    case .empty: return "empty"
+    case .bytes(let bytes): return "bytes:\(Data(bytes).base64EncodedString())"
+    case .uri(let uri): return "uri:\(uri)"
+    case .unsupported(let detail): return "unsupported:\(detail)"
+    }
+  }
+
+  private static func decodeBase64(_ payload: String) -> Data? {
+    var normalized = payload
+      .replacingOccurrences(of: "-", with: "+")
+      .replacingOccurrences(of: "_", with: "/")
+      .filter { !$0.isWhitespace }
+    guard normalized.count % 4 != 1 else { return nil }
+    while normalized.count % 4 != 0 { normalized.append("=") }
+    return Data(base64Encoded: normalized)
   }
 }
 
