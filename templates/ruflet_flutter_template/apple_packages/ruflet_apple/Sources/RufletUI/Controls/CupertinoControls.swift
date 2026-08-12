@@ -3194,7 +3194,6 @@ struct CupertinoNavigationBarControlView: View {
   private func destinationButton(
     _ destinationNode: ControlNode, index: Int, count: Int, selected: Bool
   ) -> some View {
-    let disabled = presentation.disabled || destinationNode.bool("disabled") == true
     let hint = "Tab \(index + 1) of \(count)"
     return Button {
       RufletCupertinoNavigationBarEvents.select(index: index, on: node, to: events)
@@ -3204,9 +3203,11 @@ struct CupertinoNavigationBarControlView: View {
         .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
-    .disabled(disabled)
+    // Pinned CupertinoTabBar installs one onTap for the bar. A destination's
+    // disabled flag only suppresses its tooltip; it does not disable that tab.
+    .disabled(!presentation.destinationIsInteractive(destinationNode))
     .modifier(CupertinoNavigationDestinationHelp(
-      text: disabled ? nil : destinationNode.string("tooltip")))
+      text: presentation.destinationTooltip(destinationNode)))
     .accessibilityAddTraits(selected ? .isSelected : [])
     .accessibilityHint(hint)
   }
@@ -3339,6 +3340,14 @@ struct RufletCupertinoNavigationBarPresentation {
     if iconSize < 0 { return "CupertinoNavigationBar.icon_size must be greater than or equal to 0" }
     return nil
   }
+
+  func destinationIsInteractive(_ destination: ControlNode) -> Bool {
+    !disabled
+  }
+
+  func destinationTooltip(_ destination: ControlNode) -> String? {
+    destination.bool("disabled") == true ? nil : destination.string("tooltip")
+  }
 }
 
 struct RufletCupertinoNavigationBarBorder: Equatable {
@@ -3371,6 +3380,7 @@ enum RufletCupertinoNavigationBarDefaults {
 
 enum RufletCupertinoNavigationBarEvents {
   static func select(index: Int, on node: ControlNode, to events: RufletEventSink) {
+    guard node.bool("disabled") != true else { return }
     let value = RufletValue.int(Int64(index))
     events.setLocal(node.id, "selected_index", value)
     events.update(node.id, ["selected_index": value])
