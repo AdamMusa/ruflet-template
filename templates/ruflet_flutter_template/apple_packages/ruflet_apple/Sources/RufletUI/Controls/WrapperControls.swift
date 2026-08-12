@@ -881,15 +881,25 @@ struct WindowDragAreaControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
 
+  @ViewBuilder
   var body: some View {
-    Group {
-      if let contentID = node.controlID(forKey: "content") {
-        ControlView(id: contentID, axis: .none)
-      } else {
-        ControlList(ids: node.childIDs, axis: .vertical)
-      }
+    if let contentID = WindowDragAreaPresentation(node: node).contentID {
+      ControlView(id: contentID, axis: .none)
+        .modifier(WindowDragGesture(node: node, events: events))
+    } else {
+      RufletWrapperError(WindowDragAreaPresentation.missingContentError)
     }
-    .modifier(WindowDragGesture(node: node, events: events))
+  }
+}
+
+struct WindowDragAreaPresentation {
+  static let missingContentError = "WindowDragArea.content must be provided and visible"
+  let node: ControlNode
+  var contentID: Int? { node.controlID(forKey: "content") }
+  var maximizable: Bool { node.bool("maximizable") ?? true }
+
+  static func doubleTapPayload(wasMaximized: Bool) -> RufletValue {
+    .string(wasMaximized ? "unmaximize" : "maximize")
   }
 }
 
@@ -903,14 +913,17 @@ private struct WindowDragGesture: ViewModifier {
       content
         .simultaneousGesture(
           TapGesture(count: 2).onEnded {
-            guard node.bool("maximizable") != false, let window = NSApp.keyWindow else { return }
+            guard WindowDragAreaPresentation(node: node).maximizable,
+              let window = NSApp.keyWindow
+            else { return }
             let wasMaximized =
               window.styleMask.contains(.fullScreen)
               || window.standardWindowButton(.zoomButton)?.state == .on
             window.performZoom(nil)
             events.fire(
               node, "double_tap",
-              data: .string(wasMaximized ? "unmaximize" : "maximize"))
+              data: WindowDragAreaPresentation.doubleTapPayload(
+                wasMaximized: wasMaximized))
           }
         )
         .gesture(
