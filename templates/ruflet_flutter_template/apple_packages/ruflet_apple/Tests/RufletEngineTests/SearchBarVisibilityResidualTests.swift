@@ -16,10 +16,10 @@ final class SearchBarVisibilityResidualTests: XCTestCase {
     XCTAssertEqual(ids, [1, 3])
   }
 
-  func testUnresolvedReferencesRemainUntilTheStoreMaterializesThem() {
+  func testUnresolvedReferencesMatchFletVisibleChildrenAbsence() {
+    XCTAssertNil(
+      RufletSearchBarSlots.visibleID(7, visibilityForID: { _ in nil }))
     XCTAssertEqual(
-      RufletSearchBarSlots.visibleID(7, visibilityForID: { _ in nil }), 7)
-    XCTAssertEqual(
-      RufletSearchBarSlots.visibleIDs([7], visibilityForID: { _ in nil }), [7])
+      RufletSearchBarSlots.visibleIDs([7], visibilityForID: { _ in nil }), [])
   }
 }
