@@ -28,7 +28,7 @@ final class MediaPluginParityTests: XCTestCase {
        "stop_recording"])
     XCTAssertEqual(
       try XCTUnwrap(ControlRegistry.builtInDescriptor(for: "AudioRecorder")).supportedEvents,
-      ["state_change"])
+      ["state_change", "stream"])
 
     let camera = try XCTUnwrap(ControlRegistry.builtInDescriptor(for: "Camera"))
     XCTAssertEqual(camera.supportedEvents, ["state_change", "stream_image"])
@@ -117,7 +117,9 @@ final class MediaPluginParityTests: XCTestCase {
     XCTAssertEqual(defaults.padding.bottom, 24)
 
     XCTAssertEqual(VideoSubtitleTrack(.map(["src": .string("auto")])), .automatic)
-    XCTAssertEqual(VideoSubtitleTrack(.map(["src": .string("none")])), .none)
+    XCTAssertEqual(
+      VideoSubtitleTrack(.map(["src": .string("none")])),
+      Optional(VideoSubtitleTrack.none))
     XCTAssertEqual(
       VideoSubtitleTrack(.map(["src": .string("WEBVTT\n\n00:01.000 --> 00:02.000\nHello")])),
       .external("WEBVTT\n\n00:01.000 --> 00:02.000\nHello"))
@@ -190,10 +192,13 @@ final class MediaPluginParityTests: XCTestCase {
     let node = ControlNode(id: 8, type: "AudioRecorder")
     let context = RufletServiceContext(store: ControlStore(), emitEvent: { _, _, _ in })
 
-    let expectedSupport = [
-      "wav": true, "pcm16bits": true, "aacLc": true, "aacEld": true,
-      "opus": true, "flac": true, "aacHe": false, "amrNb": false,
-      "amrWb": false, "unknown": false,
+    let expectedSupport: [String: RufletValue] = [
+      "wav": .bool(true), "pcm16bits": .bool(true), "aacLc": .bool(true),
+      "aacEld": .bool(true), "opus": .bool(true), "flac": .bool(true),
+      "aacHe": .bool(false), "amrNb": .bool(false), "amrWb": .bool(false),
+      // parseAudioEncoder has no default in this method, so an unknown name
+      // falls through with Dart `null` rather than reporting false.
+      "unknown": .null,
     ]
     for (encoder, supported) in expectedSupport {
       var result: Result<RufletValue, Error>?
@@ -203,7 +208,7 @@ final class MediaPluginParityTests: XCTestCase {
           args: .map(["encoder": .string(encoder)])),
         node: node, context: context
       ) { result = $0 }
-      XCTAssertEqual(try? result?.get(), .bool(supported), encoder)
+      XCTAssertEqual(try? result?.get(), supported, encoder)
     }
   }
 

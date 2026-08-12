@@ -1970,8 +1970,8 @@ struct VideoControllerOptions: Equatable {
     height = map["height"]?.intValue
     scale = map["scale"]?.doubleValue ?? 1
     mpvProperties = map["mpv_properties"]?.mapValue?.reduce(into: [:]) { result, entry in
-      if let string = entry.value.stringValue { result[entry.key] = string }
-      else if let boolean = entry.value.boolValue { result[entry.key] = boolean ? "yes" : "no" }
+      if let boolean = entry.value.boolValue { result[entry.key] = boolean ? "yes" : "no" }
+      else if let string = entry.value.stringValue { result[entry.key] = string }
       else if let number = entry.value.doubleValue { result[entry.key] = String(number) }
     } ?? [:]
   }
