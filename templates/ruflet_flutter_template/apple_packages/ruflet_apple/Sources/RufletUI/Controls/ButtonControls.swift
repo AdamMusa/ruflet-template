@@ -214,7 +214,8 @@ struct ButtonPresentation {
         return RufletRequiredContent.isVisible(content)
       }
       // `buildTextOrWidget` accepts an empty String as a real Text widget.
-      return node.props["content"]?.stringValue != nil
+      if case .string? = node.props["content"] { return true }
+      return false
     }()
     let hasIcon: Bool = {
       if node.controlID(forKey: "icon") != nil {
