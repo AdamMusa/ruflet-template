@@ -165,121 +165,205 @@ struct GridViewControlView: View {
 /// is what Flet's control reports.
 struct ReorderableListControlView: View {
   let node: ControlNode
-  @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
+  @State private var orderedIDs: [Int]
+  @State private var dragOrigin: Int?
+  @State private var draggedID: Int?
+  @State private var measuredPrototypeExtent: CGFloat?
+
+  init(node: ControlNode) {
+    self.node = node
+    _orderedIDs = State(initialValue: node.childIDs)
+    _measuredPrototypeExtent = State(initialValue: nil)
+  }
 
   var body: some View {
-    let axis: Axis.Set = node.bool("horizontal") == true ? .horizontal : .vertical
-    List {
-      if let headerID = node.controlID(forKey: "header") {
-        ControlView(id: headerID, axis: .vertical).moveDisabled(true)
+    let config = CollectionDefaults.reorderableListView(node)
+    let axis: LayoutAxis = config.horizontal ? .horizontal : .vertical
+    ScrollView(
+      config.horizontal ? .horizontal : .vertical,
+      showsIndicators: config.showsIndicators
+    ) {
+      Group {
+        if config.horizontal, config.lazy {
+          LazyHStack(spacing: 0) { content(config: config, axis: axis) }
+        } else if config.horizontal {
+          HStack(spacing: 0) { content(config: config, axis: axis) }
+        } else if config.lazy {
+          LazyVStack(spacing: 0) { content(config: config, axis: axis) }
+        } else {
+          VStack(spacing: 0) { content(config: config, axis: axis) }
+        }
       }
-      ForEach(ordered, id: \.self) { childID in
-        ControlView(id: childID, axis: .vertical)
-          .frame(height: node.double("item_extent").map { CGFloat($0) })
-          .listRowSeparator(node.double("divider_thickness") == 0 ? .hidden : .automatic)
-          .listRowInsets(EdgeInsets(
-            top: spacing / 2, leading: 0, bottom: spacing / 2, trailing: 0))
-      }
-      .onMove(perform: reorder)
-      if let footerID = node.controlID(forKey: "footer") {
-        ControlView(id: footerID, axis: .vertical).moveDisabled(true)
-      }
+      .padding(config.padding)
+      .modifier(PageReverse(horizontal: config.horizontal, enabled: config.reverse))
+      .modifier(CollectionScrollContentProbe(node: node, horizontal: config.horizontal))
     }
-    .listStyle(.plain)
-    .environment(\.defaultMinListRowHeight, minimumRowHeight)
-    .modifier(AlwaysEditing(enabled: node.bool("show_default_drag_handles") != false))
-    .modifier(ReorderableScroll(node: node, axis: axis, events: events))
+    .modifier(CollectionClip(behavior: config.clipBehavior))
+    .onAppear {
+      // Apple owns the lazy prefetch and drag-edge velocity. Keep the exact
+      // Flet inputs consumed without turning them into visible geometry.
+      _ = config.anchor
+      _ = config.cacheExtent
+      _ = config.autoScrollerVelocityScalar
+    }
+    .onChange(of: node.childIDs) { ids in
+      orderedIDs = ReorderableListParity.reconciledOrder(orderedIDs, with: ids)
+    }
+    .onPreferenceChange(CollectionPrototypeExtentKey.self) { extent in
+      guard config.firstItemPrototype, extent > 0 else { return }
+      measuredPrototypeExtent = extent
+    }
+    .modifier(CollectionAutoScroll(node: node, horizontal: config.horizontal))
+    .modifier(CollectionScrollReporter(node: node, horizontal: config.horizontal, events: events))
     .accessibilityElement(children: .contain)
+    .accessibilityValue(config.semanticChildCount.map(String.init) ?? "")
   }
 
-  /// `reverse` walks the list from the end, the way Flutter's reverse does,
-  /// and `anchor` is where the list sits before it scrolls.
-  private var ordered: [Int] {
-    node.bool("reverse") == true ? node.childIDs.reversed() : node.childIDs
-  }
-
-  private var spacing: CGFloat { CGFloat(node.double("spacing") ?? 0) }
-
-  /// `first_item_prototype` and `prototype_item` size every row from one
-  /// sample; the extent they imply is the row height SwiftUI is given.
-  private var minimumRowHeight: CGFloat {
-    if let extent = node.double("item_extent") { return CGFloat(extent) }
-    if node.bool("first_item_prototype") == true || node.controlID(forKey: "prototype_item") != nil {
-      return 44
+  @ViewBuilder
+  private func content(
+    config: CollectionDefaults.ReorderableListValues, axis: LayoutAxis
+  ) -> some View {
+    if let headerID = config.headerID {
+      ControlView(id: headerID, axis: axis)
+        .modifier(PageReverse(horizontal: config.horizontal, enabled: config.reverse))
     }
-    return 0
+    ForEach(orderedIDs, id: \.self) { childID in
+      reorderableRow(childID, config: config, axis: axis)
+        .onDrop(
+          of: ["public.text"],
+          delegate: ReorderableListDropDelegate(
+            destinationID: childID,
+            orderedIDs: $orderedIDs,
+            draggedID: $draggedID,
+            dragOrigin: $dragOrigin,
+            onDrop: finishReorder))
+    }
+    if let footerID = config.footerID {
+      ControlView(id: footerID, axis: axis)
+        .modifier(PageReverse(horizontal: config.horizontal, enabled: config.reverse))
+    }
   }
 
-  private func reorder(from source: IndexSet, to destination: Int) {
-    guard let origin = source.first else { return }
-    let finalDestination = CollectionParity.reorderDestination(
-      from: origin, insertionSlot: destination)
+  @ViewBuilder
+  private func reorderableRow(
+    _ childID: Int, config: CollectionDefaults.ReorderableListValues, axis: LayoutAxis
+  ) -> some View {
+    let itemExtent = config.itemExtent
+      ?? (config.firstItemPrototype ? measuredPrototypeExtent : nil)
+    let row = ControlView(id: childID, axis: axis)
+      .modifier(CollectionPrototypeMeasure(
+        enabled: config.firstItemPrototype && childID == orderedIDs.first,
+        horizontal: config.horizontal))
+      .frame(
+        width: config.horizontal ? itemExtent : nil,
+        height: config.horizontal ? nil : itemExtent)
+      .modifier(PageReverse(horizontal: config.horizontal, enabled: config.reverse))
+
+    if config.showDefaultDragHandles {
+      #if os(macOS)
+        HStack(spacing: 0) {
+          row
+          Image(systemName: "line.3.horizontal")
+            .accessibilityHidden(true)
+            .padding(8)
+            .onDrag { beginDrag(childID) }
+        }
+      #else
+        row.onDrag { beginDrag(childID) }
+      #endif
+    } else {
+      // With Flet's generated handles disabled, only an explicit
+      // ReorderableDragHandle may initiate a drag; the row itself stays still.
+      row
+    }
+  }
+
+  private func beginDrag(_ childID: Int) -> NSItemProvider {
+    if let origin = orderedIDs.firstIndex(of: childID) {
+      draggedID = childID
+      dragOrigin = origin
+      events.fire(
+        node, "reorder_start",
+        data: ReorderableListParity.reorderStartPayload(oldIndex: origin))
+    }
+    return NSItemProvider(object: String(childID) as NSString)
+  }
+
+  private func finishReorder(oldIndex: Int, newIndex: Int) {
     events.fire(
-      node, "reorder_start",
-      data: .map(["old_index": .int(Int64(origin))]))
-    events.send(
-      node.id, "reorder",
-      .map([
-        "old_index": .int(Int64(origin)),
-        "new_index": .int(Int64(finalDestination))
-      ]))
+      node, "reorder",
+      data: ReorderableListParity.reorderPayload(oldIndex: oldIndex, newIndex: newIndex))
     events.fire(
       node, "reorder_end",
-      data: .map(["new_index": .int(Int64(finalDestination))]))
+      data: ReorderableListParity.reorderEndPayload(newIndex: newIndex))
   }
 }
 
-/// The list's scroll surface: the axis, where it anchors, how far ahead it
-/// caches, and the scroll reporting Flet does on an interval.
-private struct ReorderableScroll: ViewModifier {
-  let node: ControlNode
-  let axis: Axis.Set
-  let events: RufletEventSink
+private struct ReorderableListDropDelegate: DropDelegate {
+  let destinationID: Int
+  @Binding var orderedIDs: [Int]
+  @Binding var draggedID: Int?
+  @Binding var dragOrigin: Int?
+  let onDrop: (Int, Int) -> Void
 
-  func body(content: Content) -> some View {
-    content
-      .modifier(ScrollAxis(axis: axis))
-      // `auto_scroll` pins the list to its end as rows arrive, which is what
-      // Flutter's auto-scrolling controller does.
-      .modifier(AutoScrollToEnd(enabled: node.bool("auto_scroll") == true, ids: node.childIDs))
-      .onAppear {
-        _ = node.double("anchor")
-        _ = node.double("cache_extent")
-        _ = node.double("auto_scroller_velocity_scalar")
-        _ = node.int("semantic_child_count")
-        _ = node.bool("build_controls_on_demand")
-        _ = node.string("scroll")
-        _ = node.int("scroll_interval")
-      }
+  func dropEntered(info: DropInfo) {
+    guard let draggedID,
+          draggedID != destinationID,
+          let source = orderedIDs.firstIndex(of: draggedID),
+          let destination = orderedIDs.firstIndex(of: destinationID)
+    else { return }
+    orderedIDs = ReorderableListParity.moving(
+      orderedIDs, from: source, over: destination)
+  }
+
+  func dropUpdated(info: DropInfo) -> DropProposal? {
+    DropProposal(operation: .move)
+  }
+
+  func performDrop(info: DropInfo) -> Bool {
+    guard let draggedID,
+          let oldIndex = dragOrigin,
+          let newIndex = orderedIDs.firstIndex(of: draggedID)
+    else { return false }
+    onDrop(oldIndex, newIndex)
+    self.draggedID = nil
+    dragOrigin = nil
+    return true
   }
 }
 
-private struct ScrollAxis: ViewModifier {
-  let axis: Axis.Set
+enum ReorderableListParity {
+  /// Flutter's `reverse` changes the scroll direction, not the model order.
+  static func orderedChildren(_ ids: [Int], reverse: Bool) -> [Int] { ids }
 
-  func body(content: Content) -> some View {
-    if axis == .horizontal {
-      ScrollView(.horizontal) { content }
-    } else {
-      content
-    }
+  static func moving(_ ids: [Int], from source: Int, over destination: Int) -> [Int] {
+    guard ids.indices.contains(source), ids.indices.contains(destination), source != destination
+    else { return ids }
+    var result = ids
+    let item = result.remove(at: source)
+    result.insert(item, at: destination)
+    return result
   }
-}
 
-private struct AutoScrollToEnd: ViewModifier {
-  let enabled: Bool
-  let ids: [Int]
+  static func reconciledOrder(_ current: [Int], with incoming: [Int]) -> [Int] {
+    let retained = current.filter(incoming.contains)
+    return retained + incoming.filter { !retained.contains($0) }
+  }
 
-  func body(content: Content) -> some View {
-    guard enabled else { return AnyView(content) }
-    return AnyView(
-      ScrollViewReader { proxy in
-        content.onChange(of: ids.count) { _ in
-          guard let last = ids.last else { return }
-          withAnimation { proxy.scrollTo(last, anchor: .bottom) }
-        }
-      })
+  static func reorderStartPayload(oldIndex: Int) -> RufletValue {
+    .map(["old_index": .int(Int64(oldIndex))])
+  }
+
+  static func reorderPayload(oldIndex: Int, newIndex: Int) -> RufletValue {
+    .map([
+      "old_index": .int(Int64(oldIndex)),
+      "new_index": .int(Int64(newIndex))
+    ])
+  }
+
+  static func reorderEndPayload(newIndex: Int) -> RufletValue {
+    .map(["new_index": .int(Int64(newIndex))])
   }
 }
 
@@ -369,7 +453,11 @@ struct PageViewControlView: View {
         }
       })
     .onChange(of: selectedIndex) { value in
-      events.setLocal(node.id, "selected_index", .int(Int64(value)))
+      let properties = PageViewParity.selectionProperties(index: value)
+      events.setLocal(node.id, "selected_index", properties["selected_index"] ?? .int(Int64(value)))
+      // Flet's renderer calls updateProperties even when no on_change handler
+      // exists, keeping Ruby's selected_index synchronized with a native swipe.
+      events.update(node.id, properties)
       events.fire(node, "change", data: .int(Int64(value)))
     }
     .onChange(of: node.int("selected_index") ?? 0) { value in
@@ -430,6 +518,9 @@ enum PageViewParity {
   static func pages(_ ids: [Int]) -> [Page] {
     ids.enumerated().map { Page(index: $0.offset, id: $0.element) }
   }
+  static func selectionProperties(index: Int) -> [String: RufletValue] {
+    ["selected_index": .int(Int64(index))]
+  }
   static func commandAnimation(_ call: RufletMethodCall) -> Animation {
     let duration = call.argument("duration")?.doubleValue ?? 1_000
     let curve = call.argument("curve")?.stringValue ?? "linear"
@@ -457,6 +548,7 @@ private struct FreeScrollingPageView: View {
   let fraction: CGFloat
   let padEnds: Bool
   let implicitScrolling: Bool
+  @State private var selectionCameFromScroll = false
 
   var body: some View {
     GeometryReader { viewport in
@@ -471,10 +563,19 @@ private struct FreeScrollingPageView: View {
             abs(center($0.value, viewport: viewport.size))
               < abs(center($1.value, viewport: viewport.size))
           })?.key else { return }
-          if nearest != selectedIndex { selectedIndex = nearest }
+          if nearest != selectedIndex {
+            selectionCameFromScroll = true
+            selectedIndex = nearest
+          }
         }
         .onAppear { reader.scrollTo(selectedIndex, anchor: .center) }
-        .onChange(of: selectedIndex) { reader.scrollTo($0, anchor: .center) }
+        .onChange(of: selectedIndex) { value in
+          if selectionCameFromScroll {
+            selectionCameFromScroll = false
+          } else {
+            reader.scrollTo(value, anchor: .center)
+          }
+        }
       }
     }
   }
@@ -497,7 +598,7 @@ private struct FreeScrollingPageView: View {
               value: [index: proxy.frame(in: .named("ruflet-free-page"))])
           })
         .id(index)
-        .accessibilityHidden(!implicitScrolling && abs(index - selectedIndex) > 1)
+        .accessibilityHidden(!implicitScrolling && index != selectedIndex)
     }
     if horizontal {
       LazyHStack(spacing: 0) { pages }
@@ -2433,6 +2534,24 @@ enum CollectionDefaults {
     let clipBehavior: String
   }
 
+  struct ReorderableListValues {
+    let horizontal: Bool
+    let reverse: Bool
+    let itemExtent: CGFloat?
+    let firstItemPrototype: Bool
+    let padding: EdgeInsets
+    let clipBehavior: String
+    let cacheExtent: CGFloat?
+    let anchor: CGFloat
+    let autoScrollerVelocityScalar: CGFloat?
+    let lazy: Bool
+    let showDefaultDragHandles: Bool
+    let showsIndicators: Bool
+    let semanticChildCount: Int?
+    let headerID: Int?
+    let footerID: Int?
+  }
+
   static func listView(_ node: ControlNode) -> ListViewValues {
     ListViewValues(
       horizontal: node.bool("horizontal") ?? false,
@@ -2466,6 +2585,28 @@ enum CollectionDefaults {
       clipBehavior: node.string("clip_behavior") ?? "hardEdge",
       runsCount: max(node.int("runs_count") ?? 1, 1),
       maxExtent: node.double("max_extent").map { CGFloat(max($0, 1)) })
+  }
+
+  static func reorderableListView(_ node: ControlNode) -> ReorderableListValues {
+    let itemExtent = node.double("item_extent").map { CGFloat($0) }
+    let cacheExtent = node.double("cache_extent").map { CGFloat($0) }
+    let velocity = node.double("auto_scroller_velocity_scalar").map { CGFloat($0) }
+    return ReorderableListValues(
+      horizontal: node.bool("horizontal") ?? false,
+      reverse: node.bool("reverse") ?? false,
+      itemExtent: itemExtent,
+      firstItemPrototype: node.bool("first_item_prototype") ?? false,
+      padding: ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets(),
+      clipBehavior: node.string("clip_behavior") ?? "hardEdge",
+      cacheExtent: cacheExtent,
+      anchor: CGFloat(node.double("anchor") ?? 0),
+      autoScrollerVelocityScalar: velocity,
+      lazy: node.bool("build_controls_on_demand") ?? true,
+      showDefaultDragHandles: node.bool("show_default_drag_handles") ?? true,
+      showsIndicators: node.string("scroll") != "hidden",
+      semanticChildCount: node.int("semantic_child_count"),
+      headerID: node.controlID(forKey: "header"),
+      footerID: node.controlID(forKey: "footer"))
   }
 
   static func listTile(_ node: ControlNode) -> ListTileValues {
