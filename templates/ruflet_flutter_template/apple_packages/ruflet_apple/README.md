@@ -51,15 +51,15 @@ struct MyApp: App {
 }
 ```
 
-An app that uses sensors, location or the camera links those modules and names
-them:
+An app links only the Flet extension products it uses and names them:
 
 ```swift
 import RufletApple
-import RufletMedia
+import RufletCamera
+import RufletGeolocator
 import RufletMotion
 
-RufletAppView(services: [RufletMedia.self, RufletMotion.self])
+RufletAppView(extensions: [RufletCamera.self, RufletGeolocator.self, RufletMotion.self])
 ```
 
 That is the whole template app. Three other entry points exist:
@@ -109,7 +109,7 @@ When a bundle carries more than one, name it in `Info.plist` under
 | `RufletEngine` | The control model, the store, the session, the transport, the embedded runtime, and every ungated service. |
 | `RufletUI` | The SwiftUI renderer: `ControlRegistry`, `ControlView`, and one view per control. |
 | `RufletApple` | Umbrella that re-exports the three above — what an app links. |
-| `RufletMotion`, `RufletLocation`, `RufletMedia` | Optional service modules, linked on demand. |
+| `RufletMotion`, `RufletGeolocator`, `RufletCamera`, etc. | Independent Flet extension products, linked on demand. |
 
 ### How the protocol becomes a tree
 
@@ -165,14 +165,21 @@ the camera code at all. What you do not link is not in the binary.
 
 | Module | Services | Framework it pulls in |
 |--------|----------|-----------------------|
-| `RufletApple` (always) | clipboard, shared preferences, secure storage, storage paths, URL launcher, haptics, wakelock, semantics, battery, connectivity, permissions, screen brightness, file picker, share, page methods | none that Apple gates |
+| `RufletApple` (always) | clipboard, shared preferences, storage paths, URL launcher, haptics, wakelock, semantics, battery, connectivity, screen brightness, file picker, share, page methods | none that Apple gates |
 | `RufletMotion` | accelerometer, user accelerometer, gyroscope, magnetometer, barometer, shake detector | CoreMotion — `NSMotionUsageDescription` |
-| `RufletLocation` | geolocator | CoreLocation — `NSLocationWhenInUseUsageDescription` |
-| `RufletMedia` | audio, audio recorder, camera (and its preview control), flashlight | AVFoundation capture — `NSCameraUsageDescription`, `NSMicrophoneUsageDescription` |
+| `RufletGeolocator` | geolocator | CoreLocation — `NSLocationWhenInUseUsageDescription` |
+| `RufletPermissionHandler` | permission status, requests, app settings | AVFoundation and Apple permission APIs used by the requested permission |
+| `RufletSecureStorage` | secure storage | Security / Keychain |
+| `RufletAudio` | audio playback | AVFoundation |
+| `RufletAudioRecorder` | audio recorder | AVFoundation — `NSMicrophoneUsageDescription` |
+| `RufletCamera` | camera service and preview control | AVFoundation — `NSCameraUsageDescription`, `NSMicrophoneUsageDescription` |
+| `RufletFlashlight` | flashlight | AVFoundation — `NSCameraUsageDescription` |
 
-`PermissionHandler` stays in the core and asks whichever modules are linked, so
-a permission nothing can answer reports `granted` — which is the truth for
-anything the OS does not gate.
+Every remaining Flet extension in `Package.swift` follows the same rule: it is
+an independent Swift product and registers only its own controls and services.
+The future `ruflet.yaml` / `services.yaml` integration layer will choose which
+of those products a generated app target links; this package does not collapse
+them into aggregate media or location modules.
 
 Asking Ruby for a service whose module is absent replies with the name of the
 module to add, rather than a bare failure. Every `invoke_control_method` is
@@ -234,9 +241,8 @@ Everything an iOS deployment target rules out compiles cleanly on macOS, whose
 minimum is three releases later — `Locale.language`, `SpatialTapGesture` and
 `menuOrder` are all iOS 16 — and so does anything naming an AppKit API that
 UIKit spells differently. The iOS build had been broken for some time because
-nothing ran it. Repeat it for `RufletMotion`, `RufletLocation` and
-`RufletMedia` when you touch them: each is its own scheme, and their sources
-are entirely inside those guards.
+nothing ran it. Repeat the compile check for whichever independent extension
+product you touch; each product is its own scheme and owns only its Flet package.
 
 The suite covers the codec against byte fixtures captured from
 `Ruflet::WireCodec`, the store's patch/update/removal semantics, the session's

@@ -17,7 +17,6 @@ let package = Package(
     // usage string and flags during review, so they are linked on demand
     // rather than compiled into every app.
     .library(name: "RufletMotion", targets: ["RufletMotion"]),
-    .library(name: "RufletLocation", targets: ["RufletLocation"]),
     .library(name: "RufletGeolocator", targets: ["RufletGeolocator"]),
     .library(name: "RufletPermissionHandler", targets: ["RufletPermissionHandler"]),
     .library(name: "RufletSecureStorage", targets: ["RufletSecureStorage"]),
@@ -63,9 +62,6 @@ let package = Package(
     .target(name: "RufletApple", dependencies: ["RufletUI", "RufletEngine", "RufletProtocol"]),
 
     .target(name: "RufletMotion", dependencies: ["RufletEngine", "RufletProtocol"]),
-    .target(
-      name: "RufletLocation",
-      dependencies: ["RufletGeolocator", "RufletEngine", "RufletProtocol"]),
     .target(name: "RufletGeolocator", dependencies: ["RufletEngine", "RufletProtocol"]),
     .target(name: "RufletPermissionHandler", dependencies: ["RufletEngine", "RufletProtocol"]),
     .target(name: "RufletSecureStorage", dependencies: ["RufletEngine", "RufletProtocol"]),
@@ -132,7 +128,7 @@ let package = Package(
       name: "RufletEngineTests",
       dependencies: [
         "RufletEngine", "RufletProtocol", "RufletUI",
-        "RufletMotion", "RufletLocation", "RufletGeolocator",
+        "RufletMotion", "RufletGeolocator",
         "RufletPermissionHandler", "RufletSecureStorage", "RufletAudio", "RufletQRScanner",
         "RufletAudioRecorder", "RufletCamera", "RufletFlashlight",
         "RufletRive", "RufletLottie",

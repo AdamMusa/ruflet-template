@@ -71,7 +71,7 @@ public struct RufletAppView: View {
   /// Boots the Ruby project packaged into the app bundle.
   ///
   /// `extensions` names the optional modules this target links —
-  /// `RufletMotion`, `RufletLocation`, `RufletAudio`. Everything that touches
+  /// `RufletMotion`, `RufletGeolocator`, `RufletAudio`. Everything that touches
   /// no privacy-gated framework is always available; the rest is opt-in so an
   /// app that never uses the camera neither carries the code nor gets asked
   /// for a usage string.

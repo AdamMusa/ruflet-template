@@ -9,11 +9,62 @@ import RufletApple
 #if canImport(RufletMotion)
   import RufletMotion
 #endif
-#if canImport(RufletLocation)
-  import RufletLocation
+#if canImport(RufletGeolocator)
+  import RufletGeolocator
 #endif
-#if canImport(RufletMedia)
-  import RufletMedia
+#if canImport(RufletAudio)
+  import RufletAudio
+#endif
+#if canImport(RufletAudioRecorder)
+  import RufletAudioRecorder
+#endif
+#if canImport(RufletCamera)
+  import RufletCamera
+#endif
+#if canImport(RufletFlashlight)
+  import RufletFlashlight
+#endif
+#if canImport(RufletPermissionHandler)
+  import RufletPermissionHandler
+#endif
+#if canImport(RufletSecureStorage)
+  import RufletSecureStorage
+#endif
+#if canImport(RufletQRScanner)
+  import RufletQRScanner
+#endif
+#if canImport(RufletRive)
+  import RufletRive
+#endif
+#if canImport(RufletLottie)
+  import RufletLottie
+#endif
+#if canImport(RufletCharts)
+  import RufletCharts
+#endif
+#if canImport(RufletMap)
+  import RufletMap
+#endif
+#if canImport(RufletDataTable2)
+  import RufletDataTable2
+#endif
+#if canImport(RufletVideo)
+  import RufletVideo
+#endif
+#if canImport(RufletWebView)
+  import RufletWebView
+#endif
+#if canImport(RufletAds)
+  import RufletAds
+#endif
+#if canImport(RufletCodeEditor)
+  import RufletCodeEditor
+#endif
+#if canImport(RufletColorPickers)
+  import RufletColorPickers
+#endif
+#if canImport(RufletSpinKit)
+  import RufletSpinKit
 #endif
 
 /// Which renderer this app uses, and which extensions it carries.
@@ -44,11 +95,62 @@ enum RufletEngineChoice {
     #if canImport(RufletMotion)
       extensions.append(RufletMotion.self)
     #endif
-    #if canImport(RufletLocation)
-      extensions.append(RufletLocation.self)
+    #if canImport(RufletGeolocator)
+      extensions.append(RufletGeolocator.self)
     #endif
-    #if canImport(RufletMedia)
-      extensions.append(RufletMedia.self)
+    #if canImport(RufletAudio)
+      extensions.append(RufletAudio.self)
+    #endif
+    #if canImport(RufletAudioRecorder)
+      extensions.append(RufletAudioRecorder.self)
+    #endif
+    #if canImport(RufletCamera)
+      extensions.append(RufletCamera.self)
+    #endif
+    #if canImport(RufletFlashlight)
+      extensions.append(RufletFlashlight.self)
+    #endif
+    #if canImport(RufletPermissionHandler)
+      extensions.append(RufletPermissionHandler.self)
+    #endif
+    #if canImport(RufletSecureStorage)
+      extensions.append(RufletSecureStorage.self)
+    #endif
+    #if canImport(RufletQRScanner)
+      extensions.append(RufletQRScanner.self)
+    #endif
+    #if canImport(RufletRive)
+      extensions.append(RufletRive.self)
+    #endif
+    #if canImport(RufletLottie)
+      extensions.append(RufletLottie.self)
+    #endif
+    #if canImport(RufletCharts)
+      extensions.append(RufletCharts.self)
+    #endif
+    #if canImport(RufletMap)
+      extensions.append(RufletMap.self)
+    #endif
+    #if canImport(RufletDataTable2)
+      extensions.append(RufletDataTable2.self)
+    #endif
+    #if canImport(RufletVideo)
+      extensions.append(RufletVideo.self)
+    #endif
+    #if canImport(RufletWebView)
+      extensions.append(RufletWebView.self)
+    #endif
+    #if canImport(RufletAds)
+      extensions.append(RufletAds.self)
+    #endif
+    #if canImport(RufletCodeEditor)
+      extensions.append(RufletCodeEditor.self)
+    #endif
+    #if canImport(RufletColorPickers)
+      extensions.append(RufletColorPickers.self)
+    #endif
+    #if canImport(RufletSpinKit)
+      extensions.append(RufletSpinKit.self)
     #endif
     return extensions
   }

@@ -23,7 +23,7 @@ class MainFlutterWindow: NSWindow {
       // Kept as a child so the engine stays alive and its plugins keep running,
       // while the window shows the native renderer.
       self.contentViewController = NSHostingController(
-        rootView: RufletAppView(services: RufletEngineChoice.services))
+        rootView: RufletAppView(extensions: RufletEngineChoice.extensions))
       self.contentViewController?.addChild(flutterViewController)
     } else {
       self.contentViewController = flutterViewController
