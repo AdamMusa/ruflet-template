@@ -567,6 +567,10 @@ public enum RufletControlDefaults {
     "PopupMenuButton": [
       "clip_behavior": .string("none"),
     ],
+    "QrcodeScanner": [
+      "on_detect": .bool(false),
+      "on_error": .bool(false),
+    ],
     "RadarChart": [
       "center_min_value": .bool(false),
       "interactive": .bool(true),
@@ -917,6 +921,10 @@ public enum RufletControlDefaults {
     ],
     "WindowDragArea": [
       "maximizable": .bool(true),
+    ],
+    "qrcode_scanner": [
+      "on_detect": .bool(false),
+      "on_error": .bool(false),
     ],
   ]
 

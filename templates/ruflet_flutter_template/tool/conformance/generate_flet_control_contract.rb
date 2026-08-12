@@ -78,7 +78,11 @@ module FletControlContract
   end
 
   def registry_mappings(registry_path)
-    source = File.read(registry_path)
+    # A commented switch case is documentation/TODO, not a wire type the Flet
+    # engine can construct. In particular flet_ads keeps NativeAdControl's
+    # unfinished case in a block comment. Strip comments before walking the
+    # registry so the generated contract represents executable Flet code.
+    source = strip_dart_comments(File.read(registry_path))
     mappings = []
     {
       "widget" => /\bcreateWidget\s*\([^)]*\)\s*/m,
@@ -106,6 +110,66 @@ module FletControlContract
       end
     end
     mappings
+  end
+
+  def strip_dart_comments(source)
+    result = +""
+    index = 0
+    quote = nil
+    escaped = false
+    line_comment = false
+    block_comment_depth = 0
+
+    while index < source.length
+      character = source[index]
+      following = source[index + 1]
+
+      if line_comment
+        if character == "\n"
+          line_comment = false
+          result << character
+        end
+      elsif block_comment_depth.positive?
+        if character == "/" && following == "*"
+          block_comment_depth += 1
+          result << "  "
+          index += 1
+        elsif character == "*" && following == "/"
+          block_comment_depth -= 1
+          result << "  "
+          index += 1
+        else
+          # Preserve newlines so renderer source locations remain useful.
+          result << (character == "\n" ? "\n" : " ")
+        end
+      elsif quote
+        result << character
+        if escaped
+          escaped = false
+        elsif character == "\\"
+          escaped = true
+        elsif character == quote
+          quote = nil
+        end
+      elsif character == '"' || character == "'"
+        quote = character
+        result << character
+      elsif character == "/" && following == "/"
+        line_comment = true
+        result << "  "
+        index += 1
+      elsif character == "/" && following == "*"
+        block_comment_depth = 1
+        result << "  "
+        index += 1
+      else
+        result << character
+      end
+
+      index += 1
+    end
+
+    result
   end
 
   def primitive(expression, getter: nil)
@@ -216,7 +280,9 @@ module FletControlContract
 
   def registries
     core = File.join(packages_root, "flet", "lib", "src", "flet_core_extension.dart")
-    extensions = Dir.glob(File.join(packages_root, "flet_*", "lib", "src", "extension.dart")).sort
+    extensions = %w[flet_* ruflet_*].flat_map do |pattern|
+      Dir.glob(File.join(packages_root, pattern, "lib", "src", "extension.dart"))
+    end.sort
     [["flet", core]] + extensions.map do |path|
       [path.split(File::SEPARATOR)[-4], path]
     end

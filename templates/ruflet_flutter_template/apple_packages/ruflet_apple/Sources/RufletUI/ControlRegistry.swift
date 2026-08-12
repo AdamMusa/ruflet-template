@@ -492,26 +492,27 @@ public enum ControlRegistry {
     add(["TileLayer", "MarkerLayer", "Marker", "CircleLayer", "CircleMarker",
          "PolylineLayer", "PolylineMarker", "PolygonLayer", "PolygonMarker",
          "SimpleAttribution", "RichAttribution", "TextSourceAttribution",
-         "ImageSourceAttribution"], .structuralChild, "MapKit layer metadata", .metadataOnly)
+         "ImageSourceAttribution"], .structuralChild, "RufletMap layer metadata",
+        .optionalBundle("RufletMap"))
     result["tilelayer"] = ControlDescriptor(
       wireType: "TileLayer", classification: .structuralChild,
-      implementation: "ReportingTileOverlay", rendering: .metadataOnly,
+      implementation: "RufletMap.ReportingTileOverlay", rendering: .optionalBundle("RufletMap"),
       supportedEvents: ["image_error"])
     result["simpleattribution"] = ControlDescriptor(
       wireType: "SimpleAttribution", classification: .structuralChild,
-      implementation: "MapAttributionView", rendering: .metadataOnly,
+      implementation: "RufletMap.MapAttributionView", rendering: .optionalBundle("RufletMap"),
       supportedEvents: ["click"])
     result["richattribution"] = ControlDescriptor(
       wireType: "RichAttribution", classification: .structuralChild,
-      implementation: "MapRichAttributionView", rendering: .metadataOnly,
+      implementation: "RufletMap.MapRichAttributionView", rendering: .optionalBundle("RufletMap"),
       supportedEvents: ["click"])
     result["textsourceattribution"] = ControlDescriptor(
       wireType: "TextSourceAttribution", classification: .structuralChild,
-      implementation: "MapRichAttributionView", rendering: .metadataOnly,
+      implementation: "RufletMap.MapRichAttributionView", rendering: .optionalBundle("RufletMap"),
       supportedEvents: ["click"])
     result["imagesourceattribution"] = ControlDescriptor(
       wireType: "ImageSourceAttribution", classification: .structuralChild,
-      implementation: "MapRichAttributionView", rendering: .metadataOnly,
+      implementation: "RufletMap.MapRichAttributionView", rendering: .optionalBundle("RufletMap"),
       supportedEvents: ["click"])
     add(["Camera"], .visible, "RufletCamera.CameraControlView",
         .optionalBundle("RufletCamera"),

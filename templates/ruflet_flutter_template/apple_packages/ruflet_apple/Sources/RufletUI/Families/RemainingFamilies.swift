@@ -70,11 +70,15 @@ extension ControlRegistry {
       return AnyView(MissingBundleControlView(node: node, bundle: "RufletColorPickers"))
     case "Map":
       return AnyView(MissingBundleControlView(node: node, bundle: "RufletMap"))
-    case "TileLayer", "MarkerLayer", "Marker", "CircleLayer", "CircleMarker",
-      "PolylineLayer", "PolylineMarker", "PolygonLayer", "PolygonMarker",
-      "SimpleAttribution", "RichAttribution", "TextSourceAttribution",
-      "ImageSourceAttribution":
-      // MapKit consumes these through the Map parent.
+    case "TileLayer", "MarkerLayer", "CircleLayer", "PolylineLayer", "PolygonLayer",
+      "SimpleAttribution", "RichAttribution":
+      // Flet constructs these through flet_map's extension. The linked
+      // RufletMap product replaces this fallback with metadata builders.
+      return AnyView(MissingBundleControlView(node: node, bundle: "RufletMap"))
+    case "Marker", "CircleMarker", "PolylineMarker", "PolygonMarker",
+      "TextSourceAttribution", "ImageSourceAttribution":
+      // These are serialized child values consumed by a registered layer or
+      // attribution control; Flet itself does not register them as widgets.
       return AnyView(EmptyView())
     case "Audio", "AudioRecorder", "InterstitialAd":
       // Services with no visible body; they answer method calls instead.

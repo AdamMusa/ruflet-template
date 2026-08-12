@@ -3703,31 +3703,6 @@
       "methods": []
     },
     {
-      "wire_type": "NativeAd",
-      "renderer": {
-        "class": "NativeAdControl",
-        "source": "flet_packages/flet_ads/lib/src/native.dart",
-        "line": 8,
-        "sha256": "6370c6779304d444cfeb29b588fdce91cd9840d8655f1ab938454e128ccdb280"
-      },
-      "package": "flet_ads",
-      "family": "extension",
-      "classification": "widget",
-      "design_family": null,
-      "primitive_defaults": {},
-      "events": [
-        "click",
-        "close",
-        "error",
-        "impression",
-        "load",
-        "open",
-        "paid",
-        "will_dismiss"
-      ],
-      "methods": []
-    },
-    {
       "wire_type": "NavigationBar",
       "renderer": {
         "class": "NavigationBarControl",
@@ -4185,6 +4160,41 @@
       "primitive_defaults": {},
       "events": [],
       "methods": []
+    },
+    {
+      "wire_type": "QrcodeScanner",
+      "renderer": {
+        "class": "QrCodeScannerControl",
+        "source": "flet_packages/ruflet_qrcode_scanner/lib/src/qrcode_scanner.dart",
+        "line": 10,
+        "sha256": "efa3413b948cffe15150dd646fd168b288e45315fc1654fb1192f3f592b4f066"
+      },
+      "package": "ruflet_qrcode_scanner",
+      "family": "extension",
+      "classification": "widget",
+      "design_family": null,
+      "primitive_defaults": {
+        "on_detect": {
+          "type": "bool",
+          "value": false
+        },
+        "on_error": {
+          "type": "bool",
+          "value": false
+        }
+      },
+      "events": [
+        "detect",
+        "error"
+      ],
+      "methods": [
+        "reset_zoom_scale",
+        "set_zoom_scale",
+        "start",
+        "stop",
+        "switch_camera",
+        "toggle_torch"
+      ]
     },
     {
       "wire_type": "RadarChart",
@@ -6700,6 +6710,41 @@
         "drag_start"
       ],
       "methods": []
+    },
+    {
+      "wire_type": "qrcode_scanner",
+      "renderer": {
+        "class": "QrCodeScannerControl",
+        "source": "flet_packages/ruflet_qrcode_scanner/lib/src/qrcode_scanner.dart",
+        "line": 10,
+        "sha256": "efa3413b948cffe15150dd646fd168b288e45315fc1654fb1192f3f592b4f066"
+      },
+      "package": "ruflet_qrcode_scanner",
+      "family": "extension",
+      "classification": "widget",
+      "design_family": null,
+      "primitive_defaults": {
+        "on_detect": {
+          "type": "bool",
+          "value": false
+        },
+        "on_error": {
+          "type": "bool",
+          "value": false
+        }
+      },
+      "events": [
+        "detect",
+        "error"
+      ],
+      "methods": [
+        "reset_zoom_scale",
+        "set_zoom_scale",
+        "start",
+        "stop",
+        "switch_camera",
+        "toggle_torch"
+      ]
     }
   ]
 }
