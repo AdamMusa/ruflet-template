@@ -149,6 +149,37 @@ final class GestureFamilyParityTests: XCTestCase {
       contentID: 4, content: ControlNode(id: 4, type: "Container")))
   }
 
+  func testInteractiveViewerCommandsMatchPinnedArgumentParsing() {
+    XCTAssertNil(RufletInteractiveViewerSemantics.zoomFactor([:]))
+    XCTAssertEqual(
+      RufletInteractiveViewerSemantics.zoomFactor(["factor": .string("1.25")]), 1.25)
+
+    XCTAssertNil(RufletInteractiveViewerSemantics.panTranslation(["dy": .int(4)]))
+    XCTAssertEqual(
+      RufletInteractiveViewerSemantics.panTranslation(["dx": .int(3)]),
+      .init(dx: 3, dy: 0, dz: 0))
+    XCTAssertEqual(
+      RufletInteractiveViewerSemantics.panTranslation([
+        "dx": .double(1.5), "dy": .int(-2), "dz": .string("4"),
+      ]),
+      .init(dx: 1.5, dy: -2, dz: 4))
+  }
+
+  func testInteractiveViewerResetUsesFletDurationWireForms() {
+    XCTAssertNil(RufletInteractiveViewerSemantics.durationMilliseconds(nil))
+    XCTAssertEqual(RufletInteractiveViewerSemantics.durationMilliseconds(.int(250)), 250)
+    XCTAssertEqual(RufletInteractiveViewerSemantics.durationMilliseconds(.double(2.5)), 0)
+    XCTAssertEqual(
+      RufletInteractiveViewerSemantics.durationMilliseconds(
+        .extended(type: 3, string: "125000")),
+      125)
+    XCTAssertEqual(
+      RufletInteractiveViewerSemantics.durationMilliseconds(.map([
+        "seconds": .int(1), "milliseconds": .string("50"),
+      ])),
+      1_050)
+  }
+
   func testGestureFamilyDeclaresFletLifecycleAndCommands() throws {
     XCTAssertEqual(
       try XCTUnwrap(ControlRegistry.descriptor(for: "Draggable")).supportedEvents,

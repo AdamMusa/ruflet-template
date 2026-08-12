@@ -226,7 +226,10 @@ private struct GestureHoverReporter: ViewModifier {
   @State private var hovering = false
   @State private var previous = CGPoint.zero
   @State private var origin = CGPoint.zero
-  @State private var lastReport = Date.distantPast
+  // Flet initializes its throttle timestamp when the control state is
+  // created, so an interaction beginning immediately does not bypass the
+  // configured update interval.
+  @State private var lastReport = Date()
 
   private var installsMouseRegion: Bool {
     !RufletGestureParity.mouseRegionEvents(node).isEmpty
@@ -1137,27 +1140,38 @@ struct InteractiveViewerControlView: View {
     .rufletCommandHandler(node.id) { call, completion in
       switch call.name {
       case "zoom":
-        let factor = CGFloat(call.argument("factor")?.doubleValue ?? 1)
+        guard let factor = RufletInteractiveViewerSemantics.zoomFactor(call.args.mapValue ?? [:])
+        else {
+          completion(.success(.null))
+          return
+        }
         scale = min(
           max(
-            scale * factor,
+            scale * CGFloat(factor),
             CGFloat(node.double("min_scale") ?? RufletGestureParity.interactiveMinScale)),
           CGFloat(node.double("max_scale") ?? RufletGestureParity.interactiveMaxScale))
         completion(.success(.null))
       case "pan":
+        guard let translation = RufletInteractiveViewerSemantics.panTranslation(
+          call.args.mapValue ?? [:])
+        else {
+          completion(.success(.null))
+          return
+        }
         // Flet exposes a z delta for matrix parity. The native Apple viewer is
         // two-dimensional, but dx/dy retain the same additive semantics.
-        _ = call.argument("dz")?.doubleValue ?? 0
+        _ = translation.dz
         offset = clampedOffset(CGSize(
-          width: offset.width + CGFloat(call.argument("dx")?.doubleValue ?? 0),
-          height: offset.height + CGFloat(call.argument("dy")?.doubleValue ?? 0)))
+          width: offset.width + CGFloat(translation.dx),
+          height: offset.height + CGFloat(translation.dy)))
         completion(.success(.null))
       case "reset":
         let reset = {
           scale = 1
           offset = .zero
         }
-        if let milliseconds = call.argument("animation_duration")?.doubleValue,
+        if let milliseconds = RufletInteractiveViewerSemantics.durationMilliseconds(
+          call.argument("animation_duration")),
           milliseconds > 0
         {
           withAnimation(.easeInOut(duration: milliseconds / 1_000), reset)
@@ -1184,9 +1198,64 @@ struct InteractiveViewerControlView: View {
 enum RufletInteractiveViewerSemantics {
   static let missingContentError = "InteractiveViewer.content must be provided and visible"
 
+  struct PanTranslation: Equatable {
+    let dx: Double
+    let dy: Double
+    let dz: Double
+  }
+
   static func validationError(contentID: Int?, content: ControlNode?) -> String? {
     RufletRequiredContent.validationError(
       contentID: contentID, content: content, message: missingContentError)
+  }
+
+  /// The pinned method ignores `zoom` unless its required factor parses.
+  static func zoomFactor(_ arguments: [String: RufletValue]) -> Double? {
+    arguments["factor"]?.doubleValue
+  }
+
+  /// The pinned method requires `dx`; `dy` and `dz` independently default to
+  /// zero only after that required argument is present.
+  static func panTranslation(_ arguments: [String: RufletValue]) -> PanTranslation? {
+    guard let dx = arguments["dx"]?.doubleValue else { return nil }
+    return PanTranslation(
+      dx: dx,
+      dy: arguments["dy"]?.doubleValue ?? 0,
+      dz: arguments["dz"]?.doubleValue ?? 0)
+  }
+
+  /// Exact Flet `parseDuration` behavior used by `reset`: integers are
+  /// milliseconds, maps are summed component-wise, Duration ext-3 values are
+  /// microseconds, and fractional numeric values parse to zero.
+  static func durationMilliseconds(_ value: RufletValue?) -> Double? {
+    guard let value, !value.isNull else { return nil }
+    switch value {
+    case .int(let milliseconds):
+      return Double(milliseconds)
+    case .string(let raw):
+      return Double(Int64(raw) ?? 0)
+    case .double:
+      return 0
+    case .extended(type: 3, let microseconds):
+      return Double(Int64(microseconds) ?? 0) / 1_000
+    case .map(let map):
+      func integer(_ key: String) -> Int64 {
+        switch map[key] {
+        case .int(let value): return value
+        case .string(let value), .extended(_, let value): return Int64(value) ?? 0
+        default: return 0
+        }
+      }
+      let microseconds = integer("microseconds")
+        + 1_000 * integer("milliseconds")
+        + 1_000_000 * integer("seconds")
+        + 60_000_000 * integer("minutes")
+        + 3_600_000_000 * integer("hours")
+        + 86_400_000_000 * integer("days")
+      return Double(microseconds) / 1_000
+    default:
+      return 0
+    }
   }
 }
 
