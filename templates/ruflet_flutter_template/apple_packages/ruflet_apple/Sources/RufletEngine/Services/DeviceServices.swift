@@ -11,6 +11,8 @@ import RufletProtocol
   import AppKit
 #endif
 #if canImport(IOKit)
+  import IOKit
+  import IOKit.graphics
   import IOKit.ps
 #endif
 
@@ -81,6 +83,10 @@ public enum FletDeviceServiceSemantics {
       throw RufletServiceError.invalidArguments("value must be between 0 and 1")
     }
     return value
+  }
+
+  public static func brightnessEvent(_ value: Double) -> RufletValue {
+    .map(["brightness": .double(value)])
   }
 }
 
@@ -390,15 +396,24 @@ public final class ConnectivityService: RufletStreamingService {
 public final class ScreenBrightnessService: RufletStreamingService {
   public static let wireType = "ScreenBrightness"
 
+  private var systemBrightness: Double?
   private var applicationBrightness: Double?
-  private var systemBrightnessAtStart: Double?
   private var animate = true
   private var autoReset = true
   private var eventNode: ControlNode?
   private var eventContext: RufletServiceContext?
   private var brightnessObserver: NSObjectProtocol?
+  private var lifecycleObservers: [NSObjectProtocol] = []
+  #if os(iOS)
+    private var brightnessTask: Task<Void, Never>?
+  #elseif os(macOS)
+    private var brightnessPoller: Timer?
+  #endif
 
-  public init() {}
+  public init() {
+    systemBrightness = Self.nativeBrightness()
+    installLifecycleObservers()
+  }
 
   public func activate(node: ControlNode, context: RufletServiceContext) {
     let listensForSystem = node.handlesEvent("system_screen_brightness_change")
@@ -411,26 +426,61 @@ public final class ScreenBrightnessService: RufletStreamingService {
     }
     eventNode = node
     eventContext = context
-    #if os(iOS)
-      guard listensForSystem else {
-        stopBrightnessObservation()
-        return
-      }
-      guard brightnessObserver == nil else {
-        return
-      }
-      brightnessObserver = NotificationCenter.default.addObserver(
-        forName: UIScreen.brightnessDidChangeNotification,
-        object: UIScreen.main,
-        queue: .main
-      ) { [weak self] _ in
-        Task { @MainActor in self?.emitSystemBrightness() }
-      }
-    #endif
+    startBrightnessObservation()
   }
 
   deinit {
     if let brightnessObserver { NotificationCenter.default.removeObserver(brightnessObserver) }
+    for observer in lifecycleObservers { NotificationCenter.default.removeObserver(observer) }
+    #if os(iOS)
+      brightnessTask?.cancel()
+    #elseif os(macOS)
+      brightnessPoller?.invalidate()
+    #endif
+  }
+
+  private func startBrightnessObservation() {
+    #if os(iOS)
+      guard brightnessObserver == nil else { return }
+      brightnessObserver = NotificationCenter.default.addObserver(
+        forName: UIScreen.brightnessDidChangeNotification,
+        object: nil,
+        queue: .main
+      ) { [weak self] _ in
+        Task { @MainActor in self?.nativeBrightnessChanged() }
+      }
+    #elseif os(macOS)
+      guard brightnessPoller == nil else { return }
+      brightnessPoller = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) {
+        [weak self] _ in
+        Task { @MainActor in self?.nativeBrightnessChanged() }
+      }
+    #endif
+  }
+
+  private func installLifecycleObservers() {
+    #if os(iOS)
+      lifecycleObservers = [
+        NotificationCenter.default.addObserver(
+          forName: UIApplication.willResignActiveNotification, object: nil, queue: .main
+        ) { [weak self] _ in Task { @MainActor in self?.applicationWillResignActive() } },
+        NotificationCenter.default.addObserver(
+          forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main
+        ) { [weak self] _ in Task { @MainActor in self?.applicationDidBecomeActive() } },
+      ]
+    #elseif os(macOS)
+      lifecycleObservers = [
+        NotificationCenter.default.addObserver(
+          forName: NSApplication.willResignActiveNotification, object: nil, queue: .main
+        ) { [weak self] _ in Task { @MainActor in self?.applicationWillResignActive() } },
+        NotificationCenter.default.addObserver(
+          forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main
+        ) { [weak self] _ in Task { @MainActor in self?.applicationDidBecomeActive() } },
+        NotificationCenter.default.addObserver(
+          forName: NSApplication.willTerminateNotification, object: nil, queue: .main
+        ) { [weak self] _ in Task { @MainActor in self?.restoreSystemBrightness() } },
+      ]
+    #endif
   }
 
   public func invoke(
@@ -439,15 +489,22 @@ public final class ScreenBrightnessService: RufletStreamingService {
     context: RufletServiceContext,
     completion: @escaping RufletMethodCompletion
   ) {
-    #if os(iOS)
+    #if os(iOS) || os(macOS)
       switch call.name {
       case "can_change_system_screen_brightness":
         completion(.success(.bool(true)))
       case "get_system_screen_brightness":
-        completion(.success(.double(Double(UIScreen.main.brightness))))
+        guard let systemBrightness else {
+          return completion(.failure(RufletServiceError.unavailable(
+            "Could not find system screen brightness value")))
+        }
+        completion(.success(.double(systemBrightness)))
       case "get_application_screen_brightness":
-        completion(
-          .success(.double(applicationBrightness ?? Double(UIScreen.main.brightness))))
+        guard let brightness = Self.nativeBrightness() else {
+          return completion(.failure(RufletServiceError.unavailable(
+            "Could not find application screen brightness value")))
+        }
+        completion(.success(.double(brightness)))
       case "set_application_screen_brightness", "set_system_screen_brightness":
         let value: Double
         do {
@@ -456,23 +513,38 @@ public final class ScreenBrightnessService: RufletStreamingService {
           return completion(.failure(error))
         }
         if call.name == "set_application_screen_brightness" {
-          if systemBrightnessAtStart == nil {
-            systemBrightnessAtStart = Double(UIScreen.main.brightness)
+          do {
+            try setNativeBrightness(value)
+          } catch {
+            return completion(.failure(error))
           }
           applicationBrightness = value
-          UIScreen.main.brightness = CGFloat(value)
           emitApplicationBrightness(value)
         } else {
-          UIScreen.main.brightness = CGFloat(value)
+          systemBrightness = value
           emitSystemBrightness(value)
+          if applicationBrightness == nil {
+            do {
+              try setNativeBrightness(value)
+            } catch {
+              return completion(.failure(error))
+            }
+            emitApplicationBrightness(value)
+          }
         }
         completion(.success(.null))
       case "reset_application_screen_brightness":
-        if let original = systemBrightnessAtStart {
-          UIScreen.main.brightness = CGFloat(original)
+        guard let systemBrightness else {
+          return completion(.failure(RufletServiceError.unavailable(
+            "Could not find system screen brightness value")))
+        }
+        do {
+          try setNativeBrightness(systemBrightness)
+        } catch {
+          return completion(.failure(error))
         }
         applicationBrightness = nil
-        emitApplicationBrightness(Double(UIScreen.main.brightness))
+        emitApplicationBrightness(systemBrightness)
         completion(.success(.null))
       case "is_animate":
         completion(.success(.bool(animate)))
@@ -510,25 +582,142 @@ public final class ScreenBrightnessService: RufletStreamingService {
     guard let eventNode, eventNode.handlesEvent("application_screen_brightness_change"),
       let eventContext
     else { return }
-    eventContext.emitEvent(eventNode.id, "application_screen_brightness_change", .map([
-      "brightness": .double(value)
-    ]))
+    eventContext.emitEvent(
+      eventNode.id, "application_screen_brightness_change",
+      FletDeviceServiceSemantics.brightnessEvent(value))
   }
 
   private func stopBrightnessObservation() {
     if let brightnessObserver { NotificationCenter.default.removeObserver(brightnessObserver) }
     brightnessObserver = nil
+    #if os(macOS)
+      brightnessPoller?.invalidate()
+      brightnessPoller = nil
+    #endif
   }
 
   private func emitSystemBrightness(_ value: Double? = nil) {
     guard let eventNode, eventNode.handlesEvent("system_screen_brightness_change"),
       let eventContext
     else { return }
+    guard let brightness = value ?? systemBrightness else { return }
+    eventContext.emitEvent(
+      eventNode.id, "system_screen_brightness_change",
+      FletDeviceServiceSemantics.brightnessEvent(brightness))
+  }
+
+  private func nativeBrightnessChanged() {
+    // An application override changes the physical display without changing
+    // the saved system value. Treating that notification as a system change
+    // would make reset restore the override instead of the user's setting.
+    guard applicationBrightness == nil else { return }
+    guard let brightness = Self.nativeBrightness(), brightness != systemBrightness else { return }
+    systemBrightness = brightness
+    emitSystemBrightness(brightness)
+    if applicationBrightness == nil { emitApplicationBrightness(brightness) }
+  }
+
+  private func applicationWillResignActive() {
+    guard autoReset else { return }
+    restoreSystemBrightness()
+  }
+
+  private func applicationDidBecomeActive() {
+    guard autoReset else { return }
+    if let brightness = Self.nativeBrightness() {
+      systemBrightness = brightness
+      emitSystemBrightness(brightness)
+      if applicationBrightness == nil { emitApplicationBrightness(brightness) }
+    }
+    if let applicationBrightness { try? setNativeBrightness(applicationBrightness) }
+  }
+
+  private func restoreSystemBrightness() {
+    guard let systemBrightness else { return }
+    try? setNativeBrightness(systemBrightness)
+  }
+
+  private static func nativeBrightness() -> Double? {
     #if os(iOS)
-      let brightness = value ?? Double(UIScreen.main.brightness)
-      eventContext.emitEvent(eventNode.id, "system_screen_brightness_change", .map([
-        "brightness": .double(brightness)
-      ]))
+      return Double(UIScreen.main.brightness)
+    #elseif os(macOS) && canImport(IOKit)
+      return try? macScreenBrightness()
+    #else
+      return nil
     #endif
   }
+
+  private func setNativeBrightness(_ brightness: Double) throws {
+    #if os(iOS)
+      brightnessTask?.cancel()
+      guard animate else {
+        UIScreen.main.brightness = CGFloat(brightness)
+        return
+      }
+      let initial = Double(UIScreen.main.brightness)
+      brightnessTask = Task { @MainActor in
+        let steps = 60
+        for step in 1...steps {
+          guard !Task.isCancelled else { return }
+          UIScreen.main.brightness = CGFloat(
+            initial + (brightness - initial) * Double(step) / Double(steps))
+          try? await Task.sleep(nanoseconds: 16_000_000)
+        }
+      }
+    #elseif os(macOS) && canImport(IOKit)
+      try Self.setMacScreenBrightness(Float(brightness))
+    #else
+      throw RufletServiceError.unavailable("Screen brightness is not settable on this platform")
+    #endif
+  }
+
+  #if os(macOS) && canImport(IOKit)
+    private static func displayIterator() throws -> io_iterator_t {
+      var iterator: io_iterator_t = 0
+      let port: mach_port_t
+      if #available(macOS 12, *) { port = kIOMainPortDefault } else { port = kIOMasterPortDefault }
+      guard IOServiceGetMatchingServices(
+        port, IOServiceMatching("IODisplayConnect"), &iterator) == kIOReturnSuccess
+      else {
+        throw RufletServiceError.unavailable("Display service unavailable")
+      }
+      return iterator
+    }
+
+    private static func macScreenBrightness() throws -> Double {
+      let iterator = try displayIterator()
+      defer { IOObjectRelease(iterator) }
+      var brightness: Float = 0
+      var found = false
+      while true {
+        let service = IOIteratorNext(iterator)
+        guard service != 0 else { break }
+        defer { IOObjectRelease(service) }
+        if IODisplayGetFloatParameter(
+          service, 0, kIODisplayBrightnessKey as CFString, &brightness) == kIOReturnSuccess
+        {
+          found = true
+        }
+      }
+      guard found else { throw RufletServiceError.unavailable("Display brightness unavailable") }
+      return Double(brightness)
+    }
+
+    private static func setMacScreenBrightness(_ brightness: Float) throws {
+      let iterator = try displayIterator()
+      defer { IOObjectRelease(iterator) }
+      var found = false
+      while true {
+        let service = IOIteratorNext(iterator)
+        guard service != 0 else { break }
+        defer { IOObjectRelease(service) }
+        if IODisplaySetFloatParameter(
+          service, 0, kIODisplayBrightnessKey as CFString, brightness) == kIOReturnSuccess
+        {
+          found = true
+        }
+      }
+      guard found else { throw RufletServiceError.unavailable("Unable to change screen brightness") }
+    }
+  #endif
 }
