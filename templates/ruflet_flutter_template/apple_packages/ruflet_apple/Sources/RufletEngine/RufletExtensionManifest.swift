@@ -36,7 +36,7 @@ public enum RufletExtensionManifest {
     .init(fletPackage: "flet_flashlight", swiftProduct: "RufletFlashlight", status: .available),
     .init(fletPackage: "flet_geolocator", swiftProduct: "RufletGeolocator", status: .pending),
     .init(fletPackage: "flet_lottie", swiftProduct: "RufletLottie", status: .available),
-    .init(fletPackage: "flet_map", swiftProduct: "RufletMap", status: .pending),
+    .init(fletPackage: "flet_map", swiftProduct: "RufletMap", status: .available),
     .init(fletPackage: "flet_permission_handler", swiftProduct: "RufletPermissionHandler", status: .pending),
     .init(fletPackage: "flet_rive", swiftProduct: "RufletRive", status: .available),
     .init(fletPackage: "flet_secure_storage", swiftProduct: "RufletSecureStorage", status: .pending),

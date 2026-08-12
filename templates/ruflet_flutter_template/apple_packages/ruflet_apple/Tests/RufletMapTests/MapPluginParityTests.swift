@@ -1,5 +1,6 @@
 import RufletEngine
 import RufletProtocol
+@testable import RufletMap
 @testable import RufletUI
 import XCTest
 

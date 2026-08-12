@@ -68,7 +68,7 @@ extension ControlRegistry {
     case "Video":
       return AnyView(VideoControlView(node: node))
     case "Map":
-      return AnyView(MapControlView(node: node))
+      return AnyView(MissingBundleControlView(node: node, bundle: "RufletMap"))
     case "TileLayer", "MarkerLayer", "Marker", "CircleLayer", "CircleMarker",
       "PolylineLayer", "PolylineMarker", "PolygonLayer", "PolygonMarker",
       "SimpleAttribution", "RichAttribution", "TextSourceAttribution",

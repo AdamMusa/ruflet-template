@@ -460,7 +460,7 @@ public enum ControlRegistry {
         methods: ["get_current_position", "get_duration", "is_completed", "is_playing",
                   "jump_to", "next", "pause", "play", "play_or_pause", "playlist_add",
                   "playlist_remove", "previous", "seek", "stop"])
-    add(["Map"], .visible, "MapControlView", .nativeView,
+    add(["Map"], .visible, "RufletMap.MapControlView", .optionalBundle("RufletMap"),
         events: ["event", "hover", "init", "long_press", "pointer_cancel", "pointer_down",
                  "pointer_up", "position_change", "secondary_tap", "tap"],
         methods: ["center_on", "move_to", "reset_rotation", "rotate_from", "zoom_in",
