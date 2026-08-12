@@ -596,22 +596,34 @@ struct MergeSemanticsControlView: View {
 /// `SelectionArea` — makes the text inside it selectable.
 struct SelectionAreaControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
 
   var body: some View {
-    if let contentID = node.controlID(forKey: "content") {
+    let contentID = node.controlID(forKey: "content")
+    let contentIsVisible = contentID.flatMap(store.node).map { $0.bool("visible") != false } ?? false
+    if RufletSelectionAreaPayload.validationError(
+      contentID: contentID, contentIsVisible: contentIsVisible) == nil,
+      let contentID
+    {
       ControlView(id: contentID, axis: .none)
         .textSelection(.enabled)
         .environment(\.rufletSelectionAreaChange) { selection in
           events.fire(node, "change", data: RufletSelectionAreaPayload.data(selection))
         }
     } else {
-      RufletWrapperError("SelectionArea.content must be provided and visible")
+      RufletWrapperError(RufletSelectionAreaPayload.missingContentError)
     }
   }
 }
 
 enum RufletSelectionAreaPayload {
+  static let missingContentError = "SelectionArea.content must be provided and visible"
+
+  static func validationError(contentID: Int?, contentIsVisible: Bool) -> String? {
+    contentID != nil && contentIsVisible ? nil : missingContentError
+  }
+
   static func selection(in source: String, range: NSRange) -> String? {
     guard range.location != NSNotFound, range.length > 0,
       range.location >= 0, NSMaxRange(range) <= source.utf16.count

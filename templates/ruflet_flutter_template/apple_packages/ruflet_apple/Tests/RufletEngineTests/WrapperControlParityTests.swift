@@ -127,6 +127,17 @@ final class WrapperControlParityTests: XCTestCase {
     XCTAssertEqual(RufletSelectionAreaPayload.data(nil), .null)
   }
 
+  func testSelectionAreaRequiresVisibleContentLikePinnedFlet() {
+    XCTAssertEqual(
+      RufletSelectionAreaPayload.validationError(contentID: nil, contentIsVisible: false),
+      "SelectionArea.content must be provided and visible")
+    XCTAssertEqual(
+      RufletSelectionAreaPayload.validationError(contentID: 2, contentIsVisible: false),
+      RufletSelectionAreaPayload.missingContentError)
+    XCTAssertNil(
+      RufletSelectionAreaPayload.validationError(contentID: 2, contentIsVisible: true))
+  }
+
   private func wrapperGradient(_ type: String) -> RufletValue {
     .map([
       "_type": .string(type),
