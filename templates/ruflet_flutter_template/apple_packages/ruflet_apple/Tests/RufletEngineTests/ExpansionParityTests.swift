@@ -20,14 +20,15 @@ final class ExpansionParityTests: XCTestCase {
       id: 3, type: "ExpansionTile", props: ["title": .string("Details")])))
   }
 
-  func testExpansionTileUsesPinnedMaterial3ConstructorAndThemeDefaults() {
+  func testStylelessExpansionTileUsesAppleNativeDisclosureDefaults() {
     let presentation = ExpansionTilePresentation(node: ControlNode(
       id: 1, type: "ExpansionTile", props: ["title": .string("Details")]))
 
-    XCTAssertEqual(presentation.textColorToken, "onsurface")
-    XCTAssertEqual(presentation.iconColorToken, "primary")
-    XCTAssertEqual(presentation.collapsedTextColorToken, "onsurface")
-    XCTAssertEqual(presentation.collapsedIconColorToken, "onsurfacevariant")
+    XCTAssertFalse(presentation.requiresCustomRendering)
+    XCTAssertNil(presentation.textColorToken)
+    XCTAssertNil(presentation.iconColorToken)
+    XCTAssertNil(presentation.collapsedTextColorToken)
+    XCTAssertNil(presentation.collapsedIconColorToken)
     XCTAssertEqual(presentation.iconAffinityToken, "trailing")
     XCTAssertTrue(presentation.showsTrailingIcon)
     XCTAssertFalse(presentation.maintainState)
@@ -66,19 +67,16 @@ final class ExpansionParityTests: XCTestCase {
     XCTAssertEqual(presentation.expandedAlignmentToken, "bottomright")
     XCTAssertEqual(presentation.expandedCrossAxisAlignmentToken, "stretch")
     XCTAssertEqual(presentation.minTileHeight, 61)
+    XCTAssertTrue(presentation.requiresCustomRendering)
   }
 
-  func testExpansionPanelListUsesFlutterConstructorDefaults() {
+  func testStylelessExpansionPanelListUsesAppleNativeDisclosureDefaults() {
     let presentation = ExpansionPanelListPresentation(node: ControlNode(
       id: 1, type: "ExpansionPanelList"))
 
-    XCTAssertEqual(presentation.elevation, 2)
-    XCTAssertEqual(presentation.spacing, 16)
-    XCTAssertEqual(presentation.expandedHeaderPadding.top, 16)
-    XCTAssertEqual(presentation.expandedHeaderPadding.leading, 0)
-    XCTAssertEqual(presentation.expandedHeaderPadding.bottom, 16)
-    XCTAssertEqual(presentation.expandedHeaderPadding.trailing, 0)
-    XCTAssertEqual(presentation.animationDuration, 0.2)
+    XCTAssertFalse(presentation.requiresCustomRendering)
+    XCTAssertFalse(ExpansionPanelListPresentation.panelRequiresCustomRendering(
+      ControlNode(id: 2, type: "ExpansionPanel")))
   }
 
   func testExpansionPanelListOnlyCreatesMaterialGapNextToExpandedPanel() {
@@ -108,5 +106,6 @@ final class ExpansionParityTests: XCTestCase {
     XCTAssertEqual(presentation.expandedHeaderPadding.leading, 4)
     XCTAssertEqual(presentation.expandedHeaderPadding.bottom, 3)
     XCTAssertEqual(presentation.expandedHeaderPadding.trailing, 2)
+    XCTAssertTrue(presentation.requiresCustomRendering)
   }
 }
