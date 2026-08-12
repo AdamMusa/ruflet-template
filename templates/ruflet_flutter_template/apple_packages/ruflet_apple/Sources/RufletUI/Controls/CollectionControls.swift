@@ -3034,8 +3034,11 @@ private struct CollectionScrollReporter: ViewModifier {
   @State private var lastReports: [String: Date] = [:]
   @State private var viewportExtent: CGFloat = 0
   @State private var previousPixels: CGFloat = 0
+  @State private var previousRawPixels: CGFloat = 0
+  @State private var previousSampleTime = Date()
   @State private var hasSample = false
   @State private var isScrolling = false
+  @State private var scrollDirection = RufletScrollDirection.idle
   @State private var endToken = UUID()
 
   func body(content: Content) -> some View {
@@ -3049,49 +3052,87 @@ private struct CollectionScrollReporter: ViewModifier {
         })
       .onPreferenceChange(CollectionViewportKey.self) { viewportExtent = $0 }
       .onPreferenceChange(CollectionScrollOffsetKey.self) { sample in
-          let pixels = max(0, sample.pixels)
+          let now = Date()
+          let resolved = RufletScrollSampleContract.resolve(
+            rawPixels: sample.pixels,
+            contentExtent: sample.contentExtent,
+            viewportDimension: viewportExtent)
+          let pixels = resolved.metrics.pixels
           scaffold?.reportScroll(sourceID: node.id, offset: pixels)
           guard node.handlesEvent("scroll") else { return }
           guard hasSample else {
             hasSample = true
             previousPixels = pixels
+            previousRawPixels = sample.pixels
+            previousSampleTime = now
             return
           }
-          let delta = pixels - previousPixels
-          guard abs(delta) > 0.001 else { return }
+          let rawDelta = sample.pixels - previousRawPixels
+          guard abs(rawDelta) > 0.001 else { return }
           if !isScrolling {
             isScrolling = true
-            report(type: "start", sample: sample, pixels: pixels)
+            report(kind: .start, metrics: resolved.metrics, now: now)
           }
-          report(type: "update", sample: sample, pixels: pixels, delta: delta)
+          let direction = RufletScrollContract.direction(for: rawDelta)
+          if direction != scrollDirection {
+            scrollDirection = direction
+            report(kind: .user, metrics: resolved.metrics, direction: direction, now: now)
+          }
+          if resolved.overscroll != 0 {
+            report(
+              kind: .overscroll,
+              metrics: resolved.metrics,
+              overscroll: resolved.overscroll,
+              velocity: RufletScrollContract.velocity(
+                delta: rawDelta, elapsed: now.timeIntervalSince(previousSampleTime)),
+              now: now)
+          } else {
+            report(
+              kind: .update,
+              metrics: resolved.metrics,
+              delta: pixels - previousPixels,
+              now: now)
+          }
           previousPixels = pixels
+          previousRawPixels = sample.pixels
+          previousSampleTime = now
           let token = UUID()
           endToken = token
           DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
             guard endToken == token else { return }
             isScrolling = false
-            report(type: "end", sample: sample, pixels: pixels)
+            report(kind: .end, metrics: resolved.metrics)
+            scrollDirection = .idle
+            report(kind: .user, metrics: resolved.metrics, direction: .idle)
           }
       }
       .onDisappear { scaffold?.removeScrollSource(node.id) }
   }
 
   private func report(
-    type: String, sample: CollectionScrollSample, pixels: CGFloat, delta: CGFloat? = nil
+    kind: RufletScrollNotificationKind,
+    metrics: RufletScrollMetrics,
+    delta: CGFloat? = nil,
+    direction: RufletScrollDirection? = nil,
+    overscroll: CGFloat? = nil,
+    velocity: CGFloat? = nil,
+    now: Date = Date()
   ) {
-    let now = Date()
-    let interval = TimeInterval(node.int("scroll_interval") ?? 10) / 1_000
-    if let prior = lastReports[type], now.timeIntervalSince(prior) <= interval { return }
-    lastReports[type] = now
-    var payload: [String: RufletValue] = [
-      "pixels": .double(Double(pixels)),
-      "min_scroll_extent": .double(0),
-      "max_scroll_extent": .double(Double(max(sample.contentExtent - viewportExtent, 0))),
-      "viewport_dimension": .double(Double(viewportExtent)),
-      "event_type": .string(type),
-    ]
-    if let delta { payload["scroll_delta"] = .double(Double(delta)) }
-    events.fire(node, "scroll", data: .map(payload))
+    let interval = node.int("scroll_interval") ?? RufletScrollContract.defaultIntervalMilliseconds
+    guard RufletScrollContract.shouldEmit(
+      previous: lastReports[kind.rawValue], now: now, intervalMilliseconds: interval)
+    else { return }
+    lastReports[kind.rawValue] = now
+    events.fire(
+      node,
+      "scroll",
+      data: RufletScrollContract.payload(
+        kind: kind,
+        metrics: metrics,
+        scrollDelta: delta,
+        direction: direction,
+        overscroll: overscroll,
+        velocity: velocity))
   }
 }
 

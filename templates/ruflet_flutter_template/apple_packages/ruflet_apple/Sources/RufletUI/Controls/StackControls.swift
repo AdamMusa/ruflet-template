@@ -370,6 +370,9 @@ struct ScrollableStack: ViewModifier {
   @StateObject private var nativeDriver = RufletNativeScrollDriver()
   @State private var viewportExtent: CGFloat = 0
   @State private var previousPixels: CGFloat = 0
+  @State private var previousRawPixels: CGFloat = 0
+  @State private var previousSampleTime = Date()
+  @State private var scrollDirection = RufletScrollDirection.idle
   @State private var lastScrollReports: [String: Date] = [:]
   @State private var hasScrollSample = false
   @State private var scrollEndToken = UUID()
@@ -405,26 +408,56 @@ struct ScrollableStack: ViewModifier {
         // `on_scroll` subscription. Always publish the real body offset.
         scaffold?.reportScroll(sourceID: node.id, offset: max(0, sample.pixels))
         guard node.handlesEvent("scroll") else { return }
-        let pixels = max(0, sample.pixels)
-        let delta = pixels - previousPixels
+        let now = Date()
+        let resolved = RufletScrollSampleContract.resolve(
+          rawPixels: sample.pixels,
+          contentExtent: sample.contentExtent,
+          viewportDimension: viewportExtent)
+        let pixels = resolved.metrics.pixels
+        let rawDelta = sample.pixels - previousRawPixels
         guard hasScrollSample else {
           hasScrollSample = true
           previousPixels = pixels
+          previousRawPixels = sample.pixels
+          previousSampleTime = now
           return
         }
-        guard abs(delta) > 0.001 else { return }
+        guard abs(rawDelta) > 0.001 else { return }
         if !isScrolling {
           isScrolling = true
-          reportScroll(type: "start", sample: sample, pixels: pixels)
+          reportScroll(kind: .start, metrics: resolved.metrics, now: now)
         }
-        reportScroll(type: "update", sample: sample, pixels: pixels, delta: delta)
+        let direction = RufletScrollContract.direction(for: rawDelta)
+        if direction != scrollDirection {
+          scrollDirection = direction
+          reportScroll(kind: .user, metrics: resolved.metrics, direction: direction, now: now)
+        }
+        if resolved.overscroll != 0 {
+          reportScroll(
+            kind: .overscroll,
+            metrics: resolved.metrics,
+            overscroll: resolved.overscroll,
+            velocity: RufletScrollContract.velocity(
+              delta: rawDelta, elapsed: now.timeIntervalSince(previousSampleTime)),
+            now: now)
+        } else {
+          reportScroll(
+            kind: .update,
+            metrics: resolved.metrics,
+            delta: pixels - previousPixels,
+            now: now)
+        }
         previousPixels = pixels
+        previousRawPixels = sample.pixels
+        previousSampleTime = now
         let token = UUID()
         scrollEndToken = token
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) {
           guard scrollEndToken == token else { return }
           isScrolling = false
-          reportScroll(type: "end", sample: sample, pixels: pixels)
+          reportScroll(kind: .end, metrics: resolved.metrics)
+          scrollDirection = .idle
+          reportScroll(kind: .user, metrics: resolved.metrics, direction: .idle)
         }
       }
       // `auto_scroll` keeps the end in view as children arrive, which is what
@@ -474,21 +507,29 @@ struct ScrollableStack: ViewModifier {
   }
 
   private func reportScroll(
-    type: String, sample: StackScrollSample, pixels: CGFloat, delta: CGFloat? = nil
+    kind: RufletScrollNotificationKind,
+    metrics: RufletScrollMetrics,
+    delta: CGFloat? = nil,
+    direction: RufletScrollDirection? = nil,
+    overscroll: CGFloat? = nil,
+    velocity: CGFloat? = nil,
+    now: Date = Date()
   ) {
-    let now = Date()
-    let interval = TimeInterval(node.int("scroll_interval") ?? 10) / 1_000
-    if let previous = lastScrollReports[type], now.timeIntervalSince(previous) <= interval { return }
-    lastScrollReports[type] = now
-    var data: [String: RufletValue] = [
-      "pixels": .double(Double(pixels)),
-      "min_scroll_extent": .double(0),
-      "max_scroll_extent": .double(Double(max(0, sample.contentExtent - viewportExtent))),
-      "viewport_dimension": .double(Double(viewportExtent)),
-      "event_type": .string(type),
-    ]
-    if let delta { data["scroll_delta"] = .double(Double(delta)) }
-    events.fire(node, "scroll", data: .map(data))
+    let interval = node.int("scroll_interval") ?? RufletScrollContract.defaultIntervalMilliseconds
+    guard RufletScrollContract.shouldEmit(
+      previous: lastScrollReports[kind.rawValue], now: now, intervalMilliseconds: interval)
+    else { return }
+    lastScrollReports[kind.rawValue] = now
+    events.fire(
+      node,
+      "scroll",
+      data: RufletScrollContract.payload(
+        kind: kind,
+        metrics: metrics,
+        scrollDelta: delta,
+        direction: direction,
+        overscroll: overscroll,
+        velocity: velocity))
   }
 }
 
