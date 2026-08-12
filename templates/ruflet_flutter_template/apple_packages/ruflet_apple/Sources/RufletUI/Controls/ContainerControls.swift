@@ -1669,64 +1669,32 @@ private struct CardBorderLayer: View {
 /// `Card` — the Flet contract realized with native Apple presentation.
 struct CardControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
 
-  @ViewBuilder
   var body: some View {
     let metrics = RufletCardMetrics(node: node)
-    if metrics.requiresCustomAppearance {
-      customCard(metrics)
-    } else {
-      GroupBox { cardContent }
-        .padding(metrics.margin)
-        .modifier(NativeCardClip(enabled: metrics.clipBehavior.lowercased() != "none"))
-        .accessibilityElement(children: metrics.semanticContainer ? .combine : .contain)
-    }
-  }
-
-  private func customCard(_ metrics: RufletCardMetrics) -> some View {
-    let shape = RufletCardShape(
-      kind: metrics.shapeKind, radii: metrics.radii,
-      eccentricity: metrics.eccentricity)
-    let outline = MaterialPalette.color(metrics.outlineToken, default: .clear)
-
-    return ZStack {
-      shape
-        .fill(MaterialPalette.color(metrics.fillToken, default: .clear))
-        .shadow(
-          color: MaterialPalette.color(metrics.shadowToken, default: .black).opacity(0.2),
-          radius: metrics.elevation)
-      if metrics.outlineWidth > 0, !metrics.showBorderOnForeground {
-        CardBorderLayer(
-          shape: shape, color: outline, width: metrics.outlineWidth,
-          strokeAlign: metrics.outlineStrokeAlign)
-      }
-      Group {
-        if let contentID = node.controlID(forKey: "content") {
-          ControlView(id: contentID, axis: .none)
-        }
-      }
-      .modifier(CardClip(metrics: metrics))
-      if metrics.outlineWidth > 0, metrics.showBorderOnForeground {
-        CardBorderLayer(
-          shape: shape, color: outline, width: metrics.outlineWidth,
-          strokeAlign: metrics.outlineStrokeAlign)
-      }
-    }
-    // Card.margin belongs to the Material widget itself. LayoutControl then
-    // applies the shared margin wrapper too unless Ruby marks it skipped,
-    // exactly mirroring the Flet control tree rather than painting the margin
-    // inside the card's fill.
+    return GroupBox { cardContent }
     .padding(metrics.margin)
-    // Flutter's `semanticContainer` decides whether the card is one element
-    // to a screen reader or a group of them.
+    .modifier(NativeCardClip(enabled: metrics.clipBehavior.lowercased() != "none"))
     .accessibilityElement(children: metrics.semanticContainer ? .combine : .contain)
   }
 
   @ViewBuilder
   private var cardContent: some View {
-    if let contentID = node.controlID(forKey: "content") {
+    if let contentID = CardPresentation.visibleContentID(node, nodeForID: store.node) {
       ControlView(id: contentID, axis: .none)
     }
+  }
+}
+
+enum CardPresentation {
+  static func visibleContentID(
+    _ node: ControlNode, nodeForID: (Int) -> ControlNode?
+  ) -> Int? {
+    guard let id = node.controlID(forKey: "content"), let content = nodeForID(id),
+      content.bool("visible") != false
+    else { return nil }
+    return id
   }
 }
 

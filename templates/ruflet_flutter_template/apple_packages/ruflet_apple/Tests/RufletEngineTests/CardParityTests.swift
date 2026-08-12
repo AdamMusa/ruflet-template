@@ -133,4 +133,31 @@ final class CardParityTests: XCTestCase {
       ]))
     XCTAssertEqual(circle.eccentricity, 0.75)
   }
+
+  func testCardContentUsesPinnedVisibleChildLookup() {
+    let card = node(["content": .controlRef(2)])
+    XCTAssertEqual(CardPresentation.visibleContentID(card, nodeForID: { id in
+      id == 2 ? ControlNode(id: 2, type: "Text") : nil
+    }), 2)
+    XCTAssertNil(CardPresentation.visibleContentID(card, nodeForID: { id in
+      id == 2 ? ControlNode(id: 2, type: "Text", props: ["visible": .bool(false)]) : nil
+    }))
+    XCTAssertNil(CardPresentation.visibleContentID(card, nodeForID: { _ in nil }))
+  }
+
+  func testRendererAlwaysUsesNativeAppleGroupBox() throws {
+    let package = URL(fileURLWithPath: #filePath)
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+    let source = try String(contentsOf: package.appendingPathComponent(
+      "Sources/RufletUI/Controls/ContainerControls.swift"))
+    let start = try XCTUnwrap(source.range(of: "struct CardControlView"))
+    let end = try XCTUnwrap(source.range(of: "/// `SafeArea`", range: start.upperBound..<source.endIndex))
+    let card = source[start.lowerBound..<end.lowerBound]
+    XCTAssertTrue(card.contains("GroupBox { cardContent }"))
+    XCTAssertFalse(card.contains("customCard"))
+    XCTAssertFalse(card.contains("MaterialPalette"))
+    XCTAssertFalse(card.contains("RufletCardShape"))
+  }
 }
