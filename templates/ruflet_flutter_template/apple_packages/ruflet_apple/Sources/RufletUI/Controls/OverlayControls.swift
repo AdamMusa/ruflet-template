@@ -168,6 +168,11 @@ enum RufletOverlaySemantics {
 
 /// Pinned Flet/Flutter defaults consumed by native Apple overlay primitives.
 enum OverlayDefaults {
+  static let snackBarMissingContentError = "SnackBar.content must be provided and visible"
+  static let bannerMissingContentError = "Banner.content must be provided and visible"
+  static let bannerMissingActionsError =
+    "Banner.actions must be provided and at least one action should be visible"
+
   struct DialogValues: Equatable {
     let radius: CGFloat
     let elevation: CGFloat
@@ -238,6 +243,24 @@ enum OverlayDefaults {
     return singleRow
       ? EdgeInsets(top: 2, leading: 16, bottom: 0, trailing: 0)
       : EdgeInsets(top: 24, leading: 16, bottom: 4, trailing: 16)
+  }
+
+  static func snackBarValidation(
+    _ node: ControlNode, content: ControlNode?
+  ) -> String? {
+    RufletRequiredContent.validationError(
+      contentID: node.controlID(forKey: "content"), content: content,
+      message: snackBarMissingContentError)
+  }
+
+  static func bannerValidation(
+    _ node: ControlNode, content: ControlNode?, visibleActionCount: Int
+  ) -> String? {
+    if let error = RufletRequiredContent.validationError(
+      contentID: node.controlID(forKey: "content"), content: content,
+      message: bannerMissingContentError)
+    { return error }
+    return visibleActionCount > 0 ? nil : bannerMissingActionsError
   }
 }
 
@@ -642,6 +665,19 @@ struct SnackBarControlView: View {
 
   var body: some View {
     let defaults = OverlayDefaults.snackBar(node)
+    let contentID = node.controlID(forKey: "content")
+    let validation = OverlayDefaults.snackBarValidation(
+      node, content: contentID.flatMap(store.node))
+    return Group {
+      if let validation {
+        Text(validation).font(.caption).foregroundStyle(.red)
+      } else {
+        snackBar(defaults: defaults)
+      }
+    }
+  }
+
+  private func snackBar(defaults: OverlayDefaults.SnackBarValues) -> some View {
     HStack(spacing: 12) {
       if let contentID = node.controlID(forKey: "content") {
         ControlView(id: contentID, axis: .none)
@@ -717,13 +753,29 @@ struct SnackBarControlView: View {
 /// `Banner` — a persistent message strip below the app bar.
 struct BannerControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
 
+  @ViewBuilder
   var body: some View {
+    let contentID = node.controlID(forKey: "content")
+    let visibleActionCount = node.controlIDs(forKey: "actions").reduce(into: 0) { count, id in
+      if RufletRequiredContent.isVisible(store.node(id)) { count += 1 }
+    }
+    if let validation = OverlayDefaults.bannerValidation(
+      node, content: contentID.flatMap(store.node), visibleActionCount: visibleActionCount)
+    {
+      Text(validation).font(.caption).foregroundStyle(.red)
+    } else {
+      banner
+    }
+  }
+
+  private var banner: some View {
     let singleRow = node.controlIDs(forKey: "actions").count == 1
       && node.bool("force_actions_below") != true
     let elevation = CGFloat(node.double("elevation") ?? 0)
-    VStack(spacing: 0) {
+    return VStack(spacing: 0) {
       HStack(alignment: .center, spacing: 0) {
         if let leadingID = node.controlID(forKey: "leading") {
           ControlView(id: leadingID, axis: .none)

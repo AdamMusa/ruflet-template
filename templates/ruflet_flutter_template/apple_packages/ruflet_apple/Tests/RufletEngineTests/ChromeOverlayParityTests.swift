@@ -384,6 +384,28 @@ final class ChromeOverlayParityTests: XCTestCase {
     XCTAssertEqual(multiPadding.bottom, 4)
   }
 
+  func testSnackBarAndBannerRequireVisibleFletSlots() {
+    let hiddenContent = ControlNode(
+      id: 10, type: "Text", props: ["visible": .bool(false)])
+    let content = ControlNode(id: 12, type: "Text")
+
+    let snack = ControlNode(
+      id: 1, type: "SnackBar", props: ["content": .controlRef(10)])
+    XCTAssertEqual(
+      OverlayDefaults.snackBarValidation(snack, content: hiddenContent),
+      OverlayDefaults.snackBarMissingContentError)
+
+    let banner = ControlNode(
+      id: 2, type: "Banner",
+      props: ["content": .controlRef(12), "actions": .array([.controlRef(11)])])
+    XCTAssertEqual(
+      OverlayDefaults.bannerValidation(
+        banner, content: content, visibleActionCount: 0),
+      OverlayDefaults.bannerMissingActionsError)
+    XCTAssertNil(OverlayDefaults.bannerValidation(
+      banner, content: content, visibleActionCount: 1))
+  }
+
   func testOverlayDismissUpdatesOpenBeforeSendingDismiss() {
     let node = ControlNode(
       id: 90, type: "SnackBar", props: ["on_dismiss": .bool(true)])
