@@ -543,14 +543,14 @@ enum RufletAlertDialogSlots {
   static func visibleControlID(
     _ node: ControlNode, key: String, visibilityForID: (Int) -> Bool?
   ) -> Int? {
-    guard let id = node.controlID(forKey: key), visibilityForID(id) != false else { return nil }
+    guard let id = node.controlID(forKey: key), visibilityForID(id) == true else { return nil }
     return id
   }
 
   static func visibleActionIDs(
     _ node: ControlNode, visibilityForID: (Int) -> Bool?
   ) -> [Int] {
-    node.controlIDs(forKey: "actions").filter { visibilityForID($0) != false }
+    node.controlIDs(forKey: "actions").filter { visibilityForID($0) == true }
   }
 
   /// Pinned Flet validates title/content by wire presence, actions by visible

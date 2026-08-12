@@ -41,4 +41,21 @@ final class AlertDialogSlotResidualTests: XCTestCase {
     XCTAssertEqual(
       RufletAlertDialogSlots.visibleActionIDs(dialog, visibilityForID: visibility), [3, 5])
   }
+
+  func testRenderedSlotsAlsoFilterDanglingControlReferences() {
+    let dialog = ControlNode(
+      id: 1, type: "AlertDialog",
+      props: [
+        "content": .controlRef(2),
+        "actions": .array([.controlRef(3), .controlRef(4)]),
+      ])
+
+    XCTAssertNil(
+      RufletAlertDialogSlots.visibleControlID(
+        dialog, key: "content", visibilityForID: { _ in nil }))
+    XCTAssertEqual(
+      RufletAlertDialogSlots.visibleActionIDs(
+        dialog, visibilityForID: { $0 == 3 ? true : nil }),
+      [3])
+  }
 }
