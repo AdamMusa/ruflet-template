@@ -116,4 +116,95 @@ final class ChartsExtensionParityTests: XCTestCase {
     XCTAssertTrue(
       ChartEventSemantics.shouldForward(movedToSection, after: first, chartType: "PieChart"))
   }
+
+  func testNativeGestureLifecycleUsesFletChartEventTypeNames() {
+    XCTAssertEqual(
+      ChartInteractionSemantics.dragChanged(
+        first: true, crossedPanThreshold: false, panning: false),
+      ["tapDown"])
+    XCTAssertEqual(
+      ChartInteractionSemantics.dragChanged(
+        first: false, crossedPanThreshold: true, panning: false),
+      ["tapCancel", "panDown", "panStart"])
+    XCTAssertEqual(
+      ChartInteractionSemantics.dragChanged(
+        first: false, crossedPanThreshold: true, panning: true),
+      ["panUpdate"])
+    XCTAssertEqual(
+      ChartInteractionSemantics.dragEnded(panning: false, longPressing: false),
+      ["tapUp"])
+    XCTAssertEqual(
+      ChartInteractionSemantics.dragEnded(panning: true, longPressing: false),
+      ["panEnd"])
+    XCTAssertEqual(
+      ChartInteractionSemantics.longPressStarted(),
+      ["tapCancel", "longPressStart"])
+    XCTAssertEqual(
+      ChartInteractionSemantics.dragEnded(panning: false, longPressing: true),
+      ["longPressEnd"])
+  }
+
+  func testLongPressDurationUsesFletMillisecondAndDurationPayloads() {
+    XCTAssertEqual(
+      ChartInteractionSemantics.longPressDuration(
+        for: ControlNode(id: 1, type: "ScatterChart", props: [:])),
+      0.5)
+    XCTAssertEqual(
+      ChartInteractionSemantics.longPressDuration(
+        for: ControlNode(
+          id: 1, type: "ScatterChart", props: ["long_press_duration": .int(750)])),
+      0.75)
+    XCTAssertEqual(
+      ChartInteractionSemantics.longPressDuration(
+        for: ControlNode(
+          id: 1, type: "ScatterChart",
+          props: ["long_press_duration": .map(["seconds": .int(1), "milliseconds": .int(250)])])),
+      1.25)
+    XCTAssertEqual(
+      ChartInteractionSemantics.longPressDuration(
+        for: ControlNode(
+          id: 1, type: "ScatterChart",
+          props: ["long_press_duration": .extended(type: 3, string: "625000")])),
+      0.625)
+  }
+
+  func testSelectedTooltipIndicatorsMatchPinnedFamilyRules() {
+    XCTAssertFalse(ChartInteractionSemantics.showsSelectedTooltip(
+      chartType: "LineChart", interactive: true, selected: true,
+      showTooltip: true, hasTooltip: true))
+    XCTAssertTrue(ChartInteractionSemantics.showsSelectedTooltip(
+      chartType: "LineChart", interactive: false, selected: true,
+      showTooltip: true, hasTooltip: true))
+    XCTAssertTrue(ChartInteractionSemantics.showsSelectedTooltip(
+      chartType: "BarChart", interactive: false, selected: true,
+      showTooltip: true, hasTooltip: true))
+    XCTAssertTrue(ChartInteractionSemantics.showsSelectedTooltip(
+      chartType: "ScatterChart", interactive: true, selected: true,
+      showTooltip: true, hasTooltip: true))
+    XCTAssertTrue(ChartInteractionSemantics.showsSelectedTooltip(
+      chartType: "CandlestickChart", interactive: false, selected: true,
+      showTooltip: true, hasTooltip: true))
+    XCTAssertFalse(ChartInteractionSemantics.showsSelectedTooltip(
+      chartType: "ScatterChart", interactive: true, selected: true,
+      showTooltip: false, hasTooltip: true))
+    XCTAssertFalse(ChartInteractionSemantics.showsSelectedTooltip(
+      chartType: "ScatterChart", interactive: true, selected: true,
+      showTooltip: true, hasTooltip: false))
+  }
+
+  func testSelectedOnlyDisablesBuiltInTouchTooltipsWhereFletDoes() {
+    let selectedOnlyScatter = ControlNode(
+      id: 1, type: "ScatterChart",
+      props: ["show_tooltips_for_selected_spots_only": .bool(true)])
+    let selectedOnlyCandle = ControlNode(
+      id: 2, type: "CandlestickChart",
+      props: ["show_tooltips_for_selected_spots_only": .bool(true)])
+    let line = ControlNode(
+      id: 3, type: "LineChart",
+      props: ["show_tooltips_for_selected_spots_only": .bool(true)])
+
+    XCTAssertFalse(ChartInteractionSemantics.handlesBuiltInTooltips(for: selectedOnlyScatter))
+    XCTAssertFalse(ChartInteractionSemantics.handlesBuiltInTooltips(for: selectedOnlyCandle))
+    XCTAssertTrue(ChartInteractionSemantics.handlesBuiltInTooltips(for: line))
+  }
 }

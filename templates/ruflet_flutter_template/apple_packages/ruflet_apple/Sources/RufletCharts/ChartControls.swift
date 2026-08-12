@@ -204,6 +204,76 @@ struct ChartEventSemantics {
   }
 }
 
+struct ChartInteractionSemantics {
+  static let panThreshold: CGFloat = 10
+  static let defaultLongPressDuration = 0.5
+
+  static func dragChanged(first: Bool, crossedPanThreshold: Bool, panning: Bool) -> [String] {
+    if first { return ["tapDown"] }
+    if crossedPanThreshold, !panning { return ["tapCancel", "panDown", "panStart"] }
+    return panning ? ["panUpdate"] : []
+  }
+
+  static func dragEnded(panning: Bool, longPressing: Bool) -> [String] {
+    if longPressing { return ["longPressEnd"] }
+    return [panning ? "panEnd" : "tapUp"]
+  }
+
+  static func longPressStarted() -> [String] {
+    ["tapCancel", "longPressStart"]
+  }
+
+  static func longPressDuration(for node: ControlNode) -> Double {
+    guard let value = node.props["long_press_duration"] else {
+      return defaultLongPressDuration
+    }
+    switch value {
+    case .int(let milliseconds): return max(Double(milliseconds), 0) / 1_000
+    case .double(let milliseconds): return max(milliseconds, 0) / 1_000
+    case .extended(type: 3, let microseconds):
+      return max(Double(Int64(microseconds) ?? 0), 0) / 1_000_000
+    case .map(let components):
+      func integer(_ key: String) -> Int64 {
+        switch components[key] {
+        case .int(let component): return component
+        case .string(let component), .extended(_, let component):
+          return Int64(component) ?? 0
+        default: return 0
+        }
+      }
+      let microseconds = integer("microseconds")
+        + 1_000 * integer("milliseconds")
+        + 1_000_000 * integer("seconds")
+        + 60_000_000 * integer("minutes")
+        + 3_600_000_000 * integer("hours")
+        + 86_400_000_000 * integer("days")
+      return max(Double(microseconds), 0) / 1_000_000
+    default: return defaultLongPressDuration
+    }
+  }
+
+  static func handlesBuiltInTooltips(for node: ControlNode) -> Bool {
+    switch node.type {
+    case "ScatterChart", "CandlestickChart":
+      return node.bool("show_tooltips_for_selected_spots_only") != true
+    default:
+      return true
+    }
+  }
+
+  static func showsSelectedTooltip(
+    chartType: String, interactive: Bool, selected: Bool,
+    showTooltip: Bool, hasTooltip: Bool
+  ) -> Bool {
+    guard selected, showTooltip, hasTooltip else { return false }
+    switch chartType {
+    case "BarChart", "LineChart": return !interactive
+    case "ScatterChart", "CandlestickChart": return true
+    default: return false
+    }
+  }
+}
+
 /// The chart family, drawn from the same control trees Flet's chart widgets take.
 ///
 /// The chart controls do not share a wire shape: lines contain data series,
@@ -217,6 +287,9 @@ public struct ChartControlView: View {
   @State private var chartSize: CGSize = .zero
   @State private var interactionLocation: CGPoint?
   @State private var previousEvent: RufletValue?
+  @State private var gestureOrigin: CGPoint?
+  @State private var isPanning = false
+  @State private var isLongPressing = false
 
   public init(node: ControlNode) {
     self.node = node
@@ -244,7 +317,14 @@ public struct ChartControlView: View {
       default:
         drawLines(in: &context, plot: plot)
       }
-      if let interactionLocation {
+      for tooltip in selectedTooltips(in: plot) {
+        drawTooltip(
+          in: &context, label: tooltip.label, at: tooltip.location,
+          bounds: CGRect(origin: .zero, size: size))
+      }
+      if let interactionLocation,
+        ChartInteractionSemantics.handlesBuiltInTooltips(for: node)
+      {
         drawTooltip(in: &context, at: interactionLocation, bounds: CGRect(origin: .zero, size: size))
       }
     }
@@ -261,27 +341,70 @@ public struct ChartControlView: View {
           .onChange(of: geometry.size) { chartSize = $0 }
       }
     }
-    .gesture(
-      // SpatialTapGesture is iOS 16, and this package ships to iOS 15. A drag
-      // with no minimum distance reports the same location on release, which
-      // is how the gesture detector reads tap positions here too.
-      DragGesture(minimumDistance: 0).onEnded { event in
+    .gesture(chartDragGesture)
+    .simultaneousGesture(chartLongPressGesture)
+    .onHover { inside in
+      let location = interactionLocation
+        ?? CGPoint(x: chartSize.width / 2, y: chartSize.height / 2)
+      emitChartEvent(inside ? "pointerEnter" : "pointerExit", at: location)
+    }
+  }
+
+  private var chartDragGesture: some Gesture {
+    DragGesture(minimumDistance: 0)
+      .onChanged { event in
         guard ChartControlSemantics.interactionEnabled(for: node) else { return }
         interactionLocation = event.location
-        if ChartControlSemantics.shouldEmitEvent(for: node) {
-          let payload = chartEvent(at: event.location, type: "tapUp")
-          if ChartEventSemantics.shouldForward(
-            payload, after: previousEvent, chartType: node.type
-          ) {
-            previousEvent = payload
-            events.fire(node, "event", data: payload)
-          }
+        let first = gestureOrigin == nil
+        if first { gestureOrigin = event.startLocation }
+        let origin = gestureOrigin ?? event.startLocation
+        let distance = hypot(event.location.x - origin.x, event.location.y - origin.y)
+        let crossed = distance >= ChartInteractionSemantics.panThreshold
+        let eventTypes = isLongPressing ? ["longPressMoveUpdate"]
+          : ChartInteractionSemantics.dragChanged(
+            first: first, crossedPanThreshold: crossed, panning: isPanning)
+        for eventType in eventTypes { emitChartEvent(eventType, at: event.location) }
+        if crossed, !isLongPressing { isPanning = true }
+      }
+      .onEnded { event in
+        guard ChartControlSemantics.interactionEnabled(for: node) else { return }
+        interactionLocation = event.location
+        for eventType in ChartInteractionSemantics.dragEnded(
+          panning: isPanning, longPressing: isLongPressing
+        ) {
+          emitChartEvent(eventType, at: event.location)
         }
-      })
+        gestureOrigin = nil
+        isPanning = false
+        isLongPressing = false
+      }
+  }
+
+  private var chartLongPressGesture: some Gesture {
+    LongPressGesture(minimumDuration: ChartInteractionSemantics.longPressDuration(for: node))
+      .onEnded { recognized in
+        guard recognized, ChartControlSemantics.interactionEnabled(for: node) else { return }
+        isLongPressing = true
+        isPanning = false
+        let location = interactionLocation
+          ?? CGPoint(x: chartSize.width / 2, y: chartSize.height / 2)
+        for eventType in ChartInteractionSemantics.longPressStarted() {
+          emitChartEvent(eventType, at: location)
+        }
+      }
+  }
+
+  private func emitChartEvent(_ type: String, at location: CGPoint) {
+    guard ChartControlSemantics.shouldEmitEvent(for: node) else { return }
+    let payload = chartEvent(at: location, type: type)
+    guard ChartEventSemantics.shouldForward(
+      payload, after: previousEvent, chartType: node.type
+    ) else { return }
+    previousEvent = payload
+    events.fire(node, "event", data: payload)
   }
 
   private func drawTooltip(in context: inout GraphicsContext, at location: CGPoint, bounds: CGRect) {
-    let defaults = ChartControlSemantics.tooltipDefaults(node.map("tooltip"))
     let event = chartEvent(at: location)
     let label: String
     switch node.type {
@@ -296,7 +419,14 @@ public struct ChartControlView: View {
     default:
       label = event["spot_index"]?.intValue.map(String.init) ?? ""
     }
+    drawTooltip(in: &context, label: label, at: location, bounds: bounds)
+  }
+
+  private func drawTooltip(
+    in context: inout GraphicsContext, label: String, at location: CGPoint, bounds: CGRect
+  ) {
     guard !label.isEmpty else { return }
+    let defaults = ChartControlSemantics.tooltipDefaults(node.map("tooltip"))
     let padding: CGFloat = 8
     let width = min(defaults.maxWidth, max(CGFloat(label.count) * 8 + padding * 2, 36))
     let height: CGFloat = 28
@@ -319,6 +449,160 @@ public struct ChartControlView: View {
       with: .color(MaterialPalette.color(node.map("tooltip")?["bgcolor"]?.stringValue,
                                          default: .secondary)))
     tooltip.draw(Text(label).font(.caption).foregroundColor(.white), at: CGPoint(x: rect.midX, y: rect.midY))
+  }
+
+  private struct SelectedTooltip {
+    let location: CGPoint
+    let label: String
+  }
+
+  private func selectedTooltips(in plot: CGRect) -> [SelectedTooltip] {
+    let interactive = node.bool("interactive") ?? true
+    switch node.type {
+    case "BarChart": return selectedBarTooltips(in: plot, interactive: interactive)
+    case "LineChart": return selectedLineTooltips(in: plot, interactive: interactive)
+    case "ScatterChart": return selectedScatterTooltips(in: plot, interactive: interactive)
+    case "CandlestickChart": return selectedCandlestickTooltips(in: plot, interactive: interactive)
+    default: return []
+    }
+  }
+
+  private func selectedLineTooltips(
+    in plot: CGRect, interactive: Bool
+  ) -> [SelectedTooltip] {
+    let series = lineSeries
+    let xs = series.flatMap { $0.points.map(\.x) }
+    let ys = series.flatMap { $0.points.map(\.y) }
+    guard let dataMinX = xs.min(), let dataMaxX = xs.max(),
+      let dataMinY = ys.min(), let dataMaxY = ys.max()
+    else { return [] }
+    let minX = node.double("min_x") ?? dataMinX
+    let maxX = node.double("max_x") ?? dataMaxX
+    let minY = node.double("min_y") ?? dataMinY
+    let maxY = node.double("max_y") ?? dataMaxY
+    let spanX = max(maxX - minX, .ulpOfOne)
+    let spanY = max(maxY - minY, .ulpOfOne)
+    return series.flatMap { entry in
+      entry.points.compactMap { point in
+        guard ChartInteractionSemantics.showsSelectedTooltip(
+          chartType: node.type, interactive: interactive, selected: point.selected,
+          showTooltip: point.showTooltip, hasTooltip: point.tooltipLabel != nil
+        ), let label = point.tooltipLabel else { return nil }
+        return SelectedTooltip(
+          location: CGPoint(
+            x: plot.minX + CGFloat((point.x - minX) / spanX) * plot.width,
+            y: plot.maxY - CGFloat((point.y - minY) / spanY) * plot.height),
+          label: label)
+      }
+    }
+  }
+
+  private func selectedBarTooltips(
+    in plot: CGRect, interactive: Bool
+  ) -> [SelectedTooltip] {
+    let groups = barGroups
+    guard !groups.isEmpty else { return [] }
+    let chart = CGRect(
+      x: plot.minX + 38, y: plot.minY + 4,
+      width: max(plot.width - 42, 1), height: max(plot.height - 32, 1))
+    let dataMinY = groups.flatMap(\.rods).map { min($0.fromY, $0.toY) }.min() ?? 0
+    let dataMaxY = groups.flatMap(\.rods).map { max($0.fromY, $0.toY) }.max() ?? 1
+    let minY = node.double("min_y") ?? min(0, dataMinY)
+    let maxY = node.double("max_y") ?? dataMaxY
+    let spanY = max(maxY - minY, .ulpOfOne)
+    let minX = node.double("min_x") ?? groups.map(\.x).min() ?? 0
+    let maxX = node.double("max_x") ?? groups.map(\.x).max() ?? 1
+    let xSpan = max(maxX - minX, 1)
+    let evenlySpaced = node.double("min_x") == nil && node.double("max_x") == nil
+    let centers = ChartControlSemantics.groupCenters(
+      count: groups.count, in: chart.minX...chart.maxX,
+      alignment: node.string("group_alignment"))
+    func y(_ value: Double) -> CGFloat {
+      chart.maxY - CGFloat((value - minY) / spanY) * chart.height
+    }
+    var result: [SelectedTooltip] = []
+    for (groupIndex, group) in groups.enumerated() {
+      let centerX = evenlySpaced ? centers[groupIndex]
+        : chart.minX + CGFloat((group.x - minX) / xSpan) * chart.width
+      let totalWidth = group.vertical ? (group.rods.map(\.width).max() ?? 0)
+        : group.rods.reduce(CGFloat.zero) { $0 + $1.width }
+          + group.barsSpace * CGFloat(max(group.rods.count - 1, 0))
+      var rodX = centerX - totalWidth / 2
+      for rod in group.rods {
+        if ChartInteractionSemantics.showsSelectedTooltip(
+          chartType: node.type, interactive: interactive, selected: rod.selected,
+          showTooltip: rod.showTooltip, hasTooltip: rod.tooltipLabel != nil
+        ), let label = rod.tooltipLabel {
+          result.append(SelectedTooltip(
+            location: CGPoint(x: rodX + rod.width / 2, y: min(y(rod.fromY), y(rod.toY))),
+            label: label))
+        }
+        if !group.vertical { rodX += rod.width + group.barsSpace }
+      }
+    }
+    return result
+  }
+
+  private func selectedScatterTooltips(
+    in plot: CGRect, interactive: Bool
+  ) -> [SelectedTooltip] {
+    let spots = orderedUnique(node.controlIDs(forKey: "spots") + node.childIDs)
+      .compactMap { store.node($0) }
+      .filter { $0.double("x") != nil && $0.double("y") != nil && $0.bool("visible") != false }
+    guard !spots.isEmpty else { return [] }
+    let minX = node.double("min_x") ?? spots.compactMap { $0.double("x") }.min() ?? 0
+    let maxX = node.double("max_x") ?? spots.compactMap { $0.double("x") }.max() ?? 1
+    let minY = node.double("min_y") ?? spots.compactMap { $0.double("y") }.min() ?? 0
+    let maxY = node.double("max_y") ?? spots.compactMap { $0.double("y") }.max() ?? 1
+    let spanX = max(maxX - minX, .ulpOfOne)
+    let spanY = max(maxY - minY, .ulpOfOne)
+    return spots.compactMap { spot in
+      let label = tooltipLabel(for: spot, fallback: String(spot.double("y") ?? 0))
+      guard ChartInteractionSemantics.showsSelectedTooltip(
+        chartType: node.type, interactive: interactive,
+        selected: spot.bool("selected") == true,
+        showTooltip: spot.bool("show_tooltip") ?? true, hasTooltip: label != nil
+      ), let label else { return nil }
+      return SelectedTooltip(
+        location: CGPoint(
+          x: plot.minX + CGFloat(((spot.double("x") ?? 0) - minX) / spanX) * plot.width,
+          y: plot.maxY - CGFloat(((spot.double("y") ?? 0) - minY) / spanY) * plot.height),
+        label: label)
+    }
+  }
+
+  private func selectedCandlestickTooltips(
+    in plot: CGRect, interactive: Bool
+  ) -> [SelectedTooltip] {
+    let spots = orderedUnique(node.controlIDs(forKey: "spots") + node.childIDs)
+      .compactMap { store.node($0) }
+      .filter { $0.type == "CandlestickChartSpot" && $0.bool("visible") != false }
+    let minX = node.double("min_x") ?? spots.compactMap { $0.double("x") }.min() ?? 0
+    let maxX = node.double("max_x") ?? spots.compactMap { $0.double("x") }.max() ?? 1
+    let lows = spots.compactMap { $0.double("low") }
+    let highs = spots.compactMap { $0.double("high") }
+    let minY = node.double("min_y") ?? lows.min() ?? 0
+    let maxY = node.double("max_y") ?? highs.max() ?? 1
+    let spanX = max(maxX - minX, .ulpOfOne)
+    let spanY = max(maxY - minY, .ulpOfOne)
+    return spots.compactMap { spot in
+      let label = tooltipLabel(for: spot, fallback: "")
+      guard ChartInteractionSemantics.showsSelectedTooltip(
+        chartType: node.type, interactive: interactive,
+        selected: spot.bool("selected") == true,
+        showTooltip: spot.bool("show_tooltip") ?? true, hasTooltip: label != nil
+      ), let label else { return nil }
+      return SelectedTooltip(
+        location: CGPoint(
+          x: plot.minX + CGFloat(((spot.double("x") ?? 0) - minX) / spanX) * plot.width,
+          y: plot.maxY - CGFloat(((spot.double("high") ?? 0) - minY) / spanY) * plot.height),
+        label: label)
+    }
+  }
+
+  private func tooltipLabel(for child: ControlNode, fallback: String) -> String? {
+    guard let tooltip = child.internals["tooltip"]?.mapValue else { return nil }
+    return tooltip["text"]?.stringValue ?? fallback
   }
 
   /// Matches the maps produced by the Flet chart plugin's `*EventData.toMap()`.
@@ -397,6 +681,8 @@ public struct ChartControlView: View {
     let y: Double
     let pointStyle: RufletValue?
     let selected: Bool
+    let showTooltip: Bool
+    let tooltipLabel: String?
   }
 
   private struct LineSeries {
@@ -461,7 +747,9 @@ public struct ChartControlView: View {
         guard let point = store.node(id) else { return nil }
         return Point(
           x: point.double("x") ?? 0, y: point.double("y") ?? 0,
-          pointStyle: point.props["point"], selected: point.bool("selected") ?? false)
+          pointStyle: point.props["point"], selected: point.bool("selected") ?? false,
+          showTooltip: point.bool("show_tooltip") ?? true,
+          tooltipLabel: tooltipLabel(for: point, fallback: String(point.double("y") ?? 0)))
       }
       if !resolved.isEmpty { return resolved }
 
@@ -469,7 +757,9 @@ public struct ChartControlView: View {
         guard let map = value.mapValue else { return nil }
         return Point(
           x: map["x"]?.doubleValue ?? 0, y: map["y"]?.doubleValue ?? 0,
-          pointStyle: map["point"], selected: map["selected"]?.boolValue ?? false)
+          pointStyle: map["point"], selected: map["selected"]?.boolValue ?? false,
+          showTooltip: map["show_tooltip"]?.boolValue ?? true,
+          tooltipLabel: map["tooltip"]?.mapValue?["text"]?.stringValue)
       }
       if !inline.isEmpty { return inline }
     }
@@ -600,6 +890,8 @@ public struct ChartControlView: View {
     let backgroundColor: Color?
     let backgroundGradient: LinearGradient?
     let selected: Bool
+    let showTooltip: Bool
+    let tooltipLabel: String?
   }
 
   private struct BarGroup {
@@ -657,7 +949,9 @@ public struct ChartControlView: View {
             MaterialPalette.color($0, default: .clear)
           },
           backgroundGradient: GradientProps.linear(rod.props["background_gradient"]),
-          selected: rod.bool("selected") ?? false)
+          selected: rod.bool("selected") ?? false,
+          showTooltip: rod.bool("show_tooltip") ?? true,
+          tooltipLabel: tooltipLabel(for: rod, fallback: String(rod.double("to_y") ?? 0)))
       }
       guard !rods.isEmpty else { return nil }
       return BarGroup(
