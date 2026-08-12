@@ -351,8 +351,10 @@ public enum ControlRegistry {
         .structuralChild, "Parent-owned option metadata", .metadataOnly)
 
     // Collections.
-    add(["ListView"], .visible, "ListViewControlView", .nativeView, events: ["scroll"])
-    add(["GridView"], .visible, "GridViewControlView", .nativeView, events: ["scroll"])
+    add(["ListView"], .visible, "ListViewControlView", .nativeView,
+        events: ["scroll"], methods: ["scroll_to"])
+    add(["GridView"], .visible, "GridViewControlView", .nativeView,
+        events: ["scroll"], methods: ["scroll_to"])
     add(["ReorderableListView"], .visible, "ReorderableListControlView", .nativeView,
         events: ["reorder", "reorder_end", "reorder_start", "scroll"])
     add(["PageView"], .visible, "PageViewControlView", .nativeView,

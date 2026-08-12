@@ -1,6 +1,11 @@
 import RufletEngine
 import RufletProtocol
 import SwiftUI
+#if canImport(UIKit)
+  import UIKit
+#elseif canImport(AppKit)
+  import AppKit
+#endif
 
 /// `ListView` — a scrolling list, horizontal when `horizontal` is set.
 ///
@@ -10,6 +15,7 @@ struct ListViewControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
   @State private var measuredPrototypeExtent: CGFloat?
+  @StateObject private var scrollDriver = CollectionNativeScrollDriver()
 
   init(node: ControlNode) {
     self.node = node
@@ -50,6 +56,7 @@ struct ListViewControlView: View {
         }
       }
       .modifier(CollectionScrollContentProbe(node: node, horizontal: horizontal))
+      .background(CollectionNativeScrollLocator(driver: scrollDriver))
       .accessibilityElement(children: .contain)
       .accessibilityValue(
         node.int("semantic_child_count").map { "\($0)" } ?? "")
@@ -63,6 +70,8 @@ struct ListViewControlView: View {
     // geometry (the previous implementation incorrectly did so).
     .onAppear { _ = config.cacheExtent }
     .modifier(CollectionAutoScroll(node: node, horizontal: horizontal))
+    .modifier(CollectionScrollCommands(
+      node: node, horizontal: horizontal, driver: scrollDriver))
     .modifier(CollectionScrollReporter(node: node, horizontal: horizontal, events: events))
   }
 
@@ -92,6 +101,7 @@ struct ListViewControlView: View {
         .frame(
           width: axis == .horizontal ? itemExtent : nil,
           height: axis == .vertical ? itemExtent : nil)
+        .id(children[index])
     }
   }
 }
@@ -101,6 +111,7 @@ struct ListViewControlView: View {
 struct GridViewControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
+  @StateObject private var scrollDriver = CollectionNativeScrollDriver()
 
   var body: some View {
     let config = CollectionDefaults.gridView(node)
@@ -122,12 +133,15 @@ struct GridViewControlView: View {
       .accessibilityElement(children: .contain)
       .accessibilityValue(node.int("semantic_child_count").map { "\($0)" } ?? "")
       .modifier(CollectionScrollContentProbe(node: node, horizontal: config.horizontal))
+      .background(CollectionNativeScrollLocator(driver: scrollDriver))
     }
     // Native lazy grids choose their own prefetch window. `cache_extent`
     // remains a consumed Flet contract value but must not change the visible
     // grid's minimum height.
     .onAppear { _ = config.cacheExtent }
     .modifier(CollectionAutoScroll(node: node, horizontal: config.horizontal))
+    .modifier(CollectionScrollCommands(
+      node: node, horizontal: config.horizontal, driver: scrollDriver))
     .modifier(CollectionScrollReporter(node: node, horizontal: config.horizontal, events: events))
   }
 
@@ -138,6 +152,7 @@ struct GridViewControlView: View {
     ForEach(ids, id: \.self) { childID in
       ControlView(id: childID, axis: .none)
         .aspectRatio(config.childAspectRatio, contentMode: .fit)
+        .id(childID)
     }
   }
 
@@ -456,6 +471,218 @@ private struct CollectionAutoScroll: ViewModifier {
             }
           }
       })
+  }
+}
+
+/// Parsed form of `ScrollableControl.scroll_to` shared by ListView and
+/// GridView. Flet accepts a numeric duration or its structured Duration map,
+/// and resolves arguments in key, offset, delta order rather than rejecting a
+/// call that happens to contain more than one.
+struct CollectionScrollToCommand: Equatable {
+  let offset: Double?
+  let delta: Double?
+  let scrollKey: RufletValue?
+  let durationMilliseconds: Double
+  let curve: String
+
+  init(_ call: RufletMethodCall) {
+    offset = call.argument("offset")?.doubleValue
+    delta = call.argument("delta")?.doubleValue
+    scrollKey = call.argument("scroll_key").flatMap { $0.isNull ? nil : $0 }
+    durationMilliseconds = Self.duration(call.argument("duration"))
+    curve = call.argument("curve")?.stringValue ?? "ease"
+  }
+
+  static func duration(_ value: RufletValue?) -> Double {
+    if let number = value?.doubleValue { return Double(Int64(number)) }
+    guard let map = value?.mapValue else { return 0 }
+    let microseconds =
+      Int64(map["microseconds"]?.doubleValue ?? 0)
+      + Int64(map["milliseconds"]?.doubleValue ?? 0) * 1_000
+      + Int64(map["seconds"]?.doubleValue ?? 0) * 1_000_000
+      + Int64(map["minutes"]?.doubleValue ?? 0) * 60_000_000
+      + Int64(map["hours"]?.doubleValue ?? 0) * 3_600_000_000
+      + Int64(map["days"]?.doubleValue ?? 0) * 86_400_000_000
+    return Double(microseconds / 1_000)
+  }
+
+  static func keyString(_ value: RufletValue?) -> String? {
+    guard let value else { return nil }
+    if let map = value.mapValue { return keyString(map["value"]) }
+    if let string = value.stringValue { return string }
+    if let integer = value.intValue { return String(integer) }
+    if let number = value.doubleValue { return String(number) }
+    if let boolean = value.boolValue { return boolean ? "true" : "false" }
+    return nil
+  }
+
+  func targetID(in children: [ControlNode]) -> Int? {
+    guard let target = Self.keyString(scrollKey) else { return nil }
+    return children.first(where: {
+      Self.keyString($0.props["key"]) == target
+    })?.id
+  }
+
+  func resolvedOffset(current: Double, maximum: Double) -> Double? {
+    guard offset != nil || delta != nil else { return nil }
+    var target = offset ?? current + (delta ?? 0)
+    if let offset, offset < 0 { target = maximum + offset + 1 }
+    return min(max(0, target), max(0, maximum))
+  }
+}
+
+@MainActor
+private final class CollectionNativeScrollDriver: ObservableObject {
+  #if canImport(UIKit)
+    weak var scrollView: UIScrollView?
+
+    func move(
+      _ command: CollectionScrollToCommand,
+      horizontal: Bool,
+      completion: @escaping () -> Void
+    ) {
+      guard let scrollView else { completion(); return }
+      let current = horizontal ? scrollView.contentOffset.x : scrollView.contentOffset.y
+      let maximum = horizontal
+        ? max(0, scrollView.contentSize.width - scrollView.bounds.width)
+        : max(0, scrollView.contentSize.height - scrollView.bounds.height)
+      let target = CGFloat(command.resolvedOffset(
+        current: Double(current), maximum: Double(maximum)) ?? Double(current))
+      var point = scrollView.contentOffset
+      if horizontal { point.x = target } else { point.y = target }
+      guard command.durationMilliseconds >= 1 else {
+        scrollView.setContentOffset(point, animated: false)
+        completion()
+        return
+      }
+      UIView.animate(
+        withDuration: command.durationMilliseconds / 1_000,
+        delay: 0,
+        options: animationOptions(command.curve),
+        animations: { scrollView.contentOffset = point },
+        completion: { _ in completion() })
+    }
+
+    private func animationOptions(_ curve: String) -> UIView.AnimationOptions {
+      switch curve.lowercased() {
+      case "linear": return .curveLinear
+      case "easein": return .curveEaseIn
+      case "easeout": return .curveEaseOut
+      case "easeinout", "ease": return .curveEaseInOut
+      default: return .curveEaseInOut
+      }
+    }
+  #elseif canImport(AppKit)
+    weak var scrollView: NSScrollView?
+
+    func move(
+      _ command: CollectionScrollToCommand,
+      horizontal: Bool,
+      completion: @escaping () -> Void
+    ) {
+      guard let scrollView else { completion(); return }
+      let clip = scrollView.contentView
+      let current = horizontal ? clip.bounds.origin.x : clip.bounds.origin.y
+      let documentSize = scrollView.documentView?.bounds.size ?? .zero
+      let maximum = horizontal
+        ? max(0, documentSize.width - clip.bounds.width)
+        : max(0, documentSize.height - clip.bounds.height)
+      let target = CGFloat(command.resolvedOffset(
+        current: Double(current), maximum: Double(maximum)) ?? Double(current))
+      var point = clip.bounds.origin
+      if horizontal { point.x = target } else { point.y = target }
+      guard command.durationMilliseconds >= 1 else {
+        clip.setBoundsOrigin(point)
+        scrollView.reflectScrolledClipView(clip)
+        completion()
+        return
+      }
+      NSAnimationContext.runAnimationGroup { context in
+        context.duration = command.durationMilliseconds / 1_000
+        context.timingFunction = timingFunction(command.curve)
+        clip.animator().setBoundsOrigin(point)
+      } completionHandler: { completion() }
+    }
+
+    private func timingFunction(_ curve: String) -> CAMediaTimingFunction {
+      switch curve.lowercased() {
+      case "linear": return CAMediaTimingFunction(name: .linear)
+      case "easein": return CAMediaTimingFunction(name: .easeIn)
+      case "easeout": return CAMediaTimingFunction(name: .easeOut)
+      default: return CAMediaTimingFunction(name: .easeInEaseOut)
+      }
+    }
+  #endif
+}
+
+#if canImport(UIKit)
+  private struct CollectionNativeScrollLocator: UIViewRepresentable {
+    @ObservedObject var driver: CollectionNativeScrollDriver
+    func makeUIView(context: Context) -> UIView { UIView(frame: .zero) }
+    func updateUIView(_ view: UIView, context: Context) {
+      DispatchQueue.main.async {
+        var ancestor = view.superview
+        while let candidate = ancestor {
+          if let scrollView = candidate as? UIScrollView {
+            driver.scrollView = scrollView
+            return
+          }
+          ancestor = candidate.superview
+        }
+      }
+    }
+  }
+#elseif canImport(AppKit)
+  private struct CollectionNativeScrollLocator: NSViewRepresentable {
+    @ObservedObject var driver: CollectionNativeScrollDriver
+    func makeNSView(context: Context) -> NSView { NSView(frame: .zero) }
+    func updateNSView(_ view: NSView, context: Context) {
+      DispatchQueue.main.async {
+        var ancestor = view.superview
+        while let candidate = ancestor {
+          if let scrollView = candidate as? NSScrollView {
+            driver.scrollView = scrollView
+            return
+          }
+          ancestor = candidate.superview
+        }
+      }
+    }
+  }
+#endif
+
+private struct CollectionScrollCommands: ViewModifier {
+  let node: ControlNode
+  let horizontal: Bool
+  @ObservedObject var driver: CollectionNativeScrollDriver
+  @EnvironmentObject private var store: ControlStore
+
+  func body(content: Content) -> some View {
+    ScrollViewReader { proxy in
+      content.rufletCommandHandler(node.id, method: "scroll_to") { call, completion in
+        let command = CollectionScrollToCommand(call)
+        if let targetID = command.targetID(in: node.childIDs.compactMap(store.node)) {
+          let animation = command.durationMilliseconds >= 1
+            ? RufletCurve.animation(
+              command.curve, duration: command.durationMilliseconds / 1_000)
+            : nil
+          withAnimation(animation) { proxy.scrollTo(targetID) }
+          if command.durationMilliseconds >= 1 {
+            DispatchQueue.main.asyncAfter(
+              deadline: .now() + command.durationMilliseconds / 1_000
+            ) { completion(.success(.null)) }
+          } else {
+            completion(.success(.null))
+          }
+        } else if command.offset != nil || command.delta != nil {
+          driver.move(command, horizontal: horizontal) {
+            completion(.success(.null))
+          }
+        } else {
+          completion(.success(.null))
+        }
+      }
+    }
   }
 }
 
