@@ -1678,6 +1678,7 @@ struct CupertinoSegmentedControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
+  @Environment(\.colorScheme) private var colorScheme
 
   private var configuration: RufletCupertinoSegmentedConfiguration {
     RufletCupertinoSegmentedConfiguration(node: node)
@@ -1742,12 +1743,12 @@ struct CupertinoSegmentedControlView: View {
     nativePicker
       // CupertinoSlidingSegmentedControl names the selected surface
       // `thumb_color`, not `selected_color`.
-      .tint(MaterialPalette.color(node.string("thumb_color")))
+      .tint(configuration.thumbColor(colorScheme: colorScheme))
       .fixedSize(horizontal: configuration.proportionalWidth, vertical: false)
       // Applying the surface after padding makes this an inset between the
       // segment and its control, matching CupertinoSlidingSegmentedControl.
       .modifier(OptionalEdgeInsets(insets: configuration.padding))
-      .background(MaterialPalette.color(node.string("bgcolor")))
+      .background(configuration.backgroundColor)
   }
 
   private var regularBackground: Color? {
@@ -1767,6 +1768,15 @@ struct CupertinoSegmentedControlView: View {
     // Both pinned implementations send update_control before `change`, and
     // carry the selected integer as event data. This still updates Ruby when
     // no change handler is attached.
+    RufletCupertinoSegmentedEvents.select(index: index, on: node, to: events)
+  }
+}
+
+enum RufletCupertinoSegmentedEvents {
+  static func select(index: Int, on node: ControlNode, to events: RufletEventSink) {
+    // Flutter keeps the callback installed but explicitly rejects changes
+    // while the inherited control is disabled.
+    guard node.bool("disabled") != true else { return }
     RufletValueControlEvents.commit(
       node,
       key: "selected_index",
@@ -1789,6 +1799,12 @@ struct RufletCupertinoSegmentedConfiguration {
   let selectedIndex: Int?
   let proportionalWidth: Bool
   let padding: EdgeInsets?
+  let backgroundColorToken: String?
+  let thumbColorToken: String?
+
+  static let defaultBackgroundToken = "tertiarySystemFill"
+  static let defaultThumbLightARGB: UInt32 = 0xFFFFFFFF
+  static let defaultThumbDarkARGB: UInt32 = 0xFF636366
 
   init(node: ControlNode) {
     if node.type == "CupertinoSlidingSegmentedButton" {
@@ -1797,6 +1813,8 @@ struct RufletCupertinoSegmentedConfiguration {
       proportionalWidth = node.bool("proportional_width") ?? false
       padding = ControlProps.edgeInsets(node.props["padding"])
         ?? EdgeInsets(top: 2, leading: 3, bottom: 2, trailing: 3)
+      backgroundColorToken = node.string("bgcolor")
+      thumbColorToken = node.string("thumb_color")
     } else {
       kind = .regular
       // CupertinoSegmentedControl.groupValue is nullable in the pinned Flet
@@ -1804,7 +1822,21 @@ struct RufletCupertinoSegmentedConfiguration {
       selectedIndex = node.int("selected_index")
       proportionalWidth = false
       padding = ControlProps.edgeInsets(node.props["padding"])
+      backgroundColorToken = nil
+      thumbColorToken = nil
     }
+  }
+
+  var backgroundColor: Color {
+    MaterialPalette.color(backgroundColorToken)
+      ?? RufletCupertinoPickerDefaults.tertiarySystemFill
+  }
+
+  func thumbColor(colorScheme: ColorScheme) -> Color {
+    if let explicit = MaterialPalette.color(thumbColorToken) { return explicit }
+    return colorScheme == .dark
+      ? Color(.sRGB, red: 99 / 255, green: 99 / 255, blue: 102 / 255, opacity: 1)
+      : .white
   }
 
   func validationMessage(visibleCount: Int) -> String? {
