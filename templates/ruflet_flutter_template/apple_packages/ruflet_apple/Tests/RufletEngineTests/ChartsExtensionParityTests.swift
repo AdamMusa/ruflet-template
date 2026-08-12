@@ -74,6 +74,22 @@ final class ChartsExtensionParityTests: XCTestCase {
     XCTAssertEqual(ChartControlSemantics.axisReservedExtent(hidden, hasTitle: false), 0)
   }
 
+  func testAxisLabelsUseTheChartsRealDomainAndCannotEscapeItsCanvas() {
+    XCTAssertEqual(
+      ChartControlSemantics.axisFraction(value: 0, minimum: 0, maximum: 3), 0)
+    XCTAssertEqual(
+      ChartControlSemantics.axisFraction(value: 1, minimum: 0, maximum: 3) ?? -1,
+      CGFloat(1.0 / 3.0), accuracy: 0.0001)
+    XCTAssertEqual(
+      ChartControlSemantics.axisFraction(value: 3, minimum: 0, maximum: 3), 1)
+    XCTAssertNil(
+      ChartControlSemantics.axisFraction(value: 4, minimum: 0, maximum: 3))
+    XCTAssertNil(
+      ChartControlSemantics.axisFraction(value: -1, minimum: 0, maximum: 3))
+    XCTAssertNil(
+      ChartControlSemantics.axisFraction(value: 1, minimum: 1, maximum: 1))
+  }
+
   func testInteractionPayloadsMatchPinnedFletChartEventMaps() {
     XCTAssertEqual(
       ChartEventSemantics.bar(

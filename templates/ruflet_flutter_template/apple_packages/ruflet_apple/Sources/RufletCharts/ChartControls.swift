@@ -157,6 +157,14 @@ public struct ChartControlSemantics {
       abs(lhs.element - target) < abs(rhs.element - target)
     }?.offset
   }
+
+  /// Projects an explicit `ChartAxisLabel.value` into the chart's real data
+  /// domain. The old Apple painter silently used 0...1 for every axis, which
+  /// sent labels such as BarChart's x=2/x=3 far outside the Canvas.
+  static func axisFraction(value: Double, minimum: Double, maximum: Double) -> CGFloat? {
+    guard maximum > minimum, value >= minimum, value <= maximum else { return nil }
+    return CGFloat((value - minimum) / (maximum - minimum))
+  }
 }
 
 /// Exact wire maps and repeat filtering used by the pinned `flet_charts`
@@ -506,6 +514,7 @@ public struct ChartControlView: View {
   private func selectedLineTooltips(
     in plot: CGRect, interactive: Bool
   ) -> [SelectedTooltip] {
+    let chart = chartPlotRect(in: plot)
     let series = lineSeries
     let xs = series.flatMap { $0.points.map(\.x) }
     let ys = series.flatMap { $0.points.map(\.y) }
@@ -526,8 +535,8 @@ public struct ChartControlView: View {
         ), let label = point.tooltipLabel else { return nil }
         return SelectedTooltip(
           location: CGPoint(
-            x: plot.minX + CGFloat((point.x - minX) / spanX) * plot.width,
-            y: plot.maxY - CGFloat((point.y - minY) / spanY) * plot.height),
+            x: chart.minX + CGFloat((point.x - minX) / spanX) * chart.width,
+            y: chart.maxY - CGFloat((point.y - minY) / spanY) * chart.height),
           label: label)
       }
     }
@@ -580,6 +589,7 @@ public struct ChartControlView: View {
   private func selectedScatterTooltips(
     in plot: CGRect, interactive: Bool
   ) -> [SelectedTooltip] {
+    let chart = chartPlotRect(in: plot)
     let spots = orderedUnique(node.controlIDs(forKey: "spots") + node.childIDs)
       .compactMap { store.node($0) }
       .filter { $0.double("x") != nil && $0.double("y") != nil && $0.bool("visible") != false }
@@ -599,8 +609,8 @@ public struct ChartControlView: View {
       ), let label else { return nil }
       return SelectedTooltip(
         location: CGPoint(
-          x: plot.minX + CGFloat(((spot.double("x") ?? 0) - minX) / spanX) * plot.width,
-          y: plot.maxY - CGFloat(((spot.double("y") ?? 0) - minY) / spanY) * plot.height),
+          x: chart.minX + CGFloat(((spot.double("x") ?? 0) - minX) / spanX) * chart.width,
+          y: chart.maxY - CGFloat(((spot.double("y") ?? 0) - minY) / spanY) * chart.height),
         label: label)
     }
   }
@@ -608,6 +618,7 @@ public struct ChartControlView: View {
   private func selectedCandlestickTooltips(
     in plot: CGRect, interactive: Bool
   ) -> [SelectedTooltip] {
+    let chart = chartPlotRect(in: plot)
     let spots = orderedUnique(node.controlIDs(forKey: "spots") + node.childIDs)
       .compactMap { store.node($0) }
       .filter { $0.type == "CandlestickChartSpot" && $0.bool("visible") != false }
@@ -628,8 +639,8 @@ public struct ChartControlView: View {
       ), let label else { return nil }
       return SelectedTooltip(
         location: CGPoint(
-          x: plot.minX + CGFloat(((spot.double("x") ?? 0) - minX) / spanX) * plot.width,
-          y: plot.maxY - CGFloat(((spot.double("high") ?? 0) - minY) / spanY) * plot.height),
+          x: chart.minX + CGFloat(((spot.double("x") ?? 0) - minX) / spanX) * chart.width,
+          y: chart.maxY - CGFloat(((spot.double("high") ?? 0) - minY) / spanY) * chart.height),
         label: label)
     }
   }
@@ -816,11 +827,12 @@ public struct ChartControlView: View {
     let maxY = node.double("max_y") ?? dataMaxY
     let spanX = max(maxX - minX, .ulpOfOne)
     let spanY = max(maxY - minY, .ulpOfOne)
+    let chart = chartPlotRect(in: plot)
 
     func project(_ point: Point) -> CGPoint {
       CGPoint(
-        x: plot.minX + CGFloat((point.x - minX) / spanX) * plot.width,
-        y: plot.maxY - CGFloat((point.y - minY) / spanY) * plot.height)
+        x: chart.minX + CGFloat((point.x - minX) / spanX) * chart.width,
+        y: chart.maxY - CGFloat((point.y - minY) / spanY) * chart.height)
     }
 
     for entry in all {
@@ -858,8 +870,8 @@ public struct ChartControlView: View {
 
       if entry.belowColor != nil || entry.belowGradient != nil {
         var area = path
-        area.addLine(to: CGPoint(x: projected.last?.x ?? first.x, y: plot.maxY))
-        area.addLine(to: CGPoint(x: first.x, y: plot.maxY))
+        area.addLine(to: CGPoint(x: projected.last?.x ?? first.x, y: chart.maxY))
+        area.addLine(to: CGPoint(x: first.x, y: chart.maxY))
         area.closeSubpath()
         if let gradient = entry.belowGradient {
           context.fill(area, with: .style(gradient))
@@ -869,8 +881,8 @@ public struct ChartControlView: View {
       }
       if entry.aboveColor != nil || entry.aboveGradient != nil {
         var area = path
-        area.addLine(to: CGPoint(x: projected.last?.x ?? first.x, y: plot.minY))
-        area.addLine(to: CGPoint(x: first.x, y: plot.minY))
+        area.addLine(to: CGPoint(x: projected.last?.x ?? first.x, y: chart.minY))
+        area.addLine(to: CGPoint(x: first.x, y: chart.minY))
         area.closeSubpath()
         if let gradient = entry.aboveGradient {
           context.fill(area, with: .style(gradient))
@@ -906,7 +918,9 @@ public struct ChartControlView: View {
           fallbackColor: entry.color, selected: source.selected, in: &context)
       }
     }
-    drawGridAndBorder(in: &context, chart: plot)
+    drawGridAndBorder(
+      in: &context, chart: chart,
+      domain: (minX: minX, maxX: maxX, minY: minY, maxY: maxY))
   }
 
   private struct BarRod {
@@ -1103,7 +1117,9 @@ public struct ChartControlView: View {
         if !group.vertical { rodX += rod.width + group.barsSpace }
       }
     }
-    drawGridAndBorder(in: &context, chart: chart)
+    drawGridAndBorder(
+      in: &context, chart: chart,
+      domain: (minX: minX, maxX: maxX, minY: minY, maxY: maxY))
   }
 
   /// fl_chart reserves `label_size` and `title_size` outside the plot. Those
@@ -1128,7 +1144,10 @@ public struct ChartControlView: View {
   /// `horizontal_grid_lines` and `vertical_grid_lines` are FlLine maps —
   /// a colour, a width and an interval — and `border` is the box around the
   /// plot rather than around the whole chart.
-  private func drawGridAndBorder(in context: inout GraphicsContext, chart: CGRect) {
+  private func drawGridAndBorder(
+    in context: inout GraphicsContext, chart: CGRect,
+    domain: (minX: Double, maxX: Double, minY: Double, maxY: Double)? = nil
+  ) {
     if let line = node.map("horizontal_grid_lines") {
       let interval = CGFloat(line["interval"]?.doubleValue ?? 0)
       let minY = node.double("min_y") ?? 0
@@ -1167,7 +1186,7 @@ public struct ChartControlView: View {
         with: .color(MaterialPalette.color(border["color"]?.stringValue, default: .secondary)),
         lineWidth: CGFloat(border["width"]?.doubleValue ?? 1))
     }
-    drawAxes(in: &context, chart: chart)
+    drawAxes(in: &context, chart: chart, domain: domain)
   }
 
   private func strokeGrid(_ path: Path, spec: [String: RufletValue],
@@ -1186,7 +1205,10 @@ public struct ChartControlView: View {
     }
   }
 
-  private func drawAxes(in context: inout GraphicsContext, chart: CGRect) {
+  private func drawAxes(
+    in context: inout GraphicsContext, chart: CGRect,
+    domain: (minX: Double, maxX: Double, minY: Double, maxY: Double)?
+  ) {
     for key in ["left_axis", "top_axis", "right_axis", "bottom_axis"] {
       guard let axisID = node.controlID(forKey: key), let axis = store.node(axisID) else { continue }
       let defaults = ChartControlSemantics.axisDefaults(axis)
@@ -1199,8 +1221,16 @@ public struct ChartControlView: View {
                                            y: chart.midY); rotation = -90
         case "right_axis": point = CGPoint(x: chart.maxX + defaults.labelSize + defaults.titleSize / 2,
                                             y: chart.midY); rotation = 90
-        case "top_axis": point = CGPoint(x: chart.midX, y: chart.minY - defaults.labelSize); rotation = 0
-        default: point = CGPoint(x: chart.midX, y: chart.maxY + defaults.labelSize); rotation = 0
+        case "top_axis":
+          point = CGPoint(
+            x: chart.midX,
+            y: chart.minY - defaults.labelSize - defaults.titleSize / 2)
+          rotation = 0
+        default:
+          point = CGPoint(
+            x: chart.midX,
+            y: chart.maxY + defaults.labelSize + defaults.titleSize / 2)
+          rotation = 0
         }
         var titled = context
         titled.translateBy(x: point.x, y: point.y)
@@ -1214,16 +1244,18 @@ public struct ChartControlView: View {
       guard defaults.showLabels else { continue }
       let labels = axis.controlIDs(forKey: "labels").compactMap { store.node($0) }
       let vertical = key == "left_axis" || key == "right_axis"
-      let minimum = vertical ? (node.double("min_y") ?? 0) : (node.double("min_x") ?? 0)
-      let maximum = vertical ? (node.double("max_y") ?? 1) : (node.double("max_x") ?? 1)
-      let span = max(maximum - minimum, .ulpOfOne)
+      let minimum = vertical ? (domain?.minY ?? node.double("min_y") ?? 0)
+        : (domain?.minX ?? node.double("min_x") ?? 0)
+      let maximum = vertical ? (domain?.maxY ?? node.double("max_y") ?? 1)
+        : (domain?.maxX ?? node.double("max_x") ?? 1)
       for label in labels {
         guard let value = label.double("value"),
               let contentID = label.controlID(forKey: "label"),
               let text = controlText(contentID) else { continue }
         if (!defaults.showMin && abs(value - minimum) < .ulpOfOne)
           || (!defaults.showMax && abs(value - maximum) < .ulpOfOne) { continue }
-        let fraction = CGFloat((value - minimum) / span)
+        guard let fraction = ChartControlSemantics.axisFraction(
+          value: value, minimum: minimum, maximum: maximum) else { continue }
         let point: CGPoint
         let anchor: UnitPoint
         switch key {
@@ -1256,18 +1288,19 @@ public struct ChartControlView: View {
     let maxY = node.double("max_y") ?? spots.compactMap { $0.double("y") }.max() ?? 1
     let spanX = max(maxX - minX, .ulpOfOne)
     let spanY = max(maxY - minY, .ulpOfOne)
+    let chart = chartPlotRect(in: plot)
     for spot in spots {
       let radius = CGFloat(spot.double("radius") ?? 4)
       let point = CGPoint(
-        x: plot.minX + CGFloat(((spot.double("x") ?? 0) - minX) / spanX) * plot.width,
-        y: plot.maxY - CGFloat(((spot.double("y") ?? 0) - minY) / spanY) * plot.height)
+        x: chart.minX + CGFloat(((spot.double("x") ?? 0) - minX) / spanX) * chart.width,
+        y: chart.maxY - CGFloat(((spot.double("y") ?? 0) - minY) / spanY) * chart.height)
       let color = MaterialPalette.color(spot.string("color") ?? "primary", default: .primary)
       drawChartPoint(
         spot.props["point"], at: point, fallbackRadius: radius,
         fallbackColor: color, selected: spot.bool("selected") == true, in: &context)
-      drawErrorIndicator(spot.map("x_error"), horizontal: true, at: point, plot: plot,
+      drawErrorIndicator(spot.map("x_error"), horizontal: true, at: point, plot: chart,
                          min: minX, span: spanX, in: &context)
-      drawErrorIndicator(spot.map("y_error"), horizontal: false, at: point, plot: plot,
+      drawErrorIndicator(spot.map("y_error"), horizontal: false, at: point, plot: chart,
                          min: minY, span: spanY, in: &context)
       if let label = spot.string("label_text"), !label.isEmpty {
         let style = spot.map("label_text_style") ?? [:]
@@ -1281,7 +1314,9 @@ public struct ChartControlView: View {
         context.draw(text, at: CGPoint(x: point.x, y: point.y - radius - 3), anchor: .bottom)
       }
     }
-    drawGridAndBorder(in: &context, chart: plot)
+    drawGridAndBorder(
+      in: &context, chart: chart,
+      domain: (minX: minX, maxX: maxX, minY: minY, maxY: maxY))
   }
 
   private func drawChartPoint(
@@ -1470,22 +1505,23 @@ public struct ChartControlView: View {
     let minimum = node.double("min_y") ?? dataMinimum
     let maximum = node.double("max_y") ?? dataMaximum
     let span = max(maximum - minimum, .ulpOfOne)
+    let chart = chartPlotRect(in: plot)
 
     func y(_ value: Double) -> CGFloat {
-      plot.maxY - CGFloat((value - minimum) / span) * plot.height
+      chart.maxY - CGFloat((value - minimum) / span) * chart.height
     }
 
     let minX = node.double("min_x") ?? spots.compactMap { $0.double("x") }.min() ?? 0
     let maxX = node.double("max_x") ?? spots.compactMap { $0.double("x") }.max() ?? 1
     let xSpan = max(maxX - minX, .ulpOfOne)
-    let step = plot.width / CGFloat(max(spots.count, 1))
+    let step = chart.width / CGFloat(max(spots.count, 1))
     let bodyWidth = max(step * 0.6, 1)
 
     for spot in spots {
       let open = spot.double("open") ?? 0
       let close = spot.double("close") ?? 0
       let xValue = spot.double("x") ?? 0
-      let x = plot.minX + CGFloat((xValue - minX) / xSpan) * plot.width
+      let x = chart.minX + CGFloat((xValue - minX) / xSpan) * chart.width
       let colour: Color = close >= open ? .green : .red
 
       var wick = Path()
@@ -1499,7 +1535,9 @@ public struct ChartControlView: View {
         width: bodyWidth, height: max(abs(y(open) - y(close)), 1))
       context.fill(Path(body), with: .color(colour))
     }
-    drawGridAndBorder(in: &context, chart: plot)
+    drawGridAndBorder(
+      in: &context, chart: chart,
+      domain: (minX: minX, maxX: maxX, minY: minimum, maxY: maximum))
   }
 
   private func drawPie(in context: inout GraphicsContext, plot: CGRect) {
