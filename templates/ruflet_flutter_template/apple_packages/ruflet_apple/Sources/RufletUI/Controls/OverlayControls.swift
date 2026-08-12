@@ -922,10 +922,17 @@ struct BannerControlView: View {
     let elevation = CGFloat(node.double("elevation") ?? 0)
     return VStack(spacing: 0) {
       HStack(alignment: .center, spacing: 0) {
-        if let leadingID = node.controlID(forKey: "leading") {
+        switch leadingSlot {
+        case .control(let leadingID):
           ControlView(id: leadingID, axis: .none)
             .padding(ControlProps.edgeInsets(node.props["leading_padding"])
               ?? EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 16))
+        case .icon(let icon):
+          RufletIcon(value: icon)
+            .padding(ControlProps.edgeInsets(node.props["leading_padding"])
+              ?? EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 16))
+        case nil:
+          EmptyView()
         }
         bannerContent
         if singleRow { actionBar }
@@ -979,9 +986,32 @@ struct BannerControlView: View {
     BannerSlots.visibleActionIDs(
       node, visibilityForID: { id in store.node(id).map { $0.bool("visible") != false } })
   }
+
+  private var leadingSlot: BannerSlots.Leading? {
+    BannerSlots.leading(
+      node, visibilityForID: { id in store.node(id).map { $0.bool("visible") != false } })
+  }
 }
 
 enum BannerSlots {
+  enum Leading: Equatable {
+    case control(Int)
+    case icon(RufletValue)
+  }
+
+  /// Flet's `buildIconOrWidget("leading")` accepts only an integer icon or a
+  /// resolved visible Control. Strings and unresolved/invisible references
+  /// produce no widget and must not reserve the banner's leading inset.
+  static func leading(
+    _ node: ControlNode, visibilityForID: (Int) -> Bool?
+  ) -> Leading? {
+    if let id = node.controlID(forKey: "leading") {
+      return visibilityForID(id) == true ? .control(id) : nil
+    }
+    guard case .int? = node.props["leading"] else { return nil }
+    return node.props["leading"].map(Leading.icon)
+  }
+
   static func visibleActionIDs(
     _ node: ControlNode, visibilityForID: (Int) -> Bool?
   ) -> [Int] {

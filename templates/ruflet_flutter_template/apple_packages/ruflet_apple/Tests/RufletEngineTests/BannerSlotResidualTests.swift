@@ -35,4 +35,19 @@ final class BannerSlotResidualTests: XCTestCase {
     }
     XCTAssertEqual(BannerSlots.visibleActionIDs(banner, visibilityForID: visibility), [2])
   }
+
+  func testLeadingAcceptsOnlyAnIntegerIconOrVisibleResolvedControl() {
+    let icon = ControlNode(id: 1, type: "Banner", props: ["leading": .int(65_536)])
+    XCTAssertEqual(BannerSlots.leading(icon, visibilityForID: { _ in nil }), .icon(.int(65_536)))
+
+    let control = ControlNode(id: 1, type: "Banner", props: ["leading": .controlRef(2)])
+    XCTAssertEqual(BannerSlots.leading(control, visibilityForID: { _ in true }), .control(2))
+    XCTAssertNil(BannerSlots.leading(control, visibilityForID: { _ in false }))
+    XCTAssertNil(BannerSlots.leading(control, visibilityForID: { _ in nil }))
+
+    for value: RufletValue in [.string("home"), .double(1.5), .bool(true)] {
+      let invalid = ControlNode(id: 1, type: "Banner", props: ["leading": value])
+      XCTAssertNil(BannerSlots.leading(invalid, visibilityForID: { _ in true }))
+    }
+  }
 }
