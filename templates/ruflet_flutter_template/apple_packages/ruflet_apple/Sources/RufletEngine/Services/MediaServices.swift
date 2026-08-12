@@ -17,7 +17,12 @@ public final class FilePickerService: NSObject, RufletService {
   public static let wireType = "FilePicker"
 
   private var pending: RufletMethodCompletion?
+  #if canImport(UIKit)
+    private enum PendingOperation { case files(withData: Bool), directory, save(temp: URL) }
+    private var pendingOperation: PendingOperation?
+  #endif
   private var selectedURLs: [URL] = []
+  private var activeUploads: [UUID: FilePickerUploadOperation] = [:]
   private var eventNode: ControlNode?
   private var eventContext: RufletServiceContext?
 
@@ -31,6 +36,8 @@ public final class FilePickerService: NSObject, RufletService {
     context: RufletServiceContext,
     completion: @escaping RufletMethodCompletion
   ) {
+    eventNode = node
+    eventContext = context
     switch call.name {
     case "pick_files":
       pickFiles(call, completion: completion)
@@ -56,55 +63,83 @@ public final class FilePickerService: NSObject, RufletService {
     #endif
   }
 
-  /// The result shape Flet's file picker returns: a list of
-  /// `{name:, path:, size:}` maps.
-  /// Flet reports the selection on the control as well as returning it to the
-  /// caller, so a Ruby handler fires whether or not the call was awaited.
+  /// `result` is Ruflet's DSL extension. Method return values remain byte-for-
+  /// byte compatible with Flet's service.
   private func reportResult(_ value: RufletValue) {
     guard let eventNode, let eventContext, eventNode.handlesEvent("result") else { return }
     eventContext.emitEvent(eventNode.id, "result", value)
   }
 
-  private func describe(_ urls: [URL]) -> RufletValue {
+  private func describe(_ urls: [URL], withData: Bool) -> RufletValue {
     .array(
       urls.enumerated().map { index, url in
+        let accessed = url.startAccessingSecurityScopedResource()
+        defer { if accessed { url.stopAccessingSecurityScopedResource() } }
         let size = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
-        return .map([
-          "id": .int(Int64(index)),
-          "name": .string(url.lastPathComponent),
-          "path": .string(url.path),
-          "size": .int(Int64(size))
-        ])
+        return FilePickerFile(
+          id: index, name: url.lastPathComponent, path: url.path, size: Int64(size),
+          bytes: withData ? (try? Data(contentsOf: url)).map(Array.init) : nil
+        ).wireValue
       })
   }
 
+  private func resultEvent(path: String?, files: RufletValue?) -> RufletValue {
+    .map([
+      "path": path.map(RufletValue.string) ?? .null,
+      "files": files ?? .null,
+    ])
+  }
+
+  #if canImport(UniformTypeIdentifiers)
+    private func contentTypes(_ configuration: FilePickerConfiguration) -> [UTType] {
+      if configuration.fileType == .custom {
+        return configuration.allowedExtensions.compactMap { UTType(filenameExtension: $0) }
+      }
+      switch configuration.fileType {
+      case .any, .custom: return [.item]
+      case .media: return [.image, .movie]
+      case .image: return [.image]
+      case .video: return [.movie]
+      case .audio: return [.audio]
+      }
+    }
+  #endif
+
   #if canImport(AppKit)
     private func pickFiles(_ call: RufletMethodCall, completion: @escaping RufletMethodCompletion) {
+      let configuration = FilePickerConfiguration(call)
       let panel = NSOpenPanel()
       panel.canChooseFiles = true
       panel.canChooseDirectories = false
-      panel.allowsMultipleSelection = call.argument("allow_multiple")?.boolValue ?? false
-      panel.message = call.argument("dialog_title")?.stringValue ?? ""
-      applyExtensions(call, to: panel)
+      panel.allowsMultipleSelection = configuration.allowMultiple
+      panel.title = configuration.dialogTitle ?? ""
+      panel.directoryURL = configuration.initialDirectory
+      panel.allowedContentTypes = contentTypes(configuration)
 
       panel.begin { response in
         Task { @MainActor in
           self.selectedURLs = response == .OK ? panel.urls : []
-          let files = response == .OK ? self.describe(panel.urls) : RufletValue.array([])
-          self.reportResult(files)
+          let files = response == .OK
+            ? self.describe(panel.urls, withData: configuration.withData) : .array([])
+          self.reportResult(self.resultEvent(path: nil, files: files))
           completion(.success(files))
         }
       }
     }
 
     private func saveFile(_ call: RufletMethodCall, completion: @escaping RufletMethodCompletion) {
+      let configuration = FilePickerConfiguration(call)
       let panel = NSSavePanel()
-      panel.nameFieldStringValue = call.argument("file_name")?.stringValue ?? ""
-      panel.message = call.argument("dialog_title")?.stringValue ?? ""
+      panel.nameFieldStringValue = configuration.fileName ?? ""
+      panel.title = configuration.dialogTitle ?? ""
+      panel.directoryURL = configuration.initialDirectory
+      panel.allowedContentTypes = contentTypes(configuration)
 
       panel.begin { response in
         Task { @MainActor in
-          completion(.success(response == .OK ? .string(panel.url?.path ?? "") : .null))
+          let path = response == .OK ? panel.url?.path : nil
+          self.reportResult(self.resultEvent(path: path, files: nil))
+          completion(.success(path.map(RufletValue.string) ?? .null))
         }
       }
     }
@@ -113,60 +148,66 @@ public final class FilePickerService: NSObject, RufletService {
       _ call: RufletMethodCall, completion: @escaping RufletMethodCompletion
     ) {
       let panel = NSOpenPanel()
+      let configuration = FilePickerConfiguration(call)
       panel.canChooseFiles = false
       panel.canChooseDirectories = true
-      panel.message = call.argument("dialog_title")?.stringValue ?? ""
+      panel.title = configuration.dialogTitle ?? ""
+      panel.directoryURL = configuration.initialDirectory
 
       panel.begin { response in
         Task { @MainActor in
-          completion(.success(response == .OK ? .string(panel.urls.first?.path ?? "") : .null))
+          let path = response == .OK ? panel.urls.first?.path : nil
+          self.reportResult(self.resultEvent(path: path, files: nil))
+          completion(.success(path.map(RufletValue.string) ?? .null))
         }
       }
     }
 
-    private func applyExtensions(_ call: RufletMethodCall, to panel: NSOpenPanel) {
-      let extensions = (call.argument("allowed_extensions")?.arrayValue ?? [])
-        .compactMap(\.stringValue)
-      guard !extensions.isEmpty else { return }
-      if #available(macOS 12.0, *) {
-        panel.allowedContentTypes = extensions.compactMap { UTType(filenameExtension: $0) }
-      }
-    }
   #elseif canImport(UIKit)
     private func pickFiles(_ call: RufletMethodCall, completion: @escaping RufletMethodCompletion) {
-      let types = (call.argument("allowed_extensions")?.arrayValue ?? [])
-        .compactMap(\.stringValue)
-        .compactMap { UTType(filenameExtension: $0) }
+      let configuration = FilePickerConfiguration(call)
       let controller = UIDocumentPickerViewController(
-        forOpeningContentTypes: types.isEmpty ? [.item] : types)
-      controller.allowsMultipleSelection = call.argument("allow_multiple")?.boolValue ?? false
-      present(controller, completion: completion)
+        forOpeningContentTypes: contentTypes(configuration))
+      controller.allowsMultipleSelection = configuration.allowMultiple
+      present(controller, operation: .files(withData: configuration.withData), completion: completion)
     }
 
     private func saveFile(_ call: RufletMethodCall, completion: @escaping RufletMethodCompletion) {
-      // iOS saves by exporting an existing file, so there is nothing to show
-      // until the caller has written one.
-      completion(
-        .failure(
-          RufletServiceError.unavailable(
-            "save_file needs a source file on iOS; write it first, then share it")))
+      let configuration = FilePickerConfiguration(call)
+      guard let bytes = configuration.sourceBytes else {
+        return completion(.failure(RufletServiceError.invalidArguments(
+          "\"src_bytes\" is required when saving a file on Web, Android and iOS.")))
+      }
+      let directory = FileManager.default.temporaryDirectory
+        .appendingPathComponent("ruflet-file-picker", isDirectory: true)
+      do {
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let source = directory.appendingPathComponent(configuration.fileName ?? "new-file")
+        try Data(bytes).write(to: source, options: .atomic)
+        let controller = UIDocumentPickerViewController(forExporting: [source], asCopy: true)
+        present(controller, operation: .save(temp: source), completion: completion)
+      } catch {
+        completion(.failure(RufletServiceError.failed(error.localizedDescription)))
+      }
     }
 
     private func pickDirectory(
       _ call: RufletMethodCall, completion: @escaping RufletMethodCompletion
     ) {
       let controller = UIDocumentPickerViewController(forOpeningContentTypes: [.folder])
-      present(controller, completion: completion)
+      present(controller, operation: .directory, completion: completion)
     }
 
     private func present(
       _ controller: UIDocumentPickerViewController,
+      operation: PendingOperation,
       completion: @escaping RufletMethodCompletion
     ) {
       guard let presenter = RufletWindow.topViewController() else {
         return completion(.failure(RufletServiceError.unavailable("No window to present from")))
       }
       pending = completion
+      pendingOperation = operation
       controller.delegate = self
       presenter.present(controller, animated: true)
     }
@@ -194,53 +235,67 @@ public final class FilePickerService: NSObject, RufletService {
     guard !requests.isEmpty else {
       return completion(.success(.null))
     }
-    eventNode = node
-    eventContext = context
+    let uploads = requests.compactMap(FilePickerUploadRequest.init)
+    let pageURL = ["page_uri", "page_url", "url", "uri"]
+      .compactMap { context.store.page?.string($0) }
+      .compactMap(URL.init(string:)).first
+    uploadNext(uploads, index: 0, pageURL: pageURL)
+    completion(.success(.null))
+  }
 
-    for request in requests {
-      let id = request["id"]?.intValue
-      let name = request["name"]?.stringValue
-      let source: URL? = {
-        if let id, selectedURLs.indices.contains(id) { return selectedURLs[id] }
-        return selectedURLs.first { $0.lastPathComponent == name }
-      }()
-      guard let source else {
-        emitUpload(name: name ?? "", progress: nil, error: "Selected file was not found")
-        continue
-      }
-      guard let rawURL = request["upload_url"]?.stringValue,
-        let destination = URL(string: rawURL), destination.scheme != nil
-      else {
-        emitUpload(name: source.lastPathComponent, progress: nil,
-          error: "upload_url must be an absolute URL in the native Apple renderer")
-        continue
-      }
+  private func uploadNext(_ requests: [FilePickerUploadRequest], index: Int, pageURL: URL?) {
+    guard requests.indices.contains(index) else { return }
+    let request = requests[index]
+    let id = request.id
+    let name = request.name
+    let source: URL? = {
+      if let id, selectedURLs.indices.contains(id) { return selectedURLs[id] }
+      return selectedURLs.first { $0.lastPathComponent == name }
+    }()
+    guard let source else {
+      emitUpload(name: name ?? "", progress: nil, error: "Selected file was not found")
+      return uploadNext(requests, index: index + 1, pageURL: pageURL)
+    }
+    guard let destination = request.resolvedURL(relativeTo: pageURL) else {
+      emitUpload(name: source.lastPathComponent, progress: nil,
+        error: "Relative upload_url requires a backend page URI")
+      return uploadNext(requests, index: index + 1, pageURL: pageURL)
+    }
 
-      var urlRequest = URLRequest(url: destination)
-      urlRequest.httpMethod = request["method"]?.stringValue ?? "PUT"
-      emitUpload(name: source.lastPathComponent, progress: 0, error: nil)
-      let accessed = source.startAccessingSecurityScopedResource()
-      URLSession.shared.uploadTask(with: urlRequest, fromFile: source) { [weak self] _, response, error in
+    var urlRequest = URLRequest(url: destination)
+    urlRequest.httpMethod = request.method
+    emitUpload(name: source.lastPathComponent, progress: 0, error: nil)
+    let accessed = source.startAccessingSecurityScopedResource()
+    let token = UUID()
+    let operation = FilePickerUploadOperation(
+      progress: { [weak self] progress in
+        Task { @MainActor in self?.emitUpload(
+          name: source.lastPathComponent, progress: progress, error: nil) }
+      },
+      completion: { [weak self] status, body, error in
         if accessed { source.stopAccessingSecurityScopedResource() }
         Task { @MainActor in
           guard let self else { return }
+          self.activeUploads[token] = nil
           if let error {
             self.emitUpload(name: source.lastPathComponent, progress: nil,
               error: error.localizedDescription)
-            return
-          }
-          let status = (response as? HTTPURLResponse)?.statusCode ?? 0
-          if !(200...204).contains(status) {
+          } else if !(200...204).contains(status ?? 0) {
+            let suffix = String(data: body, encoding: .utf8).flatMap { $0.isEmpty ? nil : ": \($0)" } ?? ""
             self.emitUpload(name: source.lastPathComponent, progress: nil,
-              error: "Upload endpoint returned code \(status)")
+              error: "Upload endpoint returned code \(status ?? 0)\(suffix)")
+            // Flet removes a selected file after every completed HTTP response,
+            // including a non-success response.
+            self.selectedURLs.removeAll { $0 == source }
           } else {
             self.emitUpload(name: source.lastPathComponent, progress: 1, error: nil)
             self.selectedURLs.removeAll { $0 == source }
           }
+          self.uploadNext(requests, index: index + 1, pageURL: pageURL)
         }
-      }.resume()
-    }
-    completion(.success(.null))
+      })
+    activeUploads[token] = operation
+    operation.start(request: urlRequest, source: source)
   }
 
   private func emitUpload(name: String, progress: Double?, error: String?) {
@@ -261,10 +316,26 @@ public final class FilePickerService: NSObject, RufletService {
       Task { @MainActor in
         let completion = pending
         pending = nil
-        selectedURLs = urls
-        let files = describe(urls)
-        reportResult(files)
-        completion?(.success(files))
+        let operation = pendingOperation
+        pendingOperation = nil
+        switch operation {
+        case .files(let withData):
+          selectedURLs = urls
+          let files = describe(urls, withData: withData)
+          reportResult(resultEvent(path: nil, files: files))
+          completion?(.success(files))
+        case .directory:
+          let path = urls.first?.path
+          reportResult(resultEvent(path: path, files: nil))
+          completion?(.success(path.map(RufletValue.string) ?? .null))
+        case .save(let temp):
+          try? FileManager.default.removeItem(at: temp)
+          let path = urls.first?.path
+          reportResult(resultEvent(path: path, files: nil))
+          completion?(.success(path.map(RufletValue.string) ?? .null))
+        case nil:
+          completion?(.success(.null))
+        }
       }
     }
 
@@ -274,9 +345,23 @@ public final class FilePickerService: NSObject, RufletService {
       Task { @MainActor in
         let completion = pending
         pending = nil
-        selectedURLs = []
-        reportResult(.array([]))
-        completion?(.success(.array([])))
+        let operation = pendingOperation
+        pendingOperation = nil
+        switch operation {
+        case .files:
+          selectedURLs = []
+          reportResult(resultEvent(path: nil, files: .array([])))
+          completion?(.success(.array([])))
+        case .save(let temp):
+          try? FileManager.default.removeItem(at: temp)
+          reportResult(resultEvent(path: nil, files: nil))
+          completion?(.success(.null))
+        case .directory:
+          reportResult(resultEvent(path: nil, files: nil))
+          completion?(.success(.null))
+        case nil:
+          completion?(.success(.null))
+        }
       }
     }
   }
