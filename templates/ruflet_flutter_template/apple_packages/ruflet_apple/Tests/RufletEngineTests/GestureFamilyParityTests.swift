@@ -91,6 +91,20 @@ final class GestureFamilyParityTests: XCTestCase {
       ]))
   }
 
+  func testDragTargetRequiresVisibleContent() {
+    XCTAssertEqual(
+      RufletDragTargetSemantics.validationError(contentID: nil, content: nil),
+      "DragTarget.content must be visible")
+    XCTAssertEqual(
+      RufletDragTargetSemantics.validationError(
+        contentID: 5,
+        content: ControlNode(
+          id: 5, type: "Container", props: ["visible": .bool(false)])),
+      RufletDragTargetSemantics.missingContentError)
+    XCTAssertNil(RufletDragTargetSemantics.validationError(
+      contentID: 5, content: ControlNode(id: 5, type: "Container")))
+  }
+
   func testInteractiveViewerUsesFletScaleDetailKeys() throws {
     let update = try XCTUnwrap(
       RufletInteractionParity.scaleUpdate(

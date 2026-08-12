@@ -612,13 +612,21 @@ private enum RufletDragSession {
 /// `DragTarget` — accepts a `Draggable` from the same group.
 struct DragTargetControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
   @State private var globalOrigin = CGPoint.zero
 
   var body: some View {
+    let contentID = node.controlID(forKey: "content")
     Group {
-      if let contentID = node.controlID(forKey: "content") {
+      if RufletDragTargetSemantics.validationError(
+        contentID: contentID, content: contentID.flatMap(store.node)) == nil,
+        let contentID
+      {
         ControlView(id: contentID, axis: .none)
+      } else {
+        Text(RufletDragTargetSemantics.missingContentError)
+          .font(.caption).foregroundStyle(.red)
       }
     }
     .background(
@@ -631,6 +639,15 @@ struct DragTargetControlView: View {
       of: ["public.text"],
       delegate: RufletDragTargetDropDelegate(
         node: node, events: events, globalOrigin: globalOrigin))
+  }
+}
+
+enum RufletDragTargetSemantics {
+  static let missingContentError = "DragTarget.content must be visible"
+
+  static func validationError(contentID: Int?, content: ControlNode?) -> String? {
+    RufletRequiredContent.validationError(
+      contentID: contentID, content: content, message: missingContentError)
   }
 }
 
