@@ -1188,14 +1188,15 @@ struct ListTileControlView: View {
   }
 
   private var cupertinoTile: some View {
-    let presentation = CupertinoListTilePresentation(node: node)
+    let presentation = CupertinoListTilePresentation(
+      node: node, visibilityForID: { store.node($0)?.bool("visible") })
     return HStack(spacing: 0) {
-      if let leadingID = node.controlID(forKey: "leading") {
+      if let leadingID = presentation.leadingID {
         ControlView(id: leadingID, axis: .none)
           .frame(width: presentation.leadingSize, height: presentation.leadingSize)
         Spacer().frame(width: presentation.leadingToTitle)
-      } else if node.props["leading"] != nil {
-        RufletIcon(value: node.props["leading"], size: presentation.leadingSize, color: nil)
+      } else if let leadingIcon = presentation.leadingIcon {
+        RufletIcon(value: leadingIcon, size: presentation.leadingSize, color: nil)
           .frame(width: presentation.leadingSize, height: presentation.leadingSize)
         Spacer().frame(width: presentation.leadingToTitle)
       } else {
@@ -1204,19 +1205,19 @@ struct ListTileControlView: View {
       }
 
       VStack(alignment: .leading, spacing: presentation.titleSubtitleSpacing) {
-        if let titleID = node.controlID(forKey: "title") {
+        if let titleID = presentation.titleID {
           ControlView(id: titleID, axis: .none)
             .font(presentation.titleFont)
             .lineLimit(1)
-        } else if let title = node.string("title") {
+        } else if let title = presentation.titleText {
           Text(title).font(presentation.titleFont).lineLimit(1)
         }
-        if let subtitleID = node.controlID(forKey: "subtitle") {
+        if let subtitleID = presentation.subtitleID {
           ControlView(id: subtitleID, axis: .none)
             .font(.system(size: presentation.subtitleFontSize))
             .foregroundColor(.secondary)
             .lineLimit(1)
-        } else if let subtitle = node.string("subtitle") {
+        } else if let subtitle = presentation.subtitleText {
           Text(subtitle)
             .font(.system(size: presentation.subtitleFontSize))
             .foregroundColor(.secondary)
@@ -1225,17 +1226,17 @@ struct ListTileControlView: View {
       }
       .frame(maxWidth: .infinity, alignment: .leading)
 
-      if let infoID = node.controlID(forKey: "additional_info") {
+      if let infoID = presentation.additionalInfoID {
         ControlView(id: infoID, axis: .none).foregroundColor(.secondary).lineLimit(1)
-        if node.props["trailing"] != nil { Spacer().frame(width: 6) }
-      } else if let info = node.string("additional_info") {
+        if presentation.hasTrailing { Spacer().frame(width: 6) }
+      } else if let info = presentation.additionalInfoText {
         Text(info).foregroundColor(.secondary).lineLimit(1)
-        if node.props["trailing"] != nil { Spacer().frame(width: 6) }
+        if presentation.hasTrailing { Spacer().frame(width: 6) }
       }
-      if let trailingID = node.controlID(forKey: "trailing") {
+      if let trailingID = presentation.trailingID {
         ControlView(id: trailingID, axis: .none)
-      } else if node.props["trailing"] != nil {
-        RufletIcon(value: node.props["trailing"], size: 17, color: nil)
+      } else if let trailingIcon = presentation.trailingIcon {
+        RufletIcon(value: trailingIcon, size: 17, color: nil)
       }
     }
     .padding(presentation.contentPadding)
@@ -1396,7 +1397,7 @@ struct ListTilePresentation {
     if node.controlID(forKey: "title") != nil {
       hasTitle = RufletRequiredContent.isVisible(title)
     } else {
-      hasTitle = node.props["title"]?.stringValue != nil
+      if case .string = node.props["title"] { hasTitle = true } else { hasTitle = false }
     }
     return hasTitle ? nil : "CupertinoListTile.title must be provided and visible"
   }
@@ -1484,13 +1485,50 @@ struct CupertinoListTilePresentation {
   let notched: Bool
   let hasLeading: Bool
   let hasSubtitle: Bool
+  let titleID: Int?
+  let titleText: String?
+  let leadingID: Int?
+  let leadingIcon: RufletValue?
+  let subtitleID: Int?
+  let subtitleText: String?
+  let additionalInfoID: Int?
+  let additionalInfoText: String?
+  let trailingID: Int?
+  let trailingIcon: RufletValue?
 
-  init(node: ControlNode) {
+  init(node: ControlNode, visibilityForID: (Int) -> Bool? = { _ in nil }) {
     self.node = node
     notched = node.bool("notched") == true
-    hasLeading = node.props["leading"] != nil || node.controlID(forKey: "leading") != nil
-    hasSubtitle = node.props["subtitle"] != nil || node.controlID(forKey: "subtitle") != nil
+
+    func visibleID(_ key: String) -> Int? {
+      node.controlID(forKey: key).flatMap { visibilityForID($0) == false ? nil : $0 }
+    }
+    func strictText(_ key: String) -> String? {
+      if case .string(let value) = node.props[key] { return value }
+      return nil
+    }
+    func strictIcon(_ key: String) -> RufletValue? {
+      switch node.props[key] {
+      case .int, .string: return node.props[key]
+      default: return nil
+      }
+    }
+
+    titleID = visibleID("title")
+    titleText = strictText("title")
+    leadingID = visibleID("leading")
+    leadingIcon = strictIcon("leading")
+    subtitleID = visibleID("subtitle")
+    subtitleText = strictText("subtitle")
+    additionalInfoID = visibleID("additional_info")
+    additionalInfoText = strictText("additional_info")
+    trailingID = visibleID("trailing")
+    trailingIcon = strictIcon("trailing")
+    hasLeading = leadingID != nil || leadingIcon != nil
+    hasSubtitle = subtitleID != nil || subtitleText != nil
   }
+
+  var hasTrailing: Bool { trailingID != nil || trailingIcon != nil }
 
   var leadingSize: CGFloat { CGFloat(node.double("leading_size") ?? (notched ? 30 : 28)) }
   var leadingToTitle: CGFloat { CGFloat(node.double("leading_to_title") ?? (notched ? 12 : 16)) }
