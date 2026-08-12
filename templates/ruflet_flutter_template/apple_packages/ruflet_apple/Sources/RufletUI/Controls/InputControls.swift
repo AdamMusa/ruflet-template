@@ -803,7 +803,7 @@ struct TextFieldControlView: View {
 
   var body: some View {
     HStack(alignment: verticalAlignment, spacing: 8) {
-      if !usesNativeSearchAppearance {
+      if !embedsNativePrefix {
         formIcon("prefix_icon")
           .modifier(SlotSizeConstraints(value: node.props["prefix_icon_constraints"]))
       }
@@ -898,6 +898,7 @@ struct TextFieldControlView: View {
           secure: node.bool("password") == true && !revealsPassword,
           nativeChrome: usesNativeChrome,
           searchAppearance: usesNativeSearchAppearance,
+          leadingSymbol: nativePrefixSymbol,
           traits: traits,
           onTap: { events.fire(node, "click") },
           onTapOutside: { events.fire(node, "tap_outside") },
@@ -1014,6 +1015,22 @@ struct TextFieldControlView: View {
 
   private var usesNativeSearchAppearance: Bool {
     usesNativeChrome && RufletTextFieldDefaults.hasSearchPrefix(node)
+  }
+
+  private var nativePrefixSymbol: String? {
+    guard usesNativeChrome, let value = node.props["prefix_icon"] else { return nil }
+    let symbol = IconMapping.symbol(for: value)
+    return symbol == IconMapping.placeholderSymbol ? nil : symbol
+  }
+
+  private var embedsNativePrefix: Bool {
+    #if canImport(UIKit)
+      return nativePrefixSymbol != nil
+    #else
+      // NSSearchField owns its magnifying glass; arbitrary AppKit field icons
+      // remain ordinary Flet slots because NSTextField has no public leftView.
+      return usesNativeSearchAppearance
+    #endif
   }
 
   private var borderWidth: CGFloat {

@@ -388,6 +388,7 @@ public enum IconMapping {
     "mic": "mic.fill", "mic_off": "mic.slash.fill", "headphones": "headphones",
     "audiotrack": "music.note", "music_note": "music.note", "library_music": "music.note.list",
     "camera": "camera.fill", "camera_alt": "camera.fill",
+    "cameraswitch": "arrow.triangle.2.circlepath.camera",
     "photo_camera": "camera.fill", "photo": "photo", "image": "photo",
     "photo_library": "photo.on.rectangle", "collections": "square.stack",
     "movie": "film", "video_library": "film.stack", "album": "square.stack.fill",

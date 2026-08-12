@@ -26,6 +26,20 @@ enum RufletFlexMath {
       ? CGSize(width: size.width, height: max(crossExtent, 0))
       : CGSize(width: max(crossExtent, 0), height: size.height)
   }
+
+  static func childAxis(
+    parentAxis: LayoutAxis, flex: Double, loose: Bool, crossStretch: Bool
+  ) -> LayoutAxis {
+    let tightMain = flex > 0 && !loose
+    let tightWidth = parentAxis == .horizontal ? tightMain : crossStretch
+    let tightHeight = parentAxis == .vertical ? tightMain : crossStretch
+    switch (tightWidth, tightHeight) {
+    case (true, true): return .tightBoth
+    case (true, false): return .tightHorizontal
+    case (false, true): return .tightVertical
+    case (false, false): return .none
+    }
+  }
 }
 
 @available(iOS 16.0, macOS 13.0, *)
@@ -42,16 +56,22 @@ private struct LooseFlexValueKey: LayoutValueKey {
 struct RufletFlexChild: View {
   let id: Int
   let axis: LayoutAxis
+  let crossStretch: Bool
   @EnvironmentObject private var store: ControlStore
+
+  init(id: Int, axis: LayoutAxis, crossStretch: Bool = false) {
+    self.id = id
+    self.axis = axis
+    self.crossStretch = crossStretch
+  }
 
   @ViewBuilder
   var body: some View {
     let node = store.node(id)
     let flex = RufletFlexMath.flex(node?.props["expand"])
     let loose = node?.bool("expand_loose") ?? false
-    let childAxis: LayoutAxis = flex > 0 && !loose
-      ? (axis == .horizontal ? .tightHorizontal : .tightVertical)
-      : .none
+    let childAxis = RufletFlexMath.childAxis(
+      parentAxis: axis, flex: flex, loose: loose, crossStretch: crossStretch)
 
     ControlView(id: id, axis: childAxis)
       .layoutValue(key: FlexValueKey.self, value: flex)

@@ -39,7 +39,9 @@ struct RowControlView: View {
           tight: semantics.tight
         ) {
           ForEach(children, id: \.self) { id in
-            RufletFlexChild(id: id, axis: .horizontal)
+            RufletFlexChild(
+              id: id, axis: .horizontal,
+              crossStretch: semantics.crossAlignment == .stretch)
           }
         }
       } else {
@@ -96,7 +98,9 @@ struct ColumnControlView: View {
           tight: semantics.tight
         ) {
           ForEach(node.childIDs, id: \.self) { id in
-            RufletFlexChild(id: id, axis: .vertical)
+            RufletFlexChild(
+              id: id, axis: .vertical,
+              crossStretch: semantics.crossAlignment == .stretch)
           }
         }
       } else {

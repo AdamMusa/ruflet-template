@@ -13,9 +13,9 @@ final class IconMappingTests: XCTestCase {
     "arrow_drop_down_circle", "audiotrack", "auto_awesome", "battery_full",
     "calendar_today", "check_box", "check_circle", "chevron_right", "close", "code",
     "crop_square", "date_range", "delete", "directions_car", "donut_large", "edit",
-    "flashlight_on", "folder_open", "grid_view", "home", "hub", "image", "info",
+    "cameraswitch", "flashlight_on", "folder_open", "grid_view", "home", "hub", "image", "info",
     "info_outline", "insert_drive_file", "ios_share", "language", "linear_scale", "list",
-    "location_on", "login", "map", "mic", "open_in_new", "open_with", "photo_camera",
+    "link", "location_on", "login", "map", "mic", "open_in_new", "open_with", "photo_camera",
     "play_arrow", "play_circle", "qr_code_scanner", "radio_button_checked", "rocket_launch",
     "save", "schedule", "search", "sensors", "settings", "share", "show_chart", "star",
     "stop", "tab", "table_chart", "text_fields", "toggle_on", "touch_app", "tune",
@@ -112,6 +112,9 @@ final class IconMappingTests: XCTestCase {
         IconMapping.symbol(forMaterialName: "rocket_launch")))
     XCTAssertEqual(IconMapping.symbol(forMaterialName: "account_circle"), "person.crop.circle")
     XCTAssertEqual(IconMapping.symbol(forMaterialName: "chevron_right"), "chevron.right")
+    XCTAssertEqual(
+      IconMapping.symbol(forMaterialName: "cameraswitch"),
+      "arrow.triangle.2.circlepath.camera")
   }
 
   func testUnmappedMaterialNamesKeepTheirExactFlutterGlyphInsteadOfAPlaceholder() throws {

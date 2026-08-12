@@ -16,10 +16,13 @@ public enum LayoutAxis {
   /// paint their decoration.
   case tightHorizontal
   case tightVertical
+  /// Both axes are exact. RenderFlex uses this when an expanded child also
+  /// participates in a stretched cross axis.
+  case tightBoth
   case none
 
-  var requiresTightWidth: Bool { self == .tightHorizontal }
-  var requiresTightHeight: Bool { self == .tightVertical }
+  var requiresTightWidth: Bool { self == .tightHorizontal || self == .tightBoth }
+  var requiresTightHeight: Bool { self == .tightVertical || self == .tightBoth }
 }
 
 /// Applies the shared property vocabulary around a control's own body.
@@ -37,7 +40,7 @@ struct CommonControlModifiers: ViewModifier {
     // for example opacity is applied before sizing and fractional offset is
     // applied before alignment and margin.
     content
-      .modifier(TightConstraintFrame(axis: axis))
+      .modifier(TightConstraintFrame(node: node, axis: axis))
       // Padding/background are part of the native control body. They remain
       // closest to the body while individual renderers are migrated away from
       // this compatibility layer.
@@ -358,11 +361,23 @@ struct RufletMouseCursorModifier: ViewModifier {
 }
 
 private struct TightConstraintFrame: ViewModifier {
+  let node: ControlNode
   let axis: LayoutAxis
 
+  private var horizontalAlignment: Alignment {
+    // Flutter's Icon is a centered glyph inside its constrained square. When
+    // a stretched Column gives it the full row width, the glyph remains in
+    // the middle rather than moving to the leading edge.
+    node.type == "Icon" ? .center : .leading
+  }
+
   func body(content: Content) -> some View {
-    if axis.requiresTightWidth {
-      content.frame(maxWidth: .infinity, alignment: .leading)
+    if axis.requiresTightWidth && axis.requiresTightHeight {
+      content
+        .frame(maxWidth: .infinity, alignment: horizontalAlignment)
+        .frame(maxHeight: .infinity, alignment: .top)
+    } else if axis.requiresTightWidth {
+      content.frame(maxWidth: .infinity, alignment: horizontalAlignment)
     } else if axis.requiresTightHeight {
       content.frame(maxHeight: .infinity, alignment: .top)
     } else {
@@ -479,7 +494,7 @@ private struct RufletExpandModifier: ViewModifier {
         content.frame(maxWidth: .infinity, alignment: loose ? .leading : .center)
       case .vertical:
         content.frame(maxHeight: .infinity, alignment: loose ? .top : .center)
-      case .tightHorizontal, .tightVertical, .none:
+      case .tightHorizontal, .tightVertical, .tightBoth, .none:
         content
       }
     } else {

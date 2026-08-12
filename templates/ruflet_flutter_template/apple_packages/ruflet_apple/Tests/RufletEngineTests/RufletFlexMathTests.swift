@@ -18,4 +18,19 @@ final class RufletFlexMathTests: XCTestCase {
   func testNegativeFlexIsNotRenderedAsExpanded() {
     XCTAssertEqual(RufletFlexMath.flex(.int(-2)), 0)
   }
+
+  func testStretchPropagatesAnExactCrossAxisConstraintToEveryChild() {
+    XCTAssertEqual(
+      RufletFlexMath.childAxis(
+        parentAxis: .vertical, flex: 0, loose: false, crossStretch: true),
+      .tightHorizontal)
+    XCTAssertEqual(
+      RufletFlexMath.childAxis(
+        parentAxis: .horizontal, flex: 0, loose: false, crossStretch: true),
+      .tightVertical)
+    XCTAssertEqual(
+      RufletFlexMath.childAxis(
+        parentAxis: .vertical, flex: 1, loose: false, crossStretch: true),
+      .tightBoth)
+  }
 }
