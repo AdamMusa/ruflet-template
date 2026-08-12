@@ -90,4 +90,4 @@ lines << "}"
 lines << ""
 
 File.write(output, lines.join("\n"))
-puts "Wrote #{names.length} Material glyph codepoints to #{output.sub("#{root}/", "")}" 
+puts "Wrote #{names.length} Material glyph codepoints to #{output.sub("#{root}/", "")}"
