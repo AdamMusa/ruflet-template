@@ -1,5 +1,6 @@
 import Foundation
 import RufletProtocol
+import SwiftUI
 
 /// An optional Ruflet extension an application chooses to link.
 ///
@@ -22,6 +23,29 @@ public protocol RufletExtension {
   /// missing.
   static var extensionName: String { get }
 
+  /// Performs one-time native SDK setup before this extension is registered.
+  /// This is the Apple peer of FletExtension.ensureInitialized().
+  static func ensureInitialized()
+
+  /// Creates the native view for `control`, or returns nil when this
+  /// extension does not own that wire type.
+  ///
+  /// Ruflet queries application extensions in their declared order and uses
+  /// the first non-nil view, matching FletExtension.createWidget(). The outer
+  /// ControlView still supplies stable identity, the control store, events,
+  /// commands, and the standard LayoutControl modifiers.
+  static func createView(for control: ControlNode) -> AnyView?
+
+  /// Creates a per-control imperative service, or returns nil when this
+  /// extension does not own the service wire type. Instances are cached by
+  /// control id and disposed when that control leaves the tree, matching
+  /// FletExtension.createService().
+  static func createService(for control: ControlNode) -> RufletService?
+
+  /// Creates custom native icon artwork for an integer wire code. The view
+  /// inherits the icon's requested font size and foreground color.
+  static func createIcon(for code: Int) -> AnyView?
+
   /// Installs this extension into a session. Implementations can register
   /// services directly and, when their module depends on `RufletUI`, native
   /// control builders through `ControlRegistry`.
@@ -30,6 +54,11 @@ public protocol RufletExtension {
 
 public extension RufletExtension {
   static var extensionName: String { String(describing: Self.self) }
+  static func ensureInitialized() {}
+  static func createView(for _: ControlNode) -> AnyView? { nil }
+  static func createService(for _: ControlNode) -> RufletService? { nil }
+  static func createIcon(for _: Int) -> AnyView? { nil }
+  static func register(in _: ServiceRegistry) {}
 }
 
 /// Source-compatible name used by the first Apple renderer prototypes.
@@ -43,6 +72,8 @@ extension ServiceRegistry {
   /// Installs an optional extension once for this session.
   public func register(extension extensionType: any RufletExtension.Type) {
     guard markExtensionRegistered(extensionType.extensionName) else { return }
+    retainRegisteredExtension(extensionType)
+    extensionType.ensureInitialized()
     extensionType.register(in: self)
   }
 

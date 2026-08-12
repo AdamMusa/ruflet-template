@@ -505,6 +505,7 @@ public struct RufletIcon: View {
   var symbolWeight: Font.Weight?
   var filled: Bool
   @Environment(\.layoutDirection) private var layoutDirection
+  @Environment(\.rufletExtensions) private var extensions
 
   public init(value: RufletValue?, size: CGFloat? = nil, color: Color? = nil) {
     self.value = value
@@ -526,6 +527,21 @@ public struct RufletIcon: View {
   }
 
   public var body: some View {
+    if let code = value?.intValue,
+      let custom = RufletExtensionRenderer.buildIcon(
+        code: code, extensions: extensions)
+    {
+      custom
+        .font(size.map { Font.system(size: $0, weight: symbolWeight ?? .regular) })
+        .modifier(ExplicitIconColor(color: color))
+        .accessibilityHidden(true)
+    } else {
+      standardIcon
+    }
+  }
+
+  @ViewBuilder
+  private var standardIcon: some View {
     switch IconMapping.rendering(for: value) {
     case .materialGlyph(let codepoint, let name):
       if let glyph = MaterialIconsFont.glyphString(codepoint: codepoint) {

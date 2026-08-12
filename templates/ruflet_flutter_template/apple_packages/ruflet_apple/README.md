@@ -62,6 +62,45 @@ import RufletMotion
 RufletAppView(extensions: [RufletCamera.self, RufletGeolocator.self, RufletMotion.self])
 ```
 
+Application extensions use the same first-match contract as Flutter's
+`FletExtension.createWidget()`. They can claim a custom Ruby wire control
+without changing Ruflet's registry or engine sources:
+
+```swift
+import RufletApple
+import SwiftUI
+
+enum RatingExtension: RufletExtension {
+  static func createView(for control: ControlNode) -> AnyView? {
+    guard control.type == "rating" else { return nil }
+    return AnyView(RatingView(control: control))
+  }
+}
+
+struct RatingView: View {
+  let control: ControlNode
+  @Environment(\.rufletEvents) private var events
+
+  var body: some View {
+    Button("Rating: \(control.double("value") ?? 0)") {
+      events.commit(control, value: .double(5))
+    }
+  }
+}
+
+RufletAppView(extensions: [RatingExtension.self])
+```
+
+Extensions are queried in array order and the first non-nil view wins. Ruflet
+wraps the returned view in the normal control context, so it inherits the
+store, event and command environments, stable wire identity, and common layout
+properties. `ensureInitialized()` and `register(in:)` are optional hooks for
+SDK setup and native services; a control-only extension implements neither.
+For the other two Flet extension seams, implement `createService(for:)` to
+return a per-control `RufletService`, or `createIcon(for:)` to return custom
+SwiftUI artwork for an integer icon code. All three creation hooks use ordered
+first-match dispatch and default to nil.
+
 That is the whole template app. Three other entry points exist:
 
 ```swift

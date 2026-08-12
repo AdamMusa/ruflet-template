@@ -48,13 +48,43 @@ struct ControlList: View {
 struct ControlBody: View {
   let node: ControlNode
   let axis: LayoutAxis
+  @Environment(\.rufletExtensions) private var extensions
 
   var body: some View {
-    if let view = ControlRegistry.build(node: node, axis: axis) {
+    if let view = RufletExtensionRenderer.build(
+      node: node, extensions: extensions)
+    {
+      view
+    } else if let view = ControlRegistry.build(node: node, axis: axis) {
       view
     } else {
       UnmappedControlView(node: node, axis: axis)
     }
+  }
+}
+
+/// Ordered application-extension dispatch, equivalent to Flet's
+/// ControlWidget loop over FletBackend.extensions.
+@MainActor
+enum RufletExtensionRenderer {
+  static func build(
+    node: ControlNode,
+    extensions: [any RufletExtension.Type]
+  ) -> AnyView? {
+    for extensionType in extensions {
+      if let view = extensionType.createView(for: node) { return view }
+    }
+    return nil
+  }
+
+  static func buildIcon(
+    code: Int,
+    extensions: [any RufletExtension.Type]
+  ) -> AnyView? {
+    for extensionType in extensions {
+      if let view = extensionType.createIcon(for: code) { return view }
+    }
+    return nil
   }
 }
 

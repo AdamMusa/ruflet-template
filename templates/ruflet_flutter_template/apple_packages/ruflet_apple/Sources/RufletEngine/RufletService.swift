@@ -116,7 +116,8 @@ public protocol RufletStreamingService: RufletService {
 public final class ServiceRegistry {
   private var factories: [String: () -> RufletService] = [:]
   private var instances: [Int: RufletService] = [:]
-  private var registeredExtensions: Set<String> = []
+  private var registeredExtensionNames: Set<String> = []
+  private var registeredExtensions: [any RufletExtension.Type] = []
 
   public init() {}
 
@@ -125,11 +126,15 @@ public final class ServiceRegistry {
   /// example installing a permission probe), so hosts must not replay it when
   /// reconnecting the same session.
   func markExtensionRegistered(_ name: String) -> Bool {
-    registeredExtensions.insert(name).inserted
+    registeredExtensionNames.insert(name).inserted
   }
 
   public func hasExtension(_ name: String) -> Bool {
-    registeredExtensions.contains(name)
+    registeredExtensionNames.contains(name)
+  }
+
+  func retainRegisteredExtension(_ extensionType: any RufletExtension.Type) {
+    registeredExtensions.append(extensionType)
   }
 
   public func register<S: RufletService>(_ type: S.Type, factory: @escaping () -> S) {
@@ -144,6 +149,7 @@ public final class ServiceRegistry {
 
   public func service(for node: ControlNode) -> RufletService? {
     if let existing = instances[node.id] { return existing }
+    if let instance = extensionService(for: node) { return instance }
     guard let factory = factories[node.type.lowercased()] else { return nil }
     let instance = factory()
     instances[node.id] = instance
@@ -167,15 +173,30 @@ public final class ServiceRegistry {
   }
 
   public func activateStreamingServices(in store: ControlStore, context: RufletServiceContext) {
-    for node in store.nodes.values
-    where streamingTypes.contains(node.type.lowercased()) {
-      guard let service = service(for: node) as? RufletStreamingService else { continue }
+    for node in store.nodes.values {
+      let service: RufletStreamingService?
+      if streamingTypes.contains(node.type.lowercased()) {
+        service = self.service(for: node) as? RufletStreamingService
+      } else {
+        service = extensionService(for: node) as? RufletStreamingService
+      }
+      guard let service else { continue }
       // Flet calls a service's `update()` whenever its control properties
       // change. Re-presenting the current node gives native streaming
       // services the same lifecycle hook; each service owns the decision to
       // keep, restart, or stop its subscription from the new configuration.
       service.activate(node: node, context: context)
     }
+  }
+
+  private func extensionService(for node: ControlNode) -> RufletService? {
+    if let existing = instances[node.id] { return existing }
+    for extensionType in registeredExtensions {
+      guard let service = extensionType.createService(for: node) else { continue }
+      instances[node.id] = service
+      return service
+    }
+    return nil
   }
 
   public func handles(_ wireType: String) -> Bool {

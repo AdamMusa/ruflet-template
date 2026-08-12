@@ -9,6 +9,7 @@ import RufletQRScanner
 import RufletProtocol
 import RufletSecureStorage
 @testable import RufletUI
+import SwiftUI
 import XCTest
 
 @MainActor
@@ -16,6 +17,11 @@ final class RufletExtensionArchitectureTests: XCTestCase {
   private enum ExampleExtension: RufletExtension {
     static let extensionName = "Example"
     static var registrations = 0
+    static var initializations = 0
+
+    static func ensureInitialized() {
+      initializations += 1
+    }
 
     static func register(in registry: ServiceRegistry) {
       registrations += 1
@@ -33,8 +39,82 @@ final class RufletExtensionArchitectureTests: XCTestCase {
     }
   }
 
+  private final class RatingService: RufletService {
+    static let wireType = "rating_service"
+    func invoke(
+      _ call: RufletMethodCall, node: ControlNode?, context: RufletServiceContext,
+      completion: @escaping RufletMethodCompletion
+    ) {
+      completion(.success(.string("rating")))
+    }
+  }
+
+  private enum PassThroughExtension: RufletExtension {
+    static var visitedTypes: [String] = []
+
+    static func createView(for control: ControlNode) -> AnyView? {
+      visitedTypes.append(control.type)
+      return nil
+    }
+  }
+
+  private enum RatingExtension: RufletExtension {
+    static var visitedTypes: [String] = []
+
+    static func createView(for control: ControlNode) -> AnyView? {
+      visitedTypes.append(control.type)
+      guard control.type == "rating" else { return nil }
+      return AnyView(Text("rating"))
+    }
+
+    static func createService(for control: ControlNode) -> RufletService? {
+      control.type == RatingService.wireType ? RatingService() : nil
+    }
+
+    static func createIcon(for code: Int) -> AnyView? {
+      code == 0xF101 ? AnyView(Image(systemName: "star.fill")) : nil
+    }
+  }
+
+  private enum LaterRatingExtension: RufletExtension {
+    static var visits = 0
+
+    static func createView(for control: ControlNode) -> AnyView? {
+      visits += 1
+      guard control.type == "rating" else { return nil }
+      return AnyView(Text("later"))
+    }
+  }
+
   override func setUp() {
     ExampleExtension.registrations = 0
+    ExampleExtension.initializations = 0
+    PassThroughExtension.visitedTypes = []
+    RatingExtension.visitedTypes = []
+    LaterRatingExtension.visits = 0
+  }
+
+  func testCustomControlExtensionsUseOrderedFirstMatchDispatch() {
+    let rating = ControlNode(id: 7, type: "rating", props: ["value": 4.5])
+
+    XCTAssertNotNil(
+      RufletExtensionRenderer.build(
+        node: rating,
+        extensions: [
+          PassThroughExtension.self, RatingExtension.self, LaterRatingExtension.self,
+        ]))
+    XCTAssertEqual(PassThroughExtension.visitedTypes, ["rating"])
+    XCTAssertEqual(RatingExtension.visitedTypes, ["rating"])
+    XCTAssertEqual(LaterRatingExtension.visits, 0)
+  }
+
+  func testCustomControlExtensionReturnsNilForUnclaimedWireType() {
+    let text = ControlNode(id: 8, type: "Text", props: ["value": "hello"])
+
+    XCTAssertNil(
+      RufletExtensionRenderer.build(
+        node: text, extensions: [RatingExtension.self]))
+    XCTAssertEqual(RatingExtension.visitedTypes, ["Text"])
   }
 
   func testExtensionRegistrationIsIdempotentPerSessionRegistry() {
@@ -42,8 +122,29 @@ final class RufletExtensionArchitectureTests: XCTestCase {
     registry.register(extensions: [ExampleExtension.self, ExampleExtension.self])
 
     XCTAssertEqual(ExampleExtension.registrations, 1)
+    XCTAssertEqual(ExampleExtension.initializations, 1)
     XCTAssertTrue(registry.hasExtension("Example"))
     XCTAssertTrue(registry.handles("ExampleService"))
+  }
+
+  func testCustomExtensionCreatesPerControlServicesWithoutFactoryRegistration() {
+    let registry = ServiceRegistry()
+    registry.register(extension: RatingExtension.self)
+    let node = ControlNode(id: 22, type: RatingService.wireType)
+
+    let first = registry.service(for: node)
+    let second = registry.service(for: node)
+    XCTAssertTrue(first is RatingService)
+    XCTAssertTrue(first === second)
+  }
+
+  func testCustomExtensionIconUsesFirstMatchAndFallsBackWhenUnclaimed() {
+    XCTAssertNotNil(
+      RufletExtensionRenderer.buildIcon(
+        code: 0xF101, extensions: [RatingExtension.self]))
+    XCTAssertNil(
+      RufletExtensionRenderer.buildIcon(
+        code: 0xF102, extensions: [RatingExtension.self]))
   }
 
   func testManifestMirrorsEveryRequiredVendoredFletExtensionBoundary() {
