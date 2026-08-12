@@ -33,4 +33,19 @@ final class SnackBarContentResidualTests: XCTestCase {
     XCTAssertNil(OverlayDefaults.snackBarValidation(
       snack, content: ControlNode(id: 2, type: "Text")))
   }
+
+  func testActionAcceptsOnlyAStringOrVisibleResolvedControl() {
+    let string = ControlNode(id: 1, type: "SnackBar", props: ["action": .string("Retry")])
+    XCTAssertEqual(SnackBarSlots.action(string, visibilityForID: { _ in nil }), .text("Retry"))
+
+    let control = ControlNode(id: 1, type: "SnackBar", props: ["action": .controlRef(2)])
+    XCTAssertEqual(SnackBarSlots.action(control, visibilityForID: { _ in true }), .control(2))
+    XCTAssertNil(SnackBarSlots.action(control, visibilityForID: { _ in false }))
+    XCTAssertNil(SnackBarSlots.action(control, visibilityForID: { _ in nil }))
+
+    for value: RufletValue in [.int(1), .double(1.5), .bool(true)] {
+      let invalid = ControlNode(id: 1, type: "SnackBar", props: ["action": value])
+      XCTAssertNil(SnackBarSlots.action(invalid, visibilityForID: { _ in true }))
+    }
+  }
 }

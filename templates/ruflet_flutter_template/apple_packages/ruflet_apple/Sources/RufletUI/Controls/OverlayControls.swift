@@ -831,10 +831,13 @@ struct SnackBarControlView: View {
         Text(content)
       }
       Spacer(minLength: 0)
-      if let actionID = node.controlID(forKey: "action") {
+      switch actionSlot {
+      case .control(let actionID):
         ControlView(id: actionID, axis: .none)
-      } else if let action = node.string("action") {
+      case .text(let action):
         Button(action) { events.fire(node, "action") }
+      case nil:
+        EmptyView()
       }
       // Flutter offers a close affordance when the bar is not transient.
       if node.bool("show_close_icon") == true {
@@ -852,8 +855,7 @@ struct SnackBarControlView: View {
       ?? EdgeInsets(
         top: 14, leading: defaults.horizontalPadding,
         bottom: 14,
-        trailing: node.controlID(forKey: "action") != nil
-          || node.string("action") != nil || node.bool("show_close_icon") == true
+        trailing: actionSlot != nil || node.bool("show_close_icon") == true
           ? 0 : defaults.horizontalPadding))
     .background(
       MaterialPalette.color(
@@ -877,6 +879,11 @@ struct SnackBarControlView: View {
 
   private var floating: Bool { node.string("behavior")?.lowercased() == "floating" }
 
+  private var actionSlot: SnackBarSlots.Action? {
+    SnackBarSlots.action(
+      node, visibilityForID: { id in store.node(id).map { $0.bool("visible") != false } })
+  }
+
   private func floatingInsets(_ defaults: OverlayDefaults.SnackBarValues) -> EdgeInsets {
     // Flutter ignores horizontal margin when an explicit floating width is
     // supplied, but preserves the vertical inset.
@@ -895,6 +902,23 @@ struct SnackBarControlView: View {
     try? await Task.sleep(nanoseconds: UInt64(milliseconds * 1_000_000))
     guard !Task.isCancelled else { return }
     RufletOverlaySemantics.dismissMessengerOverlay(node, through: events)
+  }
+}
+
+enum SnackBarSlots {
+  enum Action: Equatable {
+    case control(Int)
+    case text(String)
+  }
+
+  static func action(
+    _ node: ControlNode, visibilityForID: (Int) -> Bool?
+  ) -> Action? {
+    if let id = node.controlID(forKey: "action") {
+      return visibilityForID(id) == true ? .control(id) : nil
+    }
+    guard case .string(let text)? = node.props["action"] else { return nil }
+    return .text(text)
   }
 }
 
