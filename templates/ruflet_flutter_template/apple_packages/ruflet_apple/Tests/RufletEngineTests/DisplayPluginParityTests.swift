@@ -171,7 +171,7 @@ final class DisplayPluginParityTests: XCTestCase {
   func testCanvasPaintUsesFlutterPaintDefaults() {
     let paint = CanvasPaint(nil)
     XCTAssertEqual(paint.style, "fill")
-    XCTAssertEqual(paint.strokeWidth, 1) // Flutter's zero-width hairline remains visible.
+    XCTAssertEqual(paint.strokeWidth, 0) // Flutter/CoreGraphics device-space hairline.
     XCTAssertEqual(paint.strokeCap, .butt)
     XCTAssertEqual(paint.strokeJoin, .miter)
     XCTAssertEqual(paint.strokeMiterLimit, 4)
@@ -225,6 +225,32 @@ final class DisplayPluginParityTests: XCTestCase {
     XCTAssertEqual(paint.blendModeName, "multiply")
   }
 
+  func testCanvasPaintConsumesFletGradientAndBlurImage() {
+    let gradient: RufletValue = .map([
+      "_type": .string("radial"),
+      "colors": .array([.string("red"), .string("blue")]),
+      "radius": .double(24),
+    ])
+    let paint = CanvasPaint([
+      "gradient": gradient,
+      "blur_image": .map(["sigma_x": .double(3), "sigma_y": .double(5)]),
+    ])
+    XCTAssertEqual(paint.gradient, gradient)
+    XCTAssertEqual(paint.blurSigmaX, 3)
+    XCTAssertEqual(paint.blurSigmaY, 5)
+  }
+
+  func testCanvasCapturePreservesLogicalSizeUntilCleared() {
+    var capture = CanvasCaptureBuffer()
+    capture.store(Data([0x89, 0x50]), logicalSize: CGSize(width: 320, height: 180))
+    XCTAssertEqual(capture.logicalSize, CGSize(width: 320, height: 180))
+    XCTAssertEqual(capture.wireValue, .binary([0x89, 0x50]))
+
+    capture.clear()
+    XCTAssertNil(capture.logicalSize)
+    XCTAssertEqual(capture.wireValue, .null)
+  }
+
   func testChartDefaultsAreSharedAcrossFamilies() {
     XCTAssertEqual(ChartControlSemantics.unboundedHeight, 300)
     let scatter = ControlNode(id: 1, type: "ScatterChart", props: [
@@ -247,6 +273,42 @@ final class DisplayPluginParityTests: XCTestCase {
       "on_event": .bool(true), "interactive": .bool(false),
     ])
     XCTAssertTrue(ChartControlSemantics.shouldEmitEvent(for: pie))
+
+    XCTAssertEqual(ChartControlSemantics.animationDuration(for: pie), 0.15)
+    XCTAssertEqual(ChartControlSemantics.animationCurve(for: pie), "linear")
+  }
+
+  func testChartAnimationAxisTooltipAndAlignmentUseFletDefaults() {
+    let chart = ControlNode(id: 1, type: "LineChart", props: [
+      "animation": .map(["duration": .double(420), "curve": .string("ease_in")]),
+    ])
+    XCTAssertEqual(ChartControlSemantics.animationDuration(for: chart), 0.42)
+    XCTAssertEqual(ChartControlSemantics.animationCurve(for: chart), "ease_in")
+
+    let axis = ControlNode(id: 2, type: "ChartAxis", props: [:])
+    let defaults = ChartControlSemantics.axisDefaults(axis)
+    XCTAssertTrue(defaults.showLabels)
+    XCTAssertEqual(defaults.titleSize, 16)
+    XCTAssertEqual(defaults.labelSize, 22)
+    XCTAssertTrue(defaults.showMin)
+    XCTAssertTrue(defaults.showMax)
+
+    let tooltip = ChartControlSemantics.tooltipDefaults(nil)
+    XCTAssertEqual(tooltip.margin, 16)
+    XCTAssertEqual(tooltip.maxWidth, 120)
+    XCTAssertEqual(tooltip.rotation, 0)
+    XCTAssertFalse(tooltip.fitHorizontal)
+    XCTAssertFalse(tooltip.fitVertical)
+
+    XCTAssertEqual(
+      ChartControlSemantics.groupCenters(count: 3, in: 0...120, alignment: "space_between"),
+      [0, 60, 120])
+    XCTAssertEqual(
+      ChartControlSemantics.groupCenters(count: 3, in: 0...120, alignment: "space_around"),
+      [20, 60, 100])
+    XCTAssertEqual(
+      ChartControlSemantics.nearestIndex(to: 7.9, values: [1, 8, 20]),
+      1)
   }
 
   func testRadarShapeSupportsFletPolygonAndCircleModes() {

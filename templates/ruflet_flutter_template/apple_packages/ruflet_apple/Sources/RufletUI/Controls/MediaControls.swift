@@ -41,6 +41,7 @@ struct CanvasControlView: View {
 
   var body: some View {
     ZStack {
+      capturedImage
       Canvas { context, size in
         for shapeID in shapeIDs {
           guard let shape = store.node(shapeID) else { continue }
@@ -68,7 +69,9 @@ struct CanvasControlView: View {
     guard size != reportedSize else { return }
     // `resize_interval` throttles the stream the way Flet throttles its own;
     // zero reports every change.
-    let interval = TimeInterval(node.int("resize_interval") ?? 0) / 1_000
+    // Flet's Canvas defaults this to 10 ms, not zero. The first size is still
+    // reported immediately; subsequent changes are throttled.
+    let interval = TimeInterval(node.int("resize_interval") ?? 10) / 1_000
     guard Date().timeIntervalSince(lastResizeReport) >= interval else { return }
     lastResizeReport = Date()
     reportedSize = size
@@ -95,12 +98,12 @@ struct CanvasControlView: View {
       let renderer = ImageRenderer(content: captureSurface.frame(width: reportedSize.width, height: reportedSize.height))
       renderer.scale = call.argument("pixel_ratio")?.doubleValue ?? displayScale
       #if canImport(UIKit)
-        capture.store(renderer.uiImage?.pngData())
+      capture.store(renderer.uiImage?.pngData(), logicalSize: reportedSize)
       #elseif canImport(AppKit)
         if let image = renderer.nsImage,
            let tiff = image.tiffRepresentation,
            let bitmap = NSBitmapImageRep(data: tiff) {
-          capture.store(bitmap.representation(using: .png, properties: [:]))
+          capture.store(bitmap.representation(using: .png, properties: [:]), logicalSize: reportedSize)
         }
       #endif
       completion(.success(.null))
@@ -115,15 +118,27 @@ struct CanvasControlView: View {
   }
 
   private var captureSurface: some View {
-    Canvas { context, size in
-      for shapeID in shapeIDs {
-        guard let shape = store.node(shapeID) else { continue }
-        draw(shape, in: &context, size: size)
+    ZStack {
+      capturedImage
+      Canvas { context, size in
+        for shapeID in shapeIDs {
+          guard let shape = store.node(shapeID) else { continue }
+          draw(shape, in: &context, size: size)
+        }
+      } symbols: {
+        canvasImageSymbols
       }
-    } symbols: {
-      canvasImageSymbols
     }
     .environmentObject(store)
+  }
+
+  @ViewBuilder
+  private var capturedImage: some View {
+    if let png = capture.png, let logicalSize = capture.logicalSize {
+      PlatformImageView(data: png)
+        .frame(width: logicalSize.width, height: logicalSize.height)
+        .clipped()
+    }
   }
 
   @ViewBuilder
@@ -230,21 +245,22 @@ struct CanvasControlView: View {
 
     case "Shadow":
       let path = Self.path(from: shape.array("path") ?? [])
+      let elevation = CGFloat(max(shape.double("elevation") ?? 0, 0))
       var shadowed = context
       shadowed.addFilter(
         .shadow(
           color: MaterialPalette.color(shape.string("color"), default: .black),
-          radius: CGFloat(shape.double("elevation") ?? 0), x: 0, y: 0))
+          radius: elevation, x: 0, y: elevation / 2))
       shadowed.fill(path, with: .color(.black.opacity(shape.bool("transparent_occluder") == true ? 0.001 : 1)))
 
     case "Image":
       guard let symbol = context.resolveSymbol(id: shape.id) else { break }
       let width = CGFloat(shape.double("width") ?? symbol.size.width)
       let height = CGFloat(shape.double("height") ?? symbol.size.height)
-      context.draw(
+      paint.draw(
         symbol, in: CGRect(
           x: CGFloat(shape.double("x") ?? 0), y: CGFloat(shape.double("y") ?? 0),
-          width: width, height: height))
+          width: width, height: height), context: &context)
 
     default:
       RufletLog.debug("Canvas shape `\(shape.type)` is not drawn by the Apple engine")
@@ -468,9 +484,16 @@ struct CanvasControlView: View {
 /// `get_capture`. Kept independent of SwiftUI so command behavior is testable.
 struct CanvasCaptureBuffer: Equatable {
   private(set) var png: Data?
+  private(set) var logicalSize: CGSize?
 
-  mutating func store(_ data: Data?) { png = data }
-  mutating func clear() { png = nil }
+  mutating func store(_ data: Data?, logicalSize: CGSize? = nil) {
+    png = data
+    self.logicalSize = data == nil ? nil : logicalSize
+  }
+  mutating func clear() {
+    png = nil
+    logicalSize = nil
+  }
 
   var wireValue: RufletValue {
     png.map { .binary(Array($0)) } ?? .null
@@ -491,13 +514,19 @@ struct CanvasPaint: Equatable {
   let dash: [CGFloat]
   let antiAlias: Bool
   let blendModeName: String?
+  let blurSigmaX: CGFloat
+  let blurSigmaY: CGFloat
+  let gradient: RufletValue?
 
   init(_ map: [String: RufletValue]?) {
     colorName = map?["color"]?.stringValue
     style = map?["style"]?.stringValue?.lowercased() ?? "fill"
     // A zero-width Flutter stroke is a one-device-pixel hairline. SwiftUI
     // drops a literal zero, so use one logical pixel rather than disappearing.
-    strokeWidth = CGFloat(max(map?["stroke_width"]?.doubleValue ?? 0, 1))
+    // Keep Flutter's actual Paint value. CoreGraphics also interprets a zero
+    // line width as a device-space hairline, so replacing it with one logical
+    // point makes Retina strokes twice as thick.
+    strokeWidth = CGFloat(map?["stroke_width"]?.doubleValue ?? 0)
     strokeCap = Self.lineCap(map?["stroke_cap"]?.stringValue)
     strokeJoin = Self.lineJoin(map?["stroke_join"]?.stringValue)
     strokeMiterLimit = CGFloat(map?["stroke_miter_limit"]?.doubleValue ?? 4)
@@ -505,6 +534,10 @@ struct CanvasPaint: Equatable {
       .compactMap(\.doubleValue).map { CGFloat($0) }
     antiAlias = map?["anti_alias"]?.boolValue ?? true
     blendModeName = map?["blend_mode"]?.stringValue
+    let blur = map?["blur_image"]?.mapValue
+    blurSigmaX = CGFloat(blur?["sigma_x"]?.doubleValue ?? 0)
+    blurSigmaY = CGFloat(blur?["sigma_y"]?.doubleValue ?? 0)
+    gradient = map?["gradient"]
   }
 
   var color: Color { MaterialPalette.color(colorName, default: .black) }
@@ -516,17 +549,71 @@ struct CanvasPaint: Equatable {
   func fill(_ path: Path, in context: inout GraphicsContext) {
     var copy = context
     copy.blendMode = Self.blendMode(blendModeName)
-    copy.fill(path, with: .color(color), style: FillStyle(antialiased: antiAlias))
+    addFilters(to: &copy)
+    copy.fill(path, with: shading(in: path.boundingRect), style: FillStyle(antialiased: antiAlias))
   }
 
   func stroke(_ path: Path, in context: inout GraphicsContext) {
     var copy = context
     copy.blendMode = Self.blendMode(blendModeName)
+    addFilters(to: &copy)
     copy.stroke(
-      path, with: .color(color),
+      path, with: shading(in: path.boundingRect),
       style: StrokeStyle(
         lineWidth: strokeWidth, lineCap: strokeCap, lineJoin: strokeJoin,
         miterLimit: strokeMiterLimit, dash: dash))
+  }
+
+  func draw(_ symbol: GraphicsContext.ResolvedSymbol, in rect: CGRect,
+            context: inout GraphicsContext) {
+    var copy = context
+    copy.blendMode = Self.blendMode(blendModeName)
+    addFilters(to: &copy)
+    copy.draw(symbol, in: rect)
+  }
+
+  private func addFilters(to context: inout GraphicsContext) {
+    // GraphicsContext exposes an isotropic blur. Using the larger sigma keeps
+    // the same visual extent as Flutter when its image filter is anisotropic;
+    // the X/Y distinction is retained above for conformance and tests.
+    let sigma = max(blurSigmaX, blurSigmaY)
+    if sigma > 0 { context.addFilter(.blur(radius: sigma)) }
+  }
+
+  private func shading(in bounds: CGRect) -> GraphicsContext.Shading {
+    guard let map = gradient?.mapValue else { return .color(color) }
+    let colors = (map["colors"]?.arrayValue ?? []).map {
+      MaterialPalette.color($0.stringValue, default: .clear)
+    }
+    guard !colors.isEmpty else { return .color(color) }
+    let stops = map["color_stops"]?.arrayValue?.compactMap(\.doubleValue)
+    let gradient = Gradient(stops: colors.enumerated().map { index, value in
+      let location = stops.flatMap { index < $0.count ? $0[index] : nil }
+        ?? (colors.count == 1 ? 0 : Double(index) / Double(colors.count - 1))
+      return Gradient.Stop(color: value, location: location)
+    })
+    func point(_ value: RufletValue?, fallback: CGPoint) -> CGPoint {
+      guard let map = value?.mapValue else { return fallback }
+      return CGPoint(x: map["x"]?.doubleValue ?? fallback.x,
+                     y: map["y"]?.doubleValue ?? fallback.y)
+    }
+    switch map["_type"]?.stringValue?.lowercased() {
+    case "radial":
+      let center = point(map["center"], fallback: CGPoint(x: bounds.midX, y: bounds.midY))
+      return .radialGradient(
+        gradient, center: center, startRadius: 0,
+        endRadius: CGFloat(map["radius"]?.doubleValue ?? 0))
+    case "sweep":
+      let center = point(map["center"], fallback: CGPoint(x: bounds.midX, y: bounds.midY))
+      return .conicGradient(
+        gradient, center: center,
+        angle: .radians(map["start_angle"]?.doubleValue ?? 0))
+    default:
+      return .linearGradient(
+        gradient,
+        startPoint: point(map["begin"], fallback: CGPoint(x: bounds.minX, y: bounds.minY)),
+        endPoint: point(map["end"], fallback: CGPoint(x: bounds.maxX, y: bounds.maxY)))
+    }
   }
 
   static func lineCap(_ value: String?) -> CGLineCap {
@@ -547,6 +634,20 @@ struct CanvasPaint: Equatable {
 
   static func blendMode(_ value: String?) -> GraphicsContext.BlendMode {
     switch value?.lowercased() {
+    case "clear": return .clear
+    case "src": return .copy
+    case "dst": return .destinationOver
+    case "src_over": return .normal
+    case "dst_over": return .destinationOver
+    case "src_in": return .sourceAtop
+    case "dst_in": return .destinationIn
+    case "src_out": return .sourceOut
+    case "dst_out": return .destinationOut
+    case "src_atop": return .sourceAtop
+    case "dst_atop": return .destinationAtop
+    case "xor": return .xor
+    case "plus": return .plusLighter
+    case "modulate": return .multiply
     case "multiply": return .multiply
     case "screen": return .screen
     case "overlay": return .overlay
@@ -554,6 +655,14 @@ struct CanvasPaint: Equatable {
     case "lighten": return .lighten
     case "difference": return .difference
     case "exclusion": return .exclusion
+    case "color_dodge": return .colorDodge
+    case "color_burn": return .colorBurn
+    case "hard_light": return .hardLight
+    case "soft_light": return .softLight
+    case "hue": return .hue
+    case "saturation": return .saturation
+    case "color": return .color
+    case "luminosity": return .luminosity
     default: return .normal // Flutter's default `srcOver`.
     }
   }
@@ -588,13 +697,59 @@ private struct CanvasShapeImageView: View {
 /// pie, or radar chart from quietly inventing a different default.
 struct ChartControlSemantics {
   static let unboundedHeight: CGFloat = 300
+  static let defaultAnimationDuration: Double = 0.15
+
+  static func animationDuration(for node: ControlNode) -> Double {
+    guard let value = node.props["animation"] else { return defaultAnimationDuration }
+    return ControlProps.animationDurationSeconds(value) ?? defaultAnimationDuration
+  }
+
+  static func animationCurve(for node: ControlNode) -> String {
+    node.props["animation"]?["curve"]?.stringValue ?? "linear"
+  }
+
+  static func animation(for node: ControlNode) -> Animation {
+    RufletCurve.animation(animationCurve(for: node), duration: animationDuration(for: node))
+  }
+
+  /// Flet's `SideTitles` defaults. These are source defaults rather than
+  /// renderer styling: an absent axis hides everything, while a supplied axis
+  /// reserves 22 points for labels and 16 for its optional title.
+  static func axisDefaults(_ node: ControlNode?) -> (showLabels: Bool, titleSize: CGFloat,
+                                                      labelSize: CGFloat,
+                                                      showMin: Bool, showMax: Bool) {
+    guard let node else { return (false, 16, 22, true, true) }
+    return (
+      node.bool("show_labels") ?? true,
+      CGFloat(node.double("title_size") ?? 16),
+      CGFloat(node.double("label_size") ?? 22),
+      node.bool("show_min") ?? true,
+      node.bool("show_max") ?? true)
+  }
+
+  static func tooltipDefaults(_ map: [String: RufletValue]?) ->
+    (margin: CGFloat, maxWidth: CGFloat, rotation: Double,
+     horizontalOffset: CGFloat, fitHorizontal: Bool, fitVertical: Bool) {
+    (
+      CGFloat(map?["margin"]?.doubleValue ?? 16),
+      CGFloat(map?["max_width"]?.doubleValue ?? 120),
+      map?["rotation"]?.doubleValue ?? 0,
+      CGFloat(map?["horizontal_offset"]?.doubleValue ?? 0),
+      map?["fit_inside_horizontally"]?.boolValue ?? false,
+      map?["fit_inside_vertically"]?.boolValue ?? false)
+  }
 
   static func rotationDegrees(for node: ControlNode) -> Double {
     Double((node.int("rotation_quarter_turns") ?? 0) % 4) * 90
   }
 
   static func shouldEmitEvent(for node: ControlNode) -> Bool {
-    guard node.bool("on_event") == true, node.bool("disabled") != true else { return false }
+    guard node.bool("on_event") == true else { return false }
+    return interactionEnabled(for: node)
+  }
+
+  static func interactionEnabled(for node: ControlNode) -> Bool {
+    guard node.bool("disabled") != true else { return false }
     // PieTouchData is always enabled in Flet. Every other family honours its
     // `interactive` property, whose generated default is true.
     return node.type == "PieChart" || (node.bool("interactive") ?? true)
@@ -627,6 +782,38 @@ struct ChartControlSemantics {
     path.closeSubpath()
     return path
   }
+
+  static func groupCenters(count: Int, in range: ClosedRange<CGFloat>, alignment: String?) -> [CGFloat] {
+    guard count > 0 else { return [] }
+    let width = range.upperBound - range.lowerBound
+    let key = alignment?.lowercased() ?? "space_evenly"
+    if count == 1 {
+      switch key {
+      case "start": return [range.lowerBound]
+      case "end": return [range.upperBound]
+      default: return [range.lowerBound + width / 2]
+      }
+    }
+    switch key {
+    case "start": return (0..<count).map { range.lowerBound + CGFloat($0) * width / CGFloat(count) }
+    case "end": return (0..<count).map { range.lowerBound + CGFloat($0 + 1) * width / CGFloat(count) }
+    case "center":
+      let step = width / CGFloat(count + 1)
+      return (0..<count).map { range.lowerBound + width / 2 + (CGFloat($0) - CGFloat(count - 1) / 2) * step }
+    case "space_between":
+      return (0..<count).map { range.lowerBound + CGFloat($0) * width / CGFloat(count - 1) }
+    case "space_around":
+      return (0..<count).map { range.lowerBound + (CGFloat($0) + 0.5) * width / CGFloat(count) }
+    default: // spaceEvenly is fl_chart's effective default.
+      return (0..<count).map { range.lowerBound + CGFloat($0 + 1) * width / CGFloat(count + 1) }
+    }
+  }
+
+  static func nearestIndex(to target: Double, values: [Double]) -> Int? {
+    values.enumerated().min { lhs, rhs in
+      abs(lhs.element - target) < abs(rhs.element - target)
+    }?.offset
+  }
 }
 
 /// The chart family, drawn from the same control trees Flet's chart widgets take.
@@ -640,6 +827,7 @@ struct ChartControlView: View {
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
   @State private var chartSize: CGSize = .zero
+  @State private var interactionLocation: CGPoint?
 
   var body: some View {
     Canvas { context, size in
@@ -663,12 +851,16 @@ struct ChartControlView: View {
       default:
         drawLines(in: &context, plot: plot)
       }
+      if let interactionLocation {
+        drawTooltip(in: &context, at: interactionLocation, bounds: CGRect(origin: .zero, size: size))
+      }
     }
     // Flet caps only an *unbounded* chart at 300. An unconditional max-height
     // changes explicitly-sized charts, so advertise 300 as the intrinsic
     // ideal while still accepting the bounds supplied by the DSL.
     .frame(minHeight: 0, idealHeight: ChartControlSemantics.unboundedHeight)
     .rotationEffect(.degrees(ChartControlSemantics.rotationDegrees(for: node)))
+    .animation(ChartControlSemantics.animation(for: node), value: store.revision)
     .background {
       GeometryReader { geometry in
         Color.clear
@@ -681,10 +873,53 @@ struct ChartControlView: View {
       // with no minimum distance reports the same location on release, which
       // is how the gesture detector reads tap positions here too.
       DragGesture(minimumDistance: 0).onEnded { event in
-        guard ChartControlSemantics.shouldEmitEvent(for: node)
-        else { return }
-        events.fire(node, "event", data: chartEvent(at: event.location))
+        guard ChartControlSemantics.interactionEnabled(for: node) else { return }
+        interactionLocation = event.location
+        if ChartControlSemantics.shouldEmitEvent(for: node) {
+          events.fire(node, "event", data: chartEvent(at: event.location))
+        }
       })
+  }
+
+  private func drawTooltip(in context: inout GraphicsContext, at location: CGPoint, bounds: CGRect) {
+    let defaults = ChartControlSemantics.tooltipDefaults(node.map("tooltip"))
+    let event = chartEvent(at: location)
+    let label: String
+    switch node.type {
+    case "BarChart":
+      let group = event["group_index"]?.intValue
+      let rod = event["rod_index"]?.intValue
+      label = group.map { "\($0):\(rod ?? 0)" } ?? ""
+    case "PieChart":
+      label = event["section_index"]?.intValue.map(String.init) ?? ""
+    case "RadarChart":
+      label = event["entry_value"]?.doubleValue.map { String(format: "%.2f", $0) } ?? ""
+    default:
+      label = event["spot_index"]?.intValue.map(String.init) ?? ""
+    }
+    guard !label.isEmpty else { return }
+    let padding: CGFloat = 8
+    let width = min(defaults.maxWidth, max(CGFloat(label.count) * 8 + padding * 2, 36))
+    let height: CGFloat = 28
+    var origin = CGPoint(
+      x: location.x - width / 2 + defaults.horizontalOffset,
+      y: location.y - height - defaults.margin)
+    if defaults.fitHorizontal {
+      origin.x = min(max(origin.x, bounds.minX), bounds.maxX - width)
+    }
+    if defaults.fitVertical {
+      origin.y = min(max(origin.y, bounds.minY), bounds.maxY - height)
+    }
+    let rect = CGRect(origin: origin, size: CGSize(width: width, height: height))
+    var tooltip = context
+    tooltip.translateBy(x: rect.midX, y: rect.midY)
+    tooltip.rotate(by: .degrees(defaults.rotation))
+    tooltip.translateBy(x: -rect.midX, y: -rect.midY)
+    tooltip.fill(
+      Path(roundedRect: rect, cornerRadius: 4),
+      with: .color(MaterialPalette.color(node.map("tooltip")?["bgcolor"]?.stringValue,
+                                         default: .secondary)))
+    tooltip.draw(Text(label).font(.caption).foregroundColor(.white), at: CGPoint(x: rect.midX, y: rect.midY))
   }
 
   /// Matches the maps produced by the Flet chart plugin's `*EventData.toMap()`.
@@ -694,7 +929,11 @@ struct ChartControlView: View {
     let xFraction = max(0, min(location.x / max(chartSize.width, 1), 0.999_999))
     switch node.type {
     case "BarChart":
-      let groupIndex = min(Int(xFraction * CGFloat(barGroups.count)), max(barGroups.count - 1, 0))
+      let groups = barGroups
+      let minX = node.double("min_x") ?? groups.map(\.x).min() ?? 0
+      let maxX = node.double("max_x") ?? groups.map(\.x).max() ?? 1
+      let target = minX + Double(xFraction) * max(maxX - minX, .ulpOfOne)
+      let groupIndex = ChartControlSemantics.nearestIndex(to: target, values: groups.map(\.x)) ?? 0
       return .map([
         "type": .string("tapUp"), "group_index": barGroups.isEmpty ? .null : .int(Int64(groupIndex)),
         "rod_index": barGroups.isEmpty ? .null : .int(0), "stack_item_index": .null,
@@ -718,10 +957,15 @@ struct ChartControlView: View {
       ])
     case "ScatterChart", "CandlestickChart":
       let key = "spots"
-      let count = orderedUnique(node.controlIDs(forKey: key) + node.childIDs).count
-      let index = min(Int(xFraction * CGFloat(count)), max(count - 1, 0))
+      let spots = orderedUnique(node.controlIDs(forKey: key) + node.childIDs).compactMap { store.node($0) }
+      let values = spots.map { $0.double("x") ?? 0 }
+      let minX = node.double("min_x") ?? values.min() ?? 0
+      let maxX = node.double("max_x") ?? values.max() ?? 1
+      let target = minX + Double(xFraction) * max(maxX - minX, .ulpOfOne)
+      let index = ChartControlSemantics.nearestIndex(to: target, values: values)
       return .map([
-        "type": .string("tapUp"), "spot_index": count == 0 ? .null : .int(Int64(index)),
+        "type": .string("tapUp"),
+        "spot_index": index.map { .int(Int64($0)) } ?? .null,
       ])
     case "RadarChart":
       let sets = node.controlIDs(forKey: "data_sets").compactMap { store.node($0) }
@@ -739,7 +983,11 @@ struct ChartControlView: View {
       ])
     default:
       let spots = lineSeries.enumerated().map { barIndex, series -> RufletValue in
-        let index = min(Int(xFraction * CGFloat(series.points.count)), max(series.points.count - 1, 0))
+        let xs = series.points.map(\.x)
+        let minX = node.double("min_x") ?? xs.min() ?? 0
+        let maxX = node.double("max_x") ?? xs.max() ?? 1
+        let target = minX + Double(xFraction) * max(maxX - minX, .ulpOfOne)
+        let index = ChartControlSemantics.nearestIndex(to: target, values: xs) ?? 0
         return .map(["bar_index": .int(Int64(barIndex)), "spot_index": .int(Int64(index))])
       }
       return .map(["type": .string("tapUp"), "spots": .array(spots)])
@@ -749,10 +997,13 @@ struct ChartControlView: View {
   private struct Point {
     let x: Double
     let y: Double
+    let pointStyle: RufletValue?
+    let selected: Bool
   }
 
   private struct LineSeries {
     let color: Color
+    let gradient: LinearGradient?
     let points: [Point]
     let strokeWidth: CGFloat
     let curved: Bool
@@ -762,6 +1013,9 @@ struct ChartControlView: View {
     let stepDirection: Double?
     let belowColor: Color?
     let aboveColor: Color?
+    let belowGradient: LinearGradient?
+    let aboveGradient: LinearGradient?
+    let shadow: [String: RufletValue]?
     let point: RufletValue?
   }
 
@@ -773,6 +1027,7 @@ struct ChartControlView: View {
       guard !values.isEmpty else { return nil }
       return LineSeries(
         color: MaterialPalette.color(group.string("color"), default: .cyan),
+        gradient: GradientProps.linear(group.props["gradient"]),
         points: values,
         strokeWidth: CGFloat(group.double("stroke_width") ?? 2),
         curved: group.bool("curved") ?? false,
@@ -786,6 +1041,9 @@ struct ChartControlView: View {
         aboveColor: group.string("above_line_bgcolor").map {
           MaterialPalette.color($0, default: .clear)
         },
+        belowGradient: GradientProps.linear(group.props["below_line_gradient"]),
+        aboveGradient: GradientProps.linear(group.props["above_line_gradient"]),
+        shadow: group.map("shadow"),
         point: group.props["point"])
     }
   }
@@ -803,13 +1061,17 @@ struct ChartControlView: View {
     for key in ["data_points", "points", "spots"] {
       let resolved = group.controlIDs(forKey: key).compactMap { id -> Point? in
         guard let point = store.node(id) else { return nil }
-        return Point(x: point.double("x") ?? 0, y: point.double("y") ?? 0)
+        return Point(
+          x: point.double("x") ?? 0, y: point.double("y") ?? 0,
+          pointStyle: point.props["point"], selected: point.bool("selected") ?? false)
       }
       if !resolved.isEmpty { return resolved }
 
       let inline = (group.array(key) ?? []).compactMap { value -> Point? in
         guard let map = value.mapValue else { return nil }
-        return Point(x: map["x"]?.doubleValue ?? 0, y: map["y"]?.doubleValue ?? 0)
+        return Point(
+          x: map["x"]?.doubleValue ?? 0, y: map["y"]?.doubleValue ?? 0,
+          pointStyle: map["point"], selected: map["selected"]?.boolValue ?? false)
       }
       if !inline.isEmpty { return inline }
     }
@@ -872,36 +1134,54 @@ struct ChartControlView: View {
         for point in projected.dropFirst() { path.addLine(to: point) }
       }
 
-      if let below = entry.belowColor {
+      if entry.belowColor != nil || entry.belowGradient != nil {
         var area = path
         area.addLine(to: CGPoint(x: projected.last?.x ?? first.x, y: plot.maxY))
         area.addLine(to: CGPoint(x: first.x, y: plot.maxY))
         area.closeSubpath()
-        context.fill(area, with: .color(below))
+        if let gradient = entry.belowGradient {
+          context.fill(area, with: .style(gradient))
+        } else if let below = entry.belowColor {
+          context.fill(area, with: .color(below))
+        }
       }
-      if let above = entry.aboveColor {
+      if entry.aboveColor != nil || entry.aboveGradient != nil {
         var area = path
         area.addLine(to: CGPoint(x: projected.last?.x ?? first.x, y: plot.minY))
         area.addLine(to: CGPoint(x: first.x, y: plot.minY))
         area.closeSubpath()
-        context.fill(area, with: .color(above))
+        if let gradient = entry.aboveGradient {
+          context.fill(area, with: .style(gradient))
+        } else if let above = entry.aboveColor {
+          context.fill(area, with: .color(above))
+        }
       }
 
-      context.stroke(
+      var lineContext = context
+      if let shadow = entry.shadow {
+        let offset = shadow["offset"]?.mapValue
+        lineContext.addFilter(.shadow(
+          color: MaterialPalette.color(shadow["color"]?.stringValue, default: .clear),
+          radius: CGFloat(shadow["blur_radius"]?.doubleValue ?? 0),
+          x: CGFloat(offset?["x"]?.doubleValue ?? 0),
+          y: CGFloat(offset?["y"]?.doubleValue ?? 0)))
+      }
+      lineContext.stroke(
         path,
-        with: .color(entry.color),
+        with: entry.gradient.map { .style($0) } ?? .color(entry.color),
         style: StrokeStyle(
           lineWidth: entry.strokeWidth,
           lineCap: entry.roundedStrokeCap ? .round : .butt,
           lineJoin: entry.roundedStrokeJoin ? .round : .miter,
           dash: entry.dash))
 
-      if entry.point != nil, entry.point?.boolValue != false {
-        for point in projected {
-          context.fill(
-            Path(ellipseIn: CGRect(x: point.x - 4, y: point.y - 4, width: 8, height: 8)),
-            with: .color(entry.color))
-        }
+      for (index, point) in projected.enumerated() {
+        let source = entry.points[index]
+        let pointStyle = source.pointStyle ?? entry.point
+        guard pointStyle != nil, pointStyle?.boolValue != false else { continue }
+        drawChartPoint(
+          pointStyle, at: point, fallbackRadius: 4,
+          fallbackColor: entry.color, selected: source.selected, in: &context)
       }
     }
     drawGridAndBorder(in: &context, chart: plot)
@@ -920,6 +1200,7 @@ struct ChartControlView: View {
     let backgroundFromY: Double?
     let backgroundToY: Double?
     let backgroundColor: Color?
+    let backgroundGradient: LinearGradient?
     let selected: Bool
   }
 
@@ -930,6 +1211,7 @@ struct ChartControlView: View {
     let barsSpace: CGFloat
     /// The rods whose tooltip Flet asked to be showing.
     let tooltipIndicators: [Int]
+    let vertical: Bool
   }
 
   /// A rod can be painted with a gradient rather than a flat colour, and can
@@ -976,6 +1258,7 @@ struct ChartControlView: View {
           backgroundColor: rod.string("bgcolor").map {
             MaterialPalette.color($0, default: .clear)
           },
+          backgroundGradient: GradientProps.linear(rod.props["background_gradient"]),
           selected: rod.bool("selected") ?? false)
       }
       guard !rods.isEmpty else { return nil }
@@ -984,7 +1267,8 @@ struct ChartControlView: View {
         rods: rods,
         barsSpace: CGFloat(group.double("spacing") ?? group.double("bars_space") ?? 0),
         tooltipIndicators: interactiveChart
-          ? [] : rods.enumerated().compactMap { $0.element.selected ? $0.offset : nil })
+          ? [] : rods.enumerated().compactMap { $0.element.selected ? $0.offset : nil },
+        vertical: group.bool("group_vertically") ?? false)
     }
   }
 
@@ -1029,26 +1313,33 @@ struct ChartControlView: View {
     }
 
     let evenlySpaced = node.double("min_x") == nil && node.double("max_x") == nil
+    let automaticCenters = ChartControlSemantics.groupCenters(
+      count: groups.count, in: chart.minX...chart.maxX,
+      alignment: node.string("group_alignment"))
     for (groupIndex, group) in groups.enumerated() {
       let centreX: CGFloat
       if evenlySpaced {
-        centreX = chart.minX + chart.width * (CGFloat(groupIndex) + 0.5) / CGFloat(groups.count)
+        centreX = automaticCenters[groupIndex]
       } else {
         centreX = chart.minX + CGFloat((group.x - minX) / xSpan) * chart.width
       }
-      let totalWidth = group.rods.reduce(CGFloat.zero) { $0 + $1.width }
-        + group.barsSpace * CGFloat(max(group.rods.count - 1, 0))
+      let totalWidth = group.vertical ? (group.rods.map(\.width).max() ?? 0)
+        : group.rods.reduce(CGFloat.zero) { $0 + $1.width }
+          + group.barsSpace * CGFloat(max(group.rods.count - 1, 0))
       var rodX = centreX - totalWidth / 2
       for (rodIndex, rod) in group.rods.enumerated() {
         if let from = rod.backgroundFromY, let to = rod.backgroundToY,
-          let background = rod.backgroundColor
+          rod.backgroundColor != nil || rod.backgroundGradient != nil
         {
           let backgroundTop = min(y(from), y(to))
-          context.fill(
-            Path(roundedRect: CGRect(
+          let backgroundPath = Path(roundedRect: CGRect(
               x: rodX, y: backgroundTop, width: rod.width,
-              height: max(abs(y(from) - y(to)), 1)), cornerRadius: rod.radius),
-            with: .color(background))
+              height: max(abs(y(from) - y(to)), 1)), cornerRadius: rod.radius)
+          if let gradient = rod.backgroundGradient {
+            context.fill(backgroundPath, with: .style(gradient))
+          } else if let background = rod.backgroundColor {
+            context.fill(backgroundPath, with: .color(background))
+          }
         }
         let top = min(y(rod.fromY), y(rod.toY))
         let rect = CGRect(
@@ -1083,7 +1374,7 @@ struct ChartControlView: View {
             Path(ellipseIn: CGRect(x: rect.midX - 2, y: rect.minY - 8, width: 4, height: 4)),
             with: .color(rod.color))
         }
-        rodX += rod.width + group.barsSpace
+        if !group.vertical { rodX += rod.width + group.barsSpace }
       }
       if axisShowsLabels(forKey: "bottom_axis"), let label = bottomAxisLabel(for: group.x) {
         context.draw(
@@ -1120,31 +1411,33 @@ struct ChartControlView: View {
   private func drawGridAndBorder(in context: inout GraphicsContext, chart: CGRect) {
     if let line = node.map("horizontal_grid_lines") {
       let interval = CGFloat(line["interval"]?.doubleValue ?? 0)
-      let step = interval > 0 ? interval : chart.height / 4
+      let minY = node.double("min_y") ?? 0
+      let maxY = node.double("max_y") ?? 1
+      let step = interval > 0
+        ? chart.height * interval / CGFloat(max(maxY - minY, .ulpOfOne))
+        : chart.height / 4
       var y = chart.minY
       while y <= chart.maxY, step > 0 {
         var path = Path()
         path.move(to: CGPoint(x: chart.minX, y: y))
         path.addLine(to: CGPoint(x: chart.maxX, y: y))
-        context.stroke(
-          path,
-          with: .color(MaterialPalette.color(line["color"]?.stringValue, default: .secondary)),
-          lineWidth: CGFloat(line["width"]?.doubleValue ?? 1))
+        strokeGrid(path, spec: line, in: &context)
         y += step
       }
     }
     if let line = node.map("vertical_grid_lines") {
       let interval = CGFloat(line["interval"]?.doubleValue ?? 0)
-      let step = interval > 0 ? interval : chart.width / 4
+      let minX = node.double("min_x") ?? 0
+      let maxX = node.double("max_x") ?? 1
+      let step = interval > 0
+        ? chart.width * interval / CGFloat(max(maxX - minX, .ulpOfOne))
+        : chart.width / 4
       var x = chart.minX
       while x <= chart.maxX, step > 0 {
         var path = Path()
         path.move(to: CGPoint(x: x, y: chart.minY))
         path.addLine(to: CGPoint(x: x, y: chart.maxY))
-        context.stroke(
-          path,
-          with: .color(MaterialPalette.color(line["color"]?.stringValue, default: .secondary)),
-          lineWidth: CGFloat(line["width"]?.doubleValue ?? 1))
+        strokeGrid(path, spec: line, in: &context)
         x += step
       }
     }
@@ -1153,6 +1446,75 @@ struct ChartControlView: View {
         Path(chart),
         with: .color(MaterialPalette.color(border["color"]?.stringValue, default: .secondary)),
         lineWidth: CGFloat(border["width"]?.doubleValue ?? 1))
+    }
+    drawAxes(in: &context, chart: chart)
+  }
+
+  private func strokeGrid(_ path: Path, spec: [String: RufletValue],
+                          in context: inout GraphicsContext) {
+    let width = CGFloat(spec["width"]?.doubleValue ?? 2)
+    let dash = (spec["dash_pattern"]?.arrayValue ?? [])
+      .compactMap(\.doubleValue).map { CGFloat($0) }
+    let style = StrokeStyle(lineWidth: width, dash: dash)
+    if let gradient = GradientProps.linear(spec["gradient"]) {
+      context.stroke(path, with: .style(gradient), style: style)
+    } else {
+      context.stroke(
+        path,
+        with: .color(MaterialPalette.color(spec["color"]?.stringValue, default: .black)),
+        style: style)
+    }
+  }
+
+  private func drawAxes(in context: inout GraphicsContext, chart: CGRect) {
+    for key in ["left_axis", "top_axis", "right_axis", "bottom_axis"] {
+      guard let axisID = node.controlID(forKey: key), let axis = store.node(axisID) else { continue }
+      let defaults = ChartControlSemantics.axisDefaults(axis)
+
+      if let titleID = axis.controlID(forKey: "title"), let title = controlText(titleID) {
+        let point: CGPoint
+        let rotation: Double
+        switch key {
+        case "left_axis": point = CGPoint(x: chart.minX - defaults.labelSize - defaults.titleSize / 2,
+                                           y: chart.midY); rotation = -90
+        case "right_axis": point = CGPoint(x: chart.maxX + defaults.labelSize + defaults.titleSize / 2,
+                                            y: chart.midY); rotation = 90
+        case "top_axis": point = CGPoint(x: chart.midX, y: chart.minY - defaults.labelSize); rotation = 0
+        default: point = CGPoint(x: chart.midX, y: chart.maxY + defaults.labelSize); rotation = 0
+        }
+        var titled = context
+        titled.translateBy(x: point.x, y: point.y)
+        titled.rotate(by: .degrees(rotation))
+        titled.draw(Text(title).font(.system(size: defaults.titleSize)), at: .zero)
+      }
+
+      guard defaults.showLabels else { continue }
+      let labels = axis.controlIDs(forKey: "labels").compactMap { store.node($0) }
+      let vertical = key == "left_axis" || key == "right_axis"
+      let minimum = vertical ? (node.double("min_y") ?? 0) : (node.double("min_x") ?? 0)
+      let maximum = vertical ? (node.double("max_y") ?? 1) : (node.double("max_x") ?? 1)
+      let span = max(maximum - minimum, .ulpOfOne)
+      for label in labels {
+        guard let value = label.double("value"),
+              let contentID = label.controlID(forKey: "label"),
+              let text = controlText(contentID) else { continue }
+        if (!defaults.showMin && abs(value - minimum) < .ulpOfOne)
+          || (!defaults.showMax && abs(value - maximum) < .ulpOfOne) { continue }
+        let fraction = CGFloat((value - minimum) / span)
+        let point: CGPoint
+        let anchor: UnitPoint
+        switch key {
+        case "left_axis":
+          point = CGPoint(x: chart.minX - 4, y: chart.maxY - fraction * chart.height); anchor = .trailing
+        case "right_axis":
+          point = CGPoint(x: chart.maxX + 4, y: chart.maxY - fraction * chart.height); anchor = .leading
+        case "top_axis":
+          point = CGPoint(x: chart.minX + fraction * chart.width, y: chart.minY - 4); anchor = .bottom
+        default:
+          point = CGPoint(x: chart.minX + fraction * chart.width, y: chart.maxY + 4); anchor = .top
+        }
+        context.draw(Text(text).font(.caption2), at: point, anchor: anchor)
+      }
     }
   }
 
@@ -1173,11 +1535,14 @@ struct ChartControlView: View {
       let point = CGPoint(
         x: plot.minX + CGFloat(((spot.double("x") ?? 0) - minX) / spanX) * plot.width,
         y: plot.maxY - CGFloat(((spot.double("y") ?? 0) - minY) / spanY) * plot.height)
-      context.fill(
-        Path(ellipseIn: CGRect(
-          x: point.x - radius, y: point.y - radius,
-          width: radius * 2, height: radius * 2)),
-        with: .color(MaterialPalette.color(spot.string("color") ?? "primary", default: .primary)))
+      let color = MaterialPalette.color(spot.string("color") ?? "primary", default: .primary)
+      drawChartPoint(
+        spot.props["point"], at: point, fallbackRadius: radius,
+        fallbackColor: color, selected: spot.bool("selected") == true, in: &context)
+      drawErrorIndicator(spot.map("x_error"), horizontal: true, at: point, plot: plot,
+                         min: minX, span: spanX, in: &context)
+      drawErrorIndicator(spot.map("y_error"), horizontal: false, at: point, plot: plot,
+                         min: minY, span: spanY, in: &context)
       if let label = spot.string("label_text"), !label.isEmpty {
         let style = spot.map("label_text_style") ?? [:]
         var text = Text(label)
@@ -1189,15 +1554,64 @@ struct ChartControlView: View {
         }
         context.draw(text, at: CGPoint(x: point.x, y: point.y - radius - 3), anchor: .bottom)
       }
-      if spot.bool("selected") == true {
-        context.stroke(
-          Path(ellipseIn: CGRect(
-            x: point.x - radius - 3, y: point.y - radius - 3,
-            width: radius * 2 + 6, height: radius * 2 + 6)),
-          with: .color(.primary), lineWidth: 1)
-      }
     }
     drawGridAndBorder(in: &context, chart: plot)
+  }
+
+  private func drawChartPoint(
+    _ value: RufletValue?, at center: CGPoint, fallbackRadius: CGFloat,
+    fallbackColor: Color, selected: Bool, in context: inout GraphicsContext
+  ) {
+    if value?.boolValue == false { return }
+    let map = value?.mapValue
+    let type = map?["_type"]?.stringValue?.lowercased() ?? "chartcirclepoint"
+    let color = MaterialPalette.color(map?["color"]?.stringValue, default: fallbackColor)
+    let stroke = MaterialPalette.color(map?["stroke_color"]?.stringValue,
+                                       default: color.opacity(0.75))
+    let strokeWidth = CGFloat(map?["stroke_width"]?.doubleValue ?? (selected ? 2 : 0))
+    let radius = CGFloat(map?["radius"]?.doubleValue ?? (selected ? max(fallbackRadius, 8) : fallbackRadius))
+    let size = CGFloat(map?["size"]?.doubleValue ?? radius * 2)
+    let path: Path
+    switch type {
+    case "chartsquarepoint":
+      path = Path(CGRect(x: center.x - size / 2, y: center.y - size / 2,
+                         width: size, height: size))
+    case "chartcrosspoint":
+      var cross = Path()
+      cross.move(to: CGPoint(x: center.x - size / 2, y: center.y - size / 2))
+      cross.addLine(to: CGPoint(x: center.x + size / 2, y: center.y + size / 2))
+      cross.move(to: CGPoint(x: center.x + size / 2, y: center.y - size / 2))
+      cross.addLine(to: CGPoint(x: center.x - size / 2, y: center.y + size / 2))
+      context.stroke(cross, with: .color(color),
+                     lineWidth: CGFloat(map?["width"]?.doubleValue ?? 2))
+      return
+    default:
+      path = Path(ellipseIn: CGRect(x: center.x - radius, y: center.y - radius,
+                                    width: radius * 2, height: radius * 2))
+    }
+    context.fill(path, with: .color(color))
+    if strokeWidth > 0 { context.stroke(path, with: .color(stroke), lineWidth: strokeWidth) }
+  }
+
+  private func drawErrorIndicator(
+    _ map: [String: RufletValue]?, horizontal: Bool, at center: CGPoint,
+    plot: CGRect, min: Double, span: Double, in context: inout GraphicsContext
+  ) {
+    guard let map else { return }
+    let lower = map["lower_by"]?.doubleValue ?? map["lower"]?.doubleValue ?? 0
+    let upper = map["upper_by"]?.doubleValue ?? map["upper"]?.doubleValue ?? 0
+    guard lower != 0 || upper != 0 else { return }
+    let scale = (horizontal ? plot.width : plot.height) / CGFloat(max(span, .ulpOfOne))
+    let start = horizontal
+      ? CGPoint(x: center.x - CGFloat(lower) * scale, y: center.y)
+      : CGPoint(x: center.x, y: center.y + CGFloat(lower) * scale)
+    let end = horizontal
+      ? CGPoint(x: center.x + CGFloat(upper) * scale, y: center.y)
+      : CGPoint(x: center.x, y: center.y - CGFloat(upper) * scale)
+    var line = Path()
+    line.move(to: start); line.addLine(to: end)
+    let color = MaterialPalette.color(map["color"]?.stringValue, default: .secondary)
+    context.stroke(line, with: .color(color), lineWidth: CGFloat(map["width"]?.doubleValue ?? 1))
   }
 
   /// `RadarChart` — one closed polygon per data set over a spoked grid.
