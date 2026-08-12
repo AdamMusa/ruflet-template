@@ -893,19 +893,23 @@ struct ResponsiveRowControlView: View {
 
   @ViewBuilder
   var body: some View {
-    let semantics = RufletResponsiveRowSemantics(node)
+    let page = store.page
+    let semantics = RufletResponsiveRowSemantics(node, page: page)
+    let children = ResponsiveGridMath.visibleChildren(node.childIDs, node: store.node)
+    let pageWidth = page?.double("width").map { CGFloat($0) }
     if #available(iOS 16.0, macOS 13.0, tvOS 16.0, *) {
       ResponsiveGridLayout(
-        spans: node.childIDs.map { store.node($0)?.props["col"] },
+        spans: children.map { store.node($0)?.props["col"] },
         columns: semantics.columns,
         spacing: semantics.spacing,
         runSpacing: semantics.runSpacing,
         breakpoints: semantics.breakpoints,
-        breakpointWidth: viewWidth > 0 ? viewWidth : nil,
+        runBreakpoints: semantics.pageBreakpoints,
+        breakpointWidth: pageWidth ?? (viewWidth > 0 ? viewWidth : nil),
         alignment: semantics.alignment,
         verticalAlignment: semantics.verticalAlignment
       ) {
-        ForEach(node.childIDs, id: \.self) { id in
+        ForEach(children, id: \.self) { id in
           ControlView(id: id, axis: ResponsiveGridMath.childLayoutAxis)
             // Flet wraps every child in a ConstrainedBox whose minWidth and
             // maxWidth are identical. The flexible frame is SwiftUI's
@@ -927,7 +931,7 @@ struct ResponsiveRowControlView: View {
           semantics.runSpacing, default: 10, width: viewWidth,
           breakpoints: ResponsiveGridMath.defaultBreakpoints))
       ) {
-        ForEach(node.childIDs, id: \.self) { id in
+        ForEach(children, id: \.self) { id in
           ControlView(id: id, axis: .none)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -942,16 +946,19 @@ struct RufletResponsiveRowSemantics: Equatable {
   let spacing: RufletValue?
   let runSpacing: RufletValue?
   let breakpoints: [String: Double]
+  let pageBreakpoints: [String: Double]
   let alignment: String
   let verticalAlignment: String
 
-  init(_ node: ControlNode) {
+  init(_ node: ControlNode, page: ControlNode? = nil) {
     // parseResponsiveNumber inserts the scalar unnamed default before the
     // responsive resolver runs. Preserve those exact Flet defaults here.
     columns = node.props["columns"] ?? .double(12)
     spacing = node.props["spacing"] ?? .double(10)
     runSpacing = node.props["run_spacing"] ?? .double(10)
-    breakpoints = ResponsiveGridMath.breakpoints(node.props["breakpoints"])
+    pageBreakpoints = ResponsiveGridMath.breakpoints(page?.props["breakpoints"])
+    breakpoints = node.props["breakpoints"] == nil
+      ? pageBreakpoints : ResponsiveGridMath.breakpoints(node.props["breakpoints"])
     alignment = node.string("alignment") ?? "start"
     verticalAlignment = node.string("vertical_alignment") ?? "start"
   }
@@ -986,6 +993,15 @@ enum ResponsiveGridMath {
   static let defaultBreakpoints: [String: Double] = [
     "xs": 0, "sm": 576, "md": 768, "lg": 992, "xl": 1200, "xxl": 1400,
   ]
+
+  static func visibleChildren(
+    _ ids: [Int], node: (Int) -> ControlNode?
+  ) -> [Int] {
+    ids.filter { id in
+      guard let child = node(id) else { return false }
+      return child.bool("visible") != false
+    }
+  }
 
   static func breakpoints(_ value: RufletValue?) -> [String: Double] {
     guard let map = value?.mapValue else { return defaultBreakpoints }
@@ -1060,6 +1076,7 @@ private struct ResponsiveGridLayout: Layout {
   let spacing: RufletValue?
   let runSpacing: RufletValue?
   let breakpoints: [String: Double]
+  let runBreakpoints: [String: Double]
   let breakpointWidth: CGFloat?
   let alignment: String
   let verticalAlignment: String
@@ -1128,7 +1145,7 @@ private struct ResponsiveGridLayout: Layout {
     let runGap = CGFloat(
       ResponsiveGridMath.value(
         runSpacing, default: 10, width: responsiveWidth,
-        breakpoints: ResponsiveGridMath.defaultBreakpoints))
+        breakpoints: runBreakpoints))
     let resolvedSpans = subviews.indices.map { index in
       max(
         ResponsiveGridMath.value(

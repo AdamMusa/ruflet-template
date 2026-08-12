@@ -1,5 +1,6 @@
 import XCTest
 @testable import RufletUI
+import RufletEngine
 import RufletProtocol
 
 final class ResponsiveGridMathTests: XCTestCase {
@@ -64,5 +65,33 @@ final class ResponsiveGridMathTests: XCTestCase {
     XCTAssertEqual(
       ResponsiveGridMath.itemWidth(span: 18, columns: 12, total: 600, spacing: 12),
       906, accuracy: 0.001)
+  }
+
+  func testResponsiveRowUsesVisibleExistingControlsOnly() {
+    let nodes = [
+      1: ControlNode(id: 1, type: "Container"),
+      2: ControlNode(id: 2, type: "Container", props: ["visible": .bool(false)]),
+    ]
+    XCTAssertEqual(
+      ResponsiveGridMath.visibleChildren([1, 2, 404], node: { nodes[$0] }),
+      [1])
+  }
+
+  func testRowBreakpointsFallBackToThePageConfiguration() {
+    let page = ControlNode(
+      id: 1, type: "Page",
+      props: ["breakpoints": .map(["phone": .double(0), "wide": .double(500)])])
+    let inherited = RufletResponsiveRowSemantics(
+      ControlNode(id: 2, type: "ResponsiveRow"), page: page)
+    XCTAssertEqual(inherited.breakpoints, ["phone": 0, "wide": 500])
+    XCTAssertEqual(inherited.pageBreakpoints, inherited.breakpoints)
+
+    let explicit = RufletResponsiveRowSemantics(
+      ControlNode(
+        id: 3, type: "ResponsiveRow",
+        props: ["breakpoints": .map(["compact": .double(0)])]),
+      page: page)
+    XCTAssertEqual(explicit.breakpoints, ["compact": 0])
+    XCTAssertEqual(explicit.pageBreakpoints, ["phone": 0, "wide": 500])
   }
 }
