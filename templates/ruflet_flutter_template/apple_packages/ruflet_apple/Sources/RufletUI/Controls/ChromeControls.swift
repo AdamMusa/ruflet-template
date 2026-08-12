@@ -160,10 +160,12 @@ struct NavigationBarControlView: View {
   /// selected destination; an absent shape is Material's stadium.
   @ViewBuilder
   private func destinationIndicator(active: Bool) -> some View {
-    if active, let color = MaterialPalette.color(node.string("indicator_color")) {
+    if active {
       RoundedRectangle(
         cornerRadius: ControlProps.cornerRadius(node.map("indicator_shape")?["radius"]) ?? 16)
-        .fill(color)
+        .fill(MaterialPalette.color(
+          node.string("indicator_color"),
+          default: MaterialPalette.color("secondarycontainer", default: .clear)))
     }
   }
 
@@ -187,14 +189,14 @@ struct NavigationBarControlView: View {
         } label: {
           VStack(spacing: 4) {
             destinationIcon(destination, selected: index == selected)
+              .frame(minWidth: 64, minHeight: 32)
+              .background(destinationIndicator(active: index == selected))
             if metrics.showsLabel(selected: index == selected),
               let label = destination.string("label") {
-              Text(label).font(.caption2)
+              Text(label).font(.caption2).padding(metrics.labelPadding)
             }
           }
           .frame(maxWidth: .infinity)
-          .padding(metrics.labelPadding)
-          .background(destinationIndicator(active: index == selected))
           .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -265,17 +267,6 @@ struct NavigationRailControlView: View {
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
 
-  /// `label_type` decides whether a rail shows every label, only the selected
-  /// one, or none; an extended rail always shows them.
-  private func showsRailLabel(extended: Bool, selected: Bool) -> Bool {
-    switch node.string("label_type")?.lowercased() {
-    case "none": return false
-    case "selected": return extended || selected
-    case "all": return true
-    default: return extended
-    }
-  }
-
   private func railLabelStyle(selected: Bool) -> RufletTextStyle {
     guard selected else {
       return RufletTextStyle(node: node, styleKey: "unselected_label_text_style")
@@ -283,15 +274,17 @@ struct NavigationRailControlView: View {
     return RufletTextStyle(node: node, styleKey: "selected_label_text_style")
   }
 
-  private func railIndicator(active: Bool) -> Color {
+  private func railIndicator(_ destination: ControlNode, active: Bool) -> Color {
     guard active else { return .clear }
     return MaterialPalette.color(
-      node.string("indicator_color"),
+      destination.string("indicator_color") ?? node.string("indicator_color"),
       default: MaterialPalette.color("secondarycontainer", default: .clear))
   }
 
-  private var railIndicatorRadius: CGFloat {
-    ControlProps.cornerRadius(node.map("indicator_shape")?["radius"]) ?? 12
+  private func railIndicatorRadius(_ destination: ControlNode) -> CGFloat {
+    ControlProps.cornerRadius(destination.map("indicator_shape")?["radius"])
+      ?? ControlProps.cornerRadius(node.map("indicator_shape")?["radius"])
+      ?? 12
   }
 
   var body: some View {
@@ -311,16 +304,19 @@ struct NavigationRailControlView: View {
         } label: {
           HStack(spacing: 8) {
             railDestinationIcon(destination, selected: index == selected)
-            if showsRailLabel(extended: extended, selected: index == selected) {
+            if metrics.showsLabel(extended: extended, selected: index == selected) {
               railDestinationLabel(destination, selected: index == selected)
               Spacer(minLength: 0)
             }
           }
-          .padding(.horizontal, extended ? 16 : 12)
-          .padding(.vertical, 10)
+          .padding(
+            ControlProps.edgeInsets(destination.props["padding"])
+              ?? EdgeInsets(
+                top: 10, leading: extended ? 16 : 12,
+                bottom: 10, trailing: extended ? 16 : 12))
           .background(
-            railIndicator(active: metrics.useIndicator && index == selected),
-            in: RoundedRectangle(cornerRadius: railIndicatorRadius)
+            railIndicator(destination, active: metrics.useIndicator && index == selected),
+            in: RoundedRectangle(cornerRadius: railIndicatorRadius(destination))
           )
           .contentShape(Rectangle())
         }
@@ -406,7 +402,7 @@ enum ChromeDefaults {
   }
 
   struct NavigationBarValues {
-    let height: CGFloat?
+    let height: CGFloat
     let elevation: CGFloat
     let animation: Animation
     let labelPadding: EdgeInsets
@@ -426,7 +422,21 @@ enum ChromeDefaults {
     let groupAlignment: Double
     let minWidth: CGFloat
     let useIndicator: Bool
+    let labelBehavior: NavigationRailLabelBehavior
+
+    func showsLabel(extended: Bool, selected: Bool) -> Bool {
+      // Flutter sets labelType to none for an extended rail because the
+      // extended constructor itself displays every destination label.
+      if extended { return true }
+      switch labelBehavior {
+      case .all: return true
+      case .selected: return selected
+      case .none: return false
+      }
+    }
   }
+
+  enum NavigationRailLabelBehavior { case all, selected, none }
 
   static func appBar(_ node: ControlNode) -> AppBarValues {
     AppBarValues(
@@ -461,7 +471,9 @@ enum ChromeDefaults {
     }
     let duration = max(node.double("animation_duration") ?? 500, 0) / 1000
     return NavigationBarValues(
-      height: node.double("height").map { CGFloat($0) },
+      // Flutter Material 3's NavigationBar constructor resolves an omitted
+      // height through _NavigationBarDefaultsM3 to 80 logical pixels.
+      height: CGFloat(node.double("height") ?? 80),
       elevation: CGFloat(node.double("elevation") ?? 0),
       animation: .easeInOut(duration: duration),
       labelPadding: ControlProps.edgeInsets(node.props["label_padding"])
@@ -470,11 +482,17 @@ enum ChromeDefaults {
   }
 
   static func navigationRail(_ node: ControlNode) -> NavigationRailValues {
-    NavigationRailValues(
+    let labelBehavior: NavigationRailLabelBehavior = switch node.string("label_type")?.lowercased() {
+    case "none": .none
+    case "selected": .selected
+    default: .all
+    }
+    return NavigationRailValues(
       elevation: CGFloat(node.double("elevation") ?? 0),
       groupAlignment: node.double("group_alignment") ?? -1,
       minWidth: CGFloat(node.double("min_width") ?? 72),
-      useIndicator: node.bool("use_indicator") ?? true)
+      useIndicator: node.bool("use_indicator") ?? true,
+      labelBehavior: labelBehavior)
   }
 }
 
@@ -502,7 +520,7 @@ struct NavigationDrawerControlView: View {
   @Environment(\.rufletEvents) private var events
 
   var body: some View {
-    let selected = node.int("selected_index")
+    let selected = node.int("selected_index") ?? 0
     let controls = drawerControls
 
     ScrollView {
@@ -522,6 +540,10 @@ struct NavigationDrawerControlView: View {
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     .background(MaterialPalette.color(node.string("bgcolor"), default: drawerSurface))
+    .shadow(
+      color: MaterialPalette.color(node.string("shadow_color"), default: .black.opacity(0.2)),
+      radius: CGFloat(max(node.double("elevation") ?? 0, 0)),
+      x: CGFloat(max(node.double("elevation") ?? 0, 0) / 2))
   }
 
   @ViewBuilder

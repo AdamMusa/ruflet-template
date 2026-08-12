@@ -549,13 +549,17 @@ struct DrawerPresenter: ViewModifier {
       let drawer = store.node(drawerID),
       drawer.bool("_open") == true
     {
-      ZStack(alignment: edge == .leading ? .leading : .trailing) {
-        Color.black.opacity(0.3)
-          .ignoresSafeArea()
-          .onTapGesture { close(drawer) }
-        ControlView(id: drawerID, axis: .vertical)
-          .frame(width: 300)
-          .transition(.move(edge: edge))
+      GeometryReader { proxy in
+        ZStack(alignment: edge == .leading ? .leading : .trailing) {
+          Color.black.opacity(0.3)
+            .ignoresSafeArea()
+            .onTapGesture { close(drawer) }
+          ControlView(id: drawerID, axis: .vertical)
+            // Flutter Material 3's NavigationDrawer default width is 360,
+            // constrained by the available viewport on compact devices.
+            .frame(width: min(proxy.size.width, 360))
+            .transition(.move(edge: edge))
+        }
       }
     }
   }
@@ -582,21 +586,33 @@ struct PopupMenuControlView: View {
     } label: {
       if let contentID = node.controlID(forKey: "content") {
         ControlView(id: contentID, axis: .none)
+      } else if node.props["icon"] == nil {
+        // Flutter's PopupMenuButton falls back to Icons.moreVert when neither
+        // an icon nor child was supplied. Use the native semantic equivalent.
+        Image(systemName: "ellipsis")
+          .font(.system(size: iconSize))
+          .foregroundColor(MaterialPalette.color(node.string("icon_color")))
+          .frame(width: splashSide ?? 40, height: splashSide ?? 40)
+          .contentShape(Rectangle())
       } else {
         RufletIcon(
-          value: node.props["icon"], size: 20,
+          value: node.props["icon"], size: iconSize,
           color: MaterialPalette.color(node.string("icon_color")))
-          .frame(width: splashSide ?? 28, height: splashSide ?? 28)
+          .frame(width: splashSide ?? 40, height: splashSide ?? 40)
           .contentShape(Rectangle())
       }
     }
+    .padding(MaterialMenuDefaults.popupPadding(node))
+    .modifier(SlotSizeConstraints(value: node.props["size_constraints"]))
+    .modifier(MaterialMenuButtonStyle(value: node.props["style"]))
+    .modifier(ChromeClipModifier(behavior: MaterialMenuDefaults.popupClipBehavior(node)))
     .buttonStyle(.plain)
     .disabled(node.bool("disabled") ?? false)
     .modifier(TapFeedback(enabled: node.bool("enable_feedback") != false))
     .popover(isPresented: $presented, attachmentAnchor: menuAnchor) {
       VStack(alignment: .leading, spacing: 0) {
         ForEach(itemIDs, id: \.self) { itemID in
-          if let item = store.node(itemID) { menuItem(item) }
+          if let item = store.node(itemID), item.type == "PopupMenuItem" { menuItem(item) }
         }
       }
       .padding(ControlProps.edgeInsets(node.props["menu_padding"])
@@ -633,23 +649,44 @@ struct PopupMenuControlView: View {
     node.double("splash_radius").map { CGFloat($0) * 2 }
   }
 
+  private var iconSize: CGFloat {
+    MaterialMenuDefaults.popupIconSize(node)
+  }
+
   private var itemIDs: [Int] {
-    node.controlIDs(forKey: "items") + node.childIDs
+    MaterialMenuDefaults.controlIDs(node, key: "items")
   }
 
   @ViewBuilder
   private func menuItem(_ item: ControlNode) -> some View {
-    if item.bool("_divider") == true {
+    let hasContent = item.controlID(forKey: "content") != nil
+      || item.string("content") != nil || item.string("text") != nil
+    let hasIcon = item.props["icon"] != nil
+    if item.bool("_divider") == true || (!hasContent && !hasIcon) {
       Divider()
     } else {
       Button {
         completedSelection = true
         // Flet's popup entry value is the wire id of the selected item.
         events.fire(node, "select", data: .string(String(item.id)))
-        events.fire(item, "click")
+        if let checked = item.bool("checked") {
+          events.fire(item, "click", data: .bool(!checked))
+        } else {
+          events.fire(item, "click")
+        }
         presented = false
       } label: {
         HStack {
+          if let checked = item.bool("checked") {
+            Group {
+              if checked {
+                Image(systemName: "checkmark")
+              } else {
+                Color.clear.frame(width: 18, height: 1)
+              }
+            }
+            .frame(width: 18)
+          }
           if item.props["icon"] != nil {
             RufletIcon(value: item.props["icon"], size: 16, color: nil)
           }
@@ -659,6 +696,9 @@ struct PopupMenuControlView: View {
             Text(item.string("content") ?? item.string("text") ?? "")
           }
         }
+        .padding(ControlProps.edgeInsets(item.props["padding"]) ?? EdgeInsets())
+        .frame(minHeight: MaterialMenuDefaults.popupItemHeight(item))
+        .rufletTextStyle(RufletTextStyle(node: item, styleKey: "label_text_style"))
       }
       .disabled(item.bool("disabled") ?? false)
     }
@@ -671,10 +711,14 @@ struct MenuBarControlView: View {
 
   var body: some View {
     HStack(spacing: 4) {
-      ControlList(ids: node.childIDs, axis: .horizontal)
+      ControlList(ids: controlIDs, axis: .horizontal)
     }
-    .padding(.horizontal, 8)
-    .background(MaterialPalette.color(node.string("bgcolor")))
+    .modifier(MenuSurfaceStyle(value: node.props["style"]))
+    .modifier(ChromeClipModifier(behavior: MaterialMenuDefaults.menuBarClipBehavior(node)))
+  }
+
+  private var controlIDs: [Int] {
+    MaterialMenuDefaults.controlIDs(node, key: "controls")
   }
 }
 
@@ -683,6 +727,7 @@ struct SubmenuButtonControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
   @State private var presented = false
+  @FocusState private var focused: Bool
 
   /// `alignment_offset` shifts the submenu from where it would otherwise
   /// hang off its parent.
@@ -712,7 +757,10 @@ struct SubmenuButtonControlView: View {
       }
     }
     .buttonStyle(.plain)
+    .modifier(MaterialMenuButtonStyle(value: node.props["style"], appliesConstructorDefaults: true))
+    .modifier(ChromeClipModifier(behavior: MaterialMenuDefaults.submenuClipBehavior(node)))
     .disabled(node.bool("disabled") ?? false)
+    .focused($focused)
     .popover(
       isPresented: $presented,
       attachmentAnchor: .rect(.bounds)
@@ -724,15 +772,26 @@ struct SubmenuButtonControlView: View {
     .offset(submenuOffset)
     .modifier(MenuSurfaceStyle(value: node.props["menu_style"]))
     .onChange(of: presented) { open in
-      events.fire(node, open ? "open" : "close")
+      guard node.bool("disabled") != true else { return }
+      if open, MaterialMenuDefaults.shouldEmit(node, event: "open") {
+        events.fire(node, "open")
+      }
+      if !open, MaterialMenuDefaults.shouldEmit(node, event: "close") {
+        events.fire(node, "close")
+      }
     }
     .onHover { inside in
-      events.fire(node, "hover", data: .bool(inside))
+      if MaterialMenuDefaults.shouldEmit(node, event: "hover") {
+        events.fire(node, "hover", data: .bool(inside))
+      }
+    }
+    .onChange(of: focused) { isFocused in
+      events.fire(node, isFocused ? "focus" : "blur")
     }
   }
 
   private var controlIDs: [Int] {
-    orderedUnique(node.controlIDs(forKey: "controls") + node.childIDs)
+    MaterialMenuDefaults.controlIDs(node, key: "controls")
   }
 }
 
@@ -758,8 +817,8 @@ struct MenuItemButtonControlView: View {
 
   var body: some View {
     Button {
-      events.fire(node, "click")
-      if node.bool("close_on_click") ?? true { dismiss() }
+      if MaterialMenuDefaults.shouldEmit(node, event: "click") { events.fire(node, "click") }
+      if MaterialMenuDefaults.menuItemClosesOnClick(node) { dismiss() }
     } label: {
       // `overflow_axis` is the direction the item's content runs when it does
       // not fit; Flutter lays a menu item out along it.
@@ -770,21 +829,118 @@ struct MenuItemButtonControlView: View {
         if let contentID = node.controlID(forKey: "content") {
           ControlView(id: contentID, axis: .none)
         }
-        if let trailingID = node.controlID(forKey: "trailing") {
+        if let trailingID = node.controlID(forKey: "trailing_icon")
+          ?? node.controlID(forKey: "trailing") {
           ControlView(id: trailingID, axis: .none)
         }
       }
     }
+    .buttonStyle(.plain)
+    .modifier(MaterialMenuButtonStyle(value: node.props["style"], appliesConstructorDefaults: true))
+    .modifier(ChromeClipModifier(behavior: MaterialMenuDefaults.menuItemClipBehavior(node)))
     .disabled(node.bool("disabled") ?? false)
     .focused($focused)
-    .accessibilityLabel(node.string("semantic_label") ?? "")
+    .modifier(MenuSemanticLabel(value: node.string("semantics_label") ?? node.string("semantic_label")))
     .onAppear {
       if node.bool("autofocus") == true { focused = true }
     }
     .onHover { inside in
-      if inside, node.bool("focus_on_hover") ?? true { focused = true }
-      events.fire(node, "hover", data: .bool(inside))
+      if inside, MaterialMenuDefaults.menuItemFocusesOnHover(node) { focused = true }
+      if MaterialMenuDefaults.shouldEmit(node, event: "hover") {
+        events.fire(node, "hover", data: .bool(inside))
+      }
     }
+    .onChange(of: focused) { isFocused in
+      events.fire(node, isFocused ? "focus" : "blur")
+    }
+  }
+}
+
+/// Constructor values from Flet 0.80.5's Material menu controls. Keeping the
+/// omission rules here prevents each SwiftUI view from inventing a different
+/// fallback and gives parity tests a stable, source-derived seam.
+enum MaterialMenuDefaults {
+  static func popupIconSize(_ node: ControlNode) -> CGFloat {
+    CGFloat(node.double("icon_size") ?? 24)
+  }
+
+  static func popupPadding(_ node: ControlNode) -> EdgeInsets {
+    ControlProps.edgeInsets(node.props["padding"])
+      ?? EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
+  }
+
+  static func popupClipBehavior(_ node: ControlNode) -> String {
+    node.string("clip_behavior") ?? "none"
+  }
+
+  static func popupItemHeight(_ node: ControlNode) -> CGFloat {
+    CGFloat(node.double("height") ?? 48)
+  }
+
+  static func menuBarClipBehavior(_ node: ControlNode) -> String {
+    node.string("clip_behavior") ?? "none"
+  }
+
+  static func submenuClipBehavior(_ node: ControlNode) -> String {
+    node.string("clip_behavior") ?? "hardEdge"
+  }
+
+  static func menuItemClipBehavior(_ node: ControlNode) -> String {
+    node.string("clip_behavior") ?? "none"
+  }
+
+  static func menuItemClosesOnClick(_ node: ControlNode) -> Bool {
+    node.bool("close_on_click") ?? true
+  }
+
+  static func menuItemFocusesOnHover(_ node: ControlNode) -> Bool {
+    node.bool("focus_on_hover") ?? true
+  }
+
+  static func shouldEmit(_ node: ControlNode, event: String) -> Bool {
+    node.bool("disabled") != true && node.bool("on_\(event)") == true
+  }
+
+  static func controlIDs(_ node: ControlNode, key: String) -> [Int] {
+    orderedUnique(node.controlIDs(forKey: key) + node.childIDs)
+  }
+}
+
+/// Menu buttons use the same Flet ButtonStyle map as Material buttons, with
+/// the constructor defaults supplied by SubmenuButton/MenuItemButton.
+private struct MaterialMenuButtonStyle: ViewModifier {
+  let value: RufletValue?
+  var appliesConstructorDefaults = false
+
+  func body(content: Content) -> some View {
+    guard appliesConstructorDefaults || value?.mapValue != nil else { return AnyView(content) }
+    let style = value?.mapValue ?? [:]
+    let radius = ControlProps.cornerRadius(style["shape"]?.mapValue?["radius"]) ?? 999
+    let padding = ControlProps.edgeInsets(style["padding"])
+      ?? EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
+    let elevation = CGFloat(style["elevation"]?.doubleValue ?? 0)
+    return AnyView(
+      content
+        .padding(padding)
+        .foregroundColor(MaterialPalette.color(
+          style["color"]?.stringValue,
+          default: MaterialPalette.color("primary", default: .accentColor)))
+        .background(
+          RoundedRectangle(cornerRadius: radius)
+            .fill(MaterialPalette.color(style["bgcolor"]?.stringValue, default: .clear)))
+        .shadow(
+          color: MaterialPalette.color(
+            style["shadow_color"]?.stringValue, default: .clear),
+          radius: elevation, y: elevation / 2))
+  }
+}
+
+private struct MenuSemanticLabel: ViewModifier {
+  let value: String?
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if let value { content.accessibilityLabel(value) } else { content }
   }
 }
 

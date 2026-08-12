@@ -4,6 +4,83 @@ import RufletProtocol
 import XCTest
 
 final class ChromeOverlayParityTests: XCTestCase {
+  func testMaterialChromeUsesPinnedFletAndFlutterConstructorDefaults() {
+    let appBar = ChromeDefaults.appBar(ControlNode(id: 1, type: "AppBar"))
+    XCTAssertEqual(appBar.toolbarHeight, 56)
+    XCTAssertEqual(appBar.toolbarOpacity, 1)
+    XCTAssertFalse(appBar.excludeHeaderSemantics)
+    XCTAssertFalse(appBar.forceMaterialTransparency)
+
+    let bottom = ChromeDefaults.bottomAppBar(ControlNode(id: 2, type: "BottomAppBar"))
+    XCTAssertEqual(bottom.notchMargin, 4)
+    XCTAssertNil(bottom.height)
+
+    let navigation = ChromeDefaults.navigationBar(ControlNode(id: 3, type: "NavigationBar"))
+    XCTAssertEqual(navigation.height, 80)
+    XCTAssertTrue(navigation.showsLabel(selected: false))
+
+    let rail = ChromeDefaults.navigationRail(ControlNode(id: 4, type: "NavigationRail"))
+    XCTAssertEqual(rail.minWidth, 72)
+    XCTAssertEqual(rail.groupAlignment, -1)
+    XCTAssertTrue(rail.useIndicator)
+    XCTAssertTrue(rail.showsLabel(extended: false, selected: false))
+  }
+
+  func testNavigationRailLabelTypeAndExplicitGeometryArePreserved() {
+    let selectedOnly = ChromeDefaults.navigationRail(ControlNode(
+      id: 4, type: "NavigationRail",
+      props: [
+        "label_type": .string("selected"), "min_width": .double(88),
+        "group_alignment": .double(0.5), "use_indicator": .bool(false),
+      ]))
+    XCTAssertFalse(selectedOnly.showsLabel(extended: false, selected: false))
+    XCTAssertTrue(selectedOnly.showsLabel(extended: false, selected: true))
+    XCTAssertTrue(selectedOnly.showsLabel(extended: true, selected: false))
+    XCTAssertEqual(selectedOnly.minWidth, 88)
+    XCTAssertEqual(selectedOnly.groupAlignment, 0.5)
+    XCTAssertFalse(selectedOnly.useIndicator)
+  }
+
+  func testMaterialMenuDefaultsMatchPinnedFletConstructors() {
+    let popup = ControlNode(id: 10, type: "PopupMenuButton")
+    XCTAssertEqual(MaterialMenuDefaults.popupIconSize(popup), 24)
+    XCTAssertEqual(MaterialMenuDefaults.popupPadding(popup).top, 8)
+    XCTAssertEqual(MaterialMenuDefaults.popupPadding(popup).leading, 8)
+    XCTAssertEqual(MaterialMenuDefaults.popupClipBehavior(popup), "none")
+
+    XCTAssertEqual(
+      MaterialMenuDefaults.submenuClipBehavior(ControlNode(id: 11, type: "SubmenuButton")),
+      "hardEdge")
+    let item = ControlNode(id: 12, type: "MenuItemButton")
+    XCTAssertEqual(MaterialMenuDefaults.menuItemClipBehavior(item), "none")
+    XCTAssertTrue(MaterialMenuDefaults.menuItemClosesOnClick(item))
+    XCTAssertTrue(MaterialMenuDefaults.menuItemFocusesOnHover(item))
+    XCTAssertEqual(
+      MaterialMenuDefaults.popupItemHeight(ControlNode(id: 13, type: "PopupMenuItem")), 48)
+  }
+
+  func testMaterialMenuLifecycleCallbacksAreEnabledAndDisabledLikeFlet() {
+    let listening = ControlNode(
+      id: 20, type: "SubmenuButton",
+      props: ["on_open": .bool(true), "on_close": .bool(true), "on_hover": .bool(true)])
+    XCTAssertTrue(MaterialMenuDefaults.shouldEmit(listening, event: "open"))
+    XCTAssertTrue(MaterialMenuDefaults.shouldEmit(listening, event: "close"))
+    XCTAssertTrue(MaterialMenuDefaults.shouldEmit(listening, event: "hover"))
+    XCTAssertFalse(MaterialMenuDefaults.shouldEmit(listening, event: "click"))
+
+    let disabled = ControlNode(
+      id: 21, type: "MenuItemButton",
+      props: ["on_click": .bool(true), "disabled": .bool(true)])
+    XCTAssertFalse(MaterialMenuDefaults.shouldEmit(disabled, event: "click"))
+  }
+
+  func testMaterialMenuUsesExplicitSlotsAndDeduplicatesLegacyChildren() {
+    let node = ControlNode(
+      id: 30, type: "MenuBar",
+      props: ["controls": .array([.controlRef(2), .controlRef(3), .controlRef(2)])])
+    XCTAssertEqual(MaterialMenuDefaults.controlIDs(node, key: "controls"), [2, 3])
+  }
+
   func testChromeAndMenuDescriptorsExposeFletEvents() throws {
     XCTAssertEqual(events("CupertinoNavigationBar"), ["change"])
     XCTAssertEqual(events("MenuItemButton"), ["click", "hover"])
