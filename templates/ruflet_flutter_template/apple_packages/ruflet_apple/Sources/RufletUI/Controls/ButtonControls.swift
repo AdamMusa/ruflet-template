@@ -200,10 +200,12 @@ struct ButtonPresentation {
     if variant == .floatingAction,
       node.props["icon"] == nil && node.props["content"] == nil
     {
-      return "FloatingActionButton has nothing to display. Provide at minimum one of these: icon, content"
+      return
+        "FloatingActionButton has nothing to display. Provide at minimum one of these: icon, content"
     }
     if variant.isIconButton {
-      let visible = node.controlID(forKey: "content") != nil
+      let visible =
+        node.controlID(forKey: "content") != nil
         || !(node.string("content") ?? "").isEmpty
       if node.props["icon"] == nil && !visible {
         return "IconButton must have either icon or a visible content specified."
@@ -242,7 +244,10 @@ struct ButtonPresentation {
   var padding: EdgeInsets {
     let states = node.widgetStates()
     if let value = RufletWidgetStateProperty.resolve(style?["padding"], in: states),
-      let parsed = ControlProps.edgeInsets(value) { return parsed }
+      let parsed = ControlProps.edgeInsets(value)
+    {
+      return parsed
+    }
     if hasExplicitStyle { return EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8) }
     if variant == .text { return EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12) }
     return EdgeInsets(top: 0, leading: 24, bottom: 0, trailing: 24)
@@ -265,14 +270,20 @@ struct ButtonPresentation {
 
   var elevation: Double {
     if let explicit = RufletWidgetStateProperty.resolve(
-      style?["elevation"], in: node.widgetStates())?.doubleValue { return explicit }
+      style?["elevation"], in: node.widgetStates())?.doubleValue
+    {
+      return explicit
+    }
     if hasExplicitStyle { return node.double("elevation") ?? 1 }
     return variant == .elevated ? 1 : 0
   }
 
   var radius: CGFloat {
     if let value = style?["shape"]?.mapValue?["radius"],
-      let parsed = ControlProps.cornerRadius(value) { return parsed }
+      let parsed = ControlProps.cornerRadius(value)
+    {
+      return parsed
+    }
     return 20
   }
 
@@ -329,7 +340,9 @@ struct ButtonPresentation {
     if key == "bgcolor" {
       if node.bool("disabled") == true,
         variant == .elevated || variant == .filled || variant == .filledTonal
-      { return MaterialPalette.color("onsurface,0.12") }
+      {
+        return MaterialPalette.color("onsurface,0.12")
+      }
       return MaterialPalette.color(backgroundToken)
     }
     if key == "overlay_color", let state {
@@ -478,7 +491,8 @@ struct IconButtonPresentation {
     if (node.internals["style"]?.mapValue ?? node.props["style"]?.mapValue) != nil,
       node.bool("disabled") != true
     {
-      palette.foreground = RufletThemeDefaults.colorToken(control: node.type, property: "color")
+      palette.foreground =
+        RufletThemeDefaults.colorToken(control: node.type, property: "color")
         ?? palette.foreground
       palette.background = "transparent"
       palette.outline = nil
@@ -489,11 +503,12 @@ struct IconButtonPresentation {
   private var palette: RufletThemeDefaults.IconButtonPalette { Self.palette(for: node) }
 
   var requiresCustomRendering: Bool {
-    style?.isEmpty == false || [
-      "bgcolor", "icon_color", "disabled_color", "selected_icon_color",
-      "padding", "alignment", "size_constraints", "splash_radius",
-      "highlight_color", "splash_color",
-    ].contains { node.props[$0] != nil }
+    style?.isEmpty == false
+      || [
+        "bgcolor", "icon_color", "disabled_color", "selected_icon_color",
+        "padding", "alignment", "size_constraints", "splash_radius",
+        "highlight_color", "splash_color",
+      ].contains { node.props[$0] != nil }
   }
 
   var foreground: Color? {
@@ -537,7 +552,8 @@ struct IconButtonPresentation {
     if let explicit = ControlProps.sizeConstraints(node.props["size_constraints"]) {
       return explicit
     }
-    let side = node.double("splash_radius").map { CGFloat($0) * 2 }
+    let side =
+      node.double("splash_radius").map { CGFloat($0) * 2 }
       ?? RufletThemeDefaults.materialIconButtonTargetSize
     return ControlProps.SizeConstraints(minWidth: side, minHeight: side)
   }
@@ -563,9 +579,11 @@ struct FloatingActionPresentation {
   var isExtended: Bool { node.props["icon"] != nil && node.props["content"] != nil }
 
   var side: CGFloat {
-    isExtended ? RufletThemeDefaults.floatingActionButtonSize : (isMini
-      ? RufletThemeDefaults.floatingActionButtonMiniSize
-      : RufletThemeDefaults.floatingActionButtonSize)
+    isExtended
+      ? RufletThemeDefaults.floatingActionButtonSize
+      : (isMini
+        ? RufletThemeDefaults.floatingActionButtonMiniSize
+        : RufletThemeDefaults.floatingActionButtonSize)
   }
 
   var width: CGFloat? { isExtended ? nil : side }
@@ -638,7 +656,8 @@ private struct RufletMaterialButtonStyle: ButtonStyle {
     let fixed = p.fixedSize
     let maximum = p.maximumSize
     let shape = RoundedRectangle(cornerRadius: p.radius)
-    let activeState: RufletWidgetState? = configuration.isPressed ? .pressed : (hovering ? .hovered : nil)
+    let activeState: RufletWidgetState? =
+      configuration.isPressed ? .pressed : (hovering ? .hovered : nil)
     let elevation = p.elevation(state: activeState)
     let border = p.border(state: activeState)
     configuration.label
@@ -649,11 +668,16 @@ private struct RufletMaterialButtonStyle: ButtonStyle {
         maxWidth: fixed?.maxWidth ?? maximum?.maxWidth,
         minHeight: fixed?.minHeight ?? p.minimumSize.minHeight,
         maxHeight: fixed?.maxHeight ?? maximum?.maxHeight,
-        alignment: p.alignment)
-      .foregroundColor(p.color("color", state: configuration.isPressed ? .pressed : (hovering ? .hovered : nil)))
+        alignment: p.alignment
+      )
+      .foregroundColor(
+        p.color("color", state: configuration.isPressed ? .pressed : (hovering ? .hovered : nil))
+      )
       .background(
-        p.color("bgcolor", state: configuration.isPressed ? .pressed : (hovering ? .hovered : nil)) ?? .clear,
-        in: shape)
+        p.color("bgcolor", state: configuration.isPressed ? .pressed : (hovering ? .hovered : nil))
+          ?? .clear,
+        in: shape
+      )
       .overlay {
         if configuration.isPressed || hovering {
           shape.fill(
@@ -670,7 +694,8 @@ private struct RufletMaterialButtonStyle: ButtonStyle {
         color: elevation > 0
           ? (MaterialPalette.color(p.style?["shadow_color"]?.stringValue) ?? .black.opacity(0.2))
           : .clear,
-        radius: CGFloat(max(elevation, 0)), y: CGFloat(max(elevation, 0) / 2))
+        radius: CGFloat(max(elevation, 0)), y: CGFloat(max(elevation, 0) / 2)
+      )
       .contentShape(shape)
       .onHover { hovering = $0 }
   }
@@ -697,10 +722,12 @@ private struct RufletIconButtonStyle: ButtonStyle {
       .frame(
         minWidth: constraints.minWidth, maxWidth: constraints.maxWidth,
         minHeight: constraints.minHeight, maxHeight: constraints.maxHeight,
-        alignment: alignment)
+        alignment: alignment
+      )
       .background(Circle().fill(background ?? .clear))
       .background(
-        Circle().fill(configuration.isPressed ? (splash ?? .clear) : (highlight ?? .clear)))
+        Circle().fill(configuration.isPressed ? (splash ?? .clear) : (highlight ?? .clear))
+      )
       .overlay(Circle().strokeBorder(outline ?? .clear))
       .contentShape(Circle())
   }
@@ -726,7 +753,8 @@ private struct RufletFloatingActionStyle: ButtonStyle {
 
   func makeBody(configuration: Configuration) -> some View {
     let shape = RoundedRectangle(cornerRadius: radius)
-    let raised = configuration.isPressed
+    let raised =
+      configuration.isPressed
       ? pressedElevation
       : (hovering ? hoverElevation : elevation)
     return configuration.label
@@ -738,7 +766,8 @@ private struct RufletFloatingActionStyle: ButtonStyle {
       .contentShape(shape)
       .shadow(
         color: shadow ?? .black.opacity(0.25),
-        radius: CGFloat(max(raised, 0)), y: CGFloat(max(raised, 0) / 2))
+        radius: CGFloat(max(raised, 0)), y: CGFloat(max(raised, 0) / 2)
+      )
       .onHover { hovering = $0 }
   }
 }
@@ -750,10 +779,11 @@ struct TapFeedback: ViewModifier {
   func body(content: Content) -> some View {
     #if os(iOS)
       if enabled {
-        return AnyView(content.simultaneousGesture(
-          TapGesture().onEnded {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-          }))
+        return AnyView(
+          content.simultaneousGesture(
+            TapGesture().onEnded {
+              UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            }))
       }
     #endif
     return AnyView(content)
@@ -786,12 +816,80 @@ struct ChipControlView: View {
       Text(validationMessage)
         .font(.caption)
         .foregroundStyle(.red)
+    } else if ChipPresentation.requiresCustomRendering(node) {
+      materialChip
     } else {
-      chip
+      nativeChip
     }
   }
 
-  private var chip: some View {
+  /// Apple has no public SwiftUI token/chip primitive. A compact native
+  /// bordered button is the closest semantic equivalent and, importantly,
+  /// leaves its colour, metrics, corner treatment and pressed appearance to
+  /// the platform. Explicit Material styling still uses `materialChip`.
+  private var nativeChip: some View {
+    let selected = node.bool("selected") ?? false
+    let interactive = node.handlesEvent("select") || node.handlesEvent("click")
+
+    return HStack(spacing: nil) {
+      Button {
+        activateChip(selected: selected)
+      } label: {
+        nativeChipLabel(selected: selected)
+      }
+      .modifier(NativeChipButtonStyle(selected: selected))
+      .allowsHitTesting(interactive && node.bool("disabled") != true)
+      .accessibilityAddTraits(interactive ? .isButton : [])
+
+      if node.handlesEvent("delete") {
+        Button {
+          events.fire(node, "delete")
+        } label: {
+          nativeDeleteIcon
+        }
+        .buttonStyle(.borderless)
+        .help(ChipPresentation.deleteTooltip(node) ?? "")
+        .modifier(ChipSlotConstraints(value: node.props["delete_icon_size_constraints"]))
+      }
+    }
+    .controlSize(.small)
+    .disabled(node.bool("disabled") == true)
+    .modifier(FocusReporter(node: node, events: events))
+  }
+
+  @ViewBuilder
+  private func nativeChipLabel(selected: Bool) -> some View {
+    HStack {
+      if selected, node.bool("show_checkmark") != false {
+        Image(systemName: "checkmark")
+      } else if let leadingID = node.controlID(forKey: "leading") {
+        ControlView(id: leadingID, axis: .none)
+          .modifier(ChipSlotConstraints(value: node.props["leading_size_constraints"]))
+      }
+      label
+    }
+  }
+
+  @ViewBuilder
+  private var nativeDeleteIcon: some View {
+    if node.props["delete_icon"] != nil {
+      RufletIcon(value: node.props["delete_icon"], size: nil, color: nil)
+    } else {
+      Image(systemName: "xmark.circle")
+    }
+  }
+
+  private func activateChip(selected: Bool) {
+    guard node.bool("disabled") != true else { return }
+    guard !(node.handlesEvent("select") && node.handlesEvent("click")) else { return }
+    if node.handlesEvent("select") {
+      events.commit(node, key: "selected", value: .bool(!selected), event: "select")
+    } else if node.handlesEvent("click") {
+      events.fire(node, "click")
+    }
+  }
+
+  private var materialChip: some View {
     let selected = node.bool("selected") ?? false
 
     return HStack(spacing: 0) {
@@ -800,16 +898,18 @@ struct ChipControlView: View {
       if selected, node.bool("show_checkmark") != false {
         Image(systemName: "checkmark")
           .font(.system(size: ChipPresentation.defaultIconSize))
-          .foregroundColor(MaterialPalette.color(
-            node.string("check_color") ?? ChipPresentation.checkmarkColorToken(node)))
+          .foregroundColor(
+            MaterialPalette.color(
+              node.string("check_color") ?? ChipPresentation.checkmarkColorToken(node)))
       } else if let leadingID = node.controlID(forKey: "leading") {
         ControlView(id: leadingID, axis: .none)
           .modifier(ChipSlotConstraints(value: node.props["leading_size_constraints"]))
       }
       label
         .foregroundColor(MaterialPalette.color(ChipPresentation.labelColorToken(node)))
-        .padding(ControlProps.edgeInsets(node.props["label_padding"])
-          ?? EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8))
+        .padding(
+          ControlProps.edgeInsets(node.props["label_padding"])
+            ?? EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8))
       if node.handlesEvent("delete") {
         Button {
           events.fire(node, "delete")
@@ -822,11 +922,14 @@ struct ChipControlView: View {
         .modifier(ChipSlotConstraints(value: node.props["delete_icon_size_constraints"]))
       }
     }
-    .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets(
-      top: ChipPresentation.defaultPadding,
-      leading: ChipPresentation.defaultPadding,
-      bottom: ChipPresentation.defaultPadding,
-      trailing: ChipPresentation.defaultPadding))
+    .padding(
+      ControlProps.edgeInsets(node.props["padding"])
+        ?? EdgeInsets(
+          top: ChipPresentation.defaultPadding,
+          leading: ChipPresentation.defaultPadding,
+          bottom: ChipPresentation.defaultPadding,
+          trailing: ChipPresentation.defaultPadding)
+    )
     .modifier(VisualDensityPadding(value: node.props["visual_density"]))
     .background(shape.fill(fill))
     .overlay(shape.strokeBorder(borderColor, lineWidth: borderWidth))
@@ -838,7 +941,8 @@ struct ChipControlView: View {
     .simultaneousGesture(
       DragGesture(minimumDistance: 0)
         .onChanged { _ in pressed = true }
-        .onEnded { _ in pressed = false })
+        .onEnded { _ in pressed = false }
+    )
     .onTapGesture {
       guard node.bool("disabled") != true else { return }
       // InputChip rejects this combination; prefer neither event over
@@ -873,8 +977,9 @@ struct ChipControlView: View {
     } else {
       Image(systemName: "xmark.circle.fill")
         .font(.system(size: ChipPresentation.defaultIconSize))
-        .foregroundColor(MaterialPalette.color(
-          node.string("delete_icon_color") ?? ChipPresentation.deleteIconColorToken(node)))
+        .foregroundColor(
+          MaterialPalette.color(
+            node.string("delete_icon_color") ?? ChipPresentation.deleteIconColorToken(node)))
     }
   }
 
@@ -887,7 +992,8 @@ struct ChipControlView: View {
   }
 
   private var fill: Color {
-    let states = node.widgetStates(selected: node.bool("selected"), extra: pressed ? [.pressed] : [])
+    let states = node.widgetStates(
+      selected: node.bool("selected"), extra: pressed ? [.pressed] : [])
     if let stateColor = MaterialPalette.color(stateful: node.props["color"], in: states) {
       return stateColor
     }
@@ -949,8 +1055,24 @@ enum ChipPresentation {
   static let defaultIconSize: CGFloat = 18
   static let selectedColorToken = "secondarycontainer"
 
+  /// Visual values are the boundary between a native Apple chip equivalent
+  /// and Flet's explicitly requested Material rendering. Content, state and
+  /// event properties do not opt out of the native control family.
+  static func requiresCustomRendering(_ node: ControlNode) -> Bool {
+    let visualKeys = [
+      "bgcolor", "color", "disabled_color", "selected_color", "check_color",
+      "delete_icon_color", "border_side", "shape", "padding", "label_padding",
+      "elevation", "elevation_on_click", "shadow_color", "selected_shadow_color",
+      "visual_density", "clip_behavior", "select_animation_style",
+      "leading_drawer_animation_style", "delete_drawer_animation_style",
+      "enable_animation_style", "label_text_style",
+    ]
+    return visualKeys.contains { node.props[$0] != nil || node.internals[$0] != nil }
+  }
+
   static func validationMessage(_ node: ControlNode) -> String? {
-    let hasLabel = node.controlID(forKey: "label") != nil
+    let hasLabel =
+      node.controlID(forKey: "label") != nil
       || !(node.string("label") ?? "").isEmpty
     if !hasLabel { return "Chip.label must be provided and visible" }
     if node.handlesEvent("select") && node.handlesEvent("click") {
@@ -985,6 +1107,19 @@ enum ChipPresentation {
   /// Flet semantics without making applications rewrite their DSL.
   static func deleteTooltip(_ node: ControlNode) -> String? {
     node.string("delete_icon_tooltip") ?? node.string("delete_button_tooltip")
+  }
+}
+
+private struct NativeChipButtonStyle: ViewModifier {
+  let selected: Bool
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if selected {
+      content.buttonStyle(.borderedProminent)
+    } else {
+      content.buttonStyle(.bordered)
+    }
   }
 }
 
@@ -1039,7 +1174,9 @@ private struct ChipSlotConstraints: ViewModifier {
   }
 }
 
-/// `SegmentedButton` — a Material segmented control, rendered as a picker.
+/// `SegmentedButton` — Apple's segmented picker for the ordinary single
+/// selection contract, with native button groups for Flet's multi/empty and
+/// vertical extensions. Explicit visual styles retain the Material path.
 struct SegmentedButtonControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
@@ -1054,30 +1191,89 @@ struct SegmentedButtonControlView: View {
     {
       Text(message).font(.caption).foregroundStyle(.red)
     } else {
-      stack(spacing: 0) {
-        ForEach(segments, id: \.id) { segment in
-          let value = segment.string("value") ?? ""
-          let isSelected = selected.contains(value)
-          Button {
-            toggle(value: value, selected: selected)
-          } label: {
-            segmentLabel(segment, chosen: isSelected)
-              .frame(maxWidth: .infinity)
-              .padding(.vertical, 7)
-              .foregroundColor(SegmentedButtonPresentation(node: node).foreground(
-                selected: isSelected, disabled: segment.bool("disabled") == true))
-              .background(SegmentedButtonPresentation(node: node).background(selected: isSelected))
-          }
-          .buttonStyle(.plain)
-          .disabled(node.bool("disabled") == true || segment.bool("disabled") == true)
-          .help(segment.bool("disabled") == true ? "" : (segment.string("tooltip") ?? ""))
-        }
+      switch SegmentedButtonPresentation(node: node).route {
+      case .picker:
+        nativePicker(segments: segments)
+      case .buttonGroup:
+        nativeButtonGroup(segments: segments, selected: selected)
+      case .custom:
+        materialButtonGroup(segments: segments, selected: selected)
       }
-      .background(Capsule().fill(Color.clear))
-      .overlay(Capsule().strokeBorder(SegmentedButtonPresentation(node: node).border))
-      .disabled(node.bool("disabled") ?? false)
-      .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets())
     }
+  }
+
+  private func nativePicker(segments: [ControlNode]) -> some View {
+    Picker("", selection: nativeSingleSelection) {
+      ForEach(segments, id: \.id) { segment in
+        let value = segment.string("value") ?? ""
+        segmentLabel(segment, chosen: selectedValues.contains(value))
+          .tag(value)
+          .disabled(segment.bool("disabled") == true)
+      }
+    }
+    .pickerStyle(.segmented)
+    .labelsHidden()
+    .disabled(node.bool("disabled") == true)
+    .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets())
+  }
+
+  private var nativeSingleSelection: Binding<String> {
+    Binding(
+      get: { selectedValuesInWireOrder.first ?? "" },
+      set: { value in
+        guard value != selectedValuesInWireOrder.first else { return }
+        events.commit(
+          node, key: "selected", value: .array([.string(value)]), event: "change")
+      })
+  }
+
+  @ViewBuilder
+  private func nativeButtonGroup(segments: [ControlNode], selected: Set<String>) -> some View {
+    stack(spacing: nil) {
+      ForEach(segments, id: \.id) { segment in
+        let value = segment.string("value") ?? ""
+        let isSelected = selected.contains(value)
+        Button {
+          toggle(value: value, selected: selected)
+        } label: {
+          segmentLabel(segment, chosen: isSelected)
+        }
+        .modifier(NativeSegmentButtonStyle(selected: isSelected))
+        .disabled(node.bool("disabled") == true || segment.bool("disabled") == true)
+        .help(segment.bool("disabled") == true ? "" : (segment.string("tooltip") ?? ""))
+      }
+    }
+    .disabled(node.bool("disabled") ?? false)
+    .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets())
+  }
+
+  @ViewBuilder
+  private func materialButtonGroup(segments: [ControlNode], selected: Set<String>) -> some View {
+    stack(spacing: 0) {
+      ForEach(segments, id: \.id) { segment in
+        let value = segment.string("value") ?? ""
+        let isSelected = selected.contains(value)
+        Button {
+          toggle(value: value, selected: selected)
+        } label: {
+          segmentLabel(segment, chosen: isSelected)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 7)
+            .foregroundColor(
+              SegmentedButtonPresentation(node: node).foreground(
+                selected: isSelected, disabled: segment.bool("disabled") == true)
+            )
+            .background(SegmentedButtonPresentation(node: node).background(selected: isSelected))
+        }
+        .buttonStyle(.plain)
+        .disabled(node.bool("disabled") == true || segment.bool("disabled") == true)
+        .help(segment.bool("disabled") == true ? "" : (segment.string("tooltip") ?? ""))
+      }
+    }
+    .background(Capsule().fill(Color.clear))
+    .overlay(Capsule().strokeBorder(SegmentedButtonPresentation(node: node).border))
+    .disabled(node.bool("disabled") ?? false)
+    .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets())
   }
 
   @ViewBuilder
@@ -1109,7 +1305,7 @@ struct SegmentedButtonControlView: View {
   /// `direction` lays the segments out in a row or a column.
   @ViewBuilder
   private func stack<Content: View>(
-    spacing: CGFloat, @ViewBuilder content: () -> Content
+    spacing: CGFloat?, @ViewBuilder content: () -> Content
   ) -> some View {
     if node.string("direction")?.lowercased() == "vertical" {
       VStack(spacing: spacing) { content() }
@@ -1158,6 +1354,28 @@ struct SegmentedButtonPresentation {
     node.internals["style"]?.mapValue ?? node.props["style"]?.mapValue
   }
 
+  enum Route: Equatable {
+    case picker
+    case buttonGroup
+    case custom
+  }
+
+  var route: Route {
+    if requiresCustomRendering { return .custom }
+    if node.bool("allow_multiple_selection") == true
+      || node.bool("allow_empty_selection") == true
+      || node.string("direction")?.lowercased() == "vertical"
+    {
+      return .buttonGroup
+    }
+    return .picker
+  }
+
+  private var requiresCustomRendering: Bool {
+    guard let style else { return false }
+    return !style.isEmpty
+  }
+
   static func validationMessage(
     segmentCount: Int, selected: [String], node: ControlNode
   ) -> String? {
@@ -1167,13 +1385,16 @@ struct SegmentedButtonPresentation {
     let allowEmpty = node.bool("allow_empty_selection") == true
     let multiple = node.bool("allow_multiple_selection") == true
     if selected.isEmpty && !allowEmpty {
-      return "SegmentedButton.selected must contain at least one value because allow_empty_selection=False"
+      return
+        "SegmentedButton.selected must contain at least one value because allow_empty_selection=False"
     }
     if !multiple && selected.count != 1 && !allowEmpty {
-      return "SegmentedButton.selected must contain exactly one value because allow_multiple_selection=False"
+      return
+        "SegmentedButton.selected must contain exactly one value because allow_multiple_selection=False"
     }
     if multiple && selected.count > segmentCount {
-      return "The length of SegmentedButton.selected must be less than or equal to the number of visible segments"
+      return
+        "The length of SegmentedButton.selected must be less than or equal to the number of visible segments"
     }
     return nil
   }
@@ -1203,5 +1424,18 @@ struct SegmentedButtonPresentation {
     }
     return MaterialPalette.color(
       node.bool("disabled") == true ? "onsurface,0.12" : "outline", default: .clear)
+  }
+}
+
+private struct NativeSegmentButtonStyle: ViewModifier {
+  let selected: Bool
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if selected {
+      content.buttonStyle(.borderedProminent)
+    } else {
+      content.buttonStyle(.bordered)
+    }
   }
 }
