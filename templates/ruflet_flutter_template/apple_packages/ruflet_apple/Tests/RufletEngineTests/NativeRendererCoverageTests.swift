@@ -194,9 +194,15 @@ final class NativeRendererCoverageTests: XCTestCase {
   func testEveryRegisteredWireTypeHasACompatibilityDescriptorAndBuilder() {
     for (index, wireType) in Self.registeredWireTypes.enumerated() {
       let node = ControlNode(id: index + 1, type: wireType)
+      let descriptor = ControlRegistry.builtInDescriptor(for: wireType)
       XCTAssertNotNil(
-        ControlRegistry.builtInDescriptor(for: wireType),
+        descriptor,
         "\(wireType) has a builder but no Apple compatibility descriptor")
+      if descriptor?.classification == .service {
+        // Services are resolved by RufletServiceRegistry and deliberately do
+        // not fabricate a visual SwiftUI control.
+        continue
+      }
       XCTAssertNotNil(
         ControlRegistry.build(node: node, axis: .none),
         "\(wireType) has no Apple renderer registry entry")
@@ -246,7 +252,7 @@ final class NativeRendererCoverageTests: XCTestCase {
       "AudioRecorder": .service,
       "Banner": .host,
       "BottomSheet": .host,
-      "BrowserContextMenu": .unsupported,
+      "BrowserContextMenu": .service,
       "CupertinoAlertDialog": .host,
       "CupertinoBottomSheet": .host,
       "Dialogs": .host,

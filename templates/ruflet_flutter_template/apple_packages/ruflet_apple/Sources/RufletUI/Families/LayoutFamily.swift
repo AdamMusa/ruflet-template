@@ -57,10 +57,8 @@ extension ControlRegistry {
       return AnyView(ScreenshotControlView(node: node))
     case "WindowDragArea":
       return AnyView(WindowDragAreaControlView(node: node))
-    case "AutofillGroup", "BrowserContextMenu":
-      // Autofill is managed by the platform and the browser context menu is
-      // web-only; both simply render their content here.
-      return AnyView(InertWrapperControlView(node: node))
+    case "AutofillGroup":
+      return AnyView(AutofillGroupControlView(node: node))
     case "Overlay", "Dialogs", "ServiceRegistry", "Window":
       // Not part of the visible tree: overlays and dialogs are presented by the
       // view that owns them, services have no body, and the window is handled

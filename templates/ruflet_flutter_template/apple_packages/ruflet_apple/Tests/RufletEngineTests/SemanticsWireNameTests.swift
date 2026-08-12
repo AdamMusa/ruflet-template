@@ -1,11 +1,8 @@
 import XCTest
 
-/// Semantics is the one control where Ruflet's Ruby keywords and Flutter's
-/// Dart parameter names disagree, and the renderer has to follow Ruby: those
-/// are the keys that actually arrive on the wire.
-///
-/// The renderer read Flutter's spelling here once already, which silently
-/// dropped every one of these properties, so the names are pinned.
+/// Pins the Apple renderer to the vendored Flet 0.80.5 Semantics contract.
+/// Ruflet's older Ruby spellings remain compatibility aliases, but canonical
+/// Flet names must always be preferred when both arrive on the wire.
 final class SemanticsWireNameTests: XCTestCase {
   private func semanticsSource() throws -> String {
     let url = URL(fileURLWithPath: #filePath)
@@ -20,34 +17,36 @@ final class SemanticsWireNameTests: XCTestCase {
     return String(source[start.lowerBound..<end.lowerBound])
   }
 
-  func testRendererReadsTheKeysRubySends() throws {
+  func testRendererReadsCanonicalFletProperties() throws {
     let source = try semanticsSource()
     for key in [
-      "hint_text", "textfield", "focus", "focusable", "heading_level",
-      "exclude_semantics", "live_region", "obscured", "read_only", "multiline",
-      "checked", "mixed", "toggled", "expanded", "slider",
-      "increased_value", "decreased_value",
-      "current_value_length", "max_value_length",
-      "on_tap_hint_text", "on_long_press_hint_text",
+      "label", "expanded", "hidden", "selected", "checked", "button", "slider",
+      "value", "text_field", "image", "link", "header", "increased_value",
+      "decreased_value", "hint", "on_tap_hint", "on_long_press_hint", "container",
+      "live_region", "obscured", "multiline", "focused", "read_only", "focusable",
+      "tooltip", "toggled", "max_value_length", "current_value_length",
+      "heading_level", "exclude_semantics", "mixed", "disabled",
     ] {
       XCTAssertTrue(
-        source.contains("\"\(key)\""), "Semantics never reads \(key), which Ruby sends")
+        source.contains("\"\(key)\""), "Semantics never reads canonical Flet key \(key)")
     }
   }
 
-  func testRendererDoesNotReadFlutterOnlySpellings() throws {
+  func testHistoricalRufletSpellingsAreCompatibilityAliasesOnly() throws {
     let source = try semanticsSource()
-    // Ruby has no keyword for any of these; reading them can only ever miss.
-    for key in ["\"hint\"", "\"text_field\"", "\"focused\"", "\"on_tap_hint\""] {
-      XCTAssertFalse(
-        source.contains(key), "Semantics reads \(key), which Ruby never sends")
-    }
+    XCTAssertTrue(source.contains("string(\"hint\", compatibility: \"hint_text\")"))
+    XCTAssertTrue(source.contains("bool(\"text_field\", compatibility: \"textfield\")"))
+    XCTAssertTrue(source.contains("bool(\"focused\", compatibility: \"focus\")"))
+    XCTAssertTrue(
+      source.contains(
+        "string(\"on_tap_hint\", compatibility: \"on_tap_hint_text\")"))
+    XCTAssertTrue(
+      source.contains(
+        "string(\"on_long_press_hint\", compatibility: \"on_long_press_hint_text\")"))
   }
 
-  func testDefaultActionReportsTapRatherThanClick() throws {
+  func testDefaultActionReportsCanonicalClickWithLegacyTapFallback() throws {
     let source = try semanticsSource()
-    XCTAssertTrue(source.contains("handlesEvent(\"tap\")"))
-    XCTAssertFalse(
-      source.contains("\"click\""), "Ruby declares on_tap, so the event back is tap")
+    XCTAssertTrue(source.contains("handledEvent(\"click\", compatibility: \"tap\")"))
   }
 }

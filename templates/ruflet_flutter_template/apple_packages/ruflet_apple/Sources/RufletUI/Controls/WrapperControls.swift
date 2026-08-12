@@ -1,6 +1,7 @@
 import RufletEngine
 import RufletProtocol
 import SwiftUI
+
 #if canImport(AppKit)
   import AppKit
 #elseif canImport(UIKit)
@@ -87,31 +88,41 @@ struct SemanticsControlView: View {
   @Environment(\.rufletEvents) private var events
   @AccessibilityFocusState private var accessibilityFocused: Bool
 
+  private var configuration: RufletSemanticsConfiguration {
+    RufletSemanticsConfiguration(node: node)
+  }
+
   var body: some View {
     Group {
       if let contentID = node.controlID(forKey: "content") {
         ControlView(id: contentID, axis: .none)
       } else {
-        ControlList(ids: node.childIDs, axis: .vertical)
+        EmptyView()
       }
     }
-    .accessibilityLabel(node.string("label") ?? "")
-    .accessibilityHint(node.string("hint_text") ?? "")
-    .accessibilityValue(node.string("value") ?? "")
+    .modifier(
+      SemanticsOptionalText(
+        label: configuration.label,
+        hint: configuration.hint,
+        value: configuration.value)
+    )
     .accessibilityAddTraits(traits)
-    .accessibilityHidden(node.bool("hidden") ?? false)
+    .modifier(SemanticsVisibility(hidden: configuration.hidden))
     .accessibilityElement(children: childBehavior)
     .accessibilityFocused($accessibilityFocused)
-    .privacySensitive(node.bool("obscured") ?? false)
+    .modifier(SemanticsPrivacy(obscured: configuration.obscured))
+    .modifier(SemanticsTooltip(tooltip: configuration.tooltip))
     .onChange(of: accessibilityFocused) { focused in
-      events.fire(
-        node,
+      if let event = configuration.handledEvent(
         focused ? "did_gain_accessibility_focus" : "did_lose_accessibility_focus")
+      {
+        events.fire(node, event)
+      }
     }
-    .onAppear { if node.bool("focus") == true { accessibilityFocused = true } }
-    .modifier(SemanticsHeading(level: node.int("heading_level")))
+    .onAppear { if configuration.focused == true { accessibilityFocused = true } }
+    .modifier(SemanticsHeading(level: configuration.headingLevel))
     .modifier(SemanticsStateContent(node: node))
-    .modifier(SemanticsFocusability(focusable: node.bool("focusable")))
+    .modifier(SemanticsFocusability(focusable: configuration.focusable))
     .modifier(SemanticsActions(node: node, events: events))
   }
 
@@ -119,8 +130,8 @@ struct SemanticsControlView: View {
   /// `.ignore` does; `container` keeps children addressable rather than
   /// merging them into one element.
   private var childBehavior: AccessibilityChildBehavior {
-    if node.bool("exclude_semantics") == true { return .ignore }
-    return node.bool("container") == true ? .contain : .combine
+    if configuration.excludeSemantics { return .ignore }
+    return configuration.container ? .contain : .combine
   }
 
   private var traits: AccessibilityTraits {
@@ -130,15 +141,121 @@ struct SemanticsControlView: View {
     if node.bool("image") == true { traits.formUnion(.isImage) }
     if node.bool("link") == true { traits.formUnion(.isLink) }
     if node.bool("selected") == true { traits.formUnion(.isSelected) }
-    // Ruby sends `textfield`; Flutter's Semantics calls the same flag
-    // `textField`. A read-only field is static text to VoiceOver.
-    if node.bool("textfield") == true {
+    // Flutter's `textField` flag has no exact SwiftUI trait. Search-field and
+    // static-text are the closest native distinctions VoiceOver exposes.
+    if configuration.textField == true {
       traits.formUnion(node.bool("read_only") == true ? .isStaticText : .isSearchField)
     }
-    if node.bool("slider") == true { traits.formUnion(.isSelected) }
     // Flutter's liveRegion asks the screen reader to announce changes.
     if node.bool("live_region") == true { traits.formUnion(.updatesFrequently) }
     return traits
+  }
+}
+
+/// Wire interpretation kept separate from SwiftUI so the pinned Flet names
+/// and Ruflet's historical spellings cannot silently drift apart again.
+/// Canonical Flet properties always win; aliases only keep older Ruby clients
+/// functional while they migrate to the source contract.
+struct RufletSemanticsConfiguration {
+  let node: ControlNode
+
+  var label: String? { string("label") }
+  var hint: String? { string("hint", compatibility: "hint_text") }
+  var value: String? { string("value") }
+  var tooltip: String? { string("tooltip") }
+  var textField: Bool? { bool("text_field", compatibility: "textfield") }
+  var slider: Bool? { bool("slider") }
+  var focused: Bool? { bool("focused", compatibility: "focus") }
+  var disabled: Bool? { bool("disabled") }
+  var hidden: Bool? { bool("hidden") }
+  var obscured: Bool? { bool("obscured") }
+  var focusable: Bool? { bool("focusable") }
+  var headingLevel: Int? { integer("heading_level") }
+  var container: Bool { bool("container") ?? false }
+  var excludeSemantics: Bool { bool("exclude_semantics") ?? false }
+  var tapHint: String? { string("on_tap_hint", compatibility: "on_tap_hint_text") }
+  var longPressHint: String? {
+    string("on_long_press_hint", compatibility: "on_long_press_hint_text")
+  }
+
+  func handledEvent(_ canonical: String, compatibility: String? = nil) -> String? {
+    if node.props["on_\(canonical)"]?.boolValue == true { return canonical }
+    if let compatibility, node.props["on_\(compatibility)"]?.boolValue == true {
+      return compatibility
+    }
+    return nil
+  }
+
+  private func string(_ canonical: String, compatibility: String? = nil) -> String? {
+    if let value = node.props[canonical]?.stringValue { return value }
+    return compatibility.flatMap { node.props[$0]?.stringValue }
+  }
+
+  private func bool(_ canonical: String, compatibility: String? = nil) -> Bool? {
+    if let value = node.props[canonical]?.boolValue { return value }
+    if let compatibility, let value = node.props[compatibility]?.boolValue { return value }
+    return node.bool(canonical)
+  }
+
+  private func integer(_ canonical: String, compatibility: String? = nil) -> Int? {
+    if let value = node.props[canonical]?.intValue { return value }
+    if let compatibility, let value = node.props[compatibility]?.intValue { return value }
+    return node.int(canonical)
+  }
+}
+
+private struct SemanticsOptionalText: ViewModifier {
+  let label: String?
+  let hint: String?
+  let value: String?
+
+  func body(content: Content) -> some View {
+    content
+      .modifier(OptionalSemanticsLabel(value: label))
+      .modifier(OptionalSemanticsHint(value: hint))
+      .modifier(OptionalSemanticsValue(value: value))
+  }
+}
+
+private struct OptionalSemanticsLabel: ViewModifier {
+  let value: String?
+  func body(content: Content) -> some View {
+    if let value { content.accessibilityLabel(Text(value)) } else { content }
+  }
+}
+
+private struct OptionalSemanticsHint: ViewModifier {
+  let value: String?
+  func body(content: Content) -> some View {
+    if let value { content.accessibilityHint(Text(value)) } else { content }
+  }
+}
+
+private struct OptionalSemanticsValue: ViewModifier {
+  let value: String?
+  func body(content: Content) -> some View {
+    if let value { content.accessibilityValue(Text(value)) } else { content }
+  }
+}
+
+private struct SemanticsVisibility: ViewModifier {
+  let hidden: Bool?
+  func body(content: Content) -> some View {
+    if let hidden { content.accessibilityHidden(hidden) } else { content }
+  }
+}
+
+private struct SemanticsPrivacy: ViewModifier {
+  let obscured: Bool?
+  func body(content: Content) -> some View {
+    if let obscured { content.privacySensitive(obscured) } else { content }
+  }
+}
+
+private struct SemanticsTooltip: ViewModifier {
+  let tooltip: String?
+  func body(content: Content) -> some View {
+    if let tooltip { content.help(tooltip) } else { content }
   }
 }
 
@@ -191,6 +308,9 @@ private struct SemanticsStateContent: ViewModifier {
     if let expanded = node.bool("expanded") {
       entries.append(("Expanded", expanded ? "Expanded" : "Collapsed"))
     }
+    if let disabled = node.bool("disabled") {
+      entries.append(("Enabled", disabled ? "Disabled" : "Enabled"))
+    }
     if node.bool("multiline") == true { entries.append(("Multiline", "Yes")) }
     if node.bool("read_only") == true { entries.append(("Read only", "Yes")) }
     if let increased = node.string("increased_value"), !increased.isEmpty {
@@ -201,8 +321,10 @@ private struct SemanticsStateContent: ViewModifier {
     }
     if let current = node.int("current_value_length") {
       let maximum = node.int("max_value_length")
-      entries.append((
-        "Length", maximum.map { "\(current) of \($0)" } ?? "\(current)"))
+      entries.append(
+        (
+          "Length", maximum.map { "\(current) of \($0)" } ?? "\(current)"
+        ))
     }
     return entries
   }
@@ -230,46 +352,29 @@ private struct SemanticsActions: ViewModifier {
   func body(content: Content) -> some View {
     content
       .modifier(SemanticsDefaultAction(node: node, events: events))
-      .modifier(SemanticsGestureActions(node: node, events: events))
       .modifier(SemanticsAdjustActions(node: node, events: events))
       .modifier(SemanticsDismissAction(node: node, events: events))
       .modifier(SemanticsNamedActions(node: node, events: events))
   }
 }
 
-/// Ruby declares this one as `on_tap`, so the event it expects back is `tap`
-/// rather than Flutter's `click`. `on_tap_hint_text` names the activation the
-/// way Flutter's `onTapHint` does; VoiceOver reads a named action's label in
-/// the same place.
+/// Flet's canonical action is `on_click`/`click`. The `tap` fallback preserves
+/// Ruflet clients that predate the source-driven wire contract.
 private struct SemanticsDefaultAction: ViewModifier {
   let node: ControlNode
   let events: RufletEventSink
 
   func body(content: Content) -> some View {
-    if node.handlesEvent("tap") {
-      if let hint = node.string("on_tap_hint_text"), !hint.isEmpty {
-        content.accessibilityAction(named: Text(hint)) { events.fire(node, "tap") }
+    let configuration = RufletSemanticsConfiguration(node: node)
+    if let event = configuration.handledEvent("click", compatibility: "tap") {
+      if let hint = configuration.tapHint, !hint.isEmpty {
+        content.accessibilityAction(named: Text(hint)) { events.fire(node, event) }
       } else {
-        content.accessibilityAction(.default) { events.fire(node, "tap") }
+        content.accessibilityAction(.default) { events.fire(node, event) }
       }
-    } else { content }
-  }
-}
-
-/// `on_double_tap` and `on_long_press` have no gesture of their own under
-/// VoiceOver, which routes every activation through the rotor, so each is
-/// offered as a named action.
-private struct SemanticsGestureActions: ViewModifier {
-  let node: ControlNode
-  let events: RufletEventSink
-
-  func body(content: Content) -> some View {
-    content
-      .modifier(NamedSemanticsAction(
-        node: node, events: events, event: "double_tap", label: "Double tap"))
-      .modifier(NamedSemanticsAction(
-        node: node, events: events, event: "long_press",
-        label: node.string("on_long_press_hint_text") ?? "Long press"))
+    } else {
+      content
+    }
   }
 }
 
@@ -277,12 +382,21 @@ private struct SemanticsAdjustActions: ViewModifier {
   let node: ControlNode
   let events: RufletEventSink
   func body(content: Content) -> some View {
-    content.accessibilityAdjustableAction { direction in
-      switch direction {
-      case .increment: events.fire(node, "increase")
-      case .decrement: events.fire(node, "decrease")
-      @unknown default: break
+    let configuration = RufletSemanticsConfiguration(node: node)
+    let increase = configuration.handledEvent("increase")
+    let decrease = configuration.handledEvent("decrease")
+    if increase != nil || decrease != nil {
+      content.accessibilityAdjustableAction { direction in
+        switch direction {
+        case .increment:
+          if let increase { events.fire(node, increase) }
+        case .decrement:
+          if let decrease { events.fire(node, decrease) }
+        @unknown default: break
+        }
       }
+    } else {
+      content
     }
   }
 }
@@ -291,9 +405,18 @@ private struct SemanticsDismissAction: ViewModifier {
   let node: ControlNode
   let events: RufletEventSink
   func body(content: Content) -> some View {
-    if node.handlesEvent("dismiss") {
-      content.accessibilityAction(.escape) { events.fire(node, "dismiss") }
-    } else { content }
+    let configuration = RufletSemanticsConfiguration(node: node)
+    if let dismiss = configuration.handledEvent("dismiss") {
+      content
+        .accessibilityAction(.escape) { events.fire(node, dismiss) }
+        // The pinned Flet control attaches `onLongPress` to the same dismiss
+        // callback. VoiceOver exposes that secondary activation in its rotor.
+        .accessibilityAction(named: Text(configuration.longPressHint ?? "Long press")) {
+          events.fire(node, dismiss)
+        }
+    } else {
+      content
+    }
   }
 }
 
@@ -303,36 +426,61 @@ private struct SemanticsNamedActions: ViewModifier {
 
   func body(content: Content) -> some View {
     content
-      .modifier(NamedSemanticsAction(node: node, events: events, event: "scroll_left", label: "Scroll left"))
-      .modifier(NamedSemanticsAction(node: node, events: events, event: "scroll_right", label: "Scroll right"))
-      .modifier(NamedSemanticsAction(node: node, events: events, event: "scroll_up", label: "Scroll up"))
-      .modifier(NamedSemanticsAction(node: node, events: events, event: "scroll_down", label: "Scroll down"))
-      .modifier(NamedSemanticsAction(node: node, events: events, event: "copy", label: "Copy"))
-      .modifier(NamedSemanticsAction(node: node, events: events, event: "cut", label: "Cut"))
-      .modifier(NamedSemanticsAction(node: node, events: events, event: "paste", label: "Paste"))
-      .modifier(NamedSemanticsAction(
-        node: node, events: events, event: "move_cursor_forward_by_character",
-        label: "Move cursor forward", data: .bool(true)))
-      .modifier(NamedSemanticsAction(
-        node: node, events: events, event: "move_cursor_backward_by_character",
-        label: "Move cursor backward", data: .bool(true)))
-      .modifier(NamedSemanticsAction(
-        node: node, events: events, event: "set_text", label: "Set text",
-        data: .string(node.string("value") ?? "")))
+      .modifier(
+        NamedSemanticsAction(
+          node: node, events: events, canonicalEvent: "scroll_left", label: "Scroll left")
+      )
+      .modifier(
+        NamedSemanticsAction(
+          node: node, events: events, canonicalEvent: "scroll_right", label: "Scroll right")
+      )
+      .modifier(
+        NamedSemanticsAction(
+          node: node, events: events, canonicalEvent: "scroll_up", label: "Scroll up")
+      )
+      .modifier(
+        NamedSemanticsAction(
+          node: node, events: events, canonicalEvent: "scroll_down", label: "Scroll down")
+      )
+      .modifier(
+        NamedSemanticsAction(node: node, events: events, canonicalEvent: "copy", label: "Copy")
+      )
+      .modifier(
+        NamedSemanticsAction(node: node, events: events, canonicalEvent: "cut", label: "Cut")
+      )
+      .modifier(
+        NamedSemanticsAction(node: node, events: events, canonicalEvent: "paste", label: "Paste")
+      )
+      .modifier(
+        NamedSemanticsAction(
+          node: node, events: events, canonicalEvent: "move_cursor_forward_by_character",
+          label: "Move cursor forward", data: .bool(true))
+      )
+      .modifier(
+        NamedSemanticsAction(
+          node: node, events: events, canonicalEvent: "move_cursor_backward_by_character",
+          label: "Move cursor backward", data: .bool(true))
+      )
+      .modifier(
+        NamedSemanticsAction(
+          node: node, events: events, canonicalEvent: "set_text", label: "Set text",
+          data: .string(node.string("value") ?? "")))
   }
 }
 
 private struct NamedSemanticsAction: ViewModifier {
   let node: ControlNode
   let events: RufletEventSink
-  let event: String
+  let canonicalEvent: String
   let label: String
   var data: RufletValue = .null
 
   func body(content: Content) -> some View {
-    if node.handlesEvent(event) {
+    if let event = RufletSemanticsConfiguration(node: node).handledEvent(canonicalEvent) {
       content.accessibilityAction(named: Text(label)) { events.fire(node, event, data: data) }
-    } else { content }
+    } else {
+      content
+    }
   }
 }
 
@@ -346,7 +494,7 @@ struct MergeSemanticsControlView: View {
       if let contentID = node.controlID(forKey: "content") {
         ControlView(id: contentID, axis: .none)
       } else {
-        ControlList(ids: node.childIDs, axis: .vertical)
+        EmptyView()
       }
     }
     .accessibilityElement(children: .combine)
@@ -359,15 +507,13 @@ struct SelectionAreaControlView: View {
   @Environment(\.rufletEvents) private var events
 
   var body: some View {
-    Group {
-      if let contentID = node.controlID(forKey: "content") {
-        ControlView(id: contentID, axis: .none)
-      } else {
-        ControlList(ids: node.childIDs, axis: .vertical)
-      }
+    if let contentID = node.controlID(forKey: "content") {
+      ControlView(id: contentID, axis: .none)
+        .textSelection(.enabled)
+        .modifier(SelectionChangeReporter(node: node, events: events))
+    } else {
+      RufletWrapperError("SelectionArea.content must be provided and visible")
     }
-    .textSelection(.enabled)
-    .modifier(SelectionChangeReporter(node: node, events: events))
   }
 }
 
@@ -382,7 +528,8 @@ private struct SelectionChangeReporter: ViewModifier {
       ) { notification in
         guard let view = notification.object as? NSTextView else { return }
         let range = view.selectedRange()
-        guard range.location != NSNotFound, range.location + range.length <= view.string.utf16.count else {
+        guard range.location != NSNotFound, range.location + range.length <= view.string.utf16.count
+        else {
           return
         }
         events.fire(
@@ -415,14 +562,12 @@ struct TransparentPointerControlView: View {
   let node: ControlNode
 
   var body: some View {
-    Group {
-      if let contentID = node.controlID(forKey: "content") {
-        ControlView(id: contentID, axis: .none)
-      } else {
-        ControlList(ids: node.childIDs, axis: .vertical)
-      }
+    if let contentID = node.controlID(forKey: "content") {
+      ControlView(id: contentID, axis: .none)
+        .allowsHitTesting(false)
+    } else {
+      EmptyView()
     }
-    .allowsHitTesting(false)
   }
 }
 
@@ -443,12 +588,12 @@ struct ShimmerControlView: View {
       RufletWrapperError("Shimmer requires either gradient or base/highlight colors")
     } else {
       content
-      .overlay {
-        if configuration.enabled {
-          shimmer
+        .overlay {
+          if configuration.enabled {
+            shimmer
+          }
         }
-      }
-      .mask(content)
+        .mask(content)
     }
   }
 
@@ -459,9 +604,12 @@ struct ShimmerControlView: View {
   }
 
   private var shimmer: some View {
-    let gradient = RufletWrapperGradient(node.props["gradient"])
+    let gradient =
+      RufletWrapperGradient(node.props["gradient"])
       ?? RufletWrapperGradient(
-        colors: [configuration.baseColor!, configuration.highlightColor!, configuration.baseColor!],
+        colors: [
+          configuration.baseColor!, configuration.highlightColor!, configuration.baseColor!,
+        ],
         stops: [0, 0.5, 1], begin: sweep.start, end: sweep.end)
     return GeometryReader { proxy in
       gradient.view
@@ -562,8 +710,9 @@ struct ShaderMaskControlView: View {
             RufletWrapperDefaults.shaderBlendMode(node.string("blend_mode")))
         }
         .mask(content)
-        .clipShape(RoundedRectangle(
-          cornerRadius: ControlProps.cornerRadius(node.props["border_radius"]) ?? 0))
+        .clipShape(
+          RoundedRectangle(
+            cornerRadius: ControlProps.cornerRadius(node.props["border_radius"]) ?? 0))
     } else {
       RufletWrapperError("ShaderMask.shader must be provided")
     }
@@ -680,13 +829,15 @@ struct RufletWrapperGradient {
         Rectangle().fill(LinearGradient(stops: stops, startPoint: begin, endPoint: end))
       case .radial:
         GeometryReader { proxy in
-          Rectangle().fill(RadialGradient(
-            stops: stops, center: center, startRadius: 0,
-            endRadius: radius * min(proxy.size.width, proxy.size.height)))
+          Rectangle().fill(
+            RadialGradient(
+              stops: stops, center: center, startRadius: 0,
+              endRadius: radius * min(proxy.size.width, proxy.size.height)))
         }
       case .sweep:
-        Rectangle().fill(AngularGradient(
-          stops: stops, center: center, startAngle: startAngle, endAngle: endAngle))
+        Rectangle().fill(
+          AngularGradient(
+            stops: stops, center: center, startAngle: startAngle, endAngle: endAngle))
       }
     }
     .rotationEffect(rotation)
@@ -744,38 +895,40 @@ private struct WindowDragGesture: ViewModifier {
         .simultaneousGesture(
           TapGesture(count: 2).onEnded {
             guard node.bool("maximizable") != false, let window = NSApp.keyWindow else { return }
-            let wasMaximized = window.styleMask.contains(.fullScreen)
+            let wasMaximized =
+              window.styleMask.contains(.fullScreen)
               || window.standardWindowButton(.zoomButton)?.state == .on
             window.performZoom(nil)
             events.fire(
               node, "double_tap",
               data: .string(wasMaximized ? "unmaximize" : "maximize"))
-          })
-        .gesture(
-        DragGesture(minimumDistance: 2, coordinateSpace: .global)
-          .onChanged { value in
-            // AppKit already knows how to drag a window from an event; asking
-            // it is far more robust than moving the frame by hand.
-            guard let window = NSApp.keyWindow, let event = NSApp.currentEvent else { return }
-            if !dragging {
-              dragging = true
-              events.fire(
-                node, "drag_start",
-                data: RufletInteractionParity.dragStart(
-                  kind: "mouse", local: value.startLocation,
-                  global: value.startLocation,
-                  timestamp: Date().timeIntervalSince1970 * 1_000))
-            }
-            window.performDrag(with: event)
           }
-          .onEnded { value in
-            dragging = false
-            events.fire(
-              node, "drag_end",
-              data: RufletInteractionParity.dragEnd(
-                local: value.location, global: value.location,
-                velocity: .zero, primaryVelocity: nil))
-          })
+        )
+        .gesture(
+          DragGesture(minimumDistance: 2, coordinateSpace: .global)
+            .onChanged { value in
+              // AppKit already knows how to drag a window from an event; asking
+              // it is far more robust than moving the frame by hand.
+              guard let window = NSApp.keyWindow, let event = NSApp.currentEvent else { return }
+              if !dragging {
+                dragging = true
+                events.fire(
+                  node, "drag_start",
+                  data: RufletInteractionParity.dragStart(
+                    kind: "mouse", local: value.startLocation,
+                    global: value.startLocation,
+                    timestamp: Date().timeIntervalSince1970 * 1_000))
+              }
+              window.performDrag(with: event)
+            }
+            .onEnded { value in
+              dragging = false
+              events.fire(
+                node, "drag_end",
+                data: RufletInteractionParity.dragEnd(
+                  local: value.location, global: value.location,
+                  velocity: .zero, primaryVelocity: nil))
+            })
     #else
       // iOS has no movable top-level window. Flet's window_manager backend is
       // desktop-only too, so the wrapper remains visible without inventing a
@@ -796,16 +949,29 @@ extension EnvironmentValues {
   }
 }
 
-/// `BrowserContextMenu` and `AutofillGroup` — web-only and platform-managed
-/// respectively, so they render their content and nothing more.
-struct InertWrapperControlView: View {
+/// `AutofillGroup` keeps related native text inputs in one subtree. UIKit and
+/// AppKit infer autofill grouping from the native view hierarchy and the text
+/// inputs' content types, so this is a presentation-free native container.
+struct AutofillGroupControlView: View {
   let node: ControlNode
 
-  var body: some View {
+  @ViewBuilder var body: some View {
     if let contentID = node.controlID(forKey: "content") {
       ControlView(id: contentID, axis: .none)
     } else {
-      ControlList(ids: node.childIDs, axis: .vertical)
+      RufletWrapperError("AutofillGroup control has no content.")
     }
+  }
+}
+
+enum RufletAutofillGroupSemantics {
+  enum DisposeAction: String, Equatable {
+    case commit
+    case cancel
+  }
+
+  /// Flet defaults missing and unknown values to commit.
+  static func disposeAction(_ node: ControlNode) -> DisposeAction {
+    DisposeAction(rawValue: node.string("dispose_action")?.lowercased() ?? "") ?? .commit
   }
 }

@@ -219,8 +219,9 @@ public enum ControlRegistry {
         methods: ["capture"])
     add(["WindowDragArea"], .visible, "WindowDragAreaControlView", .nativeView,
         events: ["double_tap", "drag_end", "drag_start"])
-    add(["AutofillGroup"], .visible, "InertWrapperControlView", .nativeView)
-    add(["BrowserContextMenu"], .unsupported, "InertWrapperControlView", .unsupportedFallback)
+    add(["AutofillGroup"], .visible, "AutofillGroupControlView", .nativeView)
+    add(["BrowserContextMenu"], .service, "BrowserContextMenuService", .serviceOnly,
+        methods: ["disable_menu", "enable_menu"])
     add(["RufletApp"], .visible, "RufletAppControlView", .nativeView,
         events: ["animation_end", "error", "size_change"])
 
