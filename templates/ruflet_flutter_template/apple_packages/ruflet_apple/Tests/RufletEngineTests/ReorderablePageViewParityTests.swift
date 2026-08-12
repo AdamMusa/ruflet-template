@@ -91,6 +91,27 @@ final class ReorderablePageViewParityTests: XCTestCase {
       .map(["new_index": .int(0)]))
   }
 
+  func testExplicitDragHandleRequiresItsNativeRowScopeBeforeContent() {
+    let visible = ControlNode(id: 7, type: "Text")
+    let hidden = ControlNode(id: 8, type: "Text", props: ["visible": .bool(false)])
+
+    XCTAssertEqual(
+      ReorderableDragHandleParity.error(
+        hasReorderableAncestor: false, content: nil),
+      "ReorderableDragHandle must be placed inside ReorderableListView.")
+    XCTAssertEqual(
+      ReorderableDragHandleParity.error(
+        hasReorderableAncestor: true, content: nil),
+      "ReorderableDragHandle.content must be set and visible")
+    XCTAssertEqual(
+      ReorderableDragHandleParity.error(
+        hasReorderableAncestor: true, content: hidden),
+      "ReorderableDragHandle.content must be set and visible")
+    XCTAssertNil(
+      ReorderableDragHandleParity.error(
+        hasReorderableAncestor: true, content: visible))
+  }
+
   func testPageViewSelectionUsesFletUpdatePropertiesShape() {
     XCTAssertEqual(
       PageViewParity.selectionProperties(index: 3),

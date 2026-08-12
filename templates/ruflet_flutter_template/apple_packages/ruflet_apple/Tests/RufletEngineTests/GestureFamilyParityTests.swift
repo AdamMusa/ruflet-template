@@ -38,6 +38,50 @@ final class GestureFamilyParityTests: XCTestCase {
     XCTAssertEqual(RufletDismissibleDefaults.resizeDuration(pinnedWire), 80)
   }
 
+  func testDismissibleThresholdsPreferPinnedNamesAndAcceptRubySymbolAliases() {
+    let node = ControlNode(
+      id: 4, type: "Dismissible",
+      props: ["dismiss_thresholds": .map([
+        "endToStart": .double(0.25),
+        "end_to_start": .double(0.75),
+        "up": .double(0.6),
+      ])])
+
+    XCTAssertEqual(RufletDismissibleDefaults.threshold(node, direction: "endToStart"), 0.25)
+    XCTAssertEqual(RufletDismissibleDefaults.threshold(node, direction: "up"), 0.6)
+    XCTAssertEqual(RufletDismissibleDefaults.threshold(node, direction: "down"), 0.4)
+
+    let aliasOnly = ControlNode(
+      id: 5, type: "Dismissible",
+      props: ["dismiss_thresholds": .map(["end_to_start": .double(0.7)])])
+    XCTAssertEqual(
+      RufletDismissibleDefaults.threshold(aliasOnly, direction: "endToStart"), 0.7)
+  }
+
+  func testDismissibleCompletionUsesMeasuredExtentAndCrossAxisFraction() {
+    XCTAssertEqual(
+      RufletDismissibleDefaults.dismissedOffset(
+        size: CGSize(width: 320, height: 80), direction: "endToStart",
+        layoutDirection: .leftToRight, crossAxisEndOffset: 0.25),
+      CGSize(width: -320, height: 20))
+    XCTAssertEqual(
+      RufletDismissibleDefaults.dismissedOffset(
+        size: CGSize(width: 320, height: 80), direction: "startToEnd",
+        layoutDirection: .rightToLeft, crossAxisEndOffset: -0.5),
+      CGSize(width: -320, height: -40))
+    XCTAssertEqual(
+      RufletDismissibleDefaults.dismissedOffset(
+        size: CGSize(width: 320, height: 80), direction: "up",
+        layoutDirection: .leftToRight, crossAxisEndOffset: 0.1),
+      CGSize(width: 32, height: -80))
+  }
+
+  func testDismissibleRequiredContentErrorMatchesPinnedClient() {
+    XCTAssertEqual(
+      RufletDismissibleDefaults.missingContentError,
+      "Dismissible.content must be visible")
+  }
+
   func testDragTargetPayloadMatchesFletDragTargetEvent() {
     XCTAssertEqual(
       RufletGestureParity.dragPayload(

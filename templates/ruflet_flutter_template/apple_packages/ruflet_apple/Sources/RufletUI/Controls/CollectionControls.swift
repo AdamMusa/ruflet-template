@@ -259,6 +259,13 @@ struct ReorderableListControlView: View {
         width: config.horizontal ? itemExtent : nil,
         height: config.horizontal ? nil : itemExtent)
       .modifier(PageReverse(horizontal: config.horizontal, enabled: config.reverse))
+      // Flutter's ReorderableItemScope makes the owning row/index available
+      // to a ReorderableDragHandle anywhere below that row. An environment
+      // action is the native SwiftUI equivalent and keeps the visible handle
+      // entirely app supplied.
+      .environment(
+        \.rufletReorderDragAction,
+        RufletReorderDragAction(begin: { beginDrag(childID) }))
 
     if config.showDefaultDragHandles {
       #if os(macOS)
@@ -297,6 +304,70 @@ struct ReorderableListControlView: View {
     events.fire(
       node, "reorder_end",
       data: ReorderableListParity.reorderEndPayload(newIndex: newIndex))
+  }
+}
+
+/// The row-owned drag action inherited by an explicit
+/// `ReorderableDragHandle`. This mirrors Flet's `ReorderableItemScope`: a
+/// handle can be nested inside arbitrary layout controls but cannot be used
+/// outside its owning reorderable row.
+private struct RufletReorderDragAction {
+  let begin: () -> NSItemProvider
+}
+
+private struct RufletReorderDragActionKey: EnvironmentKey {
+  static let defaultValue: RufletReorderDragAction? = nil
+}
+
+private extension EnvironmentValues {
+  var rufletReorderDragAction: RufletReorderDragAction? {
+    get { self[RufletReorderDragActionKey.self] }
+    set { self[RufletReorderDragActionKey.self] = newValue }
+  }
+}
+
+/// `ReorderableDragHandle` — the app-provided content is itself the native
+/// drag source. No Material grip is fabricated; Flet's control is only a
+/// listener around its content.
+struct ReorderableDragHandleControlView: View {
+  let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
+  @Environment(\.rufletReorderDragAction) private var dragAction
+
+  @ViewBuilder
+  var body: some View {
+    if let error = ReorderableDragHandleParity.error(
+      hasReorderableAncestor: dragAction != nil,
+      content: node.controlID(forKey: "content").flatMap(store.node))
+    {
+      Text(error).foregroundColor(.red)
+    } else if let contentID = node.controlID(forKey: "content") {
+      if node.bool("disabled") == true {
+        ControlView(id: contentID, axis: .none)
+      } else {
+        ControlView(id: contentID, axis: .none)
+          .onDrag { dragAction!.begin() }
+      }
+    }
+  }
+}
+
+enum ReorderableDragHandleParity {
+  static let ancestorError =
+    "ReorderableDragHandle must be placed inside ReorderableListView."
+  static let missingContentError =
+    "ReorderableDragHandle.content must be set and visible"
+
+  /// Flet validates the item scope before it validates content, so preserve
+  /// that observable error ordering as well as hidden-content handling.
+  static func error(
+    hasReorderableAncestor: Bool, content: ControlNode?
+  ) -> String? {
+    guard hasReorderableAncestor else { return ancestorError }
+    guard let content, content.bool("visible") != false else {
+      return missingContentError
+    }
+    return nil
   }
 }
 

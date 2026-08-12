@@ -640,6 +640,7 @@ private struct RufletDragTargetDropDelegate: DropDelegate {
 /// `Dismissible` — swipe a row away.
 struct DismissibleControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
   @Environment(\.layoutDirection) private var layoutDirection
   @State private var translation = CGSize.zero
@@ -652,31 +653,7 @@ struct DismissibleControlView: View {
   @State private var measuredSize = CGSize.zero
 
   var body: some View {
-    ZStack {
-      background(direction: currentDirection)
-      if !dismissed {
-        Group {
-          if let contentID = node.controlID(forKey: "content") {
-            ControlView(id: contentID, axis: .none)
-          }
-        }
-        .offset(translation)
-        .gesture(dismissGesture(size: measuredSize))
-      }
-    }
-    .frame(
-      width: collapsing && ["up", "down"].contains(dismissedDirection ?? "") ? 0 : nil,
-      height: collapsing && !["up", "down"].contains(dismissedDirection ?? "") ? 0 : nil)
-    .background(
-      GeometryReader { proxy in
-        Color.clear
-          .onAppear { measuredSize = proxy.size }
-          .onChange(of: proxy.size) {
-            measuredSize = $0
-            if collapsing { events.fire(node, "resize") }
-          }
-      }
-    )
+    dismissibleBody
     .rufletCommandHandler(node.id) { call, completion in
       guard call.name == "confirm_dismiss" else {
         completion(.failure(rufletUnsupported("Dismissible", call)))
@@ -691,6 +668,47 @@ struct DismissibleControlView: View {
       }
       completion(.success(.null))
     }
+    .onDisappear {
+      confirmTimeout?.cancel()
+      confirmTimeout = nil
+    }
+  }
+
+  @ViewBuilder
+  private var dismissibleBody: some View {
+    if let contentID = visibleContentID {
+      ZStack {
+        background(direction: currentDirection)
+        if !dismissed {
+          ControlView(id: contentID, axis: .none)
+            .offset(translation)
+            .gesture(dismissGesture(size: measuredSize))
+        }
+      }
+      .frame(
+        width: collapsing && ["up", "down"].contains(dismissedDirection ?? "") ? 0 : nil,
+        height: collapsing && !["up", "down"].contains(dismissedDirection ?? "") ? 0 : nil)
+      .background(
+        GeometryReader { proxy in
+          Color.clear
+            .onAppear { measuredSize = proxy.size }
+            .onChange(of: proxy.size) {
+              measuredSize = $0
+              if collapsing { events.fire(node, "resize") }
+            }
+        }
+      )
+    } else {
+      Text(RufletDismissibleDefaults.missingContentError)
+        .foregroundColor(.red)
+    }
+  }
+
+  private var visibleContentID: Int? {
+    guard let id = node.controlID(forKey: "content"),
+      let content = store.node(id), content.bool("visible") != false
+    else { return nil }
+    return id
   }
 
   private var currentDirection: String? {
@@ -769,38 +787,19 @@ struct DismissibleControlView: View {
   }
 
   private func dismissThreshold(for direction: String) -> Double {
-    guard let values = node.props["dismiss_thresholds"]?.mapValue else {
-      return RufletGestureParity.dismissThreshold
-    }
-    return values[direction]?.doubleValue ?? RufletGestureParity.dismissThreshold
-  }
-
-  /// `cross_axis_end_offset` shifts the row across its own axis as it leaves,
-  /// which Flutter measures in fractions of the row's height.
-  private func crossAxisEndOffset(for direction: String) -> CGFloat {
-    let fraction = CGFloat(node.double("cross_axis_end_offset") ?? 0)
-    return fraction * (direction == "up" || direction == "down" ? measuredSize.width : measuredSize.height)
+    RufletDismissibleDefaults.threshold(node, direction: direction)
   }
 
   private func finishDismiss(direction: String) {
-    let distance: CGFloat = 2_000
-    let target: CGSize
-    switch direction {
-    case "startToEnd": target = CGSize(width: layoutDirection == .leftToRight ? distance : -distance, height: 0)
-    case "endToStart": target = CGSize(width: layoutDirection == .leftToRight ? -distance : distance, height: 0)
-    case "down": target = CGSize(width: 0, height: distance)
-    default: target = CGSize(width: 0, height: -distance)
-    }
+    let target = RufletDismissibleDefaults.dismissedOffset(
+      size: measuredSize, direction: direction,
+      layoutDirection: layoutDirection,
+      crossAxisEndOffset: node.double("cross_axis_end_offset") ?? 0)
     let seconds = RufletDismissibleDefaults.movementDuration(node) / 1_000
     let collapse = RufletDismissibleDefaults.resizeDuration(node) / 1_000
-    let cross = crossAxisEndOffset(for: direction)
     dismissedDirection = direction
     withAnimation(.easeOut(duration: seconds)) {
-      if direction == "up" || direction == "down" {
-        translation = CGSize(width: target.width + cross, height: target.height)
-      } else {
-        translation = CGSize(width: target.width, height: target.height + cross)
-      }
+      translation = target
     }
     DispatchQueue.main.asyncAfter(deadline: .now() + seconds) {
       withAnimation(.easeOut(duration: collapse)) {
@@ -834,12 +833,53 @@ struct DismissibleControlView: View {
 /// the native engine faithful to Flet while ensuring both public properties
 /// are actually consumed instead of silently discarded.
 enum RufletDismissibleDefaults {
+  static let missingContentError = "Dismissible.content must be visible"
+
   static func movementDuration(_ node: ControlNode) -> Double {
     max(node.double("duration") ?? node.double("movement_duration") ?? 200, 0)
   }
 
   static func resizeDuration(_ node: ControlNode) -> Double {
     max(node.double("duration") ?? node.double("resize_duration") ?? 300, 0)
+  }
+
+  static func threshold(_ node: ControlNode, direction: String) -> Double {
+    guard let values = node.props["dismiss_thresholds"]?.mapValue else {
+      return RufletGestureParity.dismissThreshold
+    }
+    // The pinned Dart parser accepts enum.name keys (`endToStart`) while the
+    // Ruby DSL also serializes symbol keys as `end_to_start`. Prefer the exact
+    // Flet spelling when both are present, then consume the DSL alias.
+    if let exact = values[direction]?.doubleValue { return exact }
+    return values.first { key, _ in
+      RufletInteractionParity.normalizedDismissDirection(key) == direction
+    }?.value.doubleValue ?? RufletGestureParity.dismissThreshold
+  }
+
+  /// Flutter's movement controller stops at one full main-axis extent. Use
+  /// the measured Apple view extent too, including the documented fractional
+  /// cross-axis offset, instead of an arbitrary screen-sized translation.
+  static func dismissedOffset(
+    size: CGSize, direction: String, layoutDirection: LayoutDirection,
+    crossAxisEndOffset: Double
+  ) -> CGSize {
+    let vertical = direction == "up" || direction == "down"
+    let distance = vertical ? size.height : size.width
+    let cross = CGFloat(crossAxisEndOffset) * (vertical ? size.width : size.height)
+    switch direction {
+    case "startToEnd":
+      return CGSize(
+        width: layoutDirection == .leftToRight ? distance : -distance,
+        height: cross)
+    case "endToStart":
+      return CGSize(
+        width: layoutDirection == .leftToRight ? -distance : distance,
+        height: cross)
+    case "down":
+      return CGSize(width: cross, height: distance)
+    default:
+      return CGSize(width: cross, height: -distance)
+    }
   }
 }
 

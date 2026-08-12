@@ -29,9 +29,11 @@ extension ControlRegistry {
       return AnyView(DataTableControlView(node: node))
     case "DataTable2":
       return AnyView(MissingBundleControlView(node: node, bundle: "RufletDataTable2"))
+    case "ReorderableDragHandle":
+      return AnyView(ReorderableDragHandleControlView(node: node))
     case "ExpansionPanel", "Tab", "DataColumn", "DataRow", "DataCell",
       "NavigationBarDestination", "NavigationRailDestination",
-      "NavigationDrawerDestination", "ReorderableDragHandle":
+      "NavigationDrawerDestination":
       // Structural children their parent lays out; rendering one standalone
       // would duplicate it.
       return AnyView(EmptyView())
