@@ -26,6 +26,21 @@ final class RufletInputParityTests: XCTestCase {
     XCTAssertNil(RufletTextSelection.normalized(NSRange(location: 4, length: 0), in: "abc"))
   }
 
+  func testNativeEditorOwnsCaretUnlessRubySuppliesSelection() {
+    let ordinary = ControlNode(id: 1, type: "TextField", props: [
+      "value": .string("native")
+    ])
+    XCTAssertFalse(RufletTextSelection.appliesWireSelection(on: ordinary))
+
+    let explicit = ControlNode(id: 2, type: "TextField", props: [
+      "value": .string("native"),
+      "selection": .map([
+        "base_offset": .int(1), "extent_offset": .int(3),
+      ]),
+    ])
+    XCTAssertTrue(RufletTextSelection.appliesWireSelection(on: explicit))
+  }
+
   func testInputDescriptorsExposeFletEventsAndMethods() {
     XCTAssertEqual(
       ControlRegistry.descriptor(for: "TextField")?.supportedEvents,

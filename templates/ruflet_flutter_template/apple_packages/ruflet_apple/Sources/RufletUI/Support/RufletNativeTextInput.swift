@@ -244,6 +244,16 @@ enum RufletTextSelection {
     ])
   }
 
+  /// A native editor owns its live caret unless Ruby supplied an explicit
+  /// `selection` property. Feeding the ordinary selection binding back into
+  /// UIKit/AppKit on every SwiftUI update races the delegate callback by a
+  /// frame: fast typing then reapplies yesterday's caret between characters.
+  /// Flutter's TextEditingController has the same one-way rule — controller
+  /// selection is only replaced from the wire when `selection` is present.
+  static func appliesWireSelection(on node: ControlNode) -> Bool {
+    node.map("selection") != nil
+  }
+
   /// The selection Ruby set on the control, clamped to the current value.
   static func explicit(on node: ControlNode) -> NSRange {
     guard let map = node.map("selection"),
@@ -406,6 +416,7 @@ enum RufletTextSelection {
     var nativeChrome = false
     var searchAppearance = false
     var leadingSymbol: String? = nil
+    var appliesWireSelection = false
     var traits = RufletTextInputTraits()
     let onTap: () -> Void
     let onTapOutside: () -> Void
@@ -462,7 +473,9 @@ enum RufletTextSelection {
         context.coordinator.programmaticBlur = true
         view.resignFirstResponder()
       }
-      context.coordinator.apply(selection, to: view)
+      if appliesWireSelection {
+        context.coordinator.apply(selection, to: view)
+      }
     }
 
     private func configureLeadingAppearance(_ view: UITextField) {
@@ -865,6 +878,7 @@ enum RufletTextSelection {
     @Binding var focused: Bool
     @Binding var selection: NSRange
     var traits = RufletTextInputTraits()
+    var appliesWireSelection = false
     let submitOnReturn: Bool
     let onTap: () -> Void
     let onTapOutside: () -> Void
@@ -893,7 +907,9 @@ enum RufletTextSelection {
         context.coordinator.programmaticBlur = true
         view.resignFirstResponder()
       }
-      context.coordinator.apply(selection, to: view)
+      if appliesWireSelection {
+        context.coordinator.apply(selection, to: view)
+      }
     }
 
     private func configure(_ view: RufletTextView) {
@@ -1103,6 +1119,7 @@ enum RufletTextSelection {
     var nativeChrome = false
     var searchAppearance = false
     var leadingSymbol: String? = nil
+    var appliesWireSelection = false
     var traits = RufletTextInputTraits()
     let onTap: () -> Void
     let onTapOutside: () -> Void
@@ -1150,7 +1167,9 @@ enum RufletTextSelection {
         context.coordinator.programmaticBlur = true
         view.window?.makeFirstResponder(nil)
       }
-      if let editor = view.currentEditor() as? NSTextView, editor.selectedRange() != selection {
+      if appliesWireSelection,
+        let editor = view.currentEditor() as? NSTextView, editor.selectedRange() != selection
+      {
         editor.setSelectedRange(selection)
       }
     }
@@ -1314,6 +1333,7 @@ enum RufletTextSelection {
     @Binding var focused: Bool
     @Binding var selection: NSRange
     var traits = RufletTextInputTraits()
+    var appliesWireSelection = false
     let submitOnReturn: Bool
     let onTap: () -> Void
     let onTapOutside: () -> Void
@@ -1352,7 +1372,8 @@ enum RufletTextSelection {
         context.coordinator.programmaticBlur = true
         view.window?.makeFirstResponder(nil)
       }
-      if selection.location != NSNotFound, NSMaxRange(selection) <= view.string.utf16.count,
+      if appliesWireSelection,
+        selection.location != NSNotFound, NSMaxRange(selection) <= view.string.utf16.count,
         view.selectedRange() != selection
       {
         view.setSelectedRange(selection)
