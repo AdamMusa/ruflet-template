@@ -135,25 +135,33 @@ struct GridViewControlView: View {
 
   var body: some View {
     let config = CollectionDefaults.gridView(node)
-    ScrollView(config.horizontal ? .horizontal : .vertical,
-      showsIndicators: config.showsIndicators) {
-      Group {
-        if config.horizontal {
-          LazyHGrid(rows: rows(spacing: config.runSpacing), spacing: config.spacing) {
-            gridChildren
-          }
-        } else {
-          LazyVGrid(columns: columns(spacing: config.runSpacing), spacing: config.spacing) {
-            gridChildren
+    GeometryReader { proxy in
+      ScrollView(config.horizontal ? .horizontal : .vertical,
+        showsIndicators: config.showsIndicators) {
+        Group {
+          if config.horizontal {
+            LazyHGrid(
+              rows: rows(spacing: config.runSpacing, availableExtent: proxy.size.height),
+              spacing: config.spacing
+            ) {
+              gridChildren
+            }
+          } else {
+            LazyVGrid(
+              columns: columns(spacing: config.runSpacing, availableExtent: proxy.size.width),
+              spacing: config.spacing
+            ) {
+              gridChildren
+            }
           }
         }
+        .padding(config.padding)
+        .modifier(CollectionClip(behavior: config.clipBehavior))
+        .accessibilityElement(children: .contain)
+        .accessibilityValue(node.int("semantic_child_count").map { "\($0)" } ?? "")
+        .modifier(CollectionScrollContentProbe(node: node, horizontal: config.horizontal))
+        .background(CollectionNativeScrollLocator(driver: scrollDriver))
       }
-      .padding(config.padding)
-      .modifier(CollectionClip(behavior: config.clipBehavior))
-      .accessibilityElement(children: .contain)
-      .accessibilityValue(node.int("semantic_child_count").map { "\($0)" } ?? "")
-      .modifier(CollectionScrollContentProbe(node: node, horizontal: config.horizontal))
-      .background(CollectionNativeScrollLocator(driver: scrollDriver))
     }
     // Native lazy grids choose their own prefetch window. `cache_extent`
     // remains a consumed Flet contract value but must not change the visible
@@ -177,22 +185,43 @@ struct GridViewControlView: View {
     }
   }
 
-  private func columns(spacing: CGFloat) -> [GridItem] {
+  private func columns(spacing: CGFloat, availableExtent: CGFloat) -> [GridItem] {
     let config = CollectionDefaults.gridView(node)
-    if config.maxExtent == nil {
-      return Array(repeating: GridItem(.flexible(), spacing: spacing), count: config.runsCount)
-    }
-    let extent = config.maxExtent ?? 1
-    return [GridItem(.adaptive(minimum: extent), spacing: spacing)]
+    let count = CollectionGridGeometry.crossAxisCount(
+      availableExtent: availableExtent,
+      spacing: spacing,
+      runsCount: config.runsCount,
+      maxExtent: config.maxExtent)
+    return Array(repeating: GridItem(.flexible(), spacing: spacing), count: count)
   }
 
-  private func rows(spacing: CGFloat) -> [GridItem] {
+  private func rows(spacing: CGFloat, availableExtent: CGFloat) -> [GridItem] {
     let config = CollectionDefaults.gridView(node)
-    if config.maxExtent == nil {
-      return Array(repeating: GridItem(.flexible(), spacing: spacing), count: config.runsCount)
-    }
-    let extent = config.maxExtent ?? 1
-    return [GridItem(.adaptive(minimum: extent), spacing: spacing)]
+    let count = CollectionGridGeometry.crossAxisCount(
+      availableExtent: availableExtent,
+      spacing: spacing,
+      runsCount: config.runsCount,
+      maxExtent: config.maxExtent)
+    return Array(repeating: GridItem(.flexible(), spacing: spacing), count: count)
+  }
+}
+
+/// Flutter's `SliverGridDelegateWithMaxCrossAxisExtent` treats `max_extent`
+/// as a maximum, not an adaptive minimum. SwiftUI's `.adaptive(minimum:)`
+/// therefore produces the opposite result on a phone (one oversized column
+/// where Flutter creates two or more). Resolve the same count explicitly and
+/// keep fixed `runs_count` behavior when no maximum is supplied.
+enum CollectionGridGeometry {
+  static func crossAxisCount(
+    availableExtent: CGFloat,
+    spacing: CGFloat,
+    runsCount: Int,
+    maxExtent: CGFloat?
+  ) -> Int {
+    guard let maxExtent else { return max(runsCount, 1) }
+    let usableExtent = max(availableExtent, 0)
+    let divisor = max(maxExtent + spacing, 1)
+    return max(Int(ceil((usableExtent + spacing) / divisor)), 1)
   }
 }
 
@@ -1065,16 +1094,21 @@ struct ListTileControlView: View {
 
   private var nativeTileContents: some View {
     let presentation = ListTilePresentation(node: node)
-    return HStack {
+    return HStack(
+      alignment: presentation.rowAlignment,
+      spacing: presentation.horizontalTitleGap
+    ) {
       if let leadingID = materialSlots.leadingID {
         ControlView(id: leadingID, axis: .none)
           .modifier(OptionalListTileTextStyle(style: presentation.leadingTrailingTextStyle))
+          .frame(minWidth: presentation.minLeadingWidth)
       } else if let leadingIcon = materialSlots.leadingIcon {
         RufletIcon(value: leadingIcon)
           .modifier(OptionalListTileTextStyle(style: presentation.leadingTrailingTextStyle))
+          .frame(minWidth: presentation.minLeadingWidth)
       }
 
-      VStack(alignment: .leading) {
+      VStack(alignment: .leading, spacing: presentation.textSpacing) {
         if let titleID = materialSlots.titleID {
           ControlView(id: titleID, axis: .none)
         } else if let title = materialSlots.titleText {
@@ -1096,6 +1130,9 @@ struct ListTileControlView: View {
           .modifier(OptionalListTileTextStyle(style: presentation.leadingTrailingTextStyle))
       }
     }
+    .padding(presentation.contentPadding)
+    .padding(.vertical, presentation.minVerticalPadding)
+    .frame(maxWidth: .infinity, minHeight: presentation.minHeight)
     .contentShape(Rectangle())
   }
 

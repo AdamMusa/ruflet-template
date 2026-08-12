@@ -144,6 +144,12 @@ final class CollectionParityTests: XCTestCase {
       ]))
     // Flet gives max_extent precedence over runs_count.
     XCTAssertEqual(adaptiveGrid.maxExtent, 120)
+    XCTAssertEqual(CollectionGridGeometry.crossAxisCount(
+      availableExtent: 351, spacing: 10, runsCount: 9, maxExtent: 220), 2)
+    XCTAssertEqual(CollectionGridGeometry.crossAxisCount(
+      availableExtent: 760, spacing: 10, runsCount: 9, maxExtent: 220), 4)
+    XCTAssertEqual(CollectionGridGeometry.crossAxisCount(
+      availableExtent: 351, spacing: 10, runsCount: 3, maxExtent: nil), 3)
 
     let tile = CollectionDefaults.listTile(ControlNode(
       id: 3, type: "ListTile", props: [
