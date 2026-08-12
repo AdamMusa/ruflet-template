@@ -895,6 +895,9 @@ enum RufletCardShapeKind: String, Equatable {
 /// Flet forwards optional wire fields unchanged, so resolving the nil cases is
 /// native-renderer work rather than Ruby DSL policy.
 struct RufletCardMetrics: Equatable {
+  /// Rendering policy only. Semantic values below always retain the pinned
+  /// Flet/Flutter defaults even when a native GroupBox realizes the control.
+  let requiresCustomAppearance: Bool
   let variant: RufletCardVariant
   let fillToken: String
   let shadowToken: String
@@ -912,6 +915,8 @@ struct RufletCardMetrics: Equatable {
   let showBorderOnForeground: Bool
 
   init(node: ControlNode) {
+    requiresCustomAppearance = ["bgcolor", "shadow_color", "elevation", "shape"]
+      .contains { node.props[$0] != nil }
     variant = RufletCardVariant(node.string("variant"))
     fillToken = node.string("bgcolor") ?? Self.defaultFill(variant)
     shadowToken = node.string("shadow_color") ?? "shadow"
@@ -1070,18 +1075,30 @@ private struct CardBorderLayer: View {
   }
 }
 
-/// `Card` — Flet's elevated, filled and outlined Material surfaces.
+/// `Card` — the Flet contract realized with native Apple presentation.
 struct CardControlView: View {
   let node: ControlNode
 
+  @ViewBuilder
   var body: some View {
     let metrics = RufletCardMetrics(node: node)
+    if metrics.requiresCustomAppearance {
+      customCard(metrics)
+    } else {
+      GroupBox { cardContent }
+        .padding(metrics.margin)
+        .modifier(NativeCardClip(enabled: metrics.clipBehavior.lowercased() != "none"))
+        .accessibilityElement(children: metrics.semanticContainer ? .combine : .contain)
+    }
+  }
+
+  private func customCard(_ metrics: RufletCardMetrics) -> some View {
     let shape = RufletCardShape(
       kind: metrics.shapeKind, radii: metrics.radii,
       eccentricity: metrics.eccentricity)
     let outline = MaterialPalette.color(metrics.outlineToken, default: .clear)
 
-    ZStack {
+    return ZStack {
       shape
         .fill(MaterialPalette.color(metrics.fillToken, default: .clear))
         .shadow(
@@ -1112,6 +1129,22 @@ struct CardControlView: View {
     // Flutter's `semanticContainer` decides whether the card is one element
     // to a screen reader or a group of them.
     .accessibilityElement(children: metrics.semanticContainer ? .combine : .contain)
+  }
+
+  @ViewBuilder
+  private var cardContent: some View {
+    if let contentID = node.controlID(forKey: "content") {
+      ControlView(id: contentID, axis: .none)
+    }
+  }
+}
+
+private struct NativeCardClip: ViewModifier {
+  let enabled: Bool
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if enabled { content.clipped() } else { content }
   }
 }
 

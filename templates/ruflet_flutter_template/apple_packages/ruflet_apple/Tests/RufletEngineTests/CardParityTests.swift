@@ -13,6 +13,7 @@ final class CardParityTests: XCTestCase {
 
   func testElevatedCardUsesMaterialThreeDefaults() {
     let metrics = RufletCardMetrics(node: node())
+    XCTAssertFalse(metrics.requiresCustomAppearance)
     XCTAssertEqual(metrics.variant, .elevated)
     XCTAssertEqual(metrics.fillToken, "surfacecontainerlow")
     XCTAssertEqual(metrics.shadowToken, "shadow")
@@ -28,6 +29,7 @@ final class CardParityTests: XCTestCase {
 
   func testFilledAndOutlinedVariantsResolveTheirOwnMaterialSurfaces() {
     let filled = RufletCardMetrics(node: node(["variant": .string("filled")]))
+    XCTAssertFalse(filled.requiresCustomAppearance)
     XCTAssertEqual(filled.fillToken, "surfacecontainerhighest")
     XCTAssertEqual(filled.elevation, 0)
     XCTAssertNil(filled.outlineToken)
@@ -53,6 +55,7 @@ final class CardParityTests: XCTestCase {
         "semantic_container": .bool(false),
         "show_border_on_foreground": .bool(false),
       ]))
+    XCTAssertTrue(metrics.requiresCustomAppearance)
     XCTAssertEqual(metrics.fillToken, "red")
     XCTAssertEqual(metrics.shadowToken, "blue")
     XCTAssertEqual(metrics.elevation, 7)
