@@ -148,6 +148,7 @@ struct PageControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletNativeScene) private var nativeScene
+  @Environment(\.rufletEvents) private var events
   @Namespace private var heroNamespace
 
   var body: some View {
@@ -156,6 +157,9 @@ struct PageControlView: View {
         Group {
           if let viewID = presentationPage.controlIDs(forKey: "views").last {
             ControlView(id: viewID, axis: .vertical)
+              .environment(
+                \.rufletNavigationContext,
+                navigationContext(page: presentationPage, viewID: viewID))
           } else {
             Color.clear
           }
@@ -183,6 +187,21 @@ struct PageControlView: View {
     return node.controlIDs(forKey: "multi_views")
       .compactMap(store.node)
       .first(where: { $0.int("view_id") == nativeScene.id })
+  }
+
+  /// Flutter's implied AppBar leading button asks the enclosing Navigator to
+  /// pop. Flet then emits Page.view_pop (or View.confirm_pop) and waits for
+  /// Ruby to patch the view stack; the native host follows the same protocol.
+  private func navigationContext(page: ControlNode, viewID: Int) -> RufletNavigationContext {
+    let views = page.controlIDs(forKey: "views")
+    guard RufletPageNavigation.canImplyLeading(viewCount: views.count),
+      let view = store.node(viewID)
+    else {
+      return RufletNavigationContext()
+    }
+    return RufletNavigationContext(canPop: true) {
+      RufletPageNavigation.requestPop(page: node, view: view, events: events)
+    }
   }
 }
 
@@ -441,6 +460,7 @@ private struct WindowTitle: ViewModifier {
 struct ViewControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
+  @StateObject private var scaffoldHost = RufletScaffoldHostState()
 
   var body: some View {
     let main = ControlProps.MainAxisAlignment(node.rufletString("vertical_alignment"))
@@ -460,6 +480,12 @@ struct ViewControlView: View {
         ControlView(id: navBarID, axis: .none)
       } else if let bottomBarID = node.controlID(forKey: "bottom_appbar") {
         ControlView(id: bottomBarID, axis: .none)
+          .background(
+            GeometryReader { proxy in
+              Color.clear.preference(
+                key: BottomBarFramePreferenceKey.self,
+                value: proxy.frame(in: .named(scaffoldCoordinateSpace)))
+            })
       }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -484,6 +510,14 @@ struct ViewControlView: View {
       .ignoresSafeArea(edges: .bottom)
     }
     .overlay(floatingActionButton, alignment: fabAlignment)
+    .coordinateSpace(name: scaffoldCoordinateSpace)
+    .onPreferenceChange(BottomBarFramePreferenceKey.self) {
+      scaffoldHost.reportBottomBar(frame: $0)
+    }
+    .onPreferenceChange(FABFramePreferenceKey.self) {
+      scaffoldHost.reportFAB(frame: $0)
+    }
+    .environment(\.rufletScaffoldHost, scaffoldHost)
     .modifier(DrawerPresenter(node: node))
     .modifier(DialogPresenter(host: node))
   }
@@ -525,17 +559,78 @@ struct ViewControlView: View {
   private var floatingActionButton: some View {
     if let fabID = node.controlID(forKey: "floating_action_button") {
       ControlView(id: fabID, axis: .none)
-        .padding(16)
+        .background(
+          GeometryReader { proxy in
+            Color.clear.preference(
+              key: FABFramePreferenceKey.self,
+              value: proxy.frame(in: .named(scaffoldCoordinateSpace)))
+          })
+        .modifier(
+          FABScaffoldPlacement(
+            location: node.string("floating_action_button_location"),
+            bottomBarHeight: scaffoldHost.bottomBarFrame.height,
+            fabHeight: measuredFABHeight))
     }
   }
 
   /// Flet's `FloatingActionButtonLocation`, reduced to the corner it names.
   private var fabAlignment: Alignment {
-    let location = node.string("floating_action_button_location")?.lowercased() ?? ""
+    let location = normalizedFABLocation
+    if location.contains("top") {
+      if location.contains("center") { return .top }
+      if location.contains("start") || location.contains("left") { return .topLeading }
+      return .topTrailing
+    }
     if location.contains("center") { return .bottom }
     if location.contains("start") || location.contains("left") { return .bottomLeading }
-    if location.contains("top") { return .topTrailing }
     return .bottomTrailing
+  }
+
+  private var normalizedFABLocation: String {
+    node.string("floating_action_button_location")?.lowercased()
+      .replacingOccurrences(of: "_", with: "") ?? "endfloat"
+  }
+
+  private var measuredFABHeight: CGFloat {
+    scaffoldHost.fabFrame.isNull ? 56 : scaffoldHost.fabFrame.height
+  }
+
+  private var scaffoldCoordinateSpace: String { "ruflet-scaffold-\(node.id)" }
+}
+
+private struct BottomBarFramePreferenceKey: PreferenceKey {
+  static var defaultValue: CGRect = .null
+  static func reduce(value: inout CGRect, nextValue: () -> CGRect) { value = nextValue() }
+}
+
+private struct FABFramePreferenceKey: PreferenceKey {
+  static var defaultValue: CGRect = .null
+  static func reduce(value: inout CGRect, nextValue: () -> CGRect) { value = nextValue() }
+}
+
+/// Flet delegates these placements to Flutter's Scaffold. The important
+/// distinction for BottomAppBar is docked (the FAB centre sits on the bar's
+/// top edge), floating (a 16pt gap), and contained (centred inside the bar).
+private struct FABScaffoldPlacement: ViewModifier {
+  let location: String?
+  let bottomBarHeight: CGFloat
+  let fabHeight: CGFloat
+
+  func body(content: Content) -> some View {
+    let value = location?.lowercased().replacingOccurrences(of: "_", with: "") ?? "endfloat"
+    let top = value.contains("top") ? CGFloat(16) : 0
+    let bottom: CGFloat
+    if value.contains("contained") {
+      bottom = max(0, (bottomBarHeight - fabHeight) / 2)
+    } else if value.contains("docked") {
+      bottom = max(0, bottomBarHeight - fabHeight / 2)
+    } else if value.contains("top") {
+      bottom = 0
+    } else {
+      bottom = bottomBarHeight + 16
+    }
+    return content
+      .padding(EdgeInsets(top: top, leading: 16, bottom: bottom, trailing: 16))
   }
 }
 

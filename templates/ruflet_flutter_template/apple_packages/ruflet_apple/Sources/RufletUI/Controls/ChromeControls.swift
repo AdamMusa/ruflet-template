@@ -10,9 +10,12 @@ import SwiftUI
 struct AppBarControlView: View {
   let node: ControlNode
   @Environment(\.rufletEvents) private var events
+  @Environment(\.rufletNavigationContext) private var navigation
+  @Environment(\.rufletScaffoldHost) private var scaffold
 
   var body: some View {
     let metrics = ChromeDefaults.appBar(node)
+    let elevation = currentElevation(metrics)
     Group {
       if RufletThemeDefaults.appBarCentersTitle(node) {
         centeredBar
@@ -27,8 +30,8 @@ struct AppBarControlView: View {
     .foregroundColor(MaterialPalette.color(node.string("color")))
     .shadow(
       color: MaterialPalette.color(node.string("shadow_color"), default: .black.opacity(0.2)),
-      radius: metrics.elevation > 0 ? metrics.elevation : 0,
-      y: metrics.elevation > 0 ? metrics.elevation / 2 : 0)
+      radius: elevation > 0 ? elevation : 0,
+      y: elevation > 0 ? elevation / 2 : 0)
     .modifier(ChromeClipModifier(behavior: metrics.clipBehavior))
     .modifier(AppBarHeaderSemanticsModifier(excluded: metrics.excludeHeaderSemantics))
     // A secondary bar sits under the primary one and carries no heading
@@ -42,17 +45,17 @@ struct AppBarControlView: View {
     node.bool("automatically_imply_leading") != false
   }
 
-  /// `elevation_on_scroll` is the raised height Material 3 uses once content
-  /// has scrolled under the bar. Without a scroll position to read, the bar
-  /// takes it as its elevation when it is the larger of the two.
-  private var scrolledElevation: CGFloat {
-    CGFloat(max(node.double("elevation_on_scroll") ?? 0, 0))
+  private func currentElevation(_ metrics: ChromeDefaults.AppBarValues) -> CGFloat {
+    guard scaffold?.scrolledUnder == true,
+      let value = node.double("elevation_on_scroll")
+    else { return metrics.elevation }
+    return CGFloat(max(value, 0))
   }
 
   private var leadingBar: some View {
     HStack(spacing: metrics.titleSpacing) {
-      if node.controlID(forKey: "leading") == nil, impliesLeading, scrolledElevation >= 0 {
-        EmptyView()
+      if node.controlID(forKey: "leading") == nil, impliesLeading, navigation.canPop {
+        impliedLeadingButton
       }
       if let leadingID = node.controlID(forKey: "leading") {
         ControlView(id: leadingID, axis: .none)
@@ -75,6 +78,9 @@ struct AppBarControlView: View {
     ZStack {
       title.lineLimit(1)
       HStack(spacing: metrics.titleSpacing) {
+        if node.controlID(forKey: "leading") == nil, impliesLeading, navigation.canPop {
+          impliedLeadingButton
+        }
         if let leadingID = node.controlID(forKey: "leading") {
           ControlView(id: leadingID, axis: .none)
             .frame(
@@ -96,6 +102,17 @@ struct AppBarControlView: View {
           .frame(minWidth: 44, minHeight: 44)
       }
     }
+  }
+
+  private var impliedLeadingButton: some View {
+    Button(action: navigation.requestPop) {
+      Image(systemName: "chevron.backward")
+        .font(.system(size: 20, weight: .semibold))
+        .frame(width: 44, height: 44)
+        .contentShape(Rectangle())
+    }
+    .buttonStyle(.plain)
+    .accessibilityLabel("Back")
   }
 
   private var metrics: ChromeDefaults.AppBarValues {
@@ -122,9 +139,14 @@ struct AppBarControlView: View {
 /// `BottomAppBar` — the same idea anchored to the bottom.
 struct BottomAppBarControlView: View {
   let node: ControlNode
+  @Environment(\.rufletScaffoldHost) private var scaffold
 
   var body: some View {
     let metrics = ChromeDefaults.bottomAppBar(node)
+    let shape = BottomAppBarHostShape(
+      cornerRadius: metrics.cornerRadius,
+      guestFrame: scaffold?.fabFrameInBottomBar,
+      notch: ChromeDefaults.bottomAppBarNotch(node))
     HStack {
       if let contentID = node.controlID(forKey: "content") {
         ControlView(id: contentID, axis: .none)
@@ -137,8 +159,12 @@ struct BottomAppBarControlView: View {
     )
     .frame(height: metrics.height)
     .frame(maxWidth: .infinity)
-    .background(MaterialPalette.color(node.string("bgcolor") ?? "surfacecontainer"))
-    .clipShape(RoundedRectangle(cornerRadius: metrics.cornerRadius))
+    .background(
+      shape.fill(
+        MaterialPalette.color(
+          node.string("bgcolor") ?? "surfacecontainer", default: Color.clear),
+        style: FillStyle(eoFill: true)))
+    .mask(shape.fill(style: FillStyle(eoFill: true)))
     .shadow(
       color: MaterialPalette.color(node.string("shadow_color"), default: .black.opacity(0.2)),
       radius: metrics.elevation > 0 ? metrics.elevation : 0,
@@ -397,6 +423,14 @@ enum ChromeDefaults {
     let notchMargin: CGFloat
   }
 
+  enum BottomAppBarNotchKind: Equatable { case none, circular, automatic }
+
+  struct BottomAppBarNotchValues: Equatable {
+    let kind: BottomAppBarNotchKind
+    let inverted: Bool
+    let margin: CGFloat
+  }
+
   enum NavigationLabelBehavior {
     case alwaysShow, alwaysHide, onlyShowSelected
   }
@@ -462,6 +496,21 @@ enum ChromeDefaults {
       notchMargin: CGFloat(node.double("notch_margin") ?? 4))
   }
 
+  static func bottomAppBarNotch(_ node: ControlNode) -> BottomAppBarNotchValues {
+    guard let shape = node.map("shape") else {
+      return BottomAppBarNotchValues(kind: .none, inverted: false, margin: 4)
+    }
+    let kind: BottomAppBarNotchKind = switch shape["_type"]?.stringValue?.lowercased() {
+    case "circular": .circular
+    case "auto": .automatic
+    default: .none
+    }
+    return BottomAppBarNotchValues(
+      kind: kind,
+      inverted: shape["inverted"]?.boolValue ?? false,
+      margin: CGFloat(node.double("notch_margin") ?? 4))
+  }
+
   static func navigationBar(_ node: ControlNode) -> NavigationBarValues {
     let raw = node.string("label_behavior")?.lowercased().replacingOccurrences(of: "_", with: "")
     let behavior: NavigationLabelBehavior = switch raw {
@@ -493,6 +542,39 @@ enum ChromeDefaults {
       minWidth: CGFloat(node.double("min_width") ?? 72),
       useIndicator: node.bool("use_indicator") ?? true,
       labelBehavior: labelBehavior)
+  }
+}
+
+/// A BottomAppBar path with the FAB guest rectangle subtracted using even-odd
+/// fill. Flutter receives the same two rectangles through ScaffoldGeometry;
+/// using the measured native FAB keeps extended and mini FABs correct too.
+private struct BottomAppBarHostShape: Shape {
+  let cornerRadius: CGFloat
+  let guestFrame: CGRect?
+  let notch: ChromeDefaults.BottomAppBarNotchValues
+
+  func path(in rect: CGRect) -> Path {
+    var path = Path(roundedRect: rect, cornerRadius: cornerRadius)
+    guard notch.kind != .none, let guestFrame else { return path }
+    let cutout = guestFrame.insetBy(dx: -notch.margin, dy: -notch.margin)
+    guard cutout.maxY > rect.minY, cutout.minY < rect.maxY else { return path }
+
+    let local = cutout.offsetBy(dx: -rect.minX, dy: -rect.minY)
+    if notch.kind == .automatic {
+      path.addRoundedRect(
+        in: local,
+        cornerSize: CGSize(width: min(local.width, local.height) / 2,
+                           height: min(local.width, local.height) / 2))
+    } else {
+      let diameter = max(local.width, local.height)
+      let circle = CGRect(
+        x: local.midX - diameter / 2,
+        y: notch.inverted ? rect.height - diameter / 2 : -diameter / 2,
+        width: diameter,
+        height: diameter)
+      path.addEllipse(in: circle)
+    }
+    return path
   }
 }
 

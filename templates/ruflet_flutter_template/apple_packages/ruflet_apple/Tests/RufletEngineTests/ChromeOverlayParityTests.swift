@@ -26,6 +26,69 @@ final class ChromeOverlayParityTests: XCTestCase {
     XCTAssertTrue(rail.showsLabel(extended: false, selected: false))
   }
 
+  func testBottomAppBarNotchParsesFletNotchedShapeContract() {
+    let absent = ChromeDefaults.bottomAppBarNotch(ControlNode(id: 1, type: "BottomAppBar"))
+    XCTAssertEqual(absent.kind, .none)
+    XCTAssertEqual(absent.margin, 4)
+
+    let circular = ChromeDefaults.bottomAppBarNotch(ControlNode(
+      id: 2, type: "BottomAppBar",
+      props: [
+        "shape": .map(["_type": .string("circular"), "inverted": .bool(true)]),
+        "notch_margin": .double(7),
+      ]))
+    XCTAssertEqual(circular.kind, .circular)
+    XCTAssertTrue(circular.inverted)
+    XCTAssertEqual(circular.margin, 7)
+
+    let automatic = ChromeDefaults.bottomAppBarNotch(ControlNode(
+      id: 3, type: "BottomAppBar",
+      props: ["shape": .map(["_type": .string("auto")])]))
+    XCTAssertEqual(automatic.kind, .automatic)
+  }
+
+  func testPageNavigationUsesFletViewPopAndConfirmProtocols() {
+    let page = ControlNode(id: 1, type: "Page")
+    let ordinary = ControlNode(
+      id: 9, type: "View", props: ["route": .string("/details")])
+    var sent: [(Int, String, RufletValue)] = []
+    let sink = RufletEventSink(send: { sent.append(($0, $1, $2)) })
+
+    XCTAssertFalse(RufletPageNavigation.canImplyLeading(viewCount: 1))
+    XCTAssertTrue(RufletPageNavigation.canImplyLeading(viewCount: 2))
+    RufletPageNavigation.requestPop(page: page, view: ordinary, events: sink)
+    XCTAssertEqual(sent.first?.0, 1)
+    XCTAssertEqual(sent.first?.1, "view_pop")
+    XCTAssertEqual(sent.first?.2, .map(["route": .string("/details")]))
+
+    sent.removeAll()
+    let confirming = ControlNode(
+      id: 10, type: "View",
+      props: ["on_confirm_pop": .bool(true)])
+    RufletPageNavigation.requestPop(page: page, view: confirming, events: sink)
+    XCTAssertEqual(sent.first?.0, 10)
+    XCTAssertEqual(sent.first?.1, "confirm_pop")
+
+    sent.removeAll()
+    let blocked = ControlNode(id: 11, type: "View", props: ["can_pop": .bool(false)])
+    RufletPageNavigation.requestPop(page: page, view: blocked, events: sink)
+    XCTAssertTrue(sent.isEmpty)
+  }
+
+  @MainActor
+  func testScaffoldHostAggregatesRealScrollAndGeometrySources() {
+    let host = RufletScaffoldHostState()
+    host.reportScroll(sourceID: 1, offset: 12)
+    host.reportScroll(sourceID: 2, offset: 0)
+    XCTAssertTrue(host.scrolledUnder)
+    host.removeScrollSource(1)
+    XCTAssertFalse(host.scrolledUnder)
+
+    host.reportBottomBar(frame: CGRect(x: 0, y: 500, width: 390, height: 80))
+    host.reportFAB(frame: CGRect(x: 300, y: 472, width: 56, height: 56))
+    XCTAssertEqual(host.fabFrameInBottomBar, CGRect(x: 300, y: -28, width: 56, height: 56))
+  }
+
   func testNavigationRailLabelTypeAndExplicitGeometryArePreserved() {
     let selectedOnly = ChromeDefaults.navigationRail(ControlNode(
       id: 4, type: "NavigationRail",

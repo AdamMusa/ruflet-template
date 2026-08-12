@@ -50,6 +50,7 @@ struct ListViewControlView: View {
         minWidth: horizontal ? prototypeExtent : nil,
         minHeight: horizontal ? nil : prototypeExtent,
         alignment: .topLeading)
+      .modifier(CollectionScrollContentProbe(node: node, horizontal: horizontal))
       .accessibilityElement(children: .contain)
       .accessibilityValue(
         node.int("semantic_child_count").map { "\($0)" } ?? "")
@@ -111,6 +112,7 @@ struct GridViewControlView: View {
       // alive; SwiftUI decides that itself, so it stands in as the grid's
       // minimum extent.
       .frame(minHeight: node.double("cache_extent").map { CGFloat($0) })
+      .modifier(CollectionScrollContentProbe(node: node, horizontal: config.horizontal))
     }
     .modifier(CollectionAutoScroll(node: node, horizontal: config.horizontal))
     .modifier(CollectionScrollReporter(node: node, horizontal: config.horizontal, events: events))
@@ -1434,21 +1436,15 @@ private struct CollectionScrollReporter: ViewModifier {
   let node: ControlNode
   let horizontal: Bool
   let events: RufletEventSink
+  @Environment(\.rufletScaffoldHost) private var scaffold
   @State private var lastReport = Date.distantPast
 
   func body(content: Content) -> some View {
-    if node.handlesEvent("scroll") {
-      content
-        .coordinateSpace(name: "ruflet-scroll-\(node.id)")
-        .background(
-          GeometryReader { proxy in
-            Color.clear.preference(
-              key: CollectionScrollOffsetKey.self,
-              value: horizontal
-                ? -proxy.frame(in: .named("ruflet-scroll-\(node.id)")).minX
-                : -proxy.frame(in: .named("ruflet-scroll-\(node.id)")).minY)
-          })
-        .onPreferenceChange(CollectionScrollOffsetKey.self) { pixels in
+    content
+      .coordinateSpace(name: "ruflet-scroll-\(node.id)")
+      .onPreferenceChange(CollectionScrollOffsetKey.self) { pixels in
+          scaffold?.reportScroll(sourceID: node.id, offset: max(0, pixels))
+          guard node.handlesEvent("scroll") else { return }
           // `scroll_interval` throttles the stream the way Flet throttles its
           // own; zero reports every sample.
           let interval = TimeInterval(node.int("scroll_interval") ?? 0) / 1_000
@@ -1461,10 +1457,27 @@ private struct CollectionScrollReporter: ViewModifier {
               "event_type": .string("update"),
               "axis": .string(horizontal ? "horizontal" : "vertical")
             ]))
-        }
-    } else {
-      content
-    }
+      }
+      .onDisappear { scaffold?.removeScrollSource(node.id) }
+  }
+}
+
+/// The offset probe must be inside the ScrollView's content. The reporter is
+/// outside it and owns the named coordinate space, matching Flutter's
+/// ScrollNotification relationship between body and Scaffold.
+private struct CollectionScrollContentProbe: ViewModifier {
+  let node: ControlNode
+  let horizontal: Bool
+
+  func body(content: Content) -> some View {
+    content.background(
+      GeometryReader { proxy in
+        Color.clear.preference(
+          key: CollectionScrollOffsetKey.self,
+          value: horizontal
+            ? -proxy.frame(in: .named("ruflet-scroll-\(node.id)")).minX
+            : -proxy.frame(in: .named("ruflet-scroll-\(node.id)")).minY)
+      })
   }
 }
 

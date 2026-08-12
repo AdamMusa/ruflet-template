@@ -334,6 +334,7 @@ struct ScrollableStack: ViewModifier {
   let axis: Axis.Set
   @Environment(\.rufletEvents) private var events
   @Environment(\.rufletPageScrollCommand) private var pageScrollCommand
+  @Environment(\.rufletScaffoldHost) private var scaffold
   @EnvironmentObject private var store: ControlStore
   @StateObject private var nativeDriver = RufletNativeScrollDriver()
   @State private var viewportExtent: CGFloat = 0
@@ -366,6 +367,9 @@ struct ScrollableStack: ViewModifier {
         })
       .onPreferenceChange(StackScrollViewportKey.self) { viewportExtent = $0 }
       .onPreferenceChange(StackScrollSampleKey.self) { sample in
+        // Scaffold/AppBar scroll-under behavior is host state, not an
+        // `on_scroll` subscription. Always publish the real body offset.
+        scaffold?.reportScroll(sourceID: node.id, offset: max(0, sample.pixels))
         guard node.handlesEvent("scroll") else { return }
         // `scroll_interval` throttles the stream the way Flet throttles its
         // own; zero reports every sample.
@@ -406,6 +410,7 @@ struct ScrollableStack: ViewModifier {
             axis: axis)
         }
       }
+      .onDisappear { scaffold?.removeScrollSource(node.id) }
       }
     } else {
       content
