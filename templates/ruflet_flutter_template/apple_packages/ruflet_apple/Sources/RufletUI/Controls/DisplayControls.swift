@@ -347,15 +347,32 @@ enum RufletImageSource: Equatable {
   case missing
 
   init(node: ControlNode) {
-    if case .binary(let bytes) = node.props["src"] {
-      self = .binary(Data(bytes))
+    if case .binary = node.props["src"] {
+      self.init(value: node.props["src"])
       return
     }
     if let base64 = node.string("src_base64"), let data = Data(base64Encoded: base64) {
       self = .binary(data)
       return
     }
-    guard let source = node.string("src"), !source.isEmpty else {
+    self.init(value: node.props["src"])
+  }
+
+  /// Flet's `ResolvedAssetSource.from` is also used by controls whose source
+  /// property is not named `src` (notably CircleAvatar's two image layers).
+  /// Keep resolution value-based so every such control accepts the same wire
+  /// forms: bytes, URLs, asset paths and unadorned Base64 strings.
+  init(value: RufletValue?) {
+    if case .binary(let bytes) = value {
+      self = .binary(Data(bytes))
+      return
+    }
+    guard let rawSource = value?.stringValue else {
+      self = .missing
+      return
+    }
+    let source = rawSource.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !source.isEmpty else {
       self = .missing
       return
     }
@@ -366,6 +383,12 @@ enum RufletImageSource: Equatable {
       scheme == "http" || scheme == "https" || scheme == "file"
     {
       self = .remote(url)
+    } else if source.contains(".") {
+      // Flet resolves anything that looks like a path before attempting
+      // Base64, so `avatar.png` can never be mistaken for encoded bytes.
+      self = .asset(source)
+    } else if let data = Data(base64Encoded: source), !data.isEmpty {
+      self = .binary(data)
     } else {
       self = .asset(source)
     }
@@ -904,6 +927,19 @@ struct RufletCircleAvatarDiameter: Equatable {
   }
 }
 
+/// Both CircleAvatar slots pass through the same `ResolvedAssetSource` path
+/// as Image in Flet. Keeping the pair as a value makes that upstream contract
+/// directly testable without loading a bundle resource or reaching a network.
+struct RufletCircleAvatarImageSources: Equatable {
+  let background: RufletImageSource
+  let foreground: RufletImageSource
+
+  init(node: ControlNode) {
+    background = RufletImageSource(value: node.props["background_image_src"])
+    foreground = RufletImageSource(value: node.props["foreground_image_src"])
+  }
+}
+
 /// `CircleAvatar` — an image, initials, or a coloured circle.
 ///
 /// Flutter layers the two images the way its decorations stack: the background
@@ -916,21 +952,18 @@ struct CircleAvatarControlView: View {
 
   var body: some View {
     let diameter = RufletCircleAvatarDiameter(node: node)
+    let sources = RufletCircleAvatarImageSources(node: node)
 
     ZStack {
       Circle().fill(backgroundColor)
 
-      if let url = imageURL(key: "background_image_src") {
-        avatarImage(url: url, slot: "background")
-      }
+      avatarImage(source: sources.background, slot: "background")
 
       if let contentID = node.controlID(forKey: "content") {
         ControlView(id: contentID, axis: .none)
       }
 
-      if let url = imageURL(key: "foreground_image_src") {
-        avatarImage(url: url, slot: "foreground")
-      }
+      avatarImage(source: sources.foreground, slot: "foreground")
     }
     .frame(
       minWidth: diameter.minimum, maxWidth: diameter.maximum,
@@ -941,20 +974,40 @@ struct CircleAvatarControlView: View {
     .foregroundColor(foregroundColor)
   }
 
-  private func imageURL(key: String) -> URL? {
-    guard let source = node.string(key), let url = URL(string: source), url.scheme != nil else {
-      return nil
+  @ViewBuilder
+  private func avatarImage(source: RufletImageSource, slot: String) -> some View {
+    switch source {
+    case .binary(let data):
+      if RemoteImage.canDecode(data) {
+        PlatformImageView(data: data)
+          .aspectRatio(contentMode: .fill)
+          .clipShape(Circle())
+      } else {
+        Color.clear.onAppear { reportImageError(slot) }
+      }
+    case .remote(let url):
+      if url.isFileURL {
+        LocalAvatarImage(url: url, slot: slot, node: node)
+      } else {
+        RemoteImage(
+          url: url,
+          errorContentID: nil,
+          onError: { _ in reportImageError(slot) })
+          .aspectRatio(contentMode: .fill)
+          .clipShape(Circle())
+      }
+    case .asset(let name):
+      Image(name)
+        .resizable()
+        .aspectRatio(contentMode: .fill)
+        .clipShape(Circle())
+    case .missing:
+      EmptyView()
     }
-    return url
   }
 
-  private func avatarImage(url: URL, slot: String) -> some View {
-    RemoteImage(
-      url: url,
-      errorContentID: nil,
-      onError: { _ in events.fire(node, "image_error", data: .string(slot)) })
-      .aspectRatio(contentMode: .fill)
-      .clipShape(Circle())
+  private func reportImageError(_ slot: String) {
+    events.fire(node, "image_error", data: .string(slot))
   }
 
   private var backgroundColor: Color {
@@ -966,6 +1019,30 @@ struct CircleAvatarControlView: View {
   private var foregroundColor: Color? {
     MaterialPalette.color(
       RufletThemeDefaults.resolvedDisplayColorToken(for: node, property: "color"))
+  }
+}
+
+/// File image providers are synchronous in Flutter. Resolve file URLs locally
+/// rather than sending them through URLSession, and preserve the same slot
+/// name in CircleAvatar's shared `image_error` event.
+private struct LocalAvatarImage: View {
+  let url: URL
+  let slot: String
+  let node: ControlNode
+  @Environment(\.rufletEvents) private var events
+
+  var body: some View {
+    Group {
+      if let data = try? Data(contentsOf: url), RemoteImage.canDecode(data) {
+        PlatformImageView(data: data)
+          .aspectRatio(contentMode: .fill)
+          .clipShape(Circle())
+      } else {
+        Color.clear.onAppear {
+          events.fire(node, "image_error", data: .string(slot))
+        }
+      }
+    }
   }
 }
 

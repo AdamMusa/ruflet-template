@@ -91,6 +91,25 @@ final class DisplayParityTests: XCTestCase {
     XCTAssertEqual(RufletImageSource(node: node("Image")), .missing)
   }
 
+  /// `ResolvedAssetSource.from` tries an unadorned string as Base64 after it
+  /// has ruled out a URL and an asset-looking path. Ruflet's Ruby transport
+  /// uses this form for byte-backed images as well as the legacy src_base64
+  /// property.
+  func testImageResolvesTrimmedRawBase64WithoutMistakingAssetPaths() {
+    XCTAssertEqual(
+      RufletImageSource(node: node("Image", ["src": .string("  SGk=\n")])),
+      .binary(Data("Hi".utf8)))
+    XCTAssertEqual(
+      RufletImageSource(node: node("Image", ["src": .string("avatar.png")])),
+      .asset("avatar.png"))
+    XCTAssertEqual(
+      RufletImageSource(node: node("Image", ["src": .string("avatar")])),
+      .asset("avatar"))
+    XCTAssertEqual(
+      RufletImageSource(node: node("Image", ["src": .string("   ")])),
+      .missing)
+  }
+
   // MARK: - Icon
 
   /// Flutter only multiplies the icon by the text scaler when it was asked to,
@@ -191,6 +210,37 @@ final class DisplayParityTests: XCTestCase {
     let explicit = node("CircleAvatar", ["bgcolor": .string("red")])
     XCTAssertEqual(
       RufletThemeDefaults.resolvedDisplayColorToken(for: explicit, property: "bgcolor"), "red")
+  }
+
+  /// CircleAvatar calls the same Flet image-provider resolver twice. These
+  /// are intentionally not URL-only properties: either slot can receive raw
+  /// bytes, Base64, a file/network URL, or a packaged asset path.
+  func testAvatarImageSlotsUseTheSharedFletSourceResolver() {
+    let sources = RufletCircleAvatarImageSources(
+      node: node(
+        "CircleAvatar",
+        [
+          "background_image_src": .binary([0x89, 0x50]),
+          "foreground_image_src": .string("SGk="),
+        ]))
+    XCTAssertEqual(sources.background, .binary(Data([0x89, 0x50])))
+    XCTAssertEqual(sources.foreground, .binary(Data("Hi".utf8)))
+
+    let locators = RufletCircleAvatarImageSources(
+      node: node(
+        "CircleAvatar",
+        [
+          "background_image_src": .string("avatars/background.png"),
+          "foreground_image_src": .string("file:///tmp/foreground.png"),
+        ]))
+    XCTAssertEqual(locators.background, .asset("avatars/background.png"))
+    XCTAssertEqual(locators.foreground, .remote(URL(fileURLWithPath: "/tmp/foreground.png")))
+  }
+
+  func testAvatarMissingImageSlotsStayMissingInsteadOfRenderingPlaceholders() {
+    let sources = RufletCircleAvatarImageSources(node: node("CircleAvatar"))
+    XCTAssertEqual(sources.background, .missing)
+    XCTAssertEqual(sources.foreground, .missing)
   }
 
   // MARK: - ProgressBar
