@@ -244,6 +244,23 @@ final class CollectionParityTests: XCTestCase {
     XCTAssertEqual(CollectionParity.normalizedIndex(99, count: 4), 3)
   }
 
+  func testStylelessTabBarUsesNativeAppleAppearance() {
+    XCTAssertTrue(TabBarPresentation.usesNativeAppearance(ControlNode(
+      id: 1, type: "TabBar")))
+  }
+
+  func testExplicitMaterialTabStripPropertiesPreserveCustomRoute() {
+    for property in [
+      "scrollable", "indicator_color", "indicator_thickness", "divider_color",
+      "label_color", "label_text_style", "padding", "tab_alignment", "secondary",
+    ] {
+      let value: RufletValue = property == "secondary" || property == "scrollable"
+        ? .bool(true) : .string("explicit")
+      XCTAssertFalse(TabBarPresentation.usesNativeAppearance(ControlNode(
+        id: 1, type: "TabBar", props: [property: value])), property)
+    }
+  }
+
   func testPageCommandsClampToMountedPageRange() {
     XCTAssertEqual(CollectionParity.clampedIndex(-1, count: 3), 0)
     XCTAssertEqual(CollectionParity.clampedIndex(3, count: 3), 2)

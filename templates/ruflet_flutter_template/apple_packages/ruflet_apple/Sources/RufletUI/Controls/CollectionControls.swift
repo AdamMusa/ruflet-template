@@ -1370,6 +1370,22 @@ private extension EnvironmentValues {
   }
 }
 
+enum TabBarPresentation {
+  /// Material-only strip properties have no Apple constructor equivalent.
+  /// Their explicit presence keeps the protocol-faithful custom renderer;
+  /// otherwise SwiftUI's segmented Picker supplies platform defaults.
+  static func usesNativeAppearance(_ node: ControlNode) -> Bool {
+    let materialStripProperties = [
+      "scrollable", "indicator", "indicator_color", "indicator_thickness",
+      "indicator_size", "indicator_animation", "divider_color", "divider_height",
+      "label_color", "unselected_label_color", "label_text_style",
+      "unselected_label_text_style", "label_padding", "padding", "overlay_color",
+      "splash_border_radius", "tab_alignment", "secondary", "enable_feedback",
+    ]
+    return !materialStripProperties.contains { node.props[$0] != nil }
+  }
+}
+
 /// `Tabs` owns the selection controller. Its content owns the actual TabBar
 /// and TabBarView, exactly as Flet's ancestor TabController contract does.
 struct TabsControlView: View {
@@ -1431,9 +1447,47 @@ struct TabBarControlView: View {
 
   var body: some View {
     let tabs = node.controlIDs(forKey: "tabs").compactMap { store.node($0) }
+
+    Group {
+      if TabBarPresentation.usesNativeAppearance(node) {
+        nativePicker(tabs)
+      } else {
+        legacyMaterialBar(tabs)
+      }
+    }
+    .disabled(node.bool("disabled") == true)
+    .rufletCommandHandler(node.id, handler: handleCommand)
+  }
+
+  /// A styleless Flet TabBar maps to Apple's platform tab selector. Explicit
+  /// Material indicator/strip properties still opt into the protocol-faithful
+  /// custom route below.
+  private func nativePicker(_ tabs: [ControlNode]) -> some View {
+    Picker("", selection: Binding(
+      get: { selection?.wrappedValue ?? 0 },
+      set: { index in
+        selection?.wrappedValue = CollectionParity.normalizedIndex(index, count: tabs.count)
+        events.fire(node, "click", data: .int(Int64(index)))
+      }
+    )) {
+      ForEach(Array(tabs.enumerated()), id: \.element.id) { index, tab in
+        tabLabel(tab)
+          .tag(index)
+          .onHover { hovering in
+            events.fire(
+              node, "hover",
+              data: .map(["hovering": .bool(hovering), "index": .int(Int64(index))]))
+          }
+      }
+    }
+    .labelsHidden()
+    .pickerStyle(.segmented)
+  }
+
+  private func legacyMaterialBar(_ tabs: [ControlNode]) -> some View {
     let metrics = CollectionDefaults.tabBar(node)
     let scrollable = metrics.scrollable
-    Group {
+    return Group {
       if scrollable {
         ScrollView(.horizontal, showsIndicators: false) { strip(tabs) }
       } else {
@@ -1461,7 +1515,6 @@ struct TabBarControlView: View {
     .modifier(
       TabOverlayColor(color: MaterialPalette.color(node.string("overlay_color"))))
     .modifier(TapFeedback(enabled: node.bool("enable_feedback") != false))
-    .rufletCommandHandler(node.id, handler: handleCommand)
   }
 
   /// `tab_alignment` places the strip when it does not fill its width;
