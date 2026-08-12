@@ -453,7 +453,8 @@ public enum ControlRegistry {
                   "zoom_out", "zoom_to"])
     add(["TileLayer", "MarkerLayer", "Marker", "CircleLayer", "CircleMarker",
          "PolylineLayer", "PolylineMarker", "PolygonLayer", "PolygonMarker",
-         "SimpleAttribution"], .structuralChild, "MapKit layer metadata", .metadataOnly)
+         "SimpleAttribution", "RichAttribution", "TextSourceAttribution",
+         "ImageSourceAttribution"], .structuralChild, "MapKit layer metadata", .metadataOnly)
     result["tilelayer"] = ControlDescriptor(
       wireType: "TileLayer", classification: .structuralChild,
       implementation: "ReportingTileOverlay", rendering: .metadataOnly,
@@ -461,6 +462,14 @@ public enum ControlRegistry {
     result["simpleattribution"] = ControlDescriptor(
       wireType: "SimpleAttribution", classification: .structuralChild,
       implementation: "MapAttributionView", rendering: .metadataOnly,
+      supportedEvents: ["click"])
+    result["textsourceattribution"] = ControlDescriptor(
+      wireType: "TextSourceAttribution", classification: .structuralChild,
+      implementation: "MapRichAttributionView", rendering: .metadataOnly,
+      supportedEvents: ["click"])
+    result["imagesourceattribution"] = ControlDescriptor(
+      wireType: "ImageSourceAttribution", classification: .structuralChild,
+      implementation: "MapRichAttributionView", rendering: .metadataOnly,
       supportedEvents: ["click"])
     add(["Camera"], .visible, "RufletMedia.CameraControlView",
         .optionalBundle("RufletMedia"),

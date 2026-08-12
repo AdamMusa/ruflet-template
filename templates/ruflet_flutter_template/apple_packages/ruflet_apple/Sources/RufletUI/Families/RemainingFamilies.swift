@@ -73,7 +73,8 @@ extension ControlRegistry {
       return AnyView(MapControlView(node: node))
     case "TileLayer", "MarkerLayer", "Marker", "CircleLayer", "CircleMarker",
       "PolylineLayer", "PolylineMarker", "PolygonLayer", "PolygonMarker",
-      "SimpleAttribution":
+      "SimpleAttribution", "RichAttribution", "TextSourceAttribution",
+      "ImageSourceAttribution":
       // MapKit consumes these through the Map parent.
       return AnyView(EmptyView())
     case "Audio", "AudioRecorder":
