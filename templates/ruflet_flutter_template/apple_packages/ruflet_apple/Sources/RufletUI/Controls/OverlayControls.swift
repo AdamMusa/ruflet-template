@@ -183,6 +183,7 @@ enum RufletOverlaySemantics {
 
 /// Pinned Flet/Flutter defaults consumed by native Apple overlay primitives.
 enum OverlayDefaults {
+  static let bottomSheetMissingContentError = "BottomSheet.content must be visible"
   static let snackBarMissingContentError = "SnackBar.content must be provided and visible"
   static let bannerMissingContentError = "Banner.content must be provided and visible"
   static let bannerMissingActionsError =
@@ -236,6 +237,12 @@ enum OverlayDefaults {
       dragHandleWidth: 32, dragHandleHeight: 4,
       useSafeArea: node.bool("use_safe_area") != false,
       dismissible: node.bool("dismissible") != false)
+  }
+
+  static func bottomSheetValidation(_ node: ControlNode, content: ControlNode?) -> String? {
+    RufletRequiredContent.validationError(
+      contentID: node.controlID(forKey: "content"), content: content,
+      message: bottomSheetMissingContentError)
   }
 
   static func snackBar(_ node: ControlNode) -> SnackBarValues {
@@ -596,13 +603,22 @@ struct BottomSheetControlView: View {
   var body: some View {
     if node.type == "CupertinoBottomSheet" {
       cupertinoSheet
+    } else if let error = materialPresentation.validationError(
+      content: node.controlID(forKey: "content").flatMap(store.node))
+    {
+      Text(error).foregroundColor(.red)
     } else {
       nativeSheet
     }
   }
 
+  private var materialPresentation: BottomSheetPresentation {
+    BottomSheetPresentation(node: node)
+  }
+
   private var nativeSheet: some View {
     let defaults = OverlayDefaults.sheet(node)
+    let presentation = materialPresentation
     let content = VStack(spacing: 0) {
       if node.bool("show_drag_handle") == true {
         Capsule()
@@ -615,7 +631,7 @@ struct BottomSheetControlView: View {
       }
     }
     .frame(maxWidth: .infinity)
-    .frame(maxHeight: node.bool("fullscreen") == true ? .infinity : nil)
+    .frame(maxHeight: presentation.fullscreen ? .infinity : nil)
     .background(
       MaterialPalette.color(node.string("bgcolor"), default: sheetSurface),
       in: UnevenRoundedRectangle(
@@ -633,19 +649,21 @@ struct BottomSheetControlView: View {
     .shadow(
       color: MaterialPalette.color(node.string("shadow_color"), default: .clear),
       radius: defaults.elevation)
-    .frame(maxWidth: node.bool("fullscreen") == true ? nil : defaults.maximumWidth)
-    .modifier(SlotSizeConstraints(value: node.props["size_constraints"]))
+    .frame(maxWidth: presentation.fullscreen ? nil : defaults.maximumWidth)
+    .modifier(SlotSizeConstraints(value: presentation.effectiveSizeConstraints))
     .modifier(ChromeClipModifier(behavior: node.string("clip_behavior") ?? "none"))
     .modifier(BottomSheetDrag(node: node, events: events))
 
     return Group {
-      if node.bool("scrollable") == true || node.bool("fullscreen") == true {
+      if presentation.scrollable {
         ScrollView { content }
       } else {
         content
       }
     }
     .modifier(BottomSheetSafeArea(useSafeArea: defaults.useSafeArea))
+    .modifier(BottomSheetKeyboardInsets(
+      maintainBottomViewInsetsPadding: presentation.maintainBottomViewInsetsPadding))
   }
 
   @ViewBuilder
@@ -685,6 +703,30 @@ struct BottomSheetControlView: View {
   }
 }
 
+struct BottomSheetPresentation: Equatable {
+  let node: ControlNode
+  let fullscreen: Bool
+  let scrollable: Bool
+  let draggable: Bool
+  let maintainBottomViewInsetsPadding: Bool
+  let effectiveSizeConstraints: RufletValue?
+
+  init(node: ControlNode) {
+    self.node = node
+    fullscreen = node.bool("fullscreen") ?? false
+    scrollable = fullscreen || (node.bool("scrollable") ?? false)
+    draggable = node.bool("draggable") ?? false
+    maintainBottomViewInsetsPadding =
+      node.bool("maintain_bottom_view_insets_padding") ?? true
+    // showModalBottomSheet receives `constraints: null` in fullscreen mode.
+    effectiveSizeConstraints = fullscreen ? nil : node.props["size_constraints"]
+  }
+
+  func validationError(content: ControlNode?) -> String? {
+    OverlayDefaults.bottomSheetValidation(node, content: content)
+  }
+}
+
 private struct BottomSheetSafeArea: ViewModifier {
   let useSafeArea: Bool
 
@@ -693,6 +735,20 @@ private struct BottomSheetSafeArea: ViewModifier {
       content
     } else {
       content.ignoresSafeArea()
+    }
+  }
+}
+
+private struct BottomSheetKeyboardInsets: ViewModifier {
+  let maintainBottomViewInsetsPadding: Bool
+
+  func body(content: Content) -> some View {
+    if maintainBottomViewInsetsPadding {
+      // SwiftUI's keyboard safe area is the native equivalent of padding by
+      // MediaQuery.viewInsets.bottom.
+      content
+    } else {
+      content.ignoresSafeArea(.keyboard, edges: .bottom)
     }
   }
 }
