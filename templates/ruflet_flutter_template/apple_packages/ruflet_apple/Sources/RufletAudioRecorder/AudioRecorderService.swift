@@ -41,7 +41,7 @@ public final class AudioRecorderService: RufletService {
     #if canImport(AVFoundation)
       switch call.name {
       case "start_recording":
-        let configurationValue = call.argument("configuration") ?? node?.props["configuration"]
+        let configurationValue = Self.recordingConfigurationValue(for: call, node: node)
         guard let configuration = AudioRecorderConfiguration(configurationValue) else {
           completion(.success(.bool(false)))
           return
@@ -233,6 +233,14 @@ public final class AudioRecorderService: RufletService {
     #else
       completion(.failure(RufletServiceError.unavailable("AVFoundation is unavailable")))
     #endif
+  }
+
+  /// Flet's recorder configuration is an imperative method argument. The
+  /// service control has no update-driven `configuration` property fallback.
+  static func recordingConfigurationValue(
+    for call: RufletMethodCall, node _: ControlNode?
+  ) -> RufletValue? {
+    return call.argument("configuration")
   }
 
   private func emitState(_ state: String) {

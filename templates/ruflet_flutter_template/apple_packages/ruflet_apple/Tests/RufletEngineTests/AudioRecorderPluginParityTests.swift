@@ -26,6 +26,25 @@ final class AudioRecorderPluginParityTests: XCTestCase {
     XCTAssertNil(AudioRecorderConfiguration(.null))
   }
 
+  func testStartConfigurationComesOnlyFromPinnedMethodArguments() {
+    let node = ControlNode(
+      id: 27, type: AudioRecorderService.wireType,
+      props: ["configuration": .map(["encoder": .string("flac")])])
+    let missing = RufletMethodCall(
+      controlID: 27, callID: "missing-config", name: "start_recording",
+      args: .map([:]))
+    XCTAssertNil(
+      AudioRecorderService.recordingConfigurationValue(for: missing, node: node))
+
+    let explicitValue: RufletValue = .map(["encoder": .string("wav")])
+    let explicit = RufletMethodCall(
+      controlID: 27, callID: "explicit-config", name: "start_recording",
+      args: .map(["configuration": explicitValue]))
+    XCTAssertEqual(
+      AudioRecorderService.recordingConfigurationValue(for: explicit, node: node),
+      explicitValue)
+  }
+
   func testEmptyConfigurationMatchesEveryPinnedFletDefault() throws {
     let config = try XCTUnwrap(AudioRecorderConfiguration(.map([:])))
     XCTAssertFalse(config.autoGain)
