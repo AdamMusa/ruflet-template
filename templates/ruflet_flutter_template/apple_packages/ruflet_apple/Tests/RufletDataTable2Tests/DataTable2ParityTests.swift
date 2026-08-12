@@ -267,7 +267,7 @@ final class DataTable2ParityTests: XCTestCase {
     XCTAssertEqual(
       DataTable2ColumnSemantics.sortArrowRendering(ControlNode(
         id: 4, type: "DataTable2", props: ["sort_arrow_icon": .string("arrow_downward")])),
-      .materialGlyph(codepoint: 0xe097, name: "ARROW_DOWNWARD"))
+      .systemSymbol("arrow.down"))
 
     XCTAssertEqual(
       DataTable2ColumnSemantics.sortArrowDurationSeconds(ControlNode(
