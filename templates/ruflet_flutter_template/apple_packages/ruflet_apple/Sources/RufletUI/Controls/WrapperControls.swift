@@ -39,12 +39,23 @@ struct ScreenshotControlView: View {
         .failure(RufletServiceError.unavailable("Screenshot capture needs iOS 16 / macOS 13")))
     }
 
+    let delay = RufletWrapperDefaults.screenshotDelay(call.argument("delay")?.doubleValue)
+    if delay > 0 {
+      DispatchQueue.main.asyncAfter(deadline: .now() + delay / 1_000) {
+        render(call, completion: completion)
+      }
+    } else {
+      render(call, completion: completion)
+    }
+  }
+
+  private func render(_ call: RufletMethodCall, completion: @escaping RufletMethodCompletion) {
     let renderer = ImageRenderer(
       content:
         content
         .environmentObject(store)
         .environment(\.rufletEvents, events))
-    renderer.scale = call.argument("pixel_ratio")?.doubleValue ?? 2
+    if let ratio = call.argument("pixel_ratio")?.doubleValue { renderer.scale = ratio }
 
     #if canImport(UIKit)
       guard let data = renderer.uiImage?.pngData() else {
@@ -428,40 +439,42 @@ struct ShimmerControlView: View {
     let highlight = MaterialPalette.color(
       node.string("highlight_color"), default: .white.opacity(0.6))
 
-    Group {
-      if let contentID = node.controlID(forKey: "content") {
-        ControlView(id: contentID, axis: .none)
-      } else {
-        ControlList(ids: node.childIDs, axis: .vertical)
+    content
+    .overlay {
+      if node.bool("disabled") != true {
+        shimmer(base: base, highlight: highlight)
       }
     }
+    .mask(content)
+  }
+
+  @ViewBuilder private var content: some View {
+    if let contentID = node.controlID(forKey: "content") {
+      ControlView(id: contentID, axis: .none)
+    }
+  }
+
+  private func shimmer(base: Color, highlight: Color) -> some View {
+    let supplied = GradientProps.linear(node.props["gradient"])
+    return (supplied ?? LinearGradient(
+      stops: [
+        .init(color: base, location: 0),
+        .init(color: highlight, location: 0.5),
+        .init(color: base, location: 1)
+      ], startPoint: sweep.start, endPoint: sweep.end))
     .overlay(
-      LinearGradient(
-        stops: [
-          .init(color: base.opacity(0), location: 0),
-          .init(color: highlight, location: 0.5),
-          .init(color: base.opacity(0), location: 1)
-        ],
-        startPoint: sweep.start, endPoint: sweep.end)
-        .offset(x: sweep.horizontal ? phase * 240 : 0, y: sweep.horizontal ? 0 : phase * 240)
-        .blendMode(.plusLighter)
+      Color.clear
     )
-    .mask(
-      Group {
-        if let contentID = node.controlID(forKey: "content") {
-          ControlView(id: contentID, axis: .none)
-        }
-      }
-    )
+    .offset(x: sweep.horizontal ? phase * 240 : 0, y: sweep.horizontal ? 0 : phase * 240)
     .onAppear {
-      let period = (node.double("period") ?? 1500) / 1000
+      let period = RufletWrapperDefaults.shimmerPeriod(node.double("period"))
       // `loop` is how many passes to make; Flutter treats zero as endless,
       // which is also the default.
-      let passes = node.int("loop") ?? 0
+      let passes = RufletWrapperDefaults.shimmerRepeats(node.int("loop"))
       let animation = Animation.linear(duration: period)
       withAnimation(
-        passes > 0
-          ? animation.repeatCount(passes, autoreverses: false)
+        passes != nil
+          ? animation.repeatCount(passes!, autoreverses: false)
           : animation.repeatForever(autoreverses: false)
       ) {
         phase = 1
@@ -480,6 +493,21 @@ struct ShimmerControlView: View {
   }
 }
 
+enum RufletWrapperDefaults {
+  static func screenshotDelay(_ milliseconds: Double?) -> Double {
+    milliseconds ?? 20
+  }
+
+  static func shimmerPeriod(_ milliseconds: Double?) -> Double {
+    (milliseconds ?? 1500) / 1_000
+  }
+
+  static func shimmerRepeats(_ loop: Int?) -> Int? {
+    let count = loop ?? 0
+    return count > 0 ? count : nil
+  }
+}
+
 /// `ShaderMask` — masks its content with a gradient.
 ///
 /// Flet passes an arbitrary shader; a linear or radial gradient is the part of
@@ -488,14 +516,18 @@ struct ShaderMaskControlView: View {
   let node: ControlNode
 
   var body: some View {
+    content
+      .overlay { gradient.blendMode(ControlProps.blendMode(node.string("blend_mode"))) }
+      .mask(content)
+      .clipShape(RoundedRectangle(cornerRadius: ControlProps.cornerRadius(node.props["border_radius"]) ?? 0))
+  }
+
+  @ViewBuilder private var content: some View {
     Group {
       if let contentID = node.controlID(forKey: "content") {
         ControlView(id: contentID, axis: .none)
-      } else {
-        ControlList(ids: node.childIDs, axis: .vertical)
       }
     }
-    .mask(gradient)
   }
 
   @ViewBuilder
@@ -515,7 +547,8 @@ struct ShaderMaskControlView: View {
 /// simply renders its content, which is the Flutter behaviour too.
 struct HeroControlView: View {
   let node: ControlNode
-  @Namespace private var namespace
+  @Namespace private var fallbackNamespace
+  @Environment(\.rufletHeroNamespace) private var pageNamespace
 
   var body: some View {
     Group {
@@ -525,7 +558,9 @@ struct HeroControlView: View {
         ControlList(ids: node.childIDs, axis: .vertical)
       }
     }
-    .matchedGeometryEffect(id: node.string("tag") ?? "hero-\(node.id)", in: namespace)
+    .matchedGeometryEffect(
+      id: node.string("tag") ?? "hero-\(node.id)",
+      in: pageNamespace ?? fallbackNamespace)
     // Flutter can keep a hero flying while the user drives a back gesture;
     // SwiftUI's matched geometry always does, so the flag only turns it off.
     .transaction { transaction in
@@ -597,13 +632,22 @@ private struct WindowDragGesture: ViewModifier {
                 velocity: .zero, primaryVelocity: nil))
           })
     #else
-      content.simultaneousGesture(
-        TapGesture(count: 2).onEnded {
-          if node.bool("maximizable") != false {
-            events.fire(node, "double_tap", data: .string("maximize"))
-          }
-        })
+      // iOS has no movable top-level window. Flet's window_manager backend is
+      // desktop-only too, so the wrapper remains visible without inventing a
+      // maximize event that never happened.
+      content
     #endif
+  }
+}
+
+private struct RufletHeroNamespaceKey: EnvironmentKey {
+  static let defaultValue: Namespace.ID? = nil
+}
+
+extension EnvironmentValues {
+  var rufletHeroNamespace: Namespace.ID? {
+    get { self[RufletHeroNamespaceKey.self] }
+    set { self[RufletHeroNamespaceKey.self] = newValue }
   }
 }
 

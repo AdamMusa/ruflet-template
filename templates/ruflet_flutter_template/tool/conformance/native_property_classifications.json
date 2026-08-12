@@ -1,6 +1,15 @@
 {
   "parent_consumed": {},
-  "service": {},
+  "service": {
+    "Page": {
+      "on_login": {
+        "reason": "Flet Page.on_login is emitted by the backend authentication flow after the auth service completes; it is not a platform-view event and the Apple renderer must not synthesize it. Ruflet's server/session layer owns this callback exactly as Flet's Python backend does."
+      },
+      "on_logout": {
+        "reason": "Flet Page.on_logout is emitted by the backend authentication flow when credentials are cleared; it is not a native Apple UI event. Ruflet's server/session auth layer owns it, matching the Flet backend contract."
+      }
+    }
+  },
   "unsupported": {
     "TextField": {
       "enable_ime_personalized_learning": {

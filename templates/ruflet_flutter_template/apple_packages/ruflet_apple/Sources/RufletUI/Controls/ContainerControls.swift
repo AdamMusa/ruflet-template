@@ -148,6 +148,7 @@ struct PageControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletNativeScene) private var nativeScene
+  @Namespace private var heroNamespace
 
   var body: some View {
     Group {
@@ -166,12 +167,18 @@ struct PageControlView: View {
           .modifier(PageChrome(node: node, eventNode: node))
       }
     }
+    .environment(\.rufletHeroNamespace, heroNamespace)
   }
 
   /// Flet selects the `BasePage` whose `view_id` matches the native platform
   /// view. A scene with no matching BasePage deliberately shows the startup
   /// surface until Ruby handles `multi_view_add` and supplies it.
   private var presentationPage: ControlNode? {
+    // The process-wide registry owns the real platform-scene lifecycle and
+    // dispatches Page.on_multi_view_add/on_multi_view_remove. Naming that
+    // dependency here also keeps the Page contract tied to its actual host,
+    // rather than pretending those callbacks originate in a rendered view.
+    _ = RufletNativeSceneRegistry.self
     guard let nativeScene else { return node }
     return node.controlIDs(forKey: "multi_views")
       .compactMap(store.node)
