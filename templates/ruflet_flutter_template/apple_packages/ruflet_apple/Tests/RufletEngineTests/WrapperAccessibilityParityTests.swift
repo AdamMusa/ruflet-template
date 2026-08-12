@@ -107,4 +107,11 @@ final class WrapperAccessibilityParityTests: XCTestCase {
     XCTAssertEqual(browserMenu?.rendering, .serviceOnly)
     XCTAssertEqual(browserMenu?.supportedMethods, Set(["disable_menu", "enable_menu"]))
   }
+
+  func testAutofillGroupUnknownDisposeActionKeepsFletCommitDefault() {
+    XCTAssertEqual(
+      RufletAutofillGroupSemantics.disposeAction(ControlNode(
+        id: 9, type: "AutofillGroup", props: ["dispose_action": .string("unknown")])),
+      .commit)
+  }
 }

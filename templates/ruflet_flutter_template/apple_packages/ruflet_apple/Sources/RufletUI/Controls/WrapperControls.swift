@@ -980,6 +980,7 @@ struct AutofillGroupControlView: View {
   @ViewBuilder var body: some View {
     if let contentID = node.controlID(forKey: "content") {
       ControlView(id: contentID, axis: .none)
+        .onDisappear { RufletAutofillGroupSemantics.dispose(node) }
     } else {
       RufletWrapperError("AutofillGroup control has no content.")
     }
@@ -995,5 +996,22 @@ enum RufletAutofillGroupSemantics {
   /// Flet defaults missing and unknown values to commit.
   static func disposeAction(_ node: ControlNode) -> DisposeAction {
     DisposeAction(rawValue: node.string("dispose_action")?.lowercased() ?? "") ?? .commit
+  }
+
+  @MainActor
+  static func dispose(_ node: ControlNode) {
+    #if canImport(UIKit)
+      // Resigning the group commits UIKit's active text/autofill session. iOS
+      // exposes no public cancel-session API; cancel therefore leaves the
+      // current context uncommitted, matching the observable Flet distinction.
+      if disposeAction(node) == .commit {
+        UIApplication.shared.sendAction(
+          #selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+      }
+    #elseif canImport(AppKit)
+      if disposeAction(node) == .commit {
+        NSApp.keyWindow?.makeFirstResponder(nil)
+      }
+    #endif
   }
 }
