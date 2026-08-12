@@ -1064,33 +1064,33 @@ struct ListTileControlView: View {
   private var nativeTileContents: some View {
     let presentation = ListTilePresentation(node: node)
     return HStack {
-      if let leadingID = node.controlID(forKey: "leading") {
+      if let leadingID = materialSlots.leadingID {
         ControlView(id: leadingID, axis: .none)
           .modifier(OptionalListTileTextStyle(style: presentation.leadingTrailingTextStyle))
-      } else if node.props["leading"] != nil {
-        RufletIcon(value: node.props["leading"])
+      } else if let leadingIcon = materialSlots.leadingIcon {
+        RufletIcon(value: leadingIcon)
           .modifier(OptionalListTileTextStyle(style: presentation.leadingTrailingTextStyle))
       }
 
       VStack(alignment: .leading) {
-        if let titleID = node.controlID(forKey: "title") {
+        if let titleID = materialSlots.titleID {
           ControlView(id: titleID, axis: .none)
-        } else if let title = node.string("title") {
+        } else if let title = materialSlots.titleText {
           Text(title)
         }
-        if let subtitleID = node.controlID(forKey: "subtitle") {
+        if let subtitleID = materialSlots.subtitleID {
           ControlView(id: subtitleID, axis: .none).foregroundStyle(.secondary)
-        } else if let subtitle = node.string("subtitle") {
+        } else if let subtitle = materialSlots.subtitleText {
           Text(subtitle).foregroundStyle(.secondary)
         }
       }
       .frame(maxWidth: .infinity, alignment: .leading)
 
-      if let trailingID = node.controlID(forKey: "trailing") {
+      if let trailingID = materialSlots.trailingID {
         ControlView(id: trailingID, axis: .none)
           .modifier(OptionalListTileTextStyle(style: presentation.leadingTrailingTextStyle))
-      } else if node.props["trailing"] != nil {
-        RufletIcon(value: node.props["trailing"])
+      } else if let trailingIcon = materialSlots.trailingIcon {
+        RufletIcon(value: trailingIcon)
           .modifier(OptionalListTileTextStyle(style: presentation.leadingTrailingTextStyle))
       }
     }
@@ -1114,37 +1114,37 @@ struct ListTileControlView: View {
       alignment: presentation.rowAlignment,
       spacing: presentation.horizontalTitleGap
     ) {
-      if let leadingID = node.controlID(forKey: "leading") {
+      if let leadingID = materialSlots.leadingID {
         ControlView(id: leadingID, axis: .none)
           .font(.system(size: presentation.leadingTrailingFontSize))
           .foregroundColor(presentation.leadingTrailingColor)
           .modifier(OptionalListTileTextStyle(style: presentation.leadingTrailingTextStyle))
           .frame(minWidth: presentation.minLeadingWidth)
-      } else if node.props["leading"] != nil {
+      } else if let leadingIcon = materialSlots.leadingIcon {
         RufletIcon(
-          value: node.props["leading"], size: 24,
+          value: leadingIcon, size: 24,
           color: presentation.iconColor)
           .frame(minWidth: presentation.minLeadingWidth)
       }
 
       VStack(alignment: .leading, spacing: presentation.textSpacing) {
-        if let titleID = node.controlID(forKey: "title") {
+        if let titleID = materialSlots.titleID {
           ControlView(id: titleID, axis: .none)
             .font(.system(size: presentation.titleFontSize))
             .foregroundColor(presentation.titleColor)
             .modifier(OptionalListTileTextStyle(style: presentation.titleTextStyle))
-        } else if let title = node.string("title") {
+        } else if let title = materialSlots.titleText {
           Text(title)
             .font(.system(size: presentation.titleFontSize))
             .foregroundColor(presentation.titleColor)
             .modifier(OptionalListTileTextStyle(style: presentation.titleTextStyle))
         }
-        if let subtitleID = node.controlID(forKey: "subtitle") {
+        if let subtitleID = materialSlots.subtitleID {
           ControlView(id: subtitleID, axis: .none)
             .font(.system(size: presentation.subtitleFontSize))
             .foregroundColor(presentation.subtitleColor)
             .modifier(OptionalListTileTextStyle(style: presentation.subtitleTextStyle))
-        } else if let subtitle = node.string("subtitle") {
+        } else if let subtitle = materialSlots.subtitleText {
           Text(subtitle)
             .font(.system(size: presentation.subtitleFontSize))
             .foregroundColor(presentation.subtitleColor)
@@ -1153,14 +1153,14 @@ struct ListTileControlView: View {
       }
       .frame(maxWidth: .infinity, alignment: .leading)
 
-      if let trailingID = node.controlID(forKey: "trailing") {
+      if let trailingID = materialSlots.trailingID {
         ControlView(id: trailingID, axis: .none)
           .font(.system(size: presentation.leadingTrailingFontSize))
           .foregroundColor(presentation.leadingTrailingColor)
           .modifier(OptionalListTileTextStyle(style: presentation.leadingTrailingTextStyle))
-      } else if node.props["trailing"] != nil {
+      } else if let trailingIcon = materialSlots.trailingIcon {
         RufletIcon(
-          value: node.props["trailing"], size: 24,
+          value: trailingIcon, size: 24,
           color: presentation.iconColor)
       }
     }
@@ -1248,6 +1248,56 @@ struct ListTileControlView: View {
       node: node, events: events, openURL: openURL, tileClicks: tileClicks,
       pressed: $pressed))
     .disabled(node.bool("disabled") == true)
+  }
+
+  private var materialSlots: MaterialListTileSlots {
+    MaterialListTileSlots(
+      node: node, visibilityForID: { store.node($0)?.bool("visible") })
+  }
+}
+
+/// Exact type and visibility ownership of Material ListTile's four slots.
+/// Dart's text builder accepts only String or a visible Control; its icon
+/// builder accepts only an integer icon code or a visible Control.
+struct MaterialListTileSlots: Equatable {
+  let titleID: Int?
+  let titleText: String?
+  let subtitleID: Int?
+  let subtitleText: String?
+  let leadingID: Int?
+  let leadingIcon: RufletValue?
+  let trailingID: Int?
+  let trailingIcon: RufletValue?
+
+  init(node: ControlNode, visibilityForID: (Int) -> Bool?) {
+    (titleID, titleText) = Self.textSlot(
+      node, key: "title", visibilityForID: visibilityForID)
+    (subtitleID, subtitleText) = Self.textSlot(
+      node, key: "subtitle", visibilityForID: visibilityForID)
+    (leadingID, leadingIcon) = Self.iconSlot(
+      node, key: "leading", visibilityForID: visibilityForID)
+    (trailingID, trailingIcon) = Self.iconSlot(
+      node, key: "trailing", visibilityForID: visibilityForID)
+  }
+
+  private static func textSlot(
+    _ node: ControlNode, key: String, visibilityForID: (Int) -> Bool?
+  ) -> (Int?, String?) {
+    if let id = node.controlID(forKey: key) {
+      return visibilityForID(id) == true ? (id, nil) : (nil, nil)
+    }
+    if case .string(let text) = node.props[key] { return (nil, text) }
+    return (nil, nil)
+  }
+
+  private static func iconSlot(
+    _ node: ControlNode, key: String, visibilityForID: (Int) -> Bool?
+  ) -> (Int?, RufletValue?) {
+    if let id = node.controlID(forKey: key) {
+      return visibilityForID(id) == true ? (id, nil) : (nil, nil)
+    }
+    if case .int = node.props[key] { return (nil, node.props[key]) }
+    return (nil, nil)
   }
 }
 
