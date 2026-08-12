@@ -2950,60 +2950,209 @@ struct CupertinoNavigationBarControlView: View {
   let node: ControlNode
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
+  @Environment(\.displayScale) private var displayScale
 
+  private var presentation: RufletCupertinoNavigationBarPresentation {
+    RufletCupertinoNavigationBarPresentation(node: node)
+  }
+
+  @ViewBuilder
   var body: some View {
-    HStack(spacing: 0) {
-      ForEach(Array(destinationIDs.enumerated()), id: \.element) { index, id in
-        Button {
-          events.commit(node, key: "selected_index", value: .int(Int64(index)))
-        } label: {
-          destination(id, selected: index == (node.int("selected_index") ?? 0))
-            .frame(maxWidth: .infinity)
-        }
-        .buttonStyle(.plain)
-        .disabled(node.bool("disabled") ?? false)
-      }
-    }
-    .padding(.vertical, 6)
-    .background(MaterialPalette.color(node.string("bgcolor")))
-    .overlay(alignment: .top) { Divider() }
-  }
-
-  private var destinationIDs: [Int] {
-    var seen = Set<Int>()
-    return (node.controlIDs(forKey: "destinations") + node.childIDs)
-      .filter { seen.insert($0).inserted }
-  }
-
-  @ViewBuilder
-  private func destination(_ id: Int, selected: Bool) -> some View {
-    if let destination = store.node(id) {
-      VStack(spacing: 2) {
-        let iconID = selected
-          ? destination.controlID(forKey: "selected_icon") ?? destination.controlID(forKey: "icon")
-          : destination.controlID(forKey: "icon")
-        if let iconID { destinationIcon(iconID) }
-        Text(destination.string("label") ?? "")
-          .font(.caption2)
-      }
-      .foregroundColor(
-        selected
-          ? MaterialPalette.color(node.string("active_color"), default: .accentColor)
-          : MaterialPalette.color(node.string("inactive_color"), default: .secondary))
-    }
-  }
-
-  @ViewBuilder
-  private func destinationIcon(_ id: Int) -> some View {
-    if let icon = store.node(id), icon.type == "Icon" {
-      RufletIcon(
-        value: icon.props["name"] ?? icon.props["icon"],
-        size: icon.double("size").map { CGFloat($0) }
-          ?? CGFloat(node.double("icon_size") ?? 30),
-        color: MaterialPalette.color(icon.string("color")))
+    let destinations = visibleDestinations
+    if let error = presentation.validationError(destinationCount: destinations.count) {
+      Text(error).font(.caption).foregroundColor(.red)
     } else {
-      ControlView(id: id, axis: .none)
+      HStack(alignment: .bottom, spacing: 0) {
+        ForEach(Array(destinations.enumerated()), id: \.element.id) { index, destination in
+          destinationButton(
+            destination, index: index, count: destinations.count,
+            selected: index == presentation.selectedIndex)
+        }
+      }
+      .padding(.bottom, RufletCupertinoNavigationBarDefaults.itemBottomPadding)
+      .frame(height: RufletCupertinoNavigationBarDefaults.height)
+      .background {
+        ZStack {
+          Rectangle().fill(.ultraThinMaterial)
+          MaterialPalette.color(node.string("bgcolor"), default: defaultBarBackground)
+        }
+      }
+      .overlay(alignment: .top) { topBorder }
     }
+  }
+
+  private func destinationButton(
+    _ destinationNode: ControlNode, index: Int, count: Int, selected: Bool
+  ) -> some View {
+    let disabled = presentation.disabled || destinationNode.bool("disabled") == true
+    let hint = "Tab \(index + 1) of \(count)"
+    return Button {
+      RufletCupertinoNavigationBarEvents.select(index: index, on: node, to: events)
+    } label: {
+      destination(destinationNode, selected: selected)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+        .contentShape(Rectangle())
+    }
+    .buttonStyle(.plain)
+    .disabled(disabled)
+    .modifier(CupertinoNavigationDestinationHelp(
+      text: disabled ? nil : destinationNode.string("tooltip")))
+    .accessibilityAddTraits(selected ? .isSelected : [])
+    .accessibilityHint(hint)
+  }
+
+  private var visibleDestinations: [ControlNode] {
+    presentation.destinationIDs.compactMap(store.node)
+      .filter { $0.bool("visible") != false }
+  }
+
+  @ViewBuilder
+  private func destination(_ destination: ControlNode, selected: Bool) -> some View {
+    VStack(spacing: 0) {
+      Group {
+        if selected && hasIcon(destination, key: "selected_icon") {
+          destinationIcon(destination, key: "selected_icon")
+        } else {
+          destinationIcon(destination, key: "icon")
+        }
+      }
+      .frame(maxHeight: .infinity)
+
+      Text(destination.string("label") ?? "")
+        .font(.system(size: 10, weight: .medium))
+        .lineLimit(1)
+    }
+    .foregroundColor(itemColor(selected: selected))
+    .dynamicTypeSize(.medium)
+    .background(MaterialPalette.color(destination.string("bgcolor"), default: .clear))
+  }
+
+  @ViewBuilder
+  private func destinationIcon(_ destination: ControlNode, key: String) -> some View {
+    if let id = destination.controlID(forKey: key),
+      let icon = store.node(id), icon.bool("visible") != false
+    {
+      if icon.type == "Icon" {
+        RufletIcon(
+          value: icon.props["name"] ?? icon.props["icon"],
+          size: icon.double("size").map { CGFloat($0) } ?? presentation.iconSize,
+          color: MaterialPalette.color(icon.string("color")))
+      } else {
+        ControlView(id: id, axis: .none)
+      }
+    } else if destination.props[key] != nil {
+      RufletIcon(
+        value: destination.props[key], size: presentation.iconSize, color: nil)
+    }
+  }
+
+  private func hasIcon(_ destination: ControlNode, key: String) -> Bool {
+    if let id = destination.controlID(forKey: key) {
+      return store.node(id)?.bool("visible") != false
+    }
+    return destination.props[key] != nil
+  }
+
+  @ViewBuilder
+  private var topBorder: some View {
+    if let border = presentation.topBorder {
+      Rectangle()
+        .fill(MaterialPalette.color(border.colorToken, default: .black.opacity(0.3)))
+        .frame(height: border.width == 0 ? 1 / max(displayScale, 1) : border.width)
+    }
+  }
+
+  private func itemColor(selected: Bool) -> Color {
+    if selected {
+      return MaterialPalette.color(
+        presentation.activeColorToken ?? presentation.indicatorColorToken,
+        default: .accentColor)
+    }
+    return MaterialPalette.color(
+      presentation.inactiveColorToken, default: Color(.sRGB, red: 153 / 255,
+        green: 153 / 255, blue: 153 / 255, opacity: 1))
+  }
+
+  private var defaultBarBackground: Color {
+    #if canImport(UIKit)
+      Color(uiColor: .systemBackground).opacity(240 / 255)
+    #elseif canImport(AppKit)
+      Color(nsColor: .windowBackgroundColor).opacity(240 / 255)
+    #else
+      Color.white.opacity(240 / 255)
+    #endif
+  }
+}
+
+struct RufletCupertinoNavigationBarPresentation {
+  let destinationIDs: [Int]
+  let selectedIndex: Int
+  let iconSize: CGFloat
+  let disabled: Bool
+  let activeColorToken: String?
+  let indicatorColorToken: String?
+  let inactiveColorToken: String?
+  let topBorder: RufletCupertinoNavigationBarBorder?
+
+  init(node: ControlNode) {
+    var seen = Set<Int>()
+    destinationIDs = node.controlIDs(forKey: "destinations")
+      .filter { seen.insert($0).inserted }
+    selectedIndex = node.int("selected_index") ?? 0
+    iconSize = CGFloat(node.double("icon_size") ?? 30)
+    disabled = node.bool("disabled") ?? false
+    activeColorToken = node.string("active_color")
+    indicatorColorToken = node.string("indicator_color")
+    inactiveColorToken = node.string("inactive_color")
+    topBorder = RufletCupertinoNavigationBarBorder(node.props["border"])
+  }
+
+  func validationError(destinationCount: Int) -> String? {
+    if destinationCount < 2 {
+      return "Tabs need at least 2 items to conform to Apple's HIG"
+    }
+    if selectedIndex < 0 || selectedIndex >= destinationCount {
+      return "CupertinoNavigationBar.selected_index must be between 0 and \(destinationCount - 1)"
+    }
+    if iconSize < 0 { return "CupertinoNavigationBar.icon_size must be greater than or equal to 0" }
+    return nil
+  }
+}
+
+struct RufletCupertinoNavigationBarBorder: Equatable {
+  let colorToken: String?
+  let width: CGFloat
+
+  init?(_ value: RufletValue?) {
+    guard let map = value?.mapValue, let top = map["top"]?.mapValue else { return nil }
+    guard (top["style"]?.stringValue?.lowercased() ?? "solid") != "none" else { return nil }
+    colorToken = top["color"]?.stringValue
+    width = max(0, CGFloat(top["width"]?.doubleValue ?? 1))
+  }
+}
+
+enum RufletCupertinoNavigationBarDefaults {
+  static let height: CGFloat = 50
+  static let iconSize: CGFloat = 30
+  static let itemBottomPadding: CGFloat = 4
+}
+
+enum RufletCupertinoNavigationBarEvents {
+  static func select(index: Int, on node: ControlNode, to events: RufletEventSink) {
+    let value = RufletValue.int(Int64(index))
+    events.setLocal(node.id, "selected_index", value)
+    events.update(node.id, ["selected_index": value])
+    if node.bool("on_change") == true || node.handlesEvent("change") {
+      events.fire(node, "change", data: value)
+    }
+  }
+}
+
+private struct CupertinoNavigationDestinationHelp: ViewModifier {
+  let text: String?
+
+  func body(content: Content) -> some View {
+    if let text, !text.isEmpty { content.help(text) } else { content }
   }
 }
 
