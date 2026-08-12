@@ -2,6 +2,7 @@ import Foundation
 import RiveRuntime
 import RufletEngine
 import RufletProtocol
+import RufletUI
 import SwiftUI
 
 /// Native Apple renderer for Ruflet's `Rive` extension control.

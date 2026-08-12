@@ -237,8 +237,8 @@ public enum ControlRegistry {
     add(
       ["RufletSpinKit"] + RufletSpinKitConfiguration.fletWireTypes,
       .visible, "SpinKitControlView", .nativeView)
-    add(["Rive"], .visible, "RiveControlView", .nativeView)
-    add(["Lottie"], .visible, "LottieControlView", .nativeView,
+    add(["Rive"], .visible, "RufletRive.RiveControlView", .optionalBundle("RufletRive"))
+    add(["Lottie"], .visible, "RufletLottie.LottieControlView", .optionalBundle("RufletLottie"),
         events: ["error", "load"])
     add(["CircleAvatar"], .visible, "CircleAvatarControlView", .nativeView,
         events: ["image_error"])

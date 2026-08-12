@@ -19,6 +19,8 @@ let package = Package(
     .library(name: "RufletMotion", targets: ["RufletMotion"]),
     .library(name: "RufletLocation", targets: ["RufletLocation"]),
     .library(name: "RufletMedia", targets: ["RufletMedia"]),
+    .library(name: "RufletRive", targets: ["RufletRive"]),
+    .library(name: "RufletLottie", targets: ["RufletLottie"]),
 
     // Available separately for hosts that want the wire layer or the control
     // model without the SwiftUI renderer.
@@ -37,21 +39,29 @@ let package = Package(
     .target(name: "RufletEngine", dependencies: ["RufletProtocol"]),
     .target(
       name: "RufletUI",
-      dependencies: [
-        "RufletEngine", "RufletProtocol", "MaterialColorUtilities",
-        .product(name: "Lottie", package: "lottie-ios"),
-        .product(name: "RiveRuntime", package: "rive-ios")
-      ]),
+      dependencies: ["RufletEngine", "RufletProtocol", "MaterialColorUtilities"]),
     .target(name: "RufletApple", dependencies: ["RufletUI", "RufletEngine", "RufletProtocol"]),
 
     .target(name: "RufletMotion", dependencies: ["RufletEngine", "RufletProtocol"]),
     .target(name: "RufletLocation", dependencies: ["RufletEngine", "RufletProtocol"]),
     .target(name: "RufletMedia", dependencies: ["RufletUI", "RufletEngine", "RufletProtocol"]),
+    .target(
+      name: "RufletRive",
+      dependencies: [
+        "RufletUI", "RufletEngine", "RufletProtocol",
+        .product(name: "RiveRuntime", package: "rive-ios")
+      ]),
+    .target(
+      name: "RufletLottie",
+      dependencies: [
+        "RufletUI", "RufletEngine", "RufletProtocol",
+        .product(name: "Lottie", package: "lottie-ios")
+      ]),
 
     .testTarget(
       name: "RufletEngineTests",
       dependencies: [
         "RufletEngine", "RufletProtocol", "RufletUI",
-        "RufletMotion", "RufletLocation", "RufletMedia"
+        "RufletMotion", "RufletLocation", "RufletMedia", "RufletRive", "RufletLottie"
       ])
   ])

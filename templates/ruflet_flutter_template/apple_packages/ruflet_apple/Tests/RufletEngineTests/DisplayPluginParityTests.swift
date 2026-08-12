@@ -1,4 +1,6 @@
 @testable import RufletUI
+@testable import RufletRive
+@testable import RufletLottie
 import RufletEngine
 import RufletProtocol
 import XCTest
@@ -22,12 +24,29 @@ final class DisplayPluginParityTests: XCTestCase {
     }
   }
 
-  func testAnimationPluginsAreNativeViews() {
-    for type in ["Lottie", "Rive", "RufletSpinKit"] {
+  func testAnimationPluginsHaveTheSameOptionalPackageBoundaryAsFlet() {
+    for (type, bundle) in [("Lottie", "RufletLottie"), ("Rive", "RufletRive")] {
       let descriptor = ControlRegistry.builtInDescriptor(for: type)
       XCTAssertEqual(descriptor?.classification, .visible)
-      XCTAssertEqual(descriptor?.rendering, .nativeView)
+      XCTAssertEqual(descriptor?.rendering, .optionalBundle(bundle))
     }
+    XCTAssertEqual(ControlRegistry.builtInDescriptor(for: "RufletSpinKit")?.rendering, .nativeView)
+  }
+
+  @MainActor
+  func testAnimationPluginBundlesInstallTheirNativeViewsInIsolation() {
+    let services = ServiceRegistry()
+    RufletRive.register(in: services)
+    XCTAssertEqual(ControlRegistry.descriptor(for: "Rive")?.rendering, .nativeView)
+    XCTAssertEqual(
+      ControlRegistry.descriptor(for: "Rive")?.implementation,
+      "RufletRive.RiveControlView")
+
+    RufletLottie.register(in: services)
+    XCTAssertEqual(ControlRegistry.descriptor(for: "Lottie")?.rendering, .nativeView)
+    XCTAssertEqual(
+      ControlRegistry.descriptor(for: "Lottie")?.supportedEvents,
+      ["error", "load"])
   }
 
   func testRiveClipRectUsesFlutterLTRBGeometry() {

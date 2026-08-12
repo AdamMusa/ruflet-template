@@ -3,6 +3,7 @@ import Lottie
 import QuartzCore
 import RufletEngine
 import RufletProtocol
+import RufletUI
 import SwiftUI
 
 /// Flet's Lottie extension rendered by Airbnb's native Apple runtime.
