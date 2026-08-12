@@ -1,68 +1,138 @@
 import Foundation
 
-/// A decoded `patch_control` message.
+/// A decoded Flet `patch_control` message.
 ///
-/// The payload shape produced by `Ruflet::Page` is
-///
-/// ```ruby
-/// { "id" => wire_id, "patch" => [[0], [0, 0, key, value], ...] }
-/// ```
-///
-/// The first element is the patch's path header — Ruflet always addresses the
-/// control named by `id` directly, so it is always the single-element `[0]`.
-/// Each following element is an operation whose leading `0` is the opcode
-/// ("set property") and whose second slot is a reserved index that Ruflet
-/// always emits as `0`.
+/// Flet patches are not limited to setting properties on the addressed
+/// control. The first patch element is a compact tree index which maps integer
+/// target ids to paths below that control. The remaining elements replace,
+/// add, remove, or move values in the indexed maps/lists.
 public struct ControlPatch: Equatable {
   public enum Operation: Equatable {
-    /// Set `key` on the target control to `value`. The only operation
-    /// `Ruflet::Page` emits.
+    /// Ruflet's in-process convenience operation. Unlike Flet's wire-level
+    /// replace operation, map-valued properties merge recursively. Keeping it
+    /// distinct preserves `Control.update()` semantics for local services.
     case set(key: String, value: RufletValue)
-    /// Anything else. Kept rather than dropped so a host can log the shape of
-    /// a message from a newer runtime instead of silently mis-rendering.
+
+    case replace(target: Int, key: RufletValue, value: RufletValue)
+    case add(target: Int, key: RufletValue, value: RufletValue)
+    case remove(target: Int, key: RufletValue)
+    case move(fromTarget: Int, fromKey: RufletValue, toTarget: Int, toKey: RufletValue)
+
+    /// Kept for source compatibility with callers that construct a patch by
+    /// hand. The store rejects the entire patch atomically.
     case unsupported(RufletValue)
   }
 
   public let controlID: Int
+
+  /// Target id -> path components relative to the addressed control's
+  /// properties. MessagePack map keys are normalized to strings by
+  /// `MessagePack`; list traversal interprets numeric strings as indices.
+  public let pathIndex: [Int: [String]]
   public let operations: [Operation]
 
-  public init(controlID: Int, operations: [Operation]) {
+  public init(
+    controlID: Int,
+    pathIndex: [Int: [String]] = [0: []],
+    operations: [Operation]
+  ) {
     self.controlID = controlID
+    self.pathIndex = pathIndex
     self.operations = operations
   }
 
   public enum DecodingError: Error, Equatable {
     case missingControlID
+    case malformedTreeIndex
+    case malformedOperation(Int)
+    case unknownOperation(Int)
   }
 
   public static func decode(payload: RufletValue) throws -> ControlPatch {
     guard let controlID = payload["id"]?.intValue else {
       throw DecodingError.missingControlID
     }
-    let raw = payload["patch"]?.arrayValue ?? []
-    var operations: [Operation] = []
-    operations.reserveCapacity(raw.count)
 
-    for (index, element) in raw.enumerated() {
-      // Skip the leading path header.
-      if index == 0, let path = element.arrayValue, path.allSatisfy({ $0.intValue != nil }) {
-        continue
-      }
-      operations.append(decodeOperation(element))
+    let raw = payload["patch"]?.arrayValue ?? []
+    guard let tree = raw.first else {
+      // An absent operation list is a valid no-op for a reconnecting client.
+      return ControlPatch(controlID: controlID, operations: [])
     }
-    return ControlPatch(controlID: controlID, operations: operations)
+
+    var pathIndex: [Int: [String]] = [:]
+    try buildPathIndex(tree, path: [], result: &pathIndex)
+
+    var operations: [Operation] = []
+    operations.reserveCapacity(max(0, raw.count - 1))
+    for (offset, element) in raw.dropFirst().enumerated() {
+      operations.append(try decodeOperation(element, index: offset + 1))
+    }
+    return ControlPatch(controlID: controlID, pathIndex: pathIndex, operations: operations)
   }
 
-  private static func decodeOperation(_ element: RufletValue) -> Operation {
+  private static func buildPathIndex(
+    _ value: RufletValue,
+    path: [String],
+    result: inout [Int: [String]]
+  ) throws {
+    guard
+      let node = value.arrayValue,
+      let target = node.first?.intValue,
+      node.count <= 2
+    else {
+      throw DecodingError.malformedTreeIndex
+    }
+
+    result[target] = path
+    guard node.count == 2 else { return }
+    guard let children = node[1].mapValue else {
+      throw DecodingError.malformedTreeIndex
+    }
+    for (component, child) in children {
+      try buildPathIndex(child, path: path + [component], result: &result)
+    }
+  }
+
+  private static func decodeOperation(_ element: RufletValue, index: Int) throws -> Operation {
     guard
       let parts = element.arrayValue,
-      parts.count >= 4,
-      parts[0].intValue == 0,
-      let key = parts[2].stringValue
+      let opcode = parts.first?.intValue
     else {
-      return .unsupported(element)
+      throw DecodingError.malformedOperation(index)
     }
-    return .set(key: key, value: parts[3])
+
+    switch opcode {
+    case 0, 1:
+      guard parts.count == 4, let target = parts[1].intValue else {
+        throw DecodingError.malformedOperation(index)
+      }
+      return opcode == 0
+        ? .replace(target: target, key: parts[2], value: parts[3])
+        : .add(target: target, key: parts[2], value: parts[3])
+
+    case 2:
+      guard parts.count == 3, let target = parts[1].intValue else {
+        throw DecodingError.malformedOperation(index)
+      }
+      return .remove(target: target, key: parts[2])
+
+    case 3:
+      guard
+        parts.count == 5,
+        let fromTarget = parts[1].intValue,
+        let toTarget = parts[3].intValue
+      else {
+        throw DecodingError.malformedOperation(index)
+      }
+      return .move(
+        fromTarget: fromTarget,
+        fromKey: parts[2],
+        toTarget: toTarget,
+        toKey: parts[4])
+
+    default:
+      throw DecodingError.unknownOperation(opcode)
+    }
   }
 }
 

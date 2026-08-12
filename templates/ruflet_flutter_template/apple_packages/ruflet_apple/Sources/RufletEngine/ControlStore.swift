@@ -57,6 +57,11 @@ public final class ControlStore: ObservableObject {
 
   @discardableResult
   public func apply(_ patch: ControlPatch) -> Bool {
+    guard !patch.operations.isEmpty else {
+      lastChangedIDs = []
+      return false
+    }
+
     let previousNodes = nodes
     var touched: Set<Int> = [patch.controlID]
 
@@ -66,22 +71,256 @@ public final class ControlStore: ObservableObject {
     var node = nodes[patch.controlID]
       ?? ControlNode(id: patch.controlID, type: patch.controlID == RufletWireID.page ? "Page" : "")
 
-    for operation in patch.operations {
-      guard case .set(let key, let value) = operation else { continue }
-      switch key {
-      case RufletControlKey.type:
-        if let name = value.stringValue { node.type = name }
-      case RufletControlKey.id:
-        break
-      case RufletControlKey.internals:
-        node.internals = mergeMap(value.mapValue ?? [:], into: node.internals, touched: &touched)
-      default:
-        node.props[key] = merge(value, into: node.props[key], touched: &touched)
+    nodes[patch.controlID] = node
+
+    do {
+      for operation in patch.operations {
+        switch operation {
+        case .set(let key, let value):
+          node = nodes[patch.controlID] ?? node
+          switch key {
+          case RufletControlKey.type:
+            if let name = value.stringValue { node.type = name }
+          case RufletControlKey.id:
+            break
+          case RufletControlKey.internals:
+            node.internals = mergeMap(
+              value.mapValue ?? [:], into: node.internals, touched: &touched)
+          default:
+            node.props[key] = merge(value, into: node.props[key], touched: &touched)
+          }
+          nodes[patch.controlID] = node
+
+        case .replace(let target, let key, let value):
+          try mutateTarget(
+            rootID: patch.controlID,
+            path: try path(for: target, in: patch),
+            touched: &touched
+          ) { container, ownerID, touched in
+            try self.replace(
+              key: key, value: value, in: &container, ownerID: ownerID, touched: &touched)
+          }
+
+        case .add(let target, let key, let value):
+          try mutateTarget(
+            rootID: patch.controlID,
+            path: try path(for: target, in: patch),
+            touched: &touched
+          ) { container, ownerID, touched in
+            try self.add(
+              key: key, value: value, to: &container, ownerID: ownerID, touched: &touched)
+          }
+
+        case .remove(let target, let key):
+          try mutateTarget(
+            rootID: patch.controlID,
+            path: try path(for: target, in: patch),
+            touched: &touched
+          ) { container, ownerID, touched in
+            _ = try self.remove(key: key, from: &container)
+            touched.insert(ownerID)
+          }
+
+        case .move(let fromTarget, let fromKey, let toTarget, let toKey):
+          var moved: RufletValue = .null
+          try mutateTarget(
+            rootID: patch.controlID,
+            path: try path(for: fromTarget, in: patch),
+            touched: &touched
+          ) { container, ownerID, touched in
+            moved = try self.remove(key: fromKey, from: &container)
+            touched.insert(ownerID)
+          }
+          try mutateTarget(
+            rootID: patch.controlID,
+            path: try path(for: toTarget, in: patch),
+            touched: &touched
+          ) { container, ownerID, touched in
+            try self.insertExisting(key: toKey, value: moved, into: &container)
+            touched.insert(ownerID)
+          }
+
+        case .unsupported:
+          throw PatchApplicationError.unsupportedOperation
+        }
       }
+    } catch {
+      // A malformed network patch must never leave half of a move or a newly
+      // materialized subtree behind. Flet throws; the native session rejects
+      // the message and keeps its last coherent render tree.
+      nodes = previousNodes
+      lastChangedIDs = []
+      return false
     }
 
-    nodes[patch.controlID] = node
     return finishApply(touched: touched, previousNodes: previousNodes)
+  }
+
+  private func path(for target: Int, in patch: ControlPatch) throws -> [String] {
+    guard let path = patch.pathIndex[target] else {
+      throw PatchApplicationError.unknownTarget(target)
+    }
+    return path
+  }
+
+  /// Resolves a Flet tree-index path against the live tree on every operation,
+  /// exactly like Dart's `getPatchTarget()`. This matters when an earlier move
+  /// shifts a list index used by a later operation.
+  private func mutateTarget(
+    rootID: Int,
+    path: [String],
+    touched: inout Set<Int>,
+    mutation: (inout RufletValue, Int, inout Set<Int>) throws -> Void
+  ) throws {
+    var root: RufletValue = .controlRef(rootID)
+    try mutateTargetValue(
+      &root,
+      path: ArraySlice(path),
+      ownerID: rootID,
+      touched: &touched,
+      mutation: mutation)
+  }
+
+  private func mutateTargetValue(
+    _ value: inout RufletValue,
+    path: ArraySlice<String>,
+    ownerID: Int,
+    touched: inout Set<Int>,
+    mutation: (inout RufletValue, Int, inout Set<Int>) throws -> Void
+  ) throws {
+    if case .controlRef(let controlID) = value {
+      guard var control = nodes[controlID] else {
+        throw PatchApplicationError.missingControl(controlID)
+      }
+      var properties: RufletValue = .map(control.props)
+      try mutateTargetValue(
+        &properties,
+        path: path,
+        ownerID: controlID,
+        touched: &touched,
+        mutation: mutation)
+      guard let map = properties.mapValue else {
+        throw PatchApplicationError.invalidContainer
+      }
+      control.props = map
+      nodes[controlID] = control
+      return
+    }
+
+    guard let component = path.first else {
+      try mutation(&value, ownerID, &touched)
+      return
+    }
+    let remainder = path.dropFirst()
+
+    switch value {
+    case .map(var entries):
+      guard var child = entries[component] else {
+        throw PatchApplicationError.missingPathComponent(component)
+      }
+      try mutateTargetValue(
+        &child,
+        path: remainder,
+        ownerID: ownerID,
+        touched: &touched,
+        mutation: mutation)
+      entries[component] = child
+      value = .map(entries)
+
+    case .array(var items):
+      guard let index = Int(component), items.indices.contains(index) else {
+        throw PatchApplicationError.invalidListIndex(component)
+      }
+      var child = items[index]
+      try mutateTargetValue(
+        &child,
+        path: remainder,
+        ownerID: ownerID,
+        touched: &touched,
+        mutation: mutation)
+      items[index] = child
+      value = .array(items)
+
+    default:
+      throw PatchApplicationError.invalidContainer
+    }
+  }
+
+  private func replace(
+    key: RufletValue,
+    value: RufletValue,
+    in container: inout RufletValue,
+    ownerID: Int,
+    touched: inout Set<Int>
+  ) throws {
+    let transformed = materialize(value, touched: &touched)
+    switch container {
+    case .map(var entries):
+      guard let key = key.stringValue else { throw PatchApplicationError.invalidMapKey }
+      entries[key] = transformed
+      container = .map(entries)
+    case .array(var items):
+      guard let index = key.intValue, items.indices.contains(index) else {
+        throw PatchApplicationError.invalidListKey
+      }
+      items[index] = transformed
+      container = .array(items)
+    default:
+      throw PatchApplicationError.invalidContainer
+    }
+    touched.insert(ownerID)
+  }
+
+  private func add(
+    key: RufletValue,
+    value: RufletValue,
+    to container: inout RufletValue,
+    ownerID: Int,
+    touched: inout Set<Int>
+  ) throws {
+    let transformed = materialize(value, touched: &touched)
+    try insertExisting(key: key, value: transformed, into: &container)
+    touched.insert(ownerID)
+  }
+
+  private func insertExisting(
+    key: RufletValue,
+    value: RufletValue,
+    into container: inout RufletValue
+  ) throws {
+    switch container {
+    case .map(var entries):
+      guard let key = key.stringValue else { throw PatchApplicationError.invalidMapKey }
+      entries[key] = value
+      container = .map(entries)
+    case .array(var items):
+      guard let index = key.intValue, index >= 0, index <= items.count else {
+        throw PatchApplicationError.invalidListKey
+      }
+      items.insert(value, at: index)
+      container = .array(items)
+    default:
+      throw PatchApplicationError.invalidContainer
+    }
+  }
+
+  private func remove(key: RufletValue, from container: inout RufletValue) throws -> RufletValue {
+    switch container {
+    case .map(var entries):
+      guard let key = key.stringValue else { throw PatchApplicationError.invalidMapKey }
+      let value = entries.removeValue(forKey: key) ?? .null
+      container = .map(entries)
+      return value
+    case .array(var items):
+      guard let index = key.intValue, items.indices.contains(index) else {
+        throw PatchApplicationError.invalidListKey
+      }
+      let value = items.remove(at: index)
+      container = .array(items)
+      return value
+    default:
+      throw PatchApplicationError.invalidContainer
+    }
   }
 
   /// Writes a value the renderer produced locally, without a round trip.
@@ -309,4 +548,15 @@ public final class ControlStore: ObservableObject {
     visit(RufletWireID.page, parentDisabled: false, parentAdaptive: nil)
     return changed
   }
+}
+
+private enum PatchApplicationError: Error {
+  case unsupportedOperation
+  case unknownTarget(Int)
+  case missingControl(Int)
+  case missingPathComponent(String)
+  case invalidListIndex(String)
+  case invalidMapKey
+  case invalidListKey
+  case invalidContainer
 }
