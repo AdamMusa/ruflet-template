@@ -5,19 +5,49 @@ import RufletProtocol
 #if canImport(AVFoundation)
   @preconcurrency import AVFoundation
 #endif
-#if canImport(UIKit)
-  import UIKit
-#endif
-#if canImport(AppKit)
-  import AppKit
-#endif
 
-/// `Flashlight` — the camera torch.
+public enum FletFlashlightPlatform: Equatable {
+  case iOS
+  case unsupported
+}
+
+public enum FletFlashlightMethod: String, CaseIterable, Equatable {
+  case on
+  case off
+  case isAvailable = "is_available"
+}
+
+/// Narrow hardware boundary matching torch_light 1.1.0's iOS plugin. Keeping
+/// capture-device existence separate from `hasTorch` preserves its distinct
+/// error-versus-false behavior.
+@MainActor
+public protocol RufletFlashlightBackend: AnyObject {
+  var hasCaptureDevice: Bool { get }
+  var hasTorch: Bool { get }
+  func setTorchEnabled(_ enabled: Bool) throws
+}
+
 @MainActor
 public final class FlashlightService: RufletService {
   public static let wireType = "Flashlight"
 
-  public init() {}
+  private let platform: FletFlashlightPlatform
+  private let backend: RufletFlashlightBackend
+
+  public init() {
+    #if canImport(AVFoundation) && os(iOS)
+      platform = .iOS
+      backend = AVFoundationFlashlightBackend()
+    #else
+      platform = .unsupported
+      backend = UnavailableFlashlightBackend()
+    #endif
+  }
+
+  public init(platform: FletFlashlightPlatform, backend: RufletFlashlightBackend) {
+    self.platform = platform
+    self.backend = backend
+  }
 
   public func invoke(
     _ call: RufletMethodCall,
@@ -25,33 +55,71 @@ public final class FlashlightService: RufletService {
     context: RufletServiceContext,
     completion: @escaping RufletMethodCompletion
   ) {
-    #if canImport(AVFoundation) && os(iOS)
-      guard let device = AVCaptureDevice.default(for: .video), device.hasTorch else {
-        return call.name == "is_available"
-          ? completion(.success(.bool(false)))
-          : completion(.failure(RufletServiceError.unavailable("This device has no torch")))
-      }
+    // Flet checks `isMobilePlatform()` before dispatching the method switch,
+    // so even `is_available` throws on macOS rather than returning false.
+    guard platform == .iOS else {
+      return completion(.failure(RufletServiceError.platformUnsupported(
+        type: Self.wireType, method: call.name, platform: "Apple non-mobile")))
+    }
+    guard let method = FletFlashlightMethod(rawValue: call.name) else {
+      return completion(.failure(RufletServiceError.unsupportedMethod(
+        type: Self.wireType, method: call.name)))
+    }
 
-      switch call.name {
-      case "is_available":
-        completion(.success(.bool(true)))
-      case "on", "off":
-        do {
-          try device.lockForConfiguration()
-          device.torchMode = call.name == "on" ? .on : .off
-          device.unlockForConfiguration()
-          completion(.success(.null))
-        } catch {
-          completion(.failure(RufletServiceError.failed(error.localizedDescription)))
-        }
-      default:
-        completion(
-          .failure(RufletServiceError.unsupportedMethod(type: "Flashlight", method: call.name)))
+    switch method {
+    case .isAvailable:
+      // torch_light reports a plugin error when AVCaptureDevice itself is
+      // absent; `false` is reserved for a real video device without a torch.
+      guard backend.hasCaptureDevice else {
+        return completion(.failure(RufletServiceError.failed(
+          "Could not determine if the device has a torch; use a physical iOS device")))
       }
-    #else
-      call.name == "is_available"
-        ? completion(.success(.bool(false)))
-        : completion(.failure(RufletServiceError.unavailable("No torch on this platform")))
-    #endif
+      completion(.success(.bool(backend.hasTorch)))
+
+    case .on, .off:
+      let enabling = method == .on
+      guard backend.hasCaptureDevice else {
+        return completion(.failure(RufletServiceError.failed(
+          "Could not \(enabling ? "enable" : "disable") torch; use a physical iOS device")))
+      }
+      guard backend.hasTorch else {
+        return completion(.failure(RufletServiceError.unavailable("Torch is not available")))
+      }
+      do {
+        try backend.setTorchEnabled(enabling)
+        completion(.success(.null))
+      } catch {
+        completion(.failure(RufletServiceError.failed(
+          "Could not \(enabling ? "enable" : "disable") torch: \(error.localizedDescription)")))
+      }
+    }
   }
 }
+
+@MainActor
+private final class UnavailableFlashlightBackend: RufletFlashlightBackend {
+  let hasCaptureDevice = false
+  let hasTorch = false
+  func setTorchEnabled(_ enabled: Bool) throws {}
+}
+
+#if canImport(AVFoundation) && os(iOS)
+  @MainActor
+  private final class AVFoundationFlashlightBackend: RufletFlashlightBackend {
+    private let device: AVCaptureDevice?
+
+    init(device: AVCaptureDevice? = AVCaptureDevice.default(for: .video)) {
+      self.device = device
+    }
+
+    var hasCaptureDevice: Bool { device != nil }
+    var hasTorch: Bool { device?.hasTorch == true }
+
+    func setTorchEnabled(_ enabled: Bool) throws {
+      guard let device else { return }
+      try device.lockForConfiguration()
+      defer { device.unlockForConfiguration() }
+      device.torchMode = enabled ? .on : .off
+    }
+  }
+#endif
