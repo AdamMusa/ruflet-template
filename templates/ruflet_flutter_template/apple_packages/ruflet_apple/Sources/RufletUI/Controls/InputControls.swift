@@ -896,6 +896,7 @@ struct TextFieldControlView: View {
     // cannot disagree about which one painted the text.
     traits.textColor = fieldTextStyle.color
     traits.fontSize = fieldTextStyle.size
+    traits.caretScrollPadding = scrollPadding
     return traits
   }
 
@@ -1186,8 +1187,7 @@ struct SearchBarControlView: View {
         if viewOpen {
           viewOpen = false
           if let value = call.argument("text")?.stringValue {
-            events.setLocal(node.id, "value", .string(value))
-            events.update(node.id, ["value": .string(value)])
+            synchronize(value)
           }
         }
         completion(.success(.null))
@@ -1246,7 +1246,12 @@ struct SearchBarControlView: View {
           traits: barTraits,
           onTap: { events.fire(node, "tap") },
           onTapOutside: { events.fire(node, "tap_outside_bar") },
-          onSubmit: { events.fire(node, "submit", data: .string($0)) })
+          onSubmit: {
+            let value = RufletSearchBarDefaults.capitalized(
+              $0, mode: node.string("capitalization"))
+            synchronize(value)
+            events.fire(node, "submit", data: .string(value))
+          })
           .modifier(SearchBarHint(node: node, showing: (node.string("value") ?? "").isEmpty))
       #else
         TextField(
@@ -1300,13 +1305,64 @@ struct SearchBarControlView: View {
     if let overlay = MaterialPalette.color(node.string("bar_overlay_color")) {
       traits.selectionColor = overlay
     }
+    traits.caretScrollPadding = RufletSearchBarDefaults.scrollPadding(node)
     return traits
   }
 
   private var searchValue: Binding<String> {
     Binding(
       get: { node.string("value") ?? "" },
-      set: { events.commit(node, value: .string($0)) })
+      set: {
+        let value = RufletSearchBarDefaults.capitalized(
+          $0, mode: node.string("capitalization"))
+        synchronize(value)
+        events.fire(node, "change", data: .string(value))
+      })
+  }
+
+  /// SearchController updates its backing property even when Ruby did not
+  /// attach `on_change`. Event registration only gates the event itself.
+  private func synchronize(_ value: String) {
+    let transformed = RufletSearchBarDefaults.capitalized(
+      value, mode: node.string("capitalization"))
+    events.setLocal(node.id, "value", .string(transformed))
+    events.update(node.id, ["value": .string(transformed)])
+  }
+}
+
+/// Source-derived SearchBar controller behavior from Flet 0.80.5.
+///
+/// These are controller semantics, not visual tuning: Flutter applies the
+/// capitalization mode before synchronizing `value`, and SearchBar's
+/// `scrollPadding` constructor keeps twenty logical pixels clear by default.
+enum RufletSearchBarDefaults {
+  static func scrollPadding(_ node: ControlNode) -> EdgeInsets {
+    ControlProps.edgeInsets(node.props["bar_scroll_padding"])
+      ?? EdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 20)
+  }
+
+  static func capitalized(_ text: String, mode: String?) -> String {
+    switch mode?.lowercased() {
+    case "characters":
+      return text.uppercased()
+    case "words":
+      return text.split(whereSeparator: { $0.isWhitespace }).map { substring in
+        let word = String(substring)
+        guard let first = word.first else { return word }
+        return String(first).uppercased() + word.dropFirst().lowercased()
+      }.joined(separator: " ")
+    case "sentences":
+      // The pinned Dart client splits at `. ` and lowercases the remainder of
+      // each sentence. Preserve the separator instead of normalizing spaces.
+      return text.components(separatedBy: ". ").map { sentence in
+        guard let first = sentence.drop(while: { $0.isWhitespace }).first else {
+          return sentence
+        }
+        return String(first).uppercased() + sentence.dropFirst().lowercased()
+      }.joined(separator: ". ")
+    default:
+      return text
+    }
   }
 }
 

@@ -61,6 +61,52 @@ final class RufletInputParityTests: XCTestCase {
     XCTAssertEqual(DropdownMenuDefaults.menuHeight(explicit), 280)
   }
 
+  func testSearchBarUsesFlutterScrollPaddingWithoutChangingBarLayout() {
+    let omitted = RufletSearchBarDefaults.scrollPadding(
+      ControlNode(id: 1, type: "SearchBar"))
+    XCTAssertEqual(omitted.top, 20)
+    XCTAssertEqual(omitted.leading, 20)
+    XCTAssertEqual(omitted.bottom, 20)
+    XCTAssertEqual(omitted.trailing, 20)
+
+    let explicit = RufletSearchBarDefaults.scrollPadding(ControlNode(
+      id: 2,
+      type: "SearchBar",
+      props: [
+        "bar_scroll_padding": .map([
+          "top": .double(1), "left": .double(2),
+          "bottom": .double(3), "right": .double(4),
+        ])
+      ]))
+    XCTAssertEqual(explicit.top, 1)
+    XCTAssertEqual(explicit.leading, 2)
+    XCTAssertEqual(explicit.bottom, 3)
+    XCTAssertEqual(explicit.trailing, 4)
+  }
+
+  func testSearchBarCapitalizationMatchesPinnedFletController() {
+    XCTAssertEqual(
+      RufletSearchBarDefaults.capitalized("ruflet native", mode: "characters"),
+      "RUFLET NATIVE")
+    XCTAssertEqual(
+      RufletSearchBarDefaults.capitalized("rUFLET   nATIVE", mode: "words"),
+      "Ruflet Native")
+    XCTAssertEqual(
+      RufletSearchBarDefaults.capitalized("hELLO. nATIVE WORLD", mode: "sentences"),
+      "Hello. Native world")
+    XCTAssertEqual(
+      RufletSearchBarDefaults.capitalized("Keep My Case", mode: "none"),
+      "Keep My Case")
+  }
+
+  func testSearchBarCarriesCaretPaddingThroughNativeTextTraits() {
+    var traits = RufletTextInputTraits()
+    traits.caretScrollPadding = RufletSearchBarDefaults.scrollPadding(
+      ControlNode(id: 1, type: "SearchBar"))
+    XCTAssertEqual(traits.caretScrollPadding.top, 20)
+    XCTAssertEqual(traits.caretScrollPadding.trailing, 20)
+  }
+
   func testAutoCompleteSuggestionsAreParsedFromFletValueMaps() {
     let store = ControlStore()
     let value = RufletValue.array([

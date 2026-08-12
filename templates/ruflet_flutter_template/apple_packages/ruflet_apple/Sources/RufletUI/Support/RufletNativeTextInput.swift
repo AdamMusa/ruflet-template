@@ -46,6 +46,9 @@ struct RufletTextInputTraits {
   /// have a paragraph-style counterpart are carried.
   var strutHeight: CGFloat?
   var strutLeading: CGFloat?
+  /// Margin kept clear around the caret while an enclosing scroll surface
+  /// follows keyboard focus. SearchBar forwards Flutter's `scrollPadding`.
+  var caretScrollPadding = EdgeInsets()
 
   /// The caret colour Flutter resolves: the error colour wins while the field
   /// is in error, then `cursor_color`, then the platform tint.
@@ -285,6 +288,27 @@ enum RufletTextSelection {
       positionCaret()
     }
 
+    /// UIKit does not expose Flutter's `scrollPadding` on UITextField. The
+    /// equivalent operation is asking the nearest enclosing scroll view to
+    /// reveal an expanded caret rectangle whenever selection or layout moves
+    /// it. This affects keyboard visibility only, never the field's layout.
+    func scrollCaretToVisible() {
+      guard isFirstResponder, let range = selectedTextRange else { return }
+      var rect = caretRect(for: range.end)
+      rect.origin.x -= traits.caretScrollPadding.leading
+      rect.origin.y -= traits.caretScrollPadding.top
+      rect.size.width += traits.caretScrollPadding.leading + traits.caretScrollPadding.trailing
+      rect.size.height += traits.caretScrollPadding.top + traits.caretScrollPadding.bottom
+      var ancestor = superview
+      while let view = ancestor {
+        if let scroll = view as? UIScrollView {
+          scroll.scrollRectToVisible(convert(rect, to: scroll), animated: true)
+          return
+        }
+        ancestor = view.superview
+      }
+    }
+
     func positionCaret() {
       guard drawsOwnCaret else { return }
       guard isFirstResponder, let range = selectedTextRange, range.isEmpty else {
@@ -511,6 +535,9 @@ enum RufletTextSelection {
         parent.focused = true
         parent.onTap()
         reportSelection(sender)
+        DispatchQueue.main.async {
+          (sender as? RufletTextFieldView)?.scrollCaretToVisible()
+        }
       }
 
       /// `always_call_on_tap` reports a tap on a field that already has focus,
@@ -557,6 +584,7 @@ enum RufletTextSelection {
       func textFieldDidChangeSelection(_ textField: UITextField) {
         reportSelection(textField)
         (textField as? RufletTextFieldView)?.positionCaret()
+        (textField as? RufletTextFieldView)?.scrollCaretToVisible()
       }
 
       private func reportSelection(_ textField: UITextField) {
@@ -727,7 +755,30 @@ enum RufletTextSelection {
         if let selection = traits.selectionColor {
           editor.selectedTextAttributes = [.backgroundColor: NSColor(selection)]
         }
+        scrollCaretToVisible(editor, padding: traits.caretScrollPadding)
       }
+    }
+
+    /// AppKit's field editor owns the insertion point. Expanding its selected
+    /// range rectangle before scrolling provides the same non-layout caret
+    /// margin as Flutter's SearchBar `scrollPadding`.
+    private func scrollCaretToVisible(
+      _ editor: NSTextView, padding: EdgeInsets
+    ) {
+      let range = editor.selectedRange()
+      guard range.location != NSNotFound else { return }
+      let glyph = editor.layoutManager?.glyphRange(
+        forCharacterRange: NSRange(location: range.location, length: 0),
+        actualCharacterRange: nil)
+      guard let glyph, let manager = editor.layoutManager,
+        let container = editor.textContainer
+      else { return }
+      var rect = manager.boundingRect(forGlyphRange: glyph, in: container)
+      rect.origin.x -= padding.leading
+      rect.origin.y -= padding.top
+      rect.size.width += padding.leading + padding.trailing
+      rect.size.height += padding.top + padding.bottom
+      editor.scrollToVisible(rect)
     }
 
     private static func alignment(_ value: String?) -> NSTextAlignment {
