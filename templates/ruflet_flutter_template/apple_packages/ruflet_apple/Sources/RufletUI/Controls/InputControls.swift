@@ -1884,14 +1884,20 @@ struct DropdownControlView: View {
   @State private var focused = false
   @State private var selection = NSRange(location: 0, length: 0)
   @State private var menuPresented = false
+  @State private var localValue = ""
+  @State private var localText = ""
+
+  init(node: ControlNode) {
+    self.node = node
+    _localValue = State(initialValue: node.string("value") ?? "")
+    _localText = State(initialValue: node.string("text") ?? "")
+  }
 
   var body: some View {
     let options = optionNodes
 
     fieldContent(options)
-    .padding(DropdownMenuDefaults.contentPadding(node))
-    .background(RoundedRectangle(cornerRadius: fieldRadius).fill(fieldBackground))
-    .overlay(borderStroke)
+    .modifier(DropdownFieldAppearance(node: node, focused: focused))
     // DropdownMenu.width sizes the field. `menu_width` belongs only to the
     // popup surface and must never resize the field itself.
     .modifier(DropdownFieldWidth(node: node))
@@ -1902,9 +1908,17 @@ struct DropdownControlView: View {
     }
     .onAppear {
       focused = node.bool("autofocus") == true && isEditable
+      localValue = node.string("value") ?? ""
+      localText = node.string("text") ?? validatedLabel(for: localValue)
       synchronizeSelectionFromWire(initial: true)
     }
-    .onChange(of: node.string("value")) { _ in synchronizeSelectionFromWire(initial: false) }
+    .onChange(of: node.string("value")) { value in
+      localValue = value ?? ""
+      synchronizeSelectionFromWire(initial: false)
+    }
+    .onChange(of: node.string("text")) { text in
+      localText = text ?? validatedLabel(for: localValue)
+    }
     .onChange(of: optionSignature) { _ in synchronizeSelectionFromWire(initial: false) }
     .onChange(of: focused) { events.fire(node, $0 ? "focus" : "blur") }
     .rufletCommandHandler(node.id) { call, completion in
@@ -2061,39 +2075,15 @@ struct DropdownControlView: View {
     }
   }
 
-  private var fieldBackground: Color {
-    guard node.bool("filled") == true else { return .clear }
-    return MaterialPalette.color(node.string("fill_color") ?? "surfacecontainerhighest",
-                                 default: .clear)
-  }
-
-  private var fieldRadius: CGFloat {
-    DropdownMenuDefaults.fieldCornerRadius(node)
-  }
-
-  @ViewBuilder
-  private var borderStroke: some View {
-    if DropdownMenuDefaults.borderKind(node) == .outline {
-      RoundedRectangle(cornerRadius: fieldRadius)
-        .strokeBorder(
-          DropdownMenuDefaults.borderColor(node, focused: focused),
-          lineWidth: DropdownMenuDefaults.borderWidth(node, focused: focused))
-    } else if DropdownMenuDefaults.borderKind(node) == .underline {
-      Rectangle()
-        .fill(DropdownMenuDefaults.borderColor(node, focused: focused))
-        .frame(height: DropdownMenuDefaults.borderWidth(node, focused: focused))
-        .frame(maxHeight: .infinity, alignment: .bottom)
-    }
-  }
-
   private var fieldTextStyle: RufletTextStyle {
     DropdownMenuDefaults.textStyle(node, disabled: node.bool("disabled") == true)
   }
 
   private var dropdownText: Binding<String> {
     Binding(
-      get: { node.string("text") ?? validatedLabel(for: node.string("value") ?? "") },
+      get: { localText },
       set: {
+        localText = $0
         events.setLocal(node.id, "text", .string($0))
         events.update(node.id, ["text": .string($0)])
         events.fire(node, "text_change", data: .string($0))
@@ -2103,6 +2093,11 @@ struct DropdownControlView: View {
   private func select(_ option: ControlNode) {
     let key = option.string("key") ?? option.string("text") ?? ""
     let text = option.string("text") ?? key
+    // Apple controls must acknowledge the tap in the same frame. The local
+    // state is then reconciled with the authoritative wire patch below; it is
+    // never held hostage by the backend/event round trip.
+    localValue = key
+    localText = text
     RufletDropdownEvents.select(key: key, text: text, on: node, to: events)
   }
 
@@ -2119,8 +2114,8 @@ struct DropdownControlView: View {
   }
 
   private var selectedText: String {
-    if let text = node.string("text"), !text.isEmpty { return text }
-    let label = validatedLabel(for: node.string("value") ?? "")
+    if !localText.isEmpty { return localText }
+    let label = validatedLabel(for: localValue)
     return label.isEmpty ? (node.string("hint_text") ?? "") : label
   }
 
@@ -2143,11 +2138,17 @@ struct DropdownControlView: View {
   /// value is cleared on the first build.
   private func synchronizeSelectionFromWire(initial: Bool) {
     guard let value = node.string("value"), !value.isEmpty else {
-      if !initial { events.setLocal(node.id, "text", .string("")) }
+      if !initial {
+        localValue = ""
+        localText = ""
+        events.setLocal(node.id, "text", .string(""))
+      }
       return
     }
     let label = validatedLabel(for: value)
+    localValue = value
     if label.isEmpty || !initial || node.string("text") == nil {
+      localText = label
       events.setLocal(node.id, "text", .string(label))
     }
   }
@@ -2192,6 +2193,18 @@ enum DropdownMenuDefaults {
   static let defaultMenuCornerRadius: CGFloat = 4
   static let defaultMenuVerticalPadding: CGFloat = 8
   static let defaultOptionTextSize: CGFloat = 14
+
+  /// Constructor defaults remain available to the semantic model, but an
+  /// omitted decoration must not paint an Android/Material text-field shell
+  /// around Apple's native Menu. Only an appearance explicitly supplied by
+  /// the application is translated into SwiftUI decoration.
+  static func hasExplicitFieldAppearance(_ node: ControlNode) -> Bool {
+    [
+      "border", "border_color", "border_width", "border_radius",
+      "focused_border_color", "focused_border_width", "filled", "fill_color",
+      "content_padding", "dense", "collapsed",
+    ].contains { node.props[$0] != nil }
+  }
 
   /// DropdownOption is structural, so its parent owns both visibility and
   /// validity filtering. This mirrors Dart's visible `children("options")`
@@ -2382,6 +2395,42 @@ enum DropdownMenuDefaults {
   }
 }
 
+private struct DropdownFieldAppearance: ViewModifier {
+  let node: ControlNode
+  let focused: Bool
+
+  func body(content: Content) -> some View {
+    guard DropdownMenuDefaults.hasExplicitFieldAppearance(node) else {
+      return AnyView(
+        content
+          .frame(minHeight: 44)
+          .contentShape(Rectangle()))
+    }
+
+    let radius = DropdownMenuDefaults.fieldCornerRadius(node)
+    let background = node.bool("filled") == true
+      ? MaterialPalette.color(
+        node.string("fill_color") ?? "surfacecontainerhighest", default: .clear)
+      : Color.clear
+    return AnyView(
+      content
+        .padding(DropdownMenuDefaults.contentPadding(node))
+        .background(RoundedRectangle(cornerRadius: radius).fill(background))
+        .overlay(alignment: .bottom) {
+          if DropdownMenuDefaults.borderKind(node) == .outline {
+            RoundedRectangle(cornerRadius: radius)
+              .strokeBorder(
+                DropdownMenuDefaults.borderColor(node, focused: focused),
+                lineWidth: DropdownMenuDefaults.borderWidth(node, focused: focused))
+          } else if DropdownMenuDefaults.borderKind(node) == .underline {
+            Rectangle()
+              .fill(DropdownMenuDefaults.borderColor(node, focused: focused))
+              .frame(height: DropdownMenuDefaults.borderWidth(node, focused: focused))
+          }
+        })
+  }
+}
+
 private struct DropdownFieldWidth: ViewModifier {
   let node: ControlNode
   func body(content: Content) -> some View {
@@ -2455,6 +2504,12 @@ struct DropdownM2ControlView: View {
   @Environment(\.colorScheme) private var colorScheme
   @FocusState private var focused: Bool
   @State private var menuPresented = false
+  @State private var localValue = ""
+
+  init(node: ControlNode) {
+    self.node = node
+    _localValue = State(initialValue: node.string("value") ?? "")
+  }
 
   var body: some View {
     Button {
@@ -2489,7 +2544,11 @@ struct DropdownM2ControlView: View {
     .popover(isPresented: $menuPresented, attachmentAnchor: .rect(.bounds)) {
       dropdownPopup
     }
-    .onAppear { focused = node.bool("autofocus") == true }
+    .onAppear {
+      focused = node.bool("autofocus") == true
+      localValue = node.string("value") ?? ""
+    }
+    .onChange(of: node.string("value")) { localValue = $0 ?? "" }
     .onChange(of: focused) { events.fire(node, $0 ? "focus" : "blur") }
     .rufletCommandHandler(node.id) { call, completion in
       guard call.name == "focus" else {
@@ -2600,6 +2659,7 @@ struct DropdownM2ControlView: View {
 
   private func select(_ option: ControlNode) {
     let value = option.string("key") ?? option.string("text") ?? String(option.id)
+    localValue = value
     RufletDropdownM2Events.select(value: value, option: option, on: node, to: events)
   }
 
@@ -2610,9 +2670,9 @@ struct DropdownM2ControlView: View {
 
   @ViewBuilder
   private var selectedLabel: some View {
-    if let value = node.string("value"),
+    if !localValue.isEmpty,
       let option = optionNodes.first(where: {
-        ($0.string("key") ?? $0.string("text") ?? String($0.id)) == value
+        ($0.string("key") ?? $0.string("text") ?? String($0.id)) == localValue
       })
     {
       optionLabel(option)

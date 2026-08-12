@@ -226,6 +226,9 @@ final class RufletInputParityTests: XCTestCase {
     XCTAssertEqual(DropdownMenuDefaults.defaultTextSize, 16)
     XCTAssertEqual(DropdownMenuDefaults.defaultMenuElevation, 3)
     XCTAssertEqual(DropdownMenuDefaults.defaultMenuCornerRadius, 4)
+    XCTAssertFalse(DropdownMenuDefaults.hasExplicitFieldAppearance(dropdown))
+    XCTAssertTrue(DropdownMenuDefaults.hasExplicitFieldAppearance(ControlNode(
+      id: 4, type: "Dropdown", props: ["border_width": .double(1)])))
   }
 
   func testDropdownDefaultsKeepSearchAndFilteringDistinct() {

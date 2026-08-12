@@ -61,6 +61,17 @@ final class ChartsExtensionParityTests: XCTestCase {
     let defaults = ChartControlSemantics.axisDefaults(axis)
     XCTAssertEqual(defaults.titleSize, 40)
     XCTAssertEqual(defaults.labelSize, 40)
+    XCTAssertEqual(ChartControlSemantics.axisReservedExtent(axis, hasTitle: true), 80)
+    XCTAssertEqual(ChartControlSemantics.axisReservedExtent(axis, hasTitle: false), 40)
+
+    let hidden = ControlNode(
+      id: 4, type: "ChartAxis",
+      props: [
+        "show_labels": .bool(false), "title_size": .double(16),
+        "label_size": .double(22),
+      ])
+    XCTAssertEqual(ChartControlSemantics.axisReservedExtent(hidden, hasTitle: true), 16)
+    XCTAssertEqual(ChartControlSemantics.axisReservedExtent(hidden, hasTitle: false), 0)
   }
 
   func testInteractionPayloadsMatchPinnedFletChartEventMaps() {
@@ -190,6 +201,14 @@ final class ChartsExtensionParityTests: XCTestCase {
   }
 
   func testSelectedTooltipIndicatorsMatchPinnedFamilyRules() {
+    XCTAssertEqual(
+      ChartControlSemantics.tooltipBackgroundName(
+        for: "CandlestickChart", explicit: nil),
+      "#FFFFECEF")
+    XCTAssertEqual(
+      ChartControlSemantics.tooltipBackgroundName(
+        for: "CandlestickChart", explicit: "#123456"),
+      "#123456")
     XCTAssertFalse(ChartInteractionSemantics.showsSelectedTooltip(
       chartType: "LineChart", interactive: true, selected: true,
       showTooltip: true, hasTooltip: true))

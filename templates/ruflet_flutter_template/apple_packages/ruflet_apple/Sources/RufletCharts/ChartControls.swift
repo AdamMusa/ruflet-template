@@ -39,6 +39,13 @@ public struct ChartControlSemantics {
       node.bool("show_max") ?? true)
   }
 
+  static func axisReservedExtent(_ node: ControlNode?, hasTitle: Bool) -> CGFloat {
+    guard let node else { return 0 }
+    let defaults = axisDefaults(node)
+    return (defaults.showLabels ? defaults.labelSize : 0)
+      + (hasTitle ? defaults.titleSize : 0)
+  }
+
   /// `title_size` and `label_size` are fl_chart reserved-layout extents, not
   /// typography. The text keeps the style of the nested Flet Text control.
   static func contentFontSize(
@@ -66,6 +73,13 @@ public struct ChartControlSemantics {
       CGFloat(map?["horizontal_offset"]?.doubleValue ?? 0),
       map?["fit_inside_horizontally"]?.boolValue ?? false,
       map?["fit_inside_vertically"]?.boolValue ?? false)
+  }
+
+  static func tooltipBackgroundName(for chartType: String, explicit: String?) -> String {
+    if let explicit { return explicit }
+    // `parseCandlestickTouchTooltipData()` uses Color(0xFFFFECEF), while the
+    // other fl_chart families retain their own neutral tooltip surface.
+    return chartType == "CandlestickChart" ? "#FFFFECEF" : "secondary"
   }
 
   static func rotationDegrees(for node: ControlNode) -> Double {
@@ -463,9 +477,14 @@ public struct ChartControlView: View {
     tooltip.translateBy(x: -rect.midX, y: -rect.midY)
     tooltip.fill(
       Path(roundedRect: rect, cornerRadius: 4),
-      with: .color(MaterialPalette.color(node.map("tooltip")?["bgcolor"]?.stringValue,
-                                         default: .secondary)))
-    tooltip.draw(Text(label).font(.caption).foregroundColor(.white), at: CGPoint(x: rect.midX, y: rect.midY))
+      with: .color(MaterialPalette.color(
+        ChartControlSemantics.tooltipBackgroundName(
+          for: node.type, explicit: node.map("tooltip")?["bgcolor"]?.stringValue),
+        default: .secondary)))
+    let textColor: Color = node.type == "CandlestickChart" ? .primary : .white
+    tooltip.draw(
+      Text(label).font(.caption).foregroundColor(textColor),
+      at: CGPoint(x: rect.midX, y: rect.midY))
   }
 
   private struct SelectedTooltip {
@@ -519,9 +538,7 @@ public struct ChartControlView: View {
   ) -> [SelectedTooltip] {
     let groups = barGroups
     guard !groups.isEmpty else { return [] }
-    let chart = CGRect(
-      x: plot.minX + 38, y: plot.minY + 4,
-      width: max(plot.width - 42, 1), height: max(plot.height - 32, 1))
+    let chart = chartPlotRect(in: plot)
     let dataMinY = groups.flatMap(\.rods).map { min($0.fromY, $0.toY) }.min() ?? 0
     let dataMaxY = groups.flatMap(\.rods).map { max($0.fromY, $0.toY) }.max() ?? 1
     let minY = node.double("min_y") ?? min(0, dataMinY)
@@ -989,9 +1006,7 @@ public struct ChartControlView: View {
     let groups = barGroups
     guard !groups.isEmpty else { return }
 
-    let chart = CGRect(
-      x: plot.minX + 38, y: plot.minY + 4,
-      width: max(plot.width - 42, 1), height: max(plot.height - 32, 1))
+    let chart = chartPlotRect(in: plot)
     let dataMinY = groups.flatMap(\.rods).map { min($0.fromY, $0.toY) }.min() ?? 0
     let dataMaxY = groups.flatMap(\.rods).map { max($0.fromY, $0.toY) }.max() ?? 1
     let minY = node.double("min_y") ?? min(0, dataMinY)
@@ -1015,10 +1030,12 @@ public struct ChartControlView: View {
       context.stroke(
         grid, with: .color(.secondary.opacity(0.18)),
         style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
-      let value = minY + spanY * fraction
-      context.draw(
-        Text(value.formatted(.number.precision(.fractionLength(0)))).font(.caption2),
-        at: CGPoint(x: chart.minX - 6, y: lineY), anchor: .trailing)
+      if axisShowsLabels(forKey: "left_axis") {
+        let value = minY + spanY * fraction
+        context.draw(
+          Text(value.formatted(.number.precision(.fractionLength(0)))).font(.caption2),
+          at: CGPoint(x: chart.minX - 6, y: lineY), anchor: .trailing)
+      }
     }
 
     let evenlySpaced = node.double("min_x") == nil && node.double("max_x") == nil
@@ -1085,33 +1102,27 @@ public struct ChartControlView: View {
         }
         if !group.vertical { rodX += rod.width + group.barsSpace }
       }
-      if axisShowsLabels(forKey: "bottom_axis"), let label = bottomAxisLabel(for: group.x) {
-        context.draw(
-          Text(label.text).font(.system(size: label.fontSize)),
-          at: CGPoint(x: centreX, y: chart.maxY + 8), anchor: .top)
-      }
-    }
-
-    if let title = axisTitle(forKey: "left_axis") {
-      var rotated = context
-      rotated.translateBy(x: plot.minX + 6, y: chart.midY)
-      rotated.rotate(by: .degrees(-90))
-      rotated.draw(
-        Text(title).font(axisTitleFont(forKey: "left_axis")), at: .zero, anchor: .center)
-    }
-    if let title = axisTitle(forKey: "right_axis") {
-      var rotated = context
-      rotated.translateBy(x: chart.maxX - 6, y: chart.midY)
-      rotated.rotate(by: .degrees(90))
-      rotated.draw(
-        Text(title).font(axisTitleFont(forKey: "right_axis")), at: .zero, anchor: .center)
-    }
-    if let title = axisTitle(forKey: "top_axis") {
-      context.draw(
-        Text(title).font(axisTitleFont(forKey: "top_axis")),
-        at: CGPoint(x: chart.midX, y: chart.minY + 8))
     }
     drawGridAndBorder(in: &context, chart: chart)
+  }
+
+  /// fl_chart reserves `label_size` and `title_size` outside the plot. Those
+  /// values are layout extents, not font sizes. Computing the plot from them
+  /// prevents long labels from being painted over the series or one another.
+  private func chartPlotRect(in plot: CGRect) -> CGRect {
+    func extent(_ key: String) -> CGFloat {
+      guard let id = node.controlID(forKey: key), let axis = store.node(id) else { return 0 }
+      return ChartControlSemantics.axisReservedExtent(
+        axis, hasTitle: axis.controlID(forKey: "title") != nil)
+    }
+    let left = extent("left_axis")
+    let right = extent("right_axis")
+    let top = extent("top_axis")
+    let bottom = extent("bottom_axis")
+    return CGRect(
+      x: plot.minX + left, y: plot.minY + top,
+      width: max(plot.width - left - right, 1),
+      height: max(plot.height - top - bottom, 1))
   }
 
   /// `horizontal_grid_lines` and `vertical_grid_lines` are FlLine maps —
