@@ -35,6 +35,7 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:ruby_runtime/ruflet_runtime.dart';
 
 import 'package:flet_webview/flet_webview.dart' as ruflet_webview;
+import 'native_renderer.dart';
 
 const bool isProduction = bool.fromEnvironment('dart.vm.product');
 const String kConfiguredClientUrl = String.fromEnvironment(
@@ -127,17 +128,27 @@ Future<void> main() async {
     extension.ensureInitialized();
   }
 
+  var pageUrl = resolveBackendUrl();
+  if (usesNativeAppleRenderer) {
+    if (pageUrl.isEmpty) {
+      try {
+        pageUrl = (await RufletRuntime.serverUrl()).toString();
+      } catch (_) {
+        // Keep the Flutter error path below. It reports the runtime failure in
+        // the same way as a non-Apple self-contained build.
+      }
+    }
+    if (pageUrl.isNotEmpty && await showNativeAppleRenderer(pageUrl)) {
+      return;
+    }
+  }
+
   // The embedded runtime is deliberately not awaited here. Platforms that can
   // start the VM before the Flutter engine exists have already been booting it
   // while these extensions initialized, and blocking startup on it would hand
   // back exactly the time that parallelism buys. TemplateApp resolves the URL
   // from the widget tree and shows a splash until it arrives.
-  runApp(
-    TemplateApp(
-      pageUrl: resolveBackendUrl(),
-      extensions: extensions,
-    ),
-  );
+  runApp(TemplateApp(pageUrl: pageUrl, extensions: extensions));
 }
 
 class TemplateApp extends StatefulWidget {
@@ -187,7 +198,9 @@ class _TemplateAppState extends State<TemplateApp> {
       _watchForServerErrors();
     } catch (error) {
       if (!mounted) return;
-      setState(() => _startupError = 'Failed to start embedded Ruflet.\n$error');
+      setState(
+        () => _startupError = 'Failed to start embedded Ruflet.\n$error',
+      );
     }
   }
 
@@ -268,4 +281,3 @@ String? parseBackendUrl(String value) {
   if (match == null) return null;
   return normalizePageUrlForPlatform(match.group(0)!);
 }
-

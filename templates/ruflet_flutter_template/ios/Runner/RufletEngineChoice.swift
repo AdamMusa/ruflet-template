@@ -85,6 +85,12 @@ enum RufletEngineChoice {
     return true
   }
 
+  /// Converts the page URL resolved by Dart into the websocket endpoint used
+  /// by the native renderer. Dart remains the owner of self/server mode.
+  static func websocketURL(from raw: String) -> URL? {
+    URL(string: raw).flatMap(WebSocketTransport.endpoint(pageURL:))
+  }
+
   /// The optional extension modules this target links.
   ///
   /// Each Flet extension has its own Swift product. As those products are

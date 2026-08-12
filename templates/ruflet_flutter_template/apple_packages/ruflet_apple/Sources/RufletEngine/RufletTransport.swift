@@ -40,6 +40,27 @@ public final class WebSocketTransport: NSObject, RufletTransport {
     URL(string: "ws://\(host):\(port)/ws")!
   }
 
+  /// Converts the same HTTP(S) page URL accepted by FletApp into Ruflet's
+  /// WebSocket endpoint. Already-normalized WS(S) endpoints are preserved.
+  public static func endpoint(pageURL: URL) -> URL? {
+    guard var components = URLComponents(url: pageURL, resolvingAgainstBaseURL: false),
+      let scheme = components.scheme?.lowercased()
+    else { return nil }
+    switch scheme {
+    case "http": components.scheme = "ws"
+    case "https": components.scheme = "wss"
+    case "ws", "wss": break
+    default: return nil
+    }
+    let path = components.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+    if path.split(separator: "/").last?.lowercased() != "ws" {
+      components.path = path.isEmpty ? "/ws" : "/\(path)/ws"
+    }
+    components.query = nil
+    components.fragment = nil
+    return components.url
+  }
+
   public func connect() {
     queue.async { [weak self] in
       guard let self, self.task == nil else { return }

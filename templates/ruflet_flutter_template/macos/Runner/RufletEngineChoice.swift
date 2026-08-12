@@ -85,6 +85,10 @@ enum RufletEngineChoice {
     return true
   }
 
+  static func websocketURL(from raw: String) -> URL? {
+    URL(string: raw).flatMap(WebSocketTransport.endpoint(pageURL:))
+  }
+
   /// The optional service modules this target links.
   static var extensions: [any RufletExtension.Type] {
     var extensions: [any RufletExtension.Type] = []

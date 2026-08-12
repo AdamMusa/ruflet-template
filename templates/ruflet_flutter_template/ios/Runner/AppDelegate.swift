@@ -3,17 +3,13 @@ import RufletApple
 import SwiftUI
 import UIKit
 
-/// iOS renders through the Ruflet Apple engine.
-///
-/// The engine choice is settled by which runner is being built, not by a flag:
-/// this file only ever compiles for iOS, and `android/`, `web/`, `linux/` and
-/// `windows/` keep their Flutter runners untouched. The Ruby application is the
-/// same either way — both engines speak the same Ruflet protocol.
-///
-/// Flutter is still initialised, because the plugins registered with it are
-/// what start the embedded mruby VM. It simply never presents a view.
+/// Flutter owns startup on every platform. The selected Dart entrypoint resolves
+/// either the embedded or configured backend URL, then calls this Runner over a
+/// method channel when iOS should present Ruflet's native Apple renderer.
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
+  private var nativeRendererChannel: FlutterMethodChannel?
+
   static let supportsNativeMultiView: Bool = {
     guard
       let manifest = Bundle.main.object(forInfoDictionaryKey: "UIApplicationSceneManifest")
@@ -22,8 +18,19 @@ import UIKit
     return manifest["UIApplicationSupportsMultipleScenes"] as? Bool ?? false
   }()
 
-  @MainActor static let nativeApplication = RufletMultiViewApplication(
-    extensions: RufletEngineChoice.extensions)
+  @MainActor private static var sharedNativeApplication: RufletMultiViewApplication?
+
+  @MainActor static func nativeApplication(serverURL: URL) -> RufletMultiViewApplication {
+    if let sharedNativeApplication { return sharedNativeApplication }
+    let application = RufletMultiViewApplication(
+      serverURL: serverURL, extensions: RufletEngineChoice.extensions)
+    sharedNativeApplication = application
+    return application
+  }
+
+  @MainActor static func disconnectNativeScene(sessionIdentifier: String) {
+    sharedNativeApplication?.disconnect(sessionIdentifier: sessionIdentifier)
+  }
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -33,65 +40,97 @@ import UIKit
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    let channel = FlutterMethodChannel(
+      name: "ruflet/native_renderer",
+      binaryMessenger: engineBridge.applicationRegistrar.messenger())
+    nativeRendererChannel = channel
+    channel.setMethodCallHandler { call, result in
+      guard call.method == "show" else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      guard RufletEngineChoice.usesNativeRenderer else {
+        result(false)
+        return
+      }
+      let arguments = call.arguments as? [String: Any]
+      let rawURL = arguments?["pageUrl"] as? String ?? ""
+      guard let serverURL = RufletEngineChoice.websocketURL(from: rawURL) else {
+        result(
+          FlutterError(
+            code: "invalid_page_url", message: "Native renderer requires a valid Ruflet page URL.",
+            details: rawURL))
+        return
+      }
+      DispatchQueue.main.async {
+        let shown = UIApplication.shared.connectedScenes.compactMap {
+          $0.delegate as? RufletSceneDelegate
+        }.reduce(false) { shown, delegate in
+          delegate.showNativeRenderer(serverURL: serverURL) || shown
+        }
+        result(shown)
+      }
+    }
   }
 
 }
 
-/// Owns the visible iOS window when UIKit's scene lifecycle is enabled.
-///
-/// Flutter's current template creates the window in `FlutterSceneDelegate`
-/// after `application(_:didFinishLaunchingWithOptions:)`. Installing SwiftUI
-/// only from `AppDelegate` is therefore temporary: the Flutter scene replaces
-/// it moments later. Make the renderer choice at the lifecycle point that owns
-/// the window so every iOS release—not just older non-scene templates—actually
-/// presents the native engine.
+/// Starts as Flutter's ordinary scene delegate. Dart calls back only after it
+/// has resolved the runtime URL, at which point this swaps the visible root and
+/// retains Flutter's controller so its engine and plugins stay alive.
 @objc class RufletSceneDelegate: FlutterSceneDelegate {
   private var nativeSessionIdentifier: String?
+  private var retainedFlutterController: UIViewController?
+  private var initialData: [String: RufletValue] = [:]
 
   override func scene(
     _ scene: UIScene,
     willConnectTo session: UISceneSession,
     options connectionOptions: UIScene.ConnectionOptions
   ) {
-    guard RufletEngineChoice.usesNativeRenderer else {
-      super.scene(
-        scene, willConnectTo: session, options: connectionOptions)
-      return
-    }
-    guard let windowScene = scene as? UIWindowScene else { return }
-
-    guard AppDelegate.supportsNativeMultiView else {
-      let nativeWindow = UIWindow(windowScene: windowScene)
-      nativeWindow.rootViewController = UIHostingController(
-        rootView: RufletAppView(extensions: RufletEngineChoice.extensions))
-      window = nativeWindow
-      nativeWindow.makeKeyAndVisible()
-      return
-    }
-
-    let identifier = session.persistentIdentifier
-    nativeSessionIdentifier = identifier
+    super.scene(scene, willConnectTo: session, options: connectionOptions)
     let activity = connectionOptions.userActivities.first ?? session.stateRestorationActivity
-    let initialData = (activity?.userInfo ?? [:]).compactMapValues {
-      RufletSceneInitialData.convert($0)
+    initialData = (activity?.userInfo ?? [:]).reduce(into: [:]) { values, entry in
+      guard let key = entry.key as? String,
+        let value = RufletSceneInitialData.convert(entry.value)
+      else { return }
+      values[key] = value
     }
-    let nativeScene = AppDelegate.nativeApplication.connect(
-      sessionIdentifier: identifier, initialData: initialData)
+  }
 
-    let nativeWindow = UIWindow(windowScene: windowScene)
-    nativeWindow.rootViewController = UIHostingController(
-      rootView: RufletMultiViewAppView(
-        application: AppDelegate.nativeApplication, scene: nativeScene))
-    window = nativeWindow
-    nativeWindow.makeKeyAndVisible()
+  @MainActor @discardableResult
+  func showNativeRenderer(serverURL: URL) -> Bool {
+    guard let window else { return false }
+    if retainedFlutterController != nil { return true }
+    guard let flutterController = window.rootViewController else { return false }
+    retainedFlutterController = flutterController
+
+    let nativeController: UIViewController
+    if AppDelegate.supportsNativeMultiView,
+      let sessionIdentifier = window.windowScene?.session.persistentIdentifier
+    {
+      nativeSessionIdentifier = sessionIdentifier
+      let application = AppDelegate.nativeApplication(serverURL: serverURL)
+      let nativeScene = application.connect(
+        sessionIdentifier: sessionIdentifier, initialData: initialData)
+      nativeController = UIHostingController(
+        rootView: RufletMultiViewAppView(application: application, scene: nativeScene))
+    } else {
+      nativeController = UIHostingController(
+        rootView: RufletAppView(
+          serverURL: serverURL, extensions: RufletEngineChoice.extensions))
+    }
+    window.rootViewController = nativeController
+    nativeController.addChild(flutterController)
+    window.makeKeyAndVisible()
+    return true
   }
 
   override func sceneDidDisconnect(_ scene: UIScene) {
-    if RufletEngineChoice.usesNativeRenderer, let nativeSessionIdentifier {
-      AppDelegate.nativeApplication.disconnect(sessionIdentifier: nativeSessionIdentifier)
+    if let nativeSessionIdentifier {
+      AppDelegate.disconnectNativeScene(sessionIdentifier: nativeSessionIdentifier)
       self.nativeSessionIdentifier = nil
-    } else {
-      super.sceneDidDisconnect(scene)
     }
+    super.sceneDidDisconnect(scene)
   }
 }

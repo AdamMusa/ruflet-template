@@ -4,6 +4,16 @@ import RufletProtocol
 import XCTest
 
 final class RufletAppControlTests: XCTestCase {
+  func testAppleBackendPageURLNormalizesToWebSocketEndpoint() {
+    XCTAssertEqual(
+      WebSocketTransport.endpoint(
+        pageURL: URL(string: "https://api.example/apps/demo?token=secret#route")!)?.absoluteString,
+      "wss://api.example/apps/demo/ws")
+    XCTAssertEqual(
+      WebSocketTransport.endpoint(
+        pageURL: URL(string: "ws://127.0.0.1:8550/ws")!)?.absoluteString,
+      "ws://127.0.0.1:8550/ws")
+  }
   func testRufletAppIsTheOnlyNativeApplicationWireName() {
     let canonical = ControlRegistry.descriptor(for: "RufletApp")
 

@@ -107,6 +107,21 @@ public final class RufletMultiViewApplication {
       source: source, extensions: extensions, capabilities: capabilities)
   }
 
+  /// Attaches every native Apple scene to the server URL already resolved by
+  /// Flutter. This is the entry used by both Ruflet build modes: an embedded
+  /// loopback URL for `--self`, or the developer's configured backend URL for
+  /// a server-driven build.
+  public init(
+    serverURL: URL,
+    extensions: [any RufletExtension.Type] = [],
+    capabilities: ClientCapabilities = .current()
+  ) {
+    var capabilities = capabilities
+    capabilities.multiView = true
+    host = RufletHost(
+      source: .server(serverURL), extensions: extensions, capabilities: capabilities)
+  }
+
   @available(*, deprecated, message: "Use init(extensions:capabilities:)")
   public convenience init(
     services: [any RufletServiceBundle.Type],

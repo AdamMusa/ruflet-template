@@ -3,30 +3,53 @@ import FlutterMacOS
 import RufletApple
 import SwiftUI
 
-/// macOS renders through the Ruflet Apple engine.
-///
-/// Same split as iOS, settled the same way: this file only ever compiles for
-/// macOS, so Android, web, Linux and Windows keep their Flutter runners and
-/// their Flutter renderer. The Ruby application does not change.
-///
-/// The Flutter view controller is still created and its plugins registered,
-/// because that is what starts the embedded mruby VM. It is simply not the
-/// window's content.
+/// Flutter starts normally. The selected Dart entrypoint resolves the self or
+/// server backend URL and calls this Runner when macOS should switch only the
+/// visible content to Ruflet's native renderer.
 class MainFlutterWindow: NSWindow {
+  private var retainedFlutterViewController: FlutterViewController?
+  private var nativeRendererChannel: FlutterMethodChannel?
+
   override func awakeFromNib() {
     let flutterViewController = FlutterViewController()
     let windowFrame = self.frame
 
     RegisterGeneratedPlugins(registry: flutterViewController)
+    retainedFlutterViewController = flutterViewController
+    self.contentViewController = flutterViewController
 
-    if RufletEngineChoice.usesNativeRenderer {
-      // Kept as a child so the engine stays alive and its plugins keep running,
-      // while the window shows the native renderer.
-      self.contentViewController = NSHostingController(
-        rootView: RufletAppView(extensions: RufletEngineChoice.extensions))
-      self.contentViewController?.addChild(flutterViewController)
-    } else {
-      self.contentViewController = flutterViewController
+    let channel = FlutterMethodChannel(
+      name: "ruflet/native_renderer", binaryMessenger: flutterViewController.engine.binaryMessenger)
+    nativeRendererChannel = channel
+    channel.setMethodCallHandler { [weak self] call, result in
+      guard call.method == "show" else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      guard RufletEngineChoice.usesNativeRenderer else {
+        result(false)
+        return
+      }
+      let arguments = call.arguments as? [String: Any]
+      let rawURL = arguments?["pageUrl"] as? String ?? ""
+      guard let serverURL = RufletEngineChoice.websocketURL(from: rawURL) else {
+        result(
+          FlutterError(
+            code: "invalid_page_url", message: "Native renderer requires a valid Ruflet page URL.",
+            details: rawURL))
+        return
+      }
+      DispatchQueue.main.async {
+        guard let self, self.retainedFlutterViewController != nil else {
+          result(false)
+          return
+        }
+        let native = NSHostingController(
+          rootView: RufletAppView(
+            serverURL: serverURL, extensions: RufletEngineChoice.extensions))
+        self.contentViewController = native
+        result(true)
+      }
     }
 
     self.setFrame(windowFrame, display: true)

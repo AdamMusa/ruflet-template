@@ -33,6 +33,8 @@
 	     not enforce this, so the failure only appears on a real device. -->
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Local network access is required to connect to a Ruflet application running on your computer.</string>
+	<key>RufletEmbeddedProject</key>
+	<string>ruflet</string>
 	<!-- App Transport Security blocks cleartext http by default. Allow it only
 	     for local networking, so connecting to a development server works while
 	     internet traffic still requires https. -->
