@@ -19,6 +19,6 @@ final class RufletLayoutEventParityTests: XCTestCase {
       ["change", "change_end", "change_start"])
     XCTAssertEqual(
       ControlRegistry.descriptor(for: "CupertinoSwitch")?.supportedEvents,
-      ["change", "image_error"])
+      ["blur", "change", "focus", "image_error"])
   }
 }
