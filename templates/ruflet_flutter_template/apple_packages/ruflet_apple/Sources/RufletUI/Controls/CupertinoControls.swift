@@ -3102,7 +3102,7 @@ enum RufletCupertinoAppBarSlots {
   static func visibleID(
     _ id: Int?, visibilityForID: (Int) -> Bool?
   ) -> Int? {
-    guard let id, visibilityForID(id) != false else { return nil }
+    guard let id, visibilityForID(id) == true else { return nil }
     return id
   }
 
@@ -3111,7 +3111,7 @@ enum RufletCupertinoAppBarSlots {
   ) -> [Int] {
     var seen = Set<Int>()
     return ids.filter { id in
-      visibilityForID(id) != false && seen.insert(id).inserted
+      visibilityForID(id) == true && seen.insert(id).inserted
     }
   }
 }

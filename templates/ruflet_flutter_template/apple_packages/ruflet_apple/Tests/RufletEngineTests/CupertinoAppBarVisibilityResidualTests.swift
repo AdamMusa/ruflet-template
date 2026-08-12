@@ -18,10 +18,10 @@ final class CupertinoAppBarVisibilityResidualTests: XCTestCase {
     XCTAssertEqual(result, [1, 3])
   }
 
-  func testUnresolvedSlotRemainsEligibleUntilStoreMaterializesIt() {
+  func testUnresolvedSlotsAreAbsentLikeBuildWidgetResults() {
+    XCTAssertNil(
+      RufletCupertinoAppBarSlots.visibleID(7, visibilityForID: { _ in nil }))
     XCTAssertEqual(
-      RufletCupertinoAppBarSlots.visibleID(7, visibilityForID: { _ in nil }), 7)
-    XCTAssertEqual(
-      RufletCupertinoAppBarSlots.visibleIDs([7], visibilityForID: { _ in nil }), [7])
+      RufletCupertinoAppBarSlots.visibleIDs([7], visibilityForID: { _ in nil }), [])
   }
 }
