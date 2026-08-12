@@ -45,6 +45,14 @@ final class ContainerCoreParityTests: XCTestCase {
     XCTAssertEqual(componentDuration.duration, 1.2505)
     XCTAssertEqual(componentDuration.reverseDuration, 0.75)
     XCTAssertEqual(AnimatedSwitcherPresentation.durationSeconds(.double(2.5), default: 1), 0.002)
+    XCTAssertEqual(
+      AnimatedSwitcherPresentation.durationSeconds(
+        .extended(type: 3, string: "1250000"), default: 1),
+      1.25)
+
+    let unknownTransition = AnimatedSwitcherPresentation(node: ControlNode(
+      id: 11, type: "AnimatedSwitcher", props: ["transition": .string("unknown")]))
+    XCTAssertEqual(unknownTransition.transition, "fade")
   }
 
   func testAnimatedSwitcherIdentityChangesForEveryParentPatchRevision() {

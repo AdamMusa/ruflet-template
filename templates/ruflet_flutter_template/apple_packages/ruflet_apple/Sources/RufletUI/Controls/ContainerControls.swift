@@ -2225,7 +2225,13 @@ struct AnimatedSwitcherPresentation {
   }
   var switchInCurve: String { node.string("switch_in_curve") ?? "linear" }
   var switchOutCurve: String { node.string("switch_out_curve") ?? "linear" }
-  var transition: String { node.string("transition")?.lowercased() ?? "fade" }
+  var transition: String {
+    switch node.string("transition")?.lowercased() {
+    case "rotation": return "rotation"
+    case "scale": return "scale"
+    default: return "fade"
+    }
+  }
   var inAnimation: Animation { RufletCurve.animation(switchInCurve, duration: duration) }
   var outAnimation: Animation {
     RufletCurve.animation(switchOutCurve, duration: reverseDuration)
@@ -2236,6 +2242,9 @@ struct AnimatedSwitcherPresentation {
     if case .int(let milliseconds) = value { return Double(milliseconds) / 1_000 }
     if case .double(let milliseconds) = value { return Double(Int(milliseconds)) / 1_000 }
     if case .string(let raw) = value { return Double(Int(raw) ?? 0) / 1_000 }
+    if case .extended(type: 3, let microseconds) = value {
+      return Double(Int64(microseconds) ?? 0) / 1_000_000
+    }
     guard let map = value.mapValue else { return 0 }
     func integer(_ key: String) -> Int {
       switch map[key] {
