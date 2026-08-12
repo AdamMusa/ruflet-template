@@ -3021,8 +3021,8 @@ struct AutoCompleteControlView: View {
         color: RufletAutoCompleteDefaults.popupShadowColor,
         radius: RufletAutoCompleteDefaults.popupElevation)
     }
-    .onAppear { synchronizeFromWire() }
-    .onChange(of: node.string("value")) { _ in synchronizeFromWire() }
+    .onAppear { synchronizeFromWire(node.string("value")) }
+    .onChange(of: node.string("value")) { synchronizeFromWire($0) }
   }
 
   private var queryBinding: Binding<String> {
@@ -3072,12 +3072,16 @@ struct AutoCompleteControlView: View {
     ]))
   }
 
-  private func synchronizeFromWire() {
-    let value = node.string("value") ?? ""
+  private func synchronizeFromWire(_ wireValue: String?) {
+    let value = RufletAutoCompleteWireSync.text(wireValue)
     guard value != query else { return }
     query = value
     selection = NSRange(location: value.utf16.count, length: 0)
   }
+}
+
+enum RufletAutoCompleteWireSync {
+  static func text(_ deliveredValue: String?) -> String { deliveredValue ?? "" }
 }
 
 /// Exact defaults used by Flutter's Material `Autocomplete`. The editable

@@ -3,6 +3,17 @@ import XCTest
 @testable import RufletUI
 
 final class CupertinoPickerSelectionSyncResidualTests: XCTestCase {
+  func testObserverSnapshotCarriesTheDeliveredIndexAndRenderedChildCount() {
+    let old = RufletCupertinoPickerSelectionSnapshot(
+      selectedIndex: 0, visibleCount: 4, looping: false)
+    let next = RufletCupertinoPickerSelectionSnapshot(
+      selectedIndex: 3, visibleCount: 2, looping: true)
+    XCTAssertNotEqual(old, next)
+    XCTAssertEqual(next.selectedIndex, 3)
+    XCTAssertEqual(next.visibleCount, 2)
+    XCTAssertTrue(next.looping)
+  }
+
   func testFiniteExternalSelectionClampsToNativeWheelRange() {
     XCTAssertEqual(
       CupertinoPickerParity.normalizedSelectedIndex(-3, count: 4, looping: false), 0)

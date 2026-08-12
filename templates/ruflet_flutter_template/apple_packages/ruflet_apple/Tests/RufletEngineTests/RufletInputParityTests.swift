@@ -469,6 +469,11 @@ final class RufletInputParityTests: XCTestCase {
     XCTAssertEqual(calls, ["local:value", "update:value", "event:change"])
   }
 
+  func testAutoCompleteObserverConsumesTheDeliveredWireValue() {
+    XCTAssertEqual(RufletAutoCompleteWireSync.text("new query"), "new query")
+    XCTAssertEqual(RufletAutoCompleteWireSync.text(nil), "")
+  }
+
   func testMaterialPickerBoundsAreThePinnedFletDatesNotARollingWindow() {
     var calendar = Calendar(identifier: .gregorian)
     calendar.timeZone = TimeZone(secondsFromGMT: 0)!

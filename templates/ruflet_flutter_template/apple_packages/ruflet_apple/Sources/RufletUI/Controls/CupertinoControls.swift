@@ -2047,9 +2047,8 @@ struct CupertinoPickerControlView: View {
       .background(MaterialPalette.color(configuration.backgroundToken))
       .overlay(selectionOverlay)
       .disabled(configuration.disabled)
-      .onAppear { synchronizeSelection() }
-      .onChange(of: node.int("selected_index") ?? 0) { _ in synchronizeSelection() }
-      .onChange(of: visibleControlIDs) { _ in synchronizeSelection() }
+      .onAppear { synchronizeSelection(using: selectionSnapshot) }
+      .onChange(of: selectionSnapshot) { synchronizeSelection(using: $0) }
     }
   }
 
@@ -2101,26 +2100,38 @@ struct CupertinoPickerControlView: View {
     }
   }
 
-  private func synchronizeSelection() {
-    let count = visibleControlIDs.count
+  private var selectionSnapshot: RufletCupertinoPickerSelectionSnapshot {
+    RufletCupertinoPickerSelectionSnapshot(
+      selectedIndex: node.int("selected_index") ?? 0,
+      visibleCount: visibleControlIDs.count,
+      looping: configuration.looping)
+  }
+
+  private func synchronizeSelection(using snapshot: RufletCupertinoPickerSelectionSnapshot) {
+    let count = snapshot.visibleCount
     guard count > 0 else {
       wheelIndex = 0
       return
     }
-    let selected = node.int("selected_index") ?? 0
     let normalized = CupertinoPickerParity.normalizedSelectedIndex(
-      selected, count: count, looping: configuration.looping)
+      snapshot.selectedIndex, count: count, looping: snapshot.looping)
     let real = CupertinoPickerParity.selectedIndex(
-      wheelIndex: wheelIndex, count: count, looping: configuration.looping)
+      wheelIndex: wheelIndex, count: count, looping: snapshot.looping)
     // A matching real item is not enough: changing visibility can make an
     // old looping tag fall outside the newly rendered finite delegate.
     guard normalized != real
       || !CupertinoPickerParity.isValidWheelIndex(
-        wheelIndex, count: count, looping: configuration.looping)
+        wheelIndex, count: count, looping: snapshot.looping)
     else { return }
     wheelIndex = CupertinoPickerParity.initialIndex(
-      selected: normalized, count: count, looping: configuration.looping)
+      selected: normalized, count: count, looping: snapshot.looping)
   }
+}
+
+struct RufletCupertinoPickerSelectionSnapshot: Equatable {
+  let selectedIndex: Int
+  let visibleCount: Int
+  let looping: Bool
 }
 
 struct RufletCupertinoPickerConfiguration {
