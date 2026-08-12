@@ -288,10 +288,22 @@ public final class ScreenBrightnessService: RufletStreamingService {
   public init() {}
 
   public func activate(node: ControlNode, context: RufletServiceContext) {
+    let listensForSystem = node.handlesEvent("system_screen_brightness_change")
+    let listensForApplication = node.handlesEvent("application_screen_brightness_change")
+    guard listensForSystem || listensForApplication else {
+      eventNode = nil
+      eventContext = nil
+      stopBrightnessObservation()
+      return
+    }
     eventNode = node
     eventContext = context
     #if os(iOS)
-      guard node.handlesEvent("system_screen_brightness_change"), brightnessObserver == nil else {
+      guard listensForSystem else {
+        stopBrightnessObservation()
+        return
+      }
+      guard brightnessObserver == nil else {
         return
       }
       brightnessObserver = NotificationCenter.default.addObserver(
@@ -388,6 +400,11 @@ public final class ScreenBrightnessService: RufletStreamingService {
     eventContext.emitEvent(eventNode.id, "application_screen_brightness_change", .map([
       "brightness": .double(value)
     ]))
+  }
+
+  private func stopBrightnessObservation() {
+    if let brightnessObserver { NotificationCenter.default.removeObserver(brightnessObserver) }
+    brightnessObserver = nil
   }
 
   private func emitSystemBrightness(_ value: Double? = nil) {
