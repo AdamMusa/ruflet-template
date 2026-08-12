@@ -64,11 +64,13 @@ public struct WebViewControlView: View {
     private var urlObserver: NSKeyValueObservation?
     private var loadedInitialRequest = false
     private var scriptProxy: WeakWebViewScriptHandler?
+    private var consoleBridgeInstalled = false
 
     func configure(node: ControlNode, events: RufletEventSink) {
       self.node = node
       self.events = events
       if let webView {
+        installConsoleBridgeIfNeeded(in: webView.configuration.userContentController)
         applyBackground(to: webView)
         loadInitialRequestIfNeeded(in: webView)
       }
@@ -80,10 +82,7 @@ public struct WebViewControlView: View {
       let proxy = WeakWebViewScriptHandler(target: self)
       scriptProxy = proxy
       configuration.userContentController.add(proxy, name: "rufletConsole")
-      configuration.userContentController.addUserScript(WKUserScript(
-        source: Self.consoleBridge,
-        injectionTime: .atDocumentStart,
-        forMainFrameOnly: false))
+      installConsoleBridgeIfNeeded(in: configuration.userContentController)
       let view = WKWebView(frame: .zero, configuration: configuration)
       view.navigationDelegate = self
       view.uiDelegate = self
@@ -96,8 +95,9 @@ public struct WebViewControlView: View {
       }
       urlObserver = view.observe(\.url, options: [.new]) { [weak self] view, _ in
         Task { @MainActor in
-          guard let url = view.url?.absoluteString else { return }
-          self?.fire("url_change", .string(url))
+          self?.fire(
+            "url_change",
+            view.url.map { .string($0.absoluteString) } ?? .null)
         }
       }
       #if canImport(UIKit)
@@ -153,12 +153,15 @@ public struct WebViewControlView: View {
         setZoomEnabled(call.name == "enable_zoom", in: webView)
         completion(.success(.null))
       case "clear_cache":
-        let types: Set<String> = [WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeMemoryCache]
+        let types = WebViewSemantics.cacheDataTypes
         WKWebsiteDataStore.default().removeData(
           ofTypes: types, modifiedSince: .distantPast
         ) { completion(.success(.null)) }
       case "clear_local_storage":
-        evaluate("window.localStorage.clear();", in: webView, completion: completion)
+        WKWebsiteDataStore.default().removeData(
+          ofTypes: WebViewSemantics.localStorageDataTypes,
+          modifiedSince: .distantPast
+        ) { completion(.success(.null)) }
       case "get_current_url":
         completion(.success(webView.url.map { .string($0.absoluteString) } ?? .null))
       case "get_title":
@@ -192,13 +195,17 @@ public struct WebViewControlView: View {
         guard let value = call.argument("value")?.stringValue else {
           return completion(.success(.null))
         }
-        evaluate(value, in: webView, completion: completion)
+        evaluate(
+          value, in: webView, ignoresUnsupportedResult: true,
+          completion: completion)
       case "scroll_to", "scroll_by":
         guard let x = call.argument("x")?.intValue, let y = call.argument("y")?.intValue else {
           return completion(.success(.null))
         }
-        let function = call.name == "scroll_to" ? "scrollTo" : "scrollBy"
-        evaluate("window.\(function)(\(x), \(y));", in: webView, completion: completion)
+        scroll(
+          to: CGPoint(x: Double(x), y: Double(y)),
+          relative: call.name == "scroll_by", in: webView,
+          completion: completion)
       case "set_javascript_mode":
         if let mode = call.argument("mode")?.stringValue?.lowercased(),
           ["disabled", "unrestricted"].contains(mode)
@@ -216,11 +223,18 @@ public struct WebViewControlView: View {
       _ script: String,
       in webView: WKWebView,
       returnsValue: Bool = false,
+      ignoresUnsupportedResult: Bool = false,
       completion: @escaping RufletMethodCompletion
     ) {
       webView.evaluateJavaScript(script) { value, error in
         if let error {
-          completion(.failure(RufletServiceError.failed(error.localizedDescription)))
+          if ignoresUnsupportedResult,
+            WebViewSemantics.isUnsupportedJavaScriptResult(error)
+          {
+            completion(.success(.null))
+          } else {
+            completion(.failure(RufletServiceError.failed(error.localizedDescription)))
+          }
         } else if returnsValue, let string = value as? String {
           completion(.success(.string(string)))
         } else {
@@ -230,10 +244,44 @@ public struct WebViewControlView: View {
     }
 
     private func setZoomEnabled(_ enabled: Bool, in webView: WKWebView) {
+      // webview_flutter_wkwebview implements this with a viewport user script
+      // on both Darwin platforms. Resetting the scripts when enabling removes
+      // the restriction while preserving the optional console bridge.
+      let controller = webView.configuration.userContentController
+      controller.removeAllUserScripts()
+      if consoleBridgeInstalled { controller.addUserScript(WebViewSemantics.consoleUserScript) }
+      if !enabled { controller.addUserScript(WebViewSemantics.zoomDisabledUserScript) }
+    }
+
+    private func installConsoleBridgeIfNeeded(in controller: WKUserContentController) {
+      guard !consoleBridgeInstalled, node?.handlesEvent("console_message") == true else { return }
+      consoleBridgeInstalled = true
+      controller.addUserScript(WebViewSemantics.consoleUserScript)
+    }
+
+    private func scroll(
+      to point: CGPoint,
+      relative: Bool,
+      in webView: WKWebView,
+      completion: @escaping RufletMethodCompletion
+    ) {
       #if canImport(UIKit)
-        webView.scrollView.pinchGestureRecognizer?.isEnabled = enabled
+        let destination = relative
+          ? CGPoint(
+            x: webView.scrollView.contentOffset.x + point.x,
+            y: webView.scrollView.contentOffset.y + point.y)
+          : point
+        webView.scrollView.setContentOffset(destination, animated: false)
+        completion(.success(.null))
       #elseif canImport(AppKit)
-        webView.enclosingScrollView?.allowsMagnification = enabled
+        // WKWebView exposes its UIScrollView on iOS, but not its internal
+        // NSScrollView on macOS. webview_flutter has the same platform gap;
+        // use the DOM scroll API there so the documented Flet command remains
+        // executable instead of silently succeeding without scrolling.
+        let function = relative ? "scrollBy" : "scrollTo"
+        evaluate(
+          "window.\(function)(\(point.x), \(point.y));", in: webView,
+          ignoresUnsupportedResult: true, completion: completion)
       #endif
     }
 
@@ -296,7 +344,7 @@ public struct WebViewControlView: View {
       completionHandler()
     }
 
-    fileprivate func receiveConsoleMessage(name: String, body value: Any) {
+    func receiveConsoleMessage(name: String, body value: Any) {
       guard name == "rufletConsole", let body = value as? [String: Any],
         let text = body["message"] as? String, let level = body["severity_level"] as? String
       else { return }
@@ -310,24 +358,77 @@ public struct WebViewControlView: View {
       urlObserver?.invalidate()
     }
 
-    private static let consoleBridge = """
+  }
+
+  enum WebViewSemantics {
+    static let cacheDataTypes: Set<String> = [
+      WKWebsiteDataTypeDiskCache,
+      WKWebsiteDataTypeMemoryCache,
+      WKWebsiteDataTypeOfflineWebApplicationCache,
+    ]
+    static let localStorageDataTypes: Set<String> = [WKWebsiteDataTypeLocalStorage]
+
+    static var consoleUserScript: WKUserScript {
+      WKUserScript(
+        source: consoleBridge, injectionTime: .atDocumentStart,
+        forMainFrameOnly: true)
+    }
+
+    static var zoomDisabledUserScript: WKUserScript {
+      WKUserScript(
+        source: zoomDisabledScript, injectionTime: .atDocumentEnd,
+        forMainFrameOnly: true)
+    }
+
+    static func isUnsupportedJavaScriptResult(_ error: Error) -> Bool {
+      let nsError = error as NSError
+      return nsError.domain == WKError.errorDomain
+        && nsError.code == WKError.Code.javaScriptResultTypeIsUnsupported.rawValue
+    }
+
+    /// Source-compatible form of webview_flutter_wkwebview's console bridge:
+    /// all five Dart severity levels, main-frame injection, object JSON, a
+    /// 3000-character argument cap, and comma-separated arguments.
+    static let consoleBridge = """
       (() => {
         if (window.__rufletConsoleInstalled) return;
         window.__rufletConsoleInstalled = true;
         const bridge = window.webkit && window.webkit.messageHandlers &&
           window.webkit.messageHandlers.rufletConsole;
         if (!bridge) return;
-        ['log', 'debug', 'warn', 'error'].forEach((name) => {
+        const severity = { log: 'log', info: 'info', debug: 'debug', warn: 'warning', error: 'error' };
+        const stringify = (value) => {
+          if (typeof value === 'undefined') return 'undefined';
+          if (typeof value !== 'object' || value === null) return String(value);
+          try {
+            const seen = new WeakSet();
+            return JSON.stringify(value, (_, nested) => {
+              if (typeof nested !== 'object' || nested === null) return nested;
+              if (seen.has(nested)) return undefined;
+              seen.add(nested);
+              return nested;
+            });
+          } catch (_) { return String(value); }
+        };
+        ['log', 'info', 'debug', 'warn', 'error'].forEach((name) => {
           const original = console[name];
           console[name] = function(...args) {
             bridge.postMessage({
-              message: args.map((value) => String(value)).join(' '),
-              severity_level: name === 'warn' ? 'warning' : name
+              message: args.map((value) => stringify(value).substring(0, 3000)).join(', '),
+              severity_level: severity[name]
             });
             return original.apply(console, args);
           };
         });
       })();
+      """
+
+    static let zoomDisabledScript = """
+      var meta = document.createElement('meta');
+      meta.name = 'viewport';
+      meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+      var head = document.getElementsByTagName('head')[0];
+      head.appendChild(meta);
       """
   }
 
