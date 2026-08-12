@@ -41,7 +41,7 @@ struct DialogPresenter: ViewModifier {
       ZStack {
         // `modal` keeps the barrier from dismissing, and `barrier_color`
         // paints it — both are the dialog's own properties in Flet.
-        MaterialPalette.color(dialog.string("barrier_color"), default: .black.opacity(0.3))
+        MaterialPalette.color(dialog.string("barrier_color"), default: .black.opacity(0.54))
           .ignoresSafeArea()
           .onTapGesture {
             guard RufletOverlaySemantics.allowsBarrierDismiss(dialog) else { return }
@@ -122,8 +122,10 @@ enum RufletOverlaySemantics {
 
   static func allowsBarrierDismiss(_ node: ControlNode) -> Bool {
     switch node.type {
-    case "BottomSheet", "CupertinoBottomSheet":
+    case "BottomSheet":
       return node.bool("dismissible") != false
+    case "CupertinoBottomSheet":
+      return node.bool("modal") != true
     default:
       return node.bool("modal") != true
     }
@@ -133,6 +135,84 @@ enum RufletOverlaySemantics {
     events.setLocal(node.id, "open", .bool(false))
     events.update(node.id, ["open": .bool(false)])
     events.fire(node, "dismiss")
+  }
+}
+
+/// Constructor values copied from Flet 0.80.5 and Flutter 3.41.2. Keeping
+/// them here makes the renderer's fallback contract testable and prevents a
+/// platform framework update from silently changing a Ruflet application.
+enum OverlayDefaults {
+  struct DialogValues: Equatable {
+    let radius: CGFloat
+    let elevation: CGFloat
+    let inset: EdgeInsets
+    let content: EdgeInsets
+    let actions: EdgeInsets
+  }
+
+  struct SheetValues: Equatable {
+    let radius: CGFloat
+    let elevation: CGFloat
+    let maximumWidth: CGFloat
+    let dragHandleWidth: CGFloat
+    let dragHandleHeight: CGFloat
+    let useSafeArea: Bool
+    let dismissible: Bool
+  }
+
+  struct SnackBarValues: Equatable {
+    let elevation: CGFloat
+    let radius: CGFloat
+    let horizontalPadding: CGFloat
+    let inset: EdgeInsets
+    let durationMilliseconds: Double
+    let dismissDirection: String
+    let actionOverflowThreshold: Double
+  }
+
+  static func dialog(_ node: ControlNode) -> DialogValues {
+    DialogValues(
+      radius: ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? 28,
+      elevation: CGFloat(node.double("elevation") ?? 6),
+      inset: ControlProps.edgeInsets(node.props["inset_padding"])
+        ?? EdgeInsets(top: 24, leading: 40, bottom: 24, trailing: 40),
+      // Flet supplies this value to AlertDialog, so it intentionally wins
+      // over Flutter's otherwise slightly different Material 3 fallback.
+      content: ControlProps.edgeInsets(node.props["content_padding"])
+        ?? EdgeInsets(top: 20, leading: 24, bottom: 24, trailing: 24),
+      actions: ControlProps.edgeInsets(node.props["actions_padding"])
+        ?? EdgeInsets(top: 0, leading: 24, bottom: 24, trailing: 24))
+  }
+
+  static func sheet(_ node: ControlNode) -> SheetValues {
+    SheetValues(
+      radius: ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? 28,
+      elevation: CGFloat(node.double("elevation") ?? 1), maximumWidth: 640,
+      dragHandleWidth: 32, dragHandleHeight: 4,
+      useSafeArea: node.bool("use_safe_area") != false,
+      dismissible: node.bool("dismissible") != false)
+  }
+
+  static func snackBar(_ node: ControlNode) -> SnackBarValues {
+    let floating = node.string("behavior")?.lowercased() == "floating"
+    return SnackBarValues(
+      elevation: CGFloat(node.double("elevation") ?? 6),
+      radius: ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? (floating ? 4 : 0),
+      horizontalPadding: floating ? 16 : 24,
+      inset: ControlProps.edgeInsets(node.props["margin"])
+        ?? EdgeInsets(top: 5, leading: 15, bottom: 10, trailing: 15),
+      durationMilliseconds: node.double("duration") ?? 4000,
+      dismissDirection: node.string("dismiss_direction")?.lowercased() ?? "down",
+      actionOverflowThreshold: node.double("action_overflow_threshold") ?? 0.25)
+  }
+
+  static func bannerContentPadding(_ node: ControlNode) -> EdgeInsets {
+    if let explicit = ControlProps.edgeInsets(node.props["content_padding"]) { return explicit }
+    let singleRow = node.controlIDs(forKey: "actions").count == 1
+      && node.bool("force_actions_below") != true
+    return singleRow
+      ? EdgeInsets(top: 2, leading: 16, bottom: 0, trailing: 0)
+      : EdgeInsets(top: 24, leading: 16, bottom: 4, trailing: 16)
   }
 }
 
@@ -152,19 +232,29 @@ struct AlertDialogControlView: View {
   }
 
   private var materialDialog: some View {
-    let body = VStack(alignment: .leading, spacing: 16) {
+    let defaults = OverlayDefaults.dialog(node)
+    let hasTitle = node.controlID(forKey: "title") != nil
+    let hasContent = node.controlID(forKey: "content") != nil
+    let body = VStack(alignment: .leading, spacing: 0) {
       if node.controlID(forKey: "icon") != nil {
         RufletFormFieldSlot(node: node, key: "icon")
-          .padding(ControlProps.edgeInsets(node.props["icon_padding"]) ?? EdgeInsets())
+          .foregroundColor(MaterialPalette.color(node.string("icon_color"), default:
+            MaterialPalette.color("secondary", default: .secondary)))
+          .frame(maxWidth: .infinity)
+          .padding(ControlProps.edgeInsets(node.props["icon_padding"]) ?? EdgeInsets(
+            top: 24, leading: 24, bottom: hasTitle ? 16 : (hasContent ? 0 : 24), trailing: 24))
       }
       if let titleID = node.controlID(forKey: "title") {
         ControlView(id: titleID, axis: .none)
           .rufletTextStyle(RufletTextStyle(node: node, styleKey: "title_text_style"))
-          .padding(ControlProps.edgeInsets(node.props["title_padding"]) ?? EdgeInsets())
+          .padding(ControlProps.edgeInsets(node.props["title_padding"]) ?? EdgeInsets(
+            top: node.controlID(forKey: "icon") == nil ? 24 : 0,
+            leading: 24, bottom: hasContent ? 0 : 20, trailing: 24))
       }
       if let contentID = node.controlID(forKey: "content") {
         ControlView(id: contentID, axis: .vertical)
           .rufletTextStyle(RufletTextStyle(node: node, styleKey: "content_text_style"))
+          .padding(defaults.content)
       }
       if !node.controlIDs(forKey: "actions").isEmpty {
         HStack(spacing: CGFloat(node.double("actions_overflow_button_spacing") ?? 8)) {
@@ -173,19 +263,20 @@ struct AlertDialogControlView: View {
             .padding(ControlProps.edgeInsets(node.props["action_button_padding"]) ?? EdgeInsets())
           if actionsAlignment == .leading { Spacer(minLength: 0) }
         }
-        .padding(ControlProps.edgeInsets(node.props["actions_padding"]) ?? EdgeInsets())
+        .padding(defaults.actions)
       }
     }
-    .padding(20)
     .frame(maxWidth: 420)
     .background(
-      RoundedRectangle(cornerRadius: dialogRadius)
+      RoundedRectangle(cornerRadius: defaults.radius)
         .fill(MaterialPalette.color(node.string("bgcolor"), default: dialogSurface)))
     .shadow(
-      color: MaterialPalette.color(node.string("shadow_color"), default: .black.opacity(0.3)),
-      radius: CGFloat(node.double("elevation") ?? 20))
-    .padding(ControlProps.edgeInsets(node.props["inset_padding"]) ?? EdgeInsets(
-      top: 24, leading: 24, bottom: 24, trailing: 24))
+      // Material 3's generated DialogTheme uses a transparent shadow. An
+      // explicit Flet shadow_color still opts into a native shadow.
+      color: MaterialPalette.color(node.string("shadow_color"), default: .clear),
+      radius: defaults.elevation)
+    .padding(defaults.inset)
+    .modifier(DialogClip(radius: defaults.radius, behavior: node.string("clip_behavior") ?? "none"))
 
     // `scrollable` lets a tall dialog scroll rather than overflow, which is
     // what Material's AlertDialog does with the same flag.
@@ -196,11 +287,8 @@ struct AlertDialogControlView: View {
         body
       }
     }
-  }
-
-  /// `shape` is an OutlinedBorder; Material's dialog corner is 14 without one.
-  private var dialogRadius: CGFloat {
-    ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? 14
+    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: dialogAlignment)
+    .modifier(OptionalAccessibilityLabel(value: node.string("semantics_label")))
   }
 
   /// `actions_alignment` is Flutter's MainAxisAlignment across the button row.
@@ -210,6 +298,10 @@ struct AlertDialogControlView: View {
     case "center": return .center
     default: return .trailing
     }
+  }
+
+  private var dialogAlignment: Alignment {
+    ControlProps.alignment(node.props["alignment"]) ?? .center
   }
 
   private var appleAlert: some View {
@@ -287,6 +379,137 @@ struct AlertDialogControlView: View {
 
   private var dialogSurface: Color {
     #if canImport(UIKit)
+      return MaterialPalette.color("surfacecontainerhigh", default: Color(UIColor.systemBackground))
+    #elseif canImport(AppKit)
+      return MaterialPalette.color("surfacecontainerhigh", default: Color(NSColor.windowBackgroundColor))
+    #else
+      return .white
+    #endif
+  }
+}
+
+private struct DialogClip: ViewModifier {
+  let radius: CGFloat
+  let behavior: String
+
+  func body(content: Content) -> some View {
+    if behavior.lowercased() == "none" {
+      content
+    } else {
+      content.clipShape(RoundedRectangle(cornerRadius: radius))
+    }
+  }
+}
+
+private struct OptionalAccessibilityLabel: ViewModifier {
+  let value: String?
+
+  func body(content: Content) -> some View {
+    if let value, !value.isEmpty {
+      content.accessibilityLabel(Text(value))
+    } else {
+      content
+    }
+  }
+}
+
+/// `BottomSheet` — content anchored to the bottom edge.
+struct BottomSheetControlView: View {
+  let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
+  @Environment(\.rufletEvents) private var events
+
+  @ViewBuilder
+  var body: some View {
+    if node.type == "CupertinoBottomSheet" {
+      cupertinoSheet
+    } else {
+      materialSheet
+    }
+  }
+
+  private var materialSheet: some View {
+    let defaults = OverlayDefaults.sheet(node)
+    let content = VStack(spacing: 0) {
+      if node.bool("show_drag_handle") == true {
+        Capsule()
+          .fill(MaterialPalette.color("onsurfacevariant", default: Color.secondary))
+          .frame(width: defaults.dragHandleWidth, height: defaults.dragHandleHeight)
+          // Flutter reserves the minimum interactive dimension when showing
+          // the handle, even though the painted handle itself is only 32x4.
+          .frame(height: 48)
+      }
+      if let contentID = node.controlID(forKey: "content") {
+        ControlView(id: contentID, axis: .vertical)
+      }
+    }
+    .frame(maxWidth: .infinity)
+    .frame(maxHeight: node.bool("fullscreen") == true ? .infinity : nil)
+    .background(
+      MaterialPalette.color(node.string("bgcolor"), default: sheetSurface),
+      in: UnevenRoundedRectangle(
+        topLeadingRadius: defaults.radius, bottomLeadingRadius: 0,
+        bottomTrailingRadius: 0, topTrailingRadius: defaults.radius))
+    .overlay(
+      UnevenRoundedRectangle(
+        topLeadingRadius: defaults.radius, bottomLeadingRadius: 0,
+        bottomTrailingRadius: 0, topTrailingRadius: defaults.radius)
+        .strokeBorder(
+          MaterialPalette.color(node.map("shape")?["side"]?.mapValue?["color"]?.stringValue,
+                                default: .clear),
+          lineWidth: CGFloat(
+            node.map("shape")?["side"]?.mapValue?["width"]?.doubleValue ?? 0)))
+    .shadow(
+      color: MaterialPalette.color(node.string("shadow_color"), default: .clear),
+      radius: defaults.elevation)
+    .frame(maxWidth: node.bool("fullscreen") == true ? nil : defaults.maximumWidth)
+    .modifier(SlotSizeConstraints(value: node.props["size_constraints"]))
+    .modifier(ChromeClipModifier(behavior: node.string("clip_behavior") ?? "none"))
+    .modifier(BottomSheetDrag(node: node, events: events))
+
+    return Group {
+      if node.bool("scrollable") == true || node.bool("fullscreen") == true {
+        ScrollView { content }
+      } else {
+        content
+      }
+    }
+    .modifier(BottomSheetSafeArea(useSafeArea: defaults.useSafeArea))
+  }
+
+  @ViewBuilder
+  private var cupertinoSheet: some View {
+    if let contentID = node.controlID(forKey: "content") {
+      if let content = store.node(contentID), Self.cupertinoPickerTypes.contains(content.type) {
+        ControlView(id: contentID, axis: .vertical)
+          .frame(maxWidth: .infinity)
+          .frame(height: CGFloat(node.double("height") ?? 220))
+          .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets())
+          .background(MaterialPalette.color(node.string("bgcolor"), default: cupertinoSheetSurface))
+      } else {
+        // Flet intentionally wraps arbitrary Cupertino sheet content in a
+        // Material widget but adds no BottomSheet surface, shape or padding.
+        ControlView(id: contentID, axis: .vertical)
+      }
+    }
+  }
+
+  private static let cupertinoPickerTypes: Set<String> = [
+    "CupertinoPicker", "CupertinoTimerPicker", "CupertinoDatePicker",
+  ]
+
+  private var sheetSurface: Color {
+    #if canImport(UIKit)
+      return MaterialPalette.color("surfacecontainerlow", default: Color(UIColor.systemBackground))
+    #elseif canImport(AppKit)
+      return MaterialPalette.color("surfacecontainerlow", default: Color(NSColor.windowBackgroundColor))
+    #else
+      return .white
+    #endif
+  }
+
+  private var cupertinoSheetSurface: Color {
+    #if canImport(UIKit)
       return Color(UIColor.systemBackground)
     #elseif canImport(AppKit)
       return Color(NSColor.windowBackgroundColor)
@@ -296,63 +519,15 @@ struct AlertDialogControlView: View {
   }
 }
 
-/// `BottomSheet` — content anchored to the bottom edge.
-struct BottomSheetControlView: View {
-  let node: ControlNode
-  @Environment(\.rufletEvents) private var events
+private struct BottomSheetSafeArea: ViewModifier {
+  let useSafeArea: Bool
 
-  var body: some View {
-    let content = VStack(spacing: 0) {
-      if node.bool("show_drag_handle") == true {
-        Capsule()
-          .fill(Color.secondary.opacity(0.4))
-          .frame(width: 36, height: 5)
-          .padding(.vertical, 8)
-      }
-      if let contentID = node.controlID(forKey: "content") {
-        ControlView(id: contentID, axis: .vertical)
-      }
+  func body(content: Content) -> some View {
+    if useSafeArea {
+      content
+    } else {
+      content.ignoresSafeArea()
     }
-    .frame(maxWidth: .infinity)
-    .frame(maxHeight: node.bool("fullscreen") == true ? .infinity : nil)
-    .padding(.bottom, 24)
-    .background(
-      MaterialPalette.color(node.string("bgcolor"), default: sheetSurface),
-      in: RoundedRectangle(cornerRadius: sheetRadius))
-    .overlay(
-      RoundedRectangle(cornerRadius: sheetRadius)
-        .strokeBorder(
-          MaterialPalette.color(node.map("shape")?["side"]?.mapValue?["color"]?.stringValue,
-                                default: .clear),
-          lineWidth: CGFloat(
-            node.map("shape")?["side"]?.mapValue?["width"]?.doubleValue ?? 0)))
-    .shadow(radius: CGFloat(node.double("elevation") ?? 0))
-    .modifier(SlotSizeConstraints(value: node.props["size_constraints"]))
-    .modifier(ChromeClipModifier(behavior: node.string("clip_behavior") ?? "none"))
-    .modifier(BottomSheetDrag(node: node, events: events))
-
-    Group {
-      if node.bool("scrollable") == true || node.bool("fullscreen") == true {
-        ScrollView { content }
-      } else {
-        content
-      }
-    }
-    .ignoresSafeArea(edges: node.bool("use_safe_area") == false ? .all : .bottom)
-  }
-
-  private var sheetRadius: CGFloat {
-    ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? 16
-  }
-
-  private var sheetSurface: Color {
-    #if canImport(UIKit)
-      return Color(UIColor.systemBackground)
-    #elseif canImport(AppKit)
-      return Color(NSColor.windowBackgroundColor)
-    #else
-      return .white
-    #endif
   }
 }
 
@@ -379,9 +554,8 @@ private struct SnackBarSwipe: ViewModifier {
   let events: RufletEventSink
 
   func body(content: Content) -> some View {
-    guard let direction = node.string("dismiss_direction")?.lowercased(),
-      direction != "none"
-    else { return AnyView(content) }
+    let direction = OverlayDefaults.snackBar(node).dismissDirection
+    guard direction != "none" else { return AnyView(content) }
     return AnyView(
       content.gesture(
         DragGesture(minimumDistance: 20).onEnded { value in
@@ -408,6 +582,7 @@ struct SnackBarControlView: View {
   @Environment(\.rufletEvents) private var events
 
   var body: some View {
+    let defaults = OverlayDefaults.snackBar(node)
     HStack(spacing: 12) {
       if let contentID = node.controlID(forKey: "content") {
         ControlView(id: contentID, axis: .none)
@@ -431,17 +606,22 @@ struct SnackBarControlView: View {
       }
     }
     .padding(ControlProps.edgeInsets(node.props["padding"])
-      ?? EdgeInsets(top: 14, leading: 14, bottom: 14, trailing: 14))
+      ?? EdgeInsets(
+        top: 14, leading: defaults.horizontalPadding,
+        bottom: 14,
+        trailing: node.controlID(forKey: "action") != nil
+          || node.string("action") != nil || node.bool("show_close_icon") == true
+          ? 0 : defaults.horizontalPadding))
     .background(
-      MaterialPalette.color(node.string("bgcolor"), default: Color.black.opacity(0.85)),
-      in: RoundedRectangle(cornerRadius: snackBarRadius))
+      MaterialPalette.color(
+        node.string("bgcolor"), default: MaterialPalette.color("inversesurface", default: .black)),
+      in: RoundedRectangle(cornerRadius: defaults.radius))
     .modifier(ChromeClipModifier(behavior: node.string("clip_behavior") ?? "hardEdge"))
-    .shadow(radius: CGFloat(node.double("elevation") ?? 0))
+    .shadow(color: .black.opacity(0.2), radius: defaults.elevation)
     .frame(width: floating ? node.double("width").map { CGFloat($0) } : nil)
-    .foregroundColor(.white)
+    .foregroundColor(MaterialPalette.color("oninversesurface", default: .white))
     // `behavior: floating` lifts the bar off the edge; `fixed` sits flush.
-    .padding(floating ? (ControlProps.edgeInsets(node.props["margin"])
-      ?? EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16)) : EdgeInsets())
+    .padding(floating ? floatingInsets(defaults) : EdgeInsets())
     .modifier(SnackBarSwipe(node: node, events: events))
     // Flutter's SnackBar invokes `onVisible` when the presentation becomes
     // visible. The action click stays on SnackBarAction when it is a control;
@@ -452,8 +632,11 @@ struct SnackBarControlView: View {
 
   private var floating: Bool { node.string("behavior")?.lowercased() == "floating" }
 
-  private var snackBarRadius: CGFloat {
-    ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? 8
+  private func floatingInsets(_ defaults: OverlayDefaults.SnackBarValues) -> EdgeInsets {
+    // Flutter ignores horizontal margin when an explicit floating width is
+    // supplied, but preserves the vertical inset.
+    guard node.double("width") != nil else { return defaults.inset }
+    return EdgeInsets(top: defaults.inset.top, leading: 0, bottom: defaults.inset.bottom, trailing: 0)
   }
 
   /// Flet's SnackBar hides itself after `duration` milliseconds; the Ruby side
@@ -462,8 +645,7 @@ struct SnackBarControlView: View {
   /// decides when the action moves to its own line.
   private func autoDismiss() async {
     guard node.bool("persist") != true else { return }
-    _ = node.double("action_overflow_threshold")
-    let milliseconds = node.double("duration") ?? 4000
+    let milliseconds = OverlayDefaults.snackBar(node).durationMilliseconds
     guard milliseconds > 0 else { return }
     try? await Task.sleep(nanoseconds: UInt64(milliseconds * 1_000_000))
     guard !Task.isCancelled else { return }
@@ -477,34 +659,36 @@ struct BannerControlView: View {
   @Environment(\.rufletEvents) private var events
 
   var body: some View {
-    HStack(alignment: .top, spacing: 12) {
-      if let leadingID = node.controlID(forKey: "leading") {
-        ControlView(id: leadingID, axis: .none)
-          .padding(ControlProps.edgeInsets(node.props["leading_padding"]) ?? EdgeInsets())
-      }
-      if node.bool("force_actions_below") == true {
-        VStack(alignment: .leading, spacing: 8) {
-          bannerContent
-          actionBar
+    let singleRow = node.controlIDs(forKey: "actions").count == 1
+      && node.bool("force_actions_below") != true
+    let elevation = CGFloat(node.double("elevation") ?? 0)
+    VStack(spacing: 0) {
+      HStack(alignment: .center, spacing: 0) {
+        if let leadingID = node.controlID(forKey: "leading") {
+          ControlView(id: leadingID, axis: .none)
+            .padding(ControlProps.edgeInsets(node.props["leading_padding"])
+              ?? EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 16))
         }
-      } else {
         bannerContent
-        actionBar
+        if singleRow { actionBar }
+      }
+      .padding(OverlayDefaults.bannerContentPadding(node))
+      if !singleRow { actionBar }
+      if elevation == 0 {
+        Rectangle()
+          .fill(MaterialPalette.color(node.string("divider_color"), default:
+            MaterialPalette.color("outlinevariant", default: .secondary.opacity(0.25))))
+          .frame(height: 1)
       }
     }
-    .padding(ControlProps.edgeInsets(node.props["content_padding"])
-      ?? EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16))
-    .padding(ControlProps.edgeInsets(node.props["margin"]) ?? EdgeInsets())
     .frame(maxWidth: .infinity)
-    .background(MaterialPalette.color(node.string("bgcolor"), default: .yellow.opacity(0.2)))
-    .overlay(alignment: .bottom) {
-      Rectangle()
-        .fill(MaterialPalette.color(node.string("divider_color"), default: .clear))
-        .frame(height: 1)
-    }
+    .background(MaterialPalette.color(node.string("bgcolor"), default:
+      MaterialPalette.color("surfacecontainerlow", default: .white)))
     .shadow(
       color: MaterialPalette.color(node.string("shadow_color"), default: .clear),
-      radius: CGFloat(node.double("elevation") ?? 0))
+      radius: elevation)
+    .padding(ControlProps.edgeInsets(node.props["margin"])
+      ?? EdgeInsets(top: 0, leading: 0, bottom: elevation > 0 ? 10 : 0, trailing: 0))
     .onAppear { events.fire(node, "visible") }
   }
 
@@ -522,6 +706,7 @@ struct BannerControlView: View {
       Spacer(minLength: 0)
       ControlList(ids: node.controlIDs(forKey: "actions"), axis: .horizontal)
     }
+    .padding(.horizontal, 8)
     .frame(minHeight: CGFloat(node.double("min_action_bar_height") ?? 52))
   }
 }

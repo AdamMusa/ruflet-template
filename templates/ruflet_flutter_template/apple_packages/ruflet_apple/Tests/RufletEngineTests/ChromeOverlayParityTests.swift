@@ -314,6 +314,85 @@ final class ChromeOverlayParityTests: XCTestCase {
     XCTAssertFalse(
       RufletOverlaySemantics.allowsBarrierDismiss(
         ControlNode(id: 83, type: "BottomSheet", props: ["dismissible": .bool(false)])))
+    // Flet's Cupertino popup API has no `dismissible` prop; it maps `modal`
+    // to showCupertinoModalPopup.barrierDismissible instead.
+    XCTAssertTrue(
+      RufletOverlaySemantics.allowsBarrierDismiss(
+        ControlNode(id: 84, type: "CupertinoBottomSheet",
+                    props: ["dismissible": .bool(false)])))
+    XCTAssertFalse(
+      RufletOverlaySemantics.allowsBarrierDismiss(
+        ControlNode(id: 85, type: "CupertinoBottomSheet", props: ["modal": .bool(true)])))
+  }
+
+  func testDialogDefaultsTranslateFletAndFlutterMaterialThreeConstructors() {
+    let defaults = OverlayDefaults.dialog(ControlNode(id: 100, type: "AlertDialog"))
+    XCTAssertEqual(defaults.radius, 28)
+    XCTAssertEqual(defaults.elevation, 6)
+    XCTAssertEqual(defaults.inset.leading, 40)
+    XCTAssertEqual(defaults.inset.top, 24)
+    XCTAssertEqual(defaults.content.leading, 24)
+    XCTAssertEqual(defaults.content.top, 20)
+    XCTAssertEqual(defaults.actions.bottom, 24)
+
+    let explicit = OverlayDefaults.dialog(ControlNode(
+      id: 101, type: "AlertDialog",
+      props: ["elevation": .double(9), "inset_padding": .double(7)]))
+    XCTAssertEqual(explicit.elevation, 9)
+    XCTAssertEqual(explicit.inset.leading, 7)
+  }
+
+  func testBottomSheetDefaultsMatchFlutterMaterialThreeAndFletFlags() {
+    let defaults = OverlayDefaults.sheet(ControlNode(id: 110, type: "BottomSheet"))
+    XCTAssertEqual(defaults.radius, 28)
+    XCTAssertEqual(defaults.elevation, 1)
+    XCTAssertEqual(defaults.maximumWidth, 640)
+    XCTAssertEqual(defaults.dragHandleWidth, 32)
+    XCTAssertEqual(defaults.dragHandleHeight, 4)
+    XCTAssertTrue(defaults.useSafeArea)
+    XCTAssertTrue(defaults.dismissible)
+
+    let explicit = OverlayDefaults.sheet(ControlNode(
+      id: 111, type: "BottomSheet",
+      props: ["use_safe_area": .bool(false), "dismissible": .bool(false)]))
+    XCTAssertFalse(explicit.useSafeArea)
+    XCTAssertFalse(explicit.dismissible)
+  }
+
+  func testSnackBarDefaultsRespectFixedFloatingAndExplicitWidthRules() {
+    let fixed = OverlayDefaults.snackBar(ControlNode(id: 120, type: "SnackBar"))
+    XCTAssertEqual(fixed.elevation, 6)
+    XCTAssertEqual(fixed.radius, 0)
+    XCTAssertEqual(fixed.horizontalPadding, 24)
+    XCTAssertEqual(fixed.durationMilliseconds, 4000)
+    XCTAssertEqual(fixed.dismissDirection, "down")
+    XCTAssertEqual(fixed.actionOverflowThreshold, 0.25)
+
+    let floating = OverlayDefaults.snackBar(ControlNode(
+      id: 121, type: "SnackBar", props: ["behavior": .string("floating")]))
+    XCTAssertEqual(floating.radius, 4)
+    XCTAssertEqual(floating.horizontalPadding, 16)
+    XCTAssertEqual(floating.inset.leading, 15)
+    XCTAssertEqual(floating.inset.top, 5)
+    XCTAssertEqual(floating.inset.bottom, 10)
+  }
+
+  func testBannerPaddingUsesFlutterSingleAndMultiActionGeometry() {
+    let single = ControlNode(
+      id: 130, type: "Banner", props: ["actions": .array([.controlRef(1)])])
+    let singlePadding = OverlayDefaults.bannerContentPadding(single)
+    XCTAssertEqual(singlePadding.leading, 16)
+    XCTAssertEqual(singlePadding.top, 2)
+    XCTAssertEqual(singlePadding.trailing, 0)
+
+    let multi = ControlNode(
+      id: 131, type: "Banner",
+      props: ["actions": .array([.controlRef(1), .controlRef(2)])])
+    let multiPadding = OverlayDefaults.bannerContentPadding(multi)
+    XCTAssertEqual(multiPadding.leading, 16)
+    XCTAssertEqual(multiPadding.top, 24)
+    XCTAssertEqual(multiPadding.trailing, 16)
+    XCTAssertEqual(multiPadding.bottom, 4)
   }
 
   func testOverlayDismissUpdatesOpenBeforeSendingDismiss() {
