@@ -35,6 +35,73 @@ final class MaterialMenuContextParityTests: XCTestCase {
     XCTAssertEqual(MaterialMenuDefaults.controlIDs(node, key: "controls"), [30])
   }
 
+  func testPopupMenuDefaultsMatchPinnedFlutterMaterial3Route() {
+    let popup = ControlNode(id: 8, type: "PopupMenuButton")
+    let item = ControlNode(id: 9, type: "PopupMenuItem")
+
+    XCTAssertEqual(MaterialMenuDefaults.popupMenuPosition(popup), "over")
+    XCTAssertEqual(MaterialMenuDefaults.popupMenuRadius, 4)
+    XCTAssertEqual(MaterialMenuDefaults.popupMenuPadding(popup).top, 8)
+    XCTAssertEqual(MaterialMenuDefaults.popupMenuPadding(popup).leading, 0)
+    XCTAssertEqual(MaterialMenuDefaults.popupItemPadding(item).leading, 12)
+    XCTAssertEqual(MaterialMenuDefaults.popupItemPadding(item).trailing, 12)
+  }
+
+  func testPopupEntriesFilterInvisibleAndNonPopupChildrenInWireOrder() {
+    let node = ControlNode(
+      id: 10, type: "PopupMenuButton",
+      props: ["items": .array([
+        .controlRef(20), .controlRef(21), .controlRef(22), .controlRef(20)
+      ])])
+    let types = [20: "PopupMenuItem", 21: "Text", 22: "PopupMenuItem"]
+    let visible = [20: true, 21: true, 22: false]
+
+    XCTAssertEqual(
+      MaterialMenuDefaults.popupItemIDs(
+        node, key: "items", typeForID: { types[$0] }, visibilityForID: { visible[$0] }),
+      [20])
+  }
+
+  func testHiddenPopupSlotsBecomeAbsentAndCanTurnAnItemIntoADivider() {
+    let controlContent = ControlNode(
+      id: 11, type: "PopupMenuItem", props: ["content": .controlRef(30)])
+    let scalarContent = ControlNode(
+      id: 12, type: "PopupMenuItem", props: ["content": .string("")])
+
+    XCTAssertTrue(MaterialMenuDefaults.popupItemIsDivider(controlContent) { _ in false })
+    XCTAssertFalse(MaterialMenuDefaults.popupItemIsDivider(controlContent) { _ in true })
+    XCTAssertFalse(MaterialMenuDefaults.popupItemIsDivider(scalarContent) { _ in false })
+  }
+
+  func testPopupSelectionFiresItemTapBeforeParentSelection() {
+    let button = ControlNode(
+      id: 40, type: "PopupMenuButton", props: ["on_select": .bool(true)])
+    let item = ControlNode(
+      id: 41, type: "PopupMenuItem",
+      props: ["checked": .bool(false), "on_click": .bool(true)])
+    var received: [(Int, String, RufletValue)] = []
+    let sink = RufletEventSink(send: { received.append(($0, $1, $2)) })
+
+    MaterialMenuDefaults.firePopupSelection(button: button, item: item, events: sink)
+
+    XCTAssertEqual(received.map { $0.0 }, [41, 40])
+    XCTAssertEqual(received.map { $0.1 }, ["click", "select"])
+    XCTAssertEqual(received[0].2, .bool(true))
+    XCTAssertEqual(received[1].2, .string("41"))
+  }
+
+  func testMenuControlContractIncludesFocusAndParentOwnedPopupItems() {
+    XCTAssertEqual(
+      ControlRegistry.builtInDescriptor(for: "MenuItemButton")?.supportedEvents,
+      ["blur", "click", "focus", "hover"])
+    XCTAssertEqual(
+      ControlRegistry.builtInDescriptor(for: "SubmenuButton")?.supportedEvents,
+      ["blur", "close", "focus", "hover", "open"])
+    let item = ControlRegistry.builtInDescriptor(for: "PopupMenuItem")
+    XCTAssertEqual(item?.classification, .structuralChild)
+    XCTAssertEqual(item?.rendering, .metadataOnly)
+  }
+
   func testPointerTriggerDefaultsMatchFletConstructor() {
     let node = ControlNode(id: 1, type: "ContextMenu")
 
@@ -124,6 +191,27 @@ final class MaterialMenuContextParityTests: XCTestCase {
     XCTAssertEqual(
       RufletContextMenuDefaults.popupItemIDs(node, button: nil) { types[$0] },
       [10, 12])
+  }
+
+  func testContextMenuVisibilityFiltersBeforeEntryBuilding() {
+    let node = ControlNode(
+      id: 41,
+      type: "ContextMenu",
+      props: ["secondary_items": .array([
+        .controlRef(10), .controlRef(11), .controlRef(12)
+      ])])
+    let types = [10: "PopupMenuItem", 11: "Text", 12: "PopupMenuItem"]
+    let visibility = [10: true, 11: true, 12: false]
+
+    XCTAssertEqual(
+      RufletContextMenuDefaults.visibleItemIDs(
+        node, button: "secondary", visibilityForID: { visibility[$0] }),
+      [10, 11])
+    XCTAssertEqual(
+      RufletContextMenuDefaults.visiblePopupItemIDs(
+        node, button: "secondary", typeForID: { types[$0] },
+        visibilityForID: { visibility[$0] }),
+      [10])
   }
 
   func testOpenPositionConversionAndCenterFallbackMatchFlet() {

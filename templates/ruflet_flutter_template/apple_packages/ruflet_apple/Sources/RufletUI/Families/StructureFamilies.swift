@@ -74,8 +74,13 @@ extension ControlRegistry {
       return AnyView(MenuBarControlView(node: node))
     case "SubmenuButton":
       return AnyView(SubmenuButtonControlView(node: node))
-    case "MenuItemButton", "PopupMenuItem":
+    case "MenuItemButton":
       return AnyView(MenuItemButtonControlView(node: node))
+    case "PopupMenuItem":
+      // PopupMenuItem is converted into a native entry by PopupMenuButton or
+      // ContextMenu. Rendering it independently would fabricate a different
+      // button control and duplicate parent-owned state.
+      return AnyView(EmptyView())
     case "ContextMenu", "CupertinoContextMenu":
       return AnyView(ContextMenuControlView(node: node))
     case "SnackBarAction", "CupertinoContextMenuAction", "CupertinoActionSheetAction",

@@ -386,10 +386,10 @@ public enum ControlRegistry {
         events: ["cancel", "open", "select"])
     add(["MenuBar"], .visible, "MenuBarControlView", .nativeView)
     add(["SubmenuButton"], .visible, "SubmenuButtonControlView", .nativeView,
-        events: ["close", "hover", "open"])
+        events: ["blur", "close", "focus", "hover", "open"])
     add(["MenuItemButton"], .visible, "MenuItemButtonControlView", .nativeView,
-        events: ["click", "hover"])
-    add(["PopupMenuItem"], .visible, "MenuItemButtonControlView", .nativeView,
+        events: ["blur", "click", "focus", "hover"])
+    add(["PopupMenuItem"], .structuralChild, "Parent-owned popup menu entry", .metadataOnly,
         events: ["click"])
     add(["ContextMenu"], .visible, "ContextMenuControlView", .nativeView,
         events: ["dismiss", "select"], methods: ["open"])

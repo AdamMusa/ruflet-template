@@ -828,30 +828,39 @@ struct PopupMenuControlView: View {
 
   var body: some View {
     Button {
+      // PopupMenuButtonState.showButtonMenu returns without firing onOpened
+      // when the visible, type-filtered entry list is empty.
+      guard !itemIDs.isEmpty else { return }
       completedSelection = false
       presented = true
       events.fire(node, "open")
     } label: {
-      if let contentID = node.controlID(forKey: "content") {
+      if let contentID = MaterialMenuDefaults.visibleControlID(
+        node, key: "content", visibilityForID: visibility
+      ) {
         ControlView(id: contentID, axis: .none)
       } else if let content = node.string("content") {
         Text(content)
-      } else if node.props["icon"] == nil {
-        // Flutter's PopupMenuButton falls back to Icons.moreVert when neither
-        // an icon nor child was supplied. Use the native semantic equivalent.
-        Image(systemName: "ellipsis")
-          .font(.system(size: iconSize))
-          .foregroundColor(MaterialPalette.color(node.string("icon_color")))
-          .frame(width: splashSide ?? 40, height: splashSide ?? 40)
-          .contentShape(Rectangle())
-      } else if let iconID = node.controlID(forKey: "icon") {
+      } else if let iconID = MaterialMenuDefaults.visibleControlID(
+        node, key: "icon", visibilityForID: visibility
+      ) {
         ControlView(id: iconID, axis: .none)
           .frame(width: splashSide ?? 40, height: splashSide ?? 40)
           .contentShape(Rectangle())
-      } else {
+      } else if MaterialMenuDefaults.hasVisibleSlot(
+        node, key: "icon", visibilityForID: visibility
+      ) {
         RufletIcon(
           value: node.props["icon"], size: iconSize,
           color: MaterialPalette.color(node.string("icon_color")))
+          .frame(width: splashSide ?? 40, height: splashSide ?? 40)
+          .contentShape(Rectangle())
+      } else {
+        // Flutter's PopupMenuButton falls back to Icons.moreVert when neither
+        // a visible icon nor child was supplied. Use the native semantic equivalent.
+        Image(systemName: "ellipsis")
+          .font(.system(size: iconSize))
+          .foregroundColor(MaterialPalette.color(node.string("icon_color")))
           .frame(width: splashSide ?? 40, height: splashSide ?? 40)
           .contentShape(Rectangle())
       }
@@ -868,8 +877,7 @@ struct PopupMenuControlView: View {
           if let item = store.node(itemID), item.type == "PopupMenuItem" { menuItem(item) }
         }
       }
-      .padding(ControlProps.edgeInsets(node.props["menu_padding"])
-        ?? EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
+      .padding(MaterialMenuDefaults.popupMenuPadding(node))
       .frame(minWidth: 180)
       // PopupMenuButton.constraints constrains the popup route, not the
       // anchor button which opens it.
@@ -892,12 +900,13 @@ struct PopupMenuControlView: View {
   /// `menu_position` is Flutter's `PopupMenuPosition`: the menu hangs under
   /// the button or covers it.
   private var menuAnchor: PopoverAttachmentAnchor {
-    node.string("menu_position")?.lowercased() == "over"
-      ? .rect(.bounds) : .rect(.bounds)
+    MaterialMenuDefaults.popupMenuPosition(node) == "under"
+      ? .point(.bottom) : .rect(.bounds)
   }
 
   private var menuRadius: CGFloat {
-    ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? 8
+    ControlProps.cornerRadius(node.map("shape")?["radius"])
+      ?? MaterialMenuDefaults.popupMenuRadius
   }
 
   /// `splash_radius` sizes the circle the button's press wash fills.
@@ -910,56 +919,29 @@ struct PopupMenuControlView: View {
   }
 
   private var itemIDs: [Int] {
-    MaterialMenuDefaults.controlIDs(node, key: "items")
+    MaterialMenuDefaults.popupItemIDs(
+      node, key: "items", typeForID: { store.node($0)?.type },
+      visibilityForID: visibility)
   }
 
   @ViewBuilder
   private func menuItem(_ item: ControlNode) -> some View {
-    let hasContent = item.controlID(forKey: "content") != nil
-      || item.string("content") != nil || item.string("text") != nil
-    let hasIcon = item.props["icon"] != nil
-    if !hasContent && !hasIcon {
+    if MaterialMenuDefaults.popupItemIsDivider(item, visibilityForID: visibility) {
       Divider()
     } else {
       Button {
         completedSelection = true
-        // Flet's popup entry value is the wire id of the selected item.
-        events.fire(node, "select", data: .string(String(item.id)))
-        if let checked = item.bool("checked") {
-          events.fire(item, "click", data: .bool(!checked))
-        } else {
-          events.fire(item, "click")
-        }
+        MaterialMenuDefaults.firePopupSelection(button: node, item: item, events: events)
         presented = false
       } label: {
-        HStack {
-          if let checked = item.bool("checked") {
-            Group {
-              if checked {
-                Image(systemName: "checkmark")
-              } else {
-                Color.clear.frame(width: 18, height: 1)
-              }
-            }
-            .frame(width: 18)
-          }
-          if let iconID = item.controlID(forKey: "icon") {
-            ControlView(id: iconID, axis: .none)
-          } else if item.props["icon"] != nil {
-            RufletIcon(value: item.props["icon"], size: 16, color: nil)
-          }
-          if let contentID = item.controlID(forKey: "content") {
-            ControlView(id: contentID, axis: .none)
-          } else {
-            Text(item.string("content") ?? item.string("text") ?? "")
-          }
-        }
-        .padding(ControlProps.edgeInsets(item.props["padding"]) ?? EdgeInsets())
-        .frame(minHeight: MaterialMenuDefaults.popupItemHeight(item))
-        .rufletTextStyle(RufletTextStyle(node: item, styleKey: "label_text_style"))
+        PopupMenuItemLabel(node: item)
       }
       .disabled(item.bool("disabled") ?? false)
     }
+  }
+
+  private func visibility(_ id: Int) -> Bool? {
+    store.node(id)?.bool("visible")
   }
 }
 
@@ -994,6 +976,7 @@ struct MenuBarControlView: View {
 /// `SubmenuButton` — a labelled menu that can nest further submenus.
 struct SubmenuButtonControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
   @State private var presented = false
   @FocusState private var focused: Bool
@@ -1028,7 +1011,9 @@ struct SubmenuButtonControlView: View {
     .buttonStyle(.plain)
     .modifier(MaterialMenuButtonStyle(value: node.props["style"], appliesConstructorDefaults: true))
     .modifier(ChromeClipModifier(behavior: MaterialMenuDefaults.submenuClipBehavior(node)))
-    .disabled(node.bool("disabled") ?? false)
+    // Flutter disables SubmenuButton when its visible menuChildren collection
+    // is empty, even when the explicit disabled flag is false.
+    .disabled(node.bool("disabled") == true || controlIDs.isEmpty)
     .focused($focused)
     .popover(
       isPresented: $presented,
@@ -1068,7 +1053,9 @@ struct SubmenuButtonControlView: View {
   }
 
   private var controlIDs: [Int] {
-    MaterialMenuDefaults.controlIDs(node, key: "controls")
+    MaterialMenuDefaults.visibleControlIDs(node, key: "controls") {
+      store.node($0)?.bool("visible")
+    }
   }
 }
 
@@ -1140,10 +1127,60 @@ struct MenuItemButtonControlView: View {
   }
 }
 
+/// The label shared by PopupMenuButton and ContextMenu entries. Flet builds
+/// both through `buildPopupMenuEntries`, so icon/checkmark order, default
+/// padding, minimum height, text style, and hidden child slots must agree.
+private struct PopupMenuItemLabel: View {
+  let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
+
+  var body: some View {
+    HStack(spacing: 8) {
+      if let checked = node.bool("checked") {
+        Group {
+          if checked {
+            Image(systemName: "checkmark")
+          } else {
+            Color.clear.frame(width: 18, height: 1)
+          }
+        }
+        .frame(width: 18)
+      }
+      if let iconID = MaterialMenuDefaults.visibleControlID(
+        node, key: "icon", visibilityForID: visibility
+      ) {
+        ControlView(id: iconID, axis: .none)
+      } else if MaterialMenuDefaults.hasVisibleSlot(
+        node, key: "icon", visibilityForID: visibility
+      ) {
+        RufletIcon(value: node.props["icon"], size: 16, color: nil)
+      }
+      if let contentID = MaterialMenuDefaults.visibleControlID(
+        node, key: "content", visibilityForID: visibility
+      ) {
+        ControlView(id: contentID, axis: .none)
+      } else if let content = node.string("content") ?? node.string("text") {
+        Text(content)
+      }
+    }
+    .padding(MaterialMenuDefaults.popupItemPadding(node))
+    .frame(
+      maxWidth: .infinity, minHeight: MaterialMenuDefaults.popupItemHeight(node),
+      alignment: .leading)
+    .rufletTextStyle(RufletTextStyle(node: node, styleKey: "label_text_style"))
+  }
+
+  private func visibility(_ id: Int) -> Bool? {
+    store.node(id)?.bool("visible")
+  }
+}
+
 /// Constructor values from Flet 0.80.5's Material menu controls. Keeping the
 /// omission rules here prevents each SwiftUI view from inventing a different
 /// fallback and gives parity tests a stable, source-derived seam.
 enum MaterialMenuDefaults {
+  static let popupMenuRadius: CGFloat = 4
+
   static func popupIconSize(_ node: ControlNode) -> CGFloat {
     CGFloat(node.double("icon_size") ?? 24)
   }
@@ -1157,8 +1194,23 @@ enum MaterialMenuDefaults {
     node.string("clip_behavior") ?? "none"
   }
 
+  static func popupMenuPadding(_ node: ControlNode) -> EdgeInsets {
+    ControlProps.edgeInsets(node.props["menu_padding"])
+      ?? EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0)
+  }
+
+  static func popupMenuPosition(_ node: ControlNode) -> String {
+    let value = node.string("menu_position")?.lowercased() ?? "over"
+    return value.hasSuffix("under") ? "under" : "over"
+  }
+
   static func popupItemHeight(_ node: ControlNode) -> CGFloat {
     CGFloat(node.double("height") ?? 48)
+  }
+
+  static func popupItemPadding(_ node: ControlNode) -> EdgeInsets {
+    ControlProps.edgeInsets(node.props["padding"])
+      ?? EdgeInsets(top: 0, leading: 12, bottom: 0, trailing: 12)
   }
 
   static func menuBarClipBehavior(_ node: ControlNode) -> String {
@@ -1190,6 +1242,67 @@ enum MaterialMenuDefaults {
     // generic `controls` collection into an `items` slot can silently render
     // unrelated controls in a popup.
     orderedUnique(node.controlIDs(forKey: key))
+  }
+
+  static func visibleControlID(
+    _ node: ControlNode,
+    key: String,
+    visibilityForID: (Int) -> Bool?
+  ) -> Int? {
+    guard let id = node.controlID(forKey: key), visibilityForID(id) != false else { return nil }
+    return id
+  }
+
+  /// Flet's `buildTextOrWidget`/`buildIconOrWidget` treats a hidden child
+  /// control as absent, while preserving scalar text and icon values.
+  static func hasVisibleSlot(
+    _ node: ControlNode,
+    key: String,
+    visibilityForID: (Int) -> Bool?
+  ) -> Bool {
+    if node.controlID(forKey: key) != nil {
+      return visibleControlID(node, key: key, visibilityForID: visibilityForID) != nil
+    }
+    return node.props[key]?.isNull == false
+  }
+
+  static func popupItemIsDivider(
+    _ node: ControlNode,
+    visibilityForID: (Int) -> Bool?
+  ) -> Bool {
+    !hasVisibleSlot(node, key: "content", visibilityForID: visibilityForID)
+      && node.string("text") == nil
+      && !hasVisibleSlot(node, key: "icon", visibilityForID: visibilityForID)
+  }
+
+  static func popupItemIDs(
+    _ node: ControlNode,
+    key: String,
+    typeForID: (Int) -> String?,
+    visibilityForID: (Int) -> Bool?
+  ) -> [Int] {
+    visibleControlIDs(node, key: key, visibilityForID: visibilityForID)
+      .filter { typeForID($0) == "PopupMenuItem" }
+  }
+
+  /// PopupMenuItem.onTap runs before PopupMenuButton.onSelected in Flutter.
+  /// Keeping dispatch in one seam prevents the native popover from reversing
+  /// two callbacks that application code can observe.
+  static func firePopupSelection(
+    button: ControlNode,
+    item: ControlNode,
+    events: RufletEventSink
+  ) {
+    firePopupItemClick(item, events: events)
+    events.fire(button, "select", data: .string(String(item.id)))
+  }
+
+  static func firePopupItemClick(_ item: ControlNode, events: RufletEventSink) {
+    if let checked = item.bool("checked") {
+      events.fire(item, "click", data: .bool(!checked))
+    } else {
+      events.fire(item, "click")
+    }
   }
 
   static func visibleControlIDs(
@@ -1248,6 +1361,24 @@ enum RufletContextMenuDefaults {
     typeForID: (Int) -> String?
   ) -> [Int] {
     itemIDs(node, button: button).filter { typeForID($0) == "PopupMenuItem" }
+  }
+
+  static func visibleItemIDs(
+    _ node: ControlNode,
+    button: String?,
+    visibilityForID: (Int) -> Bool?
+  ) -> [Int] {
+    itemIDs(node, button: button).filter { visibilityForID($0) != false }
+  }
+
+  static func visiblePopupItemIDs(
+    _ node: ControlNode,
+    button: String?,
+    typeForID: (Int) -> String?,
+    visibilityForID: (Int) -> Bool?
+  ) -> [Int] {
+    visibleItemIDs(node, button: button, visibilityForID: visibilityForID)
+      .filter { typeForID($0) == "PopupMenuItem" }
   }
 
   static func permitsGesture(_ node: ControlNode, button: String, gesture: String) -> Bool {
@@ -1385,13 +1516,17 @@ struct ContextMenuControlView: View {
   @State private var activeGlobalPosition = CGPoint.zero
   @State private var activeLocalPosition: CGPoint?
   @State private var contentFrame = CGRect.zero
+  @State private var contentMeasured = false
   @State private var primaryPressGlobalPosition: CGPoint?
+  @State private var pendingOpenCompletion: RufletMethodCompletion?
 
   var body: some View {
     Group {
       if node.type == "CupertinoContextMenu" {
         CupertinoContextMenuControlView(node: node)
-      } else if let contentID = node.controlID(forKey: "content") {
+      } else if let contentID = MaterialMenuDefaults.visibleControlID(
+        node, key: "content", visibilityForID: visibility
+      ) {
         ControlView(id: contentID, axis: .none)
       } else {
         Text("ContextMenu.content must be visible")
@@ -1422,18 +1557,27 @@ struct ContextMenuControlView: View {
           key: ContextMenuFramePreference.self,
           value: proxy.frame(in: .global))
       })
-    .onPreferenceChange(ContextMenuFramePreference.self) { contentFrame = $0 }
+    .onPreferenceChange(ContextMenuFramePreference.self) {
+      contentFrame = $0
+      contentMeasured = true
+    }
     .popover(isPresented: $presented, attachmentAnchor: popoverAnchor) {
       VStack(alignment: .leading, spacing: 0) {
         popoverMenuItems(button: activeButton)
       }
-      .padding(.vertical, 6)
+      .padding(.vertical, 8)
       .frame(minWidth: 180)
     }
     .onChange(of: presented) { open in
       if !open, !completedSelection {
         events.fire(node, "dismiss", data: .map(eventPayload(button: activeButton)))
       }
+      if !open { completeOpenCommand() }
+    }
+    .onDisappear {
+      pendingOpenCompletion?(.failure(RufletServiceError.unavailable(
+        "ContextMenu disappeared before its menu closed")))
+      pendingOpenCompletion = nil
     }
     .rufletCommandHandler(node.id) { call, completion in
       guard node.type != "CupertinoContextMenu" else {
@@ -1444,12 +1588,22 @@ struct ContextMenuControlView: View {
         completion(.failure(rufletUnsupported(node.type, call)))
         return
       }
+      guard contentMeasured else {
+        completion(.failure(RufletServiceError.unavailable(
+          "ContextMenu render box is not ready to display a menu")))
+        return
+      }
+      guard pendingOpenCompletion == nil else {
+        completion(.failure(RufletServiceError.unavailable(
+          "ContextMenu already has a pending open call")))
+        return
+      }
       let positions = RufletContextMenuDefaults.positions(
         global: RufletContextMenuDefaults.point(call.argument("global_position")),
         local: RufletContextMenuDefaults.point(call.argument("local_position")),
         frame: contentFrame)
+      pendingOpenCompletion = completion
       open(button: nil, global: positions.global, local: positions.local)
-      completion(.success(.null))
     }
   }
 
@@ -1468,52 +1622,45 @@ struct ContextMenuControlView: View {
     activeGlobalPosition = positions.global
     activeLocalPosition = positions.local
     completedSelection = false
-    if itemIDs(button: button).isEmpty {
-      events.fire(node, "dismiss", data: .map(eventPayload(button: button)))
+    if popupItemIDs(button: button).isEmpty {
+      events.fire(
+        node, "dismiss",
+        data: .map(eventPayload(button: button, itemCount: 0)))
+      completeOpenCommand()
       return
     }
     presented = true
   }
 
-  private func itemIDs(button: String?) -> [Int] {
-    RufletContextMenuDefaults.popupItemIDs(node, button: button) {
-      store.node($0)?.type
-    }
+  /// The source collection remains relevant to selection payload indices even
+  /// though only PopupMenuItem entries are rendered, matching Flet's state machine.
+  private func collectionItemIDs(button: String?) -> [Int] {
+    RufletContextMenuDefaults.visibleItemIDs(
+      node, button: button, visibilityForID: visibility)
+  }
+
+  private func popupItemIDs(button: String?) -> [Int] {
+    RufletContextMenuDefaults.visiblePopupItemIDs(
+      node, button: button, typeForID: { store.node($0)?.type },
+      visibilityForID: visibility)
   }
 
   @ViewBuilder
   private func popoverMenuItems(button: String?) -> some View {
-    ForEach(itemIDs(button: button), id: \.self) { itemID in
+    ForEach(popupItemIDs(button: button), id: \.self) { itemID in
       if let item = store.node(itemID) { contextItem(item, button: button) }
     }
   }
 
   @ViewBuilder
   private func contextItem(_ item: ControlNode, button: String?) -> some View {
-    let hasContent = item.controlID(forKey: "content") != nil
-      || item.string("content") != nil || item.string("text") != nil
-    let hasIcon = item.props["icon"] != nil
-    if !hasContent && !hasIcon {
+    if MaterialMenuDefaults.popupItemIsDivider(item, visibilityForID: visibility) {
       Divider()
     } else {
       Button {
         select(item, button: button)
       } label: {
-        HStack(spacing: 8) {
-          if let iconID = item.controlID(forKey: "icon") {
-            ControlView(id: iconID, axis: .none)
-          } else if item.props["icon"] != nil {
-            RufletIcon(value: item.props["icon"], size: 16, color: nil)
-          }
-          if let contentID = item.controlID(forKey: "content") {
-            ControlView(id: contentID, axis: .none)
-          } else {
-            Text(item.string("content") ?? item.string("text") ?? "")
-          }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 7)
+        PopupMenuItemLabel(node: item)
       }
       .buttonStyle(.plain)
       .disabled(item.bool("disabled") ?? false)
@@ -1522,29 +1669,34 @@ struct ContextMenuControlView: View {
 
   private func select(_ item: ControlNode, button: String?) {
     completedSelection = true
-    let ids = itemIDs(button: button)
+    let ids = collectionItemIDs(button: button)
     var payload = eventPayload(button: button)
     payload["id"] = .int(Int64(item.id))
-    payload["idx"] = .int(Int64(ids.firstIndex(of: item.id) ?? 0))
+    payload["idx"] = ids.firstIndex(of: item.id).map { .int(Int64($0)) } ?? .null
     // PopupMenuItem.onTap runs before showMenu's Future completes and the
     // parent receives `select`, so preserve that observable event order.
-    if let checked = item.bool("checked") {
-      events.fire(item, "click", data: .bool(!checked))
-    } else {
-      events.fire(item, "click")
-    }
+    MaterialMenuDefaults.firePopupItemClick(item, events: events)
     events.fire(node, "select", data: .map(payload))
     presented = false
   }
 
-  private func eventPayload(button: String?) -> [String: RufletValue] {
-    let ids = itemIDs(button: button)
+  private func eventPayload(button: String?, itemCount: Int? = nil) -> [String: RufletValue] {
     return RufletContextMenuDefaults.eventPayload(
       node: node,
       button: button,
       global: activeGlobalPosition,
       local: activeLocalPosition,
-      itemCount: ids.count)
+      itemCount: itemCount ?? collectionItemIDs(button: button).count)
+  }
+
+  private func visibility(_ id: Int) -> Bool? {
+    store.node(id)?.bool("visible")
+  }
+
+  private func completeOpenCommand() {
+    guard let completion = pendingOpenCompletion else { return }
+    pendingOpenCompletion = nil
+    completion(.success(.null))
   }
 }
 

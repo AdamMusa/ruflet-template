@@ -223,8 +223,8 @@ final class ChromeOverlayParityTests: XCTestCase {
 
   func testChromeAndMenuDescriptorsExposeFletEvents() throws {
     XCTAssertEqual(events("CupertinoNavigationBar"), ["change"])
-    XCTAssertEqual(events("MenuItemButton"), ["click", "hover"])
-    XCTAssertEqual(events("SubmenuButton"), ["close", "hover", "open"])
+    XCTAssertEqual(events("MenuItemButton"), ["blur", "click", "focus", "hover"])
+    XCTAssertEqual(events("SubmenuButton"), ["blur", "close", "focus", "hover", "open"])
     XCTAssertEqual(events("SnackBar"), ["action", "dismiss", "visible"])
     XCTAssertEqual(events("SnackBarAction"), ["click"])
   }
