@@ -1959,6 +1959,13 @@ struct TabBarPresentation {
   /// corresponding modifier; they never opt into a handwritten strip.
   static func usesNativeAppearance(_: ControlNode) -> Bool { true }
 
+  /// `Tab` is structural metadata owned by `TabBar`. Dart obtains it through
+  /// `children("tabs")`, whose default contract excludes invisible children
+  /// before constructing the native tab indices.
+  static func visibleTabs(_ tabs: [ControlNode]) -> [ControlNode] {
+    tabs.filter { $0.bool("visible") != false }
+  }
+
   static func validationMessage(_ node: ControlNode) -> String? {
     let values = CollectionDefaults.tabBar(node)
     if node.map("indicator") == nil && values.indicatorThickness <= 0 {
@@ -2075,7 +2082,8 @@ struct TabBarControlView: View {
   @Environment(\.rufletTabSelection) private var selection
 
   var body: some View {
-    let tabs = node.controlIDs(forKey: "tabs").compactMap { store.node($0) }
+    let tabs = TabBarPresentation.visibleTabs(
+      node.controlIDs(forKey: "tabs").compactMap { store.node($0) })
 
     Group {
       if selection == nil {
