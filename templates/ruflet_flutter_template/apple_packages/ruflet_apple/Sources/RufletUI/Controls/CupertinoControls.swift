@@ -680,26 +680,43 @@ struct CupertinoSliderControlView: View {
 
   var body: some View {
     let presentation = CupertinoSliderPresentation(node: node)
-    Group {
-      if let step = presentation.step {
-        Slider(
-          value: valueBinding(presentation), in: presentation.range, step: step,
-          onEditingChanged: editingChanged(presentation))
-      } else {
-        // Flet passes `divisions: null` to CupertinoSlider for a genuinely
-        // continuous control. Supplying an artificial epsilon step changes
-        // native value quantisation and can overflow SwiftUI's step count.
-        Slider(
-          value: valueBinding(presentation), in: presentation.range,
-          onEditingChanged: editingChanged(presentation))
-      }
-    }
-    .modifier(OptionalSliderTint(color: presentation.activeColor))
-    .disabled(node.bool("disabled") ?? false)
+    slider(presentation)
+    .disabled(node.bool("disabled") == true || !presentation.hasSelectableRange)
     .onAppear { currentValue = presentation.value }
     .onChange(of: node.double("value")) { _ in
       currentValue = CupertinoSliderPresentation(node: node).value
     }
+  }
+
+  @ViewBuilder
+  private func slider(_ presentation: CupertinoSliderPresentation) -> some View {
+    #if canImport(UIKit)
+      // UISlider is the public native Apple primitive which exposes both the
+      // minimum-track and thumb tint. SwiftUI Slider exposes only the track
+      // tint and previously discarded Flet's Cupertino `thumb_color`.
+      RufletNativeCupertinoSlider(
+        value: valueBinding(presentation),
+        configuration: CupertinoSliderNativeConfiguration(presentation),
+        activeColor: presentation.activeColor,
+        thumbColor: presentation.thumbColor,
+        enabled: node.bool("disabled") != true && presentation.hasSelectableRange,
+        onEditingChanged: editingChanged(presentation))
+    #else
+      Group {
+        if let step = presentation.step {
+          Slider(
+            value: valueBinding(presentation), in: presentation.range, step: step,
+            onEditingChanged: editingChanged(presentation))
+        } else {
+          // AppKit's native slider remains genuinely continuous when Flet
+          // omits divisions. NSSlider has no public knob-tint API.
+          Slider(
+            value: valueBinding(presentation), in: presentation.range,
+            onEditingChanged: editingChanged(presentation))
+        }
+      }
+      .modifier(OptionalSliderTint(color: presentation.activeColor))
+    #endif
   }
 
   private func valueBinding(_ presentation: CupertinoSliderPresentation) -> Binding<Double> {
@@ -730,9 +747,14 @@ struct CupertinoSliderPresentation {
   let node: ControlNode
 
   var minimum: Double { node.double("min") ?? 0 }
-  var maximum: Double { max(node.double("max") ?? 1, minimum + .ulpOfOne) }
-  var range: ClosedRange<Double> { minimum...maximum }
-  var value: Double { min(max(node.double("value") ?? minimum, minimum), maximum) }
+  var maximum: Double { node.double("max") ?? 1 }
+  var hasSelectableRange: Bool { maximum > minimum }
+  /// SwiftUI requires a non-empty interval even when Flet disables a slider
+  /// whose minimum equals its maximum. Interaction is disabled separately.
+  var range: ClosedRange<Double> { minimum...max(maximum, minimum + .ulpOfOne) }
+  var value: Double {
+    min(max(node.double("value") ?? minimum, minimum), max(maximum, minimum))
+  }
   var divisions: Int? { node.int("divisions") }
   var step: Double? {
     guard let divisions, divisions > 0 else { return nil }
@@ -741,7 +763,98 @@ struct CupertinoSliderPresentation {
   var activeColor: Color? { MaterialPalette.color(node.string("active_color")) }
   /// Flutter's CupertinoSlider defaults the thumb to Cupertino white.
   var thumbColorName: String { node.string("thumb_color") ?? "white" }
+  var thumbColor: Color { MaterialPalette.color(thumbColorName, default: .white) }
 }
+
+struct CupertinoSliderNativeConfiguration: Equatable {
+  let minimum: Double
+  let maximum: Double
+  let divisions: Int?
+
+  init(_ presentation: CupertinoSliderPresentation) {
+    minimum = presentation.minimum
+    maximum = max(presentation.maximum, presentation.minimum)
+    divisions = presentation.divisions.flatMap { $0 > 0 ? $0 : nil }
+  }
+
+  var step: Double? {
+    divisions.map { (maximum - minimum) / Double($0) }
+  }
+
+  /// UISlider is continuous even when Flet supplies divisions; quantise each
+  /// native value change to the same equally-spaced stops CupertinoSlider uses.
+  func snapped(_ value: Double) -> Double {
+    let clamped = min(max(value, minimum), maximum)
+    guard let step, step > 0 else { return clamped }
+    let index = ((clamped - minimum) / step).rounded()
+    return min(max(minimum + index * step, minimum), maximum)
+  }
+}
+
+#if canImport(UIKit)
+  private struct RufletNativeCupertinoSlider: UIViewRepresentable {
+    @Binding var value: Double
+    let configuration: CupertinoSliderNativeConfiguration
+    let activeColor: Color?
+    let thumbColor: Color
+    let enabled: Bool
+    let onEditingChanged: (Bool) -> Void
+
+    func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
+
+    func makeUIView(context: Context) -> UISlider {
+      let slider = UISlider(frame: .zero)
+      slider.isContinuous = true
+      slider.addTarget(
+        context.coordinator, action: #selector(Coordinator.started(_:)),
+        for: .touchDown)
+      slider.addTarget(
+        context.coordinator, action: #selector(Coordinator.changed(_:)),
+        for: .valueChanged)
+      slider.addTarget(
+        context.coordinator, action: #selector(Coordinator.ended(_:)),
+        for: [.touchUpInside, .touchUpOutside, .touchCancel])
+      configure(slider)
+      return slider
+    }
+
+    func updateUIView(_ slider: UISlider, context: Context) {
+      context.coordinator.parent = self
+      configure(slider)
+    }
+
+    private func configure(_ slider: UISlider) {
+      slider.minimumValue = Float(configuration.minimum)
+      slider.maximumValue = Float(configuration.maximum)
+      if !slider.isTracking {
+        slider.setValue(Float(configuration.snapped(value)), animated: false)
+      }
+      slider.minimumTrackTintColor = activeColor.map(UIColor.init)
+      slider.thumbTintColor = UIColor(thumbColor)
+      slider.isEnabled = enabled
+    }
+
+    final class Coordinator: NSObject {
+      var parent: RufletNativeCupertinoSlider
+
+      init(parent: RufletNativeCupertinoSlider) { self.parent = parent }
+
+      @objc func started(_ slider: UISlider) {
+        parent.onEditingChanged(true)
+      }
+
+      @objc func changed(_ slider: UISlider) {
+        let snapped = parent.configuration.snapped(Double(slider.value))
+        slider.value = Float(snapped)
+        parent.value = snapped
+      }
+
+      @objc func ended(_ slider: UISlider) {
+        parent.onEditingChanged(false)
+      }
+    }
+  }
+#endif
 
 private struct OptionalSliderTint: ViewModifier {
   let color: Color?
