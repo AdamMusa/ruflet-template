@@ -778,6 +778,7 @@ private struct ViewportFraction: ViewModifier {
 /// `PageView` — a horizontally paged carousel.
 struct PageViewControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
   @State private var selectedIndex: Int
   @State private var viewportExtent: CGFloat = 0
@@ -789,10 +790,11 @@ struct PageViewControlView: View {
 
   var body: some View {
     let config = CollectionDefaults.pageView(node)
+    let ids = pageIDs
     Group {
       if config.snap {
         TabView(selection: $selectedIndex) {
-          ForEach(PageViewParity.pages(node.childIDs), id: \.id) { page in
+          ForEach(PageViewParity.pages(ids), id: \.id) { page in
             ControlView(id: page.id, axis: .none)
               .modifier(PageViewport(
                 horizontal: config.horizontal,
@@ -807,7 +809,7 @@ struct PageViewControlView: View {
         .modifier(PageAxis(horizontal: config.horizontal))
       } else {
         FreeScrollingPageView(
-          ids: node.childIDs, selectedIndex: $selectedIndex,
+          ids: ids, selectedIndex: $selectedIndex,
           horizontal: config.horizontal, reverse: config.reverse,
           fraction: config.viewportFraction, padEnds: config.padEnds,
           implicitScrolling: config.implicitScrolling)
@@ -832,16 +834,23 @@ struct PageViewControlView: View {
       events.fire(node, "change", data: .int(Int64(value)))
     }
     .onChange(of: node.int("selected_index") ?? 0) { value in
-      selectedIndex = CollectionParity.clampedIndex(value, count: node.childIDs.count)
+      selectedIndex = CollectionParity.clampedIndex(value, count: ids.count)
+    }
+    .onChange(of: ids) { nextIDs in
+      selectedIndex = CollectionParity.clampedIndex(selectedIndex, count: nextIDs.count)
     }
     .rufletCommandHandler(node.id, handler: handleCommand)
+  }
+
+  private var pageIDs: [Int] {
+    PageViewParity.visibleControlIDs(node, in: store.nodes)
   }
 
   private func handleCommand(
     _ call: RufletMethodCall,
     completion: @escaping RufletMethodCompletion
   ) {
-    let count = node.childIDs.count
+    let count = pageIDs.count
     switch call.name {
     case "go_to_page", "jump_to_page":
       guard let index = call.argument("index")?.intValue else {
@@ -888,6 +897,11 @@ enum PageViewParity {
   /// children or reinterpret PageController indices.
   static func pages(_ ids: [Int]) -> [Page] {
     ids.enumerated().map { Page(index: $0.offset, id: $0.element) }
+  }
+  static func visibleControlIDs(
+    _ node: ControlNode, in nodes: [Int: ControlNode]
+  ) -> [Int] {
+    CollectionVisibleChildren.ids(node.controlIDs(forKey: "controls"), in: nodes)
   }
   static func selectionProperties(index: Int) -> [String: RufletValue] {
     ["selected_index": .int(Int64(index))]
