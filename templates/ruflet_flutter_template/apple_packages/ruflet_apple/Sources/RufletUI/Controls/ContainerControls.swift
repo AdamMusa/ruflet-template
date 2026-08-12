@@ -895,9 +895,10 @@ enum RufletCardShapeKind: String, Equatable {
 /// Flet forwards optional wire fields unchanged, so resolving the nil cases is
 /// native-renderer work rather than Ruby DSL policy.
 struct RufletCardMetrics: Equatable {
+  let usesNativeAppearance: Bool
   let variant: RufletCardVariant
-  let fillToken: String
-  let shadowToken: String
+  let fillToken: String?
+  let shadowToken: String?
   let elevation: CGFloat
   let margin: EdgeInsets
   let shapeKind: RufletCardShapeKind
@@ -912,12 +913,21 @@ struct RufletCardMetrics: Equatable {
   let showBorderOnForeground: Bool
 
   init(node: ControlNode) {
+    // Flet's wire contract tells us what the control means; it does not make
+    // Material the default presentation of an Apple renderer. When Ruby has
+    // not supplied any visual Card property, let SwiftUI's GroupBoxStyle own
+    // the platform appearance. An explicit visual property opts into the
+    // custom surface below so the DSL remains the source of truth.
+    usesNativeAppearance = [
+      "variant", "bgcolor", "shadow_color", "elevation", "margin", "shape",
+      "clip_behavior", "show_border_on_foreground",
+    ].allSatisfy { node.props[$0] == nil }
     variant = RufletCardVariant(node.string("variant"))
-    fillToken = node.string("bgcolor") ?? Self.defaultFill(variant)
-    shadowToken = node.string("shadow_color") ?? "shadow"
-    elevation = CGFloat(node.double("elevation") ?? (variant == .elevated ? 1 : 0))
+    fillToken = node.string("bgcolor") ?? (usesNativeAppearance ? nil : Self.defaultFill(variant))
+    shadowToken = node.string("shadow_color") ?? (usesNativeAppearance ? nil : "shadow")
+    elevation = CGFloat(node.double("elevation") ?? (usesNativeAppearance ? 0 : (variant == .elevated ? 1 : 0)))
     margin = ControlProps.edgeInsets(node.props["margin"])
-      ?? EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4)
+      ?? EdgeInsets()
     clipBehavior = node.string("clip_behavior") ?? "none"
     semanticContainer = node.bool("semantic_container") != false
     showBorderOnForeground = node.bool("show_border_on_foreground") != false
@@ -929,7 +939,7 @@ struct RufletCardMetrics: Equatable {
     shapeKind = parsedKind ?? .roundedRectangle
     radii = shapeWasParsed
       ? (ControlProps.cornerRadii(shape?["radius"]) ?? RufletCornerRadii(uniform: 0))
-      : RufletCornerRadii(uniform: 12)
+      : RufletCornerRadii(uniform: usesNativeAppearance ? 0 : 12)
     eccentricity = CGFloat(shape?["eccentricity"]?.doubleValue ?? 0)
 
     if shapeWasParsed, let side = shape?["side"]?.mapValue,
@@ -938,7 +948,7 @@ struct RufletCardMetrics: Equatable {
       outlineToken = side["color"]?.stringValue ?? "black"
       outlineWidth = CGFloat(side["width"]?.doubleValue ?? 1)
       outlineStrokeAlign = CGFloat(side["stroke_align"]?.doubleValue ?? -1)
-    } else if !shapeWasParsed, variant == .outlined {
+    } else if !usesNativeAppearance, !shapeWasParsed, variant == .outlined {
       outlineToken = "outlinevariant"
       outlineWidth = 1
       outlineStrokeAlign = -1
@@ -1074,44 +1084,49 @@ private struct CardBorderLayer: View {
 struct CardControlView: View {
   let node: ControlNode
 
+  @ViewBuilder
   var body: some View {
     let metrics = RufletCardMetrics(node: node)
-    let shape = RufletCardShape(
-      kind: metrics.shapeKind, radii: metrics.radii,
-      eccentricity: metrics.eccentricity)
-    let outline = MaterialPalette.color(metrics.outlineToken, default: .clear)
-
-    ZStack {
-      shape
-        .fill(MaterialPalette.color(metrics.fillToken, default: .clear))
-        .shadow(
-          color: MaterialPalette.color(metrics.shadowToken, default: .black).opacity(0.2),
-          radius: metrics.elevation)
-      if metrics.outlineWidth > 0, !metrics.showBorderOnForeground {
-        CardBorderLayer(
-          shape: shape, color: outline, width: metrics.outlineWidth,
-          strokeAlign: metrics.outlineStrokeAlign)
+    if metrics.usesNativeAppearance {
+      GroupBox {
+        cardContent
       }
-      Group {
-        if let contentID = node.controlID(forKey: "content") {
-          ControlView(id: contentID, axis: .none)
+      .accessibilityElement(children: metrics.semanticContainer ? .combine : .contain)
+    } else {
+      let shape = RufletCardShape(
+        kind: metrics.shapeKind, radii: metrics.radii,
+        eccentricity: metrics.eccentricity)
+      let outline = MaterialPalette.color(metrics.outlineToken, default: .clear)
+
+      ZStack {
+        shape
+          .fill(MaterialPalette.color(metrics.fillToken, default: .clear))
+          .shadow(
+            color: MaterialPalette.color(metrics.shadowToken, default: .clear).opacity(0.2),
+            radius: metrics.elevation)
+        if metrics.outlineWidth > 0, !metrics.showBorderOnForeground {
+          CardBorderLayer(
+            shape: shape, color: outline, width: metrics.outlineWidth,
+            strokeAlign: metrics.outlineStrokeAlign)
+        }
+        cardContent
+          .modifier(CardClip(metrics: metrics))
+        if metrics.outlineWidth > 0, metrics.showBorderOnForeground {
+          CardBorderLayer(
+            shape: shape, color: outline, width: metrics.outlineWidth,
+            strokeAlign: metrics.outlineStrokeAlign)
         }
       }
-      .modifier(CardClip(metrics: metrics))
-      if metrics.outlineWidth > 0, metrics.showBorderOnForeground {
-        CardBorderLayer(
-          shape: shape, color: outline, width: metrics.outlineWidth,
-          strokeAlign: metrics.outlineStrokeAlign)
-      }
+      .padding(metrics.margin)
+      .accessibilityElement(children: metrics.semanticContainer ? .combine : .contain)
     }
-    // Card.margin belongs to the Material widget itself. LayoutControl then
-    // applies the shared margin wrapper too unless Ruby marks it skipped,
-    // exactly mirroring the Flet control tree rather than painting the margin
-    // inside the card's fill.
-    .padding(metrics.margin)
-    // Flutter's `semanticContainer` decides whether the card is one element
-    // to a screen reader or a group of them.
-    .accessibilityElement(children: metrics.semanticContainer ? .combine : .contain)
+  }
+
+  @ViewBuilder
+  private var cardContent: some View {
+    if let contentID = node.controlID(forKey: "content") {
+      ControlView(id: contentID, axis: .none)
+    }
   }
 }
 

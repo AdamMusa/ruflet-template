@@ -4,22 +4,23 @@ import SwiftUI
 @testable import RufletUI
 import XCTest
 
-/// Translated from Flet's CardControl constructor and Flutter's Material 3
-/// Card defaults. These are engine contracts, not Explorer snapshot values.
+/// Flet Card wire behavior mapped onto native Apple presentation. Omitted
+/// visuals stay native; explicit DSL visuals are resolved by the renderer.
 final class CardParityTests: XCTestCase {
   private func node(_ props: [String: RufletValue] = [:]) -> ControlNode {
     ControlNode(id: 1, type: "Card", props: props)
   }
 
-  func testElevatedCardUsesMaterialThreeDefaults() {
+  func testOmittedCardVisualsUseNativeAppleAppearance() {
     let metrics = RufletCardMetrics(node: node())
+    XCTAssertTrue(metrics.usesNativeAppearance)
     XCTAssertEqual(metrics.variant, .elevated)
-    XCTAssertEqual(metrics.fillToken, "surfacecontainerlow")
-    XCTAssertEqual(metrics.shadowToken, "shadow")
-    XCTAssertEqual(metrics.elevation, 1)
-    XCTAssertEqual(metrics.radius, 12)
+    XCTAssertNil(metrics.fillToken)
+    XCTAssertNil(metrics.shadowToken)
+    XCTAssertEqual(metrics.elevation, 0)
+    XCTAssertEqual(metrics.radius, 0)
     XCTAssertFalse(metrics.shapeWasParsed)
-    XCTAssertEqual(metrics.margin, EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4))
+    XCTAssertEqual(metrics.margin, EdgeInsets())
     XCTAssertNil(metrics.outlineToken)
     XCTAssertEqual(metrics.clipBehavior, "none")
     XCTAssertTrue(metrics.semanticContainer)
@@ -28,6 +29,7 @@ final class CardParityTests: XCTestCase {
 
   func testFilledAndOutlinedVariantsResolveTheirOwnMaterialSurfaces() {
     let filled = RufletCardMetrics(node: node(["variant": .string("filled")]))
+    XCTAssertFalse(filled.usesNativeAppearance)
     XCTAssertEqual(filled.fillToken, "surfacecontainerhighest")
     XCTAssertEqual(filled.elevation, 0)
     XCTAssertNil(filled.outlineToken)
