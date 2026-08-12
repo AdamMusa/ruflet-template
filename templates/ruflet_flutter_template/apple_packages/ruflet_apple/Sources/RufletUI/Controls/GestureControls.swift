@@ -1121,11 +1121,14 @@ struct DialogActionControlView: View {
     if node.type.hasPrefix("Cupertino") {
       cupertinoAction
     } else {
-      materialAction
+      nativeAction
     }
   }
 
-  private var materialAction: some View {
+  /// Flet owns the action slot and click contract. Apple owns the omitted
+  /// button presentation; an explicit DSL color or destructive role is the
+  /// only reason to override the native tint.
+  private var nativeAction: some View {
     Button {
       events.fire(node, "click")
     } label: {
@@ -1137,8 +1140,8 @@ struct DialogActionControlView: View {
     }
     .foregroundColor(
       node.bool("destructive") == true
-        ? MaterialPalette.color("error", default: .red)
-        : MaterialPalette.color(node.string("color") ?? "primary", default: .primary))
+        ? .red
+        : MaterialPalette.color(node.string("color")))
     // Cupertino emphasises the default action in a sheet. `fontWeight` on a
     // view is iOS 16, and this package ships to iOS 15, so the weight goes on
     // the font itself.
