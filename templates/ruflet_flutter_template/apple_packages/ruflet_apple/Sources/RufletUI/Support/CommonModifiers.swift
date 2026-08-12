@@ -86,14 +86,16 @@ struct RufletBadgeModifier: ViewModifier {
     if let badge = badgeNode {
       if RufletBadgeSemantics.isVisible(badge) {
         content.overlay(alignment: alignment(badge)) {
-          marker(badge).offset(RufletBadgeSemantics.offset(badge, layoutDirection: layoutDirection))
+          RufletBadgeMarker(badge: badge)
+            .offset(RufletBadgeSemantics.offset(badge, layoutDirection: layoutDirection))
         }
       } else {
         content
       }
     } else if let text = node.string("badge") {
       content.overlay(alignment: .topTrailing) {
-        label(Text(text), on: nil).offset(x: 4, y: -4)
+        RufletBadgeMarker(fallbackLabel: text)
+          .offset(RufletBadgeSemantics.offset(nil, layoutDirection: layoutDirection))
       }
     } else {
       content
@@ -104,49 +106,67 @@ struct RufletBadgeModifier: ViewModifier {
     node.controlID(forKey: "badge").flatMap { store.node($0) }
   }
 
+  private func alignment(_ badge: ControlNode) -> Alignment {
+    ControlProps.alignment(badge.props["alignment"]) ?? .topTrailing
+  }
+}
+
+/// Apple has no public standalone badge view which can host an arbitrary
+/// SwiftUI control (the native `.badge` API is limited to rows and tabs).
+/// This is therefore a semantic adapter: Flet still owns the label slot and
+/// explicit geometry, while omitted appearance comes from Apple's system red
+/// notification badge and native text styles rather than Material roles.
+struct RufletBadgeMarker: View {
+  var badge: ControlNode?
+  var fallbackLabel: String?
+
+  init(badge: ControlNode? = nil, fallbackLabel: String? = nil) {
+    self.badge = badge
+    self.fallbackLabel = fallbackLabel
+  }
+
   @ViewBuilder
-  private func marker(_ badge: ControlNode) -> some View {
-    if let labelID = badge.controlID(forKey: "label") {
-      label(AnyView(ControlView(id: labelID, axis: .none)), on: badge)
-    } else if let text = badge.string("label") {
-      label(Text(text), on: badge)
+  var body: some View {
+    if let labelID = badge?.controlID(forKey: "label") {
+      labelled(AnyView(ControlView(id: labelID, axis: .none)))
+    } else if let text = badge?.string("label") ?? fallbackLabel {
+      labelled(AnyView(Text(text)))
     } else {
       Circle()
-        .fill(MaterialPalette.color(RufletBadgeSemantics.backgroundColor(badge), default: .red))
-        .frame(
-          width: CGFloat(badge.double("small_size") ?? 6),
-          height: CGFloat(badge.double("small_size") ?? 6))
+        .fill(backgroundColor)
+        .frame(width: smallSize, height: smallSize)
     }
   }
 
-  private func label(_ content: some View, on badge: ControlNode?) -> some View {
-    let large = CGFloat(badge?.double("large_size") ?? 16)
-    return content
-      .rufletTextStyle(textStyle(badge))
+  private func labelled(_ content: AnyView) -> some View {
+    content
+      .rufletTextStyle(textStyle)
       .padding(
         ControlProps.edgeInsets(badge?.props["padding"])
-          ?? EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4))
-      .frame(minWidth: large, minHeight: large)
-      .background(
-        Capsule().fill(
-          MaterialPalette.color(
-            badge.map(RufletBadgeSemantics.backgroundColor) ?? "error", default: .red)))
+          ?? EdgeInsets(top: 0, leading: 5, bottom: 0, trailing: 5))
+      .frame(minWidth: largeSize, minHeight: largeSize)
+      .background(Capsule().fill(backgroundColor))
   }
 
-  private func textStyle(_ badge: ControlNode?) -> RufletTextStyle {
+  private var backgroundColor: Color {
+    MaterialPalette.color(RufletBadgeSemantics.explicitBackgroundColor(badge)) ?? .red
+  }
+
+  private var textStyle: RufletTextStyle {
     var style = badge.map { RufletTextStyle(node: $0, styleKey: "text_style") }
       ?? RufletTextStyle()
     if style.color == nil {
-      style.color = MaterialPalette.color(
-        badge.map(RufletBadgeSemantics.textColor) ?? "onerror", default: .white)
+      style.color = MaterialPalette.color(RufletBadgeSemantics.explicitTextColor(badge)) ?? .white
     }
     if style.size == nil, style.themeStyle == nil { style.themeStyle = Font.TextStyle.caption2 }
     return style
   }
 
-  private func alignment(_ badge: ControlNode) -> Alignment {
-    ControlProps.alignment(badge.props["alignment"]) ?? .topTrailing
-  }
+  /// Six points is the native notification-dot size used by Apple surfaces.
+  private var smallSize: CGFloat { CGFloat(badge?.double("small_size") ?? 6) }
+
+  /// The system's compact notification badge has an 18-point minimum pill.
+  private var largeSize: CGFloat { CGFloat(badge?.double("large_size") ?? 18) }
 }
 
 /// Source-pinned behavior from Flutter's `Badge.build` and Flet's
@@ -162,23 +182,30 @@ enum RufletBadgeSemantics {
     badge.controlID(forKey: "label") != nil || badge.string("label") != nil
   }
 
-  /// Flutter's Material 3 Badge defaults resolve through the ambient color
-  /// scheme rather than through fixed red/white literals.
-  static func backgroundColor(_ badge: ControlNode) -> String {
-    badge.string("bgcolor") ?? "error"
+  /// Only a value sent by the DSL is a portable colour contract. When absent,
+  /// the Apple renderer deliberately lets `RufletBadgeMarker` use the native
+  /// notification appearance instead of synthesising Material `error` roles.
+  static func explicitBackgroundColor(_ badge: ControlNode?) -> String? {
+    nonEmpty(badge?.string("bgcolor"))
   }
 
-  static func textColor(_ badge: ControlNode) -> String {
-    badge.string("text_color") ?? "onerror"
+  static func explicitTextColor(_ badge: ControlNode?) -> String? {
+    nonEmpty(badge?.string("text_color"))
   }
 
-  static func offset(_ badge: ControlNode, layoutDirection: LayoutDirection) -> CGSize {
-    if let map = badge.map("offset") {
+  static func offset(_ badge: ControlNode?, layoutDirection: LayoutDirection) -> CGSize {
+    if let map = badge?.map("offset") {
       return CGSize(
         width: CGFloat(map["x"]?.doubleValue ?? 0),
         height: CGFloat(map["y"]?.doubleValue ?? 0))
     }
     return CGSize(width: layoutDirection == .rightToLeft ? -4 : 4, height: -4)
+  }
+
+  private static func nonEmpty(_ value: String?) -> String? {
+    guard let value = value?.trimmingCharacters(in: .whitespacesAndNewlines), !value.isEmpty
+    else { return nil }
+    return value
   }
 }
 

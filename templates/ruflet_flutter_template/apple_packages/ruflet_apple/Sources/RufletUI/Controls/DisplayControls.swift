@@ -396,6 +396,9 @@ struct RufletImagePresentation: Equatable {
   let fadeInCurve: String
   let fadeOutDuration: Double
   let fadeOutCurve: String
+  /// Image tinting is opt-in. An omitted colour must never acquire a renderer
+  /// palette default; Apple displays the source pixels unchanged.
+  let explicitColorToken: String?
 
   var interpolation: Image.Interpolation {
     switch filterQuality {
@@ -419,6 +422,7 @@ struct RufletImagePresentation: Equatable {
     fadeInCurve = fadeIn.curve
     fadeOutDuration = fadeOut.duration
     fadeOutCurve = fadeOut.curve
+    explicitColorToken = Self.nonEmpty(node.string("color"))
   }
 
   private static func animation(
@@ -433,6 +437,12 @@ struct RufletImagePresentation: Equatable {
     return (
       max(value["duration"]?.doubleValue ?? 0, 0) / 1000,
       value["curve"]?.stringValue?.lowercased() ?? "linear")
+  }
+
+  private static func nonEmpty(_ value: String?) -> String? {
+    guard let value = value?.trimmingCharacters(in: .whitespacesAndNewlines), !value.isEmpty
+    else { return nil }
+    return value
   }
 }
 
@@ -530,7 +540,7 @@ private struct ImageColorFilter: ViewModifier {
 
   @ViewBuilder
   func body(content: Content) -> some View {
-    if let color = MaterialPalette.color(node.string("color")) {
+    if let color = MaterialPalette.color(RufletImagePresentation(node: node).explicitColorToken) {
       content
         .colorMultiply(color)
         .blendMode(ControlProps.blendMode(node.string("color_blend_mode")))
@@ -1182,6 +1192,25 @@ struct RufletCircleAvatarImageSources: Equatable {
   }
 }
 
+/// Explicit CircleAvatar colours are part of the Ruflet DSL. The Material
+/// `primaryContainer`/`onPrimaryContainer` pair is not: it is a Flutter theme
+/// fallback and must not leak into the Apple renderer.
+struct RufletCircleAvatarAppearance: Equatable {
+  let explicitBackgroundColor: String?
+  let explicitForegroundColor: String?
+
+  init(node: ControlNode) {
+    explicitBackgroundColor = Self.nonEmpty(node.string("bgcolor"))
+    explicitForegroundColor = Self.nonEmpty(node.string("color"))
+  }
+
+  private static func nonEmpty(_ value: String?) -> String? {
+    guard let value = value?.trimmingCharacters(in: .whitespacesAndNewlines), !value.isEmpty
+    else { return nil }
+    return value
+  }
+}
+
 /// `CircleAvatar` — an image, initials, or a coloured circle.
 ///
 /// Flutter layers the two images the way its decorations stack: the background
@@ -1195,9 +1224,10 @@ struct CircleAvatarControlView: View {
   var body: some View {
     let diameter = RufletCircleAvatarDiameter(node: node)
     let sources = RufletCircleAvatarImageSources(node: node)
+    let appearance = RufletCircleAvatarAppearance(node: node)
 
     ZStack {
-      Circle().fill(backgroundColor)
+      Circle().fill(backgroundColor(appearance))
 
       avatarImage(source: sources.background, slot: "background")
 
@@ -1210,10 +1240,10 @@ struct CircleAvatarControlView: View {
     .frame(
       minWidth: diameter.minimum, maxWidth: diameter.maximum,
       minHeight: diameter.minimum, maxHeight: diameter.maximum)
-    // Flutter wraps the child in a `titleMedium` DefaultTextStyle and an
-    // IconTheme of the same colour, so initials and glyphs both pick it up.
+    // The content slot remains Flet-owned; omitted typography and colour use
+    // Apple's native headline/label appearance.
     .font(.headline)
-    .foregroundColor(foregroundColor)
+    .foregroundColor(foregroundColor(appearance))
   }
 
   @ViewBuilder
@@ -1252,15 +1282,12 @@ struct CircleAvatarControlView: View {
     events.fire(node, "image_error", data: .string(slot))
   }
 
-  private var backgroundColor: Color {
-    MaterialPalette.color(
-      RufletThemeDefaults.resolvedDisplayColorToken(for: node, property: "bgcolor"),
-      default: .clear)
+  private func backgroundColor(_ appearance: RufletCircleAvatarAppearance) -> Color {
+    MaterialPalette.color(appearance.explicitBackgroundColor) ?? Color.secondary.opacity(0.18)
   }
 
-  private var foregroundColor: Color? {
-    MaterialPalette.color(
-      RufletThemeDefaults.resolvedDisplayColorToken(for: node, property: "color"))
+  private func foregroundColor(_ appearance: RufletCircleAvatarAppearance) -> Color {
+    MaterialPalette.color(appearance.explicitForegroundColor) ?? .primary
   }
 }
 
@@ -1291,6 +1318,7 @@ private struct LocalAvatarImage: View {
 /// `Badge` — a count or dot anchored to its content's corner.
 struct BadgeControlView: View {
   let node: ControlNode
+  @Environment(\.layoutDirection) private var layoutDirection
 
   var body: some View {
     Group {
@@ -1298,29 +1326,11 @@ struct BadgeControlView: View {
         ControlView(id: contentID, axis: .none)
       }
     }
-    .overlay(alignment: .topTrailing) {
-      if node.bool("visible") != false {
-        label
+    .overlay(alignment: ControlProps.alignment(node.props["alignment"]) ?? .topTrailing) {
+      if RufletBadgeSemantics.isVisible(node) {
+        RufletBadgeMarker(badge: node)
+          .offset(RufletBadgeSemantics.offset(node, layoutDirection: layoutDirection))
       }
-    }
-  }
-
-  @ViewBuilder
-  private var label: some View {
-    let text = node.string("text") ?? node.string("label")
-    if let text, !text.isEmpty {
-      Text(text)
-        .font(.caption2)
-        .padding(.horizontal, 5)
-        .padding(.vertical, 2)
-        .background(Capsule().fill(MaterialPalette.color(node.string("bgcolor"), default: .red)))
-        .foregroundColor(MaterialPalette.color(node.string("text_color"), default: .white))
-        .offset(x: 6, y: -6)
-    } else {
-      Circle()
-        .fill(MaterialPalette.color(node.string("bgcolor"), default: .red))
-        .frame(width: 8, height: 8)
-        .offset(x: 3, y: -3)
     }
   }
 }

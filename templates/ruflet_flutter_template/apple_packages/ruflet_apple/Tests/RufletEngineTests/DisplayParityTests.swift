@@ -248,18 +248,27 @@ final class DisplayParityTests: XCTestCase {
     XCTAssertEqual(capped.maximum, 60)
   }
 
-  func testAvatarResolvesTheMaterialThreeContainerRoles() {
+  func testAvatarOmittedColorsUseNativeAppleAppearance() {
     let omitted = node("CircleAvatar")
-    XCTAssertEqual(
-      RufletThemeDefaults.resolvedDisplayColorToken(for: omitted, property: "bgcolor"),
-      "primarycontainer")
-    XCTAssertEqual(
-      RufletThemeDefaults.resolvedDisplayColorToken(for: omitted, property: "color"),
-      "onprimarycontainer")
+    let omittedAppearance = RufletCircleAvatarAppearance(node: omitted)
+    XCTAssertNil(omittedAppearance.explicitBackgroundColor)
+    XCTAssertNil(omittedAppearance.explicitForegroundColor)
 
-    let explicit = node("CircleAvatar", ["bgcolor": .string("red")])
+    let explicit = RufletCircleAvatarAppearance(node: node(
+      "CircleAvatar", ["bgcolor": .string("red"), "color": .string("white")]))
+    XCTAssertEqual(explicit.explicitBackgroundColor, "red")
+    XCTAssertEqual(explicit.explicitForegroundColor, "white")
+  }
+
+  func testImageTintIsExplicitOnly() {
+    XCTAssertNil(RufletImagePresentation(node: node("Image")).explicitColorToken)
+    XCTAssertNil(
+      RufletImagePresentation(node: node("Image", ["color": .string("  ")]))
+        .explicitColorToken)
     XCTAssertEqual(
-      RufletThemeDefaults.resolvedDisplayColorToken(for: explicit, property: "bgcolor"), "red")
+      RufletImagePresentation(node: node("Image", ["color": .string("blue")]))
+        .explicitColorToken,
+      "blue")
   }
 
   /// CircleAvatar calls the same Flet image-provider resolver twice. These
