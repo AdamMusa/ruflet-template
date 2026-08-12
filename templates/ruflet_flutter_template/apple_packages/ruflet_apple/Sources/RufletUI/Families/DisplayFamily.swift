@@ -17,18 +17,6 @@ extension ControlRegistry {
       return AnyView(ProgressBarControlView(node: node))
     case "ProgressRing":
       return AnyView(ProgressRingControlView(node: node))
-    case "RufletSpinKit",
-      "SpinKitRotatingPlain", "SpinKitDoubleBounce", "SpinKitWave",
-      "SpinKitWanderingCubes", "SpinKitFadingFour", "SpinKitFadingCube",
-      "SpinKitPulse", "SpinKitChasingDots", "SpinKitThreeBounce", "SpinKitCircle",
-      "SpinKitCubeGrid", "SpinKitFadingCircle", "SpinKitRotatingCircle",
-      "SpinKitFoldingCube", "SpinKitPumpingHeart", "SpinKitHourGlass",
-      "SpinKitPouringHourGlass", "SpinKitPouringHourGlassRefined", "SpinKitFadingGrid",
-      "SpinKitRing", "SpinKitRipple", "SpinKitDualRing", "SpinKitSpinningCircle",
-      "SpinKitSpinningLines", "SpinKitSquareCircle", "SpinKitThreeInOut",
-      "SpinKitDancingSquare", "SpinKitPianoWave", "SpinKitPulsingGrid",
-      "SpinKitWaveSpinner":
-      return AnyView(SpinKitControlView(node: node))
     case "CircleAvatar":
       return AnyView(CircleAvatarControlView(node: node))
     case "Badge":

@@ -38,8 +38,6 @@ extension ControlRegistry {
       return AnyView(RangeSliderControlView(node: node))
     case "TextField":
       return AnyView(TextFieldControlView(node: node))
-    case "CodeEditor":
-      return AnyView(CodeEditorControlView(node: node))
     case "SearchBar":
       return AnyView(SearchBarControlView(node: node))
     case "Dropdown":

@@ -82,10 +82,10 @@ extension ControlRegistry {
       return AnyView(EmptyView())
     case "Camera":
       // Ruflet treats camera as a *visual* service, so unlike the others it
-      // renders. The preview lives in RufletMedia and registers itself there,
+      // renders. The preview lives in RufletCamera and registers itself there,
       // which is what keeps AVFoundation capture out of an app that does not
       // link it; this case is the fallback for one that does not.
-      return AnyView(MissingBundleControlView(node: node, bundle: "RufletMedia"))
+      return AnyView(MissingBundleControlView(node: node, bundle: "RufletCamera"))
     case "QrcodeScanner", "qrcode_scanner":
       return AnyView(MissingBundleControlView(node: node, bundle: "RufletMedia"))
     case "Arc", "Circle", "Color", "Fill", "Line", "Oval", "Path", "Points", "Rect", "Shadow":

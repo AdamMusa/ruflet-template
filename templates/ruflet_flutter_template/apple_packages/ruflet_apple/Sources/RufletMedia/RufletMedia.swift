@@ -6,38 +6,24 @@ import SwiftUI
   import AVFoundation
 #endif
 
-/// The AVFoundation services: audio playback, recording, the camera and the
-/// torch — plus the camera's live preview control.
+/// Audio playback and Ruflet's QR scanner extension.
 ///
-/// Linked separately because AVFoundation capture is what makes iOS require
-/// `NSCameraUsageDescription` and `NSMicrophoneUsageDescription`. Playback
-/// alone needs neither, but the four travel together in Ruflet's service
-/// surface, so they share a module rather than splitting a permission across
-/// two.
+/// Legacy applications may keep linking this product for `Audio` and
+/// `QrcodeScanner`. Flet's camera, recorder and flashlight packages are
+/// independent products and deliberately are not dependencies of this module.
 ///
 /// ```swift
-/// RufletAppView(services: [RufletMedia.self])
+/// RufletAppView(extensions: [RufletMedia.self])
 /// ```
 @MainActor
-public enum RufletMedia: RufletServiceBundle {
-  public static let bundleName = "RufletMedia"
-
+public enum RufletMedia: RufletExtension {
   public static func register(in registry: ServiceRegistry) {
     registry.registerNamed("Audio") { AudioService() }
-    registry.registerNamed("AudioRecorder") { AudioRecorderService() }
-    registry.registerNamed("Camera") { CameraService() }
-    registry.registerNamed("Flashlight") { FlashlightService() }
     // Flet services receive `update()` whenever their wire properties change.
     // Audio owns a persistent player, so it needs the same lifecycle hook for
     // source, volume, balance, rate and release-mode updates made after mount.
     registry.markStreaming(["Audio"])
 
-    // Ruflet treats camera as a *visual* service, so it also has a control to
-    // render. Registering the view here keeps the preview out of apps that do
-    // not link this module.
-    ControlRegistry.register("Camera") { node, _ in
-      AnyView(CameraControlView(node: node))
-    }
     let qrDescriptor = ControlDescriptor(
       wireType: "QrcodeScanner", classification: .visible,
       implementation: "RufletMedia.QRScannerControlView", rendering: .nativeView,
@@ -61,18 +47,12 @@ public enum RufletMedia: RufletServiceBundle {
       RufletPermissions.installProbe { permission in
         switch permission {
         case "camera": return describe(AVCaptureDevice.authorizationStatus(for: .video))
-        case "microphone": return describe(AVCaptureDevice.authorizationStatus(for: .audio))
         default: return nil
         }
       }
       RufletPermissions.installRequest { permission, completion in
-        let media: AVMediaType
-        switch permission {
-        case "camera": media = .video
-        case "microphone": media = .audio
-        default: return false
-        }
-        AVCaptureDevice.requestAccess(for: media) { granted in
+        guard permission == "camera" else { return false }
+        AVCaptureDevice.requestAccess(for: .video) { granted in
           Task { @MainActor in
             completion(granted ? "granted" : "permanently_denied")
           }

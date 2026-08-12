@@ -19,6 +19,9 @@ let package = Package(
     .library(name: "RufletMotion", targets: ["RufletMotion"]),
     .library(name: "RufletLocation", targets: ["RufletLocation"]),
     .library(name: "RufletMedia", targets: ["RufletMedia"]),
+    .library(name: "RufletAudioRecorder", targets: ["RufletAudioRecorder"]),
+    .library(name: "RufletCamera", targets: ["RufletCamera"]),
+    .library(name: "RufletFlashlight", targets: ["RufletFlashlight"]),
     .library(name: "RufletRive", targets: ["RufletRive"]),
     .library(name: "RufletLottie", targets: ["RufletLottie"]),
 
@@ -46,6 +49,15 @@ let package = Package(
     .target(name: "RufletLocation", dependencies: ["RufletEngine", "RufletProtocol"]),
     .target(name: "RufletMedia", dependencies: ["RufletUI", "RufletEngine", "RufletProtocol"]),
     .target(
+      name: "RufletAudioRecorder",
+      dependencies: ["RufletEngine", "RufletProtocol"]),
+    .target(
+      name: "RufletCamera",
+      dependencies: ["RufletUI", "RufletEngine", "RufletProtocol"]),
+    .target(
+      name: "RufletFlashlight",
+      dependencies: ["RufletEngine", "RufletProtocol"]),
+    .target(
       name: "RufletRive",
       dependencies: [
         "RufletUI", "RufletEngine", "RufletProtocol",
@@ -62,6 +74,8 @@ let package = Package(
       name: "RufletEngineTests",
       dependencies: [
         "RufletEngine", "RufletProtocol", "RufletUI",
-        "RufletMotion", "RufletLocation", "RufletMedia", "RufletRive", "RufletLottie"
+        "RufletMotion", "RufletLocation", "RufletMedia",
+        "RufletAudioRecorder", "RufletCamera", "RufletFlashlight",
+        "RufletRive", "RufletLottie"
       ])
   ])

@@ -1,4 +1,6 @@
 import RufletEngine
+@testable import RufletAudioRecorder
+@testable import RufletCamera
 @testable import RufletMedia
 import RufletProtocol
 @testable import RufletUI

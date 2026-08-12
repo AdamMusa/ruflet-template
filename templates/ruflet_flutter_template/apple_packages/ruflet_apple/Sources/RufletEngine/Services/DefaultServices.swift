@@ -6,7 +6,7 @@ extension ServiceRegistry {
   ///
   /// The names are the wire types from `Ruflet::UI::Services::RufletServices`.
   /// The rest — the CoreMotion sensors, CoreLocation and AVFoundation capture —
-  /// live in `RufletMotion`, `RufletLocation` and `RufletMedia`, because
+  /// live in dedicated `Ruflet*` extension products, because
   /// linking those frameworks is what makes iOS demand a usage string and what
   /// App Store review flags. An app links the ones it uses.
   ///
@@ -53,8 +53,14 @@ extension ServiceRegistry {
       return "RufletMotion"
     case "geolocator":
       return "RufletLocation"
-    case "audio", "audiorecorder", "camera", "flashlight":
+    case "audio":
       return "RufletMedia"
+    case "audiorecorder":
+      return "RufletAudioRecorder"
+    case "camera":
+      return "RufletCamera"
+    case "flashlight":
+      return "RufletFlashlight"
     default:
       return nil
     }

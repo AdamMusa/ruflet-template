@@ -1,4 +1,7 @@
 import RufletEngine
+import RufletAudioRecorder
+import RufletCamera
+import RufletFlashlight
 import RufletMedia
 import RufletProtocol
 import XCTest
@@ -39,6 +42,9 @@ final class ServiceCommandConformanceTests: XCTestCase {
     let registry = ServiceRegistry()
     registry.registerDefaults()
     RufletMedia.register(in: registry)
+    RufletAudioRecorder.register(in: registry)
+    RufletCamera.register(in: registry)
+    RufletFlashlight.register(in: registry)
 
     for type in [
       "Page", "View", "BasePage", "Pagelet", "BrowserContextMenu", "Battery",

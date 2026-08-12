@@ -1,5 +1,5 @@
 import RufletEngine
-@testable import RufletMedia
+@testable import RufletCamera
 import RufletProtocol
 @testable import RufletUI
 import XCTest

@@ -1,5 +1,5 @@
 import Foundation
-@testable import RufletMedia
+@testable import RufletAudioRecorder
 import RufletProtocol
 import XCTest
 

@@ -1,4 +1,7 @@
 import RufletEngine
+import RufletAudioRecorder
+import RufletCamera
+import RufletFlashlight
 import RufletLocation
 import RufletMedia
 import RufletMotion
@@ -277,20 +280,25 @@ final class NativeRendererCoverageTests: XCTestCase {
   func testOptionalVisualBundleReplacesCameraFallbackWithNativeViewDescriptor() {
     let builtIn = ControlRegistry.builtInDescriptor(for: "Camera")
     XCTAssertEqual(builtIn?.classification, .visible)
-    XCTAssertEqual(builtIn?.rendering, .optionalBundle("RufletMedia"))
+    XCTAssertEqual(builtIn?.rendering, .optionalBundle("RufletCamera"))
 
     let services = ServiceRegistry()
-    RufletMedia.register(in: services)
+    RufletCamera.register(in: services)
 
     XCTAssertEqual(ControlRegistry.descriptor(for: "Camera")?.rendering, .nativeView)
-    XCTAssertEqual(ControlRegistry.descriptor(for: "Camera")?.implementation, "extension:Camera")
+    XCTAssertEqual(
+      ControlRegistry.descriptor(for: "Camera")?.implementation,
+      "RufletCamera.CameraControlView")
   }
 
   @MainActor
   func testEveryRufletServiceIsProvidedByCoreOrAnOptionalAppleBundle() {
     let registry = ServiceRegistry()
     registry.registerDefaults()
-    registry.register(bundles: [RufletMotion.self, RufletLocation.self, RufletMedia.self])
+    registry.register(extensions: [
+      RufletMotion.self, RufletLocation.self, RufletMedia.self,
+      RufletAudioRecorder.self, RufletCamera.self, RufletFlashlight.self,
+    ])
 
     let serviceWireTypes = [
       "Accelerometer", "AudioRecorder", "Barometer", "Battery", "Camera", "Clipboard",

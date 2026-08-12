@@ -1,4 +1,5 @@
 import RufletEngine
+import RufletUI
 import SwiftUI
 
 /// Values shared by Ruflet's generic spinner and the thirty native Flet wire

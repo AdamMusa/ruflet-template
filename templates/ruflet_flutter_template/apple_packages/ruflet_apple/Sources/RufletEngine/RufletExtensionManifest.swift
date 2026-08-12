@@ -29,11 +29,11 @@ public enum RufletExtensionManifest {
   /// entries into a catch-all target because that would relink unrelated SDKs.
   public static let packages: [RufletExtensionPackage] = [
     .init(fletPackage: "flet_audio", swiftProduct: "RufletAudio", status: .pending),
-    .init(fletPackage: "flet_audio_recorder", swiftProduct: "RufletAudioRecorder", status: .pending),
-    .init(fletPackage: "flet_camera", swiftProduct: "RufletCamera", status: .pending),
+    .init(fletPackage: "flet_audio_recorder", swiftProduct: "RufletAudioRecorder", status: .available),
+    .init(fletPackage: "flet_camera", swiftProduct: "RufletCamera", status: .available),
     .init(fletPackage: "flet_charts", swiftProduct: "RufletCharts", status: .pending),
     .init(fletPackage: "flet_code_editor", swiftProduct: "RufletCodeEditor", status: .pending),
-    .init(fletPackage: "flet_flashlight", swiftProduct: "RufletFlashlight", status: .pending),
+    .init(fletPackage: "flet_flashlight", swiftProduct: "RufletFlashlight", status: .available),
     .init(fletPackage: "flet_geolocator", swiftProduct: "RufletGeolocator", status: .pending),
     .init(fletPackage: "flet_lottie", swiftProduct: "RufletLottie", status: .available),
     .init(fletPackage: "flet_map", swiftProduct: "RufletMap", status: .pending),

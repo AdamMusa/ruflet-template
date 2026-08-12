@@ -2,8 +2,10 @@ import XCTest
 import RufletEngine
 import RufletProtocol
 import SwiftUI
+@testable import RufletCodeEditor
 @testable import RufletUI
 
+@MainActor
 final class CodeEditorParityTests: XCTestCase {
   func testFoldProjectionPreservesSourceAndCanBeRemovedLosslessly() {
     let source = "def greet\n  puts 'hello'\nend\ngreet"
@@ -104,6 +106,7 @@ final class CodeEditorParityTests: XCTestCase {
   }
 
   func testRegistryExposesOnlyFletCodeEditorMethods() {
+    RufletCodeEditor.register(in: ServiceRegistry())
     XCTAssertEqual(
       ControlRegistry.descriptor(for: "CodeEditor")?.supportedMethods,
       ["focus", "fold_at", "fold_comment_at_line_zero", "fold_imports"])

@@ -475,8 +475,8 @@ public enum ControlRegistry {
       wireType: "ImageSourceAttribution", classification: .structuralChild,
       implementation: "MapRichAttributionView", rendering: .metadataOnly,
       supportedEvents: ["click"])
-    add(["Camera"], .visible, "RufletMedia.CameraControlView",
-        .optionalBundle("RufletMedia"),
+    add(["Camera"], .visible, "RufletCamera.CameraControlView",
+        .optionalBundle("RufletCamera"),
         events: ["state_change", "stream_image"],
         methods: ["get_available_cameras", "get_exposure_offset_step_size",
                   "get_max_exposure_offset", "get_max_zoom_level",
@@ -497,7 +497,7 @@ public enum ControlRegistry {
         events: ["duration_change", "loaded", "position_change", "seek_complete", "state_change"],
         methods: ["get_current_position", "get_duration", "pause", "play", "release",
                   "resume", "seek"])
-    add(["AudioRecorder"], .service, "RufletMedia AudioRecorderService", .serviceOnly,
+    add(["AudioRecorder"], .service, "RufletAudioRecorder.AudioRecorderService", .serviceOnly,
         events: ["state_change", "stream"],
         methods: ["cancel_recording", "get_input_devices", "has_permission", "is_paused",
                   "is_recording", "is_supported_encoder", "pause_recording",

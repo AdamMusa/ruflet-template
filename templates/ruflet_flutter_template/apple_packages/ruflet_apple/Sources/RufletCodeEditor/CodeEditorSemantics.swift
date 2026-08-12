@@ -1,6 +1,7 @@
 import Foundation
 import RufletEngine
 import RufletProtocol
+import RufletUI
 import SwiftUI
 
 /// The complete property surface read by Flet 0.80.5's `CodeEditorControl`.

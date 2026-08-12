@@ -1,5 +1,6 @@
 import RufletEngine
 import RufletProtocol
+@testable import RufletSpinKit
 @testable import RufletUI
 import XCTest
 
@@ -8,6 +9,7 @@ import XCTest
 /// those thirty by name, and neither conformance audit measures that: the
 /// property audit sees `variant` read once, and the control audit allows the
 /// thirty Flet types because Ruby never sends them.
+@MainActor
 final class SpinKitCoverageTests: XCTestCase {
   /// The thirty `flet_spinkit` types, as the snake-case variant names Ruby
   /// sends. Taken from the vendored contract rather than retyped.
@@ -26,7 +28,7 @@ final class SpinKitCoverageTests: XCTestCase {
       .deletingLastPathComponent()
       .deletingLastPathComponent()
       .deletingLastPathComponent()
-      .appendingPathComponent("Sources/RufletUI/Controls/SpinKitControl.swift")
+      .appendingPathComponent("Sources/RufletSpinKit/SpinKitControl.swift")
     let source = try String(contentsOf: url)
 
     let unhandled = fletVariants.filter { !source.contains("\"\($0)\"") }
@@ -77,13 +79,14 @@ final class SpinKitCoverageTests: XCTestCase {
   }
 
   func testEveryIndividualFletSpinnerWireTypeIsRegistered() {
+    RufletSpinKit.register(in: ServiceRegistry())
     for variant in fletVariants {
       let type = "SpinKit" + variant.split(separator: "_")
         .map { $0.prefix(1).uppercased() + $0.dropFirst() }
         .joined()
       let node = ControlNode(id: 1, type: type, props: [:])
       XCTAssertNotNil(ControlRegistry.build(node: node, axis: .none))
-      XCTAssertEqual(ControlRegistry.builtInDescriptor(for: type)?.rendering, .nativeView)
+      XCTAssertEqual(ControlRegistry.descriptor(for: type)?.rendering, .nativeView)
     }
   }
 }
