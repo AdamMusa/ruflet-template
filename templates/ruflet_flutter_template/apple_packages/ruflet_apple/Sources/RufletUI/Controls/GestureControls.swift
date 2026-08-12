@@ -20,6 +20,36 @@ enum RufletGestureParity {
       "x": .double(location.x), "y": .double(location.y),
     ])
   }
+
+  static func mouseRegionEvents(_ node: ControlNode) -> Set<String> {
+    Set(["enter", "hover", "exit"].filter(node.handlesEvent))
+  }
+
+  /// Flet serialises MouseRegion's PointerEvent with the complete compact
+  /// event map, including null local delta on enter/exit. Apple hover events
+  /// do not expose pressure, radius, device id, or tilt, so their native mouse
+  /// constants are carried without inventing stylus measurements.
+  static func mouseRegionPayload(
+    local: CGPoint, global: CGPoint, previousLocal: CGPoint? = nil,
+    timestamp: Double = 0
+  ) -> RufletValue {
+    .map([
+      "k": .string("mouse"),
+      "l": RufletInteractionParity.point(local),
+      "g": RufletInteractionParity.point(global),
+      "ts": .double(timestamp),
+      "dev": .int(0),
+      "ps": .double(0),
+      "pMin": .double(0), "pMax": .double(1),
+      "dist": .double(0), "distMax": .double(0), "size": .double(0),
+      "rMj": .double(0), "rMn": .double(0), "rMin": .double(0),
+      "rMax": .double(0), "or": .double(0), "tilt": .double(0),
+      "ld": previousLocal.map {
+        RufletInteractionParity.point(
+          CGPoint(x: local.x - $0.x, y: local.y - $0.y))
+      } ?? .null,
+    ])
+  }
 }
 
 /// `GestureDetector` — the full Flet gesture surface over arbitrary content.
@@ -178,8 +208,15 @@ private struct GestureHoverReporter: ViewModifier {
   @State private var origin = CGPoint.zero
   @State private var lastReport = Date.distantPast
 
+  private var installsMouseRegion: Bool {
+    !RufletGestureParity.mouseRegionEvents(node).isEmpty
+  }
+
+  @ViewBuilder
   func body(content: Content) -> some View {
-    if #available(iOS 16.0, macOS 13.0, *) {
+    if !installsMouseRegion {
+      content
+    } else if #available(iOS 16.0, macOS 13.0, *) {
       content
         .overlay(GeometryReader { proxy in
           Color.clear.allowsHitTesting(false)
@@ -190,31 +227,37 @@ private struct GestureHoverReporter: ViewModifier {
           switch phase {
           case .active(let local):
             let global = CGPoint(x: local.x + origin.x, y: local.y + origin.y)
-            let payload: RufletValue = .map([
-              "k": .string("mouse"), "l": RufletInteractionParity.point(local),
-              "g": RufletInteractionParity.point(global),
-              "ld": RufletInteractionParity.point(
-                CGPoint(x: local.x - previous.x, y: local.y - previous.y)),
-            ])
             if !hovering {
               hovering = true
-              events.fire(node, "enter", data: payload)
+              previous = local
+              if node.handlesEvent("enter") {
+                events.fire(
+                  node, "enter",
+                  data: RufletGestureParity.mouseRegionPayload(
+                    local: local, global: global,
+                    timestamp: Date().timeIntervalSince1970 * 1_000))
+              }
             }
             let interval = TimeInterval(node.int("hover_interval") ?? 0) / 1_000
-            if Date().timeIntervalSince(lastReport) >= interval {
+            if node.handlesEvent("hover"), Date().timeIntervalSince(lastReport) >= interval {
               lastReport = Date()
-              events.fire(node, "hover", data: payload)
+              events.fire(
+                node, "hover",
+                data: RufletGestureParity.mouseRegionPayload(
+                  local: local, global: global, previousLocal: previous,
+                  timestamp: Date().timeIntervalSince1970 * 1_000))
             }
             previous = local
           case .ended:
             hovering = false
-            events.fire(
-              node, "exit",
-              data: .map([
-                "k": .string("mouse"), "l": RufletInteractionParity.point(previous),
-                "g": RufletInteractionParity.point(
-                  CGPoint(x: previous.x + origin.x, y: previous.y + origin.y)),
-              ]))
+            if node.handlesEvent("exit") {
+              events.fire(
+                node, "exit",
+                data: RufletGestureParity.mouseRegionPayload(
+                  local: previous,
+                  global: CGPoint(x: previous.x + origin.x, y: previous.y + origin.y),
+                  timestamp: Date().timeIntervalSince1970 * 1_000))
+            }
           }
         }
     } else {

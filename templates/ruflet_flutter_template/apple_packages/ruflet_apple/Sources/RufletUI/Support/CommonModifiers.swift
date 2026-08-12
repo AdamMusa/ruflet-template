@@ -220,17 +220,44 @@ enum RufletBadgeSemantics {
   }
 }
 
+/// Every name accepted by Flet's `parseMouseCursor`.
+///
+/// Parsing is kept platform-neutral even though only macOS can install the
+/// corresponding pointer. This way an unknown wire value defers to the parent
+/// on every Apple platform, just as Flutter's parser returns its default.
+enum RufletMouseCursorName: String, CaseIterable {
+  case alias, allscroll, basic, cell, click, contextmenu, copy, disappearing
+  case forbidden, grab, grabbing, help, move, nodrop, none, precise, progress
+  case resizecolumn, resizedown, resizedownleft, resizedownright, resizeleft
+  case resizeleftright, resizeright, resizerow, resizeup, resizeupdown
+  case resizeupleft, resizeupleftdownright, resizeupright
+  case resizeuprightdownleft, text, verticaltext, wait, zoomin, zoomout
+
+  init?(_ wireValue: String?) {
+    guard let wireValue else { return nil }
+    self.init(rawValue: wireValue.lowercased())
+  }
+}
+
 /// `mouse_cursor` — Flutter's `SystemMouseCursors` names against AppKit's
 /// cursors.
 ///
 /// Only macOS has a pointer to change. iOS carries the property so one Ruby
 /// app runs on both, and it is inert there, exactly as it is in Flutter.
 struct RufletMouseCursorModifier: ViewModifier {
-  let node: ControlNode
+  let cursorName: String?
+
+  init(node: ControlNode) {
+    cursorName = node.string("mouse_cursor")
+  }
+
+  init(cursorName: String?) {
+    self.cursorName = cursorName
+  }
 
   func body(content: Content) -> some View {
     #if os(macOS)
-      if let cursor = Self.cursor(node.string("mouse_cursor")) {
+      if let cursor = Self.cursor(cursorName) {
         content.onHover { inside in
           if inside { cursor.push() } else { NSCursor.pop() }
         }
@@ -247,25 +274,44 @@ struct RufletMouseCursorModifier: ViewModifier {
     /// does have it spells differently. A name with no counterpart leaves the
     /// cursor alone rather than guessing at a lookalike.
     static func cursor(_ name: String?) -> NSCursor? {
-      switch name?.lowercased() {
-      case "click", "grab": return .openHand
-      case "grabbing", "move", "allscroll": return .closedHand
-      case "text": return .iBeam
-      case "verticaltext": return .iBeamCursorForVerticalLayout
-      case "forbidden", "nodrop": return .operationNotAllowed
-      case "contextmenu": return .contextualMenu
-      case "copy": return .dragCopy
-      case "alias": return .dragLink
-      case "precise", "cell": return .crosshair
-      case "none": return .none
-      case "resizeleftright", "resizecolumn": return .resizeLeftRight
-      case "resizeupdown", "resizerow": return .resizeUpDown
-      case "resizeup": return .resizeUp
-      case "resizedown": return .resizeDown
-      case "resizeleft": return .resizeLeft
-      case "resizeright": return .resizeRight
-      case "disappearing": return .disappearingItem
-      default: return nil
+      switch RufletMouseCursorName(name) {
+      case .basic: return .arrow
+      case .click: return .pointingHand
+      case .grab: return .openHand
+      case .grabbing: return .closedHand
+      case .text: return .iBeam
+      case .verticaltext: return .iBeamCursorForVerticalLayout
+      case .forbidden, .nodrop: return .operationNotAllowed
+      case .contextmenu: return .contextualMenu
+      case .copy: return .dragCopy
+      case .alias: return .dragLink
+      case .precise, .cell: return .crosshair
+      case .some(.none):
+        // AppKit has no public hidden-cursor singleton. A transparent native
+        // cursor preserves Flutter's `none` semantics without drawing a
+        // replacement pointer.
+        return NSCursor(
+          image: NSImage(size: NSSize(width: 1, height: 1)), hotSpot: .zero)
+      case .resizeleftright, .resizecolumn: return .resizeLeftRight
+      case .resizeupdown, .resizerow: return .resizeUpDown
+      case .resizeup: return .resizeUp
+      case .resizedown: return .resizeDown
+      case .resizeleft: return .resizeLeft
+      case .resizeright: return .resizeRight
+      case .disappearing: return .disappearingItem
+      case .zoomin:
+        if #available(macOS 15.0, *) { return .zoomIn }
+        return nil
+      case .zoomout:
+        if #available(macOS 15.0, *) { return .zoomOut }
+        return nil
+      // AppKit has no semantic counterpart for these Flutter cursors. Let the
+      // responder chain retain its cursor rather than substitute a misleading
+      // shape (for example, a closed hand for `move`).
+      case .allscroll, .help, .move, .progress, .resizedownleft,
+        .resizedownright, .resizeupleft, .resizeupleftdownright,
+        .resizeupright, .resizeuprightdownleft, .wait, nil:
+        return nil
       }
     }
   #endif
@@ -541,13 +587,148 @@ private struct RufletDirectionalityModifier: ViewModifier {
   }
 }
 
+/// Parsed shape accepted by Flet's `parseTooltip`: either a bare string or
+/// the structured Tooltip value. Apple exposes tooltip text through native
+/// `help`; the remaining fields stay explicit here so wire semantics are not
+/// lost and can be adopted if Apple expands that API.
+struct RufletTooltipPresentation {
+  enum TriggerMode: String {
+    case manual, tap, longPress
+
+    init?(_ value: String?) {
+      switch value?.lowercased() {
+      case "manual": self = .manual
+      case "tap": self = .tap
+      case "longpress": self = .longPress
+      default: return nil
+      }
+    }
+  }
+
+  static let stringWaitDurationMilliseconds = 800.0
+  static let defaultBorderRadius = 4.0
+  static let nativeHelpLimitations: Set<String> = [
+    "decoration", "enable_feedback", "exclude_from_semantics", "exit_duration",
+    "margin", "padding", "prefer_below", "show_duration", "size_constraints",
+    "tap_to_dismiss", "text_align", "text_style", "trigger_mode", "vertical_offset",
+    "wait_duration",
+  ]
+
+  let message: String
+  let structured: Bool
+  let enableFeedback: Bool?
+  let tapToDismiss: Bool
+  let excludeFromSemantics: Bool?
+  let constraints: ControlProps.SizeConstraints?
+  let exitDurationMilliseconds: Double?
+  let preferBelow: Bool?
+  let padding: EdgeInsets?
+  let borderRadius: CGFloat
+  let backgroundColor: String?
+  let textStyle: [String: RufletValue]?
+  let verticalOffset: Double?
+  let margin: EdgeInsets?
+  let mouseCursor: RufletMouseCursorName?
+  let textAlign: String?
+  let showDurationMilliseconds: Double?
+  let waitDurationMilliseconds: Double?
+  let triggerMode: TriggerMode?
+
+  init?(_ value: RufletValue?) {
+    guard let value, !value.isNull else { return nil }
+    if case .string(let message) = value {
+      self.message = message
+      structured = false
+      enableFeedback = nil
+      tapToDismiss = true
+      excludeFromSemantics = nil
+      constraints = nil
+      exitDurationMilliseconds = nil
+      preferBelow = nil
+      padding = nil
+      borderRadius = Self.defaultBorderRadius
+      backgroundColor = nil
+      textStyle = nil
+      verticalOffset = nil
+      margin = nil
+      mouseCursor = nil
+      textAlign = nil
+      showDurationMilliseconds = nil
+      waitDurationMilliseconds = Self.stringWaitDurationMilliseconds
+      triggerMode = nil
+      return
+    }
+
+    guard let map = value.mapValue else { return nil }
+    message = map["message"]?.stringValue ?? ""
+    structured = true
+    enableFeedback = map["enable_feedback"]?.boolValue
+    tapToDismiss = map["tap_to_dismiss"]?.boolValue ?? true
+    excludeFromSemantics = map["exclude_from_semantics"]?.boolValue
+    constraints = ControlProps.sizeConstraints(map["size_constraints"])
+    exitDurationMilliseconds = Self.durationMilliseconds(map["exit_duration"])
+    preferBelow = map["prefer_below"]?.boolValue
+    padding = ControlProps.edgeInsets(map["padding"])
+    let decoration = map["decoration"]?.mapValue
+    borderRadius = ControlProps.cornerRadius(decoration?["border_radius"])
+      ?? Self.defaultBorderRadius
+    backgroundColor = decoration?["bgcolor"]?.stringValue ?? map["bgcolor"]?.stringValue
+    textStyle = map["text_style"]?.mapValue
+    verticalOffset = map["vertical_offset"]?.doubleValue
+    margin = ControlProps.edgeInsets(map["margin"])
+    mouseCursor = RufletMouseCursorName(map["mouse_cursor"]?.stringValue)
+    textAlign = Self.enumValue(
+      map["text_align"]?.stringValue,
+      accepted: ["center", "end", "justify", "left", "right", "start"])
+    showDurationMilliseconds = Self.durationMilliseconds(map["show_duration"])
+    waitDurationMilliseconds = Self.durationMilliseconds(map["wait_duration"])
+    triggerMode = TriggerMode(map["trigger_mode"]?.stringValue)
+  }
+
+  private static func enumValue(_ value: String?, accepted: Set<String>) -> String? {
+    guard let value = value?.lowercased(), accepted.contains(value) else { return nil }
+    return value
+  }
+
+  /// Mirrors Flet's `parseDuration`: numeric values are milliseconds and a
+  /// component map is summed after every component is truncated to an Int.
+  static func durationMilliseconds(_ value: RufletValue?) -> Double? {
+    guard let value, !value.isNull else { return nil }
+    if case .int(let milliseconds) = value { return Double(milliseconds) }
+    if case .string(let raw) = value { return Double(Int(raw) ?? 0) }
+    if case .double = value { return 0 }
+    guard let map = value.mapValue else { return 0 }
+    func integer(_ key: String) -> Int {
+      switch map[key] {
+      case .int(let value): return Int(value)
+      case .string(let value): return Int(value) ?? 0
+      default: return 0
+      }
+    }
+    let microseconds = integer("microseconds")
+      + 1_000 * integer("milliseconds")
+      + 1_000_000 * integer("seconds")
+      + 60_000_000 * integer("minutes")
+      + 3_600_000_000 * integer("hours")
+      + 86_400_000_000 * integer("days")
+    return Double(microseconds) / 1_000
+  }
+}
+
 private struct RufletTooltipModifier: ViewModifier {
   let node: ControlNode
 
   @ViewBuilder
   func body(content: Content) -> some View {
-    if !node.skipsRufletProperty("tooltip"), let tooltip = node.string("tooltip"), !tooltip.isEmpty {
-      content.help(tooltip)
+    if !node.skipsRufletProperty("tooltip"),
+      let tooltip = RufletTooltipPresentation(node.props["tooltip"])
+    {
+      // SwiftUI help is backed by the platform tooltip/accessibility system.
+      // It does not expose Flutter's popup geometry, theme, trigger, feedback,
+      // or duration knobs, so those are deliberately not hand-drawn here.
+      content
+        .help(tooltip.message)
+        .modifier(RufletMouseCursorModifier(cursorName: tooltip.mouseCursor?.rawValue))
     } else {
       content
     }
