@@ -431,21 +431,25 @@ struct ShimmerControlView: View {
   let node: ControlNode
   @State private var phase: CGFloat = -1
 
-  var body: some View {
-    // Flet names the resting colour `base_color`; `color` is the older
-    // spelling the same control still accepts.
-    let base = MaterialPalette.color(
-      node.string("base_color") ?? node.string("color"), default: .gray.opacity(0.3))
-    let highlight = MaterialPalette.color(
-      node.string("highlight_color"), default: .white.opacity(0.6))
+  private var configuration: RufletShimmerConfiguration {
+    RufletShimmerConfiguration(node: node)
+  }
 
-    content
-    .overlay {
-      if node.bool("disabled") != true {
-        shimmer(base: base, highlight: highlight)
+  @ViewBuilder
+  var body: some View {
+    if node.controlID(forKey: "content") == nil {
+      RufletWrapperError("Shimmer.content must be specified")
+    } else if !configuration.hasValidColors {
+      RufletWrapperError("Shimmer requires either gradient or base/highlight colors")
+    } else {
+      content
+      .overlay {
+        if configuration.enabled {
+          shimmer
+        }
       }
+      .mask(content)
     }
-    .mask(content)
   }
 
   @ViewBuilder private var content: some View {
@@ -454,24 +458,26 @@ struct ShimmerControlView: View {
     }
   }
 
-  private func shimmer(base: Color, highlight: Color) -> some View {
-    let supplied = GradientProps.linear(node.props["gradient"])
-    return (supplied ?? LinearGradient(
-      stops: [
-        .init(color: base, location: 0),
-        .init(color: highlight, location: 0.5),
-        .init(color: base, location: 1)
-      ], startPoint: sweep.start, endPoint: sweep.end))
-    .overlay(
-      Color.clear
-    )
-    .offset(x: sweep.horizontal ? phase * 240 : 0, y: sweep.horizontal ? 0 : phase * 240)
+  private var shimmer: some View {
+    let gradient = RufletWrapperGradient(node.props["gradient"])
+      ?? RufletWrapperGradient(
+        colors: [configuration.baseColor!, configuration.highlightColor!, configuration.baseColor!],
+        stops: [0, 0.5, 1], begin: sweep.start, end: sweep.end)
+    return GeometryReader { proxy in
+      gradient.view
+        .overlay(Color.clear)
+        // The shimmer package translates by the child's extent, not a fixed
+        // number of pixels. Measuring keeps the same speed and sweep on every
+        // device and for every Ruflet layout.
+        .offset(
+          x: sweep.horizontal ? phase * proxy.size.width : 0,
+          y: sweep.horizontal ? 0 : phase * proxy.size.height)
+    }
     .onAppear {
-      let period = RufletWrapperDefaults.shimmerPeriod(node.double("period"))
       // `loop` is how many passes to make; Flutter treats zero as endless,
       // which is also the default.
-      let passes = RufletWrapperDefaults.shimmerRepeats(node.int("loop"))
-      let animation = Animation.linear(duration: period)
+      let passes = configuration.repeats
+      let animation = Animation.linear(duration: configuration.period)
       withAnimation(
         passes != nil
           ? animation.repeatCount(passes!, autoreverses: false)
@@ -506,6 +512,38 @@ enum RufletWrapperDefaults {
     let count = loop ?? 0
     return count > 0 ? count : nil
   }
+
+  /// Flutter's ShaderMask constructor defaults to `BlendMode.modulate`.
+  /// SwiftUI names the equivalent component multiplication `multiply`.
+  static func shaderBlendMode(_ value: String?) -> BlendMode {
+    guard let value else { return .multiply }
+    return value.lowercased() == "modulate" ? .multiply : ControlProps.blendMode(value)
+  }
+}
+
+/// The constructor validation and defaults used by the vendored Shimmer
+/// widget. In particular, omitted colours are an error in Flet; inventing a
+/// grey/white pair here makes invalid Ruflet code appear valid only on Apple.
+struct RufletShimmerConfiguration {
+  let baseColor: Color?
+  let highlightColor: Color?
+  let hasGradient: Bool
+  let period: Double
+  let repeats: Int?
+  let enabled: Bool
+
+  init(node: ControlNode) {
+    baseColor = MaterialPalette.color(node.string("base_color"))
+    highlightColor = MaterialPalette.color(node.string("highlight_color"))
+    hasGradient = RufletWrapperGradient(node.props["gradient"]) != nil
+    period = RufletWrapperDefaults.shimmerPeriod(node.double("period"))
+    repeats = RufletWrapperDefaults.shimmerRepeats(node.int("loop"))
+    enabled = node.bool("disabled") != true
+  }
+
+  var hasValidColors: Bool {
+    hasGradient || (baseColor != nil && highlightColor != nil)
+  }
 }
 
 /// `ShaderMask` — masks its content with a gradient.
@@ -515,11 +553,20 @@ enum RufletWrapperDefaults {
 struct ShaderMaskControlView: View {
   let node: ControlNode
 
+  @ViewBuilder
   var body: some View {
-    content
-      .overlay { gradient.blendMode(ControlProps.blendMode(node.string("blend_mode"))) }
-      .mask(content)
-      .clipShape(RoundedRectangle(cornerRadius: ControlProps.cornerRadius(node.props["border_radius"]) ?? 0))
+    if let shader = RufletWrapperGradient(node.props["shader"]) {
+      content
+        .overlay {
+          shader.view.blendMode(
+            RufletWrapperDefaults.shaderBlendMode(node.string("blend_mode")))
+        }
+        .mask(content)
+        .clipShape(RoundedRectangle(
+          cornerRadius: ControlProps.cornerRadius(node.props["border_radius"]) ?? 0))
+    } else {
+      RufletWrapperError("ShaderMask.shader must be provided")
+    }
   }
 
   @ViewBuilder private var content: some View {
@@ -530,14 +577,6 @@ struct ShaderMaskControlView: View {
     }
   }
 
-  @ViewBuilder
-  private var gradient: some View {
-    if let mask = GradientProps.linear(node.props["shader"]) {
-      Rectangle().fill(mask)
-    } else {
-      Rectangle()
-    }
-  }
 }
 
 /// `Hero` — a shared-element transition between screens.
@@ -550,24 +589,130 @@ struct HeroControlView: View {
   @Namespace private var fallbackNamespace
   @Environment(\.rufletHeroNamespace) private var pageNamespace
 
+  @ViewBuilder
   var body: some View {
-    Group {
-      if let contentID = node.controlID(forKey: "content") {
+    if node.controlID(forKey: "content") == nil {
+      RufletWrapperError("Hero.content must be provided and visible")
+    } else if node.props["tag"] == nil {
+      RufletWrapperError("Hero.tag must be provided")
+    } else if let contentID = node.controlID(forKey: "content") {
+      Group {
         ControlView(id: contentID, axis: .none)
-      } else {
-        ControlList(ids: node.childIDs, axis: .vertical)
+      }
+      .matchedGeometryEffect(
+        id: RufletHeroTag(node.props["tag"]),
+        in: pageNamespace ?? fallbackNamespace)
+    }
+  }
+}
+
+/// Hero accepts any protocol value as its tag. Stringifying only string tags
+/// made the integer and boolean tags used by Flet collide on Apple.
+struct RufletHeroTag: Hashable {
+  private let value: String
+
+  init(_ value: RufletValue?) {
+    switch value {
+    case .string(let string): self.value = "string:\(string)"
+    case .int(let integer): self.value = "int:\(integer)"
+    case .double(let double): self.value = "double:\(double)"
+    case .bool(let bool): self.value = "bool:\(bool)"
+    case .null, nil: self.value = "null"
+    default: self.value = "value:\(String(describing: value!))"
+    }
+  }
+}
+
+/// A gradient parser local to the wrapper controls. Flet accepts linear,
+/// radial and sweep gradients for both Shimmer and ShaderMask; the previous
+/// implementation silently discarded the latter two.
+struct RufletWrapperGradient {
+  enum Kind: Equatable { case linear, radial, sweep }
+  let kind: Kind
+  let stops: [Gradient.Stop]
+  let begin: UnitPoint
+  let end: UnitPoint
+  let center: UnitPoint
+  let radius: CGFloat
+  let startAngle: Angle
+  let endAngle: Angle
+  let rotation: Angle
+
+  init?(_ value: RufletValue?) {
+    guard let map = value?.mapValue else { return nil }
+    let colors = (map["colors"]?.arrayValue ?? []).compactMap {
+      MaterialPalette.color($0.stringValue)
+    }
+    guard colors.count > 1 else { return nil }
+    let locations = map["stops"]?.arrayValue?.compactMap(\.doubleValue)
+    stops = Self.stops(colors: colors, locations: locations)
+    switch map["_type"]?.stringValue?.lowercased() {
+    case "linear": kind = .linear
+    case "radial": kind = .radial
+    case "sweep": kind = .sweep
+    default: return nil
+    }
+    begin = Self.point(map["begin"], fallback: .leading)
+    end = Self.point(map["end"], fallback: .trailing)
+    center = Self.point(map["center"], fallback: .center)
+    radius = CGFloat(map["radius"]?.doubleValue ?? 0.5)
+    startAngle = .radians(map["start_angle"]?.doubleValue ?? 0)
+    endAngle = .radians(map["end_angle"]?.doubleValue ?? 0)
+    rotation = .radians(map["rotation"]?.doubleValue ?? 0)
+  }
+
+  init(colors: [Color], stops locations: [Double], begin: UnitPoint, end: UnitPoint) {
+    kind = .linear
+    stops = Self.stops(colors: colors, locations: locations)
+    self.begin = begin
+    self.end = end
+    center = .center
+    radius = 0.5
+    startAngle = .zero
+    endAngle = .zero
+    rotation = .zero
+  }
+
+  @ViewBuilder var view: some View {
+    Group {
+      switch kind {
+      case .linear:
+        Rectangle().fill(LinearGradient(stops: stops, startPoint: begin, endPoint: end))
+      case .radial:
+        GeometryReader { proxy in
+          Rectangle().fill(RadialGradient(
+            stops: stops, center: center, startRadius: 0,
+            endRadius: radius * min(proxy.size.width, proxy.size.height)))
+        }
+      case .sweep:
+        Rectangle().fill(AngularGradient(
+          stops: stops, center: center, startAngle: startAngle, endAngle: endAngle))
       }
     }
-    .matchedGeometryEffect(
-      id: node.string("tag") ?? "hero-\(node.id)",
-      in: pageNamespace ?? fallbackNamespace)
-    // Flutter can keep a hero flying while the user drives a back gesture;
-    // SwiftUI's matched geometry always does, so the flag only turns it off.
-    .transaction { transaction in
-      if node.bool("transition_on_user_gestures") == false {
-        transaction.disablesAnimations = true
-      }
+    .rotationEffect(rotation)
+  }
+
+  private static func stops(colors: [Color], locations: [Double]?) -> [Gradient.Stop] {
+    let resolved: [Double]
+    if let locations, locations.count == colors.count {
+      resolved = locations
+    } else {
+      resolved = colors.indices.map { Double($0) / Double(colors.count - 1) }
     }
+    return zip(colors, resolved).map { Gradient.Stop(color: $0.0, location: $0.1) }
+  }
+
+  private static func point(_ value: RufletValue?, fallback: UnitPoint) -> UnitPoint {
+    guard let alignment = ControlProps.continuousAlignment(value) else { return fallback }
+    return UnitPoint(x: (alignment.x + 1) / 2, y: (alignment.y + 1) / 2)
+  }
+}
+
+private struct RufletWrapperError: View {
+  let message: String
+  init(_ message: String) { self.message = message }
+  var body: some View {
+    Text(message).font(.caption).foregroundStyle(.red)
   }
 }
 

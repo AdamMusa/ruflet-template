@@ -1,5 +1,7 @@
 import XCTest
 @testable import RufletUI
+import RufletEngine
+import RufletProtocol
 
 final class WrapperControlParityTests: XCTestCase {
   func testScreenshotUsesFletCaptureDelayDefault() {
@@ -14,5 +16,62 @@ final class WrapperControlParityTests: XCTestCase {
     XCTAssertNil(RufletWrapperDefaults.shimmerRepeats(nil))
     XCTAssertNil(RufletWrapperDefaults.shimmerRepeats(0))
     XCTAssertEqual(RufletWrapperDefaults.shimmerRepeats(3), 3)
+  }
+
+  func testShimmerRequiresTheSameConstructorInputsAsFlet() {
+    let missing = RufletShimmerConfiguration(
+      node: ControlNode(id: 1, type: "Shimmer"))
+    XCTAssertFalse(missing.hasValidColors)
+    XCTAssertTrue(missing.enabled)
+
+    let pair = RufletShimmerConfiguration(
+      node: ControlNode(
+        id: 2, type: "Shimmer",
+        props: [
+          "base_color": .string("grey"),
+          "highlight_color": .string("white"),
+          "disabled": .bool(true),
+        ]))
+    XCTAssertTrue(pair.hasValidColors)
+    XCTAssertFalse(pair.enabled)
+
+    let gradient = RufletShimmerConfiguration(
+      node: ControlNode(
+        id: 3, type: "Shimmer",
+        props: ["gradient": wrapperGradient("radial")]))
+    XCTAssertTrue(gradient.hasValidColors)
+  }
+
+  func testWrapperGradientAcceptsEveryGradientTypeParsedByFlet() throws {
+    XCTAssertEqual(try XCTUnwrap(RufletWrapperGradient(wrapperGradient("linear"))).kind, .linear)
+    XCTAssertEqual(try XCTUnwrap(RufletWrapperGradient(wrapperGradient("radial"))).kind, .radial)
+    XCTAssertEqual(try XCTUnwrap(RufletWrapperGradient(wrapperGradient("sweep"))).kind, .sweep)
+    XCTAssertNil(RufletWrapperGradient(.map([
+      "_type": .string("linear"), "colors": .array([.string("red")])
+    ])))
+    XCTAssertNil(RufletWrapperGradient(wrapperGradient("unsupported")))
+    XCTAssertNil(RufletWrapperGradient(.map([
+      "colors": .array([.string("red"), .string("blue")])
+    ])))
+  }
+
+  func testShaderMaskDefaultsToFluttersModulateBlendMode() {
+    XCTAssertEqual(RufletWrapperDefaults.shaderBlendMode(nil), .multiply)
+    XCTAssertEqual(RufletWrapperDefaults.shaderBlendMode("modulate"), .multiply)
+    XCTAssertEqual(RufletWrapperDefaults.shaderBlendMode("screen"), .screen)
+  }
+
+  func testHeroTagPreservesProtocolTypeAsWellAsValue() {
+    XCTAssertEqual(RufletHeroTag(.int(7)), RufletHeroTag(.int(7)))
+    XCTAssertNotEqual(RufletHeroTag(.int(7)), RufletHeroTag(.string("7")))
+    XCTAssertNotEqual(RufletHeroTag(.bool(true)), RufletHeroTag(.string("true")))
+  }
+
+  private func wrapperGradient(_ type: String) -> RufletValue {
+    .map([
+      "_type": .string(type),
+      "colors": .array([.string("red"), .string("blue")]),
+      "stops": .array([.double(0), .double(1)]),
+    ])
   }
 }
