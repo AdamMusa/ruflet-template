@@ -85,4 +85,29 @@ final class WindowServiceParityTests: XCTestCase {
     XCTAssertTrue(registry.handles("Window"))
     XCTAssertTrue(registry.service(for: ControlNode(id: 44, type: "Window")) is WindowService)
   }
+
+  func testWindowConfigurationPreservesIndependentFletAxes() {
+    let configuration = RufletWindowConfiguration(
+      node: ControlNode(id: 1, type: "Window", props: [
+        "width": .int(900),
+        "min_height": .int(240),
+        "max_width": .int(1_440),
+        "top": .int(20),
+        "aspect_ratio": .double(1.5),
+        "alignment": .map(["x": .double(-1), "y": .double(0.5)]),
+      ]),
+      pageTitle: "Ruflet Studio")
+
+    XCTAssertEqual(configuration.title, "Ruflet Studio")
+    XCTAssertEqual(configuration.width, 900)
+    XCTAssertNil(configuration.height)
+    XCTAssertNil(configuration.minWidth)
+    XCTAssertEqual(configuration.minHeight, 240)
+    XCTAssertEqual(configuration.maxWidth, 1_440)
+    XCTAssertNil(configuration.maxHeight)
+    XCTAssertEqual(configuration.top, 20)
+    XCTAssertNil(configuration.left)
+    XCTAssertEqual(configuration.aspectRatio, 1.5)
+    XCTAssertEqual(configuration.alignment, CGPoint(x: -1, y: 0.5))
+  }
 }

@@ -96,6 +96,43 @@ public struct RufletWindowEvent: Equatable {
   }
 }
 
+/// Property model consumed by AppKit. Keeping nullable axes independent is
+/// important: Flet forwards `width`/`height`, min/max dimensions, and
+/// `top`/`left` independently rather than requiring pairs.
+public struct RufletWindowConfiguration: Equatable {
+  public let title: String?
+  public let width: Double?
+  public let height: Double?
+  public let minWidth: Double?
+  public let minHeight: Double?
+  public let maxWidth: Double?
+  public let maxHeight: Double?
+  public let top: Double?
+  public let left: Double?
+  public let aspectRatio: Double?
+  public let alignment: CGPoint?
+
+  public init(node: ControlNode, pageTitle: String?) {
+    title = pageTitle
+    width = node.double("width")
+    height = node.double("height")
+    minWidth = node.double("min_width")
+    minHeight = node.double("min_height")
+    maxWidth = node.double("max_width")
+    maxHeight = node.double("max_height")
+    top = node.double("top")
+    left = node.double("left")
+    aspectRatio = node.double("aspect_ratio")
+    if let map = node.props["alignment"]?.mapValue {
+      alignment = CGPoint(
+        x: map["x"]?.doubleValue ?? 0,
+        y: map["y"]?.doubleValue ?? 0)
+    } else {
+      alignment = nil
+    }
+  }
+}
+
 /// Injectable host boundary. It keeps command parsing independently testable
 /// and keeps AppKit/UIKit details out of the protocol session.
 @MainActor
@@ -148,7 +185,9 @@ public final class WindowService: RufletStreamingService {
     #if canImport(AppKit)
       DispatchQueue.main.async {
         guard let window = NSApplication.shared.windows.first else { return }
-        Self.apply(node, to: window)
+        Self.apply(
+          node, to: window,
+          pageTitle: context.store.page?.string("title"))
       }
     #endif
   }
@@ -157,15 +196,44 @@ public final class WindowService: RufletStreamingService {
     /// Every window property Flet carries that AppKit can express. The ones it
     /// cannot — a task-bar entry, a dock progress bar — are noted where they
     /// are read.
-    static func apply(_ node: ControlNode, to window: NSWindow) {
-      if let width = node.double("width"), let height = node.double("height") {
-        window.setContentSize(NSSize(width: width, height: height))
+    static func apply(_ node: ControlNode, to window: NSWindow, pageTitle: String? = nil) {
+      let configuration = RufletWindowConfiguration(node: node, pageTitle: pageTitle)
+      if let title = configuration.title { window.title = title }
+      if configuration.width != nil || configuration.height != nil {
+        let current = window.contentLayoutRect.size
+        window.setContentSize(NSSize(
+          width: configuration.width ?? current.width,
+          height: configuration.height ?? current.height))
       }
-      if let minWidth = node.double("min_width"), let minHeight = node.double("min_height") {
-        window.contentMinSize = NSSize(width: minWidth, height: minHeight)
+      if configuration.minWidth != nil || configuration.minHeight != nil {
+        window.contentMinSize = NSSize(
+          width: configuration.minWidth ?? window.contentMinSize.width,
+          height: configuration.minHeight ?? window.contentMinSize.height)
       }
-      if let maxWidth = node.double("max_width"), let maxHeight = node.double("max_height") {
-        window.contentMaxSize = NSSize(width: maxWidth, height: maxHeight)
+      if configuration.maxWidth != nil || configuration.maxHeight != nil {
+        window.contentMaxSize = NSSize(
+          width: configuration.maxWidth ?? window.contentMaxSize.width,
+          height: configuration.maxHeight ?? window.contentMaxSize.height)
+      }
+      if let ratio = configuration.aspectRatio, ratio > 0 {
+        window.contentAspectRatio = NSSize(width: ratio, height: 1)
+      }
+      if configuration.top != nil || configuration.left != nil,
+        let screen = window.screen ?? NSScreen.main
+      {
+        var frame = window.frame
+        if let left = configuration.left { frame.origin.x = left }
+        if let top = configuration.top { frame.origin.y = screen.frame.maxY - top - frame.height }
+        window.setFrameOrigin(frame.origin)
+      } else if let alignment = configuration.alignment,
+        let screen = window.screen ?? NSScreen.main
+      {
+        let available = screen.visibleFrame
+        let unitX = min(max((alignment.x + 1) / 2, 0), 1)
+        let unitY = min(max((alignment.y + 1) / 2, 0), 1)
+        window.setFrameOrigin(NSPoint(
+          x: available.minX + (available.width - window.frame.width) * unitX,
+          y: available.minY + (available.height - window.frame.height) * (1 - unitY)))
       }
 
       var style = window.styleMask
