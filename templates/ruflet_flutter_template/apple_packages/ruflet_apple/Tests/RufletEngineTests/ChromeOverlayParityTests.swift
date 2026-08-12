@@ -4,42 +4,42 @@ import RufletProtocol
 import XCTest
 
 final class ChromeOverlayParityTests: XCTestCase {
-  func testAppleChromeUsesNativeDefaultsWhenDSLDoesNotStyleIt() {
+  func testNativeChromeConsumesPinnedFletAndFlutterDefaults() {
     let appBar = ChromeDefaults.appBar(ControlNode(id: 1, type: "AppBar"))
-    XCTAssertEqual(appBar.toolbarHeight, 44)
+    XCTAssertEqual(appBar.toolbarHeight, 56)
     XCTAssertEqual(appBar.toolbarOpacity, 1)
-    XCTAssertEqual(appBar.titleSpacing, 8)
-    XCTAssertEqual(appBar.leadingWidth, 44)
-    XCTAssertEqual(appBar.scrolledUnderElevation, 0)
+    XCTAssertEqual(appBar.titleSpacing, 16)
+    XCTAssertEqual(appBar.leadingWidth, 56)
+    XCTAssertEqual(appBar.scrolledUnderElevation, 3)
     XCTAssertFalse(appBar.excludeHeaderSemantics)
     XCTAssertFalse(appBar.forceMaterialTransparency)
 
     let bottom = ChromeDefaults.bottomAppBar(ControlNode(id: 2, type: "BottomAppBar"))
-    XCTAssertEqual(bottom.notchMargin, 0)
-    XCTAssertEqual(bottom.height, 44)
-    XCTAssertEqual(bottom.elevation, 0)
-    XCTAssertEqual(bottom.padding.top, 0)
-    XCTAssertEqual(bottom.padding.leading, 8)
+    XCTAssertEqual(bottom.notchMargin, 4)
+    XCTAssertEqual(bottom.height, 80)
+    XCTAssertEqual(bottom.elevation, 3)
+    XCTAssertEqual(bottom.padding.top, 12)
+    XCTAssertEqual(bottom.padding.leading, 16)
 
     let navigation = ChromeDefaults.navigationBar(ControlNode(id: 3, type: "NavigationBar"))
-    XCTAssertEqual(navigation.height, 49)
-    XCTAssertEqual(navigation.elevation, 0)
-    XCTAssertEqual(navigation.labelPadding.top, 2)
+    XCTAssertEqual(navigation.height, 80)
+    XCTAssertEqual(navigation.elevation, 3)
+    XCTAssertEqual(navigation.labelPadding.top, 4)
     XCTAssertEqual(navigation.labelPadding.bottom, 0)
     XCTAssertTrue(navigation.showsLabel(selected: false))
 
     let rail = ChromeDefaults.navigationRail(ControlNode(id: 4, type: "NavigationRail"))
-    XCTAssertEqual(rail.minWidth, 64)
-    XCTAssertEqual(rail.minExtendedWidth, 220)
+    XCTAssertEqual(rail.minWidth, 80)
+    XCTAssertEqual(rail.minExtendedWidth, 256)
     XCTAssertEqual(rail.groupAlignment, -1)
-    XCTAssertFalse(rail.useIndicator)
+    XCTAssertTrue(rail.useIndicator)
     XCTAssertTrue(rail.showsLabel(extended: false, selected: false))
   }
 
   func testBottomAppBarNotchParsesFletNotchedShapeContract() {
     let absent = ChromeDefaults.bottomAppBarNotch(ControlNode(id: 1, type: "BottomAppBar"))
-    XCTAssertEqual(absent.kind, .none)
-    XCTAssertEqual(absent.margin, 0)
+    XCTAssertEqual(absent.kind, .automatic)
+    XCTAssertEqual(absent.margin, 4)
 
     let circular = ChromeDefaults.bottomAppBarNotch(ControlNode(
       id: 2, type: "BottomAppBar",
@@ -93,13 +93,13 @@ final class ChromeOverlayParityTests: XCTestCase {
     }
   }
 
-  func testNavigationDrawerUsesNativeAppleRowGeometry() {
+  func testNavigationDrawerUsesPinnedFlutterGeometry() {
     let values = ChromeDefaults.navigationDrawer(ControlNode(id: 6, type: "NavigationDrawer"))
-    XCTAssertEqual(values.elevation, 0)
-    XCTAssertEqual(values.tilePadding.leading, 8)
-    XCTAssertEqual(values.tileHeight, 44)
-    XCTAssertNil(values.indicatorWidth)
-    XCTAssertEqual(values.indicatorHeight, 44)
+    XCTAssertEqual(values.elevation, 1)
+    XCTAssertEqual(values.tilePadding.leading, 12)
+    XCTAssertEqual(values.tileHeight, 56)
+    XCTAssertEqual(values.indicatorWidth, 336)
+    XCTAssertEqual(values.indicatorHeight, 56)
   }
 
   func testPageNavigationUsesFletViewPopAndConfirmProtocols() {

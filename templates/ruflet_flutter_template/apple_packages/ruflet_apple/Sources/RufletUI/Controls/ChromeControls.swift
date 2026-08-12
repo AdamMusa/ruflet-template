@@ -7,9 +7,11 @@ import UIKit
 import AppKit
 #endif
 
-/// Apple chrome inherits the platform's dynamic system colors. Flet colour
-/// values are still honoured when the DSL supplies them, but an omitted value
-/// must not silently opt an Apple app into Flutter's Material colour scheme.
+/// Native Apple primitives used to realize Flet chrome controls.
+///
+/// Constructor and theme defaults are still resolved from the pinned Flet /
+/// Flutter contract. This adapter is only the platform color executor; it must
+/// not replace a Flet default token with an unrelated Apple default.
 enum AppleChromeAppearance {
   static var barSurface: Color {
     #if canImport(UIKit)
@@ -76,8 +78,8 @@ struct AppBarControlView: View {
     .padding(.horizontal, metrics.horizontalPadding)
     .frame(height: metrics.toolbarHeight)
     .background(metrics.forceMaterialTransparency
-      ? Color.clear : AppleChromeAppearance.color(node.string("bgcolor"), fallback: barSurface))
-    .foregroundColor(AppleChromeAppearance.color(node.string("color"), fallback: .primary))
+      ? Color.clear : MaterialPalette.color(node.string("bgcolor") ?? "surface"))
+    .foregroundColor(MaterialPalette.color(node.string("color") ?? "onsurface"))
     .shadow(
       color: AppleChromeAppearance.color(node.string("shadow_color"), fallback: .clear),
       radius: elevation > 0 ? elevation : 0,
@@ -173,13 +175,13 @@ struct AppBarControlView: View {
         .rufletTextStyle(RufletTextStyle(node: node, styleKey: "title_text_style"))
     } else if let text = node.string("title") {
       Text(text)
-        .font(.headline)
+        .font(.system(size: 22))
         .rufletTextStyle(RufletTextStyle(node: node, styleKey: "title_text_style"))
     }
   }
 
   private var barSurface: Color {
-    AppleChromeAppearance.barSurface
+    MaterialPalette.color("surface", default: .clear)
   }
 }
 
@@ -206,7 +208,7 @@ struct BottomAppBarControlView: View {
     .frame(maxWidth: .infinity)
     .background(
       shape.fill(
-        AppleChromeAppearance.color(node.string("bgcolor"), fallback: AppleChromeAppearance.barSurface),
+        MaterialPalette.color(node.string("bgcolor") ?? "surfacecontainer", default: .clear),
         style: FillStyle(eoFill: true)))
     .mask(shape.fill(style: FillStyle(eoFill: true)))
     .shadow(
@@ -226,15 +228,15 @@ struct NavigationBarControlView: View {
   @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
 
-  /// Apple tab bars do not synthesize Material's selected pill. A pill is
-  /// rendered only when the DSL explicitly supplies its colour or shape.
+  /// Flet's omitted indicator values resolve through Flutter's NavigationBar
+  /// theme; the native SwiftUI composition receives those resolved values.
   @ViewBuilder
   private func destinationIndicator(active: Bool) -> some View {
-    if active, node.props["indicator_color"] != nil || node.props["indicator_shape"] != nil {
+    if active {
       ChromeOutlinedShape(value: node.props["indicator_shape"], defaultKind: .stadium)
-        .fill(AppleChromeAppearance.color(
-          node.string("indicator_color"), fallback: .accentColor.opacity(0.12)))
-        .frame(minWidth: 44, minHeight: 28)
+        .fill(MaterialPalette.color(
+          node.string("indicator_color") ?? "secondarycontainer", default: .clear))
+        .frame(width: 64, height: 32)
     }
   }
 
@@ -256,16 +258,18 @@ struct NavigationBarControlView: View {
         } label: {
           VStack(spacing: 4) {
             destinationIcon(destination, selected: isSelected)
-              .foregroundColor(AppleChromeAppearance.itemColor(
-                selected: isSelected, disabled: isDisabled))
-              .frame(minWidth: 44, minHeight: 28)
+              .foregroundColor(MaterialPalette.color(
+                ChromeDefaults.navigationBarItemPalette(
+                  selected: isSelected, disabled: isDisabled).iconToken))
+              .frame(minWidth: 64, minHeight: 32)
               .background(destinationIndicator(active: isSelected))
             if metrics.showsLabel(selected: isSelected),
               let label = destination.string("label") {
               Text(label)
-                .font(.caption)
-                .foregroundColor(AppleChromeAppearance.itemColor(
-                  selected: isSelected, disabled: isDisabled))
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(MaterialPalette.color(
+                  ChromeDefaults.navigationBarItemPalette(
+                    selected: isSelected, disabled: isDisabled).labelToken))
                 .padding(metrics.labelPadding)
             }
           }
@@ -280,8 +284,7 @@ struct NavigationBarControlView: View {
       }
     }
     .frame(height: metrics.height)
-    .background(AppleChromeAppearance.color(
-      node.string("bgcolor"), fallback: AppleChromeAppearance.barSurface))
+    .background(MaterialPalette.color(node.string("bgcolor") ?? "surfacecontainer"))
     .overlay(alignment: .top) {
       if let border = ControlProps.border(node.props["border"]) {
         Rectangle().fill(border.color).frame(height: border.width)
@@ -364,9 +367,9 @@ struct NavigationRailControlView: View {
 
   private func railIndicator(_ destination: ControlNode, active: Bool) -> Color {
     guard active else { return .clear }
-    return AppleChromeAppearance.color(
+    return MaterialPalette.color(
       destination.string("indicator_color") ?? node.string("indicator_color"),
-      fallback: .accentColor.opacity(0.12))
+      default: MaterialPalette.color("secondarycontainer", default: .clear))
   }
 
   var body: some View {
@@ -429,8 +432,7 @@ struct NavigationRailControlView: View {
       .frame(maxHeight: .infinity)
     }
     .frame(width: extended ? metrics.minExtendedWidth : metrics.minWidth)
-    .background(AppleChromeAppearance.color(
-      node.string("bgcolor"), fallback: AppleChromeAppearance.groupedSurface))
+    .background(MaterialPalette.color(node.string("bgcolor") ?? "surface"))
     .shadow(
       color: .black.opacity(0.2), radius: metrics.elevation > 0 ? metrics.elevation : 0,
       x: metrics.elevation > 0 ? metrics.elevation / 2 : 0)
@@ -439,10 +441,11 @@ struct NavigationRailControlView: View {
   private func railIconPart(
     _ destination: ControlNode, selected: Bool, disabled: Bool
   ) -> some View {
+    let palette = ChromeDefaults.navigationRailItemPalette(selected: selected, disabled: disabled)
     let shapeValue = destination.props["indicator_shape"] ?? node.props["indicator_shape"]
     return railDestinationIcon(destination, selected: selected)
-      .foregroundColor(AppleChromeAppearance.itemColor(selected: selected, disabled: disabled))
-      .frame(width: 44, height: 32)
+      .foregroundColor(MaterialPalette.color(palette.iconToken))
+      .frame(width: 56, height: 32)
       .background {
         if ChromeDefaults.navigationRail(node).useIndicator && selected {
           ChromeOutlinedShape(value: shapeValue, defaultKind: .stadium)
@@ -473,15 +476,16 @@ struct NavigationRailControlView: View {
   private func railDestinationLabel(
     _ destination: ControlNode, selected: Bool, disabled: Bool
   ) -> some View {
-    let color = AppleChromeAppearance.itemColor(selected: selected, disabled: disabled)
+    let color = MaterialPalette.color(
+      ChromeDefaults.navigationRailItemPalette(selected: selected, disabled: disabled).labelToken)
     if let labelID = destination.controlID(forKey: "label") {
       ControlView(id: labelID, axis: .none)
-        .font(.caption)
+        .font(.system(size: 12, weight: .medium))
         .foregroundColor(color)
         .rufletTextStyle(railLabelStyle(selected: selected))
     } else {
       Text(destination.string("label") ?? "")
-        .font(.caption)
+        .font(.system(size: 12, weight: .medium))
         .foregroundColor(color)
         .rufletTextStyle(railLabelStyle(selected: selected))
     }
@@ -517,8 +521,7 @@ private struct ChromeRailGroupAlignmentLayout: Layout {
   }
 }
 
-/// Protocol-to-native defaults for Apple chrome controls. Explicit Ruflet
-/// values win, while omissions resolve to Apple toolbar/tab/sidebar metrics.
+/// Pinned Flet/Flutter semantic defaults consumed by native Apple chrome.
 enum ChromeDefaults {
   struct AppBarValues {
     let toolbarHeight: CGFloat
@@ -571,6 +574,11 @@ enum ChromeDefaults {
     }
   }
 
+  struct NavigationItemPalette: Equatable {
+    let iconToken: String
+    let labelToken: String
+  }
+
   struct NavigationRailValues {
     let elevation: CGFloat
     let groupAlignment: Double
@@ -597,21 +605,20 @@ enum ChromeDefaults {
     let elevation: CGFloat
     let tilePadding: EdgeInsets
     let tileHeight: CGFloat
-    let indicatorWidth: CGFloat?
+    let indicatorWidth: CGFloat
     let indicatorHeight: CGFloat
   }
 
   static func appBar(_ node: ControlNode) -> AppBarValues {
     AppBarValues(
-      toolbarHeight: CGFloat(node.double("toolbar_height") ?? 44),
+      toolbarHeight: RufletThemeDefaults.appBarHeight(node),
       toolbarOpacity: node.double("toolbar_opacity") ?? 1,
       horizontalPadding: 0,
-      titleSpacing: CGFloat(node.double("title_spacing") ?? 8),
-      leadingWidth: CGFloat(node.double("leading_width") ?? 44),
+      titleSpacing: CGFloat(node.double("title_spacing") ?? 16),
+      leadingWidth: CGFloat(node.double("leading_width") ?? 56),
       actionsPadding: ControlProps.edgeInsets(node.props["actions_padding"]) ?? EdgeInsets(),
       elevation: CGFloat(node.double("elevation") ?? 0),
-      scrolledUnderElevation: CGFloat(node.double("elevation_on_scroll")
-        ?? node.double("elevation") ?? 0),
+      scrolledUnderElevation: CGFloat(node.double("elevation_on_scroll") ?? 3),
       clipBehavior: node.string("clip_behavior") ?? "none",
       excludeHeaderSemantics: node.bool("exclude_header_semantics") ?? false,
       forceMaterialTransparency: node.bool("force_material_transparency") ?? false)
@@ -622,14 +629,14 @@ enum ChromeDefaults {
       ?? RufletCornerRadii(uniform: 0)
     return BottomAppBarValues(
       padding: ControlProps.edgeInsets(node.props["padding"])
-        ?? EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8),
-      height: CGFloat(node.double("height") ?? 44),
-      elevation: CGFloat(node.double("elevation") ?? 0),
+        ?? EdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16),
+      height: CGFloat(node.double("height") ?? 80),
+      elevation: CGFloat(node.double("elevation") ?? 3),
       cornerRadii: radii,
       clipBehavior: radii.maximum > 0
         ? (node.string("clip_behavior") == "none" ? "antiAlias" : node.string("clip_behavior") ?? "antiAlias")
         : node.string("clip_behavior") ?? "none",
-      notchMargin: CGFloat(node.props["notch_margin"]?.doubleValue ?? 0))
+      notchMargin: CGFloat(node.double("notch_margin") ?? 4))
   }
 
   static func bottomAppBarNotch(_ node: ControlNode) -> BottomAppBarNotchValues {
@@ -637,12 +644,12 @@ enum ChromeDefaults {
     let kind: BottomAppBarNotchKind = switch shape?["_type"]?.stringValue?.lowercased() {
     case "circular": .circular
     case "auto": .automatic
-    default: .none
+    default: .automatic
     }
     return BottomAppBarNotchValues(
       kind: kind,
       inverted: shape?["inverted"]?.boolValue ?? false,
-      margin: CGFloat(node.props["notch_margin"]?.doubleValue ?? 0))
+      margin: CGFloat(node.double("notch_margin") ?? 4))
   }
 
   static func navigationBar(_ node: ControlNode) -> NavigationBarValues {
@@ -654,12 +661,24 @@ enum ChromeDefaults {
     }
     let duration = max(node.double("animation_duration") ?? 500, 0) / 1000
     return NavigationBarValues(
-      height: CGFloat(node.double("height") ?? 49),
-      elevation: CGFloat(node.double("elevation") ?? 0),
+      height: CGFloat(node.double("height") ?? 80),
+      elevation: CGFloat(node.double("elevation") ?? 3),
       animation: .easeInOut(duration: duration),
       labelPadding: ControlProps.edgeInsets(node.props["label_padding"])
-        ?? EdgeInsets(top: 2, leading: 0, bottom: 0, trailing: 0),
+        ?? EdgeInsets(top: 4, leading: 0, bottom: 0, trailing: 0),
       labelBehavior: behavior)
+  }
+
+  static func navigationBarItemPalette(
+    selected: Bool, disabled: Bool
+  ) -> NavigationItemPalette {
+    if disabled {
+      return NavigationItemPalette(
+        iconToken: "onsurfacevariant,0.38", labelToken: "onsurfacevariant,0.38")
+    }
+    return NavigationItemPalette(
+      iconToken: selected ? "onsecondarycontainer" : "onsurfacevariant",
+      labelToken: selected ? "onsurface" : "onsurfacevariant")
   }
 
   static func navigationRail(_ node: ControlNode) -> NavigationRailValues {
@@ -671,20 +690,39 @@ enum ChromeDefaults {
     return NavigationRailValues(
       elevation: CGFloat(node.double("elevation") ?? 0),
       groupAlignment: node.double("group_alignment") ?? -1,
-      minWidth: CGFloat(node.double("min_width") ?? 64),
-      minExtendedWidth: CGFloat(node.double("min_extended_width") ?? 220),
-      useIndicator: node.bool("use_indicator") ?? false,
+      minWidth: CGFloat(node.double("min_width") ?? 80),
+      minExtendedWidth: CGFloat(node.double("min_extended_width") ?? 256),
+      useIndicator: node.bool("use_indicator") ?? true,
       labelBehavior: labelBehavior)
+  }
+
+  static func navigationRailItemPalette(
+    selected: Bool, disabled: Bool
+  ) -> NavigationItemPalette {
+    NavigationItemPalette(
+      iconToken: disabled
+        ? "onsurface,0.38"
+        : selected ? "onsecondarycontainer" : "onsurfacevariant",
+      labelToken: disabled ? "onsurface,0.38" : "onsurface")
   }
 
   static func navigationDrawer(_ node: ControlNode) -> NavigationDrawerValues {
     NavigationDrawerValues(
-      elevation: CGFloat(node.double("elevation") ?? 0),
+      elevation: CGFloat(node.double("elevation") ?? 1),
       tilePadding: ControlProps.edgeInsets(node.props["tile_padding"])
-        ?? EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8),
-      tileHeight: 44,
-      indicatorWidth: nil,
-      indicatorHeight: 44)
+        ?? EdgeInsets(top: 0, leading: 12, bottom: 0, trailing: 12),
+      tileHeight: 56,
+      indicatorWidth: 336,
+      indicatorHeight: 56)
+  }
+
+  static func navigationDrawerItemPalette(
+    selected: Bool, disabled: Bool
+  ) -> NavigationItemPalette {
+    let token = disabled
+      ? "onsurfacevariant,0.38"
+      : selected ? "onsecondarycontainer" : "onsurfacevariant"
+    return NavigationItemPalette(iconToken: token, labelToken: token)
   }
 
   static func outlinedShape(
@@ -854,8 +892,7 @@ struct NavigationDrawerControlView: View {
       .padding(.vertical, 16)
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-    .background(AppleChromeAppearance.color(
-      node.string("bgcolor"), fallback: AppleChromeAppearance.groupedSurface))
+    .background(MaterialPalette.color(node.string("bgcolor") ?? "surfacecontainerlow"))
     .shadow(
       color: AppleChromeAppearance.color(node.string("shadow_color"), fallback: .clear),
       radius: metrics.elevation > 0 ? metrics.elevation : 0,
@@ -872,11 +909,13 @@ struct NavigationDrawerControlView: View {
     } label: {
       HStack(spacing: 12) {
         Color.clear.frame(width: 4)
+        let palette = ChromeDefaults.navigationDrawerItemPalette(
+          selected: active, disabled: disabled)
         drawerDestinationIcon(destination, selected: active)
-          .foregroundColor(AppleChromeAppearance.itemColor(selected: active, disabled: disabled))
+          .foregroundColor(MaterialPalette.color(palette.iconToken))
         Text(destination.string("label") ?? "")
           .font(.body)
-          .foregroundColor(AppleChromeAppearance.itemColor(selected: active, disabled: disabled))
+          .foregroundColor(MaterialPalette.color(palette.labelToken))
         Spacer(minLength: 0)
       }
       .frame(height: metrics.tileHeight)
@@ -886,13 +925,13 @@ struct NavigationDrawerControlView: View {
         if active {
           if node.props["indicator_shape"] != nil {
             ChromeOutlinedShape(value: node.props["indicator_shape"], defaultKind: .roundedRectangle)
-              .fill(AppleChromeAppearance.color(
-                node.string("indicator_color"), fallback: .accentColor.opacity(0.12)))
+              .fill(MaterialPalette.color(
+                node.string("indicator_color") ?? "secondarycontainer", default: .clear))
               .frame(maxWidth: .infinity, minHeight: metrics.indicatorHeight)
           } else {
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-              .fill(AppleChromeAppearance.color(
-                node.string("indicator_color"), fallback: .accentColor.opacity(0.12)))
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+              .fill(MaterialPalette.color(
+                node.string("indicator_color") ?? "secondarycontainer", default: .clear))
               .frame(maxWidth: .infinity, minHeight: metrics.indicatorHeight)
           }
         }
