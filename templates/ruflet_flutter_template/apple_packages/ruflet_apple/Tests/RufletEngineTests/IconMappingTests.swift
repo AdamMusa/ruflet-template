@@ -123,9 +123,7 @@ final class IconMappingTests: XCTestCase {
 
   func testRubyMaterialNamesResolveToTheirNativeAppleMeaning() {
     XCTAssertEqual(IconMapping.symbol(forMaterialName: "home"), "house")
-    XCTAssertTrue(
-      ["rocket.fill", "airplane.departure"].contains(
-        IconMapping.symbol(forMaterialName: "rocket_launch")))
+    XCTAssertEqual(IconMapping.symbol(forMaterialName: "rocket_launch"), "paperplane.fill")
     XCTAssertEqual(IconMapping.symbol(forMaterialName: "account_circle"), "person.crop.circle")
     XCTAssertEqual(IconMapping.symbol(forMaterialName: "chevron_right"), "chevron.right")
     XCTAssertEqual(
@@ -135,11 +133,11 @@ final class IconMappingTests: XCTestCase {
 
   func testExplorerGalleryCategoriesUseClosestNativeAppleArtwork() {
     let expected: [String: String] = [
-      "view_module": "square.grid.3x3",
+      "view_module": "square.grid.3x3.fill",
       "widgets": "square.grid.2x2.fill",
       "image": "photo.fill",
       "show_chart": "chart.line.uptrend.xyaxis",
-      "animation": "circle.grid.cross",
+      "animation": "circle.hexagongrid",
       "auto_awesome": "sparkles",
       "settings": "gearshape",
     ]
