@@ -53,7 +53,7 @@ struct RiveControlView: View {
       stringList("animations").joined(separator: ","),
       stringList("state_machines").joined(separator: ","),
       node.string("fit") ?? "contain",
-      node.string("alignment") ?? "center",
+      RiveControlSemantics.alignmentKey(node.props["alignment"]),
       node.bool("use_art_board_size") == true ? "intrinsic" : "layout",
       String(describing: node.props["clip_rect"]),
     ].joined(separator: "|")
@@ -64,8 +64,8 @@ struct RiveControlView: View {
     viewModel = nil
     artboardSize = nil
     errorMessage = nil
-    guard let source = node.string("src"), !source.isEmpty else {
-      errorMessage = "Rive requires a source."
+    guard let source = node.string("src") else {
+      errorMessage = RiveControlSemantics.missingSourceMessage
       return
     }
 
@@ -95,7 +95,7 @@ struct RiveControlView: View {
         alignment: riveAlignment,
         artboardName: node.string("art_board"))
       result.speedMultiplier = node.double("speed_multiplier") ?? 1
-      artboardSize = model.artboard.bounds().size
+      artboardSize = probeArtboard.bounds().size
       viewModel = result
     } catch {
       errorMessage = "Rive failed to load: \(error.localizedDescription)"
@@ -140,29 +140,11 @@ struct RiveControlView: View {
   }
 
   private var riveFit: RiveFit {
-    switch node.string("fit")?.lowercased().replacingOccurrences(of: "_", with: "") {
-    case "fill": return .fill
-    case "cover": return .cover
-    case "fitheight": return .fitHeight
-    case "fitwidth": return .fitWidth
-    case "scaledown": return .scaleDown
-    case "none": return .noFit
-    default: return .contain
-    }
+    RiveControlSemantics.fit(node.string("fit"))
   }
 
   private var riveAlignment: RiveAlignment {
-    switch node.string("alignment")?.lowercased().replacingOccurrences(of: "_", with: "") {
-    case "topleft": return .topLeft
-    case "topcenter": return .topCenter
-    case "topright": return .topRight
-    case "centerleft": return .centerLeft
-    case "centerright": return .centerRight
-    case "bottomleft": return .bottomLeft
-    case "bottomcenter": return .bottomCenter
-    case "bottomright": return .bottomRight
-    default: return .center
-    }
+    RiveControlSemantics.alignment(node.props["alignment"])
   }
 }
 
@@ -259,7 +241,7 @@ private final class RufletRiveView: RiveView {
   }
 
   override func advance(delta: Double) {
-    let scaled = delta * max(0, speedMultiplier)
+    let scaled = RiveControlSemantics.scaledDelta(delta, multiplier: speedMultiplier)
     super.advance(delta: scaled)
     for animation in additionalAnimations { _ = animation.advance(by: scaled) }
     for machine in additionalStateMachines { _ = machine.advance(by: scaled) }
@@ -395,6 +377,57 @@ private final class RufletRiveViewModel: RiveViewModel {
 }
 
 enum RiveControlSemantics {
+  static let missingSourceMessage = "Rive must have \"src\" specified."
+
+  /// Flet's enum parser compares the Dart enum name case-insensitively. It
+  /// does not normalize underscores or hyphens into a different spelling.
+  static func fit(_ value: String?) -> RiveFit {
+    switch value?.lowercased() {
+    case "fill": return .fill
+    case "contain": return .contain
+    case "cover": return .cover
+    case "fitheight": return .fitHeight
+    case "fitwidth": return .fitWidth
+    case "scaledown": return .scaleDown
+    case "none": return .noFit
+    default: return .contain
+    }
+  }
+
+  /// Flutter sends Alignment as its `{x, y}` value object, not as names such
+  /// as `top_left`. Rive Apple's public renderer exposes the same canonical
+  /// nine anchors as an enum, so arbitrary Flutter coordinates are mapped to
+  /// their nearest native anchor while all Flet alignment constants remain
+  /// exact.
+  static func alignment(_ value: RufletValue?) -> RiveAlignment {
+    let map = value?.mapValue
+    let x = map?["x"]?.doubleValue ?? 0
+    let y = map?["y"]?.doubleValue ?? 0
+    switch (axis(x), axis(y)) {
+    case (-1, -1): return .topLeft
+    case (0, -1): return .topCenter
+    case (1, -1): return .topRight
+    case (-1, 0): return .centerLeft
+    case (1, 0): return .centerRight
+    case (-1, 1): return .bottomLeft
+    case (0, 1): return .bottomCenter
+    case (1, 1): return .bottomRight
+    default: return .center
+    }
+  }
+
+  static func alignmentKey(_ value: RufletValue?) -> String {
+    let map = value?.mapValue
+    return "\(map?["x"]?.doubleValue ?? 0),\(map?["y"]?.doubleValue ?? 0)"
+  }
+
+  /// The pinned painter multiplies elapsed time verbatim. In particular, a
+  /// negative multiplier is not clamped and can drive a reversible timeline
+  /// backwards when the authored Rive animation supports it.
+  static func scaledDelta(_ delta: Double, multiplier: Double) -> Double {
+    delta * multiplier
+  }
+
   static func artboardLocation(
     _ point: CGPoint,
     container: CGSize,
@@ -424,6 +457,12 @@ enum RiveControlSemantics {
     return CGPoint(
       x: artboard.minX + (point.x - origin.x) / scales.0,
       y: artboard.minY + (point.y - origin.y) / scales.1)
+  }
+
+  private static func axis(_ value: Double) -> Int {
+    if value < -0.5 { return -1 }
+    if value > 0.5 { return 1 }
+    return 0
   }
 
   private static func alignmentFactor(_ alignment: RiveAlignment) -> CGPoint {
