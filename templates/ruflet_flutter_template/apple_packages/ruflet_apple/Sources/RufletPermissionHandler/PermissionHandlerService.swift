@@ -5,6 +5,9 @@ import RufletProtocol
 #if canImport(AVFoundation)
   import AVFoundation
 #endif
+#if canImport(Photos)
+  import Photos
+#endif
 #if canImport(UIKit)
   import UIKit
 #endif
@@ -86,6 +89,18 @@ public enum FletPermissionHandlerSemantics {
   /// permission_handler_apple's UnknownPermissionStrategy defaults.
   public static func unsupportedStatus(requesting: Bool) -> RufletPermissionStatus {
     requesting ? .permanentlyDenied : .denied
+  }
+
+  /// The pinned Apple strategy uses read/write access for `photos` and the
+  /// separate add-only authorization domain for `photosAddOnly`.
+  public static func photoPermissionUsesAddOnlyAccess(
+    _ permission: RufletPermissionKind
+  ) -> Bool? {
+    switch permission {
+    case .photos: return false
+    case .photosAddOnly: return true
+    default: return nil
+    }
   }
 
   public static func status(
@@ -184,6 +199,13 @@ private final class RufletApplePermissionHandler: RufletPermissionHandling {
       }
     #endif
 
+    #if canImport(Photos)
+      if let addOnly = FletPermissionHandlerSemantics.photoPermissionUsesAddOnlyAccess(permission) {
+        let accessLevel: PHAccessLevel = addOnly ? .addOnly : .readWrite
+        return completion(Self.status(PHPhotoLibrary.authorizationStatus(for: accessLevel)))
+      }
+    #endif
+
     // Apple permission_handler uses UnknownPermissionStrategy for permission
     // groups that have no enabled native strategy on the current target.
     completion(FletPermissionHandlerSemantics.unsupportedStatus(requesting: false))
@@ -204,6 +226,22 @@ private final class RufletApplePermissionHandler: RufletPermissionHandling {
         AVCaptureDevice.requestAccess(for: mediaType) { _ in
           let status = Self.status(AVCaptureDevice.authorizationStatus(for: mediaType))
           Task { @MainActor in completion(status) }
+        }
+        return
+      }
+    #endif
+
+    #if canImport(Photos)
+      if let addOnly = FletPermissionHandlerSemantics.photoPermissionUsesAddOnlyAccess(permission) {
+        let accessLevel: PHAccessLevel = addOnly ? .addOnly : .readWrite
+        let current = Self.status(PHPhotoLibrary.authorizationStatus(for: accessLevel))
+        // PhotoPermissionStrategy prompts only from its denied/not-determined
+        // state. Restricted, permanently-denied, granted and limited are
+        // returned immediately.
+        guard current == .denied else { return completion(current) }
+        PHPhotoLibrary.requestAuthorization(for: accessLevel) { status in
+          let resolved = Self.status(status)
+          Task { @MainActor in completion(resolved) }
         }
         return
       }
@@ -240,6 +278,23 @@ private final class RufletApplePermissionHandler: RufletPermissionHandling {
       case .notDetermined: state = .notDetermined
       case .restricted: state = .restricted
       case .denied: state = .denied
+      @unknown default: state = .notDetermined
+      }
+      return FletPermissionHandlerSemantics.status(for: state)
+    }
+  #endif
+
+  #if canImport(Photos)
+    nonisolated private static func status(
+      _ status: PHAuthorizationStatus
+    ) -> RufletPermissionStatus {
+      let state: RufletAppleAuthorizationState
+      switch status {
+      case .authorized: state = .authorized
+      case .notDetermined: state = .notDetermined
+      case .restricted: state = .restricted
+      case .denied: state = .denied
+      case .limited: state = .limited
       @unknown default: state = .notDetermined
       }
       return FletPermissionHandlerSemantics.status(for: state)

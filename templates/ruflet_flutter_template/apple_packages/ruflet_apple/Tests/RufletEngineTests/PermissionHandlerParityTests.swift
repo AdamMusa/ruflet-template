@@ -68,6 +68,19 @@ final class PermissionHandlerParityTests: XCTestCase {
     XCTAssertEqual(FletPermissionHandlerSemantics.status(for: .provisional), .provisional)
   }
 
+  func testPhotoPermissionsSelectPinnedAppleAccessDomains() {
+    XCTAssertEqual(
+      FletPermissionHandlerSemantics.photoPermissionUsesAddOnlyAccess(.photos), false)
+    XCTAssertEqual(
+      FletPermissionHandlerSemantics.photoPermissionUsesAddOnlyAccess(.photosAddOnly), true)
+    XCTAssertNil(
+      FletPermissionHandlerSemantics.photoPermissionUsesAddOnlyAccess(.camera))
+
+    XCTAssertEqual(FletPermissionHandlerSemantics.status(for: .authorized), .granted)
+    XCTAssertEqual(FletPermissionHandlerSemantics.status(for: .limited), .limited)
+    XCTAssertEqual(FletPermissionHandlerSemantics.status(for: .denied), .permanentlyDenied)
+  }
+
   func testGetStatusAndRequestUseCanonicalPermissionAndResultShapes() async throws {
     let permissions = Permissions()
     let service = PermissionHandlerService(permissions: permissions)
