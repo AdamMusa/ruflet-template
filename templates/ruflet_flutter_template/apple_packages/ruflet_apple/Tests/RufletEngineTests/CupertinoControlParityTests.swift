@@ -4,18 +4,52 @@ import RufletEngine
 import RufletProtocol
 
 final class CupertinoControlParityTests: XCTestCase {
-  func testActivityIndicatorUsesCupertinoTwelveSpokeModel() {
-    XCTAssertEqual(RufletCupertinoActivityIndicatorMetrics.spokeCount, 12)
-    XCTAssertEqual(RufletCupertinoActivityIndicatorMetrics.revealedSpokes(progress: nil), 12)
+  func testActivityIndicatorUsesPinnedConstructorDefaultsAndNativeMode() {
+    let presentation = RufletCupertinoActivityIndicatorPresentation(
+      node: ControlNode(id: 1, type: "CupertinoActivityIndicator"))
+
+    XCTAssertEqual(presentation.radius, 10)
+    XCTAssertEqual(presentation.diameter, 20)
+    XCTAssertNil(presentation.colorToken)
+    XCTAssertEqual(presentation.mode, .indeterminate(animating: true))
+    XCTAssertEqual(RufletCupertinoActivityIndicatorMetrics.tickCount, 8)
   }
 
-  func testPartiallyRevealedIndicatorClampsAndRoundsLikeFlet() {
-    XCTAssertEqual(RufletCupertinoActivityIndicatorMetrics.revealedSpokes(progress: -1), 0)
-    XCTAssertEqual(RufletCupertinoActivityIndicatorMetrics.revealedSpokes(progress: 0), 0)
-    XCTAssertEqual(RufletCupertinoActivityIndicatorMetrics.revealedSpokes(progress: 0.01), 1)
-    XCTAssertEqual(RufletCupertinoActivityIndicatorMetrics.revealedSpokes(progress: 0.5), 6)
-    XCTAssertEqual(RufletCupertinoActivityIndicatorMetrics.revealedSpokes(progress: 1), 12)
-    XCTAssertEqual(RufletCupertinoActivityIndicatorMetrics.revealedSpokes(progress: 2), 12)
+  func testPartiallyRevealedIndicatorClampsAndRoundsLikePinnedFlutter() {
+    XCTAssertEqual(RufletCupertinoActivityIndicatorMetrics.clamped(-1), 0)
+    XCTAssertEqual(RufletCupertinoActivityIndicatorMetrics.clamped(2), 1)
+    XCTAssertEqual(RufletCupertinoActivityIndicatorMetrics.revealedTicks(progress: -1), 0)
+    XCTAssertEqual(RufletCupertinoActivityIndicatorMetrics.revealedTicks(progress: 0), 0)
+    XCTAssertEqual(RufletCupertinoActivityIndicatorMetrics.revealedTicks(progress: 0.01), 1)
+    XCTAssertEqual(RufletCupertinoActivityIndicatorMetrics.revealedTicks(progress: 0.5), 4)
+    XCTAssertEqual(RufletCupertinoActivityIndicatorMetrics.revealedTicks(progress: 1), 8)
+    XCTAssertEqual(RufletCupertinoActivityIndicatorMetrics.revealedTicks(progress: 2), 8)
+  }
+
+  func testProgressSelectsStaticModeAndIgnoresAnimating() {
+    let presentation = RufletCupertinoActivityIndicatorPresentation(
+      node: ControlNode(
+        id: 1, type: "CupertinoActivityIndicator",
+        props: [
+          "radius": .double(14),
+          "color": .string("red"),
+          "animating": .bool(true),
+          "progress": .double(0.625),
+        ]))
+
+    XCTAssertEqual(presentation.radius, 14)
+    XCTAssertEqual(presentation.diameter, 28)
+    XCTAssertEqual(presentation.colorToken, "red")
+    XCTAssertEqual(presentation.mode, .partiallyRevealed(progress: 0.625))
+    XCTAssertEqual(RufletCupertinoActivityIndicatorMetrics.revealedTicks(progress: 0.625), 5)
+  }
+
+  func testAnimatingFalseKeepsNativeIndicatorMountedButStopped() {
+    let presentation = RufletCupertinoActivityIndicatorPresentation(
+      node: ControlNode(
+        id: 1, type: "CupertinoActivityIndicator",
+        props: ["animating": .bool(false)]))
+    XCTAssertEqual(presentation.mode, .indeterminate(animating: false))
   }
 
   func testAppBarUsesPinnedCupertinoConstructorDefaults() {

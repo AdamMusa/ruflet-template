@@ -2108,75 +2108,164 @@ enum RufletCupertinoTimerModel {
 struct CupertinoActivityIndicatorControlView: View {
   let node: ControlNode
 
+  private var presentation: RufletCupertinoActivityIndicatorPresentation {
+    RufletCupertinoActivityIndicatorPresentation(node: node)
+  }
+
+  @ViewBuilder
   var body: some View {
-    RufletCupertinoActivityIndicator(
-      radius: CGFloat(node.double("radius") ?? 10),
-      color: MaterialPalette.color(node.string("color")) ?? .secondary,
-      progress: node.double("progress"),
-      animating: node.double("progress") == nil && (node.bool("animating") ?? true))
+    switch presentation.mode {
+    case .indeterminate(let animating):
+      RufletNativeCupertinoActivityIndicator(
+        animating: animating,
+        color: MaterialPalette.color(presentation.colorToken))
+        .frame(width: presentation.diameter, height: presentation.diameter)
+    case .partiallyRevealed(let progress):
+      RufletPartiallyRevealedCupertinoActivityIndicator(
+        radius: presentation.radius,
+        color: MaterialPalette.color(presentation.colorToken)
+          ?? RufletCupertinoActivityIndicatorDefaults.partiallyRevealedColor,
+        progress: progress)
+    }
   }
 }
 
-/// Flet uses `CupertinoActivityIndicator.partiallyRevealed` when `progress`
-/// is supplied. SwiftUI's determinate `ProgressView` is a ring, not
-/// Cupertino's twelve spokes, so the native renderer draws the same spoke
-/// model and only reveals the requested fraction.
-struct RufletCupertinoActivityIndicator: View {
+enum RufletCupertinoActivityIndicatorMode: Equatable {
+  case indeterminate(animating: Bool)
+  case partiallyRevealed(progress: Double)
+}
+
+/// The arguments Flet 0.80.5 passes to Flutter's two Cupertino constructors.
+/// A supplied progress always selects `partiallyRevealed` and therefore
+/// ignores `animating`.
+struct RufletCupertinoActivityIndicatorPresentation {
+  let radius: CGFloat
+  let colorToken: String?
+  let mode: RufletCupertinoActivityIndicatorMode
+
+  init(node: ControlNode) {
+    radius = CGFloat(node.double("radius") ?? RufletCupertinoActivityIndicatorDefaults.radius)
+    colorToken = node.string("color")
+    if let progress = node.double("progress") {
+      mode = .partiallyRevealed(
+        progress: RufletCupertinoActivityIndicatorMetrics.clamped(progress))
+    } else {
+      mode = .indeterminate(animating: node.bool("animating") ?? true)
+    }
+  }
+
+  var diameter: CGFloat { radius * 2 }
+}
+
+enum RufletCupertinoActivityIndicatorDefaults {
+  static let radius = 10.0
+  static let nativeDiameter: CGFloat = 20
+  static let partiallyRevealedOpacity = 147.0 / 255.0
+
+  /// Flutter's fallback is the dynamic iOS tick colour extracted from the
+  /// native control. `primary` is Apple's adaptive label colour equivalent;
+  /// the painter applies Flutter's 147/255 partial-tick alpha separately.
+  static var partiallyRevealedColor: Color { .primary }
+}
+
+/// Flutter must paint its partially-revealed variant because Apple's native
+/// progress indicators do not expose individual ticks. Keep that exceptional
+/// static adapter small; the normal indeterminate mode below stays native.
+private struct RufletPartiallyRevealedCupertinoActivityIndicator: View {
   let radius: CGFloat
   let color: Color
-  let progress: Double?
-  let animating: Bool
-  @State private var rotation = 0.0
+  let progress: Double
 
   var body: some View {
-    Canvas { context, size in
-      let center = CGPoint(x: size.width / 2, y: size.height / 2)
-      let spokeCount = RufletCupertinoActivityIndicatorMetrics.spokeCount
-      let visible = RufletCupertinoActivityIndicatorMetrics.revealedSpokes(progress: progress)
-      let length = max(radius * 0.46, 1)
-      let width = max(radius * 0.22, 1)
-
-      for index in 0..<visible {
-        var path = Path()
-        path.move(to: CGPoint(x: center.x, y: center.y - radius + width / 2))
-        path.addLine(
-          to: CGPoint(x: center.x, y: center.y - radius + width / 2 + length))
-        var spoke = context
-        spoke.translateBy(x: center.x, y: center.y)
-        spoke.rotate(by: .degrees(Double(index) * 360 / Double(spokeCount)))
-        spoke.translateBy(x: -center.x, y: -center.y)
-        spoke.opacity = progress == nil
-          ? 0.25 + (0.75 * Double(index + 1) / Double(spokeCount))
-          : 1
-        spoke.stroke(path, with: .color(color), style: StrokeStyle(lineWidth: width, lineCap: .round))
+    ZStack {
+      ForEach(0..<RufletCupertinoActivityIndicatorMetrics.revealedTicks(progress: progress), id: \.self) {
+        index in
+        Capsule()
+          .fill(color.opacity(RufletCupertinoActivityIndicatorDefaults.partiallyRevealedOpacity))
+          .frame(
+            width: radius / RufletCupertinoActivityIndicatorDefaults.radius * 2,
+            height: radius * 2 / 3)
+          .offset(y: -radius * 2 / 3)
+          .rotationEffect(
+            .degrees(Double(index) * 360 / Double(RufletCupertinoActivityIndicatorMetrics.tickCount)))
       }
     }
     .frame(width: radius * 2, height: radius * 2)
-    .rotationEffect(.degrees(rotation))
-    .onAppear { updateAnimation() }
-    .onChange(of: animating) { _ in updateAnimation() }
-  }
-
-  private func updateAnimation() {
-    guard animating else {
-      rotation = 0
-      return
-    }
-    rotation = 0
-    withAnimation(.linear(duration: 0.9).repeatForever(autoreverses: false)) {
-      rotation = 360
-    }
+    .accessibilityElement(children: .ignore)
+    .accessibilityLabel("Progress")
+    .accessibilityValue(Text(progress, format: .percent))
   }
 }
 
 enum RufletCupertinoActivityIndicatorMetrics {
-  static let spokeCount = 12
+  /// Flutter's pinned Cupertino painter has eight alpha/tick entries.
+  static let tickCount = 8
 
-  static func revealedSpokes(progress: Double?) -> Int {
-    guard let progress else { return spokeCount }
-    return Int(ceil(min(max(progress, 0), 1) * Double(spokeCount)))
+  static func clamped(_ progress: Double) -> Double {
+    min(max(progress, 0), 1)
+  }
+
+  static func revealedTicks(progress: Double) -> Int {
+    Int(ceil(clamped(progress) * Double(tickCount)))
   }
 }
+
+#if canImport(UIKit)
+  private struct RufletNativeCupertinoActivityIndicator: UIViewRepresentable {
+    let animating: Bool
+    let color: Color?
+
+    func makeUIView(context: Context) -> UIActivityIndicatorView {
+      let indicator = UIActivityIndicatorView(style: .medium)
+      indicator.hidesWhenStopped = false
+      configure(indicator)
+      return indicator
+    }
+
+    func updateUIView(_ indicator: UIActivityIndicatorView, context: Context) {
+      configure(indicator)
+    }
+
+    private func configure(_ indicator: UIActivityIndicatorView) {
+      indicator.color = color.map(UIColor.init)
+      if animating { indicator.startAnimating() } else { indicator.stopAnimating() }
+    }
+  }
+#elseif canImport(AppKit)
+  private struct RufletNativeCupertinoActivityIndicator: NSViewRepresentable {
+    let animating: Bool
+    let color: Color?
+
+    func makeNSView(context: Context) -> NSProgressIndicator {
+      let indicator = NSProgressIndicator()
+      indicator.style = .spinning
+      indicator.isIndeterminate = true
+      indicator.isDisplayedWhenStopped = true
+      configure(indicator)
+      return indicator
+    }
+
+    func updateNSView(_ indicator: NSProgressIndicator, context: Context) {
+      configure(indicator)
+    }
+
+    private func configure(_ indicator: NSProgressIndicator) {
+      // AppKit does not publish a progress-indicator tint API. Preserve the
+      // native adaptive colour when Flet omits color; SwiftUI's accent tint is
+      // the supported native customization path when one is supplied.
+      if animating { indicator.startAnimation(nil) } else { indicator.stopAnimation(nil) }
+    }
+  }
+#else
+  private struct RufletNativeCupertinoActivityIndicator: View {
+    let animating: Bool
+    let color: Color?
+
+    var body: some View {
+      ProgressView().tint(color).opacity(animating ? 1 : 0.999)
+    }
+  }
+#endif
 
 /// `CupertinoAppBar` — the iOS title bar.
 struct CupertinoAppBarControlView: View {
