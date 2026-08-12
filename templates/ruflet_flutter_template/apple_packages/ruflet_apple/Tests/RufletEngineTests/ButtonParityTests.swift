@@ -109,11 +109,15 @@ final class ButtonParityTests: XCTestCase {
       node: node("FloatingActionButton", ["icon": .string("add")]))
     XCTAssertFalse(regular.isExtended)
     XCTAssertFalse(regular.requiresCustomRendering)
+    XCTAssertEqual(regular.side, 56)
+    XCTAssertEqual(regular.nativeLabelSide, 40)
     XCTAssertEqual(NativeButtonAppearance.resolve(.floatingAction), .borderedProminent)
 
     let mini = FloatingActionPresentation(
       node: node("FloatingActionButton", ["icon": .string("add"), "mini": .bool(true)]))
     XCTAssertTrue(mini.isMini)
+    XCTAssertEqual(mini.side, 40)
+    XCTAssertEqual(mini.nativeLabelSide, 24)
     XCTAssertFalse(mini.requiresCustomRendering)
   }
 

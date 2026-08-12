@@ -365,10 +365,7 @@ private struct TightConstraintFrame: ViewModifier {
   let axis: LayoutAxis
 
   private var horizontalAlignment: Alignment {
-    // Flutter's Icon is a centered glyph inside its constrained square. When
-    // a stretched Column gives it the full row width, the glyph remains in
-    // the middle rather than moving to the leading edge.
-    node.type == "Icon" ? .center : .leading
+    RufletTightConstraintAlignment.horizontal(node)
   }
 
   func body(content: Content) -> some View {
@@ -382,6 +379,22 @@ private struct TightConstraintFrame: ViewModifier {
       content.frame(maxHeight: .infinity, alignment: .top)
     } else {
       content
+    }
+  }
+}
+
+/// A tight Flutter cross-axis constraint is also the line box used by Text's
+/// `textAlign`. SwiftUI otherwise keeps Text at its intrinsic width and merely
+/// wraps that small view in a leading-aligned frame, making `text_align:
+/// "center"` appear left aligned inside a stretched Column/ResponsiveRow.
+enum RufletTightConstraintAlignment {
+  static func horizontal(_ node: ControlNode) -> Alignment {
+    if node.type == "Icon" { return .center }
+    guard node.type == "Text" else { return .leading }
+    switch node.string("text_align")?.lowercased() {
+    case "center": return .center
+    case "right", "end": return .trailing
+    default: return .leading
     }
   }
 }

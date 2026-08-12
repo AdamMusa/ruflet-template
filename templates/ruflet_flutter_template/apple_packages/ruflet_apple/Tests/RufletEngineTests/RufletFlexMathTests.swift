@@ -1,5 +1,6 @@
 import XCTest
 @testable import RufletUI
+import RufletEngine
 import RufletProtocol
 
 final class RufletFlexMathTests: XCTestCase {
@@ -32,5 +33,22 @@ final class RufletFlexMathTests: XCTestCase {
       RufletFlexMath.childAxis(
         parentAxis: .vertical, flex: 1, loose: false, crossStretch: true),
       .tightBoth)
+  }
+
+  func testTightTextUsesItsFletParagraphAlignmentAcrossTheStretchedWidth() {
+    XCTAssertEqual(
+      RufletTightConstraintAlignment.horizontal(ControlNode(
+        id: 1, type: "Text", props: ["text_align": .string("center")])),
+      .center)
+    XCTAssertEqual(
+      RufletTightConstraintAlignment.horizontal(ControlNode(
+        id: 2, type: "Text", props: ["text_align": .string("end")])),
+      .trailing)
+    XCTAssertEqual(
+      RufletTightConstraintAlignment.horizontal(ControlNode(id: 3, type: "Text")),
+      .leading)
+    XCTAssertEqual(
+      RufletTightConstraintAlignment.horizontal(ControlNode(id: 4, type: "Icon")),
+      .center)
   }
 }

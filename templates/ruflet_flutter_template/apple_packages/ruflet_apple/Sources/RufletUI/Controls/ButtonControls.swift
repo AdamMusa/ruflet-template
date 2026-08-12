@@ -101,7 +101,11 @@ struct ButtonControlView: View {
         floatingActionSlots: variant == .floatingAction ? floatingActionSlots : nil)
       {
         Button(action: activate) {
-          label
+          label.modifier(
+            FloatingActionLabelTarget(
+              presentation: variant == .floatingAction
+                ? FloatingActionPresentation(node: node, slots: floatingActionSlots)
+                : nil))
         }
       }
       .modifier(FocusReporter(node: node, events: events))
@@ -197,6 +201,30 @@ struct ButtonControlView: View {
   private var floatingActionSlots: FloatingActionSlots {
     FloatingActionSlots(
       node: node, visibilityForID: { FloatingActionSlots.visibility(of: store.node($0)) })
+  }
+}
+
+/// SwiftUI's native bordered Button derives its hit region from the label,
+/// not from a frame applied around the finished Button. A FAB therefore
+/// looked 56×56 but exposed only its roughly 24×24 icon as the tappable and
+/// accessibility frame. Give the native label the constructor's exact target
+/// before the button style installs its interaction gesture.
+private struct FloatingActionLabelTarget: ViewModifier {
+  let presentation: FloatingActionPresentation?
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if let presentation, !presentation.isExtended {
+      content
+        // The native bordered style contributes its own platform padding.
+        // Leave that padding inside the constructor's 56/40-point target.
+        .frame(
+          width: presentation.nativeLabelSide,
+          height: presentation.nativeLabelSide)
+        .contentShape(Rectangle())
+    } else {
+      content
+    }
   }
 }
 
@@ -694,6 +722,11 @@ struct FloatingActionPresentation {
 
   var width: CGFloat? { isExtended ? nil : side }
   var height: CGFloat { side }
+
+  /// SwiftUI's bordered-prominent style adds roughly eight points on every
+  /// edge. Flutter's FAB size includes that padding, so reserve it rather than
+  /// growing a 56-point constructor into a 72-point native button.
+  var nativeLabelSide: CGFloat { max(side - 16, 0) }
 
   var padding: EdgeInsets {
     isExtended ? RufletThemeDefaults.floatingActionButtonExtendedPadding : EdgeInsets()
