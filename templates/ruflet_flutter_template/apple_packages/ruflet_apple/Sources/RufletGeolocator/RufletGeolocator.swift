@@ -12,6 +12,7 @@ import RufletEngine
 public enum RufletGeolocator: RufletExtension {
   public static func register(in registry: ServiceRegistry) {
     registry.register(GeolocatorService.self) { GeolocatorService() }
+    registry.markStreaming([GeolocatorService.wireType])
 
     #if canImport(CoreLocation)
       let manager = CLLocationManager()
