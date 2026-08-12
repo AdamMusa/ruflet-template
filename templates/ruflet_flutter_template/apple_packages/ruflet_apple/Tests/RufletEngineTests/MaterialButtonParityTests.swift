@@ -328,5 +328,43 @@ final class MaterialButtonParityTests: XCTestCase {
     XCTAssertEqual(
       ChipPresentation.validationMessage(conflicting),
       "Chip cannot have both on_select and on_click events specified")
+
+    let referenced = ControlNode(
+      id: 3, type: "Chip", props: ["label": .controlRef(30)])
+    XCTAssertEqual(
+      ChipPresentation.validationMessage(
+        referenced, label: ControlNode(
+          id: 30, type: "Text", props: ["visible": .bool(false)])),
+      "Chip.label must be provided and visible")
+    XCTAssertNil(ChipPresentation.validationMessage(
+      referenced, label: ControlNode(id: 30, type: "Text")))
+    XCTAssertNil(ChipPresentation.validationMessage(ControlNode(
+      id: 4, type: "Chip", props: ["label": .string("")])))
+  }
+
+  func testRequiredButtonSlotsResolveChildVisibility() {
+    let iconButton = ControlNode(
+      id: 1, type: "IconButton", props: ["content": .controlRef(10)])
+    XCTAssertEqual(
+      ButtonPresentation.validationMessage(
+        iconButton, variant: .icon,
+        content: ControlNode(
+          id: 10, type: "Text", props: ["visible": .bool(false)])),
+      "IconButton must have either icon or a visible content specified.")
+    XCTAssertNil(ButtonPresentation.validationMessage(
+      iconButton, variant: .icon, content: ControlNode(id: 10, type: "Text")))
+
+    let fab = ControlNode(
+      id: 2, type: "FloatingActionButton", props: ["icon": .controlRef(20)])
+    XCTAssertEqual(
+      ButtonPresentation.validationMessage(
+        fab, variant: .floatingAction,
+        icon: ControlNode(
+          id: 20, type: "Icon", props: ["visible": .bool(false)])),
+      "FloatingActionButton has nothing to display. Provide at minimum one of these: icon, content")
+
+    XCTAssertNil(ButtonPresentation.validationMessage(
+      ControlNode(id: 3, type: "IconButton", props: ["content": .string("")]),
+      variant: .icon))
   }
 }

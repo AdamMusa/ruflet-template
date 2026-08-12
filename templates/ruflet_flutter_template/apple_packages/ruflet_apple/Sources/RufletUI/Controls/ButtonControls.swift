@@ -80,12 +80,17 @@ struct ButtonControlView: View {
   let node: ControlNode
   let variant: ButtonVariant
 
+  @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
   @Environment(\.openURL) private var openURL
 
   @ViewBuilder
   var body: some View {
-    if let message = ButtonPresentation.validationMessage(node, variant: variant) {
+    if let message = ButtonPresentation.validationMessage(
+      node, variant: variant,
+      content: node.controlID(forKey: "content").flatMap(store.node),
+      icon: node.controlID(forKey: "icon").flatMap(store.node))
+    {
       Text(message).font(.caption).foregroundStyle(.red)
     } else if variant.isIconButton, node.bool("adaptive") == true {
       CupertinoButtonControlView(node: node)
@@ -198,22 +203,38 @@ struct ButtonPresentation {
   /// ButtonStyle populated with Flet's supplied defaults.
   var requiresCustomStyle: Bool { style != nil }
 
-  static func validationMessage(_ node: ControlNode, variant: ButtonVariant) -> String? {
+  static func validationMessage(
+    _ node: ControlNode,
+    variant: ButtonVariant,
+    content: ControlNode? = nil,
+    icon: ControlNode? = nil
+  ) -> String? {
+    let hasContent: Bool = {
+      if node.controlID(forKey: "content") != nil {
+        return RufletRequiredContent.isVisible(content)
+      }
+      // `buildTextOrWidget` accepts an empty String as a real Text widget.
+      return node.props["content"]?.stringValue != nil
+    }()
+    let hasIcon: Bool = {
+      if node.controlID(forKey: "icon") != nil {
+        return RufletRequiredContent.isVisible(icon)
+      }
+      return node.props["icon"] != nil
+    }()
+
     if variant == .floatingAction,
-      node.props["icon"] == nil && node.props["content"] == nil
+      !hasIcon && !hasContent
     {
       return
         "FloatingActionButton has nothing to display. Provide at minimum one of these: icon, content"
     }
     if variant.isIconButton {
-      let visible =
-        node.controlID(forKey: "content") != nil
-        || !(node.string("content") ?? "").isEmpty
-      if node.props["icon"] == nil && !visible {
+      if !hasIcon && !hasContent {
         return "IconButton must have either icon or a visible content specified."
       }
     } else if variant != .floatingAction,
-      node.props["icon"] != nil && node.props["content"] == nil
+      hasIcon && !hasContent
     {
       return "Error displaying Button: \"icon\" must be specified together with \"content\""
     }
@@ -723,11 +744,14 @@ struct OptionalForeground: ViewModifier {
 /// `Chip` — a compact, optionally selectable, optionally deletable token.
 struct ChipControlView: View {
   let node: ControlNode
+  @EnvironmentObject private var store: ControlStore
   @Environment(\.rufletEvents) private var events
 
   @ViewBuilder
   var body: some View {
-    if let validationMessage = ChipPresentation.validationMessage(node) {
+    if let validationMessage = ChipPresentation.validationMessage(
+      node, label: node.controlID(forKey: "label").flatMap(store.node))
+    {
       Text(validationMessage)
         .font(.caption)
         .foregroundStyle(.red)
@@ -906,10 +930,14 @@ enum ChipPresentation {
     return visualKeys.contains { node.props[$0] != nil || node.internals[$0] != nil }
   }
 
-  static func validationMessage(_ node: ControlNode) -> String? {
-    let hasLabel =
-      node.controlID(forKey: "label") != nil
-      || !(node.string("label") ?? "").isEmpty
+  static func validationMessage(_ node: ControlNode, label: ControlNode? = nil) -> String? {
+    let hasLabel: Bool = {
+      if node.controlID(forKey: "label") != nil {
+        return RufletRequiredContent.isVisible(label)
+      }
+      // Flet deliberately accepts an empty String label as an empty Text.
+      return node.props["label"]?.stringValue != nil
+    }()
     if !hasLabel { return "Chip.label must be provided and visible" }
     if node.handlesEvent("select") && node.handlesEvent("click") {
       return "Chip cannot have both on_select and on_click events specified"
