@@ -472,22 +472,36 @@ struct ChipControlView: View {
   @Environment(\.rufletEvents) private var events
   @State private var pressed = false
 
+  @ViewBuilder
   var body: some View {
+    if let validationMessage = ChipPresentation.validationMessage(node) {
+      Text(validationMessage)
+        .font(.caption)
+        .foregroundStyle(.red)
+    } else {
+      chip
+    }
+  }
+
+  private var chip: some View {
     let selected = node.bool("selected") ?? false
 
-    HStack(spacing: 6) {
+    return HStack(spacing: 0) {
       // A selected chip shows the checkmark in place of its leading icon,
       // which is what Material's `showCheckmark` does.
       if selected, node.bool("show_checkmark") != false {
         Image(systemName: "checkmark")
-          .font(.caption)
-          .foregroundColor(MaterialPalette.color(node.string("check_color")))
+          .font(.system(size: ChipPresentation.defaultIconSize))
+          .foregroundColor(MaterialPalette.color(
+            node.string("check_color") ?? ChipPresentation.checkmarkColorToken(node)))
       } else if let leadingID = node.controlID(forKey: "leading") {
         ControlView(id: leadingID, axis: .none)
           .modifier(ChipSlotConstraints(value: node.props["leading_size_constraints"]))
       }
       label
-        .padding(ControlProps.edgeInsets(node.props["label_padding"]) ?? EdgeInsets())
+        .foregroundColor(MaterialPalette.color(ChipPresentation.labelColorToken(node)))
+        .padding(ControlProps.edgeInsets(node.props["label_padding"])
+          ?? EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8))
       if node.handlesEvent("delete") {
         Button {
           events.fire(node, "delete")
@@ -499,13 +513,17 @@ struct ChipControlView: View {
         .modifier(ChipSlotConstraints(value: node.props["delete_icon_size_constraints"]))
       }
     }
-    .padding(ControlProps.edgeInsets(node.props["padding"])
-      ?? EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12))
+    .padding(ControlProps.edgeInsets(node.props["padding"]) ?? EdgeInsets(
+      top: ChipPresentation.defaultPadding,
+      leading: ChipPresentation.defaultPadding,
+      bottom: ChipPresentation.defaultPadding,
+      trailing: ChipPresentation.defaultPadding))
     .modifier(VisualDensityPadding(value: node.props["visual_density"]))
     .background(shape.fill(fill))
     .overlay(shape.strokeBorder(borderColor, lineWidth: borderWidth))
     .shadow(color: shadowColor, radius: elevation)
-    .contentShape(Capsule())
+    .contentShape(shape)
+    .modifier(ChromeClipModifier(behavior: node.string("clip_behavior") ?? "none"))
     .animation(rufletAnimation(node.props["select_animation_style"]), value: selected)
     .animation(slotAnimation, value: node.props["leading"] != nil)
     .simultaneousGesture(
@@ -540,19 +558,23 @@ struct ChipControlView: View {
   private var deleteIcon: some View {
     if node.props["delete_icon"] != nil {
       RufletIcon(
-        value: node.props["delete_icon"], size: 16,
-        color: MaterialPalette.color(node.string("delete_icon_color")))
+        value: node.props["delete_icon"], size: ChipPresentation.defaultIconSize,
+        color: MaterialPalette.color(
+          node.string("delete_icon_color") ?? ChipPresentation.deleteIconColorToken(node)))
     } else {
       Image(systemName: "xmark.circle.fill")
-        .font(.caption)
-        .foregroundColor(MaterialPalette.color(node.string("delete_icon_color")))
+        .font(.system(size: ChipPresentation.defaultIconSize))
+        .foregroundColor(MaterialPalette.color(
+          node.string("delete_icon_color") ?? ChipPresentation.deleteIconColorToken(node)))
     }
   }
 
   /// `shape` is Flutter's `OutlinedBorder`; a chip is a capsule unless a
   /// corner radius says otherwise.
   private var shape: ChipShape {
-    ChipShape(radius: ControlProps.cornerRadius(node.map("shape")?["radius"]))
+    ChipShape(
+      radius: ControlProps.cornerRadius(node.map("shape")?["radius"])
+        ?? ChipPresentation.defaultCornerRadius)
   }
 
   private var fill: Color {
@@ -561,19 +583,24 @@ struct ChipControlView: View {
       return stateColor
     }
     if node.bool("disabled") == true {
-      return MaterialPalette.color(node.string("disabled_color"), default: .clear)
+      let fallback = node.bool("selected") == true ? "onsurface,0.12" : nil
+      return MaterialPalette.color(node.string("disabled_color") ?? fallback, default: .clear)
     }
     let selected = node.bool("selected") ?? false
-    return selected
-      ? MaterialPalette.color(for: node, property: "selected_color", default: .clear)
-      : MaterialPalette.color(node.string("bgcolor"), default: .clear)
+    if selected {
+      return MaterialPalette.color(
+        node.string("selected_color") ?? ChipPresentation.selectedColorToken,
+        default: .clear)
+    }
+    return MaterialPalette.color(node.string("bgcolor"), default: .clear)
   }
 
   private var borderColor: Color {
     if let side = node.map("border_side"), let color = side["color"]?.stringValue {
       return MaterialPalette.color(color, default: .clear)
     }
-    return MaterialPalette.color(for: node, property: "border_color", default: .clear)
+    return MaterialPalette.color(
+      ChipPresentation.borderColorToken(node), default: .clear)
   }
 
   private var borderWidth: CGFloat {
@@ -608,6 +635,41 @@ struct ChipControlView: View {
 }
 
 enum ChipPresentation {
+  static let defaultCornerRadius: CGFloat = 8
+  static let defaultPadding: CGFloat = 8
+  static let defaultIconSize: CGFloat = 18
+  static let selectedColorToken = "secondarycontainer"
+
+  static func validationMessage(_ node: ControlNode) -> String? {
+    let hasLabel = node.controlID(forKey: "label") != nil
+      || !(node.string("label") ?? "").isEmpty
+    if !hasLabel { return "Chip.label must be provided and visible" }
+    if node.handlesEvent("select") && node.handlesEvent("click") {
+      return "Chip cannot have both on_select and on_click events specified"
+    }
+    return nil
+  }
+
+  static func labelColorToken(_ node: ControlNode) -> String {
+    if node.bool("disabled") == true { return "onsurface" }
+    return node.bool("selected") == true ? "onsecondarycontainer" : "onsurfacevariant"
+  }
+
+  static func checkmarkColorToken(_ node: ControlNode) -> String {
+    if node.bool("disabled") == true { return "onsurface" }
+    return node.bool("selected") == true ? "primary" : "onsurfacevariant"
+  }
+
+  static func deleteIconColorToken(_ node: ControlNode) -> String {
+    if node.bool("disabled") == true { return "onsurface" }
+    return node.bool("selected") == true ? "onsecondarycontainer" : "onsurfacevariant"
+  }
+
+  static func borderColorToken(_ node: ControlNode) -> String {
+    if node.bool("selected") == true { return "transparent" }
+    return node.bool("disabled") == true ? "onsurface,0.12" : "outlinevariant"
+  }
+
   /// Pinned Flet calls this `delete_button_tooltip`; Ruflet's public DSL has
   /// historically serialized the equivalent field as `delete_icon_tooltip`.
   /// Resolve both at the control boundary so the native constructor retains

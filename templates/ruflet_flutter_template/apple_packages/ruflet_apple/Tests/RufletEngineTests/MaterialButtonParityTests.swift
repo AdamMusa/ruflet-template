@@ -50,4 +50,41 @@ final class MaterialButtonParityTests: XCTestCase {
       "Delete"
     )
   }
+
+  func testChipUsesFlutterMaterial3InputChipConstructorDefaults() {
+    XCTAssertEqual(ChipPresentation.defaultCornerRadius, 8)
+    XCTAssertEqual(ChipPresentation.defaultPadding, 8)
+    XCTAssertEqual(ChipPresentation.defaultIconSize, 18)
+    XCTAssertEqual(ChipPresentation.selectedColorToken, "secondarycontainer")
+
+    let resting = ControlNode(id: 1, type: "Chip", props: ["label": .string("A")])
+    XCTAssertEqual(ChipPresentation.labelColorToken(resting), "onsurfacevariant")
+    XCTAssertEqual(ChipPresentation.deleteIconColorToken(resting), "onsurfacevariant")
+    XCTAssertEqual(ChipPresentation.borderColorToken(resting), "outlinevariant")
+
+    let selected = ControlNode(
+      id: 2, type: "Chip",
+      props: ["label": .string("A"), "selected": .bool(true)])
+    XCTAssertEqual(ChipPresentation.labelColorToken(selected), "onsecondarycontainer")
+    XCTAssertEqual(ChipPresentation.checkmarkColorToken(selected), "primary")
+    XCTAssertEqual(ChipPresentation.deleteIconColorToken(selected), "onsecondarycontainer")
+    XCTAssertEqual(ChipPresentation.borderColorToken(selected), "transparent")
+  }
+
+  func testChipEnforcesFletInputChipValidation() {
+    XCTAssertEqual(
+      ChipPresentation.validationMessage(ControlNode(id: 1, type: "Chip")),
+      "Chip.label must be provided and visible")
+
+    let conflicting = ControlNode(
+      id: 2, type: "Chip",
+      props: [
+        "label": .string("A"),
+        "on_select": .bool(true),
+        "on_click": .bool(true),
+      ])
+    XCTAssertEqual(
+      ChipPresentation.validationMessage(conflicting),
+      "Chip cannot have both on_select and on_click events specified")
+  }
 }
