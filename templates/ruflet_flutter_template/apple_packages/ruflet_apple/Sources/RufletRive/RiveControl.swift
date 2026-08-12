@@ -78,22 +78,20 @@ struct RiveControlView: View {
       let probeArtboard = try node.string("art_board").map {
         try file.artboard(fromName: $0)
       } ?? file.artboard()
-      var animations = requestedAnimations.filter { probeArtboard.animationNames().contains($0) }
-      var stateMachines = requestedStateMachines.filter { probeArtboard.stateMachineNames().contains($0) }
-      if requestedAnimations.isEmpty, requestedStateMachines.isEmpty {
-        if let defaultMachine = probeArtboard.defaultStateMachine() {
-          stateMachines = [defaultMachine.name()]
-        } else if let first = probeArtboard.animationNames().first {
-          animations = [first]
-        }
-      }
+      let controllers = RiveControlSemantics.controllers(
+        requestedAnimations: requestedAnimations,
+        requestedStateMachines: requestedStateMachines,
+        availableAnimations: probeArtboard.animationNames(),
+        availableStateMachines: probeArtboard.stateMachineNames(),
+        defaultStateMachine: probeArtboard.defaultStateMachine()?.name())
       let result = RufletRiveViewModel(
         model,
-        animationNames: animations,
-        stateMachineNames: stateMachines,
+        animationNames: controllers.animations,
+        stateMachineNames: controllers.stateMachines,
         fit: riveFit,
         alignment: riveAlignment,
-        artboardName: node.string("art_board"))
+        artboardName: node.string("art_board"),
+        autoPlay: controllers.autoPlay)
       result.speedMultiplier = node.double("speed_multiplier") ?? 1
       artboardSize = probeArtboard.bounds().size
       viewModel = result
@@ -331,7 +329,8 @@ private final class RufletRiveViewModel: RiveViewModel {
     stateMachineNames: [String],
     fit: RiveFit,
     alignment: RiveAlignment,
-    artboardName: String?
+    artboardName: String?,
+    autoPlay: Bool
   ) {
     self.animationNames = animationNames
     self.stateMachineNames = stateMachineNames
@@ -340,11 +339,11 @@ private final class RufletRiveViewModel: RiveViewModel {
     if let stateMachine = stateMachineNames.first {
       super.init(
         model, stateMachineName: stateMachine, fit: fit,
-        alignment: alignment, artboardName: artboardName)
+        alignment: alignment, autoPlay: autoPlay, artboardName: artboardName)
     } else {
       super.init(
         model, animationName: animationNames.first, fit: fit,
-        alignment: alignment, artboardName: artboardName)
+        alignment: alignment, autoPlay: autoPlay, artboardName: artboardName)
     }
   }
 
@@ -378,6 +377,36 @@ private final class RufletRiveViewModel: RiveViewModel {
 
 enum RiveControlSemantics {
   static let missingSourceMessage = "Rive must have \"src\" specified."
+
+  struct ControllerSelection: Equatable {
+    let animations: [String]
+    let stateMachines: [String]
+    let autoPlay: Bool
+  }
+
+  /// Pinned Flet resolves every requested controller independently and only
+  /// falls back to the authored default when both request lists were omitted.
+  /// Explicit but unknown names therefore produce a static artboard; they do
+  /// not opt back into default playback.
+  static func controllers(
+    requestedAnimations: [String], requestedStateMachines: [String],
+    availableAnimations: [String], availableStateMachines: [String],
+    defaultStateMachine: String?
+  ) -> ControllerSelection {
+    var animations = requestedAnimations.filter(availableAnimations.contains)
+    var stateMachines = requestedStateMachines.filter(availableStateMachines.contains)
+    if requestedAnimations.isEmpty, requestedStateMachines.isEmpty {
+      if let defaultStateMachine {
+        stateMachines = [defaultStateMachine]
+      } else if let first = availableAnimations.first {
+        animations = [first]
+      }
+    }
+    return ControllerSelection(
+      animations: animations,
+      stateMachines: stateMachines,
+      autoPlay: !animations.isEmpty || !stateMachines.isEmpty)
+  }
 
   /// Flet's enum parser compares the Dart enum name case-insensitively. It
   /// does not normalize underscores or hyphens into a different spelling.

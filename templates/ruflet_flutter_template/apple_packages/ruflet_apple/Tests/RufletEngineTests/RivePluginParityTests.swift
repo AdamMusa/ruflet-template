@@ -65,6 +65,43 @@ final class RivePluginParityTests: XCTestCase {
     XCTAssertEqual(RiveControlSemantics.scaledDelta(0.25, multiplier: -2), -0.5)
   }
 
+  func testControllerSelectionUsesDefaultsOnlyWhenRequestsAreOmitted() {
+    XCTAssertEqual(
+      RiveControlSemantics.controllers(
+        requestedAnimations: [], requestedStateMachines: [],
+        availableAnimations: ["idle", "walk"],
+        availableStateMachines: ["button"], defaultStateMachine: "button"),
+      .init(animations: [], stateMachines: ["button"], autoPlay: true))
+    XCTAssertEqual(
+      RiveControlSemantics.controllers(
+        requestedAnimations: [], requestedStateMachines: [],
+        availableAnimations: ["idle", "walk"],
+        availableStateMachines: [], defaultStateMachine: nil),
+      .init(animations: ["idle"], stateMachines: [], autoPlay: true))
+  }
+
+  func testUnknownExplicitControllersDoNotStartAuthoredDefault() {
+    XCTAssertEqual(
+      RiveControlSemantics.controllers(
+        requestedAnimations: ["missing-animation"],
+        requestedStateMachines: ["missing-machine"],
+        availableAnimations: ["idle"],
+        availableStateMachines: ["button"], defaultStateMachine: "button"),
+      .init(animations: [], stateMachines: [], autoPlay: false))
+  }
+
+  func testControllerSelectionPreservesValidRequestedOrderAndMixedPlayback() {
+    XCTAssertEqual(
+      RiveControlSemantics.controllers(
+        requestedAnimations: ["walk", "missing", "idle"],
+        requestedStateMachines: ["hover", "missing", "button"],
+        availableAnimations: ["idle", "walk"],
+        availableStateMachines: ["button", "hover"], defaultStateMachine: "button"),
+      .init(
+        animations: ["walk", "idle"],
+        stateMachines: ["hover", "button"], autoPlay: true))
+  }
+
   func testClipRectMatchesFlutterLTRBAndRejectsInvalidBounds() throws {
     let clip = try XCTUnwrap(RufletRiveClipRect(.map([
       "left": .double(10), "top": .double(20),
