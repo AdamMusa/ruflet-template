@@ -59,6 +59,8 @@ final class RufletInputParityTests: XCTestCase {
     XCTAssertEqual(RufletTextFieldDefaults.borderColorToken(omitted, focused: true), "primary")
     XCTAssertEqual(RufletTextFieldDefaults.defaultTextSize, 16)
     XCTAssertEqual(RufletTextFieldDefaults.defaultTextLineHeight, 24)
+    XCTAssertTrue(RufletTextFieldDefaults.usesNativeApplePresentation(omitted))
+    XCTAssertEqual(RufletTextFieldDefaults.nativeSingleLineHeight, 36)
     let padding = RufletTextFieldDefaults.contentPadding(omitted)
     XCTAssertEqual(padding.top, 20)
     XCTAssertEqual(padding.leading, 12)
@@ -68,6 +70,7 @@ final class RufletInputParityTests: XCTestCase {
     let overridden = ControlNode(id: 5, type: "TextField", props: [
       "border_width": .double(1),
     ])
+    XCTAssertFalse(RufletTextFieldDefaults.usesNativeApplePresentation(overridden))
     XCTAssertEqual(RufletTextFieldDefaults.borderColorToken(overridden, focused: false), "onsurface,0.38")
     XCTAssertEqual(RufletTextFieldDefaults.borderColorToken(overridden, focused: true), "primary")
     XCTAssertEqual(RufletTextFieldDefaults.borderWidth(overridden, focused: true), 1)
@@ -92,6 +95,21 @@ final class RufletInputParityTests: XCTestCase {
       id: 3, type: "TextField", props: ["expand": .int(1)])))
     XCTAssertNil(RufletTextFieldDefaults.defaultWidth(ControlNode(
       id: 4, type: "TextField", props: ["width": .double(240)])))
+  }
+
+  func testNativeTextFieldSearchPrefixUsesAppleSearchChrome() throws {
+    let searchIndex = try XCTUnwrap(MaterialIconNames.material.firstIndex(of: "SEARCH"))
+    let search = ControlNode(id: 1, type: "TextField", props: [
+      "prefix_icon": .int(Int64(MaterialIconNames.firstCodepoint + searchIndex))
+    ])
+    XCTAssertTrue(RufletTextFieldDefaults.usesNativeApplePresentation(search))
+    XCTAssertTrue(RufletTextFieldDefaults.hasSearchPrefix(search))
+
+    let custom = ControlNode(id: 2, type: "TextField", props: [
+      "prefix_icon": .string("home"), "border_radius": .double(12)
+    ])
+    XCTAssertFalse(RufletTextFieldDefaults.hasSearchPrefix(custom))
+    XCTAssertFalse(RufletTextFieldDefaults.usesNativeApplePresentation(custom))
   }
 
   func testOmittedAccessibilityLabelPreservesNativeInference() {

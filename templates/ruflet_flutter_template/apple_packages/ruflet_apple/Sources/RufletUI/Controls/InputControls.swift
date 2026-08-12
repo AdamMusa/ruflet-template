@@ -803,8 +803,10 @@ struct TextFieldControlView: View {
 
   var body: some View {
     HStack(alignment: verticalAlignment, spacing: 8) {
-      formIcon("prefix_icon")
-        .modifier(SlotSizeConstraints(value: node.props["prefix_icon_constraints"]))
+      if !usesNativeSearchAppearance {
+        formIcon("prefix_icon")
+          .modifier(SlotSizeConstraints(value: node.props["prefix_icon_constraints"]))
+      }
       RufletFormFieldSlot(node: node, key: "prefix", styleKey: "prefix_style")
       field
       RufletFormFieldSlot(node: node, key: "suffix", styleKey: "suffix_style")
@@ -812,12 +814,14 @@ struct TextFieldControlView: View {
         .modifier(SlotSizeConstraints(value: node.props["suffix_icon_constraints"]))
     }
     .textFieldStyle(.plain)
-    .padding(contentPadding)
+    .padding(usesNativeChrome ? EdgeInsets() : contentPadding)
     .frame(width: RufletTextFieldDefaults.defaultWidth(node))
     .frame(maxWidth: fitsParent ? .infinity : nil, maxHeight: fitsParent ? .infinity : nil)
-    .background(
-      RoundedRectangle(cornerRadius: fieldRadius)
-        .fill(fieldBackground))
+    .background {
+      if !usesNativeChrome {
+        RoundedRectangle(cornerRadius: fieldRadius).fill(fieldBackground)
+      }
+    }
     .overlay(borderStroke)
     // Flutter clips a decorated field to its border; hardEdge is the default.
     .modifier(
@@ -893,11 +897,16 @@ struct TextFieldControlView: View {
           placeholder: prompt,
           secure: node.bool("password") == true && !revealsPassword,
           nativeChrome: usesNativeChrome,
+          searchAppearance: usesNativeSearchAppearance,
           traits: traits,
           onTap: { events.fire(node, "click") },
           onTapOutside: { events.fire(node, "tap_outside") },
           onSubmit: { events.fire(node, "submit", data: .string($0)) })
           .modifier(PlaceholderStyle(node: node, showing: binding.wrappedValue.isEmpty))
+          // UIViewRepresentable otherwise accepts a loose vertical proposal
+          // from a Column and can expand a one-line UITextField to the entire
+          // preview. UIKit's ordinary field owns a compact intrinsic height.
+          .frame(height: RufletTextFieldDefaults.nativeSingleLineHeight)
       #else
         TextField(prompt, text: binding)
           .onSubmit { events.fire(node, "submit", data: .string(binding.wrappedValue)) }
@@ -980,7 +989,9 @@ struct TextFieldControlView: View {
   @ViewBuilder
   private var borderStroke: some View {
     let radius = fieldRadius
-    if RufletTextFieldDefaults.borderKind(node) != .none, borderWidth > 0 {
+    if !usesNativeChrome,
+      RufletTextFieldDefaults.borderKind(node) != .none, borderWidth > 0
+    {
       if RufletTextFieldDefaults.borderKind(node) == .underline {
         VStack(spacing: 0) {
           Spacer(minLength: 0)
@@ -998,10 +1009,11 @@ struct TextFieldControlView: View {
   }
 
   private var usesNativeChrome: Bool {
-    // The native field supplies editing, selection and keyboard behavior. Its
-    // platform bezel must stay off because Flet always supplies an
-    // InputDecoration (outline by default) around that native primitive.
-    false
+    RufletTextFieldDefaults.usesNativeApplePresentation(node)
+  }
+
+  private var usesNativeSearchAppearance: Bool {
+    usesNativeChrome && RufletTextFieldDefaults.hasSearchPrefix(node)
   }
 
   private var borderWidth: CGFloat {
@@ -1085,6 +1097,27 @@ struct TextFieldControlView: View {
 /// omission has one source of truth and can be tested without snapshots.
 enum RufletTextFieldDefaults {
   enum BorderKind: String { case outline, underline, none }
+
+  static let nativeSingleLineHeight: CGFloat = 36
+
+  /// Omitted decoration is a semantic Flet outline, but its Apple
+  /// presentation belongs to UITextField/NSTextField. Any explicit DSL
+  /// decoration keeps the translated path so Ruby remains authoritative.
+  static func usesNativeApplePresentation(_ node: ControlNode) -> Bool {
+    let visualOverrides = [
+      "border", "border_color", "border_width", "focused_border_color",
+      "focused_border_width", "error_border_color", "border_radius",
+      "content_padding", "bgcolor", "fill_color", "focused_bgcolor",
+      "hover_color", "filled", "collapsed", "dense", "suffix_icon",
+      "prefix", "suffix", "prefix_icon_constraints", "suffix_icon_constraints",
+    ]
+    return !isMultiline(node) && visualOverrides.allSatisfy { node.props[$0] == nil }
+  }
+
+  static func hasSearchPrefix(_ node: ControlNode) -> Bool {
+    guard let value = node.props["prefix_icon"] else { return false }
+    return IconMapping.materialName(for: value)?.lowercased() == "search"
+  }
 
   /// Flet's buildInputDecoration() chooses outline even when the wire omits
   /// `border`; this is independent of the native editor used on Apple.
