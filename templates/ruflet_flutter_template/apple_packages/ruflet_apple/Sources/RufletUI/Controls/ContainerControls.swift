@@ -2156,7 +2156,7 @@ struct AnimatedSwitcherControlView: View {
   @ViewBuilder
   var body: some View {
     if let contentID = presentation.contentID,
-      let content = store.node(contentID), content.bool("visible") != false
+      let content = store.node(contentID), presentation.validationError(content: content) == nil
     {
       ZStack {
         ForEach(outgoing) { entry in
@@ -2166,6 +2166,11 @@ struct AnimatedSwitcherControlView: View {
         if let current {
           switcherContent(current)
             .transition(.identity)
+        } else {
+          // Flutter's AnimatedSwitcher paints its first child immediately;
+          // `onAppear` is too late to be the first visible frame in SwiftUI.
+          ControlView(id: contentID, axis: .none)
+            .id(contentIdentity)
         }
       }
       .clipped()
@@ -2176,6 +2181,8 @@ struct AnimatedSwitcherControlView: View {
       .onDisappear {
         removalTasks.values.forEach { $0.cancel() }
         removalTasks.removeAll()
+        current = nil
+        outgoing.removeAll()
       }
     } else {
       Text(AnimatedSwitcherPresentation.missingContentError)
@@ -2213,7 +2220,7 @@ struct AnimatedSwitcherControlView: View {
   private func scheduleRemoval(_ entry: AnimatedSwitcherEntry) {
     removalTasks[entry.id]?.cancel()
     removalTasks[entry.id] = Task { @MainActor in
-      let nanos = UInt64(max(0, presentation.reverseDuration) * 1_000_000_000)
+      let nanos = UInt64(max(0, presentation.effectiveReverseDuration) * 1_000_000_000)
       try? await Task.sleep(nanoseconds: nanos)
       guard !Task.isCancelled else { return }
       outgoing.removeAll { $0.id == entry.id }
@@ -2237,12 +2244,20 @@ struct AnimatedSwitcherPresentation {
 
   let node: ControlNode
   var contentID: Int? { node.controlID(forKey: "content") }
+  /// Legacy inspection surface retained for existing package callers. Native
+  /// rendering uses `effectiveDuration`, which is pinned to Dart parseDuration.
   var duration: Double { Self.durationSeconds(node.props["duration"], default: 1) }
   var reverseDuration: Double {
     Self.durationSeconds(node.props["reverse_duration"], default: 1)
   }
-  var switchInCurve: String { node.string("switch_in_curve") ?? "linear" }
-  var switchOutCurve: String { node.string("switch_out_curve") ?? "linear" }
+  var effectiveDuration: Double {
+    Self.fletDurationSeconds(node.props["duration"], default: 1)
+  }
+  var effectiveReverseDuration: Double {
+    Self.fletDurationSeconds(node.props["reverse_duration"], default: 1)
+  }
+  var switchInCurve: String { Self.fletCurve(node.string("switch_in_curve")) }
+  var switchOutCurve: String { Self.fletCurve(node.string("switch_out_curve")) }
   var transition: String {
     switch node.string("transition")?.lowercased() {
     case "rotation": return "rotation"
@@ -2250,11 +2265,62 @@ struct AnimatedSwitcherPresentation {
     default: return "fade"
     }
   }
-  var inAnimation: Animation { RufletCurve.animation(switchInCurve, duration: duration) }
+  var inAnimation: Animation {
+    RufletCurve.animation(switchInCurve, duration: effectiveDuration)
+  }
   var outAnimation: Animation {
-    RufletCurve.animation(switchOutCurve, duration: reverseDuration)
+    RufletCurve.animation(switchOutCurve, duration: effectiveReverseDuration)
   }
 
+  func validationError(content: ControlNode?) -> String? {
+    guard contentID != nil, let content, content.bool("visible") != false else {
+      return Self.missingContentError
+    }
+    return nil
+  }
+
+  /// Flet's `parseCurve(value, Curves.linear)` falls back to linear for both
+  /// omitted and unknown tokens rather than SwiftUI's general ease-in-out
+  /// fallback.
+  static func fletCurve(_ value: String?) -> String {
+    guard let value, RufletCurve.names.contains(value.lowercased()) else {
+      return "linear"
+    }
+    return value
+  }
+
+  /// Exact `parseDuration` behavior used by the renderer. Dart's `parseInt`
+  /// accepts ints and integer strings; fractional doubles/components become
+  /// zero instead of being truncated.
+  static func fletDurationSeconds(
+    _ value: RufletValue?,
+    default defaultValue: Double
+  ) -> Double {
+    guard let value, !value.isNull else { return defaultValue }
+    if case .int(let milliseconds) = value { return Double(milliseconds) / 1_000 }
+    if case .string(let raw) = value { return Double(Int64(raw) ?? 0) / 1_000 }
+    if case .extended(type: 3, let microseconds) = value {
+      return Double(Int64(microseconds) ?? 0) / 1_000_000
+    }
+    guard let map = value.mapValue else { return 0 }
+    func integer(_ key: String) -> Int64 {
+      switch map[key] {
+      case .int(let value): return value
+      case .string(let value): return Int64(value) ?? 0
+      default: return 0
+      }
+    }
+    let microseconds = integer("microseconds")
+      + 1_000 * integer("milliseconds")
+      + 1_000_000 * integer("seconds")
+      + 60_000_000 * integer("minutes")
+      + 3_600_000_000 * integer("hours")
+      + 86_400_000_000 * integer("days")
+    return Double(microseconds) / 1_000_000
+  }
+
+  /// Compatibility accessor retained for broad presentation tests. Renderer
+  /// behavior uses `fletDurationSeconds`, matching pinned Dart exactly.
   static func durationSeconds(_ value: RufletValue?, default defaultValue: Double) -> Double {
     guard let value, !value.isNull else { return defaultValue }
     if case .int(let milliseconds) = value { return Double(milliseconds) / 1_000 }
