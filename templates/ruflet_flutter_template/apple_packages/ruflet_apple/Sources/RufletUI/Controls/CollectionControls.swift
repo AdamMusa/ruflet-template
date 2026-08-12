@@ -1036,47 +1036,13 @@ struct ExpansionTileControlView: View {
   var body: some View {
     if let message = ExpansionTilePresentation.validationMessage(node) {
       Text(message).font(.caption).foregroundStyle(.red)
-    } else if !ExpansionTilePresentation(node: node).requiresCustomRendering {
-      DisclosureGroup(isExpanded: expansionBinding) {
-        ControlList(ids: node.controlIDs(forKey: "controls"), axis: .vertical)
-      } label: {
-        nativeHeader
-      }
-      .disabled(node.bool("disabled") == true)
     } else {
-      VStack(spacing: 0) {
-        Button(action: toggle) { customHeader }
-          .buttonStyle(.plain)
-          .disabled(node.bool("disabled") == true)
-          .modifier(TapFeedback(enabled: node.bool("enable_feedback") != false))
-
-        if expanded || node.bool("maintain_state") == true {
-          ControlList(ids: node.controlIDs(forKey: "controls"), axis: .vertical)
-            .padding(ControlProps.edgeInsets(node.props["controls_padding"]) ?? EdgeInsets())
-            .frame(
-              maxWidth: expandedCrossAxisAlignment == .stretch ? .infinity : nil,
-              alignment: expandedCrossAxisAlignment.alignment)
-            .frame(maxWidth: .infinity, alignment: expandedAlignment)
-            .opacity(expanded ? 1 : 0)
-            .frame(maxHeight: expanded ? nil : 0)
-            .clipped()
-        }
-      }
-      .frame(maxWidth: .infinity)
-      .background(RoundedRectangle(cornerRadius: tileRadius).fill(tileBackground))
-      .overlay { tileOutline }
-      .modifier(ChromeClipModifier(behavior: node.string("clip_behavior") ?? "none"))
-      .animation(rufletAnimation(node.props["animation_style"]), value: expanded)
+      nativeTile
     }
   }
 
-  private enum Affinity { case leading, trailing }
-
-  private var affinity: Affinity {
-    node.string("affinity")?.lowercased() == "leading" ? .leading : .trailing
-  }
-
   private var expanded: Bool { node.bool("expanded") ?? false }
+  private var presentation: ExpansionTilePresentation { ExpansionTilePresentation(node: node) }
 
   private var expansionBinding: Binding<Bool> {
     Binding(
@@ -1087,14 +1053,34 @@ struct ExpansionTileControlView: View {
       })
   }
 
-  private func toggle() {
-    let next = !expanded
-    events.commit(node, key: "expanded", value: .bool(next), event: "change")
+  /// ExpansionTile remains a native Apple disclosure control for every style
+  /// combination. Flet properties are translated through native modifiers;
+  /// they never select a handwritten Material tile implementation.
+  private var nativeTile: some View {
+    DisclosureGroup(isExpanded: expansionBinding) {
+      ControlList(ids: node.controlIDs(forKey: "controls"), axis: .vertical)
+        .padding(presentation.controlsPadding)
+        .frame(
+          maxWidth: presentation.expandedCrossAxisAlignmentToken == "stretch" ? .infinity : nil,
+          alignment: presentation.expandedCrossAxisAlignment.alignment)
+        .frame(maxWidth: .infinity, alignment: presentation.expandedAlignment)
+    } label: {
+      nativeHeader
+        .foregroundColor(MaterialPalette.color(presentation.currentTextColorToken))
+        .padding(presentation.tilePadding)
+    }
+    .frame(minHeight: presentation.effectiveMinimumTileHeight)
+    .background(MaterialPalette.color(presentation.currentBackgroundColorToken, default: .clear))
+    .tint(MaterialPalette.color(presentation.currentIconColorToken))
+    .disabled(node.bool("disabled") == true)
+    .modifier(ChromeClipModifier(behavior: presentation.clipBehaviorToken))
+    .modifier(TapFeedback(enabled: presentation.enableFeedback))
+    .animation(presentation.animation, value: expanded)
+    .accessibilityHint(expanded ? "Collapse" : "Expand")
   }
 
-  private var customHeader: some View {
+  private var nativeHeader: some View {
     HStack(spacing: 12) {
-      if node.controlID(forKey: "leading") == nil, affinity == .leading { expansionIcon }
       if let leadingID = node.controlID(forKey: "leading") {
         ControlView(id: leadingID, axis: .none)
       }
@@ -1106,102 +1092,13 @@ struct ExpansionTileControlView: View {
           ControlView(id: subtitleID, axis: .none)
         } else if let subtitle = node.string("subtitle") { Text(subtitle) }
       }
-      .foregroundColor(textColor)
       Spacer(minLength: 0)
-      if node.bool("show_trailing_icon") != false {
-        if let trailingID = node.controlID(forKey: "trailing") {
-          ControlView(id: trailingID, axis: .none)
-        } else if affinity == .trailing { expansionIcon }
+      if let trailingID = node.controlID(forKey: "trailing") {
+        ControlView(id: trailingID, axis: .none)
       }
     }
-    .padding(ControlProps.edgeInsets(node.props["tile_padding"])
-      ?? EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
-    .frame(minHeight: ExpansionTilePresentation(node: node).minTileHeight)
     .modifier(VisualDensityPadding(value: node.props["visual_density"]))
     .contentShape(Rectangle())
-    .accessibilityHint(expanded ? "Collapse" : "Expand")
-  }
-
-  private var nativeHeader: some View {
-    HStack {
-      if let leadingID = node.controlID(forKey: "leading") {
-        ControlView(id: leadingID, axis: .none)
-      }
-      VStack(alignment: .leading) {
-        if let titleID = node.controlID(forKey: "title") {
-          ControlView(id: titleID, axis: .none)
-        } else if let title = node.string("title") {
-          Text(title)
-        }
-        if let subtitleID = node.controlID(forKey: "subtitle") {
-          ControlView(id: subtitleID, axis: .none)
-        } else if let subtitle = node.string("subtitle") {
-          Text(subtitle).foregroundStyle(.secondary)
-        }
-      }
-    }
-  }
-
-  @ViewBuilder
-  private var expansionIcon: some View {
-    Image(systemName: expanded ? "chevron.down" : "chevron.right")
-      .foregroundColor(iconColor)
-      .font(.caption)
-  }
-
-  private var iconColor: Color? {
-    let presentation = ExpansionTilePresentation(node: node)
-    return MaterialPalette.color(
-      expanded ? presentation.iconColorToken : presentation.collapsedIconColorToken)
-  }
-
-  private var textColor: Color? {
-    let presentation = ExpansionTilePresentation(node: node)
-    return MaterialPalette.color(expanded ? presentation.textColorToken : presentation.collapsedTextColorToken)
-  }
-
-  private var tileBackground: Color {
-    guard expanded else {
-      return MaterialPalette.color(node.string("collapsed_bgcolor"), default: .clear)
-    }
-    return MaterialPalette.color(node.string("bgcolor"), default: .clear)
-  }
-
-  private var tileRadius: CGFloat {
-    guard expanded else {
-      return ControlProps.cornerRadius(node.map("collapsed_shape")?["radius"]) ?? 0
-    }
-    return ControlProps.cornerRadius(node.map("shape")?["radius"]) ?? 0
-  }
-
-  @ViewBuilder
-  private var tileOutline: some View {
-    if let shape = node.map(expanded ? "shape" : "collapsed_shape"),
-      let side = shape["side"]?.mapValue
-    {
-      RoundedRectangle(cornerRadius: tileRadius)
-        .strokeBorder(
-          MaterialPalette.color(side["color"]?.stringValue, default: .clear),
-          lineWidth: CGFloat(side["width"]?.doubleValue ?? 1))
-    } else if expanded {
-      VStack(spacing: 0) {
-        Rectangle().frame(height: 1)
-        Spacer(minLength: 0)
-        Rectangle().frame(height: 1)
-      }
-      .foregroundColor(MaterialPalette.color("outlinevariant", default: .clear))
-    }
-  }
-
-  /// `expanded_alignment` and `expanded_cross_axis_alignment` place the tile
-  /// and its children once it is open.
-  private var expandedAlignment: Alignment {
-    ControlProps.alignment(node.props["expanded_alignment"]) ?? .center
-  }
-
-  private var expandedCrossAxisAlignment: ExpansionCrossAxisAlignment {
-    ExpansionCrossAxisAlignment(rawValue:
-      node.string("expanded_cross_axis_alignment")?.lowercased() ?? "center") ?? .center
   }
 }
 
@@ -1229,17 +1126,47 @@ struct ExpansionTilePresentation {
     return nil
   }
 
-  var textColorToken: String? { node.string("text_color") }
-  var iconColorToken: String? { node.string("icon_color") }
-  var collapsedTextColorToken: String? { node.string("collapsed_text_color") }
-  var collapsedIconColorToken: String? { node.string("collapsed_icon_color") }
+  /// Flutter's `_ExpansionTileDefaultsM3` theme fallbacks. Explicit DSL
+  /// values take precedence, while these semantic roles remain available to
+  /// the native control instead of being discarded on Apple platforms.
+  var textColorToken: String { node.string("text_color") ?? "onsurface" }
+  var iconColorToken: String { node.string("icon_color") ?? "primary" }
+  var collapsedTextColorToken: String { node.string("collapsed_text_color") ?? "onsurface" }
+  var collapsedIconColorToken: String {
+    node.string("collapsed_icon_color") ?? "onsurfacevariant"
+  }
+  var backgroundColorToken: String { node.string("bgcolor") ?? "transparent" }
+  var collapsedBackgroundColorToken: String {
+    node.string("collapsed_bgcolor") ?? "transparent"
+  }
+  var currentTextColorToken: String { expanded ? textColorToken : collapsedTextColorToken }
+  var currentIconColorToken: String { expanded ? iconColorToken : collapsedIconColorToken }
+  var currentBackgroundColorToken: String {
+    expanded ? backgroundColorToken : collapsedBackgroundColorToken
+  }
+  private var expanded: Bool { node.bool("expanded") ?? false }
   var iconAffinityToken: String {
-    node.string("affinity")?.lowercased() == "leading" ? "leading" : "trailing"
+    let value = node.string("affinity")?.lowercased()
+    return value == "leading" ? "leading" : (value == "platform" ? "platform" : "trailing")
   }
   var showsTrailingIcon: Bool { node.bool("show_trailing_icon") != false }
   var maintainState: Bool { node.bool("maintain_state") ?? false }
   var enableFeedback: Bool { node.bool("enable_feedback") ?? true }
-  var animationDuration: TimeInterval { 0.2 }
+  var dense: Bool? { node.bool("dense") }
+  var clipBehaviorToken: String { node.string("clip_behavior") ?? "antiAlias" }
+  var animationDuration: TimeInterval {
+    max(node.map("animation_style")?["duration"]?.doubleValue ?? 200, 0) / 1_000
+  }
+  var animationCurveToken: String {
+    node.map("animation_style")?["curve"]?.stringValue?.lowercased() ?? "easein"
+  }
+  var reverseAnimationCurveToken: String {
+    node.map("animation_style")?["reverse_curve"]?.stringValue?.lowercased()
+      ?? animationCurveToken
+  }
+  var animation: Animation {
+    RufletCurve.animation(animationCurveToken, duration: animationDuration)
+  }
   var expandedAlignmentToken: String {
     node.string("expanded_alignment")?.lowercased() ?? "center"
   }
@@ -1247,19 +1174,40 @@ struct ExpansionTilePresentation {
     node.string("expanded_cross_axis_alignment")?.lowercased() ?? "center"
   }
 
-  var requiresCustomRendering: Bool {
-    [
-      "text_color", "icon_color", "collapsed_text_color", "collapsed_icon_color",
-      "bgcolor", "collapsed_bgcolor", "shape", "collapsed_shape", "tile_padding",
-      "controls_padding", "visual_density", "min_tile_height", "dense",
-      "expanded_alignment", "expanded_cross_axis_alignment", "clip_behavior",
-      "animation_style", "affinity", "show_trailing_icon", "trailing", "maintain_state",
-    ].contains { node.props[$0] != nil }
+  var expandedAlignment: Alignment {
+    ControlProps.alignment(node.props["expanded_alignment"]) ?? .center
+  }
+  var expandedCrossAxisAlignment: ExpansionCrossAxisAlignment {
+    ExpansionCrossAxisAlignment(rawValue: expandedCrossAxisAlignmentToken) ?? .center
+  }
+  var tilePadding: EdgeInsets {
+    ControlProps.edgeInsets(node.props["tile_padding"])
+      ?? EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
+  }
+  var controlsPadding: EdgeInsets {
+    ControlProps.edgeInsets(node.props["controls_padding"]) ?? EdgeInsets()
   }
 
   var minTileHeight: CGFloat? {
     if let explicit = node.double("min_tile_height") { return CGFloat(explicit) }
     return nil
+  }
+
+  /// ListTile's constructor/theme fallback before visual-density adjustment:
+  /// one-line 56/48 and two-line 72/64 for regular/dense tiles.
+  var effectiveMinimumTileHeight: CGFloat {
+    if let minTileHeight { return minTileHeight }
+    let hasSubtitle = node.controlID(forKey: "subtitle") != nil
+      || !(node.string("subtitle") ?? "").isEmpty
+    if dense == true { return hasSubtitle ? 64 : 48 }
+    return hasSubtitle ? 72 : 56
+  }
+
+  var expandedShapeSemantic: String {
+    node.props["shape"] == nil ? "border.vertical(theme.dividerColor)" : "explicit"
+  }
+  var collapsedShapeSemantic: String {
+    node.props["collapsed_shape"] == nil ? "border.vertical(transparent)" : "explicit"
   }
 }
 
@@ -1273,48 +1221,40 @@ struct ExpansionPanelListControlView: View {
   var body: some View {
     let presentation = ExpansionPanelListPresentation(node: node)
     let panels = node.childIDs.compactMap { store.node($0) }
-    if !presentation.requiresCustomRendering
-      && !panels.contains(where: ExpansionPanelListPresentation.panelRequiresCustomRendering)
-    {
-      VStack {
-        ForEach(panels, id: \.id) { panel in
-          NativeExpansionPanelView(node: panel, list: node)
-        }
-      }
+    if let message = presentation.validationMessage {
+      Text(message).font(.caption).foregroundStyle(.red)
     } else {
       VStack(spacing: 0) {
-        ForEach(Array(node.childIDs.enumerated()), id: \.element) { index, panelID in
-          if let panel = store.node(panelID) {
-            ExpansionPanelView(node: panel, list: node)
-              .shadow(
-                color: panel.bool("expanded") == true ? .black.opacity(0.2) : .clear,
-                radius: panel.bool("expanded") == true ? presentation.elevation : 0)
-            if index < node.childIDs.count - 1 {
-              let nextExpanded = store.node(node.childIDs[index + 1])?.bool("expanded") == true
-              if presentation.hasGap(
-                afterExpanded: panel.bool("expanded") == true,
-                beforeExpanded: nextExpanded)
-              {
-                Color.clear.frame(height: presentation.spacing)
-              } else if let divider = dividerColor {
-                Rectangle().fill(divider).frame(height: 1)
-              }
+        ForEach(Array(panels.enumerated()), id: \.element.id) { index, panel in
+          NativeExpansionPanelView(node: panel, list: node)
+            .shadow(
+              color: panel.bool("expanded") == true ? .black.opacity(0.2) : .clear,
+              radius: panel.bool("expanded") == true ? presentation.elevation : 0)
+          if index < panels.count - 1 {
+            let nextExpanded = panels[index + 1].bool("expanded") == true
+            if presentation.hasGap(
+              afterExpanded: panel.bool("expanded") == true,
+              beforeExpanded: nextExpanded)
+            {
+              Color.clear.frame(height: presentation.spacing)
+            } else {
+              Rectangle()
+                .fill(MaterialPalette.color(presentation.dividerColorToken, default: .clear))
+                .frame(height: 1)
             }
           }
         }
       }
-      // `expand_icon_color` tints the chevron every panel draws.
-      .foregroundColor(MaterialPalette.color(node.string("expanded_icon_color")))
+      .animation(presentation.animation, value: panels.map { $0.bool("expanded") ?? false })
     }
-  }
-
-  private var dividerColor: Color? {
-    MaterialPalette.color(node.string("divider_color"))
   }
 }
 
 struct ExpansionPanelListPresentation {
   let node: ControlNode
+  var validationMessage: String? {
+    elevation < 0 ? "ExpansionPanelList.elevation must be greater than or equal to zero" : nil
+  }
   var elevation: CGFloat { CGFloat(node.double("elevation") ?? 2) }
   var spacing: CGFloat { CGFloat(node.double("spacing") ?? 16) }
   var expandedHeaderPadding: EdgeInsets {
@@ -1322,48 +1262,80 @@ struct ExpansionPanelListPresentation {
       ?? EdgeInsets(top: 16, leading: 0, bottom: 16, trailing: 0)
   }
   var animationDuration: TimeInterval { 0.2 }
-
-  var requiresCustomRendering: Bool {
-    [
-      "elevation", "spacing", "expanded_header_padding", "divider_color",
-      "expanded_icon_color",
-    ].contains { node.props[$0] != nil }
+  var animation: Animation {
+    RufletCurve.animation("fastoutslowin", duration: animationDuration)
   }
-
-  static func panelRequiresCustomRendering(_ panel: ControlNode) -> Bool {
-    ["bgcolor", "splash_color", "highlight_color"].contains { panel.props[$0] != nil }
+  var dividerColorToken: String { node.string("divider_color") ?? "outline" }
+  var expandIconColorToken: String? {
+    // `expand_icon_color` is the Ruflet/Flet public property. The earlier Dart
+    // renderer used `expanded_icon_color`; accepting it preserves old streams.
+    node.string("expand_icon_color") ?? node.string("expanded_icon_color")
   }
+  var defaultExpandIconColorSemantic: String { "black54(light)/white60(dark)" }
 
   func hasGap(afterExpanded: Bool, beforeExpanded: Bool) -> Bool {
-    // Flutter inserts a MaterialGap immediately *after* an expanded child.
-    // The next child's state does not create a leading gap by itself.
-    _ = beforeExpanded
-    return afterExpanded
+    // ExpansionPanelList inserts a MaterialGap on either side of an expanded
+    // slice. Between two expanded slices the adjacent gaps merge into one.
+    afterExpanded || beforeExpanded
   }
 }
 
-/// The styleless panel-list path maps onto Apple's disclosure control. The
-/// panel's wire state and Flet list-level change event remain the source of
-/// truth; SwiftUI owns all omitted visual metrics.
+struct ExpansionPanelPresentation {
+  let node: ControlNode
+
+  var expanded: Bool { node.bool("expanded") ?? false }
+  var canTapHeader: Bool { node.bool("can_tap_header") ?? false }
+  var backgroundColorToken: String { node.string("bgcolor") ?? "surface" }
+  var splashColorToken: String? { node.string("splash_color") }
+  var highlightColorToken: String? { node.string("highlight_color") }
+  var hasHeader: Bool { node.controlID(forKey: "header") != nil }
+  var hasContent: Bool { node.controlID(forKey: "content") != nil }
+}
+
+/// Apple's DisclosureGroup is the native equivalent for every panel. The
+/// panel's wire state and Flet list-level change event remain authoritative.
 private struct NativeExpansionPanelView: View {
   let node: ControlNode
   let list: ControlNode
   @Environment(\.rufletEvents) private var events
+  @Environment(\.colorScheme) private var colorScheme
 
   var body: some View {
+    let presentation = ExpansionPanelListPresentation(node: list)
+    let panel = ExpansionPanelPresentation(node: node)
     DisclosureGroup(isExpanded: expansionBinding) {
       if let contentID = node.controlID(forKey: "content") {
         ControlView(id: contentID, axis: .vertical)
+      } else {
+        Text("Body Placeholder").padding()
       }
     } label: {
-      if let headerID = node.controlID(forKey: "header") {
-        ControlView(id: headerID, axis: .none)
+      Group {
+        if let headerID = node.controlID(forKey: "header") {
+          ControlView(id: headerID, axis: .none)
+        } else {
+          Text("Header Placeholder").padding()
+        }
       }
+      .padding(expanded ? presentation.expandedHeaderPadding : EdgeInsets())
     }
+    .frame(minHeight: 48)
+    .background(MaterialPalette.color(panel.backgroundColorToken, default: .clear))
+    .tint(expandIconColor)
     .disabled(list.bool("disabled") == true)
+    .animation(presentation.animation, value: expanded)
   }
 
   private var expanded: Bool { node.bool("expanded") ?? false }
+
+  private var expandIconColor: Color {
+    if let explicit = MaterialPalette.color(
+      ExpansionPanelListPresentation(node: list).expandIconColorToken)
+    {
+      return explicit
+    }
+    return colorScheme == .dark ? .white.opacity(0.60) : .black.opacity(0.54)
+  }
 
   private var expansionBinding: Binding<Bool> {
     Binding(
@@ -1376,87 +1348,6 @@ private struct NativeExpansionPanelView: View {
           list, "change",
           data: .int(Int64(list.childIDs.firstIndex(of: node.id) ?? 0)))
       })
-  }
-}
-
-private struct ExpansionPanelView: View {
-  let node: ControlNode
-  let list: ControlNode
-  @Environment(\.rufletEvents) private var events
-
-  var body: some View {
-    VStack(spacing: 0) {
-      header
-        .padding(expanded
-          ? ExpansionPanelListPresentation(node: list).expandedHeaderPadding : EdgeInsets())
-        .frame(minHeight: 48)
-      if expanded {
-        if let contentID = node.controlID(forKey: "content") {
-          ControlView(id: contentID, axis: .vertical)
-        } else {
-          Text("Body Placeholder").padding()
-        }
-      }
-    }
-    .background(MaterialPalette.color(node.string("bgcolor"), default: .clear))
-    .modifier(ListTileSplash(color:
-      MaterialPalette.color(node.string("splash_color") ?? node.string("highlight_color"))))
-    .animation(
-      .easeInOut(duration: ExpansionPanelListPresentation(node: list).animationDuration),
-      value: expanded)
-  }
-
-  private var expanded: Bool { node.bool("expanded") ?? false }
-
-  @ViewBuilder
-  private var header: some View {
-    if node.bool("can_tap_header") == true {
-      Button(action: toggle) { headerContents }.buttonStyle(.plain)
-        .disabled(list.bool("disabled") == true)
-    } else {
-      HStack(spacing: 0) {
-        headerControl
-        Spacer(minLength: 0)
-        Button(action: toggle) { expandIcon }
-          .buttonStyle(.plain)
-          .disabled(list.bool("disabled") == true)
-      }
-    }
-  }
-
-  private var headerContents: some View {
-    HStack(spacing: 0) {
-      headerControl
-      Spacer(minLength: 0)
-      expandIcon
-    }
-    .contentShape(Rectangle())
-  }
-
-  @ViewBuilder
-  private var headerControl: some View {
-    if let headerID = node.controlID(forKey: "header") {
-      ControlView(id: headerID, axis: .none)
-    } else {
-      Text("Header Placeholder").padding()
-    }
-  }
-
-  private var expandIcon: some View {
-    Image(systemName: "chevron.down")
-      .rotationEffect(.degrees(expanded ? 180 : 0))
-      .foregroundColor(MaterialPalette.color(list.string("expanded_icon_color")))
-      .padding(12)
-  }
-
-  private func toggle() {
-    guard list.bool("disabled") != true else { return }
-    let next = !expanded
-    events.setLocal(node.id, "expanded", .bool(next))
-    events.update(node.id, ["expanded": .bool(next)])
-    events.fire(
-      list, "change",
-      data: .int(Int64(list.childIDs.firstIndex(of: node.id) ?? 0)))
   }
 }
 
