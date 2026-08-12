@@ -33,6 +33,7 @@ let package = Package(
     .library(name: "RufletDataTable2", targets: ["RufletDataTable2"]),
     .library(name: "RufletVideo", targets: ["RufletVideo"]),
     .library(name: "RufletWebView", targets: ["RufletWebView"]),
+    .library(name: "RufletAds", targets: ["RufletAds"]),
     .library(name: "RufletCodeEditor", targets: ["RufletCodeEditor"]),
     .library(name: "RufletColorPickers", targets: ["RufletColorPickers"]),
     .library(name: "RufletSpinKit", targets: ["RufletSpinKit"]),
@@ -44,7 +45,10 @@ let package = Package(
   ],
   dependencies: [
     .package(url: "https://github.com/airbnb/lottie-ios.git", exact: "4.6.1"),
-    .package(url: "https://github.com/rive-app/rive-ios.git", exact: "6.9.5")
+    .package(url: "https://github.com/rive-app/rive-ios.git", exact: "6.9.5"),
+    .package(
+      url: "https://github.com/googleads/swift-package-manager-google-mobile-ads.git",
+      exact: "13.7.0")
   ],
   targets: [
     // Google's Apache-2.0 Material Color Utilities implementation. Flutter's
@@ -105,6 +109,15 @@ let package = Package(
       name: "RufletWebView",
       dependencies: ["RufletUI", "RufletEngine", "RufletProtocol"]),
     .target(
+      name: "RufletAds",
+      dependencies: [
+        "RufletUI", "RufletEngine", "RufletProtocol",
+        .product(
+          name: "GoogleMobileAds",
+          package: "swift-package-manager-google-mobile-ads",
+          condition: .when(platforms: [.iOS]))
+      ]),
+    .target(
       name: "RufletCodeEditor",
       dependencies: ["RufletUI", "RufletEngine", "RufletProtocol"]),
     .target(
@@ -130,6 +143,9 @@ let package = Package(
     .testTarget(
       name: "RufletDataTable2Tests",
       dependencies: ["RufletDataTable2", "RufletUI", "RufletEngine", "RufletProtocol"]),
+    .testTarget(
+      name: "RufletAdsTests",
+      dependencies: ["RufletAds", "RufletUI", "RufletEngine", "RufletProtocol"]),
     .testTarget(
       name: "RufletCodeEditorTests",
       dependencies: ["RufletCodeEditor", "RufletUI", "RufletEngine", "RufletProtocol"]),

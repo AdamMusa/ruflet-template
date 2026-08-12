@@ -56,6 +56,8 @@ extension ServiceRegistry {
       return "RufletSecureStorage"
     case "audio":
       return "RufletAudio"
+    case "interstitialad":
+      return "RufletAds"
     case "audiorecorder":
       return "RufletAudioRecorder"
     case "camera":

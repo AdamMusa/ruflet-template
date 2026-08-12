@@ -28,6 +28,7 @@ public enum RufletExtensionManifest {
   /// Update `status` when a dedicated Swift product lands; do not collapse
   /// entries into a catch-all target because that would relink unrelated SDKs.
   public static let packages: [RufletExtensionPackage] = [
+    .init(fletPackage: "flet_ads", swiftProduct: "RufletAds", status: .available),
     .init(fletPackage: "flet_audio", swiftProduct: "RufletAudio", status: .available),
     .init(fletPackage: "flet_audio_recorder", swiftProduct: "RufletAudioRecorder", status: .available),
     .init(fletPackage: "flet_camera", swiftProduct: "RufletCamera", status: .available),

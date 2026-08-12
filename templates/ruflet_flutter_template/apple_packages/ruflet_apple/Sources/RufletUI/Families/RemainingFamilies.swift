@@ -63,6 +63,8 @@ extension ControlRegistry {
     switch node.type {
     case "Canvas":
       return AnyView(CanvasControlView(node: node))
+    case "BannerAd":
+      return AnyView(MissingBundleControlView(node: node, bundle: "RufletAds"))
     case "ColorPicker", "HueRingPicker", "SlidePicker", "MaterialPicker", "BlockPicker",
       "MultipleChoiceBlockPicker":
       return AnyView(MissingBundleControlView(node: node, bundle: "RufletColorPickers"))
@@ -74,7 +76,7 @@ extension ControlRegistry {
       "ImageSourceAttribution":
       // MapKit consumes these through the Map parent.
       return AnyView(EmptyView())
-    case "Audio", "AudioRecorder":
+    case "Audio", "AudioRecorder", "InterstitialAd":
       // Services with no visible body; they answer method calls instead.
       return AnyView(EmptyView())
     case "Camera":

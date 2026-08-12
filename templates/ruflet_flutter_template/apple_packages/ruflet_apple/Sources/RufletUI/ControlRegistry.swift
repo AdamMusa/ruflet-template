@@ -461,6 +461,13 @@ public enum ControlRegistry {
         .structuralChild, "Flet compact chart metadata", .metadataOnly)
 
     // Media and optional native bundles.
+    add(["BannerAd"], .visible, "RufletAds.BannerAdControlView",
+        .optionalBundle("RufletAds"),
+        events: ["click", "close", "error", "impression", "load", "open", "paid",
+                 "will_dismiss"])
+    add(["InterstitialAd"], .service, "RufletAds.InterstitialAdService", .serviceOnly,
+        events: ["click", "close", "error", "impression", "load", "open"],
+        methods: ["show"])
     add(["WebView"], .visible, "RufletWebView.WebViewControlView",
         .optionalBundle("RufletWebView"),
         events: ["console_message", "javascript_alert_dialog", "page_ended", "page_started",
