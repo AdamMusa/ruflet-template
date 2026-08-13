@@ -18,6 +18,7 @@ struct RufletPageNavigator: View {
   let locale: Locale
   let layoutDirection: LayoutDirection
   let themeMode: RufletThemeMode
+  let theme: RufletTheme
   let tint: Color?
   let onRequestPop: (RufletControl) -> Void
   let onDidRemove: (RufletControl) -> Void
@@ -29,6 +30,7 @@ struct RufletPageNavigator: View {
       locale: locale,
       layoutDirection: layoutDirection,
       themeMode: themeMode,
+      theme: theme,
       tint: tint,
       onRequestPop: onRequestPop,
       onDidRemove: onDidRemove)
@@ -43,10 +45,11 @@ private struct RufletHostedPage: View {
   let locale: Locale
   let layoutDirection: LayoutDirection
   let themeMode: RufletThemeMode
+  let theme: RufletTheme
   let tint: Color?
 
   var body: some View {
-    PageContext(themeMode: themeMode) {
+    PageContext(themeMode: themeMode, theme: theme) {
       ControlWidget(control: control)
         .environment(\.rufletTopViewID, topViewID)
     }
@@ -75,6 +78,7 @@ private struct RufletHostedPageTint: ViewModifier {
     let locale: Locale
     let layoutDirection: LayoutDirection
     let themeMode: RufletThemeMode
+    let theme: RufletTheme
     let tint: Color?
     let onRequestPop: (RufletControl) -> Void
     let onDidRemove: (RufletControl) -> Void
@@ -125,6 +129,7 @@ private struct RufletHostedPageTint: ViewModifier {
               locale: parent.locale,
               layoutDirection: parent.layoutDirection,
               themeMode: parent.themeMode,
+              theme: parent.theme,
               tint: parent.tint))
           if let controller = controllers[control.id] {
             controller.rootView = root
@@ -251,6 +256,7 @@ private struct RufletHostedPageTint: ViewModifier {
     let locale: Locale
     let layoutDirection: LayoutDirection
     let themeMode: RufletThemeMode
+    let theme: RufletTheme
     let tint: Color?
     let onRequestPop: (RufletControl) -> Void
     let onDidRemove: (RufletControl) -> Void
@@ -274,6 +280,7 @@ private struct RufletHostedPageTint: ViewModifier {
             locale: locale,
             layoutDirection: layoutDirection,
             themeMode: themeMode,
+            theme: theme,
             tint: tint))
         return RufletMacHostingController(control: control, rootView: root)
       }

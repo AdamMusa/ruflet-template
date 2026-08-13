@@ -58,6 +58,59 @@ public struct RufletTheme {
   public func componentTheme(_ property: String) -> [String: Any]? {
     rufletDictionary(raw[property])
   }
+
+  /// Native Apple accent derived from the pinned Flet theme contract.
+  public var appleAccentColor: Color {
+    colorScheme?["primary"] ?? colorSchemeSeed
+  }
+
+  /// Default Cupertino page surface. An explicit scaffold color has the same
+  /// precedence as Flet's ThemeData before the Cupertino theme is derived.
+  public var applePageBackgroundColor: Color? {
+    color("scaffold_bgcolor") ?? colorScheme?["surface"]
+  }
+
+  /// Default Cupertino bar surface used by pinned `fixCupertinoTheme()`.
+  public var appleBarBackgroundColor: Color? {
+    colorScheme?["surface"] ?? applePageBackgroundColor
+  }
+
+  /// Default foreground applied by Cupertino's `applyThemeToAll` contract.
+  public var appleContentColor: Color? {
+    colorScheme?["on_surface"]
+  }
+
+  /// The Page-wide body style. Explicit control styles still take precedence.
+  public var appleBodyTextStyle: RufletTextStyle? {
+    textTheme?["body_medium"]
+  }
+}
+
+/// Parsed light/dark Page themes with the same selection rules as pinned
+/// Flet 0.80.5 `PageControl._buildApp`.
+struct RufletPageThemes {
+  let light: RufletTheme
+  let dark: RufletTheme
+
+  func active(themeMode: RufletThemeMode, systemColorScheme: ColorScheme) -> RufletTheme {
+    switch themeMode {
+    case .light:
+      light
+    case .dark:
+      dark
+    case .system:
+      systemColorScheme == .dark ? dark : light
+    }
+  }
+}
+
+/// When Page.dark_theme is absent, pinned Flet reparses Page.theme with dark
+/// brightness instead of inventing a separate theme or renderer fallback.
+func parsePageThemes(theme: Any?, darkTheme: Any?) -> RufletPageThemes {
+  let effectiveDarkTheme = rufletDictionary(darkTheme) == nil ? theme : darkTheme
+  return RufletPageThemes(
+    light: parseCupertinoTheme(theme, brightness: .light),
+    dark: parseCupertinoTheme(effectiveDarkTheme, brightness: .dark))
 }
 
 public func parseBrightness(

@@ -241,9 +241,10 @@ private struct RufletMultiViewSceneContent: View {
   @ObservedObject var backend: RufletBackend
   @ObservedObject var page: RufletControl
   let scene: RufletNativeScene
+  @Environment(\.colorScheme) private var colorScheme
 
   var body: some View {
-    PageContext(themeMode: themeMode) {
+    PageContext(themeMode: themeMode, theme: activePageTheme) {
       ZStack {
         if let viewControl {
           ControlWidget(control: viewControl)
@@ -273,5 +274,13 @@ private struct RufletMultiViewSceneContent: View {
   private var themeMode: RufletThemeMode {
     let source = multiViewControl ?? page
     return parseEnum(RufletThemeMode.self, source.string("theme_mode"), .system)!
+  }
+
+  private var activePageTheme: RufletTheme {
+    let source = multiViewControl ?? page
+    return parsePageThemes(
+      theme: source.dynamicValue("theme"),
+      darkTheme: source.dynamicValue("dark_theme")
+    ).active(themeMode: themeMode, systemColorScheme: colorScheme)
   }
 }

@@ -23,6 +23,8 @@ struct RufletAppleAppBar: View {
 
   @ObservedObject var control: RufletControl
   @Environment(\.rufletViewScrolledUnder) private var scrolledUnder
+  @Environment(\.rufletPageTheme) private var pageTheme
+  @Environment(\.rufletBarBackgroundColor) private var pageBarBackgroundColor
   let kind: Kind
 
   var body: some View {
@@ -40,7 +42,7 @@ struct RufletAppleAppBar: View {
             .accessibilityAddTraits(.isHeader)
         }
       }
-      .foregroundStyle(foregroundColor ?? .primary)
+      .foregroundStyle(foregroundColor ?? pageTheme?.appleContentColor ?? .primary)
       .opacity(toolbarOpacity)
       .background { background.modifier(RufletBarSafeAreaBackground(extendsIntoTop: extendsIntoTop)) }
       .overlay { borderOverlay }
@@ -125,7 +127,7 @@ struct RufletAppleAppBar: View {
        control.boolean("automatic_background_visibility", default: true),
        !scrolledUnder {
       Color.clear
-    } else if let backgroundColor {
+    } else if let backgroundColor = backgroundColor ?? pageBarBackgroundColor {
       backgroundColor
     } else if kind == .cupertino && control.boolean("background_filter_blur", default: true) {
       Rectangle().fill(.bar)

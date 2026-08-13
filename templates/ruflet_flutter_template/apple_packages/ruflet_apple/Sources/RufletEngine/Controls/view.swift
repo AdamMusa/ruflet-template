@@ -16,6 +16,7 @@ public struct ViewControl: View {
   @State private var bottomBarHeight = 0.0
   @State private var topBarHeight = 0.0
   @Environment(\.rufletTopViewID) private var topViewID
+  @Environment(\.rufletPageBackgroundColor) private var pageBackgroundColor
 
   public init(control: RufletControl) {
     self.control = control
@@ -50,7 +51,7 @@ public struct ViewControl: View {
 
   private var scaffold: some View {
     ZStack {
-      parseColor(control.string("bgcolor")) ?? Color.rufletSystemBackground
+      parseColor(control.string("bgcolor")) ?? pageBackgroundColor ?? Color.rufletSystemBackground
       VStack(spacing: 0) {
         if let appBar = control.child("appbar") {
           appBarView(appBar)

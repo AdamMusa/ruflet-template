@@ -7,6 +7,7 @@ public struct PageControl: View {
   @ObservedObject public var control: RufletControl
   @Environment(\.locale) private var environmentLocale
   @Environment(\.colorScheme) private var colorScheme
+  @Environment(\.rufletThemeMode) private var inheritedThemeMode
   @State private var invokeToken: UUID?
   @State private var controlListener: UUID?
   @State private var pendingPoppedRoutes: Set<String> = []
@@ -20,7 +21,7 @@ public struct PageControl: View {
 
   public var body: some View {
     RufletPageLifecycleMonitor(onTransition: lifecycleTransition) {
-      PageContext(themeMode: themeMode) {
+      PageContext(themeMode: themeMode, theme: activePageTheme) {
         GeometryReader { proxy in
           pageStack
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -43,7 +44,6 @@ public struct PageControl: View {
       .environment(
         \.layoutDirection, control.boolean("rtl", default: false) ? .rightToLeft : .leftToRight
       )
-      .modifier(RufletPageTintModifier(color: pageTint))
     }
     .onAppear(perform: mount)
     .onDisappear(perform: unmount)
@@ -73,6 +73,7 @@ public struct PageControl: View {
         locale: localeConfiguration.locale ?? environmentLocale,
         layoutDirection: control.boolean("rtl", default: false) ? .rightToLeft : .leftToRight,
         themeMode: themeMode,
+        theme: activePageTheme,
         tint: pageTint,
         onRequestPop: markPoppedView,
         onDidRemove: markPoppedView)
@@ -243,24 +244,21 @@ public struct PageControl: View {
   }
 
   private var themeMode: RufletThemeMode {
-    parseEnum(RufletThemeMode.self, control.string("theme_mode"), .system)!
+    parseEnum(RufletThemeMode.self, control.string("theme_mode"), inheritedThemeMode)!
+  }
+
+  private var pageThemes: RufletPageThemes {
+    parsePageThemes(
+      theme: control.dynamicValue("theme"),
+      darkTheme: control.dynamicValue("dark_theme"))
+  }
+
+  private var activePageTheme: RufletTheme {
+    pageThemes.active(themeMode: themeMode, systemColorScheme: colorScheme)
   }
 
   private var pageTint: Color? {
-    let theme =
-      rufletDictionary(control.dynamicValue(colorScheme == .dark ? "dark_theme" : "theme"))
-      ?? rufletDictionary(control.dynamicValue("theme"))
-    let scheme = rufletDictionary(theme?["color_scheme"])
-    return parseColor(scheme?["primary"] as? String)
-  }
-}
-
-private struct RufletPageTintModifier: ViewModifier {
-  let color: Color?
-
-  @ViewBuilder
-  func body(content: Content) -> some View {
-    if let color { content.tint(color) } else { content }
+    activePageTheme.appleAccentColor
   }
 }
 

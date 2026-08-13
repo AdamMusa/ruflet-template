@@ -63,6 +63,7 @@ public func parseTextStyle(_ value: Any?, _ defaultValue: RufletTextStyle? = nil
 
 struct RufletTextStyleModifier: ViewModifier {
     let style: RufletTextStyle?
+    @Environment(\.rufletPageTheme) private var pageTheme
 
     @ViewBuilder
     func body(content: Content) -> some View {
@@ -80,7 +81,7 @@ struct RufletTextStyleModifier: ViewModifier {
     private func base(_ content: Content) -> some View {
         content
             .font(resolvedFont)
-            .foregroundStyle(style?.color ?? .primary)
+            .foregroundStyle(resolvedColor)
             .background(style?.backgroundColor ?? .clear)
     }
 
@@ -99,16 +100,22 @@ struct RufletTextStyleModifier: ViewModifier {
     }
 
     private var resolvedFont: Font? {
-        guard let style else { return nil }
-        let size = style.size ?? 14
+        let pageStyle = pageTheme?.appleBodyTextStyle
+        guard style != nil || pageStyle != nil || pageTheme?.fontFamily != nil else { return nil }
+        let size = style?.size ?? pageStyle?.size ?? 14
         var font: Font
-        if let family = style.fontFamily {
+        if let family = style?.fontFamily ?? pageStyle?.fontFamily ?? pageTheme?.fontFamily {
             font = .custom(family, size: size)
         } else {
             font = .system(size: size)
         }
-        if let weight = style.weight { font = font.weight(weight) }
-        if style.italic { font = font.italic() }
+        if let weight = style?.weight ?? pageStyle?.weight { font = font.weight(weight) }
+        if style?.italic == true || pageStyle?.italic == true { font = font.italic() }
         return font
+    }
+
+    private var resolvedColor: Color {
+        style?.color ?? pageTheme?.appleBodyTextStyle?.color
+            ?? pageTheme?.appleContentColor ?? .primary
     }
 }
