@@ -451,6 +451,50 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             self.assertEqual(self.entries[concept]["kind"], kind)
             self.assertEqual(self.entries[concept]["value"], value)
 
+    def test_notification_status_family_is_explicit_reviewed_native_artwork(self):
+        family = MODULE.load_json(MODULE.NOTIFICATION_STATUS_OVERRIDES_PATH)
+        low_confidence = {
+            item["concept"] for item in self.audit["low_confidence_concepts"]
+        }
+        self.assertEqual(self.audit["reviewed_families"]["notification_status"], len(family))
+        self.assertTrue(set(family).isdisjoint(low_confidence))
+        for concept, target in family.items():
+            entry = self.entries[concept]
+            self.assertEqual(entry["kind"], target["kind"])
+            self.assertEqual(entry["value"], target["value"])
+            self.assertEqual(entry["confidence"], "reviewed")
+            self.assertEqual(entry["source"], "reviewed_override")
+
+    def test_notification_status_distinct_semantics_do_not_regress(self):
+        expected = {
+            "DO_DISTURB_ON": ("system_symbol", "minus.circle.fill"),
+            "EVENT_BUSY": (
+                "system_symbol",
+                "calendar.badge.exclamationmark",
+            ),
+            "NO_ENCRYPTION_GMAILERRORRED": (
+                "system_symbol",
+                "lock.slash.fill",
+            ),
+            "ONDEMAND_VIDEO": ("system_symbol", "play.rectangle.fill"),
+            "RUNNING_WITH_ERRORS": (
+                "system_symbol",
+                "exclamationmark.triangle.fill",
+            ),
+            "SMS_FAILED": (
+                "cupertino_glyph",
+                "EXCLAMATIONMARK_BUBBLE_FILL",
+            ),
+            "SYNC_PROBLEM": (
+                "system_symbol",
+                "exclamationmark.arrow.triangle.2.circlepath",
+            ),
+            "SYSTEM_UPDATE": ("system_symbol", "arrow.down.circle.fill"),
+        }
+        for concept, (kind, value) in expected.items():
+            self.assertEqual(self.entries[concept]["kind"], kind)
+            self.assertEqual(self.entries[concept]["value"], value)
+
     def test_checked_in_artifacts_are_reproducible(self):
         self.assertEqual(
             MODULE.OUTPUT_PATH.read_text(encoding="utf-8"),

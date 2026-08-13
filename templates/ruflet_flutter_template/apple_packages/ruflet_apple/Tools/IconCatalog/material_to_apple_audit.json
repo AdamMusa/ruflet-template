@@ -27,6 +27,7 @@
     "business_commerce_overrides.json": "c97061e90efefbbfec456de2c3cb7c84ea5bbfdeacb20c50f3b8aef3af6f0920",
     "travel_amenity_overrides.json": "39be6913c53d65874aa9ffc28c1dfd73544b8187e8259c147bce130f6b7b5d09",
     "audio_video_overrides.json": "a52529f209de707f4569ef6262403d4c8a91d1043d052e5880d72ec4d5848e56",
+    "notification_status_overrides.json": "229ae9a2f5f6c267134ede74e396416d9cf5d043895f7038b080c9c4b6bc90cd",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/name_availability.plist": "a277cf5b63017ed497d5b6b3ea96bbee4f407b76776af41bcb52943007335b5c",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_search.plist": "29a767651ce53d8861e28d3eaa20b50d3e02a85fe5a79d557ce1fbff7fa4ebad",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_restrictions.strings": "2e1b1c3d629d26ac1e75861f33cb1cbbb3348e142a2b6c1aaf9bba546273f13b"
@@ -34,8 +35,8 @@
   "sources": {
     "exact_apple_name": 48,
     "manual_review_required": 105,
-    "reviewed_override": 867,
-    "semantic_rank": 1215
+    "reviewed_override": 880,
+    "semantic_rank": 1202
   },
   "reviewed_families": {
     "action": 76,
@@ -48,6 +49,7 @@
     "image_media": 57,
     "maps_places": 76,
     "navigation_travel": 36,
+    "notification_status": 13,
     "social_activities": 55,
     "text_editor": 49,
     "travel_amenity": 9
@@ -55,11 +57,11 @@
   "confidence_grades": {
     "exact": 48,
     "high": 665,
-    "low": 547,
-    "medium": 108,
-    "reviewed": 867
+    "low": 539,
+    "medium": 103,
+    "reviewed": 880
   },
-  "unique_apple_targets": 876,
+  "unique_apple_targets": 879,
   "most_reused_targets": [
     {
       "kind": "system_symbol",
@@ -82,11 +84,6 @@
       "concept_count": 29
     },
     {
-      "kind": "cupertino_glyph",
-      "value": "ALT",
-      "concept_count": 26
-    },
-    {
       "kind": "system_symbol",
       "value": "photo",
       "concept_count": 25
@@ -94,6 +91,11 @@
     {
       "kind": "cupertino_glyph",
       "value": "GEAR",
+      "concept_count": 24
+    },
+    {
+      "kind": "cupertino_glyph",
+      "value": "ALT",
       "concept_count": 24
     },
     {
@@ -238,11 +240,6 @@
     },
     {
       "kind": "cupertino_glyph",
-      "value": "VIDEO_CAMERA",
-      "concept_count": 9
-    },
-    {
-      "kind": "cupertino_glyph",
       "value": "ARROW_RIGHT",
       "concept_count": 8
     },
@@ -269,6 +266,11 @@
     {
       "kind": "cupertino_glyph",
       "value": "FOLDER",
+      "concept_count": 8
+    },
+    {
+      "kind": "cupertino_glyph",
+      "value": "VIDEO_CAMERA",
       "concept_count": 8
     },
     {
@@ -312,7 +314,7 @@
       "concept_count": 7
     }
   ],
-  "low_confidence_count": 655,
+  "low_confidence_count": 642,
   "low_confidence_concepts": [
     {
       "concept": "SIXTY_FPS_SELECT",
@@ -1686,58 +1688,6 @@
         "toggle",
         "unavailable",
         "wireless"
-      ]
-    },
-    {
-      "concept": "RUNNING_WITH_ERRORS",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "STOP"
-      },
-      "confidence": 0.1499,
-      "grade": "low",
-      "reason": "name=[] semantic=['stop'] extra=[]",
-      "tags": [
-        "!",
-        "activity",
-        "alert",
-        "attention",
-        "blocked",
-        "busy",
-        "caution",
-        "danger",
-        "debugging",
-        "duration",
-        "error",
-        "errors",
-        "exclamation",
-        "execution",
-        "failed",
-        "failure",
-        "important",
-        "incomplete",
-        "interrupted",
-        "issue",
-        "loading",
-        "mark",
-        "notification",
-        "ongoing",
-        "operation",
-        "problem",
-        "process",
-        "processing",
-        "progress",
-        "running",
-        "running with errors",
-        "status",
-        "stop",
-        "symbol",
-        "task",
-        "time",
-        "triangle",
-        "troubleshooting",
-        "warning",
-        "with"
       ]
     },
     {
@@ -3583,56 +3533,6 @@
       ]
     },
     {
-      "concept": "DO_NOT_DISTURB_ON",
-      "target": {
-        "kind": "system_symbol",
-        "value": "minus.circle"
-      },
-      "confidence": 0.1838,
-      "grade": "low",
-      "reason": "name=[] semantic=['circle', 'remove', 'subtract', 'trash'] extra=[]",
-      "tags": [
-        "action",
-        "alert",
-        "ban",
-        "block",
-        "cancel",
-        "caution",
-        "circle",
-        "clear",
-        "close",
-        "control",
-        "dash",
-        "delete",
-        "denied",
-        "deny",
-        "disable",
-        "disabled",
-        "disturb",
-        "do",
-        "do not disturb",
-        "enabled",
-        "error",
-        "exclude",
-        "forbidden",
-        "horizontal line",
-        "minus",
-        "negative",
-        "off",
-        "on",
-        "pause",
-        "prohibit",
-        "remove",
-        "restrict",
-        "revoke",
-        "round",
-        "silence",
-        "stop",
-        "subtract",
-        "warning"
-      ]
-    },
-    {
       "concept": "REPORT_OFF",
       "target": {
         "kind": "system_symbol",
@@ -4387,53 +4287,6 @@
         "web design",
         "weight",
         "writing"
-      ]
-    },
-    {
-      "concept": "DO_DISTURB",
-      "target": {
-        "kind": "system_symbol",
-        "value": "bell.slash.circle"
-      },
-      "confidence": 0.2017,
-      "grade": "low",
-      "reason": "name=[] semantic=['bell', 'circle', 'remove', 'slash'] extra=[]",
-      "tags": [
-        "alert",
-        "ban",
-        "block",
-        "cancel",
-        "circle",
-        "close",
-        "control",
-        "denied",
-        "deny",
-        "diagonal",
-        "disable",
-        "disturb",
-        "do",
-        "do not disturb",
-        "exclude",
-        "forbidden",
-        "interrupt",
-        "limit",
-        "line",
-        "mute",
-        "notification",
-        "off",
-        "preference",
-        "prohibited",
-        "quiet",
-        "remove",
-        "restricted",
-        "setting",
-        "silence",
-        "silent",
-        "slash",
-        "state",
-        "status",
-        "stop",
-        "unavailable"
       ]
     },
     {
@@ -5556,57 +5409,6 @@
         "toggle",
         "unfilter",
         "view"
-      ]
-    },
-    {
-      "concept": "DO_DISTURB_ON",
-      "target": {
-        "kind": "system_symbol",
-        "value": "minus.circle"
-      },
-      "confidence": 0.2359,
-      "grade": "low",
-      "reason": "name=[] semantic=['circle', 'remove', 'subtract', 'trash'] extra=[]",
-      "tags": [
-        "action",
-        "alert",
-        "ban",
-        "block",
-        "cancel",
-        "caution",
-        "circle",
-        "clear",
-        "close",
-        "control",
-        "dash",
-        "delete",
-        "denied",
-        "deny",
-        "disable",
-        "disabled",
-        "disturb",
-        "do",
-        "do not disturb",
-        "enabled",
-        "error",
-        "exclude",
-        "forbidden",
-        "horizontal line",
-        "minus",
-        "negative",
-        "off",
-        "on",
-        "pause",
-        "prohibit",
-        "remove",
-        "restrict",
-        "revoke",
-        "round",
-        "silence",
-        "slash",
-        "stop",
-        "subtract",
-        "warning"
       ]
     },
     {
@@ -7480,63 +7282,6 @@
         "sweep",
         "tidy",
         "wash"
-      ]
-    },
-    {
-      "concept": "SYNC_PROBLEM",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "REFRESH"
-      },
-      "confidence": 0.2775,
-      "grade": "low",
-      "reason": "name=[] semantic=['refresh'] extra=[]",
-      "tags": [
-        "!",
-        "360",
-        "alert",
-        "around",
-        "arrow",
-        "arrows",
-        "attention",
-        "caution",
-        "circular arrows",
-        "cloud",
-        "cloud sync",
-        "connectivity issue",
-        "danger",
-        "data error",
-        "data issue",
-        "direction",
-        "error",
-        "exclamation",
-        "exclamation point",
-        "failed",
-        "failure",
-        "important",
-        "inprogress",
-        "issue",
-        "load",
-        "loading refresh",
-        "mark",
-        "network issue",
-        "notification",
-        "problem",
-        "refresh arrows",
-        "renew",
-        "retry",
-        "rotate",
-        "symbol",
-        "sync",
-        "sync error",
-        "sync problem",
-        "synchronization error",
-        "synchronization problem",
-        "transfer error",
-        "triangle",
-        "turn",
-        "update error",
-        "warning"
       ]
     },
     {
@@ -20547,54 +20292,6 @@
       ]
     },
     {
-      "concept": "DO_NOT_DISTURB_ALT",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "ALT"
-      },
-      "confidence": 0.5752,
-      "grade": "low",
-      "reason": "name=['alt'] semantic=['alt'] extra=[]",
-      "tags": [
-        "alert",
-        "ban",
-        "block",
-        "cancel",
-        "circle",
-        "close",
-        "control",
-        "denied",
-        "deny",
-        "diagonal",
-        "disable",
-        "disturb",
-        "do",
-        "do not disturb",
-        "exclude",
-        "forbidden",
-        "interrupt",
-        "limit",
-        "line",
-        "mute",
-        "neutral",
-        "notification",
-        "off",
-        "preference",
-        "prohibited",
-        "quiet",
-        "remove",
-        "restricted",
-        "setting",
-        "silence",
-        "silent",
-        "slash",
-        "state",
-        "status",
-        "stop",
-        "unavailable"
-      ]
-    },
-    {
       "concept": "LOCAL_CONVENIENCE_STORE",
       "target": {
         "kind": "system_symbol",
@@ -21382,53 +21079,6 @@
         "text",
         "toggle",
         "type"
-      ]
-    },
-    {
-      "concept": "SYSTEM_UPDATE",
-      "target": {
-        "kind": "system_symbol",
-        "value": "arrow.down"
-      },
-      "confidence": 0.6046,
-      "grade": "low",
-      "reason": "name=[] semantic=['arrow', 'down', 'download'] extra=[]",
-      "tags": [
-        "Android",
-        "app",
-        "app install",
-        "app promo",
-        "arrow",
-        "arrows",
-        "cell",
-        "device",
-        "direction",
-        "down",
-        "down arrow",
-        "download",
-        "download app",
-        "hardware",
-        "install",
-        "install app",
-        "install mobile",
-        "iOS",
-        "marketing",
-        "mobile",
-        "mobile download",
-        "OS",
-        "phone",
-        "phone download",
-        "promotion",
-        "security",
-        "security update",
-        "software",
-        "software update",
-        "system",
-        "system update",
-        "system upgrade",
-        "tablet",
-        "update",
-        "upgrade"
       ]
     },
     {
@@ -22404,56 +22054,6 @@
       ]
     },
     {
-      "concept": "SMS_FAILED",
-      "target": {
-        "kind": "system_symbol",
-        "value": "speaker"
-      },
-      "confidence": 0.6291,
-      "grade": "low",
-      "reason": "name=[] semantic=['speaker', 'volume'] extra=[]",
-      "tags": [
-        "!",
-        "alert",
-        "announcement",
-        "attention",
-        "broadcast",
-        "caution",
-        "chat",
-        "chat bubble",
-        "comment",
-        "communicate",
-        "communication",
-        "conversation",
-        "danger",
-        "delivery failed",
-        "element",
-        "error",
-        "exclamation",
-        "fail",
-        "failed",
-        "feedback",
-        "icon",
-        "important",
-        "mark",
-        "megaphone",
-        "message",
-        "news",
-        "notification",
-        "public address",
-        "send failed",
-        "service",
-        "sms",
-        "sound",
-        "speaker",
-        "speech",
-        "symbol",
-        "text message",
-        "volume",
-        "warning"
-      ]
-    },
-    {
       "concept": "THERMOSTAT_AUTO",
       "target": {
         "kind": "system_symbol",
@@ -22871,100 +22471,6 @@
       ]
     },
     {
-      "concept": "ONDEMAND_VIDEO",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "VIDEO_CAMERA"
-      },
-      "confidence": 0.6781,
-      "grade": "medium",
-      "reason": "name=['video'] semantic=['video'] extra=['camera']",
-      "tags": [
-        "Android",
-        "antenna",
-        "broadcast",
-        "broadcasting",
-        "channel",
-        "chrome",
-        "content",
-        "demand",
-        "desktop",
-        "device",
-        "display",
-        "electronic",
-        "entertainment",
-        "film",
-        "hardware",
-        "iOS",
-        "live tv",
-        "mac",
-        "media",
-        "monitor",
-        "movie",
-        "on demand",
-        "ondemand",
-        "ondemand video",
-        "OS",
-        "play",
-        "playback",
-        "rectangle",
-        "screen",
-        "show",
-        "signal",
-        "stream",
-        "streaming",
-        "technology",
-        "television",
-        "tv",
-        "video",
-        "watch",
-        "web",
-        "window"
-      ]
-    },
-    {
-      "concept": "PERSONAL_VIDEO",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "VIDEO_CAMERA_SOLID"
-      },
-      "confidence": 0.6817,
-      "grade": "medium",
-      "reason": "name=['video'] semantic=['solid', 'video'] extra=['camera']",
-      "tags": [
-        "Android",
-        "cam",
-        "chrome",
-        "desktop",
-        "device",
-        "display",
-        "entertainment",
-        "entertainment center",
-        "glyph",
-        "hardware",
-        "home",
-        "house",
-        "iOS",
-        "living room",
-        "mac",
-        "media",
-        "monitor",
-        "OS",
-        "outline",
-        "personal",
-        "rectangle",
-        "screen",
-        "solid fill",
-        "squared corners",
-        "streaming",
-        "television",
-        "tv",
-        "video",
-        "web",
-        "window"
-      ]
-    },
-    {
       "concept": "EXPOSURE_MINUS_2",
       "target": {
         "kind": "cupertino_glyph",
@@ -22988,53 +22494,6 @@
       "reason": "name=['rotation'] semantic=['rotation'] extra=['lock']",
       "tags": [
         "threed rotation"
-      ]
-    },
-    {
-      "concept": "DO_DISTURB_ALT",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "ALT"
-      },
-      "confidence": 0.6886,
-      "grade": "medium",
-      "reason": "name=['alt'] semantic=['alt'] extra=[]",
-      "tags": [
-        "alert",
-        "bell",
-        "block",
-        "cancel",
-        "circle",
-        "close",
-        "denied",
-        "deny",
-        "diagonal line",
-        "disable",
-        "disturb",
-        "do",
-        "do not disturb",
-        "exclude",
-        "forbidden",
-        "ignore",
-        "interrupt",
-        "line",
-        "mute",
-        "no access",
-        "no entry",
-        "notification",
-        "off",
-        "offline",
-        "pause",
-        "prohibit",
-        "quiet",
-        "remove",
-        "restriction",
-        "silence",
-        "slash",
-        "snooze",
-        "stop",
-        "unavailable",
-        "warning"
       ]
     },
     {
@@ -26044,52 +25503,6 @@
       ]
     },
     {
-      "concept": "EVENT_BUSY",
-      "target": {
-        "kind": "system_symbol",
-        "value": "xmark"
-      },
-      "confidence": 0.7954,
-      "grade": "medium",
-      "reason": "name=[] semantic=['clear', 'close', 'stop', 'x'] extra=['xmark']",
-      "tags": [
-        "appointment",
-        "blocked",
-        "booked",
-        "busy",
-        "calendar",
-        "cancel",
-        "clear",
-        "close",
-        "cross",
-        "date",
-        "event",
-        "exit",
-        "fill",
-        "full",
-        "glyph",
-        "holiday",
-        "lines",
-        "mark",
-        "meeting",
-        "no",
-        "out of office",
-        "outlined",
-        "remove",
-        "schedule",
-        "solid",
-        "square",
-        "stop",
-        "stroke",
-        "time",
-        "time off",
-        "unavailable",
-        "vacation",
-        "x",
-        "x mark"
-      ]
-    },
-    {
       "concept": "FREE_CANCELLATION",
       "target": {
         "kind": "system_symbol",
@@ -27349,57 +26762,6 @@
         "wifi signal",
         "wireless",
         "wireless network"
-      ]
-    },
-    {
-      "concept": "NO_ENCRYPTION_GMAILERRORRED",
-      "target": {
-        "kind": "system_symbol",
-        "value": "lock.open"
-      },
-      "confidence": 0.8426,
-      "grade": "medium",
-      "reason": "name=[] semantic=['lock', 'open', 'padlock', 'security', 'unlock'] extra=[]",
-      "tags": [
-        "alert",
-        "blocked",
-        "cancel",
-        "data breach",
-        "data security",
-        "disabled",
-        "enabled",
-        "encryption",
-        "error",
-        "forbidden",
-        "gmail",
-        "insecure",
-        "internet security",
-        "lock",
-        "locked",
-        "network security",
-        "no",
-        "no encryption",
-        "not allowed",
-        "off",
-        "on",
-        "open lock",
-        "padlock",
-        "privacy",
-        "private",
-        "protection",
-        "remove",
-        "security",
-        "security breach",
-        "slash",
-        "stop",
-        "unauthorized access",
-        "unlock",
-        "unlocked",
-        "unprotected",
-        "unsecure",
-        "vulnerability",
-        "vulnerable",
-        "warning"
       ]
     },
     {

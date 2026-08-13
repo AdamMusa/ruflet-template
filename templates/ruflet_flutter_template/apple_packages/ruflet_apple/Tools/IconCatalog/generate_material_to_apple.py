@@ -28,6 +28,7 @@ Generation uses pinned/auditable inputs:
 * business_commerce_overrides.json -- the reviewed business and commerce family.
 * travel_amenity_overrides.json -- the reviewed remaining travel amenity family.
 * audio_video_overrides.json -- the reviewed audio and video family.
+* notification_status_overrides.json -- the reviewed notification/status family.
 
 The installed public Apple symbol metadata is used only to choose and validate
 native symbols available at both deployment floors. Private and restricted
@@ -70,6 +71,7 @@ COMMUNICATION_OVERRIDES_PATH = TOOL_DIR / "communication_overrides.json"
 BUSINESS_COMMERCE_OVERRIDES_PATH = TOOL_DIR / "business_commerce_overrides.json"
 TRAVEL_AMENITY_OVERRIDES_PATH = TOOL_DIR / "travel_amenity_overrides.json"
 AUDIO_VIDEO_OVERRIDES_PATH = TOOL_DIR / "audio_video_overrides.json"
+NOTIFICATION_STATUS_OVERRIDES_PATH = TOOL_DIR / "notification_status_overrides.json"
 AUDIT_PATH = TOOL_DIR / "material_to_apple_audit.json"
 
 CORE_GLYPHS = Path(
@@ -352,6 +354,7 @@ def load_reviewed_overrides() -> tuple[
         "business_commerce": BUSINESS_COMMERCE_OVERRIDES_PATH,
         "travel_amenity": TRAVEL_AMENITY_OVERRIDES_PATH,
         "audio_video": AUDIO_VIDEO_OVERRIDES_PATH,
+        "notification_status": NOTIFICATION_STATUS_OVERRIDES_PATH,
     }
     merged: dict[str, dict[str, str]] = {}
     families: dict[str, str] = {}
