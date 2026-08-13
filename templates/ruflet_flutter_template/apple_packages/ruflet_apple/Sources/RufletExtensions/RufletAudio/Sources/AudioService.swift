@@ -1,4 +1,4 @@
-import AVFoundation
+@preconcurrency import AVFoundation
 import Foundation
 import RufletEngine
 import RufletProtocol
@@ -8,7 +8,7 @@ import RufletProtocol
 /// The Dart package uses `audioplayers`; this port deliberately speaks directly
 /// to AVFAudio because iOS and macOS are the only renderer platforms.
 @MainActor
-public final class RufletAudioPlayer: NSObject, AVAudioPlayerDelegate {
+public final class RufletAudioPlayer: NSObject, @preconcurrency AVAudioPlayerDelegate {
   public var onEvent: (@MainActor @Sendable (RufletAudioEvent) -> Void)?
 
   private var player: AVAudioPlayer?
