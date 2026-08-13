@@ -43,6 +43,7 @@
     "financial_wallet_overrides.json": "9c096ac6448e2ce8726960a1570050e441ebd6ffa0556ce2d5189b9a1458036f",
     "disabled_interface_overrides.json": "3c63685fb1ef10f169c96e3e82b381d0a6e5c579780a010cb6a8309d51bee214",
     "legacy_named_symbol_overrides.json": "96792138a279e09248031129dee37aa1bcfe1fb8e8007464463b82a4f4f1a89a",
+    "layout_manipulation_overrides.json": "4589877ebc63587e41ae2402c5f6219fa1db74370c3d148160c03186b1cefddd",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/name_availability.plist": "a277cf5b63017ed497d5b6b3ea96bbee4f407b76776af41bcb52943007335b5c",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_search.plist": "29a767651ce53d8861e28d3eaa20b50d3e02a85fe5a79d557ce1fbff7fa4ebad",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_restrictions.strings": "2e1b1c3d629d26ac1e75861f33cb1cbbb3348e142a2b6c1aaf9bba546273f13b"
@@ -50,8 +51,8 @@
   "sources": {
     "exact_apple_name": 48,
     "manual_review_required": 75,
-    "reviewed_override": 1014,
-    "semantic_rank": 1098
+    "reviewed_override": 1019,
+    "semantic_rank": 1093
   },
   "reviewed_families": {
     "action": 76,
@@ -72,6 +73,7 @@
     "image_media": 57,
     "interface_action": 21,
     "interface_state_manipulation": 9,
+    "layout_manipulation": 5,
     "legacy_interface_alias": 6,
     "legacy_named_symbol": 4,
     "local_service_transit": 9,
@@ -87,11 +89,11 @@
   "confidence_grades": {
     "exact": 48,
     "high": 665,
-    "low": 427,
-    "medium": 81,
-    "reviewed": 1014
+    "low": 424,
+    "medium": 79,
+    "reviewed": 1019
   },
-  "unique_apple_targets": 900,
+  "unique_apple_targets": 901,
   "most_reused_targets": [
     {
       "kind": "system_symbol",
@@ -200,11 +202,6 @@
     },
     {
       "kind": "cupertino_glyph",
-      "value": "DOC_TEXT",
-      "concept_count": 9
-    },
-    {
-      "kind": "cupertino_glyph",
       "value": "POWER",
       "concept_count": 9
     },
@@ -290,6 +287,11 @@
     },
     {
       "kind": "cupertino_glyph",
+      "value": "DOC_TEXT",
+      "concept_count": 7
+    },
+    {
+      "kind": "cupertino_glyph",
       "value": "MONEY_DOLLAR",
       "concept_count": 7
     },
@@ -344,7 +346,7 @@
       "concept_count": 6
     }
   ],
-  "low_confidence_count": 508,
+  "low_confidence_count": 503,
   "low_confidence_concepts": [
     {
       "concept": "SIXTY_FPS_SELECT",
@@ -2353,53 +2355,6 @@
         "vehicle",
         "vehicle icon",
         "warning"
-      ]
-    },
-    {
-      "concept": "UNFOLD_MORE_DOUBLE",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "CHEVRON_UP_CHEVRON_DOWN"
-      },
-      "confidence": 0.1718,
-      "grade": "low",
-      "reason": "name=[] semantic=['chevron', 'down', 'up'] extra=[]",
-      "tags": [
-        "action",
-        "additional",
-        "arrow",
-        "arrows",
-        "button",
-        "chevron",
-        "collapse",
-        "control",
-        "details",
-        "direction",
-        "double",
-        "down",
-        "dropdown",
-        "expand",
-        "expandable",
-        "filter",
-        "hide",
-        "indication",
-        "information",
-        "line",
-        "list",
-        "maximize",
-        "menu",
-        "minimize",
-        "more",
-        "navigation",
-        "open",
-        "pointer",
-        "show",
-        "sort",
-        "symbol",
-        "toggle",
-        "unfold",
-        "up",
-        "vertical"
       ]
     },
     {
@@ -7405,109 +7360,6 @@
         "unfinished",
         "urgent",
         "warning"
-      ]
-    },
-    {
-      "concept": "BORDER_INNER",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "DOC_TEXT"
-      },
-      "confidence": 0.2993,
-      "grade": "low",
-      "reason": "name=[] semantic=['doc', 'text'] extra=[]",
-      "tags": [
-        "alignment",
-        "area",
-        "border",
-        "border inner",
-        "boundary",
-        "box",
-        "cells",
-        "columns",
-        "content",
-        "dash",
-        "dashed",
-        "define",
-        "divisions",
-        "doc",
-        "edit",
-        "editing",
-        "editor",
-        "frame",
-        "grid",
-        "inner",
-        "inside",
-        "layout",
-        "lines",
-        "organize",
-        "rectangular",
-        "rows",
-        "section",
-        "separate",
-        "sheet",
-        "spreadsheet",
-        "square",
-        "stroke",
-        "structure",
-        "table",
-        "text",
-        "type",
-        "writing"
-      ]
-    },
-    {
-      "concept": "BORDER_OUTER",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "DOC_TEXT"
-      },
-      "confidence": 0.2993,
-      "grade": "low",
-      "reason": "name=[] semantic=['doc', 'text'] extra=[]",
-      "tags": [
-        "area",
-        "border",
-        "border outer",
-        "boundaries",
-        "box",
-        "cell",
-        "container",
-        "content",
-        "dash",
-        "dashed",
-        "design",
-        "doc",
-        "document",
-        "edge",
-        "edit",
-        "editing",
-        "editor",
-        "element",
-        "focus",
-        "format",
-        "frame",
-        "graphic",
-        "grid",
-        "layout",
-        "lines",
-        "outer",
-        "outline",
-        "page",
-        "perimeter",
-        "rectangle",
-        "selection",
-        "shape",
-        "sheet",
-        "spreadsheet",
-        "square",
-        "stroke",
-        "structure",
-        "style",
-        "table",
-        "text",
-        "type",
-        "writing"
       ]
     },
     {
@@ -19881,19 +19733,6 @@
       ]
     },
     {
-      "concept": "SWAP_VERT_CIRCLE",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "ARROW_SWAP"
-      },
-      "confidence": 0.7656,
-      "grade": "medium",
-      "reason": "name=['swap'] semantic=['swap'] extra=['arrow']",
-      "tags": [
-        "swap vert circle"
-      ]
-    },
-    {
       "concept": "SPEAKER_NOTES_OFF",
       "target": {
         "kind": "system_symbol",
@@ -20166,59 +20005,6 @@
         "strength",
         "wifi",
         "wireless"
-      ]
-    },
-    {
-      "concept": "BORDER_HORIZONTAL",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "LINE_HORIZONTAL_3"
-      },
-      "confidence": 0.7775,
-      "grade": "medium",
-      "reason": "name=['horizontal'] semantic=['horizontal', 'line'] extra=['3']",
-      "tags": [
-        "border",
-        "boundary",
-        "content break",
-        "dash",
-        "dashed",
-        "delineation",
-        "design element",
-        "divide",
-        "divider",
-        "division",
-        "doc",
-        "document break",
-        "edit",
-        "editing",
-        "editor",
-        "element",
-        "formatting",
-        "graphic element",
-        "horizontal",
-        "horizontal border",
-        "horizontal line",
-        "hr",
-        "layout",
-        "layout control",
-        "line",
-        "line break",
-        "outline",
-        "rule",
-        "rule line",
-        "section break",
-        "segment",
-        "separator",
-        "sheet",
-        "spreadsheet",
-        "stroke",
-        "text",
-        "text formatting",
-        "type",
-        "UI element",
-        "visual separation",
-        "writing"
       ]
     },
     {

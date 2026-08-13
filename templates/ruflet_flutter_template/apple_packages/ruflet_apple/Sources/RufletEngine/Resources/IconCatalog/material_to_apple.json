@@ -6447,60 +6447,60 @@
     "source": "semantic_rank"
   },
   "BORDER_HORIZONTAL": {
-    "kind": "cupertino_glyph",
-    "value": "LINE_HORIZONTAL_3",
+    "kind": "system_symbol",
+    "value": "rectangle.split.1x2",
     "concept": "BORDER_HORIZONTAL",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BORDER_HORIZONTAL_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "LINE_HORIZONTAL_3",
+    "kind": "system_symbol",
+    "value": "rectangle.split.1x2",
     "concept": "BORDER_HORIZONTAL",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BORDER_HORIZONTAL_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "LINE_HORIZONTAL_3",
+    "kind": "system_symbol",
+    "value": "rectangle.split.1x2",
     "concept": "BORDER_HORIZONTAL",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BORDER_HORIZONTAL_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "LINE_HORIZONTAL_3",
+    "kind": "system_symbol",
+    "value": "rectangle.split.1x2",
     "concept": "BORDER_HORIZONTAL",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BORDER_INNER": {
-    "kind": "cupertino_glyph",
-    "value": "DOC_TEXT",
+    "kind": "system_symbol",
+    "value": "rectangle.split.2x2",
     "concept": "BORDER_INNER",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BORDER_INNER_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "DOC_TEXT",
+    "kind": "system_symbol",
+    "value": "rectangle.split.2x2",
     "concept": "BORDER_INNER",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BORDER_INNER_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "DOC_TEXT",
+    "kind": "system_symbol",
+    "value": "rectangle.split.2x2",
     "concept": "BORDER_INNER",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BORDER_INNER_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "DOC_TEXT",
+    "kind": "system_symbol",
+    "value": "rectangle.split.2x2",
     "concept": "BORDER_INNER",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BORDER_LEFT": {
     "kind": "cupertino_glyph",
@@ -6531,32 +6531,32 @@
     "source": "semantic_rank"
   },
   "BORDER_OUTER": {
-    "kind": "cupertino_glyph",
-    "value": "DOC_TEXT",
+    "kind": "system_symbol",
+    "value": "rectangle",
     "concept": "BORDER_OUTER",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BORDER_OUTER_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "DOC_TEXT",
+    "kind": "system_symbol",
+    "value": "rectangle",
     "concept": "BORDER_OUTER",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BORDER_OUTER_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "DOC_TEXT",
+    "kind": "system_symbol",
+    "value": "rectangle",
     "concept": "BORDER_OUTER",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BORDER_OUTER_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "DOC_TEXT",
+    "kind": "system_symbol",
+    "value": "rectangle",
     "concept": "BORDER_OUTER",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BORDER_RIGHT": {
     "kind": "cupertino_glyph",
@@ -52738,32 +52738,32 @@
     "source": "reviewed_override"
   },
   "SWAP_VERT_CIRCLE": {
-    "kind": "cupertino_glyph",
-    "value": "ARROW_SWAP",
+    "kind": "system_symbol",
+    "value": "arrow.up.arrow.down.circle.fill",
     "concept": "SWAP_VERT_CIRCLE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SWAP_VERT_CIRCLE_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "ARROW_SWAP",
+    "kind": "system_symbol",
+    "value": "arrow.up.arrow.down.circle.fill",
     "concept": "SWAP_VERT_CIRCLE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SWAP_VERT_CIRCLE_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "ARROW_SWAP",
+    "kind": "system_symbol",
+    "value": "arrow.up.arrow.down.circle.fill",
     "concept": "SWAP_VERT_CIRCLE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SWAP_VERT_CIRCLE_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "ARROW_SWAP",
+    "kind": "system_symbol",
+    "value": "arrow.up.arrow.down.circle.fill",
     "concept": "SWAP_VERT_CIRCLE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SWAP_VERT_OUTLINED": {
     "kind": "system_symbol",
@@ -57421,32 +57421,32 @@
     "source": "reviewed_override"
   },
   "UNFOLD_MORE_DOUBLE": {
-    "kind": "cupertino_glyph",
-    "value": "CHEVRON_UP_CHEVRON_DOWN",
+    "kind": "system_symbol",
+    "value": "chevron.up.chevron.down",
     "concept": "UNFOLD_MORE_DOUBLE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "UNFOLD_MORE_DOUBLE_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "CHEVRON_UP_CHEVRON_DOWN",
+    "kind": "system_symbol",
+    "value": "chevron.up.chevron.down",
     "concept": "UNFOLD_MORE_DOUBLE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "UNFOLD_MORE_DOUBLE_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "CHEVRON_UP_CHEVRON_DOWN",
+    "kind": "system_symbol",
+    "value": "chevron.up.chevron.down",
     "concept": "UNFOLD_MORE_DOUBLE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "UNFOLD_MORE_DOUBLE_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "CHEVRON_UP_CHEVRON_DOWN",
+    "kind": "system_symbol",
+    "value": "chevron.up.chevron.down",
     "concept": "UNFOLD_MORE_DOUBLE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "UNFOLD_MORE_OUTLINED": {
     "kind": "system_symbol",
