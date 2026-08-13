@@ -16,15 +16,16 @@ final class PinnedFletEngineInventoryTests: XCTestCase {
         "transport/flet_backend_channel_mock.dart",
         "transport/js_interop.dart",
         "transport/js_interop_stub.dart",
+        "services/browser_context_menu.dart",
         "utils/images_web.dart",
         "utils/platform_utils_web.dart",
         "utils/session_store_web.dart",
         "utils/user_fonts_web.dart",
       ],
-      "Only pinned web, JavaScript, and mock transport files may be excluded from Apple")
+      "Only pinned browser, web, JavaScript, and mock transport files may be excluded from Apple")
 
     let eligible = entries.filter { $0.disposition != "apple-skip" }
-    XCTAssertEqual(eligible.count, 253)
+    XCTAssertEqual(eligible.count, 252)
     XCTAssertTrue(eligible.allSatisfy { !$0.destination.isEmpty && $0.destination != "-" })
     XCTAssertTrue(eligible.allSatisfy { $0.destination.hasSuffix(".swift") })
     XCTAssertTrue(entries.allSatisfy {
@@ -47,7 +48,7 @@ final class PinnedFletEngineInventoryTests: XCTestCase {
     print(
       "Pinned Flet 0.80.5 structural accounting: " +
       "\(present.count)/\(eligible.count) source entries have Swift destinations; " +
-      "\(missing.count) remain structurally pending; 9 web/JS/mock files are Apple-excluded.")
+      "\(missing.count) remain structurally pending; 10 browser/web/JS/mock files are Apple-excluded.")
     if !missing.isEmpty {
       let groups = Dictionary(grouping: missing, by: structuralGroup)
       let groupSummary = ["Controls", "Widgets", "Utils", "Extensions", "Other"]
