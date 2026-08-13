@@ -558,7 +558,7 @@ public enum IconMapping {
     // `rocket` is not available on Ruflet's Apple deployment floor. Apple's
     // launch/action glyph preserves the upward-launch meaning without turning
     // the Ruby token into an unrelated paper airplane or aircraft.
-    "rocket_launch": "arrow.up.forward.circle.fill",
+    "rocket": "paperplane.fill", "rocket_launch": "paperplane.fill",
     "psychology": "brain", "gavel": "hammer",
     "qr_code": "qrcode", "qr_code_scanner": "qrcode.viewfinder",
     "hub": "point.3.connected.trianglepath.dotted",

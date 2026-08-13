@@ -125,7 +125,8 @@ final class IconMappingTests: XCTestCase {
     XCTAssertEqual(IconMapping.symbol(forMaterialName: "home"), "house")
     XCTAssertEqual(
       IconMapping.symbol(forMaterialName: "rocket_launch"),
-      "arrow.up.forward.circle.fill")
+      "paperplane.fill")
+    XCTAssertEqual(IconMapping.symbol(forMaterialName: "rocket"), "paperplane.fill")
     XCTAssertEqual(IconMapping.symbol(forMaterialName: "account_circle"), "person.crop.circle")
     XCTAssertEqual(IconMapping.symbol(forMaterialName: "chevron_right"), "chevron.right")
     XCTAssertEqual(
