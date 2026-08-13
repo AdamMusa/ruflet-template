@@ -62,7 +62,9 @@ public struct NavigationBarControl: View {
   }
 
   public var body: some View {
-    RufletAppleNavigationBar(control: control, kind: .navigationBar)
+    RufletAppleNavigationBar(
+      control: control,
+      kind: control.adaptive == true ? .cupertino : .navigationBar)
   }
 }
 
@@ -72,6 +74,7 @@ struct RufletAppleNavigationBar: View {
 
   @ObservedObject var control: RufletControl
   @State private var selectedIndex: Int
+  @State private var hoveredIndex: Int?
   let kind: Kind
 
   init(control: RufletControl, kind: Kind) {
@@ -96,7 +99,8 @@ struct RufletAppleNavigationBar: View {
         color: (parseColor(control.string("shadow_color")) ?? .black)
           .opacity(elevation > 0 ? 0.18 : 0),
         radius: elevation,
-        y: -elevation / 2)
+        y: -elevation / 2
+      )
       .animation(selectionAnimation, value: selectedIndex)
     }
     .onAppear(perform: synchronizeFromControl)
@@ -105,10 +109,20 @@ struct RufletAppleNavigationBar: View {
 
   private func destinationButton(_ destination: RufletControl, index: Int) -> some View {
     let selected = selectedIndex == index
+    let presentation = RufletNavigationBarPresentation(control: control)
+    let states = presentation.states(
+      selected: selected,
+      hovered: hoveredIndex == index,
+      pressed: false,
+      disabled: !destinationIsInteractive(destination))
     return Button {
       guard destinationIsInteractive(destination) else { return }
       selectedIndex = index
-      rufletCommitSelection(control: control, index: index, notify: true)
+      rufletCommitSelection(
+        control: control,
+        index: index,
+        event: "change",
+        notify: true)
     } label: {
       VStack(spacing: 2) {
         Group {
@@ -121,9 +135,18 @@ struct RufletAppleNavigationBar: View {
           }
         }
         .frame(height: iconSize)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 3)
+        .background {
+          if kind == .navigationBar, selected {
+            RufletNavigationIndicatorShape(description: presentation.indicatorShape)
+              .fill(presentation.indicatorColor)
+          }
+        }
 
         if labelBehavior.showsLabel(selected: selected),
-           let label = destination.string("label"), !label.isEmpty {
+          let label = destination.string("label"), !label.isEmpty
+        {
           Text(label)
             .font(.caption2)
             .lineLimit(1)
@@ -132,15 +155,26 @@ struct RufletAppleNavigationBar: View {
       .frame(maxWidth: .infinity, maxHeight: .infinity)
       .contentShape(Rectangle())
       .foregroundStyle(selected ? activeColor : inactiveColor)
+      .background(presentation.overlay(states))
     }
-    .buttonStyle(.plain)
+    .buttonStyle(
+      RufletNavigationBarButtonStyle(
+        presentation: presentation,
+        selected: selected,
+        disabled: !destinationIsInteractive(destination))
+    )
     .disabled(!destinationIsInteractive(destination))
-    .modifier(RufletNavigationTooltip(text: destination.string("tooltip"), enabled: !destination.disabled))
+    .onHover { hovering in
+      hoveredIndex = hovering ? index : (hoveredIndex == index ? nil : hoveredIndex)
+    }
+    .modifier(
+      RufletNavigationTooltip(text: destination.string("tooltip"), enabled: !destination.disabled)
+    )
     .accessibilityAddTraits(selected ? .isSelected : [])
   }
 
   private var destinations: [RufletControl] {
-    rufletNavigationChildren(control)
+    rufletNavigationChildren(control, property: "destinations")
   }
 
   private func synchronizeFromControl() {
@@ -185,7 +219,8 @@ struct RufletAppleNavigationBar: View {
   @ViewBuilder
   private var border: some View {
     if kind == .cupertino, let value = control.dynamicValue("border"),
-       let parsed = parseBorder(value) {
+      let parsed = parseBorder(value)
+    {
       RufletBorderOverlay(border: parsed, radius: .zero)
     } else {
       Rectangle().fill(Color.secondary.opacity(0.22)).frame(height: 0.5)
@@ -216,6 +251,125 @@ struct RufletAppleNavigationBar: View {
   }
 }
 
+struct RufletNavigationBarPresentation {
+  let indicatorColor: Color
+  let indicatorShape: RufletNavigationIndicatorShapeDescription
+  let overlayColor: RufletWidgetStateProperty<Color>
+
+  @MainActor
+  init(control: RufletControl) {
+    indicatorColor =
+      parseColor(control.string("indicator_color"))
+      ?? Color.accentColor.opacity(0.16)
+    indicatorShape = RufletNavigationIndicatorShapeDescription(
+      control.dynamicValue("indicator_shape"))
+    overlayColor = RufletWidgetStateProperty(
+      control.dynamicValue("overlay_color"),
+      converter: rufletNavigationBarColor)
+  }
+
+  func states(
+    selected: Bool,
+    hovered: Bool,
+    pressed: Bool,
+    disabled: Bool
+  ) -> Set<RufletWidgetState> {
+    var result = Set<RufletWidgetState>()
+    if selected { result.insert(.selected) }
+    if hovered { result.insert(.hovered) }
+    if pressed { result.insert(.pressed) }
+    if disabled { result.insert(.disabled) }
+    return result
+  }
+
+  func overlay(_ states: Set<RufletWidgetState>) -> Color {
+    if let explicit = overlayColor.resolve(states) { return explicit }
+    if states.contains(.pressed) { return Color.accentColor.opacity(0.12) }
+    if states.contains(.hovered) { return Color.accentColor.opacity(0.07) }
+    return .clear
+  }
+}
+
+enum RufletNavigationIndicatorShapeKind: String, Equatable {
+  case circle, stadium, roundedRectangle, beveledRectangle, continuousRectangle
+}
+
+struct RufletNavigationIndicatorShapeDescription: Equatable {
+  let kind: RufletNavigationIndicatorShapeKind
+  let radius: RufletBorderRadius
+
+  init(_ value: Any?) {
+    let details = rufletDictionary(value)
+    switch (details?["_type"] as? String)?.lowercased() {
+    case "circle": kind = .circle
+    case "roundedrectangle": kind = .roundedRectangle
+    case "beveledrectangle": kind = .beveledRectangle
+    case "continuousrectangle": kind = .continuousRectangle
+    default: kind = .stadium
+    }
+    radius = parseBorderRadius(
+      details?["radius"] ?? details?["border_radius"],
+      RufletBorderRadius(topLeft: 16, topRight: 16, bottomLeft: 16, bottomRight: 16))!
+  }
+}
+
+private struct RufletNavigationIndicatorShape: Shape {
+  let description: RufletNavigationIndicatorShapeDescription
+
+  func path(in rect: CGRect) -> Path {
+    switch description.kind {
+    case .circle:
+      return Path(ellipseIn: rect)
+    case .stadium:
+      return Capsule().path(in: rect)
+    case .roundedRectangle:
+      return RufletCornerShape(radius: description.radius).path(in: rect)
+    case .continuousRectangle:
+      return RoundedRectangle(
+        cornerRadius: description.radius.uniform ?? 16,
+        style: .continuous
+      ).path(in: rect)
+    case .beveledRectangle:
+      let amount = min(
+        CGFloat(description.radius.uniform ?? 16),
+        min(rect.width, rect.height) / 2)
+      var path = Path()
+      path.move(to: CGPoint(x: rect.minX + amount, y: rect.minY))
+      path.addLine(to: CGPoint(x: rect.maxX - amount, y: rect.minY))
+      path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY + amount))
+      path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY - amount))
+      path.addLine(to: CGPoint(x: rect.maxX - amount, y: rect.maxY))
+      path.addLine(to: CGPoint(x: rect.minX + amount, y: rect.maxY))
+      path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY - amount))
+      path.addLine(to: CGPoint(x: rect.minX, y: rect.minY + amount))
+      path.closeSubpath()
+      return path
+    }
+  }
+}
+
+private struct RufletNavigationBarButtonStyle: ButtonStyle {
+  let presentation: RufletNavigationBarPresentation
+  let selected: Bool
+  let disabled: Bool
+
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label.background(
+      presentation.overlay(
+        presentation.states(
+          selected: selected,
+          hovered: false,
+          pressed: configuration.isPressed,
+          disabled: disabled)))
+  }
+}
+
+private func rufletNavigationBarColor(_ raw: Any?) -> Color? {
+  if let string = raw as? String { return parseColor(string) }
+  if let value = raw as? RufletValue { return parseColor(value.text) }
+  return nil
+}
+
 private struct RufletNavigationTooltip: ViewModifier {
   let text: String?
   let enabled: Bool
@@ -224,9 +378,9 @@ private struct RufletNavigationTooltip: ViewModifier {
   func body(content: Content) -> some View {
     if enabled, let text {
       #if os(macOS)
-      content.help(text)
+        content.help(text)
       #elseif os(iOS)
-      content.accessibilityHint(Text(text))
+        content.accessibilityHint(Text(text))
       #endif
     } else {
       content
