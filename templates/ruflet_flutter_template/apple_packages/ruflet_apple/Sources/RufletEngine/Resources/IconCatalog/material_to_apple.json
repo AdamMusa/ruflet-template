@@ -10825,29 +10825,29 @@
     "kind": "system_symbol",
     "value": "ticket",
     "concept": "CONFIRMATION_NUM",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CONFIRMATION_NUM_OUTLINED": {
     "kind": "system_symbol",
     "value": "ticket",
     "concept": "CONFIRMATION_NUM",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CONFIRMATION_NUM_ROUNDED": {
     "kind": "system_symbol",
     "value": "ticket",
     "concept": "CONFIRMATION_NUM",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CONFIRMATION_NUM_SHARP": {
     "kind": "system_symbol",
     "value": "ticket",
     "concept": "CONFIRMATION_NUM",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CONFIRMATION_NUMBER": {
     "kind": "cupertino_glyph",
@@ -14234,29 +14234,29 @@
     "kind": "system_symbol",
     "value": "ferry",
     "concept": "DIRECTIONS_FERRY",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DIRECTIONS_FERRY_OUTLINED": {
     "kind": "system_symbol",
     "value": "ferry",
     "concept": "DIRECTIONS_FERRY",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DIRECTIONS_FERRY_ROUNDED": {
     "kind": "system_symbol",
     "value": "ferry",
     "concept": "DIRECTIONS_FERRY",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DIRECTIONS_FERRY_SHARP": {
     "kind": "system_symbol",
     "value": "ferry",
     "concept": "DIRECTIONS_FERRY",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DIRECTIONS_OFF": {
     "kind": "cupertino_glyph",
@@ -14451,29 +14451,29 @@
     "kind": "system_symbol",
     "value": "tram",
     "concept": "DIRECTIONS_TRAIN",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DIRECTIONS_TRAIN_OUTLINED": {
     "kind": "system_symbol",
     "value": "tram",
     "concept": "DIRECTIONS_TRAIN",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DIRECTIONS_TRAIN_ROUNDED": {
     "kind": "system_symbol",
     "value": "tram",
     "concept": "DIRECTIONS_TRAIN",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DIRECTIONS_TRAIN_SHARP": {
     "kind": "system_symbol",
     "value": "tram",
     "concept": "DIRECTIONS_TRAIN",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DIRECTIONS_TRANSIT": {
     "kind": "cupertino_glyph",
@@ -19026,32 +19026,32 @@
     "source": "reviewed_override"
   },
   "FASTFOOD": {
-    "kind": "cupertino_glyph",
-    "value": "LOCATION_CIRCLE",
+    "kind": "system_symbol",
+    "value": "takeoutbag.and.cup.and.straw.fill",
     "concept": "FASTFOOD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FASTFOOD_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "LOCATION_CIRCLE",
+    "kind": "system_symbol",
+    "value": "takeoutbag.and.cup.and.straw.fill",
     "concept": "FASTFOOD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FASTFOOD_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "LOCATION_CIRCLE",
+    "kind": "system_symbol",
+    "value": "takeoutbag.and.cup.and.straw.fill",
     "concept": "FASTFOOD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FASTFOOD_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "LOCATION_CIRCLE",
+    "kind": "system_symbol",
+    "value": "takeoutbag.and.cup.and.straw.fill",
     "concept": "FASTFOOD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FAVORITE": {
     "kind": "cupertino_glyph",
@@ -29830,29 +29830,29 @@
     "kind": "system_symbol",
     "value": "ticket",
     "concept": "LOCAL_ATTRACTION",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LOCAL_ATTRACTION_OUTLINED": {
     "kind": "system_symbol",
     "value": "ticket",
     "concept": "LOCAL_ATTRACTION",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LOCAL_ATTRACTION_ROUNDED": {
     "kind": "system_symbol",
     "value": "ticket",
     "concept": "LOCAL_ATTRACTION",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LOCAL_ATTRACTION_SHARP": {
     "kind": "system_symbol",
     "value": "ticket",
     "concept": "LOCAL_ATTRACTION",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LOCAL_BAR": {
     "kind": "cupertino_glyph",
@@ -30528,31 +30528,31 @@
   },
   "LOCAL_PRINT_SHOP": {
     "kind": "system_symbol",
-    "value": "printer",
+    "value": "printer.fill",
     "concept": "LOCAL_PRINT_SHOP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LOCAL_PRINT_SHOP_OUTLINED": {
     "kind": "system_symbol",
-    "value": "printer",
+    "value": "printer.fill",
     "concept": "LOCAL_PRINT_SHOP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LOCAL_PRINT_SHOP_ROUNDED": {
     "kind": "system_symbol",
-    "value": "printer",
+    "value": "printer.fill",
     "concept": "LOCAL_PRINT_SHOP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LOCAL_PRINT_SHOP_SHARP": {
     "kind": "system_symbol",
-    "value": "printer",
+    "value": "printer.fill",
     "concept": "LOCAL_PRINT_SHOP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LOCAL_PRINTSHOP": {
     "kind": "system_symbol",
@@ -30586,29 +30586,29 @@
     "kind": "system_symbol",
     "value": "fork.knife",
     "concept": "LOCAL_RESTAURANT",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LOCAL_RESTAURANT_OUTLINED": {
     "kind": "system_symbol",
     "value": "fork.knife",
     "concept": "LOCAL_RESTAURANT",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LOCAL_RESTAURANT_ROUNDED": {
     "kind": "system_symbol",
     "value": "fork.knife",
     "concept": "LOCAL_RESTAURANT",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LOCAL_RESTAURANT_SHARP": {
     "kind": "system_symbol",
     "value": "fork.knife",
     "concept": "LOCAL_RESTAURANT",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LOCAL_SEE": {
     "kind": "system_symbol",
@@ -33022,29 +33022,29 @@
     "kind": "system_symbol",
     "value": "wrench.and.screwdriver",
     "concept": "MISCELLANEOUS_SERVICES",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MISCELLANEOUS_SERVICES_OUTLINED": {
     "kind": "system_symbol",
     "value": "wrench.and.screwdriver",
     "concept": "MISCELLANEOUS_SERVICES",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MISCELLANEOUS_SERVICES_ROUNDED": {
     "kind": "system_symbol",
     "value": "wrench.and.screwdriver",
     "concept": "MISCELLANEOUS_SERVICES",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MISCELLANEOUS_SERVICES_SHARP": {
     "kind": "system_symbol",
     "value": "wrench.and.screwdriver",
     "concept": "MISCELLANEOUS_SERVICES",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MISSED_VIDEO_CALL": {
     "kind": "cupertino_glyph",
@@ -56231,32 +56231,32 @@
     "source": "semantic_rank"
   },
   "TRANSIT_ENTEREXIT": {
-    "kind": "cupertino_glyph",
-    "value": "BUS",
+    "kind": "system_symbol",
+    "value": "arrow.left.arrow.right",
     "concept": "TRANSIT_ENTEREXIT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TRANSIT_ENTEREXIT_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "BUS",
+    "kind": "system_symbol",
+    "value": "arrow.left.arrow.right",
     "concept": "TRANSIT_ENTEREXIT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TRANSIT_ENTEREXIT_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "BUS",
+    "kind": "system_symbol",
+    "value": "arrow.left.arrow.right",
     "concept": "TRANSIT_ENTEREXIT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TRANSIT_ENTEREXIT_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "BUS",
+    "kind": "system_symbol",
+    "value": "arrow.left.arrow.right",
     "concept": "TRANSIT_ENTEREXIT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TRANSLATE": {
     "kind": "system_symbol",

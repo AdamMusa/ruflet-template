@@ -496,12 +496,6 @@
     "value": "desktopcomputer",
     "rationale": "curated Material-to-SF vocabulary"
   },
-  "CONFIRMATION_NUM": {
-    "kind": "system_symbol",
-    "value": "ticket",
-    "rationale": "confirmation number is represented by a native ticket",
-    "status": "review_required"
-  },
   "CONTENT_COPY": {
     "kind": "system_symbol",
     "value": "doc.on.doc",
@@ -603,18 +597,6 @@
     "kind": "system_symbol",
     "value": "car.fill",
     "rationale": "curated Material-to-SF vocabulary"
-  },
-  "DIRECTIONS_FERRY": {
-    "kind": "system_symbol",
-    "value": "ferry",
-    "rationale": "native Apple ferry",
-    "status": "review_required"
-  },
-  "DIRECTIONS_TRAIN": {
-    "kind": "system_symbol",
-    "value": "tram",
-    "rationale": "native Apple train/tram",
-    "status": "review_required"
   },
   "DIRECTIONS_WALK": {
     "kind": "system_symbol",
@@ -1218,12 +1200,6 @@
     "value": "list.bullet.rectangle",
     "rationale": "curated Material-to-SF vocabulary"
   },
-  "LOCAL_ATTRACTION": {
-    "kind": "system_symbol",
-    "value": "ticket",
-    "rationale": "native Apple attraction ticket",
-    "status": "review_required"
-  },
   "LOCAL_CAFE": {
     "kind": "system_symbol",
     "value": "cup.and.saucer.fill",
@@ -1233,12 +1209,6 @@
     "kind": "system_symbol",
     "value": "flame.fill",
     "rationale": "curated Material-to-SF vocabulary"
-  },
-  "LOCAL_RESTAURANT": {
-    "kind": "system_symbol",
-    "value": "fork.knife",
-    "rationale": "native Apple restaurant",
-    "status": "review_required"
   },
   "LOCATION_OFF": {
     "kind": "system_symbol",
@@ -1332,12 +1302,6 @@
     "kind": "system_symbol",
     "value": "mic.slash.fill",
     "rationale": "curated Material-to-SF vocabulary"
-  },
-  "MISCELLANEOUS_SERVICES": {
-    "kind": "system_symbol",
-    "value": "wrench.and.screwdriver",
-    "rationale": "native Apple services/tools concept",
-    "status": "review_required"
   },
   "MODE_EDIT": {
     "kind": "system_symbol",

@@ -642,6 +642,48 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             self.assertEqual(self.entries[material_name]["kind"], kind)
             self.assertEqual(self.entries[material_name]["value"], value)
 
+    def test_local_service_transit_family_is_reviewed_native_artwork(self):
+        family = MODULE.load_json(MODULE.LOCAL_SERVICE_TRANSIT_OVERRIDES_PATH)
+        low_confidence = {
+            item["concept"] for item in self.audit["low_confidence_concepts"]
+        }
+        self.assertEqual(
+            self.audit["reviewed_families"]["local_service_transit"],
+            len(family),
+        )
+        self.assertTrue(set(family).isdisjoint(low_confidence))
+        for concept, target in family.items():
+            entry = self.entries[concept]
+            self.assertEqual(entry["kind"], target["kind"])
+            self.assertEqual(entry["value"], target["value"])
+            self.assertEqual(entry["confidence"], "reviewed")
+            self.assertEqual(entry["source"], "reviewed_override")
+
+    def test_local_service_transit_distinct_semantics_do_not_regress(self):
+        expected = {
+            "CONFIRMATION_NUM": ("system_symbol", "ticket"),
+            "DIRECTIONS_FERRY": ("system_symbol", "ferry"),
+            "DIRECTIONS_TRAIN": ("system_symbol", "tram"),
+            "FASTFOOD": (
+                "system_symbol",
+                "takeoutbag.and.cup.and.straw.fill",
+            ),
+            "LOCAL_ATTRACTION": ("system_symbol", "ticket"),
+            "LOCAL_PRINT_SHOP": ("system_symbol", "printer.fill"),
+            "LOCAL_RESTAURANT": ("system_symbol", "fork.knife"),
+            "MISCELLANEOUS_SERVICES": (
+                "system_symbol",
+                "wrench.and.screwdriver",
+            ),
+            "TRANSIT_ENTEREXIT": (
+                "system_symbol",
+                "arrow.left.arrow.right",
+            ),
+        }
+        for material_name, (kind, value) in expected.items():
+            self.assertEqual(self.entries[material_name]["kind"], kind)
+            self.assertEqual(self.entries[material_name]["value"], value)
+
     def test_checked_in_artifacts_are_reproducible(self):
         self.assertEqual(
             MODULE.OUTPUT_PATH.read_text(encoding="utf-8"),

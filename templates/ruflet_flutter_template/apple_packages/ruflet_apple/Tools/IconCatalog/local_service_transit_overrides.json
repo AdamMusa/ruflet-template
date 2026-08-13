@@ -1,0 +1,47 @@
+{
+  "CONFIRMATION_NUM": {
+    "kind": "system_symbol",
+    "value": "ticket",
+    "rationale": "public Apple ticket identity for a transport or event confirmation number"
+  },
+  "DIRECTIONS_FERRY": {
+    "kind": "system_symbol",
+    "value": "ferry",
+    "rationale": "public Apple ferry transport identity"
+  },
+  "DIRECTIONS_TRAIN": {
+    "kind": "system_symbol",
+    "value": "tram",
+    "rationale": "public Apple rail-transit vehicle identity"
+  },
+  "FASTFOOD": {
+    "kind": "system_symbol",
+    "value": "takeoutbag.and.cup.and.straw.fill",
+    "rationale": "public Apple takeout meal and drink identity for fast food"
+  },
+  "LOCAL_ATTRACTION": {
+    "kind": "system_symbol",
+    "value": "ticket",
+    "rationale": "public Apple admission-ticket identity for a local attraction"
+  },
+  "LOCAL_PRINT_SHOP": {
+    "kind": "system_symbol",
+    "value": "printer.fill",
+    "rationale": "public Apple printer identity for a local print service"
+  },
+  "LOCAL_RESTAURANT": {
+    "kind": "system_symbol",
+    "value": "fork.knife",
+    "rationale": "public Apple dining and restaurant identity"
+  },
+  "MISCELLANEOUS_SERVICES": {
+    "kind": "system_symbol",
+    "value": "wrench.and.screwdriver",
+    "rationale": "public Apple paired service-tools identity"
+  },
+  "TRANSIT_ENTEREXIT": {
+    "kind": "system_symbol",
+    "value": "arrow.left.arrow.right",
+    "rationale": "public Apple opposing-direction identity for transit entry and exit"
+  }
+}

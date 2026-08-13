@@ -49,6 +49,9 @@ live in `interface_action_overrides.json`.
 Reviewed numbered looks, blur/focus, transform, white-balance lighting,
 color-inversion, and panorama-editing concepts live in
 `advanced_image_editing_overrides.json`.
+Reviewed ferry and rail directions, tickets, transit entry/exit, local dining,
+printing, fast food, and general service-tool concepts live in
+`local_service_transit_overrides.json`.
 
 The 8,825 identities contain 2,235 concepts because Flet carries Outlined,
 Rounded, and Sharp Material variants. The generator records the collapsed
