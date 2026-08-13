@@ -67,6 +67,8 @@ and pinch manipulation concepts live in
 Reviewed Apple platform branding, wearable and tablet adaptation, mobile
 compatibility, disabled phone links, and application updates live in
 `apple_platform_device_overrides.json`.
+Reviewed privacy-protection verification and account access states live in
+`privacy_access_state_overrides.json`.
 
 The 8,825 identities contain 2,235 concepts because Flet carries Outlined,
 Rounded, and Sharp Material variants. The generator records the collapsed

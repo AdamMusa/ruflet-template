@@ -37,6 +37,7 @@
     "health_accessibility_overrides.json": "9ad20e71cccecc9cd17758a3464e294f60422d31c5e27885b63b677456eb5199",
     "interface_state_manipulation_overrides.json": "f4edf739bb36d749598204f7ec718835d79589d30ac9d91eea90e4dca5388fa3",
     "apple_platform_device_overrides.json": "3a5e1cd7026487c0dcf13d60fec1d3ff573572de5339aa7f43ee8d678d9db884",
+    "privacy_access_state_overrides.json": "8be61702ea92ff6405b8d8057e30848425db0649a9355e08d0a8532ff4a06547",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/name_availability.plist": "a277cf5b63017ed497d5b6b3ea96bbee4f407b76776af41bcb52943007335b5c",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_search.plist": "29a767651ce53d8861e28d3eaa20b50d3e02a85fe5a79d557ce1fbff7fa4ebad",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_restrictions.strings": "2e1b1c3d629d26ac1e75861f33cb1cbbb3348e142a2b6c1aaf9bba546273f13b"
@@ -44,8 +45,8 @@
   "sources": {
     "exact_apple_name": 48,
     "manual_review_required": 84,
-    "reviewed_override": 986,
-    "semantic_rank": 1117
+    "reviewed_override": 990,
+    "semantic_rank": 1113
   },
   "reviewed_families": {
     "action": 76,
@@ -68,6 +69,7 @@
     "maps_places": 76,
     "navigation_travel": 36,
     "notification_status": 13,
+    "privacy_access_state": 4,
     "social_activities": 55,
     "text_editor": 49,
     "travel_amenity": 9
@@ -75,11 +77,11 @@
   "confidence_grades": {
     "exact": 48,
     "high": 665,
-    "low": 450,
+    "low": 446,
     "medium": 86,
-    "reviewed": 986
+    "reviewed": 990
   },
-  "unique_apple_targets": 894,
+  "unique_apple_targets": 895,
   "most_reused_targets": [
     {
       "kind": "system_symbol",
@@ -223,11 +225,6 @@
     },
     {
       "kind": "cupertino_glyph",
-      "value": "CHECK_MARK",
-      "concept_count": 9
-    },
-    {
-      "kind": "cupertino_glyph",
       "value": "LOCATION_SLASH",
       "concept_count": 9
     },
@@ -254,6 +251,11 @@
     {
       "kind": "system_symbol",
       "value": "line.diagonal",
+      "concept_count": 8
+    },
+    {
+      "kind": "cupertino_glyph",
+      "value": "CHECK_MARK",
       "concept_count": 8
     },
     {
@@ -332,7 +334,7 @@
       "concept_count": 6
     }
   ],
-  "low_confidence_count": 536,
+  "low_confidence_count": 532,
   "low_confidence_concepts": [
     {
       "concept": "SIXTY_FPS_SELECT",
@@ -8465,49 +8467,6 @@
       ]
     },
     {
-      "concept": "GPP_GOOD",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "CHECKMARK_SHIELD"
-      },
-      "confidence": 0.3049,
-      "grade": "low",
-      "reason": "name=[] semantic=['check', 'shield'] extra=[]",
-      "tags": [
-        "badge",
-        "certified",
-        "check",
-        "complete",
-        "confirmation",
-        "data",
-        "endorsed",
-        "excellent",
-        "exemption",
-        "good",
-        "gpp",
-        "guard",
-        "ok",
-        "pass",
-        "positive",
-        "privacy",
-        "protected",
-        "protection",
-        "quality",
-        "safety",
-        "security",
-        "shield",
-        "sim",
-        "success",
-        "tick",
-        "trust",
-        "user",
-        "valid",
-        "validation",
-        "verification",
-        "verified"
-      ]
-    },
-    {
       "concept": "CALL_MISSED_OUTGOING",
       "target": {
         "kind": "cupertino_glyph",
@@ -10344,63 +10303,6 @@
       ]
     },
     {
-      "concept": "GPP_MAYBE",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "CHECK_MARK"
-      },
-      "confidence": 0.3146,
-      "grade": "low",
-      "reason": "name=[] semantic=['check', 'mark'] extra=[]",
-      "tags": [
-        "!",
-        "alert",
-        "attention",
-        "authenticate",
-        "authentication",
-        "caution",
-        "certified",
-        "check",
-        "danger",
-        "doubt",
-        "error",
-        "exclamation",
-        "gpp",
-        "help",
-        "important",
-        "inquiry",
-        "integrity",
-        "mark",
-        "maybe",
-        "not sure",
-        "notification",
-        "privacy",
-        "private",
-        "protect",
-        "protection",
-        "query",
-        "question mark",
-        "questionable",
-        "risk",
-        "safe",
-        "security",
-        "shield",
-        "sim",
-        "status",
-        "symbol",
-        "threat",
-        "uncertain",
-        "uncertain security",
-        "unknown",
-        "unsafe",
-        "unsure",
-        "validation",
-        "verified",
-        "verify",
-        "warning"
-      ]
-    },
-    {
       "concept": "NO_CRASH",
       "target": {
         "kind": "cupertino_glyph",
@@ -11427,61 +11329,6 @@
         "team",
         "user",
         "users"
-      ]
-    },
-    {
-      "concept": "NO_ACCOUNTS",
-      "target": {
-        "kind": "system_symbol",
-        "value": "person.circle"
-      },
-      "confidence": 0.3205,
-      "grade": "low",
-      "reason": "name=[] semantic=['circle', 'people', 'person'] extra=[]",
-      "tags": [
-        "access",
-        "access denied",
-        "account",
-        "accounts",
-        "authentication",
-        "avatar",
-        "banned",
-        "blocked",
-        "cancelled",
-        "circle",
-        "denied",
-        "disabled",
-        "empty",
-        "enabled",
-        "excluded",
-        "face",
-        "forbidden",
-        "human",
-        "identity",
-        "invalid",
-        "line",
-        "login",
-        "missing",
-        "no",
-        "no accounts",
-        "none",
-        "off",
-        "offline",
-        "on",
-        "people",
-        "person",
-        "profile",
-        "profile picture",
-        "removed",
-        "restricted",
-        "slash",
-        "thumbnail",
-        "unauthorized",
-        "unavailable",
-        "unidentifiable",
-        "unknown",
-        "user",
-        "zero"
       ]
     },
     {
@@ -13784,54 +13631,6 @@
         "share",
         "store",
         "store message"
-      ]
-    },
-    {
-      "concept": "GPP_BAD",
-      "target": {
-        "kind": "system_symbol",
-        "value": "xmark"
-      },
-      "confidence": 0.3829,
-      "grade": "low",
-      "reason": "name=[] semantic=['close', 'stop', 'x'] extra=['xmark']",
-      "tags": [
-        "access denied",
-        "alert",
-        "bad",
-        "blocked",
-        "cancel",
-        "certified",
-        "close",
-        "cross",
-        "danger",
-        "denied",
-        "error",
-        "exit",
-        "failed",
-        "failure",
-        "forbidden",
-        "gpp",
-        "invalid",
-        "no",
-        "no entry",
-        "not allowed",
-        "privacy",
-        "private",
-        "protect",
-        "protection",
-        "reject",
-        "remove",
-        "restricted",
-        "safety",
-        "security",
-        "shield",
-        "sim",
-        "stop",
-        "unauthorized",
-        "verified",
-        "warning",
-        "x"
       ]
     },
     {

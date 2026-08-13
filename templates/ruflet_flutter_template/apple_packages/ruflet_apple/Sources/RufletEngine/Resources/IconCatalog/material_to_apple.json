@@ -23668,87 +23668,87 @@
   },
   "GPP_BAD": {
     "kind": "system_symbol",
-    "value": "xmark",
+    "value": "xmark.shield.fill",
     "concept": "GPP_BAD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GPP_BAD_OUTLINED": {
     "kind": "system_symbol",
-    "value": "xmark",
+    "value": "xmark.shield.fill",
     "concept": "GPP_BAD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GPP_BAD_ROUNDED": {
     "kind": "system_symbol",
-    "value": "xmark",
+    "value": "xmark.shield.fill",
     "concept": "GPP_BAD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GPP_BAD_SHARP": {
     "kind": "system_symbol",
-    "value": "xmark",
+    "value": "xmark.shield.fill",
     "concept": "GPP_BAD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GPP_GOOD": {
-    "kind": "cupertino_glyph",
-    "value": "CHECKMARK_SHIELD",
+    "kind": "system_symbol",
+    "value": "checkmark.shield.fill",
     "concept": "GPP_GOOD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GPP_GOOD_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "CHECKMARK_SHIELD",
+    "kind": "system_symbol",
+    "value": "checkmark.shield.fill",
     "concept": "GPP_GOOD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GPP_GOOD_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "CHECKMARK_SHIELD",
+    "kind": "system_symbol",
+    "value": "checkmark.shield.fill",
     "concept": "GPP_GOOD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GPP_GOOD_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "CHECKMARK_SHIELD",
+    "kind": "system_symbol",
+    "value": "checkmark.shield.fill",
     "concept": "GPP_GOOD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GPP_MAYBE": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "exclamationmark.shield.fill",
     "concept": "GPP_MAYBE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GPP_MAYBE_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "exclamationmark.shield.fill",
     "concept": "GPP_MAYBE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GPP_MAYBE_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "exclamationmark.shield.fill",
     "concept": "GPP_MAYBE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GPP_MAYBE_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "exclamationmark.shield.fill",
     "concept": "GPP_MAYBE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GPS_FIXED": {
     "kind": "system_symbol",
@@ -35603,31 +35603,31 @@
   },
   "NO_ACCOUNTS": {
     "kind": "system_symbol",
-    "value": "person.circle",
+    "value": "person.fill.xmark",
     "concept": "NO_ACCOUNTS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NO_ACCOUNTS_OUTLINED": {
     "kind": "system_symbol",
-    "value": "person.circle",
+    "value": "person.fill.xmark",
     "concept": "NO_ACCOUNTS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NO_ACCOUNTS_ROUNDED": {
     "kind": "system_symbol",
-    "value": "person.circle",
+    "value": "person.fill.xmark",
     "concept": "NO_ACCOUNTS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NO_ACCOUNTS_SHARP": {
     "kind": "system_symbol",
-    "value": "person.circle",
+    "value": "person.fill.xmark",
     "concept": "NO_ACCOUNTS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NO_ADULT_CONTENT": {
     "kind": "cupertino_glyph",
