@@ -397,7 +397,7 @@ public enum IconMapping {
     "chevron_left": "chevron.left", "chevron_right": "chevron.right",
     "first_page": "chevron.left.2", "last_page": "chevron.right.2",
     "menu": "line.3.horizontal", "more_vert": "ellipsis", "more_horiz": "ellipsis",
-    "apps": "square.grid.2x2", "widgets": "square.grid.2x2.fill", "dashboard": "square.grid.2x2.fill",
+    "apps": "square.grid.2x2", "widgets": "puzzlepiece.extension.fill", "dashboard": "square.grid.2x2.fill",
     "home": "house", "home_filled": "house.fill",
 
     // Actions

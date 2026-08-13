@@ -134,7 +134,7 @@ final class IconMappingTests: XCTestCase {
   func testExplorerGalleryCategoriesUseClosestNativeAppleArtwork() {
     let expected: [String: String] = [
       "view_module": "square.grid.3x3.fill",
-      "widgets": "square.grid.2x2.fill",
+      "widgets": "puzzlepiece.extension.fill",
       "image": "photo.fill",
       "show_chart": "chart.line.uptrend.xyaxis",
       "animation": "atom",
