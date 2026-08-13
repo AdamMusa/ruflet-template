@@ -1155,32 +1155,32 @@
     "source": "semantic_rank"
   },
   "ADD_TO_HOME_SCREEN": {
-    "kind": "cupertino_glyph",
-    "value": "HOME",
+    "kind": "system_symbol",
+    "value": "plus.app",
     "concept": "ADD_TO_HOME_SCREEN",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ADD_TO_HOME_SCREEN_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "HOME",
+    "kind": "system_symbol",
+    "value": "plus.app",
     "concept": "ADD_TO_HOME_SCREEN",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ADD_TO_HOME_SCREEN_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "HOME",
+    "kind": "system_symbol",
+    "value": "plus.app",
     "concept": "ADD_TO_HOME_SCREEN",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ADD_TO_HOME_SCREEN_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "HOME",
+    "kind": "system_symbol",
+    "value": "plus.app",
     "concept": "ADD_TO_HOME_SCREEN",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ADD_TO_PHOTOS": {
     "kind": "system_symbol",
@@ -2555,32 +2555,32 @@
     "source": "reviewed_override"
   },
   "AOD": {
-    "kind": "cupertino_glyph",
-    "value": "TIME",
+    "kind": "system_symbol",
+    "value": "display",
     "concept": "AOD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "AOD_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "TIME",
+    "kind": "system_symbol",
+    "value": "display",
     "concept": "AOD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "AOD_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "TIME",
+    "kind": "system_symbol",
+    "value": "display",
     "concept": "AOD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "AOD_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "TIME",
+    "kind": "system_symbol",
+    "value": "display",
     "concept": "AOD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "APARTMENT": {
     "kind": "system_symbol",
@@ -4726,31 +4726,31 @@
   },
   "BALANCE": {
     "kind": "system_symbol",
-    "value": "lines.measurement.horizontal",
+    "value": "scalemass",
     "concept": "BALANCE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BALANCE_OUTLINED": {
     "kind": "system_symbol",
-    "value": "lines.measurement.horizontal",
+    "value": "scalemass",
     "concept": "BALANCE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BALANCE_ROUNDED": {
     "kind": "system_symbol",
-    "value": "lines.measurement.horizontal",
+    "value": "scalemass",
     "concept": "BALANCE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BALANCE_SHARP": {
     "kind": "system_symbol",
-    "value": "lines.measurement.horizontal",
+    "value": "scalemass",
     "concept": "BALANCE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BALCONY": {
     "kind": "cupertino_glyph",
@@ -4956,172 +4956,172 @@
     "source": "semantic_rank"
   },
   "BATTERY_1_BAR": {
-    "kind": "cupertino_glyph",
-    "value": "BATTERY_FULL",
+    "kind": "system_symbol",
+    "value": "battery.25",
     "concept": "BATTERY_1_BAR",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BATTERY_1_BAR_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "BATTERY_FULL",
+    "kind": "system_symbol",
+    "value": "battery.25",
     "concept": "BATTERY_1_BAR",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BATTERY_1_BAR_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "BATTERY_FULL",
+    "kind": "system_symbol",
+    "value": "battery.25",
     "concept": "BATTERY_1_BAR",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BATTERY_1_BAR_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "BATTERY_FULL",
+    "kind": "system_symbol",
+    "value": "battery.25",
     "concept": "BATTERY_1_BAR",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BATTERY_2_BAR": {
     "kind": "system_symbol",
-    "value": "display.2",
+    "value": "battery.25",
     "concept": "BATTERY_2_BAR",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BATTERY_2_BAR_OUTLINED": {
     "kind": "system_symbol",
-    "value": "display.2",
+    "value": "battery.25",
     "concept": "BATTERY_2_BAR",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BATTERY_2_BAR_ROUNDED": {
     "kind": "system_symbol",
-    "value": "display.2",
+    "value": "battery.25",
     "concept": "BATTERY_2_BAR",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BATTERY_2_BAR_SHARP": {
     "kind": "system_symbol",
-    "value": "display.2",
+    "value": "battery.25",
     "concept": "BATTERY_2_BAR",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BATTERY_3_BAR": {
     "kind": "system_symbol",
     "value": "battery.50",
     "concept": "BATTERY_3_BAR",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BATTERY_3_BAR_OUTLINED": {
     "kind": "system_symbol",
     "value": "battery.50",
     "concept": "BATTERY_3_BAR",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BATTERY_3_BAR_ROUNDED": {
     "kind": "system_symbol",
     "value": "battery.50",
     "concept": "BATTERY_3_BAR",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BATTERY_3_BAR_SHARP": {
     "kind": "system_symbol",
     "value": "battery.50",
     "concept": "BATTERY_3_BAR",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BATTERY_4_BAR": {
     "kind": "system_symbol",
-    "value": "4.circle",
+    "value": "battery.75",
     "concept": "BATTERY_4_BAR",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BATTERY_4_BAR_OUTLINED": {
     "kind": "system_symbol",
-    "value": "4.circle",
+    "value": "battery.75",
     "concept": "BATTERY_4_BAR",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BATTERY_4_BAR_ROUNDED": {
     "kind": "system_symbol",
-    "value": "4.circle",
+    "value": "battery.75",
     "concept": "BATTERY_4_BAR",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BATTERY_4_BAR_SHARP": {
     "kind": "system_symbol",
-    "value": "4.circle",
+    "value": "battery.75",
     "concept": "BATTERY_4_BAR",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BATTERY_5_BAR": {
-    "kind": "cupertino_glyph",
-    "value": "BATTERY_FULL",
+    "kind": "system_symbol",
+    "value": "battery.75",
     "concept": "BATTERY_5_BAR",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BATTERY_5_BAR_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "BATTERY_FULL",
+    "kind": "system_symbol",
+    "value": "battery.75",
     "concept": "BATTERY_5_BAR",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BATTERY_5_BAR_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "BATTERY_FULL",
+    "kind": "system_symbol",
+    "value": "battery.75",
     "concept": "BATTERY_5_BAR",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BATTERY_5_BAR_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "BATTERY_FULL",
+    "kind": "system_symbol",
+    "value": "battery.75",
     "concept": "BATTERY_5_BAR",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BATTERY_6_BAR": {
-    "kind": "cupertino_glyph",
-    "value": "BATTERY_FULL",
+    "kind": "system_symbol",
+    "value": "battery.100",
     "concept": "BATTERY_6_BAR",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BATTERY_6_BAR_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "BATTERY_FULL",
+    "kind": "system_symbol",
+    "value": "battery.100",
     "concept": "BATTERY_6_BAR",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BATTERY_6_BAR_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "BATTERY_FULL",
+    "kind": "system_symbol",
+    "value": "battery.100",
     "concept": "BATTERY_6_BAR",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BATTERY_6_BAR_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "BATTERY_FULL",
+    "kind": "system_symbol",
+    "value": "battery.100",
     "concept": "BATTERY_6_BAR",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BATTERY_ALERT": {
     "kind": "cupertino_glyph",
@@ -5747,32 +5747,32 @@
     "source": "reviewed_override"
   },
   "BLOODTYPE": {
-    "kind": "cupertino_glyph",
-    "value": "PERSON",
+    "kind": "system_symbol",
+    "value": "drop.fill",
     "concept": "BLOODTYPE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BLOODTYPE_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "PERSON",
+    "kind": "system_symbol",
+    "value": "drop.fill",
     "concept": "BLOODTYPE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BLOODTYPE_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "PERSON",
+    "kind": "system_symbol",
+    "value": "drop.fill",
     "concept": "BLOODTYPE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BLOODTYPE_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "PERSON",
+    "kind": "system_symbol",
+    "value": "drop.fill",
     "concept": "BLOODTYPE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BLUETOOTH": {
     "kind": "system_symbol",
@@ -8715,88 +8715,88 @@
     "source": "reviewed_override"
   },
   "CAST": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "airplayvideo",
     "concept": "CAST",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CAST_CONNECTED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "airplayvideo.circle.fill",
     "concept": "CAST_CONNECTED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CAST_CONNECTED_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "airplayvideo.circle.fill",
     "concept": "CAST_CONNECTED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CAST_CONNECTED_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "airplayvideo.circle.fill",
     "concept": "CAST_CONNECTED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CAST_CONNECTED_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "airplayvideo.circle.fill",
     "concept": "CAST_CONNECTED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CAST_FOR_EDUCATION": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "airplayvideo",
     "concept": "CAST_FOR_EDUCATION",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CAST_FOR_EDUCATION_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "airplayvideo",
     "concept": "CAST_FOR_EDUCATION",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CAST_FOR_EDUCATION_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "airplayvideo",
     "concept": "CAST_FOR_EDUCATION",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CAST_FOR_EDUCATION_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "airplayvideo",
     "concept": "CAST_FOR_EDUCATION",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CAST_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "airplayvideo",
     "concept": "CAST",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CAST_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "airplayvideo",
     "concept": "CAST",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CAST_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "airplayvideo",
     "concept": "CAST",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CASTLE": {
     "kind": "cupertino_glyph",
@@ -11810,31 +11810,31 @@
   },
   "CREDIT_SCORE": {
     "kind": "system_symbol",
-    "value": "checkmark.circle",
+    "value": "creditcard",
     "concept": "CREDIT_SCORE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CREDIT_SCORE_OUTLINED": {
     "kind": "system_symbol",
-    "value": "checkmark.circle",
+    "value": "creditcard",
     "concept": "CREDIT_SCORE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CREDIT_SCORE_ROUNDED": {
     "kind": "system_symbol",
-    "value": "checkmark.circle",
+    "value": "creditcard",
     "concept": "CREDIT_SCORE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CREDIT_SCORE_SHARP": {
     "kind": "system_symbol",
-    "value": "checkmark.circle",
+    "value": "creditcard",
     "concept": "CREDIT_SCORE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CRIB": {
     "kind": "system_symbol",
@@ -12930,87 +12930,87 @@
   },
   "DATA_USAGE": {
     "kind": "system_symbol",
-    "value": "line.diagonal",
+    "value": "gauge",
     "concept": "DATA_USAGE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DATA_USAGE_OUTLINED": {
     "kind": "system_symbol",
-    "value": "line.diagonal",
+    "value": "gauge",
     "concept": "DATA_USAGE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DATA_USAGE_ROUNDED": {
     "kind": "system_symbol",
-    "value": "line.diagonal",
+    "value": "gauge",
     "concept": "DATA_USAGE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DATA_USAGE_SHARP": {
     "kind": "system_symbol",
-    "value": "line.diagonal",
+    "value": "gauge",
     "concept": "DATA_USAGE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DATASET": {
-    "kind": "cupertino_glyph",
-    "value": "COLLECTIONS",
+    "kind": "system_symbol",
+    "value": "cylinder",
     "concept": "DATASET",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DATASET_LINKED": {
-    "kind": "cupertino_glyph",
-    "value": "LINK",
+    "kind": "system_symbol",
+    "value": "cylinder.split.1x2",
     "concept": "DATASET_LINKED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DATASET_LINKED_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "LINK",
+    "kind": "system_symbol",
+    "value": "cylinder.split.1x2",
     "concept": "DATASET_LINKED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DATASET_LINKED_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "LINK",
+    "kind": "system_symbol",
+    "value": "cylinder.split.1x2",
     "concept": "DATASET_LINKED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DATASET_LINKED_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "LINK",
+    "kind": "system_symbol",
+    "value": "cylinder.split.1x2",
     "concept": "DATASET_LINKED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DATASET_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "COLLECTIONS",
+    "kind": "system_symbol",
+    "value": "cylinder",
     "concept": "DATASET",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DATASET_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "COLLECTIONS",
+    "kind": "system_symbol",
+    "value": "cylinder",
     "concept": "DATASET",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DATASET_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "COLLECTIONS",
+    "kind": "system_symbol",
+    "value": "cylinder",
     "concept": "DATASET",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DATE_RANGE": {
     "kind": "system_symbol",
@@ -13602,10 +13602,10 @@
   },
   "DEVELOPER_BOARD": {
     "kind": "system_symbol",
-    "value": "cpu",
+    "value": "cpu.fill",
     "concept": "DEVELOPER_BOARD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DEVELOPER_BOARD_OFF": {
     "kind": "cupertino_glyph",
@@ -13637,52 +13637,52 @@
   },
   "DEVELOPER_BOARD_OUTLINED": {
     "kind": "system_symbol",
-    "value": "cpu",
+    "value": "cpu.fill",
     "concept": "DEVELOPER_BOARD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DEVELOPER_BOARD_ROUNDED": {
     "kind": "system_symbol",
-    "value": "cpu",
+    "value": "cpu.fill",
     "concept": "DEVELOPER_BOARD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DEVELOPER_BOARD_SHARP": {
     "kind": "system_symbol",
-    "value": "cpu",
+    "value": "cpu.fill",
     "concept": "DEVELOPER_BOARD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DEVELOPER_MODE": {
     "kind": "cupertino_glyph",
-    "value": "COMMAND",
+    "value": "CHEVRON_LEFT_SLASH_CHEVRON_RIGHT",
     "concept": "DEVELOPER_MODE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DEVELOPER_MODE_OUTLINED": {
     "kind": "cupertino_glyph",
-    "value": "COMMAND",
+    "value": "CHEVRON_LEFT_SLASH_CHEVRON_RIGHT",
     "concept": "DEVELOPER_MODE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DEVELOPER_MODE_ROUNDED": {
     "kind": "cupertino_glyph",
-    "value": "COMMAND",
+    "value": "CHEVRON_LEFT_SLASH_CHEVRON_RIGHT",
     "concept": "DEVELOPER_MODE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DEVELOPER_MODE_SHARP": {
     "kind": "cupertino_glyph",
-    "value": "COMMAND",
+    "value": "CHEVRON_LEFT_SLASH_CHEVRON_RIGHT",
     "concept": "DEVELOPER_MODE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DEVICE_HUB": {
     "kind": "cupertino_glyph",
@@ -13713,32 +13713,32 @@
     "source": "semantic_rank"
   },
   "DEVICE_THERMOSTAT": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "thermometer",
     "concept": "DEVICE_THERMOSTAT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DEVICE_THERMOSTAT_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "thermometer",
     "concept": "DEVICE_THERMOSTAT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DEVICE_THERMOSTAT_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "thermometer",
     "concept": "DEVICE_THERMOSTAT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DEVICE_THERMOSTAT_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "thermometer",
     "concept": "DEVICE_THERMOSTAT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DEVICE_UNKNOWN": {
     "kind": "cupertino_glyph",
@@ -14644,32 +14644,32 @@
     "source": "semantic_rank"
   },
   "DISC_FULL": {
-    "kind": "cupertino_glyph",
-    "value": "TRAY_FULL",
+    "kind": "system_symbol",
+    "value": "opticaldisc",
     "concept": "DISC_FULL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DISC_FULL_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "TRAY_FULL",
+    "kind": "system_symbol",
+    "value": "opticaldisc",
     "concept": "DISC_FULL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DISC_FULL_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "TRAY_FULL",
+    "kind": "system_symbol",
+    "value": "opticaldisc",
     "concept": "DISC_FULL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DISC_FULL_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "TRAY_FULL",
+    "kind": "system_symbol",
+    "value": "opticaldisc",
     "concept": "DISC_FULL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DISCORD": {
     "kind": "system_symbol",
@@ -14700,32 +14700,32 @@
     "source": "manual_review_required"
   },
   "DISCOUNT": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "tag.fill",
     "concept": "DISCOUNT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DISCOUNT_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "tag.fill",
     "concept": "DISCOUNT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DISCOUNT_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "tag.fill",
     "concept": "DISCOUNT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DISCOUNT_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "tag.fill",
     "concept": "DISCOUNT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DISPLAY_SETTINGS": {
     "kind": "system_symbol",
@@ -14868,32 +14868,32 @@
     "source": "semantic_rank"
   },
   "DNS": {
-    "kind": "cupertino_glyph",
-    "value": "BARS",
+    "kind": "system_symbol",
+    "value": "network",
     "concept": "DNS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DNS_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "BARS",
+    "kind": "system_symbol",
+    "value": "network",
     "concept": "DNS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DNS_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "BARS",
+    "kind": "system_symbol",
+    "value": "network",
     "concept": "DNS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DNS_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "BARS",
+    "kind": "system_symbol",
+    "value": "network",
     "concept": "DNS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DO_DISTURB": {
     "kind": "system_symbol",
@@ -16135,32 +16135,32 @@
     "source": "semantic_rank"
   },
   "DVR": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "tv",
     "concept": "DVR",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DVR_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "tv",
     "concept": "DVR",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DVR_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "tv",
     "concept": "DVR",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DVR_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "tv",
     "concept": "DVR",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DYNAMIC_FEED": {
     "kind": "cupertino_glyph",
@@ -19138,32 +19138,32 @@
     "source": "reviewed_override"
   },
   "FAX": {
-    "kind": "cupertino_glyph",
-    "value": "PHONE",
+    "kind": "system_symbol",
+    "value": "printer",
     "concept": "FAX",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FAX_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "PHONE",
+    "kind": "system_symbol",
+    "value": "printer",
     "concept": "FAX",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FAX_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "PHONE",
+    "kind": "system_symbol",
+    "value": "printer",
     "concept": "FAX",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FAX_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "PHONE",
+    "kind": "system_symbol",
+    "value": "printer",
     "concept": "FAX",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FEATURED_PLAY_LIST": {
     "kind": "cupertino_glyph",
@@ -21400,31 +21400,31 @@
   },
   "FLUORESCENT": {
     "kind": "system_symbol",
-    "value": "bolt",
+    "value": "lightbulb.fill",
     "concept": "FLUORESCENT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FLUORESCENT_OUTLINED": {
     "kind": "system_symbol",
-    "value": "bolt",
+    "value": "lightbulb.fill",
     "concept": "FLUORESCENT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FLUORESCENT_ROUNDED": {
     "kind": "system_symbol",
-    "value": "bolt",
+    "value": "lightbulb.fill",
     "concept": "FLUORESCENT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FLUORESCENT_SHARP": {
     "kind": "system_symbol",
-    "value": "bolt",
+    "value": "lightbulb.fill",
     "concept": "FLUORESCENT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FLUTTER_DASH": {
     "kind": "cupertino_glyph",
@@ -21483,32 +21483,32 @@
     "source": "reviewed_override"
   },
   "FMD_GOOD": {
-    "kind": "cupertino_glyph",
-    "value": "MAP_PIN",
+    "kind": "system_symbol",
+    "value": "location.fill.viewfinder",
     "concept": "FMD_GOOD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FMD_GOOD_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "MAP_PIN",
+    "kind": "system_symbol",
+    "value": "location.fill.viewfinder",
     "concept": "FMD_GOOD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FMD_GOOD_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "MAP_PIN",
+    "kind": "system_symbol",
+    "value": "location.fill.viewfinder",
     "concept": "FMD_GOOD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FMD_GOOD_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "MAP_PIN",
+    "kind": "system_symbol",
+    "value": "location.fill.viewfinder",
     "concept": "FMD_GOOD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FOGGY": {
     "kind": "system_symbol",
@@ -23303,32 +23303,32 @@
     "source": "semantic_rank"
   },
   "GAMEPAD": {
-    "kind": "cupertino_glyph",
-    "value": "GAME_CONTROLLER",
+    "kind": "system_symbol",
+    "value": "gamecontroller.fill",
     "concept": "GAMEPAD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GAMEPAD_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "GAME_CONTROLLER",
+    "kind": "system_symbol",
+    "value": "gamecontroller.fill",
     "concept": "GAMEPAD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GAMEPAD_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "GAME_CONTROLLER",
+    "kind": "system_symbol",
+    "value": "gamecontroller.fill",
     "concept": "GAMEPAD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GAMEPAD_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "GAME_CONTROLLER",
+    "kind": "system_symbol",
+    "value": "gamecontroller.fill",
     "concept": "GAMEPAD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GAMES": {
     "kind": "cupertino_glyph",
@@ -23751,88 +23751,88 @@
     "source": "semantic_rank"
   },
   "GPS_FIXED": {
-    "kind": "cupertino_glyph",
-    "value": "MAP_PIN",
+    "kind": "system_symbol",
+    "value": "location.fill.viewfinder",
     "concept": "GPS_FIXED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GPS_FIXED_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "MAP_PIN",
+    "kind": "system_symbol",
+    "value": "location.fill.viewfinder",
     "concept": "GPS_FIXED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GPS_FIXED_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "MAP_PIN",
+    "kind": "system_symbol",
+    "value": "location.fill.viewfinder",
     "concept": "GPS_FIXED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GPS_FIXED_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "MAP_PIN",
+    "kind": "system_symbol",
+    "value": "location.fill.viewfinder",
     "concept": "GPS_FIXED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GPS_NOT_FIXED": {
-    "kind": "cupertino_glyph",
-    "value": "MAP_PIN_SLASH",
+    "kind": "system_symbol",
+    "value": "location",
     "concept": "GPS_NOT_FIXED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GPS_NOT_FIXED_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "MAP_PIN_SLASH",
+    "kind": "system_symbol",
+    "value": "location",
     "concept": "GPS_NOT_FIXED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GPS_NOT_FIXED_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "MAP_PIN_SLASH",
+    "kind": "system_symbol",
+    "value": "location",
     "concept": "GPS_NOT_FIXED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GPS_NOT_FIXED_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "MAP_PIN_SLASH",
+    "kind": "system_symbol",
+    "value": "location",
     "concept": "GPS_NOT_FIXED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GPS_OFF": {
-    "kind": "cupertino_glyph",
-    "value": "VOLUME_OFF",
+    "kind": "system_symbol",
+    "value": "location.slash",
     "concept": "GPS_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GPS_OFF_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "VOLUME_OFF",
+    "kind": "system_symbol",
+    "value": "location.slash",
     "concept": "GPS_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GPS_OFF_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "VOLUME_OFF",
+    "kind": "system_symbol",
+    "value": "location.slash",
     "concept": "GPS_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GPS_OFF_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "VOLUME_OFF",
+    "kind": "system_symbol",
+    "value": "location.slash",
     "concept": "GPS_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GRADE": {
     "kind": "system_symbol",
@@ -23947,32 +23947,32 @@
     "source": "semantic_rank"
   },
   "GRAPHIC_EQ": {
-    "kind": "cupertino_glyph",
-    "value": "CHART_BAR",
+    "kind": "system_symbol",
+    "value": "slider.vertical.3",
     "concept": "GRAPHIC_EQ",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GRAPHIC_EQ_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "CHART_BAR",
+    "kind": "system_symbol",
+    "value": "slider.vertical.3",
     "concept": "GRAPHIC_EQ",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GRAPHIC_EQ_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "CHART_BAR",
+    "kind": "system_symbol",
+    "value": "slider.vertical.3",
     "concept": "GRAPHIC_EQ",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GRAPHIC_EQ_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "CHART_BAR",
+    "kind": "system_symbol",
+    "value": "slider.vertical.3",
     "concept": "GRAPHIC_EQ",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GRASS": {
     "kind": "cupertino_glyph",
@@ -28259,32 +28259,32 @@
     "source": "semantic_rank"
   },
   "KEYBOARD_OPTION_KEY": {
-    "kind": "cupertino_glyph",
-    "value": "OPTION",
+    "kind": "system_symbol",
+    "value": "option",
     "concept": "KEYBOARD_OPTION_KEY",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "KEYBOARD_OPTION_KEY_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "OPTION",
+    "kind": "system_symbol",
+    "value": "option",
     "concept": "KEYBOARD_OPTION_KEY",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "KEYBOARD_OPTION_KEY_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "OPTION",
+    "kind": "system_symbol",
+    "value": "option",
     "concept": "KEYBOARD_OPTION_KEY",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "KEYBOARD_OPTION_KEY_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "OPTION",
+    "kind": "system_symbol",
+    "value": "option",
     "concept": "KEYBOARD_OPTION_KEY",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "KEYBOARD_OUTLINED": {
     "kind": "system_symbol",
@@ -28602,32 +28602,32 @@
     "source": "reviewed_override"
   },
   "LAN": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "network",
     "concept": "LAN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LAN_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "network",
     "concept": "LAN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LAN_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "network",
     "concept": "LAN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LAN_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "network",
     "concept": "LAN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LANDSCAPE": {
     "kind": "system_symbol",
@@ -29085,32 +29085,32 @@
     "source": "semantic_rank"
   },
   "LENS_BLUR": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO_CAMERA",
+    "kind": "system_symbol",
+    "value": "camera.filters",
     "concept": "LENS_BLUR",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LENS_BLUR_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO_CAMERA",
+    "kind": "system_symbol",
+    "value": "camera.filters",
     "concept": "LENS_BLUR",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LENS_BLUR_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO_CAMERA",
+    "kind": "system_symbol",
+    "value": "camera.filters",
     "concept": "LENS_BLUR",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LENS_BLUR_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO_CAMERA",
+    "kind": "system_symbol",
+    "value": "camera.filters",
     "concept": "LENS_BLUR",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LENS_OUTLINED": {
     "kind": "cupertino_glyph",
@@ -32438,32 +32438,32 @@
     "source": "manual_review_required"
   },
   "MEDICATION_LIQUID": {
-    "kind": "cupertino_glyph",
-    "value": "DROP",
+    "kind": "system_symbol",
+    "value": "drop.fill",
     "concept": "MEDICATION_LIQUID",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MEDICATION_LIQUID_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "DROP",
+    "kind": "system_symbol",
+    "value": "drop.fill",
     "concept": "MEDICATION_LIQUID",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MEDICATION_LIQUID_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "DROP",
+    "kind": "system_symbol",
+    "value": "drop.fill",
     "concept": "MEDICATION_LIQUID",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MEDICATION_LIQUID_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "DROP",
+    "kind": "system_symbol",
+    "value": "drop.fill",
     "concept": "MEDICATION_LIQUID",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MEDICATION_OUTLINED": {
     "kind": "system_symbol",
@@ -33131,32 +33131,32 @@
     "source": "semantic_rank"
   },
   "MOBILE_OFF": {
-    "kind": "cupertino_glyph",
-    "value": "VOLUME_OFF",
+    "kind": "system_symbol",
+    "value": "iphone.homebutton.slash",
     "concept": "MOBILE_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MOBILE_OFF_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "VOLUME_OFF",
+    "kind": "system_symbol",
+    "value": "iphone.homebutton.slash",
     "concept": "MOBILE_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MOBILE_OFF_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "VOLUME_OFF",
+    "kind": "system_symbol",
+    "value": "iphone.homebutton.slash",
     "concept": "MOBILE_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MOBILE_OFF_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "VOLUME_OFF",
+    "kind": "system_symbol",
+    "value": "iphone.homebutton.slash",
     "concept": "MOBILE_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MOBILE_SCREEN_SHARE": {
     "kind": "cupertino_glyph",
@@ -33335,31 +33335,31 @@
   },
   "MODE_NIGHT": {
     "kind": "system_symbol",
-    "value": "moon",
+    "value": "moon.fill",
     "concept": "MODE_NIGHT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MODE_NIGHT_OUTLINED": {
     "kind": "system_symbol",
-    "value": "moon",
+    "value": "moon.fill",
     "concept": "MODE_NIGHT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MODE_NIGHT_ROUNDED": {
     "kind": "system_symbol",
-    "value": "moon",
+    "value": "moon.fill",
     "concept": "MODE_NIGHT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MODE_NIGHT_SHARP": {
     "kind": "system_symbol",
-    "value": "moon",
+    "value": "moon.fill",
     "concept": "MODE_NIGHT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MODE_OF_TRAVEL": {
     "kind": "system_symbol",
@@ -33579,11 +33579,11 @@
     "source": "semantic_rank"
   },
   "MONITOR": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "desktopcomputer",
     "concept": "MONITOR",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MONITOR_HEART": {
     "kind": "system_symbol",
@@ -33614,25 +33614,25 @@
     "source": "semantic_rank"
   },
   "MONITOR_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "desktopcomputer",
     "concept": "MONITOR",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MONITOR_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "desktopcomputer",
     "concept": "MONITOR",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MONITOR_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "desktopcomputer",
     "concept": "MONITOR",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MONITOR_WEIGHT": {
     "kind": "cupertino_glyph",
@@ -38088,31 +38088,31 @@
   },
   "PASSWORD": {
     "kind": "system_symbol",
-    "value": "lock",
+    "value": "key.fill",
     "concept": "PASSWORD",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PASSWORD_OUTLINED": {
     "kind": "system_symbol",
-    "value": "lock",
+    "value": "key.fill",
     "concept": "PASSWORD",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PASSWORD_ROUNDED": {
     "kind": "system_symbol",
-    "value": "lock",
+    "value": "key.fill",
     "concept": "PASSWORD",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PASSWORD_SHARP": {
     "kind": "system_symbol",
-    "value": "lock",
+    "value": "key.fill",
     "concept": "PASSWORD",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PASTE": {
     "kind": "system_symbol",
@@ -39460,31 +39460,31 @@
   },
   "PHISHING": {
     "kind": "system_symbol",
-    "value": "flag",
+    "value": "exclamationmark.shield.fill",
     "concept": "PHISHING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHISHING_OUTLINED": {
     "kind": "system_symbol",
-    "value": "flag",
+    "value": "exclamationmark.shield.fill",
     "concept": "PHISHING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHISHING_ROUNDED": {
     "kind": "system_symbol",
-    "value": "flag",
+    "value": "exclamationmark.shield.fill",
     "concept": "PHISHING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHISHING_SHARP": {
     "kind": "system_symbol",
-    "value": "flag",
+    "value": "exclamationmark.shield.fill",
     "concept": "PHISHING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHONE": {
     "kind": "system_symbol",
@@ -39823,11 +39823,11 @@
     "source": "reviewed_override"
   },
   "PHONELINK": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "laptopcomputer.and.iphone",
     "concept": "PHONELINK",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHONELINK_ERASE": {
     "kind": "system_symbol",
@@ -39914,11 +39914,11 @@
     "source": "semantic_rank"
   },
   "PHONELINK_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "laptopcomputer.and.iphone",
     "concept": "PHONELINK",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHONELINK_RING": {
     "kind": "system_symbol",
@@ -39949,11 +39949,11 @@
     "source": "semantic_rank"
   },
   "PHONELINK_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "laptopcomputer.and.iphone",
     "concept": "PHONELINK",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHONELINK_SETUP": {
     "kind": "cupertino_glyph",
@@ -39984,11 +39984,11 @@
     "source": "semantic_rank"
   },
   "PHONELINK_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "laptopcomputer.and.iphone",
     "concept": "PHONELINK",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHOTO": {
     "kind": "cupertino_glyph",
@@ -41219,29 +41219,29 @@
     "kind": "system_symbol",
     "value": "terminal",
     "concept": "POINT_OF_SALE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "POINT_OF_SALE_OUTLINED": {
     "kind": "system_symbol",
     "value": "terminal",
     "concept": "POINT_OF_SALE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "POINT_OF_SALE_ROUNDED": {
     "kind": "system_symbol",
     "value": "terminal",
     "concept": "POINT_OF_SALE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "POINT_OF_SALE_SHARP": {
     "kind": "system_symbol",
     "value": "terminal",
     "concept": "POINT_OF_SALE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "POLICY": {
     "kind": "system_symbol",
@@ -42561,31 +42561,31 @@
   },
   "QUIZ": {
     "kind": "cupertino_glyph",
-    "value": "INFO",
+    "value": "QUESTION_CIRCLE",
     "concept": "QUIZ",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "QUIZ_OUTLINED": {
     "kind": "cupertino_glyph",
-    "value": "INFO",
+    "value": "QUESTION_CIRCLE",
     "concept": "QUIZ",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "QUIZ_ROUNDED": {
     "kind": "cupertino_glyph",
-    "value": "INFO",
+    "value": "QUESTION_CIRCLE",
     "concept": "QUIZ",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "QUIZ_SHARP": {
     "kind": "cupertino_glyph",
-    "value": "INFO",
+    "value": "QUESTION_CIRCLE",
     "concept": "QUIZ",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "QUORA": {
     "kind": "system_symbol",
@@ -42647,29 +42647,29 @@
     "kind": "system_symbol",
     "value": "scope",
     "concept": "RADAR",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RADAR_OUTLINED": {
     "kind": "system_symbol",
     "value": "scope",
     "concept": "RADAR",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RADAR_ROUNDED": {
     "kind": "system_symbol",
     "value": "scope",
     "concept": "RADAR",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RADAR_SHARP": {
     "kind": "system_symbol",
     "value": "scope",
     "concept": "RADAR",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RADIO": {
     "kind": "system_symbol",
@@ -43408,31 +43408,31 @@
   },
   "REMEMBER_ME": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "person.crop.circle.badge.checkmark",
     "concept": "REMEMBER_ME",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "REMEMBER_ME_OUTLINED": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "person.crop.circle.badge.checkmark",
     "concept": "REMEMBER_ME",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "REMEMBER_ME_ROUNDED": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "person.crop.circle.badge.checkmark",
     "concept": "REMEMBER_ME",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "REMEMBER_ME_SHARP": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "person.crop.circle.badge.checkmark",
     "concept": "REMEMBER_ME",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "REMOVE": {
     "kind": "cupertino_glyph",
@@ -44416,31 +44416,31 @@
   },
   "REVIEWS": {
     "kind": "system_symbol",
-    "value": "star",
+    "value": "star.bubble",
     "concept": "REVIEWS",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "REVIEWS_OUTLINED": {
     "kind": "system_symbol",
-    "value": "star",
+    "value": "star.bubble",
     "concept": "REVIEWS",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "REVIEWS_ROUNDED": {
     "kind": "system_symbol",
-    "value": "star",
+    "value": "star.bubble",
     "concept": "REVIEWS",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "REVIEWS_SHARP": {
     "kind": "system_symbol",
-    "value": "star",
+    "value": "star.bubble",
     "concept": "REVIEWS",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RICE_BOWL": {
     "kind": "cupertino_glyph",
@@ -44975,32 +44975,32 @@
     "source": "reviewed_override"
   },
   "ROUTER": {
-    "kind": "cupertino_glyph",
-    "value": "WIFI",
+    "kind": "system_symbol",
+    "value": "antenna.radiowaves.left.and.right",
     "concept": "ROUTER",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ROUTER_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "WIFI",
+    "kind": "system_symbol",
+    "value": "antenna.radiowaves.left.and.right",
     "concept": "ROUTER",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ROUTER_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "WIFI",
+    "kind": "system_symbol",
+    "value": "antenna.radiowaves.left.and.right",
     "concept": "ROUTER",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ROUTER_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "WIFI",
+    "kind": "system_symbol",
+    "value": "antenna.radiowaves.left.and.right",
     "concept": "ROUTER",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ROWING": {
     "kind": "system_symbol",
@@ -45564,31 +45564,31 @@
   },
   "SCALE": {
     "kind": "system_symbol",
-    "value": "scale.3d",
+    "value": "scalemass",
     "concept": "SCALE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SCALE_OUTLINED": {
     "kind": "system_symbol",
-    "value": "scale.3d",
+    "value": "scalemass",
     "concept": "SCALE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SCALE_ROUNDED": {
     "kind": "system_symbol",
-    "value": "scale.3d",
+    "value": "scalemass",
     "concept": "SCALE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SCALE_SHARP": {
     "kind": "system_symbol",
-    "value": "scale.3d",
+    "value": "scalemass",
     "concept": "SCALE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SCANNER": {
     "kind": "system_symbol",
@@ -45927,11 +45927,11 @@
     "source": "semantic_rank"
   },
   "SCREEN_ROTATION": {
-    "kind": "cupertino_glyph",
-    "value": "LOCK_ROTATION",
+    "kind": "system_symbol",
+    "value": "lock.rotation",
     "concept": "SCREEN_ROTATION",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SCREEN_ROTATION_ALT": {
     "kind": "cupertino_glyph",
@@ -45962,25 +45962,25 @@
     "source": "semantic_rank"
   },
   "SCREEN_ROTATION_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "LOCK_ROTATION",
+    "kind": "system_symbol",
+    "value": "lock.rotation",
     "concept": "SCREEN_ROTATION",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SCREEN_ROTATION_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "LOCK_ROTATION",
+    "kind": "system_symbol",
+    "value": "lock.rotation",
     "concept": "SCREEN_ROTATION",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SCREEN_ROTATION_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "LOCK_ROTATION",
+    "kind": "system_symbol",
+    "value": "lock.rotation",
     "concept": "SCREEN_ROTATION",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SCREEN_SEARCH_DESKTOP": {
     "kind": "cupertino_glyph",
@@ -46039,60 +46039,60 @@
     "source": "semantic_rank"
   },
   "SCREENSHOT": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_LAPTOP",
+    "kind": "system_symbol",
+    "value": "camera.viewfinder",
     "concept": "SCREENSHOT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SCREENSHOT_MONITOR": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "camera.viewfinder",
     "concept": "SCREENSHOT_MONITOR",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SCREENSHOT_MONITOR_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "camera.viewfinder",
     "concept": "SCREENSHOT_MONITOR",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SCREENSHOT_MONITOR_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "camera.viewfinder",
     "concept": "SCREENSHOT_MONITOR",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SCREENSHOT_MONITOR_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_DESKTOP",
+    "kind": "system_symbol",
+    "value": "camera.viewfinder",
     "concept": "SCREENSHOT_MONITOR",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SCREENSHOT_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_LAPTOP",
+    "kind": "system_symbol",
+    "value": "camera.viewfinder",
     "concept": "SCREENSHOT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SCREENSHOT_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_LAPTOP",
+    "kind": "system_symbol",
+    "value": "camera.viewfinder",
     "concept": "SCREENSHOT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SCREENSHOT_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_LAPTOP",
+    "kind": "system_symbol",
+    "value": "camera.viewfinder",
     "concept": "SCREENSHOT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SCUBA_DIVING": {
     "kind": "cupertino_glyph",
@@ -46130,11 +46130,11 @@
     "source": "semantic_rank"
   },
   "SD_CARD": {
-    "kind": "cupertino_glyph",
-    "value": "VIDEO_CAMERA",
+    "kind": "system_symbol",
+    "value": "sdcard",
     "concept": "SD_CARD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SD_CARD_ALERT": {
     "kind": "cupertino_glyph",
@@ -46165,25 +46165,25 @@
     "source": "semantic_rank"
   },
   "SD_CARD_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "VIDEO_CAMERA",
+    "kind": "system_symbol",
+    "value": "sdcard",
     "concept": "SD_CARD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SD_CARD_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "VIDEO_CAMERA",
+    "kind": "system_symbol",
+    "value": "sdcard",
     "concept": "SD_CARD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SD_CARD_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "VIDEO_CAMERA",
+    "kind": "system_symbol",
+    "value": "sdcard",
     "concept": "SD_CARD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SD_OUTLINED": {
     "kind": "system_symbol",
@@ -46207,32 +46207,32 @@
     "source": "semantic_rank"
   },
   "SD_STORAGE": {
-    "kind": "cupertino_glyph",
-    "value": "VIDEO_CAMERA",
+    "kind": "system_symbol",
+    "value": "sdcard.fill",
     "concept": "SD_STORAGE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SD_STORAGE_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "VIDEO_CAMERA",
+    "kind": "system_symbol",
+    "value": "sdcard.fill",
     "concept": "SD_STORAGE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SD_STORAGE_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "VIDEO_CAMERA",
+    "kind": "system_symbol",
+    "value": "sdcard.fill",
     "concept": "SD_STORAGE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SD_STORAGE_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "VIDEO_CAMERA",
+    "kind": "system_symbol",
+    "value": "sdcard.fill",
     "concept": "SD_STORAGE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SEARCH": {
     "kind": "cupertino_glyph",
@@ -46487,32 +46487,32 @@
     "source": "semantic_rank"
   },
   "SELL": {
-    "kind": "cupertino_glyph",
-    "value": "SHOPPING_CART",
+    "kind": "system_symbol",
+    "value": "tag.fill",
     "concept": "SELL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SELL_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "SHOPPING_CART",
+    "kind": "system_symbol",
+    "value": "tag.fill",
     "concept": "SELL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SELL_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "SHOPPING_CART",
+    "kind": "system_symbol",
+    "value": "tag.fill",
     "concept": "SELL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SELL_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "SHOPPING_CART",
+    "kind": "system_symbol",
+    "value": "tag.fill",
     "concept": "SELL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SEND": {
     "kind": "cupertino_glyph",
@@ -46599,32 +46599,32 @@
     "source": "semantic_rank"
   },
   "SEND_TO_MOBILE": {
-    "kind": "cupertino_glyph",
-    "value": "ARROW_RIGHT_TO_LINE",
+    "kind": "system_symbol",
+    "value": "iphone.and.arrow.forward",
     "concept": "SEND_TO_MOBILE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SEND_TO_MOBILE_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "ARROW_RIGHT_TO_LINE",
+    "kind": "system_symbol",
+    "value": "iphone.and.arrow.forward",
     "concept": "SEND_TO_MOBILE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SEND_TO_MOBILE_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "ARROW_RIGHT_TO_LINE",
+    "kind": "system_symbol",
+    "value": "iphone.and.arrow.forward",
     "concept": "SEND_TO_MOBILE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SEND_TO_MOBILE_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "ARROW_RIGHT_TO_LINE",
+    "kind": "system_symbol",
+    "value": "iphone.and.arrow.forward",
     "concept": "SEND_TO_MOBILE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SENSOR_DOOR": {
     "kind": "cupertino_glyph",
@@ -48119,31 +48119,31 @@
   },
   "SHORTCUT": {
     "kind": "system_symbol",
-    "value": "arrow.forward",
+    "value": "arrow.turn.up.right",
     "concept": "SHORTCUT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SHORTCUT_OUTLINED": {
     "kind": "system_symbol",
-    "value": "arrow.forward",
+    "value": "arrow.turn.up.right",
     "concept": "SHORTCUT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SHORTCUT_ROUNDED": {
     "kind": "system_symbol",
-    "value": "arrow.forward",
+    "value": "arrow.turn.up.right",
     "concept": "SHORTCUT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SHORTCUT_SHARP": {
     "kind": "system_symbol",
-    "value": "arrow.forward",
+    "value": "arrow.turn.up.right",
     "concept": "SHORTCUT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SHOW_CHART": {
     "kind": "cupertino_glyph",
@@ -48931,10 +48931,10 @@
   },
   "SIM_CARD": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "simcard.fill",
     "concept": "SIM_CARD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIM_CARD_ALERT": {
     "kind": "cupertino_glyph",
@@ -48994,24 +48994,24 @@
   },
   "SIM_CARD_OUTLINED": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "simcard.fill",
     "concept": "SIM_CARD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIM_CARD_ROUNDED": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "simcard.fill",
     "concept": "SIM_CARD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIM_CARD_SHARP": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "simcard.fill",
     "concept": "SIM_CARD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SINGLE_BED": {
     "kind": "system_symbol",
@@ -49491,31 +49491,31 @@
   },
   "SMART_SCREEN": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "tv.fill",
     "concept": "SMART_SCREEN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SMART_SCREEN_OUTLINED": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "tv.fill",
     "concept": "SMART_SCREEN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SMART_SCREEN_ROUNDED": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "tv.fill",
     "concept": "SMART_SCREEN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SMART_SCREEN_SHARP": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "tv.fill",
     "concept": "SMART_SCREEN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SMART_TOY": {
     "kind": "system_symbol",
@@ -49546,32 +49546,32 @@
     "source": "semantic_rank"
   },
   "SMARTPHONE": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_PHONE_PORTRAIT",
+    "kind": "system_symbol",
+    "value": "iphone.homebutton",
     "concept": "SMARTPHONE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SMARTPHONE_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_PHONE_PORTRAIT",
+    "kind": "system_symbol",
+    "value": "iphone.homebutton",
     "concept": "SMARTPHONE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SMARTPHONE_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_PHONE_PORTRAIT",
+    "kind": "system_symbol",
+    "value": "iphone.homebutton",
     "concept": "SMARTPHONE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SMARTPHONE_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_PHONE_PORTRAIT",
+    "kind": "system_symbol",
+    "value": "iphone.homebutton",
     "concept": "SMARTPHONE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SMOKE_FREE": {
     "kind": "cupertino_glyph",
@@ -50561,32 +50561,32 @@
     "source": "semantic_rank"
   },
   "SPLITSCREEN": {
-    "kind": "cupertino_glyph",
-    "value": "DIVIDE",
+    "kind": "system_symbol",
+    "value": "rectangle.split.2x1",
     "concept": "SPLITSCREEN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SPLITSCREEN_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "DIVIDE",
+    "kind": "system_symbol",
+    "value": "rectangle.split.2x1",
     "concept": "SPLITSCREEN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SPLITSCREEN_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "DIVIDE",
+    "kind": "system_symbol",
+    "value": "rectangle.split.2x1",
     "concept": "SPLITSCREEN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SPLITSCREEN_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "DIVIDE",
+    "kind": "system_symbol",
+    "value": "rectangle.split.2x1",
     "concept": "SPLITSCREEN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SPOKE": {
     "kind": "cupertino_glyph",
@@ -52409,32 +52409,32 @@
     "source": "reviewed_override"
   },
   "SUMMARIZE": {
-    "kind": "cupertino_glyph",
-    "value": "ZOOM_IN",
+    "kind": "system_symbol",
+    "value": "doc.text.fill",
     "concept": "SUMMARIZE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SUMMARIZE_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "ZOOM_IN",
+    "kind": "system_symbol",
+    "value": "doc.text.fill",
     "concept": "SUMMARIZE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SUMMARIZE_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "ZOOM_IN",
+    "kind": "system_symbol",
+    "value": "doc.text.fill",
     "concept": "SUMMARIZE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SUMMARIZE_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "ZOOM_IN",
+    "kind": "system_symbol",
+    "value": "doc.text.fill",
     "concept": "SUMMARIZE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SUNNY": {
     "kind": "system_symbol",
@@ -53830,60 +53830,60 @@
     "source": "semantic_rank"
   },
   "TABLET_ANDROID": {
-    "kind": "cupertino_glyph",
-    "value": "RECTANGLE",
+    "kind": "system_symbol",
+    "value": "ipad.homebutton",
     "concept": "TABLET_ANDROID",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TABLET_ANDROID_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "RECTANGLE",
+    "kind": "system_symbol",
+    "value": "ipad.homebutton",
     "concept": "TABLET_ANDROID",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TABLET_ANDROID_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "RECTANGLE",
+    "kind": "system_symbol",
+    "value": "ipad.homebutton",
     "concept": "TABLET_ANDROID",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TABLET_ANDROID_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "RECTANGLE",
+    "kind": "system_symbol",
+    "value": "ipad.homebutton",
     "concept": "TABLET_ANDROID",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TABLET_MAC": {
-    "kind": "cupertino_glyph",
-    "value": "RECTANGLE",
+    "kind": "system_symbol",
+    "value": "ipad.homebutton",
     "concept": "TABLET_MAC",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TABLET_MAC_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "RECTANGLE",
+    "kind": "system_symbol",
+    "value": "ipad.homebutton",
     "concept": "TABLET_MAC",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TABLET_MAC_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "RECTANGLE",
+    "kind": "system_symbol",
+    "value": "ipad.homebutton",
     "concept": "TABLET_MAC",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TABLET_MAC_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "RECTANGLE",
+    "kind": "system_symbol",
+    "value": "ipad.homebutton",
     "concept": "TABLET_MAC",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TABLET_OUTLINED": {
     "kind": "cupertino_glyph",
@@ -54047,11 +54047,11 @@
     "source": "semantic_rank"
   },
   "TASK": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "checkmark.rectangle.fill",
     "concept": "TASK",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TASK_ALT": {
     "kind": "cupertino_glyph",
@@ -54082,25 +54082,25 @@
     "source": "semantic_rank"
   },
   "TASK_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "checkmark.rectangle.fill",
     "concept": "TASK",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TASK_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "checkmark.rectangle.fill",
     "concept": "TASK",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TASK_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "checkmark.rectangle.fill",
     "concept": "TASK",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TAXI_ALERT": {
     "kind": "cupertino_glyph",
@@ -55447,32 +55447,32 @@
     "source": "semantic_rank"
   },
   "TIMER_10_SELECT": {
-    "kind": "cupertino_glyph",
-    "value": "TIMER",
+    "kind": "system_symbol",
+    "value": "timer",
     "concept": "TIMER_10_SELECT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TIMER_10_SELECT_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "TIMER",
+    "kind": "system_symbol",
+    "value": "timer",
     "concept": "TIMER_10_SELECT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TIMER_10_SELECT_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "TIMER",
+    "kind": "system_symbol",
+    "value": "timer",
     "concept": "TIMER_10_SELECT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TIMER_10_SELECT_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "TIMER",
+    "kind": "system_symbol",
+    "value": "timer",
     "concept": "TIMER_10_SELECT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TIMER_10_SHARP": {
     "kind": "cupertino_glyph",
@@ -55503,32 +55503,32 @@
     "source": "semantic_rank"
   },
   "TIMER_3_SELECT": {
-    "kind": "cupertino_glyph",
-    "value": "TIMER",
+    "kind": "system_symbol",
+    "value": "timer",
     "concept": "TIMER_3_SELECT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TIMER_3_SELECT_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "TIMER",
+    "kind": "system_symbol",
+    "value": "timer",
     "concept": "TIMER_3_SELECT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TIMER_3_SELECT_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "TIMER",
+    "kind": "system_symbol",
+    "value": "timer",
     "concept": "TIMER_3_SELECT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TIMER_3_SELECT_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "TIMER",
+    "kind": "system_symbol",
+    "value": "timer",
     "concept": "TIMER_3_SELECT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TIMER_3_SHARP": {
     "kind": "cupertino_glyph",
@@ -56455,11 +56455,11 @@
     "source": "reviewed_override"
   },
   "TROLLEY": {
-    "kind": "cupertino_glyph",
-    "value": "SHOPPING_CART",
+    "kind": "system_symbol",
+    "value": "cart.fill",
     "concept": "TROLLEY",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TROUBLESHOOT": {
     "kind": "system_symbol",
@@ -56603,31 +56603,31 @@
   },
   "TUNGSTEN": {
     "kind": "system_symbol",
-    "value": "bolt",
+    "value": "lightbulb.fill",
     "concept": "TUNGSTEN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TUNGSTEN_OUTLINED": {
     "kind": "system_symbol",
-    "value": "bolt",
+    "value": "lightbulb.fill",
     "concept": "TUNGSTEN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TUNGSTEN_ROUNDED": {
     "kind": "system_symbol",
-    "value": "bolt",
+    "value": "lightbulb.fill",
     "concept": "TUNGSTEN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TUNGSTEN_SHARP": {
     "kind": "system_symbol",
-    "value": "bolt",
+    "value": "lightbulb.fill",
     "concept": "TUNGSTEN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TURN_LEFT": {
     "kind": "cupertino_glyph",
@@ -57697,8 +57697,8 @@
     "kind": "system_symbol",
     "value": "cable.connector",
     "concept": "USB",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "USB_OFF": {
     "kind": "cupertino_glyph",
@@ -57732,22 +57732,22 @@
     "kind": "system_symbol",
     "value": "cable.connector",
     "concept": "USB",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "USB_ROUNDED": {
     "kind": "system_symbol",
     "value": "cable.connector",
     "concept": "USB",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "USB_SHARP": {
     "kind": "system_symbol",
     "value": "cable.connector",
     "concept": "USB",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VACCINES": {
     "kind": "system_symbol",
@@ -58450,11 +58450,11 @@
     "source": "exact_apple_name"
   },
   "VIDEOGAME_ASSET": {
-    "kind": "cupertino_glyph",
-    "value": "GAME_CONTROLLER",
+    "kind": "system_symbol",
+    "value": "gamecontroller.fill",
     "concept": "VIDEOGAME_ASSET",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VIDEOGAME_ASSET_OFF": {
     "kind": "cupertino_glyph",
@@ -58485,25 +58485,25 @@
     "source": "semantic_rank"
   },
   "VIDEOGAME_ASSET_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "GAME_CONTROLLER",
+    "kind": "system_symbol",
+    "value": "gamecontroller.fill",
     "concept": "VIDEOGAME_ASSET",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VIDEOGAME_ASSET_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "GAME_CONTROLLER",
+    "kind": "system_symbol",
+    "value": "gamecontroller.fill",
     "concept": "VIDEOGAME_ASSET",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VIDEOGAME_ASSET_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "GAME_CONTROLLER",
+    "kind": "system_symbol",
+    "value": "gamecontroller.fill",
     "concept": "VIDEOGAME_ASSET",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VIEW_AGENDA": {
     "kind": "system_symbol",
@@ -59914,10 +59914,10 @@
   },
   "WATER": {
     "kind": "system_symbol",
-    "value": "humidity",
+    "value": "drop.fill",
     "concept": "WATER",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WATER_DAMAGE": {
     "kind": "system_symbol",
@@ -59977,24 +59977,24 @@
   },
   "WATER_OUTLINED": {
     "kind": "system_symbol",
-    "value": "humidity",
+    "value": "drop.fill",
     "concept": "WATER",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WATER_ROUNDED": {
     "kind": "system_symbol",
-    "value": "humidity",
+    "value": "drop.fill",
     "concept": "WATER",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WATER_SHARP": {
     "kind": "system_symbol",
-    "value": "humidity",
+    "value": "drop.fill",
     "concept": "WATER",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WATERFALL_CHART": {
     "kind": "cupertino_glyph",

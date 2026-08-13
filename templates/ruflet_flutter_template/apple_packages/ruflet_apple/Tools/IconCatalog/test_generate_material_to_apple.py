@@ -165,6 +165,35 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             self.assertEqual(self.entries[concept]["kind"], kind)
             self.assertEqual(self.entries[concept]["value"], value)
 
+    def test_device_hardware_family_is_explicit_reviewed_native_artwork(self):
+        family = MODULE.load_json(MODULE.DEVICE_HARDWARE_OVERRIDES_PATH)
+        low_confidence = {
+            item["concept"] for item in self.audit["low_confidence_concepts"]
+        }
+        self.assertEqual(self.audit["reviewed_families"]["device_hardware"], len(family))
+        self.assertTrue(set(family).isdisjoint(low_confidence))
+        for concept, target in family.items():
+            entry = self.entries[concept]
+            self.assertEqual(entry["kind"], target["kind"])
+            self.assertEqual(entry["value"], target["value"])
+            self.assertEqual(entry["confidence"], "reviewed")
+            self.assertEqual(entry["source"], "reviewed_override")
+
+    def test_device_hardware_known_wrong_generic_targets_do_not_regress(self):
+        expected = {
+            "ADD_TO_HOME_SCREEN": ("system_symbol", "plus.app"),
+            "DEVELOPER_BOARD": ("system_symbol", "cpu.fill"),
+            "DISC_FULL": ("system_symbol", "opticaldisc"),
+            "GAMEPAD": ("system_symbol", "gamecontroller.fill"),
+            "MOBILE_OFF": ("system_symbol", "iphone.homebutton.slash"),
+            "PHONELINK": ("system_symbol", "laptopcomputer.and.iphone"),
+            "SD_CARD": ("system_symbol", "sdcard"),
+            "USB": ("system_symbol", "cable.connector"),
+        }
+        for concept, (kind, value) in expected.items():
+            self.assertEqual(self.entries[concept]["kind"], kind)
+            self.assertEqual(self.entries[concept]["value"], value)
+
     def test_checked_in_artifacts_are_reproducible(self):
         self.assertEqual(
             MODULE.OUTPUT_PATH.read_text(encoding="utf-8"),
