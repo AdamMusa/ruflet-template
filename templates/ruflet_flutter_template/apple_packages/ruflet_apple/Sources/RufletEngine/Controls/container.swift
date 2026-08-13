@@ -1,6 +1,12 @@
 import RufletProtocol
 import SwiftUI
 
+#if os(iOS)
+  import UIKit
+#elseif os(macOS)
+  import AppKit
+#endif
+
 @MainActor
 public struct ContainerControl: View {
   @ObservedObject public var control: RufletControl
@@ -8,9 +14,8 @@ public struct ContainerControl: View {
 
   public var body: some View {
     let radius = parseBorderRadius(control.dynamicValue("border_radius"), .zero)!
-    let border = parseBorder(control.dynamicValue("border"))
     let animation = parseAnimation(control.dynamicValue("animate"))
-    let shadow = rufletDictionary(control.dynamicValue("shadow"))
+    let presentation = RufletContainerPresentation(control: control, radius: radius)
     LayoutControl(control: control) {
       control.buildWidget("content")
         .padding(parsePadding(control.dynamicValue("padding")) ?? EdgeInsets())
@@ -20,20 +25,29 @@ public struct ContainerControl: View {
             alignment: parseAlignment(control.dynamicValue("alignment"), .center)!.swiftUI
           )
         )
-        .background(RufletContainerBackground(control: control, radius: radius))
-        .overlay {
-          if let border {
-            RufletBorderOverlay(border: border, radius: radius)
-          }
+        .background {
+          RufletContainerShadows(presentation: presentation)
+          RufletContainerDecoration(
+            control: control,
+            presentation: presentation,
+            foreground: false)
         }
-        .clipShape(RufletContainerShape(shape: control.string("shape"), radius: radius))
-        .shadow(
-          color: parseColor(shadow?["color"] as? String) ?? .clear,
-          radius: parseDouble(shadow?["blur_radius"], 0)!,
-          x: parseOffset(shadow?["offset"])?.width ?? 0,
-          y: parseOffset(shadow?["offset"])?.height ?? 0
+        .overlay {
+          RufletContainerDecoration(
+            control: control,
+            presentation: presentation,
+            foreground: true
+          )
+          .allowsHitTesting(false)
+        }
+        .modifier(RufletContainerClipModifier(presentation: presentation))
+        .modifier(
+          RufletContainerInteractionModifier(
+            control: control,
+            presentation: presentation)
         )
-        .modifier(RufletContainerInteractionModifier(control: control))
+        .modifier(RufletContainerBackdropModifier(presentation: presentation))
+        .modifier(RufletContainerColorFilterModifier(filter: presentation.colorFilter))
         .allowsHitTesting(!control.boolean("ignore_interactions", default: false))
         .animation(animation?.animation, value: animationSignature)
         .modifier(RufletContainerAnimationCompletion(control: control, animation: animation))
@@ -41,26 +55,210 @@ public struct ContainerControl: View {
   }
 
   private var animationSignature: String {
-    ["width", "height", "bgcolor", "padding", "margin", "alignment", "border_radius"]
-      .map { control.dynamicValue($0).map(String.init(describing:)) ?? "nil" }
-      .joined(separator: "|")
+    [
+      "width", "height", "bgcolor", "padding", "margin", "alignment", "border_radius",
+      "border", "shape", "gradient", "blend_mode", "shadow", "image",
+      "foreground_decoration", "blur", "color_filter", "clip_behavior",
+    ]
+    .map { control.dynamicValue($0).map(String.init(describing:)) ?? "nil" }
+    .joined(separator: "|")
   }
 }
 
 @MainActor
-private struct RufletContainerBackground: View {
+private struct RufletContainerDecoration: View {
   @ObservedObject var control: RufletControl
-  let radius: RufletBorderRadius
+  let presentation: RufletContainerPresentation
+  let foreground: Bool
 
   var body: some View {
-    Group {
-      if let gradient = parseGradient(control.dynamicValue("gradient")) {
-        RufletGradientShapeStyle(gradient: gradient)
-      } else {
-        parseColor(control.string("bgcolor")) ?? .clear
+    let decoration = foreground ? presentation.foreground : presentation.background
+    ZStack {
+      if let decoration {
+        Group {
+          if let gradient = decoration.gradient {
+            RufletGradientShapeStyle(gradient: gradient)
+          } else {
+            decoration.color ?? .clear
+          }
+        }
+        .blendMode(decoration.blendMode)
+        if let image = decoration.image {
+          RufletContainerDecorationImageView(image: image)
+        }
+        if let border = decoration.border {
+          RufletBorderOverlay(border: border, radius: decoration.radius)
+        }
+        ForEach(Array(decoration.shadows.enumerated()), id: \.offset) { _, shadow in
+          RufletContainerShape(shape: decoration.shape, radius: decoration.radius)
+            .fill(shadow.color)
+            .padding(-shadow.spread)
+            .blur(radius: shadow.blurRadius)
+            .offset(x: shadow.x, y: shadow.y)
+        }
       }
     }
-    .clipShape(RufletContainerShape(shape: control.string("shape"), radius: radius))
+    .clipShape(
+      RufletContainerShape(
+        shape: decoration?.shape ?? presentation.shape,
+        radius: decoration?.radius ?? presentation.radius))
+  }
+}
+
+@MainActor
+private struct RufletContainerDecorationImageView: View {
+  let image: RufletContainerDecorationImage
+
+  var body: some View {
+    RufletImageSourceView(
+      source: image.source,
+      contentMode: image.fit.contentMode,
+      onError: nil,
+      resizingMode: image.repeatMode.resizingMode,
+      interpolation: image.quality.interpolation,
+      antiAlias: image.antiAlias,
+      tint: image.tint,
+      svgFit: image.fit
+    )
+    .opacity(image.opacity)
+    .scaleEffect(image.scale)
+    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: image.alignment)
+    .blendMode(image.colorBlendMode)
+    .modifier(RufletContainerInvertModifier(enabled: image.invertColors))
+    .flipsForRightToLeftLayoutDirection(image.matchTextDirection)
+    .allowsHitTesting(false)
+  }
+}
+
+typealias RufletContainerDecorationImage = RufletTextFieldDecorationImage
+
+struct RufletContainerBlur: Equatable {
+  let sigmaX: CGFloat
+  let sigmaY: CGFloat
+
+  var radius: CGFloat { max(sigmaX, sigmaY) }
+
+  init?(_ value: Any?) {
+    guard let value else { return nil }
+    if let number = parseDouble(value) {
+      sigmaX = CGFloat(number)
+      sigmaY = CGFloat(number)
+    } else if let values = rufletArray(value) {
+      sigmaX = CGFloat(parseDouble(values.first, 0)!)
+      sigmaY = CGFloat(parseDouble(values.count > 1 ? values[1] : values.first, 0)!)
+    } else if let values = rufletDictionary(value) {
+      sigmaX = CGFloat(parseDouble(values["sigma_x"], 0)!)
+      sigmaY = CGFloat(parseDouble(values["sigma_y"], 0)!)
+    } else {
+      return nil
+    }
+  }
+}
+
+struct RufletContainerShadow {
+  let color: Color
+  let blurRadius: CGFloat
+  let spread: CGFloat
+  let x: CGFloat
+  let y: CGFloat
+
+  init?(_ value: Any?) {
+    guard let values = rufletDictionary(value) else { return nil }
+    let offset = parseOffset(values["offset"], .zero)!
+    color = parseColor(values["color"] as? String, .black)!
+    blurRadius = CGFloat(parseDouble(values["blur_radius"], 0)!)
+    spread = CGFloat(parseDouble(values["spread_radius"], 0)!)
+    x = offset.width
+    y = offset.height
+  }
+}
+
+struct RufletContainerColorFilter {
+  let color: Color
+  let blendMode: BlendMode
+
+  init?(_ value: Any?) {
+    guard let values = rufletDictionary(value),
+      let color = parseColor(values["color"] as? String),
+      let blendMode = rufletContainerBlendMode(values["blend_mode"] as? String)
+    else { return nil }
+    self.color = color
+    self.blendMode = blendMode
+  }
+}
+
+@MainActor
+struct RufletContainerDecorationSpec {
+  let shape: String?
+  let color: Color?
+  let gradient: RufletGradientSpec?
+  let radius: RufletBorderRadius
+  let border: RufletBorder?
+  let shadows: [RufletContainerShadow]
+  let blendMode: BlendMode
+  let image: RufletContainerDecorationImage?
+
+  init?(_ value: Any?, control: RufletControl) {
+    guard let values = rufletDictionary(value) else { return nil }
+    shape = values["shape"] as? String
+    color = parseColor(values["bgcolor"] as? String)
+    gradient = parseGradient(values["gradient"])
+    radius = parseBorderRadius(values["border_radius"], .zero)!
+    border = parseBorder(values["border"])
+    if let shadowValues = rufletArray(values["shadows"]) {
+      shadows = shadowValues.compactMap(RufletContainerShadow.init)
+    } else {
+      shadows = RufletContainerShadow(values["shadows"]).map { [$0] } ?? []
+    }
+    blendMode = rufletContainerBlendMode(values["blend_mode"] as? String) ?? .normal
+    image = RufletContainerDecorationImage(values["image"], control: control)
+  }
+}
+
+@MainActor
+struct RufletContainerPresentation {
+  let radius: RufletBorderRadius
+  let shape: String?
+  let clipBehavior: String
+  let background: RufletContainerDecorationSpec?
+  let foreground: RufletContainerDecorationSpec?
+  let shadows: [RufletContainerShadow]
+  let blur: RufletContainerBlur?
+  let colorFilter: RufletContainerColorFilter?
+  let ink: Bool
+  let inkColor: Color
+
+  init(control: RufletControl, radius: RufletBorderRadius) {
+    self.radius = radius
+    shape = control.string("shape")
+    clipBehavior =
+      (control.string("clip_behavior")
+      ?? (parseBorderRadius(control.dynamicValue("border_radius")) == nil ? "none" : "antialias"))
+      .replacingOccurrences(of: "_", with: "")
+      .lowercased()
+    var backgroundValues: [String: Any] = [:]
+    if let value = control.string("shape") { backgroundValues["shape"] = value }
+    if let value = control.string("bgcolor") { backgroundValues["bgcolor"] = value }
+    if let value = control.dynamicValue("gradient") { backgroundValues["gradient"] = value }
+    if let value = control.dynamicValue("border") { backgroundValues["border"] = value }
+    if let value = control.dynamicValue("border_radius") {
+      backgroundValues["border_radius"] = value
+    }
+    if let value = control.string("blend_mode") { backgroundValues["blend_mode"] = value }
+    if let value = control.dynamicValue("image") { backgroundValues["image"] = value }
+    background = RufletContainerDecorationSpec(backgroundValues, control: control)
+    foreground = RufletContainerDecorationSpec(
+      control.dynamicValue("foreground_decoration"), control: control)
+    let shadowValue = control.dynamicValue("shadow")
+    if let values = rufletArray(shadowValue) {
+      shadows = values.compactMap(RufletContainerShadow.init)
+    } else {
+      shadows = RufletContainerShadow(shadowValue).map { [$0] } ?? []
+    }
+    blur = RufletContainerBlur(control.dynamicValue("blur"))
+    colorFilter = RufletContainerColorFilter(control.dynamicValue("color_filter"))
+    ink = control.boolean("ink", default: false)
+    inkColor = parseColor(control.string("ink_color")) ?? Color.accentColor.opacity(0.18)
   }
 }
 
@@ -77,40 +275,86 @@ private struct RufletContainerShape: Shape {
 }
 
 @MainActor
+private struct RufletContainerShadows: View {
+  let presentation: RufletContainerPresentation
+
+  var body: some View {
+    ZStack {
+      ForEach(Array(presentation.shadows.enumerated()), id: \.offset) { _, shadow in
+        RufletContainerShape(shape: presentation.shape, radius: presentation.radius)
+          .fill(shadow.color)
+          .padding(-shadow.spread)
+          .blur(radius: shadow.blurRadius)
+          .offset(x: shadow.x, y: shadow.y)
+      }
+    }
+    .allowsHitTesting(false)
+  }
+}
+
+private struct RufletContainerClipModifier: ViewModifier {
+  let presentation: RufletContainerPresentation
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if presentation.clipBehavior == "none" {
+      content
+    } else {
+      content.clipShape(
+        RufletContainerShape(shape: presentation.shape, radius: presentation.radius),
+        style: FillStyle(
+          eoFill: false,
+          antialiased: presentation.clipBehavior != "hardedge"))
+    }
+  }
+}
+
+@MainActor
 private struct RufletContainerInteractionModifier: ViewModifier {
   @ObservedObject var control: RufletControl
+  let presentation: RufletContainerPresentation
 
   @ViewBuilder
   func body(content: Content) -> some View {
     let contract = RufletContainerInteractionContract(control: control)
     if contract.isEnabled {
-      content
-        .contentShape(Rectangle())
-        .modifier(
-          RufletContainerTapModifier(
-            enabled: contract.handlesTap,
-            action: tapped)
-        )
-        .modifier(
-          RufletContainerLongPressModifier(
-            enabled: contract.handlesLongPress,
-            action: { control.triggerEvent("long_press") })
-        )
-        .modifier(
-          RufletContainerHoverModifier(
-            enabled: contract.handlesHover,
-            action: { control.triggerEvent("hover", data: .bool($0)) })
-        )
-        .modifier(
-          RufletContainerTapDownModifier(
-            enabled: contract.handlesTapDown,
-            control: control))
+      interactive(content, contract: contract)
     } else {
       // Pinned Flet does not install MouseRegion/GestureDetector at all when
       // this Container owns no interaction. Keeping the child untouched is
       // essential: an inert parent recognizer must not steal a Button tap.
       content
     }
+  }
+
+  private func interactive(_ content: Content, contract: RufletContainerInteractionContract)
+    -> some View
+  {
+    content
+      .contentShape(Rectangle())
+      .modifier(
+        RufletContainerTapModifier(
+          enabled: contract.handlesTap || (presentation.ink && contract.handlesTapDown),
+          ink: presentation.ink,
+          inkColor: presentation.inkColor,
+          shape: presentation.shape,
+          radius: presentation.radius,
+          action: tapped)
+      )
+      .modifier(
+        RufletContainerLongPressModifier(
+          enabled: contract.handlesLongPress,
+          action: { control.triggerEvent("long_press") })
+      )
+      .modifier(
+        RufletContainerHoverModifier(
+          enabled: contract.handlesHover,
+          action: { control.triggerEvent("hover", data: .bool($0)) })
+      )
+      .modifier(
+        RufletContainerTapDownModifier(
+          enabled: contract.handlesTapDown,
+          control: control))
   }
 
   private func tapped() {
@@ -143,14 +387,41 @@ struct RufletContainerInteractionContract {
 
 private struct RufletContainerTapModifier: ViewModifier {
   let enabled: Bool
+  let ink: Bool
+  let inkColor: Color
+  let shape: String?
+  let radius: RufletBorderRadius
   let action: () -> Void
 
   @ViewBuilder
   func body(content: Content) -> some View {
-    if enabled {
+    if enabled, ink {
+      Button(action: action) { content }
+        .buttonStyle(
+          RufletContainerInkButtonStyle(
+            color: inkColor,
+            shape: shape,
+            radius: radius))
+    } else if enabled {
       content.onTapGesture(perform: action)
     } else {
       content
+    }
+  }
+}
+
+private struct RufletContainerInkButtonStyle: ButtonStyle {
+  let color: Color
+  let shape: String?
+  let radius: RufletBorderRadius
+
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label.overlay {
+      if configuration.isPressed {
+        RufletContainerShape(shape: shape, radius: radius)
+          .fill(color)
+          .allowsHitTesting(false)
+      }
     }
   }
 }
@@ -210,6 +481,113 @@ private struct RufletContainerTapDownModifier: ViewModifier {
     }
   }
 }
+
+private struct RufletContainerBackdropModifier: ViewModifier {
+  let presentation: RufletContainerPresentation
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if let blur = presentation.blur {
+      content.background {
+        RufletNativeBackdropBlur(radius: blur.radius)
+          .clipShape(
+            RufletContainerShape(
+              shape: presentation.shape,
+              radius: presentation.radius))
+      }
+    } else {
+      content
+    }
+  }
+}
+
+private struct RufletContainerColorFilterModifier: ViewModifier {
+  let filter: RufletContainerColorFilter?
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if let filter {
+      content
+        .overlay(filter.color.blendMode(filter.blendMode))
+        .compositingGroup()
+    } else {
+      content
+    }
+  }
+}
+
+private struct RufletContainerInvertModifier: ViewModifier {
+  let enabled: Bool
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if enabled { content.colorInvert() } else { content }
+  }
+}
+
+private func rufletContainerBlendMode(_ value: String?) -> BlendMode? {
+  guard let value else { return nil }
+  switch value.replacingOccurrences(of: "_", with: "").lowercased() {
+  case "clear": return .destinationOut
+  case "src", "source": return .normal
+  case "srcin", "sourcein": return .sourceAtop
+  case "srcatop", "sourceatop": return .sourceAtop
+  case "dstover", "destinationover": return .destinationOver
+  case "dstout", "destinationout": return .destinationOut
+  case "dstatop", "destinationatop": return .destinationOver
+  case "xor": return .difference
+  case "plus": return .plusLighter
+  case "modulate", "multiply": return .multiply
+  case "screen": return .screen
+  case "overlay": return .overlay
+  case "darken": return .darken
+  case "lighten": return .lighten
+  case "colordodge": return .colorDodge
+  case "colorburn": return .colorBurn
+  case "hardlight": return .hardLight
+  case "softlight": return .softLight
+  case "difference": return .difference
+  case "exclusion": return .exclusion
+  case "hue": return .hue
+  case "saturation": return .saturation
+  case "color": return .color
+  case "luminosity": return .luminosity
+  default: return .normal
+  }
+}
+
+#if os(iOS)
+  private struct RufletNativeBackdropBlur: UIViewRepresentable {
+    let radius: CGFloat
+
+    func makeUIView(context: Context) -> UIVisualEffectView {
+      let view = UIVisualEffectView(effect: UIBlurEffect(style: .systemMaterial))
+      view.isUserInteractionEnabled = false
+      view.alpha = min(max(radius / 20, 0.05), 1)
+      return view
+    }
+
+    func updateUIView(_ view: UIVisualEffectView, context: Context) {
+      view.alpha = min(max(radius / 20, 0.05), 1)
+    }
+  }
+#elseif os(macOS)
+  private struct RufletNativeBackdropBlur: NSViewRepresentable {
+    let radius: CGFloat
+
+    func makeNSView(context: Context) -> NSVisualEffectView {
+      let view = NSVisualEffectView()
+      view.blendingMode = .behindWindow
+      view.material = .contentBackground
+      view.state = .active
+      return view
+    }
+
+    func updateNSView(_ view: NSVisualEffectView, context: Context) {
+      view.alphaValue = min(max(radius / 20, 0.05), 1)
+    }
+  }
+#endif
 
 @MainActor
 private struct RufletContainerAnimationCompletion: ViewModifier {
