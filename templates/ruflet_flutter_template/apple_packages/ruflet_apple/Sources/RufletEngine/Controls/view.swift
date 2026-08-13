@@ -108,11 +108,16 @@ public struct ViewControl: View {
 
   @ViewBuilder
   private var content: some View {
-    let column = VStack(alignment: horizontalAlignment, spacing: control.number("spacing") ?? 10) {
-      ForEach(control.children("controls")) { child in
-        ControlWidget(control: child)
-      }
-    }
+    let column = RufletFlexibleAxisStack(
+      axis: .vertical,
+      children: control.children("controls"),
+      spacing: control.number("spacing") ?? 10,
+      horizontalAlignment: horizontalAlignment,
+      verticalAlignment: .center,
+      frameAlignment: viewAlignment,
+      crossAxisStretch: control.string("horizontal_alignment")?.lowercased() == "stretch",
+      tight: false
+    )
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: viewAlignment)
     .background {
       GeometryReader { proxy in
