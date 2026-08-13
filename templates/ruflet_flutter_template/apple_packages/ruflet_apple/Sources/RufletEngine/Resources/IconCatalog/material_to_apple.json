@@ -7651,32 +7651,32 @@
     "source": "semantic_rank"
   },
   "CALCULATE": {
-    "kind": "cupertino_glyph",
-    "value": "SUM",
+    "kind": "system_symbol",
+    "value": "plus.forwardslash.minus",
     "concept": "CALCULATE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CALCULATE_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "SUM",
+    "kind": "system_symbol",
+    "value": "plus.forwardslash.minus",
     "concept": "CALCULATE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CALCULATE_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "SUM",
+    "kind": "system_symbol",
+    "value": "plus.forwardslash.minus",
     "concept": "CALCULATE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CALCULATE_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "SUM",
+    "kind": "system_symbol",
+    "value": "plus.forwardslash.minus",
     "concept": "CALCULATE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CALENDAR_MONTH": {
     "kind": "system_symbol",
@@ -8575,32 +8575,32 @@
     "source": "semantic_rank"
   },
   "CARD_MEMBERSHIP": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "creditcard.fill",
     "concept": "CARD_MEMBERSHIP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CARD_MEMBERSHIP_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "creditcard.fill",
     "concept": "CARD_MEMBERSHIP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CARD_MEMBERSHIP_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "creditcard.fill",
     "concept": "CARD_MEMBERSHIP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CARD_MEMBERSHIP_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "creditcard.fill",
     "concept": "CARD_MEMBERSHIP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CARD_TRAVEL": {
     "kind": "system_symbol",
@@ -11130,32 +11130,32 @@
     "source": "reviewed_override"
   },
   "CONTACTLESS": {
-    "kind": "cupertino_glyph",
-    "value": "BLUETOOTH",
+    "kind": "system_symbol",
+    "value": "wave.3.right.circle.fill",
     "concept": "CONTACTLESS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CONTACTLESS_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "BLUETOOTH",
+    "kind": "system_symbol",
+    "value": "wave.3.right.circle.fill",
     "concept": "CONTACTLESS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CONTACTLESS_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "BLUETOOTH",
+    "kind": "system_symbol",
+    "value": "wave.3.right.circle.fill",
     "concept": "CONTACTLESS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CONTACTLESS_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "BLUETOOTH",
+    "kind": "system_symbol",
+    "value": "wave.3.right.circle.fill",
     "concept": "CONTACTLESS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CONTACTS": {
     "kind": "system_symbol",
@@ -12313,88 +12313,88 @@
     "source": "semantic_rank"
   },
   "CURRENCY_EXCHANGE": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "arrow.left.arrow.right.circle.fill",
     "concept": "CURRENCY_EXCHANGE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CURRENCY_EXCHANGE_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "arrow.left.arrow.right.circle.fill",
     "concept": "CURRENCY_EXCHANGE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CURRENCY_EXCHANGE_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "arrow.left.arrow.right.circle.fill",
     "concept": "CURRENCY_EXCHANGE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CURRENCY_EXCHANGE_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "arrow.left.arrow.right.circle.fill",
     "concept": "CURRENCY_EXCHANGE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CURRENCY_FRANC": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "francsign.circle",
     "concept": "CURRENCY_FRANC",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CURRENCY_FRANC_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "francsign.circle",
     "concept": "CURRENCY_FRANC",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CURRENCY_FRANC_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "francsign.circle",
     "concept": "CURRENCY_FRANC",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CURRENCY_FRANC_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "francsign.circle",
     "concept": "CURRENCY_FRANC",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CURRENCY_LIRA": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "turkishlirasign.circle",
     "concept": "CURRENCY_LIRA",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CURRENCY_LIRA_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "turkishlirasign.circle",
     "concept": "CURRENCY_LIRA",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CURRENCY_LIRA_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "turkishlirasign.circle",
     "concept": "CURRENCY_LIRA",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CURRENCY_LIRA_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "turkishlirasign.circle",
     "concept": "CURRENCY_LIRA",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CURRENCY_POUND": {
     "kind": "cupertino_glyph",
@@ -12425,60 +12425,60 @@
     "source": "semantic_rank"
   },
   "CURRENCY_RUBLE": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "rublesign.circle",
     "concept": "CURRENCY_RUBLE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CURRENCY_RUBLE_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "rublesign.circle",
     "concept": "CURRENCY_RUBLE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CURRENCY_RUBLE_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "rublesign.circle",
     "concept": "CURRENCY_RUBLE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CURRENCY_RUBLE_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "rublesign.circle",
     "concept": "CURRENCY_RUBLE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CURRENCY_RUPEE": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "indianrupeesign.circle",
     "concept": "CURRENCY_RUPEE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CURRENCY_RUPEE_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "indianrupeesign.circle",
     "concept": "CURRENCY_RUPEE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CURRENCY_RUPEE_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "indianrupeesign.circle",
     "concept": "CURRENCY_RUPEE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CURRENCY_RUPEE_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "indianrupeesign.circle",
     "concept": "CURRENCY_RUPEE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CURRENCY_YEN": {
     "kind": "cupertino_glyph",
@@ -12509,32 +12509,32 @@
     "source": "semantic_rank"
   },
   "CURRENCY_YUAN": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "yensign.circle",
     "concept": "CURRENCY_YUAN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CURRENCY_YUAN_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "yensign.circle",
     "concept": "CURRENCY_YUAN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CURRENCY_YUAN_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "yensign.circle",
     "concept": "CURRENCY_YUAN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CURRENCY_YUAN_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "yensign.circle",
     "concept": "CURRENCY_YUAN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CURTAINS": {
     "kind": "cupertino_glyph",
@@ -12789,32 +12789,32 @@
     "source": "reviewed_override"
   },
   "DATA_EXPLORATION": {
-    "kind": "cupertino_glyph",
-    "value": "GRAPH_CIRCLE",
+    "kind": "system_symbol",
+    "value": "chart.xyaxis.line",
     "concept": "DATA_EXPLORATION",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DATA_EXPLORATION_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "GRAPH_CIRCLE",
+    "kind": "system_symbol",
+    "value": "chart.xyaxis.line",
     "concept": "DATA_EXPLORATION",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DATA_EXPLORATION_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "GRAPH_CIRCLE",
+    "kind": "system_symbol",
+    "value": "chart.xyaxis.line",
     "concept": "DATA_EXPLORATION",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DATA_EXPLORATION_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "GRAPH_CIRCLE",
+    "kind": "system_symbol",
+    "value": "chart.xyaxis.line",
     "concept": "DATA_EXPLORATION",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DATA_OBJECT": {
     "kind": "system_symbol",
@@ -26943,53 +26943,53 @@
     "source": "semantic_rank"
   },
   "INSERT_CHART": {
-    "kind": "cupertino_glyph",
-    "value": "CHART_BAR",
+    "kind": "system_symbol",
+    "value": "chart.bar.fill",
     "concept": "INSERT_CHART",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "INSERT_CHART_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "CHART_BAR",
+    "kind": "system_symbol",
+    "value": "chart.bar.fill",
     "concept": "INSERT_CHART",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "INSERT_CHART_OUTLINED_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "CHART_BAR",
+    "kind": "system_symbol",
+    "value": "chart.bar.fill",
     "concept": "INSERT_CHART_OUTLINED",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "INSERT_CHART_OUTLINED_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "CHART_BAR",
+    "kind": "system_symbol",
+    "value": "chart.bar.fill",
     "concept": "INSERT_CHART_OUTLINED",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "INSERT_CHART_OUTLINED_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "CHART_BAR",
+    "kind": "system_symbol",
+    "value": "chart.bar.fill",
     "concept": "INSERT_CHART_OUTLINED",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "INSERT_CHART_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "CHART_BAR",
+    "kind": "system_symbol",
+    "value": "chart.bar.fill",
     "concept": "INSERT_CHART",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "INSERT_CHART_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "CHART_BAR",
+    "kind": "system_symbol",
+    "value": "chart.bar.fill",
     "concept": "INSERT_CHART",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "INSERT_COMMENT": {
     "kind": "cupertino_glyph",
@@ -29050,32 +29050,32 @@
     "source": "semantic_rank"
   },
   "LEGEND_TOGGLE": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "list.bullet.rectangle",
     "concept": "LEGEND_TOGGLE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LEGEND_TOGGLE_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "list.bullet.rectangle",
     "concept": "LEGEND_TOGGLE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LEGEND_TOGGLE_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "list.bullet.rectangle",
     "concept": "LEGEND_TOGGLE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LEGEND_TOGGLE_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "list.bullet.rectangle",
     "concept": "LEGEND_TOGGLE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LENS": {
     "kind": "system_symbol",
@@ -35295,31 +35295,31 @@
   },
   "NEXT_WEEK": {
     "kind": "system_symbol",
-    "value": "line.diagonal.arrow",
+    "value": "calendar.badge.plus",
     "concept": "NEXT_WEEK",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NEXT_WEEK_OUTLINED": {
     "kind": "system_symbol",
-    "value": "line.diagonal.arrow",
+    "value": "calendar.badge.plus",
     "concept": "NEXT_WEEK",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NEXT_WEEK_ROUNDED": {
     "kind": "system_symbol",
-    "value": "line.diagonal.arrow",
+    "value": "calendar.badge.plus",
     "concept": "NEXT_WEEK",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NEXT_WEEK_SHARP": {
     "kind": "system_symbol",
-    "value": "line.diagonal.arrow",
+    "value": "calendar.badge.plus",
     "concept": "NEXT_WEEK",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NFC": {
     "kind": "system_symbol",
@@ -38339,32 +38339,32 @@
     "source": "reviewed_override"
   },
   "PAYMENTS": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "creditcard.fill",
     "concept": "PAYMENTS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PAYMENTS_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "creditcard.fill",
     "concept": "PAYMENTS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PAYMENTS_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "creditcard.fill",
     "concept": "PAYMENTS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PAYMENTS_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "creditcard.fill",
     "concept": "PAYMENTS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PAYPAL": {
     "kind": "system_symbol",
@@ -42308,32 +42308,32 @@
     "source": "semantic_rank"
   },
   "QUERY_STATS": {
-    "kind": "cupertino_glyph",
-    "value": "SEARCH_CIRCLE",
+    "kind": "system_symbol",
+    "value": "chart.xyaxis.line",
     "concept": "QUERY_STATS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "QUERY_STATS_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "SEARCH_CIRCLE",
+    "kind": "system_symbol",
+    "value": "chart.xyaxis.line",
     "concept": "QUERY_STATS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "QUERY_STATS_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "SEARCH_CIRCLE",
+    "kind": "system_symbol",
+    "value": "chart.xyaxis.line",
     "concept": "QUERY_STATS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "QUERY_STATS_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "SEARCH_CIRCLE",
+    "kind": "system_symbol",
+    "value": "chart.xyaxis.line",
     "concept": "QUERY_STATS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "QUESTION_ANSWER": {
     "kind": "cupertino_glyph",
@@ -43078,32 +43078,32 @@
     "source": "semantic_rank"
   },
   "RECEIPT_LONG": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO",
+    "kind": "system_symbol",
+    "value": "scroll.fill",
     "concept": "RECEIPT_LONG",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RECEIPT_LONG_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO",
+    "kind": "system_symbol",
+    "value": "scroll.fill",
     "concept": "RECEIPT_LONG",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RECEIPT_LONG_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO",
+    "kind": "system_symbol",
+    "value": "scroll.fill",
     "concept": "RECEIPT_LONG",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RECEIPT_LONG_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO",
+    "kind": "system_symbol",
+    "value": "scroll.fill",
     "concept": "RECEIPT_LONG",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RECEIPT_OUTLINED": {
     "kind": "cupertino_glyph",
@@ -43295,32 +43295,32 @@
     "source": "manual_review_required"
   },
   "REDEEM": {
-    "kind": "cupertino_glyph",
-    "value": "SHOPPING_CART",
+    "kind": "system_symbol",
+    "value": "gift.fill",
     "concept": "REDEEM",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "REDEEM_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "SHOPPING_CART",
+    "kind": "system_symbol",
+    "value": "gift.fill",
     "concept": "REDEEM",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "REDEEM_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "SHOPPING_CART",
+    "kind": "system_symbol",
+    "value": "gift.fill",
     "concept": "REDEEM",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "REDEEM_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "SHOPPING_CART",
+    "kind": "system_symbol",
+    "value": "gift.fill",
     "concept": "REDEEM",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "REDO": {
     "kind": "system_symbol",
@@ -45535,32 +45535,32 @@
     "source": "semantic_rank"
   },
   "SAVINGS": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "banknote.fill",
     "concept": "SAVINGS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SAVINGS_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "banknote.fill",
     "concept": "SAVINGS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SAVINGS_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "banknote.fill",
     "concept": "SAVINGS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SAVINGS_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "MONEY_DOLLAR",
+    "kind": "system_symbol",
+    "value": "banknote.fill",
     "concept": "SAVINGS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SCALE": {
     "kind": "system_symbol",
@@ -47866,11 +47866,11 @@
     "source": "reviewed_override"
   },
   "SHOP": {
-    "kind": "cupertino_glyph",
-    "value": "SHOPPING_CART",
+    "kind": "system_symbol",
+    "value": "bag.fill",
     "concept": "SHOP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SHOP_2": {
     "kind": "system_symbol",
@@ -47901,25 +47901,25 @@
     "source": "semantic_rank"
   },
   "SHOP_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "SHOPPING_CART",
+    "kind": "system_symbol",
+    "value": "bag.fill",
     "concept": "SHOP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SHOP_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "SHOPPING_CART",
+    "kind": "system_symbol",
+    "value": "bag.fill",
     "concept": "SHOP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SHOP_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "SHOPPING_CART",
+    "kind": "system_symbol",
+    "value": "bag.fill",
     "concept": "SHOP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SHOP_TWO": {
     "kind": "cupertino_glyph",
@@ -51933,32 +51933,32 @@
     "source": "semantic_rank"
   },
   "STOREFRONT": {
-    "kind": "cupertino_glyph",
-    "value": "LOCATION",
+    "kind": "system_symbol",
+    "value": "bag.fill",
     "concept": "STOREFRONT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "STOREFRONT_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "LOCATION",
+    "kind": "system_symbol",
+    "value": "bag.fill",
     "concept": "STOREFRONT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "STOREFRONT_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "LOCATION",
+    "kind": "system_symbol",
+    "value": "bag.fill",
     "concept": "STOREFRONT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "STOREFRONT_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "LOCATION",
+    "kind": "system_symbol",
+    "value": "bag.fill",
     "concept": "STOREFRONT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "STORM": {
     "kind": "system_symbol",

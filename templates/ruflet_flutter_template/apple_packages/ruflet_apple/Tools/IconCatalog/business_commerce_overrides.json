@@ -1,0 +1,107 @@
+{
+  "CALCULATE": {
+    "kind": "system_symbol",
+    "value": "plus.forwardslash.minus",
+    "rationale": "public Apple calculation identity"
+  },
+  "CARD_MEMBERSHIP": {
+    "kind": "system_symbol",
+    "value": "creditcard.fill",
+    "rationale": "public Apple membership-card identity"
+  },
+  "CONTACTLESS": {
+    "kind": "system_symbol",
+    "value": "wave.3.right.circle.fill",
+    "rationale": "public Apple contactless-payment identity"
+  },
+  "CURRENCY_EXCHANGE": {
+    "kind": "system_symbol",
+    "value": "arrow.left.arrow.right.circle.fill",
+    "rationale": "public Apple bidirectional currency-exchange identity"
+  },
+  "CURRENCY_FRANC": {
+    "kind": "system_symbol",
+    "value": "francsign.circle",
+    "rationale": "public Apple franc-currency identity"
+  },
+  "CURRENCY_LIRA": {
+    "kind": "system_symbol",
+    "value": "turkishlirasign.circle",
+    "rationale": "public Apple lira-currency identity"
+  },
+  "CURRENCY_RUBLE": {
+    "kind": "system_symbol",
+    "value": "rublesign.circle",
+    "rationale": "public Apple ruble-currency identity"
+  },
+  "CURRENCY_RUPEE": {
+    "kind": "system_symbol",
+    "value": "indianrupeesign.circle",
+    "rationale": "public Apple rupee-currency identity"
+  },
+  "CURRENCY_YUAN": {
+    "kind": "system_symbol",
+    "value": "yensign.circle",
+    "rationale": "public deployment-floor Apple identity for the shared yuan/yen currency glyph"
+  },
+  "DATA_EXPLORATION": {
+    "kind": "system_symbol",
+    "value": "chart.xyaxis.line",
+    "rationale": "public Apple data-exploration identity"
+  },
+  "INSERT_CHART": {
+    "kind": "system_symbol",
+    "value": "chart.bar.fill",
+    "rationale": "public Apple insert-chart identity"
+  },
+  "INSERT_CHART_OUTLINED": {
+    "kind": "system_symbol",
+    "value": "chart.bar.fill",
+    "rationale": "public Apple insert-chart identity; Material style spelling does not change semantics"
+  },
+  "LEGEND_TOGGLE": {
+    "kind": "system_symbol",
+    "value": "list.bullet.rectangle",
+    "rationale": "public Apple chart-legend list identity"
+  },
+  "NEXT_WEEK": {
+    "kind": "system_symbol",
+    "value": "calendar.badge.plus",
+    "rationale": "public Apple next-calendar-period identity"
+  },
+  "PAYMENTS": {
+    "kind": "system_symbol",
+    "value": "creditcard.fill",
+    "rationale": "public Apple payment identity"
+  },
+  "QUERY_STATS": {
+    "kind": "system_symbol",
+    "value": "chart.xyaxis.line",
+    "rationale": "public Apple queried-statistics identity"
+  },
+  "RECEIPT_LONG": {
+    "kind": "system_symbol",
+    "value": "scroll.fill",
+    "rationale": "public Apple long-receipt identity"
+  },
+  "REDEEM": {
+    "kind": "system_symbol",
+    "value": "gift.fill",
+    "rationale": "public Apple redeemed-reward identity"
+  },
+  "SAVINGS": {
+    "kind": "system_symbol",
+    "value": "banknote.fill",
+    "rationale": "public Apple savings identity"
+  },
+  "SHOP": {
+    "kind": "system_symbol",
+    "value": "bag.fill",
+    "rationale": "public Apple shopping identity"
+  },
+  "STOREFRONT": {
+    "kind": "system_symbol",
+    "value": "bag.fill",
+    "rationale": "public Apple retail-store identity available at the deployment floor"
+  }
+}

@@ -33,6 +33,8 @@ direct deployment-floor Apple equivalents live in
 `home_household_overrides.json`.
 Reviewed call direction/status, contacts, inbox, presentation, messaging, and
 communication concepts live in `communication_overrides.json`.
+Reviewed currency, payments, shopping, financial, and business-data concepts
+live in `business_commerce_overrides.json`.
 
 The 8,825 identities contain 2,235 concepts because Flet carries Outlined,
 Rounded, and Sharp Material variants. The generator records the collapsed

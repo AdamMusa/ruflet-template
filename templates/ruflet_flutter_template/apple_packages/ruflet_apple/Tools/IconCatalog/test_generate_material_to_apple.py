@@ -354,6 +354,39 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             self.assertEqual(self.entries[concept]["kind"], kind)
             self.assertEqual(self.entries[concept]["value"], value)
 
+    def test_business_commerce_family_is_explicit_reviewed_native_artwork(self):
+        family = MODULE.load_json(MODULE.BUSINESS_COMMERCE_OVERRIDES_PATH)
+        low_confidence = {
+            item["concept"] for item in self.audit["low_confidence_concepts"]
+        }
+        self.assertEqual(self.audit["reviewed_families"]["business_commerce"], len(family))
+        self.assertTrue(set(family).isdisjoint(low_confidence))
+        for concept, target in family.items():
+            entry = self.entries[concept]
+            self.assertEqual(entry["kind"], target["kind"])
+            self.assertEqual(entry["value"], target["value"])
+            self.assertEqual(entry["confidence"], "reviewed")
+            self.assertEqual(entry["source"], "reviewed_override")
+
+    def test_business_commerce_distinct_semantics_do_not_regress(self):
+        expected = {
+            "CALCULATE": ("system_symbol", "plus.forwardslash.minus"),
+            "CONTACTLESS": ("system_symbol", "wave.3.right.circle.fill"),
+            "CURRENCY_EXCHANGE": (
+                "system_symbol",
+                "arrow.left.arrow.right.circle.fill",
+            ),
+            "CURRENCY_FRANC": ("system_symbol", "francsign.circle"),
+            "CURRENCY_RUPEE": ("system_symbol", "indianrupeesign.circle"),
+            "DATA_EXPLORATION": ("system_symbol", "chart.xyaxis.line"),
+            "INSERT_CHART_OUTLINED": ("system_symbol", "chart.bar.fill"),
+            "REDEEM": ("system_symbol", "gift.fill"),
+            "SAVINGS": ("system_symbol", "banknote.fill"),
+        }
+        for concept, (kind, value) in expected.items():
+            self.assertEqual(self.entries[concept]["kind"], kind)
+            self.assertEqual(self.entries[concept]["value"], value)
+
     def test_checked_in_artifacts_are_reproducible(self):
         self.assertEqual(
             MODULE.OUTPUT_PATH.read_text(encoding="utf-8"),
