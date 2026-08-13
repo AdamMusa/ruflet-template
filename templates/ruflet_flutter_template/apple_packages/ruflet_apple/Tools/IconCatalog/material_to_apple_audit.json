@@ -23,6 +23,7 @@
     "image_media_overrides.json": "86e4731092243d19e2a408f8a33379eb9a7359719ce3881b45bcbf8b4056001a",
     "text_editor_overrides.json": "d46267d3dfa1008428a1efbfa1cdc6e35a98850cd7cc7228e34bdd17799d0f5e",
     "home_household_overrides.json": "01241a64db5b3deb88bdc5d02ac16866dfc4ea2d2452b2d891c3edda8870ae60",
+    "communication_overrides.json": "a92e706464f58602030dc8be3250a7cfbed7b31dcce4d09b7bd53ab7862c6010",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/name_availability.plist": "a277cf5b63017ed497d5b6b3ea96bbee4f407b76776af41bcb52943007335b5c",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_search.plist": "29a767651ce53d8861e28d3eaa20b50d3e02a85fe5a79d557ce1fbff7fa4ebad",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_restrictions.strings": "2e1b1c3d629d26ac1e75861f33cb1cbbb3348e142a2b6c1aaf9bba546273f13b"
@@ -30,11 +31,12 @@
   "sources": {
     "exact_apple_name": 48,
     "manual_review_required": 105,
-    "reviewed_override": 777,
-    "semantic_rank": 1305
+    "reviewed_override": 813,
+    "semantic_rank": 1269
   },
   "reviewed_families": {
     "action": 76,
+    "communication": 36,
     "device_hardware": 72,
     "general": 339,
     "home_household": 17,
@@ -47,16 +49,16 @@
   "confidence_grades": {
     "exact": 48,
     "high": 665,
-    "low": 614,
-    "medium": 131,
-    "reviewed": 777
+    "low": 589,
+    "medium": 120,
+    "reviewed": 813
   },
-  "unique_apple_targets": 841,
+  "unique_apple_targets": 853,
   "most_reused_targets": [
     {
       "kind": "system_symbol",
       "value": "person",
-      "concept_count": 51
+      "concept_count": 47
     },
     {
       "kind": "system_symbol",
@@ -65,12 +67,12 @@
     },
     {
       "kind": "cupertino_glyph",
-      "value": "CONTROL",
-      "concept_count": 33
+      "value": "VOLUME_OFF",
+      "concept_count": 32
     },
     {
       "kind": "cupertino_glyph",
-      "value": "VOLUME_OFF",
+      "value": "CONTROL",
       "concept_count": 32
     },
     {
@@ -131,17 +133,7 @@
     {
       "kind": "cupertino_glyph",
       "value": "CHECK_MARK",
-      "concept_count": 16
-    },
-    {
-      "kind": "cupertino_glyph",
-      "value": "PHONE",
-      "concept_count": 13
-    },
-    {
-      "kind": "system_symbol",
-      "value": "phone.connection",
-      "concept_count": 12
+      "concept_count": 15
     },
     {
       "kind": "cupertino_glyph",
@@ -160,6 +152,11 @@
     },
     {
       "kind": "cupertino_glyph",
+      "value": "PHONE",
+      "concept_count": 12
+    },
+    {
+      "kind": "cupertino_glyph",
       "value": "PLAY",
       "concept_count": 12
     },
@@ -170,7 +167,7 @@
     },
     {
       "kind": "system_symbol",
-      "value": "envelope",
+      "value": "phone.connection",
       "concept_count": 11
     },
     {
@@ -179,13 +176,13 @@
       "concept_count": 11
     },
     {
-      "kind": "system_symbol",
-      "value": "bolt",
-      "concept_count": 11
-    },
-    {
       "kind": "cupertino_glyph",
       "value": "DEVICE_DESKTOP",
+      "concept_count": 10
+    },
+    {
+      "kind": "system_symbol",
+      "value": "envelope",
       "concept_count": 10
     },
     {
@@ -209,13 +206,13 @@
       "concept_count": 10
     },
     {
-      "kind": "cupertino_glyph",
-      "value": "ALARM",
-      "concept_count": 9
+      "kind": "system_symbol",
+      "value": "bolt",
+      "concept_count": 10
     },
     {
-      "kind": "system_symbol",
-      "value": "bell",
+      "kind": "cupertino_glyph",
+      "value": "ALARM",
       "concept_count": 9
     },
     {
@@ -231,11 +228,6 @@
     {
       "kind": "system_symbol",
       "value": "pencil",
-      "concept_count": 9
-    },
-    {
-      "kind": "system_symbol",
-      "value": "line.diagonal",
       "concept_count": 9
     },
     {
@@ -264,6 +256,11 @@
       "concept_count": 8
     },
     {
+      "kind": "system_symbol",
+      "value": "line.diagonal",
+      "concept_count": 8
+    },
+    {
       "kind": "cupertino_glyph",
       "value": "PIN",
       "concept_count": 8
@@ -285,11 +282,6 @@
     },
     {
       "kind": "cupertino_glyph",
-      "value": "LINK",
-      "concept_count": 7
-    },
-    {
-      "kind": "cupertino_glyph",
       "value": "FILM",
       "concept_count": 7
     },
@@ -302,9 +294,19 @@
       "kind": "cupertino_glyph",
       "value": "BACK",
       "concept_count": 7
+    },
+    {
+      "kind": "cupertino_glyph",
+      "value": "SQUARE_FILL_LINE_VERTICAL_SQUARE",
+      "concept_count": 7
+    },
+    {
+      "kind": "cupertino_glyph",
+      "value": "CROP",
+      "concept_count": 7
     }
   ],
-  "low_confidence_count": 745,
+  "low_confidence_count": 709,
   "low_confidence_concepts": [
     {
       "concept": "SIXTY_FPS_SELECT",
@@ -1400,50 +1402,6 @@
       ]
     },
     {
-      "concept": "IMPORT_CONTACTS",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "INFO"
-      },
-      "confidence": 0.1382,
-      "grade": "low",
-      "reason": "name=[] semantic=['info'] extra=[]",
-      "tags": [
-        "address",
-        "address book",
-        "book",
-        "communicate",
-        "contacts",
-        "data",
-        "diary",
-        "directory",
-        "download",
-        "education",
-        "import",
-        "info",
-        "information",
-        "journal",
-        "knowledge",
-        "learning",
-        "library",
-        "literature",
-        "migration",
-        "notebook",
-        "open",
-        "opened book",
-        "pages",
-        "reading",
-        "receive",
-        "send",
-        "share",
-        "sync",
-        "synchronize",
-        "textbook",
-        "transfer",
-        "upload"
-      ]
-    },
-    {
       "concept": "BATTERY_ALERT",
       "target": {
         "kind": "cupertino_glyph",
@@ -2334,49 +2292,6 @@
         "triangle",
         "trouble",
         "warning"
-      ]
-    },
-    {
-      "concept": "IMPORT_EXPORT",
-      "target": {
-        "kind": "system_symbol",
-        "value": "shuffle"
-      },
-      "confidence": 0.1615,
-      "grade": "low",
-      "reason": "name=[] semantic=['arrow', 'shuffle'] extra=[]",
-      "tags": [
-        "arrow",
-        "arrows",
-        "bidirectional",
-        "connection",
-        "data",
-        "direction",
-        "direction change",
-        "document",
-        "down",
-        "exchange",
-        "explort",
-        "export",
-        "file",
-        "flow",
-        "import",
-        "interchange",
-        "link",
-        "move",
-        "process",
-        "reorder",
-        "shuffle",
-        "sort",
-        "swap",
-        "switch",
-        "sync",
-        "synchronize",
-        "transaction",
-        "transfer",
-        "up",
-        "up down",
-        "vertical"
       ]
     },
     {
@@ -4273,54 +4188,6 @@
       ]
     },
     {
-      "concept": "CANCEL_PRESENTATION",
-      "target": {
-        "kind": "system_symbol",
-        "value": "line.diagonal"
-      },
-      "confidence": 0.1933,
-      "grade": "low",
-      "reason": "name=[] semantic=['diagonal', 'line'] extra=[]",
-      "tags": [
-        "abort",
-        "cancel",
-        "clear",
-        "close",
-        "conference",
-        "cross",
-        "denial",
-        "device",
-        "diagonal lines",
-        "dismiss",
-        "display",
-        "end",
-        "exclude",
-        "exit",
-        "halt",
-        "meeting",
-        "monitor",
-        "no",
-        "present",
-        "presentation",
-        "projection",
-        "projector",
-        "quit",
-        "rectangle",
-        "rejection",
-        "remove",
-        "revoke",
-        "screen",
-        "slide",
-        "slideshow",
-        "stop",
-        "terminate",
-        "website",
-        "window",
-        "x",
-        "x mark"
-      ]
-    },
-    {
       "concept": "SIGNAL_CELLULAR_NODATA",
       "target": {
         "kind": "system_symbol",
@@ -4808,58 +4675,6 @@
         "slash",
         "tag",
         "user"
-      ]
-    },
-    {
-      "concept": "LIVE_HELP",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "CONVERSATION_BUBBLE"
-      },
-      "confidence": 0.2046,
-      "grade": "low",
-      "reason": "name=[] semantic=['bubble', 'conversation'] extra=[]",
-      "tags": [
-        "?",
-        "advice",
-        "aid",
-        "answer",
-        "assistance",
-        "bubble",
-        "chat",
-        "comment",
-        "communicate",
-        "communication",
-        "contact",
-        "conversation",
-        "customer service",
-        "dialog",
-        "faq",
-        "guidance",
-        "guide",
-        "help",
-        "info",
-        "information",
-        "instant",
-        "interaction",
-        "live",
-        "message",
-        "problem",
-        "punctuation",
-        "query",
-        "question",
-        "question mark",
-        "quick help",
-        "real-time",
-        "recent",
-        "restore",
-        "solution",
-        "speech",
-        "speech bubble",
-        "support",
-        "symbol",
-        "talk",
-        "troubleshooting"
       ]
     },
     {
@@ -5555,103 +5370,6 @@
       ]
     },
     {
-      "concept": "CONTACT_SUPPORT",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "CONVERSATION_BUBBLE"
-      },
-      "confidence": 0.2233,
-      "grade": "low",
-      "reason": "name=[] semantic=['bubble', 'conversation'] extra=[]",
-      "tags": [
-        "?",
-        "ask",
-        "assistance",
-        "bubble",
-        "bubble icon",
-        "chat",
-        "chat bubble",
-        "chatbot",
-        "comment",
-        "communicate",
-        "communication",
-        "communication icon",
-        "contact",
-        "conversation",
-        "customer service",
-        "dialog",
-        "dialog box",
-        "faq",
-        "help",
-        "help icon",
-        "info",
-        "information",
-        "interaction",
-        "mark",
-        "message",
-        "messaging",
-        "punctuation",
-        "query",
-        "question",
-        "question icon",
-        "question mark",
-        "service",
-        "speech",
-        "speech bubble",
-        "support",
-        "support icon",
-        "symbol",
-        "talk"
-      ]
-    },
-    {
-      "concept": "CALL_SPLIT",
-      "target": {
-        "kind": "system_symbol",
-        "value": "phone.connection"
-      },
-      "confidence": 0.2251,
-      "grade": "low",
-      "reason": "name=[] semantic=['connection', 'phone'] extra=[]",
-      "tags": [
-        "action",
-        "arrow",
-        "arrows",
-        "branch",
-        "call",
-        "call split",
-        "communication",
-        "connect",
-        "connection",
-        "control",
-        "device",
-        "direction",
-        "disconnect",
-        "distribute",
-        "diverge",
-        "divide",
-        "fork",
-        "lines",
-        "menu",
-        "mobile",
-        "more",
-        "multiply",
-        "navigation",
-        "network",
-        "options",
-        "path",
-        "phone",
-        "redirect",
-        "routing",
-        "separate",
-        "share",
-        "split",
-        "spread",
-        "telephone",
-        "transfer"
-      ]
-    },
-    {
       "concept": "SPORTS_MARTIAL_ARTS",
       "target": {
         "kind": "system_symbol",
@@ -6029,48 +5747,6 @@
         "toggle",
         "unfilter",
         "view"
-      ]
-    },
-    {
-      "concept": "NEXT_PLAN",
-      "target": {
-        "kind": "system_symbol",
-        "value": "arrow.forward.circle"
-      },
-      "confidence": 0.2352,
-      "grade": "low",
-      "reason": "name=[] semantic=['arrow', 'circle', 'forward', 'right'] extra=[]",
-      "tags": [
-        "agenda",
-        "arrow",
-        "blueprint",
-        "business",
-        "calendar",
-        "circle",
-        "direction",
-        "document",
-        "draft",
-        "file",
-        "forward",
-        "future",
-        "management",
-        "move",
-        "next",
-        "notes",
-        "office",
-        "organization",
-        "page",
-        "plan",
-        "planning",
-        "progress",
-        "project",
-        "right",
-        "right arrow",
-        "schedule",
-        "sheet",
-        "task",
-        "text",
-        "work"
       ]
     },
     {
@@ -7150,50 +6826,6 @@
       ]
     },
     {
-      "concept": "VOICEMAIL",
-      "target": {
-        "kind": "system_symbol",
-        "value": "bell.circle"
-      },
-      "confidence": 0.2639,
-      "grade": "low",
-      "reason": "name=[] semantic=['bell', 'circle', 'mail'] extra=[]",
-      "tags": [
-        "alert",
-        "alert icon",
-        "audio",
-        "audio message",
-        "call",
-        "circle",
-        "circle with exclamation",
-        "communication",
-        "device",
-        "exclamation point",
-        "inbox",
-        "listening",
-        "mail",
-        "message",
-        "message icon",
-        "missed",
-        "mobile",
-        "new",
-        "notification",
-        "notification icon",
-        "phone",
-        "play",
-        "playback",
-        "receive",
-        "recording",
-        "sound",
-        "sound message",
-        "telephone",
-        "unread",
-        "voice",
-        "voice message",
-        "voicemail"
-      ]
-    },
-    {
       "concept": "SPORTS_HANDBALL",
       "target": {
         "kind": "system_symbol",
@@ -7995,49 +7627,6 @@
       ]
     },
     {
-      "concept": "CELL_TOWER",
-      "target": {
-        "kind": "system_symbol",
-        "value": "network"
-      },
-      "confidence": 0.2717,
-      "grade": "low",
-      "reason": "name=[] semantic=['network'] extra=[]",
-      "tags": [
-        "5g",
-        "antenna",
-        "broadcast",
-        "building",
-        "casting",
-        "cell",
-        "cell tower",
-        "cellular",
-        "communication",
-        "connection",
-        "connectivity",
-        "data",
-        "gsm",
-        "infrastructure",
-        "internet",
-        "lte",
-        "mast",
-        "mobile",
-        "network",
-        "radio",
-        "radio tower",
-        "signal",
-        "station",
-        "structure",
-        "technology",
-        "telecommunications",
-        "tower",
-        "transmission",
-        "transmission tower",
-        "transmitting",
-        "wireless"
-      ]
-    },
-    {
       "concept": "ONLINE_PREDICTION",
       "target": {
         "kind": "system_symbol",
@@ -8277,57 +7866,6 @@
       ]
     },
     {
-      "concept": "CONTACT_EMERGENCY",
-      "target": {
-        "kind": "system_symbol",
-        "value": "person"
-      },
-      "confidence": 0.2751,
-      "grade": "low",
-      "reason": "name=[] semantic=['people', 'person'] extra=[]",
-      "tags": [
-        "account",
-        "alert",
-        "assistance",
-        "avatar",
-        "call",
-        "caution",
-        "cell",
-        "contact",
-        "contacts",
-        "critical",
-        "danger",
-        "emergency",
-        "exclamation mark",
-        "face",
-        "figure",
-        "geometry",
-        "help",
-        "human",
-        "important",
-        "info",
-        "information",
-        "mobile",
-        "notification",
-        "people",
-        "person",
-        "person icon",
-        "phone",
-        "profile",
-        "profile icon",
-        "profile picture",
-        "safety",
-        "security",
-        "shape",
-        "support",
-        "symbol",
-        "urgent",
-        "user",
-        "user icon",
-        "warning"
-      ]
-    },
-    {
       "concept": "BLUR_CIRCULAR",
       "target": {
         "kind": "system_symbol",
@@ -8496,50 +8034,6 @@
         "technology",
         "web",
         "work"
-      ]
-    },
-    {
-      "concept": "CALL_RECEIVED",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "ARROW_LEFT"
-      },
-      "confidence": 0.2775,
-      "grade": "low",
-      "reason": "name=[] semantic=['arrow', 'left'] extra=[]",
-      "tags": [
-        "accept",
-        "alert",
-        "answering",
-        "arrival",
-        "arrow",
-        "audio",
-        "bottom",
-        "call",
-        "call received",
-        "communication",
-        "connectivity",
-        "curve",
-        "device",
-        "direction",
-        "download",
-        "history",
-        "inbound call",
-        "incoming",
-        "incoming call",
-        "left",
-        "line",
-        "log",
-        "message",
-        "mobile",
-        "notification",
-        "phone",
-        "point",
-        "received",
-        "recent calls",
-        "signal",
-        "telephone",
-        "voice"
       ]
     },
     {
@@ -9354,49 +8848,6 @@
       ]
     },
     {
-      "concept": "PHONELINK_SETUP",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "CONTROL"
-      },
-      "confidence": 0.2856,
-      "grade": "low",
-      "reason": "name=[] semantic=['control'] extra=[]",
-      "tags": [
-        "adjust",
-        "administration",
-        "Android",
-        "call",
-        "chat",
-        "cog",
-        "configuration",
-        "control",
-        "customization",
-        "device",
-        "gear",
-        "hardware",
-        "icon",
-        "info",
-        "iOS",
-        "manage",
-        "mobile",
-        "options",
-        "OS",
-        "parameters",
-        "phone",
-        "phonelink",
-        "preferences",
-        "settings",
-        "setup",
-        "smartphone",
-        "symbol",
-        "system",
-        "tablet",
-        "technology",
-        "text"
-      ]
-    },
-    {
       "concept": "ROLLER_SHADES",
       "target": {
         "kind": "cupertino_glyph",
@@ -9692,54 +9143,6 @@
         "urban",
         "vacation",
         "village"
-      ]
-    },
-    {
-      "concept": "RSS_FEED",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "NEWS"
-      },
-      "confidence": 0.2878,
-      "grade": "low",
-      "reason": "name=[] semantic=['news'] extra=[]",
-      "tags": [
-        "antenna",
-        "application",
-        "arc",
-        "atom",
-        "blog",
-        "broadcast",
-        "channel",
-        "circle",
-        "communication",
-        "connection",
-        "content",
-        "curve",
-        "data",
-        "distribution",
-        "dot",
-        "feed",
-        "information",
-        "internet",
-        "network",
-        "news",
-        "online",
-        "point",
-        "pulsate",
-        "radiate",
-        "rss",
-        "service",
-        "signal",
-        "streaming",
-        "subscribe",
-        "syndication",
-        "updates",
-        "waves",
-        "web",
-        "website",
-        "wifi",
-        "wireless"
       ]
     },
     {
@@ -12057,49 +11460,6 @@
       ]
     },
     {
-      "concept": "CALL_MISSED",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "ARROW_UP_ARROW_DOWN"
-      },
-      "confidence": 0.3056,
-      "grade": "low",
-      "reason": "name=[] semantic=['arrow', 'down', 'up'] extra=[]",
-      "tags": [
-        "alert",
-        "angle",
-        "angle down",
-        "arrow",
-        "call",
-        "call status",
-        "communication",
-        "contact",
-        "declined call",
-        "device",
-        "diagonal down",
-        "diagonal line",
-        "dialing",
-        "direction",
-        "down",
-        "dropped call",
-        "hang up",
-        "history",
-        "line",
-        "log",
-        "missed",
-        "missed call",
-        "mobile",
-        "notification",
-        "phone",
-        "phone symbol",
-        "recent calls",
-        "smartphone",
-        "technology",
-        "telephone",
-        "telephony"
-      ]
-    },
-    {
       "concept": "FORMAT_TEXTDIRECTION_L_TO_R",
       "target": {
         "kind": "system_symbol",
@@ -12507,55 +11867,6 @@
         "walk",
         "wheels",
         "young"
-      ]
-    },
-    {
-      "concept": "CONTACTS",
-      "target": {
-        "kind": "system_symbol",
-        "value": "person"
-      },
-      "confidence": 0.306,
-      "grade": "low",
-      "reason": "name=[] semantic=['people', 'person'] extra=[]",
-      "tags": [
-        "account",
-        "accounts",
-        "address book",
-        "avatar",
-        "avatars",
-        "call",
-        "cell",
-        "communication",
-        "connect",
-        "connection",
-        "contact",
-        "contacts",
-        "directory",
-        "face",
-        "figures",
-        "friends",
-        "group",
-        "human",
-        "humans",
-        "info",
-        "information",
-        "list",
-        "management",
-        "member",
-        "members",
-        "mobile",
-        "network",
-        "people",
-        "person",
-        "phone",
-        "profile",
-        "profiles",
-        "silhouette",
-        "social",
-        "team",
-        "user",
-        "users"
       ]
     },
     {
@@ -13262,49 +12573,6 @@
         "tracks",
         "view",
         "visualizer"
-      ]
-    },
-    {
-      "concept": "CALL_MADE",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "PHONE_ARROW_RIGHT"
-      },
-      "confidence": 0.3123,
-      "grade": "low",
-      "reason": "name=[] semantic=['arrow', 'phone', 'right'] extra=[]",
-      "tags": [
-        "action",
-        "activity",
-        "angular",
-        "arrow",
-        "call",
-        "call made",
-        "communication",
-        "connectivity",
-        "control",
-        "device",
-        "diagonal arrow",
-        "direction",
-        "external link",
-        "icon",
-        "indicator",
-        "interface",
-        "line",
-        "line arrow",
-        "link",
-        "made",
-        "mobile",
-        "navigate",
-        "outbound",
-        "outgoing",
-        "phone",
-        "pointer",
-        "right arrow",
-        "share",
-        "symbol",
-        "telephone",
-        "top right arrow"
       ]
     },
     {
@@ -15289,98 +14557,6 @@
         "title",
         "topic",
         "view"
-      ]
-    },
-    {
-      "concept": "SPOKE",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "LINK"
-      },
-      "confidence": 0.3189,
-      "grade": "low",
-      "reason": "name=[] semantic=['link'] extra=[]",
-      "tags": [
-        "access point",
-        "broadcast",
-        "center",
-        "central point",
-        "communicate",
-        "connect",
-        "connection",
-        "connections",
-        "directions",
-        "disperse",
-        "distribution",
-        "emanating",
-        "expand",
-        "grow",
-        "links",
-        "network",
-        "nodes",
-        "outward",
-        "points",
-        "radial lines",
-        "radiating",
-        "radius",
-        "rays",
-        "share",
-        "signal",
-        "spoke",
-        "spread",
-        "star",
-        "wheel",
-        "wifi"
-      ]
-    },
-    {
-      "concept": "TOPIC",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "QUESTION"
-      },
-      "confidence": 0.3189,
-      "grade": "low",
-      "reason": "name=[] semantic=['question'] extra=[]",
-      "tags": [
-        "area",
-        "basis",
-        "category",
-        "concern",
-        "context",
-        "data",
-        "details",
-        "doc",
-        "document",
-        "domain",
-        "drive",
-        "element",
-        "facts",
-        "field",
-        "file",
-        "folder",
-        "foundation",
-        "header",
-        "heading",
-        "information",
-        "issue",
-        "knowledge",
-        "matter",
-        "origin",
-        "point",
-        "question",
-        "reference",
-        "resources",
-        "root",
-        "sheet",
-        "slide",
-        "source",
-        "storage",
-        "subject",
-        "subject matter",
-        "theme",
-        "title",
-        "topic"
       ]
     },
     {
@@ -17847,99 +17023,6 @@
       ]
     },
     {
-      "concept": "DIALPAD",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "NUMBER_SQUARE"
-      },
-      "confidence": 0.3302,
-      "grade": "low",
-      "reason": "name=[] semantic=['number', 'square'] extra=[]",
-      "tags": [
-        "button",
-        "buttons",
-        "call",
-        "communication",
-        "contact",
-        "control",
-        "device",
-        "dial",
-        "dialing",
-        "dialpad",
-        "digit",
-        "dots",
-        "entering numbers",
-        "grid",
-        "grid layout",
-        "input",
-        "interactive",
-        "keypad",
-        "landline",
-        "layout",
-        "matrix",
-        "mobile",
-        "number",
-        "numbers",
-        "numeric",
-        "pad",
-        "phone",
-        "rectangle",
-        "smartphone",
-        "square",
-        "telecommunications",
-        "telephone",
-        "ten keys"
-      ]
-    },
-    {
-      "concept": "BUSINESS",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "LINK_CIRCLE"
-      },
-      "confidence": 0.3311,
-      "grade": "low",
-      "reason": "name=[] semantic=['circle', 'link'] extra=[]",
-      "tags": [
-        "address",
-        "apartment",
-        "architecture",
-        "building",
-        "business",
-        "circle",
-        "communication",
-        "company",
-        "concept",
-        "connection",
-        "domain",
-        "estate",
-        "global",
-        "globe",
-        "home",
-        "icon",
-        "internet",
-        "link",
-        "navigation",
-        "network",
-        "online",
-        "place",
-        "real",
-        "representation",
-        "residence",
-        "residential",
-        "round",
-        "shelter",
-        "sphere",
-        "symbol",
-        "technology",
-        "ui",
-        "url",
-        "web address",
-        "website",
-        "world"
-      ]
-    },
-    {
       "concept": "CATEGORY",
       "target": {
         "kind": "cupertino_glyph",
@@ -20097,55 +19180,6 @@
         "type",
         "upload",
         "video"
-      ]
-    },
-    {
-      "concept": "QR_CODE_2",
-      "target": {
-        "kind": "system_symbol",
-        "value": "2.square"
-      },
-      "confidence": 0.4671,
-      "grade": "low",
-      "reason": "name=['2'] semantic=['2', 'square'] extra=[]",
-      "tags": [
-        "2d barcode",
-        "barcode",
-        "business",
-        "camera",
-        "code",
-        "connection",
-        "contact",
-        "data",
-        "digital",
-        "encoding",
-        "identification",
-        "information",
-        "link",
-        "machine readable",
-        "marketing",
-        "matrix code",
-        "media",
-        "mobile",
-        "pattern",
-        "payment",
-        "product",
-        "qr",
-        "qr code",
-        "quick",
-        "quick response code",
-        "reading",
-        "response",
-        "scan",
-        "scanner",
-        "sharing",
-        "smartphone",
-        "square",
-        "square code",
-        "technology",
-        "url",
-        "urls",
-        "website"
       ]
     },
     {
@@ -25386,54 +24420,6 @@
       ]
     },
     {
-      "concept": "MARK_AS_UNREAD",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "CHECK_MARK"
-      },
-      "confidence": 0.6157,
-      "grade": "low",
-      "reason": "name=['mark'] semantic=['mark'] extra=['check']",
-      "tags": [
-        "alert",
-        "as",
-        "attention",
-        "badge",
-        "bookmark",
-        "chat",
-        "circle",
-        "circular",
-        "communication",
-        "dot",
-        "email",
-        "emblem",
-        "envelop",
-        "highlight",
-        "important",
-        "indicator",
-        "letters",
-        "mail",
-        "mark",
-        "message",
-        "new",
-        "notification",
-        "pending",
-        "point",
-        "post",
-        "postal",
-        "read",
-        "receive",
-        "round",
-        "send",
-        "signal",
-        "sphere",
-        "status",
-        "symbol",
-        "unread",
-        "urgent"
-      ]
-    },
-    {
       "concept": "PERM_DEVICE_INFORMATION",
       "target": {
         "kind": "cupertino_glyph",
@@ -25479,144 +24465,6 @@
         "status",
         "tablet",
         "version"
-      ]
-    },
-    {
-      "concept": "SMS",
-      "target": {
-        "kind": "system_symbol",
-        "value": "bell"
-      },
-      "confidence": 0.6277,
-      "grade": "low",
-      "reason": "name=[] semantic=['bell', 'mail'] extra=[]",
-      "tags": [
-        "3",
-        "alert",
-        "app",
-        "bubble",
-        "chat",
-        "communicate",
-        "communication",
-        "conversation",
-        "dialog",
-        "dialogue",
-        "dots",
-        "inbox",
-        "lines",
-        "mail",
-        "message",
-        "message bubble",
-        "messaging",
-        "mobile",
-        "more",
-        "new",
-        "notification",
-        "phone",
-        "pointer",
-        "receive",
-        "rectangle",
-        "send",
-        "service",
-        "sms",
-        "social",
-        "speech",
-        "speech bubble",
-        "square",
-        "talk",
-        "text",
-        "texting",
-        "three"
-      ]
-    },
-    {
-      "concept": "TEXTSMS",
-      "target": {
-        "kind": "system_symbol",
-        "value": "bell"
-      },
-      "confidence": 0.6277,
-      "grade": "low",
-      "reason": "name=[] semantic=['bell', 'mail'] extra=[]",
-      "tags": [
-        "alert",
-        "app",
-        "bubble",
-        "chat",
-        "comment",
-        "communicate",
-        "communication",
-        "conversation",
-        "dialog",
-        "dialogue",
-        "dots",
-        "feedback",
-        "inbox",
-        "lines",
-        "mail",
-        "message",
-        "message bubble",
-        "messaging",
-        "mobile",
-        "new",
-        "notification",
-        "phone",
-        "pointer",
-        "receive",
-        "rectangle",
-        "send",
-        "sms",
-        "social",
-        "speech",
-        "speech bubble",
-        "square",
-        "talk",
-        "text",
-        "texting",
-        "textsms"
-      ]
-    },
-    {
-      "concept": "UPCOMING",
-      "target": {
-        "kind": "system_symbol",
-        "value": "bell"
-      },
-      "confidence": 0.6277,
-      "grade": "low",
-      "reason": "name=[] semantic=['bell', 'mail'] extra=[]",
-      "tags": [
-        "agenda",
-        "alarm",
-        "anticipation",
-        "appointment",
-        "calendar",
-        "coming",
-        "coming soon",
-        "date",
-        "events",
-        "events list",
-        "forecast",
-        "forthcoming",
-        "future",
-        "future events",
-        "horizon",
-        "later",
-        "later date",
-        "list",
-        "mail",
-        "message",
-        "new events",
-        "next",
-        "not yet",
-        "notification",
-        "pending",
-        "plans",
-        "preview",
-        "schedule",
-        "still to come",
-        "timeline",
-        "upcoming"
       ]
     },
     {
@@ -26226,54 +25074,6 @@
       ]
     },
     {
-      "concept": "MARKUNREAD_MAILBOX",
-      "target": {
-        "kind": "system_symbol",
-        "value": "envelope"
-      },
-      "confidence": 0.6791,
-      "grade": "medium",
-      "reason": "name=[] semantic=['letter', 'mail'] extra=[]",
-      "tags": [
-        "alert",
-        "box",
-        "communication",
-        "deliver",
-        "delivery",
-        "envelop",
-        "envelope",
-        "flag",
-        "inbox",
-        "incoming mail",
-        "indicator",
-        "letter",
-        "letters",
-        "mail",
-        "mailbox",
-        "mark",
-        "marker",
-        "markunread",
-        "message",
-        "new",
-        "new message",
-        "notification",
-        "pending",
-        "post",
-        "post office",
-        "postal",
-        "postbox",
-        "receive",
-        "received",
-        "rectangle",
-        "send",
-        "signal",
-        "status.",
-        "symbol",
-        "unopened",
-        "unread"
-      ]
-    },
-    {
       "concept": "PERSONAL_VIDEO",
       "target": {
         "kind": "cupertino_glyph",
@@ -26539,55 +25339,6 @@
       ]
     },
     {
-      "concept": "FORWARD_TO_INBOX",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "FORWARD"
-      },
-      "confidence": 0.6991,
-      "grade": "medium",
-      "reason": "name=['forward'] semantic=['forward'] extra=[]",
-      "tags": [
-        "arrow",
-        "arrow icon",
-        "arrows",
-        "communication",
-        "communication icon",
-        "correspondence",
-        "delivery",
-        "destination",
-        "direction",
-        "directions",
-        "document",
-        "email",
-        "envelop",
-        "envelope",
-        "envelope icon",
-        "forward",
-        "inbox",
-        "inbox icon",
-        "letter",
-        "letter icon",
-        "letters",
-        "mail",
-        "mail icon",
-        "message",
-        "message forwarding",
-        "message transfer",
-        "move",
-        "navigation",
-        "outgoing",
-        "paper",
-        "right",
-        "send",
-        "send mail",
-        "send message",
-        "to",
-        "transfer",
-        "transport"
-      ]
-    },
-    {
       "concept": "VIEW_COMPACT_ALT",
       "target": {
         "kind": "cupertino_glyph",
@@ -26812,48 +25563,6 @@
       ]
     },
     {
-      "concept": "NAT",
-      "target": {
-        "kind": "system_symbol",
-        "value": "globe"
-      },
-      "confidence": 0.7182,
-      "grade": "medium",
-      "reason": "name=[] semantic=['earth', 'globe'] extra=[]",
-      "tags": [
-        "atlas",
-        "borders",
-        "boundaries",
-        "cartography",
-        "circle",
-        "circular",
-        "communication",
-        "continents",
-        "country",
-        "destination",
-        "earth",
-        "flag",
-        "geography",
-        "global",
-        "globe",
-        "government",
-        "international",
-        "landmass",
-        "map",
-        "nat",
-        "nation",
-        "national",
-        "planet",
-        "politics",
-        "rounded",
-        "sphere",
-        "state",
-        "tourism",
-        "travel",
-        "world"
-      ]
-    },
-    {
       "concept": "WEEKEND",
       "target": {
         "kind": "system_symbol",
@@ -26904,103 +25613,6 @@
       ]
     },
     {
-      "concept": "MARK_UNREAD_CHAT_ALT",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "CHAT_BUBBLE"
-      },
-      "confidence": 0.7209,
-      "grade": "medium",
-      "reason": "name=['chat'] semantic=['bubble', 'chat'] extra=[]",
-      "tags": [
-        "alarm",
-        "alert",
-        "bubble",
-        "bubble and dot",
-        "chat",
-        "circle",
-        "comment",
-        "communicate",
-        "communication",
-        "conversation",
-        "correspondence",
-        "dialog",
-        "dot",
-        "envelope",
-        "graphic",
-        "inbox",
-        "indicator",
-        "line",
-        "mail",
-        "mark",
-        "message",
-        "new message",
-        "notification",
-        "notifications",
-        "notify",
-        "pending",
-        "point",
-        "reminder",
-        "shape",
-        "speech",
-        "speech bubble",
-        "status",
-        "text message",
-        "unread",
-        "vector"
-      ]
-    },
-    {
-      "concept": "ATTRIBUTION",
-      "target": {
-        "kind": "system_symbol",
-        "value": "person"
-      },
-      "confidence": 0.7213,
-      "grade": "medium",
-      "reason": "name=[] semantic=['people', 'person'] extra=[]",
-      "tags": [
-        "account",
-        "attribute",
-        "attribution",
-        "author",
-        "body",
-        "cc",
-        "circle",
-        "community",
-        "content",
-        "copyright",
-        "copywriter",
-        "creative commons",
-        "credit",
-        "human",
-        "icon",
-        "intellectual property",
-        "label",
-        "legal",
-        "letters",
-        "license",
-        "licensing",
-        "marker",
-        "media",
-        "open source",
-        "people",
-        "permission",
-        "person",
-        "profile",
-        "rights",
-        "sharing",
-        "source",
-        "stamp",
-        "symbol",
-        "text",
-        "usage",
-        "user",
-        "video",
-        "youtube"
-      ]
-    },
-    {
       "concept": "BOY",
       "target": {
         "kind": "system_symbol",
@@ -27035,44 +25647,6 @@
         "symbol",
         "user",
         "young person"
-      ]
-    },
-    {
-      "concept": "DUO",
-      "target": {
-        "kind": "system_symbol",
-        "value": "person"
-      },
-      "confidence": 0.7213,
-      "grade": "medium",
-      "reason": "name=[] semantic=['people', 'person'] extra=[]",
-      "tags": [
-        "account",
-        "avatar",
-        "call",
-        "chat",
-        "collaboration",
-        "communication",
-        "conference",
-        "device",
-        "double",
-        "duo",
-        "friends",
-        "group",
-        "network",
-        "pair",
-        "partnership",
-        "people",
-        "person",
-        "profile",
-        "relationship",
-        "social",
-        "teamwork",
-        "twin",
-        "two",
-        "user",
-        "users",
-        "video"
       ]
     },
     {
@@ -28088,52 +26662,6 @@
       ]
     },
     {
-      "concept": "SEND_TIME_EXTENSION",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "TIME"
-      },
-      "confidence": 0.7285,
-      "grade": "medium",
-      "reason": "name=['time'] semantic=['time'] extra=[]",
-      "tags": [
-        "action",
-        "add",
-        "add time",
-        "arrow",
-        "button",
-        "clock",
-        "communication",
-        "delay",
-        "deliver",
-        "dispatch",
-        "email",
-        "envelop",
-        "extend",
-        "extension",
-        "future",
-        "internet",
-        "mail",
-        "message",
-        "paper plane",
-        "plus",
-        "plus sign",
-        "postpone",
-        "right arrow",
-        "schedule",
-        "send",
-        "send button",
-        "send later",
-        "share",
-        "submit",
-        "time",
-        "timer",
-        "triangle",
-        "watch",
-        "web"
-      ]
-    },
-    {
       "concept": "UNPUBLISHED",
       "target": {
         "kind": "system_symbol",
@@ -29012,54 +27540,6 @@
       ]
     },
     {
-      "concept": "UNARCHIVE",
-      "target": {
-        "kind": "system_symbol",
-        "value": "folder"
-      },
-      "confidence": 0.7723,
-      "grade": "medium",
-      "reason": "name=[] semantic=['folder', 'move'] extra=[]",
-      "tags": [
-        "access",
-        "action",
-        "archive",
-        "arrow",
-        "box",
-        "button",
-        "command",
-        "container",
-        "data",
-        "direction",
-        "document",
-        "extract",
-        "file",
-        "folder",
-        "graphic",
-        "icon",
-        "inbox",
-        "interface control",
-        "item",
-        "linear",
-        "mail",
-        "menu",
-        "move up",
-        "open folder",
-        "option",
-        "rectangle",
-        "restore",
-        "retrieve",
-        "square",
-        "storage",
-        "store",
-        "symbol",
-        "unarchive",
-        "undo",
-        "up",
-        "up arrow"
-      ]
-    },
-    {
       "concept": "ASSESSMENT",
       "target": {
         "kind": "system_symbol",
@@ -29380,57 +27860,6 @@
         "trim",
         "video",
         "video editing"
-      ]
-    },
-    {
-      "concept": "QUICKREPLY",
-      "target": {
-        "kind": "system_symbol",
-        "value": "bolt"
-      },
-      "confidence": 0.7858,
-      "grade": "medium",
-      "reason": "name=[] semantic=['bolt', 'energy'] extra=[]",
-      "tags": [
-        "bolt",
-        "bubble",
-        "chat",
-        "comment",
-        "comment bubble",
-        "communicate",
-        "communication",
-        "communication bubble",
-        "conversation",
-        "dialogue",
-        "electric",
-        "energy",
-        "engaging",
-        "express",
-        "fast",
-        "fast reply",
-        "feedback",
-        "input",
-        "instant",
-        "instant reply",
-        "interaction",
-        "lightning",
-        "message",
-        "quick",
-        "quick reply",
-        "quickreply",
-        "reply",
-        "reply icon",
-        "respond",
-        "response",
-        "short reply",
-        "speech",
-        "speech bubble",
-        "talk",
-        "talk bubble",
-        "text",
-        "text bubble",
-        "thought bubble",
-        "thunderbolt"
       ]
     },
     {
@@ -30261,53 +28690,6 @@
         "type",
         "visual",
         "writing"
-      ]
-    },
-    {
-      "concept": "MOVE_TO_INBOX",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "MOVE"
-      },
-      "confidence": 0.804,
-      "grade": "medium",
-      "reason": "name=['move'] semantic=['move'] extra=[]",
-      "tags": [
-        "archive",
-        "arrow",
-        "box",
-        "communication",
-        "container",
-        "direction",
-        "down",
-        "email",
-        "email client",
-        "envelop",
-        "filing",
-        "folder",
-        "forward",
-        "inbox",
-        "incoming",
-        "into",
-        "letters",
-        "mail",
-        "mailing",
-        "message",
-        "messages",
-        "move",
-        "move to",
-        "organization",
-        "place",
-        "pointed",
-        "read",
-        "receive",
-        "received",
-        "relocate",
-        "send",
-        "sort",
-        "storage",
-        "transfer",
-        "unread"
       ]
     },
     {
@@ -31779,61 +30161,6 @@
         "symbol",
         "unavailable",
         "zero"
-      ]
-    },
-    {
-      "concept": "PHONE_IN_TALK",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "PHONE"
-      },
-      "confidence": 0.8493,
-      "grade": "medium",
-      "reason": "name=['phone'] semantic=['phone'] extra=[]",
-      "tags": [
-        "active call",
-        "audio",
-        "call",
-        "call in progress",
-        "calling",
-        "cell",
-        "cellular",
-        "chat",
-        "communication",
-        "communication device",
-        "connected",
-        "connection",
-        "contact",
-        "conversation",
-        "data",
-        "device",
-        "handset",
-        "hardware",
-        "in",
-        "line",
-        "line active",
-        "mobile",
-        "network",
-        "ongoing call",
-        "phone",
-        "phone call",
-        "scan",
-        "service",
-        "signal",
-        "sound",
-        "sound waves",
-        "speaker",
-        "speaking",
-        "talk",
-        "talk line",
-        "talking",
-        "telephone",
-        "telephone call",
-        "voice",
-        "voice communication",
-        "volume",
-        "waves",
-        "wireless"
       ]
     }
   ]

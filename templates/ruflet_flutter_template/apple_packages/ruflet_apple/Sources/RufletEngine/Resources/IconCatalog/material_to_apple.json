@@ -4054,31 +4054,31 @@
   },
   "ATTRIBUTION": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "person.circle",
     "concept": "ATTRIBUTION",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ATTRIBUTION_OUTLINED": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "person.circle",
     "concept": "ATTRIBUTION",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ATTRIBUTION_ROUNDED": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "person.circle",
     "concept": "ATTRIBUTION",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ATTRIBUTION_SHARP": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "person.circle",
     "concept": "ATTRIBUTION",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "AUDIO_FILE": {
     "kind": "system_symbol",
@@ -7483,11 +7483,11 @@
     "source": "semantic_rank"
   },
   "BUSINESS": {
-    "kind": "cupertino_glyph",
-    "value": "LINK_CIRCLE",
+    "kind": "system_symbol",
+    "value": "building.2.fill",
     "concept": "BUSINESS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BUSINESS_CENTER": {
     "kind": "system_symbol",
@@ -7518,25 +7518,25 @@
     "source": "reviewed_override"
   },
   "BUSINESS_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "LINK_CIRCLE",
+    "kind": "system_symbol",
+    "value": "building.2.fill",
     "concept": "BUSINESS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BUSINESS_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "LINK_CIRCLE",
+    "kind": "system_symbol",
+    "value": "building.2.fill",
     "concept": "BUSINESS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "BUSINESS_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "LINK_CIRCLE",
+    "kind": "system_symbol",
+    "value": "building.2.fill",
     "concept": "BUSINESS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CABIN": {
     "kind": "system_symbol",
@@ -7854,32 +7854,32 @@
     "source": "reviewed_override"
   },
   "CALL_MADE": {
-    "kind": "cupertino_glyph",
-    "value": "PHONE_ARROW_RIGHT",
+    "kind": "system_symbol",
+    "value": "phone.arrow.up.right",
     "concept": "CALL_MADE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CALL_MADE_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "PHONE_ARROW_RIGHT",
+    "kind": "system_symbol",
+    "value": "phone.arrow.up.right",
     "concept": "CALL_MADE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CALL_MADE_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "PHONE_ARROW_RIGHT",
+    "kind": "system_symbol",
+    "value": "phone.arrow.up.right",
     "concept": "CALL_MADE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CALL_MADE_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "PHONE_ARROW_RIGHT",
+    "kind": "system_symbol",
+    "value": "phone.arrow.up.right",
     "concept": "CALL_MADE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CALL_MERGE": {
     "kind": "cupertino_glyph",
@@ -7910,11 +7910,11 @@
     "source": "semantic_rank"
   },
   "CALL_MISSED": {
-    "kind": "cupertino_glyph",
-    "value": "ARROW_UP_ARROW_DOWN",
+    "kind": "system_symbol",
+    "value": "phone.down.fill",
     "concept": "CALL_MISSED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CALL_MISSED_OUTGOING": {
     "kind": "cupertino_glyph",
@@ -7945,25 +7945,25 @@
     "source": "semantic_rank"
   },
   "CALL_MISSED_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "ARROW_UP_ARROW_DOWN",
+    "kind": "system_symbol",
+    "value": "phone.down.fill",
     "concept": "CALL_MISSED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CALL_MISSED_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "ARROW_UP_ARROW_DOWN",
+    "kind": "system_symbol",
+    "value": "phone.down.fill",
     "concept": "CALL_MISSED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CALL_MISSED_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "ARROW_UP_ARROW_DOWN",
+    "kind": "system_symbol",
+    "value": "phone.down.fill",
     "concept": "CALL_MISSED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CALL_OUTLINED": {
     "kind": "system_symbol",
@@ -7973,32 +7973,32 @@
     "source": "reviewed_override"
   },
   "CALL_RECEIVED": {
-    "kind": "cupertino_glyph",
-    "value": "ARROW_LEFT",
+    "kind": "system_symbol",
+    "value": "phone.arrow.down.left",
     "concept": "CALL_RECEIVED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CALL_RECEIVED_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "ARROW_LEFT",
+    "kind": "system_symbol",
+    "value": "phone.arrow.down.left",
     "concept": "CALL_RECEIVED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CALL_RECEIVED_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "ARROW_LEFT",
+    "kind": "system_symbol",
+    "value": "phone.arrow.down.left",
     "concept": "CALL_RECEIVED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CALL_RECEIVED_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "ARROW_LEFT",
+    "kind": "system_symbol",
+    "value": "phone.arrow.down.left",
     "concept": "CALL_RECEIVED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CALL_ROUNDED": {
     "kind": "system_symbol",
@@ -8016,31 +8016,31 @@
   },
   "CALL_SPLIT": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "arrow.triangle.branch",
     "concept": "CALL_SPLIT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CALL_SPLIT_OUTLINED": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "arrow.triangle.branch",
     "concept": "CALL_SPLIT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CALL_SPLIT_ROUNDED": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "arrow.triangle.branch",
     "concept": "CALL_SPLIT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CALL_SPLIT_SHARP": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "arrow.triangle.branch",
     "concept": "CALL_SPLIT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CALL_TO_ACTION": {
     "kind": "cupertino_glyph",
@@ -8366,31 +8366,31 @@
   },
   "CANCEL_PRESENTATION": {
     "kind": "system_symbol",
-    "value": "line.diagonal",
+    "value": "rectangle.on.rectangle.slash",
     "concept": "CANCEL_PRESENTATION",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CANCEL_PRESENTATION_OUTLINED": {
     "kind": "system_symbol",
-    "value": "line.diagonal",
+    "value": "rectangle.on.rectangle.slash",
     "concept": "CANCEL_PRESENTATION",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CANCEL_PRESENTATION_ROUNDED": {
     "kind": "system_symbol",
-    "value": "line.diagonal",
+    "value": "rectangle.on.rectangle.slash",
     "concept": "CANCEL_PRESENTATION",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CANCEL_PRESENTATION_SHARP": {
     "kind": "system_symbol",
-    "value": "line.diagonal",
+    "value": "rectangle.on.rectangle.slash",
     "concept": "CANCEL_PRESENTATION",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CANCEL_ROUNDED": {
     "kind": "cupertino_glyph",
@@ -8912,31 +8912,31 @@
   },
   "CELL_TOWER": {
     "kind": "system_symbol",
-    "value": "network",
+    "value": "antenna.radiowaves.left.and.right",
     "concept": "CELL_TOWER",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CELL_TOWER_OUTLINED": {
     "kind": "system_symbol",
-    "value": "network",
+    "value": "antenna.radiowaves.left.and.right",
     "concept": "CELL_TOWER",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CELL_TOWER_ROUNDED": {
     "kind": "system_symbol",
-    "value": "network",
+    "value": "antenna.radiowaves.left.and.right",
     "concept": "CELL_TOWER",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CELL_TOWER_SHARP": {
     "kind": "system_symbol",
-    "value": "network",
+    "value": "antenna.radiowaves.left.and.right",
     "concept": "CELL_TOWER",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CELL_WIFI": {
     "kind": "cupertino_glyph",
@@ -10990,32 +10990,32 @@
     "source": "reviewed_override"
   },
   "CONTACT_EMERGENCY": {
-    "kind": "system_symbol",
-    "value": "person",
+    "kind": "cupertino_glyph",
+    "value": "PERSON_CROP_CIRCLE_BADGE_EXCLAM",
     "concept": "CONTACT_EMERGENCY",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CONTACT_EMERGENCY_OUTLINED": {
-    "kind": "system_symbol",
-    "value": "person",
+    "kind": "cupertino_glyph",
+    "value": "PERSON_CROP_CIRCLE_BADGE_EXCLAM",
     "concept": "CONTACT_EMERGENCY",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CONTACT_EMERGENCY_ROUNDED": {
-    "kind": "system_symbol",
-    "value": "person",
+    "kind": "cupertino_glyph",
+    "value": "PERSON_CROP_CIRCLE_BADGE_EXCLAM",
     "concept": "CONTACT_EMERGENCY",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CONTACT_EMERGENCY_SHARP": {
-    "kind": "system_symbol",
-    "value": "person",
+    "kind": "cupertino_glyph",
+    "value": "PERSON_CROP_CIRCLE_BADGE_EXCLAM",
     "concept": "CONTACT_EMERGENCY",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CONTACT_MAIL": {
     "kind": "system_symbol",
@@ -11103,31 +11103,31 @@
   },
   "CONTACT_SUPPORT": {
     "kind": "cupertino_glyph",
-    "value": "CONVERSATION_BUBBLE",
+    "value": "QUESTION_CIRCLE_FILL",
     "concept": "CONTACT_SUPPORT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CONTACT_SUPPORT_OUTLINED": {
     "kind": "cupertino_glyph",
-    "value": "CONVERSATION_BUBBLE",
+    "value": "QUESTION_CIRCLE_FILL",
     "concept": "CONTACT_SUPPORT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CONTACT_SUPPORT_ROUNDED": {
     "kind": "cupertino_glyph",
-    "value": "CONVERSATION_BUBBLE",
+    "value": "QUESTION_CIRCLE_FILL",
     "concept": "CONTACT_SUPPORT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CONTACT_SUPPORT_SHARP": {
     "kind": "cupertino_glyph",
-    "value": "CONVERSATION_BUBBLE",
+    "value": "QUESTION_CIRCLE_FILL",
     "concept": "CONTACT_SUPPORT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CONTACTLESS": {
     "kind": "cupertino_glyph",
@@ -11159,31 +11159,31 @@
   },
   "CONTACTS": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "person.2.fill",
     "concept": "CONTACTS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CONTACTS_OUTLINED": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "person.2.fill",
     "concept": "CONTACTS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CONTACTS_ROUNDED": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "person.2.fill",
     "concept": "CONTACTS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CONTACTS_SHARP": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "person.2.fill",
     "concept": "CONTACTS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CONTENT_COPY": {
     "kind": "system_symbol",
@@ -13888,32 +13888,32 @@
     "source": "semantic_rank"
   },
   "DIALPAD": {
-    "kind": "cupertino_glyph",
-    "value": "NUMBER_SQUARE",
+    "kind": "system_symbol",
+    "value": "circle.grid.3x3.fill",
     "concept": "DIALPAD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DIALPAD_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "NUMBER_SQUARE",
+    "kind": "system_symbol",
+    "value": "circle.grid.3x3.fill",
     "concept": "DIALPAD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DIALPAD_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "NUMBER_SQUARE",
+    "kind": "system_symbol",
+    "value": "circle.grid.3x3.fill",
     "concept": "DIALPAD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DIALPAD_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "NUMBER_SQUARE",
+    "kind": "system_symbol",
+    "value": "circle.grid.3x3.fill",
     "concept": "DIALPAD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DIAMOND": {
     "kind": "system_symbol",
@@ -16108,31 +16108,31 @@
   },
   "DUO": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "person.2.fill",
     "concept": "DUO",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DUO_OUTLINED": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "person.2.fill",
     "concept": "DUO",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DUO_ROUNDED": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "person.2.fill",
     "concept": "DUO",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DUO_SHARP": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "person.2.fill",
     "concept": "DUO",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DVR": {
     "kind": "system_symbol",
@@ -22848,32 +22848,32 @@
     "source": "reviewed_override"
   },
   "FORWARD_TO_INBOX": {
-    "kind": "cupertino_glyph",
-    "value": "FORWARD",
+    "kind": "system_symbol",
+    "value": "tray.and.arrow.down.fill",
     "concept": "FORWARD_TO_INBOX",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FORWARD_TO_INBOX_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "FORWARD",
+    "kind": "system_symbol",
+    "value": "tray.and.arrow.down.fill",
     "concept": "FORWARD_TO_INBOX",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FORWARD_TO_INBOX_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "FORWARD",
+    "kind": "system_symbol",
+    "value": "tray.and.arrow.down.fill",
     "concept": "FORWARD_TO_INBOX",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FORWARD_TO_INBOX_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "FORWARD",
+    "kind": "system_symbol",
+    "value": "tray.and.arrow.down.fill",
     "concept": "FORWARD_TO_INBOX",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FOUNDATION": {
     "kind": "cupertino_glyph",
@@ -26699,59 +26699,59 @@
   },
   "IMPORT_CONTACTS": {
     "kind": "cupertino_glyph",
-    "value": "INFO",
+    "value": "PERSON_CROP_CIRCLE_BADGE_PLUS",
     "concept": "IMPORT_CONTACTS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "IMPORT_CONTACTS_OUTLINED": {
     "kind": "cupertino_glyph",
-    "value": "INFO",
+    "value": "PERSON_CROP_CIRCLE_BADGE_PLUS",
     "concept": "IMPORT_CONTACTS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "IMPORT_CONTACTS_ROUNDED": {
     "kind": "cupertino_glyph",
-    "value": "INFO",
+    "value": "PERSON_CROP_CIRCLE_BADGE_PLUS",
     "concept": "IMPORT_CONTACTS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "IMPORT_CONTACTS_SHARP": {
     "kind": "cupertino_glyph",
-    "value": "INFO",
+    "value": "PERSON_CROP_CIRCLE_BADGE_PLUS",
     "concept": "IMPORT_CONTACTS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "IMPORT_EXPORT": {
     "kind": "system_symbol",
-    "value": "shuffle",
+    "value": "arrow.up.arrow.down",
     "concept": "IMPORT_EXPORT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "IMPORT_EXPORT_OUTLINED": {
     "kind": "system_symbol",
-    "value": "shuffle",
+    "value": "arrow.up.arrow.down",
     "concept": "IMPORT_EXPORT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "IMPORT_EXPORT_ROUNDED": {
     "kind": "system_symbol",
-    "value": "shuffle",
+    "value": "arrow.up.arrow.down",
     "concept": "IMPORT_EXPORT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "IMPORT_EXPORT_SHARP": {
     "kind": "system_symbol",
-    "value": "shuffle",
+    "value": "arrow.up.arrow.down",
     "concept": "IMPORT_EXPORT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "IMPORTANT_DEVICES": {
     "kind": "cupertino_glyph",
@@ -29660,31 +29660,31 @@
   },
   "LIVE_HELP": {
     "kind": "cupertino_glyph",
-    "value": "CONVERSATION_BUBBLE",
+    "value": "QUESTION_CIRCLE_FILL",
     "concept": "LIVE_HELP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LIVE_HELP_OUTLINED": {
     "kind": "cupertino_glyph",
-    "value": "CONVERSATION_BUBBLE",
+    "value": "QUESTION_CIRCLE_FILL",
     "concept": "LIVE_HELP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LIVE_HELP_ROUNDED": {
     "kind": "cupertino_glyph",
-    "value": "CONVERSATION_BUBBLE",
+    "value": "QUESTION_CIRCLE_FILL",
     "concept": "LIVE_HELP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LIVE_HELP_SHARP": {
     "kind": "cupertino_glyph",
-    "value": "CONVERSATION_BUBBLE",
+    "value": "QUESTION_CIRCLE_FILL",
     "concept": "LIVE_HELP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LIVE_TV": {
     "kind": "cupertino_glyph",
@@ -32011,32 +32011,32 @@
     "source": "semantic_rank"
   },
   "MARK_AS_UNREAD": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "envelope.badge.fill",
     "concept": "MARK_AS_UNREAD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MARK_AS_UNREAD_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "envelope.badge.fill",
     "concept": "MARK_AS_UNREAD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MARK_AS_UNREAD_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "envelope.badge.fill",
     "concept": "MARK_AS_UNREAD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MARK_AS_UNREAD_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "envelope.badge.fill",
     "concept": "MARK_AS_UNREAD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MARK_CHAT_READ": {
     "kind": "cupertino_glyph",
@@ -32152,31 +32152,31 @@
   },
   "MARK_UNREAD_CHAT_ALT": {
     "kind": "cupertino_glyph",
-    "value": "CHAT_BUBBLE",
+    "value": "EXCLAMATIONMARK_BUBBLE_FILL",
     "concept": "MARK_UNREAD_CHAT_ALT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MARK_UNREAD_CHAT_ALT_OUTLINED": {
     "kind": "cupertino_glyph",
-    "value": "CHAT_BUBBLE",
+    "value": "EXCLAMATIONMARK_BUBBLE_FILL",
     "concept": "MARK_UNREAD_CHAT_ALT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MARK_UNREAD_CHAT_ALT_ROUNDED": {
     "kind": "cupertino_glyph",
-    "value": "CHAT_BUBBLE",
+    "value": "EXCLAMATIONMARK_BUBBLE_FILL",
     "concept": "MARK_UNREAD_CHAT_ALT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MARK_UNREAD_CHAT_ALT_SHARP": {
     "kind": "cupertino_glyph",
-    "value": "CHAT_BUBBLE",
+    "value": "EXCLAMATIONMARK_BUBBLE_FILL",
     "concept": "MARK_UNREAD_CHAT_ALT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MARKUNREAD": {
     "kind": "system_symbol",
@@ -32187,31 +32187,31 @@
   },
   "MARKUNREAD_MAILBOX": {
     "kind": "system_symbol",
-    "value": "envelope",
+    "value": "envelope.badge.fill",
     "concept": "MARKUNREAD_MAILBOX",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MARKUNREAD_MAILBOX_OUTLINED": {
     "kind": "system_symbol",
-    "value": "envelope",
+    "value": "envelope.badge.fill",
     "concept": "MARKUNREAD_MAILBOX",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MARKUNREAD_MAILBOX_ROUNDED": {
     "kind": "system_symbol",
-    "value": "envelope",
+    "value": "envelope.badge.fill",
     "concept": "MARKUNREAD_MAILBOX",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MARKUNREAD_MAILBOX_SHARP": {
     "kind": "system_symbol",
-    "value": "envelope",
+    "value": "envelope.badge.fill",
     "concept": "MARKUNREAD_MAILBOX",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MARKUNREAD_OUTLINED": {
     "kind": "system_symbol",
@@ -34139,32 +34139,32 @@
     "source": "semantic_rank"
   },
   "MOVE_TO_INBOX": {
-    "kind": "cupertino_glyph",
-    "value": "MOVE",
+    "kind": "system_symbol",
+    "value": "tray.and.arrow.down.fill",
     "concept": "MOVE_TO_INBOX",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MOVE_TO_INBOX_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "MOVE",
+    "kind": "system_symbol",
+    "value": "tray.and.arrow.down.fill",
     "concept": "MOVE_TO_INBOX",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MOVE_TO_INBOX_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "MOVE",
+    "kind": "system_symbol",
+    "value": "tray.and.arrow.down.fill",
     "concept": "MOVE_TO_INBOX",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MOVE_TO_INBOX_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "MOVE",
+    "kind": "system_symbol",
+    "value": "tray.and.arrow.down.fill",
     "concept": "MOVE_TO_INBOX",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MOVE_UP": {
     "kind": "cupertino_glyph",
@@ -34651,31 +34651,31 @@
   },
   "NAT": {
     "kind": "system_symbol",
-    "value": "globe",
+    "value": "network",
     "concept": "NAT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NAT_OUTLINED": {
     "kind": "system_symbol",
-    "value": "globe",
+    "value": "network",
     "concept": "NAT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NAT_ROUNDED": {
     "kind": "system_symbol",
-    "value": "globe",
+    "value": "network",
     "concept": "NAT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NAT_SHARP": {
     "kind": "system_symbol",
-    "value": "globe",
+    "value": "network",
     "concept": "NAT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NATURE": {
     "kind": "system_symbol",
@@ -35267,31 +35267,31 @@
   },
   "NEXT_PLAN": {
     "kind": "system_symbol",
-    "value": "arrow.forward.circle",
+    "value": "calendar.badge.plus",
     "concept": "NEXT_PLAN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NEXT_PLAN_OUTLINED": {
     "kind": "system_symbol",
-    "value": "arrow.forward.circle",
+    "value": "calendar.badge.plus",
     "concept": "NEXT_PLAN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NEXT_PLAN_ROUNDED": {
     "kind": "system_symbol",
-    "value": "arrow.forward.circle",
+    "value": "calendar.badge.plus",
     "concept": "NEXT_PLAN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NEXT_PLAN_SHARP": {
     "kind": "system_symbol",
-    "value": "arrow.forward.circle",
+    "value": "calendar.badge.plus",
     "concept": "NEXT_PLAN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NEXT_WEEK": {
     "kind": "system_symbol",
@@ -39662,32 +39662,32 @@
     "source": "semantic_rank"
   },
   "PHONE_IN_TALK": {
-    "kind": "cupertino_glyph",
-    "value": "PHONE",
+    "kind": "system_symbol",
+    "value": "phone.fill",
     "concept": "PHONE_IN_TALK",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHONE_IN_TALK_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "PHONE",
+    "kind": "system_symbol",
+    "value": "phone.fill",
     "concept": "PHONE_IN_TALK",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHONE_IN_TALK_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "PHONE",
+    "kind": "system_symbol",
+    "value": "phone.fill",
     "concept": "PHONE_IN_TALK",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHONE_IN_TALK_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "PHONE",
+    "kind": "system_symbol",
+    "value": "phone.fill",
     "concept": "PHONE_IN_TALK",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHONE_IPHONE": {
     "kind": "cupertino_glyph",
@@ -39956,32 +39956,32 @@
     "source": "reviewed_override"
   },
   "PHONELINK_SETUP": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "laptopcomputer.and.iphone",
     "concept": "PHONELINK_SETUP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHONELINK_SETUP_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "laptopcomputer.and.iphone",
     "concept": "PHONELINK_SETUP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHONELINK_SETUP_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "laptopcomputer.and.iphone",
     "concept": "PHONELINK_SETUP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHONELINK_SETUP_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "laptopcomputer.and.iphone",
     "concept": "PHONELINK_SETUP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHONELINK_SHARP": {
     "kind": "system_symbol",
@@ -42204,31 +42204,31 @@
   },
   "QR_CODE_2": {
     "kind": "system_symbol",
-    "value": "2.square",
+    "value": "qrcode",
     "concept": "QR_CODE_2",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "QR_CODE_2_OUTLINED": {
     "kind": "system_symbol",
-    "value": "2.square",
+    "value": "qrcode",
     "concept": "QR_CODE_2",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "QR_CODE_2_ROUNDED": {
     "kind": "system_symbol",
-    "value": "2.square",
+    "value": "qrcode",
     "concept": "QR_CODE_2",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "QR_CODE_2_SHARP": {
     "kind": "system_symbol",
-    "value": "2.square",
+    "value": "qrcode",
     "concept": "QR_CODE_2",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "QR_CODE_OUTLINED": {
     "kind": "system_symbol",
@@ -42533,31 +42533,31 @@
   },
   "QUICKREPLY": {
     "kind": "system_symbol",
-    "value": "bolt",
+    "value": "arrowshape.turn.up.left.fill",
     "concept": "QUICKREPLY",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "QUICKREPLY_OUTLINED": {
     "kind": "system_symbol",
-    "value": "bolt",
+    "value": "arrowshape.turn.up.left.fill",
     "concept": "QUICKREPLY",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "QUICKREPLY_ROUNDED": {
     "kind": "system_symbol",
-    "value": "bolt",
+    "value": "arrowshape.turn.up.left.fill",
     "concept": "QUICKREPLY",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "QUICKREPLY_SHARP": {
     "kind": "system_symbol",
-    "value": "bolt",
+    "value": "arrowshape.turn.up.left.fill",
     "concept": "QUICKREPLY",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "QUIZ": {
     "kind": "cupertino_glyph",
@@ -45031,32 +45031,32 @@
     "source": "semantic_rank"
   },
   "RSS_FEED": {
-    "kind": "cupertino_glyph",
-    "value": "NEWS",
+    "kind": "system_symbol",
+    "value": "dot.radiowaves.left.and.right",
     "concept": "RSS_FEED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RSS_FEED_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "NEWS",
+    "kind": "system_symbol",
+    "value": "dot.radiowaves.left.and.right",
     "concept": "RSS_FEED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RSS_FEED_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "NEWS",
+    "kind": "system_symbol",
+    "value": "dot.radiowaves.left.and.right",
     "concept": "RSS_FEED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RSS_FEED_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "NEWS",
+    "kind": "system_symbol",
+    "value": "dot.radiowaves.left.and.right",
     "concept": "RSS_FEED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RSVP": {
     "kind": "cupertino_glyph",
@@ -46571,32 +46571,32 @@
     "source": "reviewed_override"
   },
   "SEND_TIME_EXTENSION": {
-    "kind": "cupertino_glyph",
-    "value": "TIME",
+    "kind": "system_symbol",
+    "value": "timer",
     "concept": "SEND_TIME_EXTENSION",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SEND_TIME_EXTENSION_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "TIME",
+    "kind": "system_symbol",
+    "value": "timer",
     "concept": "SEND_TIME_EXTENSION",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SEND_TIME_EXTENSION_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "TIME",
+    "kind": "system_symbol",
+    "value": "timer",
     "concept": "SEND_TIME_EXTENSION",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SEND_TIME_EXTENSION_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "TIME",
+    "kind": "system_symbol",
+    "value": "timer",
     "concept": "SEND_TIME_EXTENSION",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SEND_TO_MOBILE": {
     "kind": "system_symbol",
@@ -49630,11 +49630,11 @@
     "source": "reviewed_override"
   },
   "SMS": {
-    "kind": "system_symbol",
-    "value": "bell",
+    "kind": "cupertino_glyph",
+    "value": "CHAT_BUBBLE_TEXT_FILL",
     "concept": "SMS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SMS_FAILED": {
     "kind": "system_symbol",
@@ -49665,25 +49665,25 @@
     "source": "semantic_rank"
   },
   "SMS_OUTLINED": {
-    "kind": "system_symbol",
-    "value": "bell",
+    "kind": "cupertino_glyph",
+    "value": "CHAT_BUBBLE_TEXT_FILL",
     "concept": "SMS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SMS_ROUNDED": {
-    "kind": "system_symbol",
-    "value": "bell",
+    "kind": "cupertino_glyph",
+    "value": "CHAT_BUBBLE_TEXT_FILL",
     "concept": "SMS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SMS_SHARP": {
-    "kind": "system_symbol",
-    "value": "bell",
+    "kind": "cupertino_glyph",
+    "value": "CHAT_BUBBLE_TEXT_FILL",
     "concept": "SMS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SNAPCHAT": {
     "kind": "system_symbol",
@@ -50589,32 +50589,32 @@
     "source": "reviewed_override"
   },
   "SPOKE": {
-    "kind": "cupertino_glyph",
-    "value": "LINK",
+    "kind": "system_symbol",
+    "value": "point.3.connected.trianglepath.dotted",
     "concept": "SPOKE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SPOKE_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "LINK",
+    "kind": "system_symbol",
+    "value": "point.3.connected.trianglepath.dotted",
     "concept": "SPOKE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SPOKE_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "LINK",
+    "kind": "system_symbol",
+    "value": "point.3.connected.trianglepath.dotted",
     "concept": "SPOKE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SPOKE_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "LINK",
+    "kind": "system_symbol",
+    "value": "point.3.connected.trianglepath.dotted",
     "concept": "SPOKE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SPORTS": {
     "kind": "system_symbol",
@@ -54635,32 +54635,32 @@
     "source": "semantic_rank"
   },
   "TEXTSMS": {
-    "kind": "system_symbol",
-    "value": "bell",
+    "kind": "cupertino_glyph",
+    "value": "CHAT_BUBBLE_TEXT_FILL",
     "concept": "TEXTSMS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TEXTSMS_OUTLINED": {
-    "kind": "system_symbol",
-    "value": "bell",
+    "kind": "cupertino_glyph",
+    "value": "CHAT_BUBBLE_TEXT_FILL",
     "concept": "TEXTSMS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TEXTSMS_ROUNDED": {
-    "kind": "system_symbol",
-    "value": "bell",
+    "kind": "cupertino_glyph",
+    "value": "CHAT_BUBBLE_TEXT_FILL",
     "concept": "TEXTSMS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TEXTSMS_SHARP": {
-    "kind": "system_symbol",
-    "value": "bell",
+    "kind": "cupertino_glyph",
+    "value": "CHAT_BUBBLE_TEXT_FILL",
     "concept": "TEXTSMS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TEXTURE": {
     "kind": "system_symbol",
@@ -55867,32 +55867,32 @@
     "source": "reviewed_override"
   },
   "TOPIC": {
-    "kind": "cupertino_glyph",
-    "value": "QUESTION",
+    "kind": "system_symbol",
+    "value": "doc.text.fill",
     "concept": "TOPIC",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TOPIC_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "QUESTION",
+    "kind": "system_symbol",
+    "value": "doc.text.fill",
     "concept": "TOPIC",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TOPIC_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "QUESTION",
+    "kind": "system_symbol",
+    "value": "doc.text.fill",
     "concept": "TOPIC",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TOPIC_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "QUESTION",
+    "kind": "system_symbol",
+    "value": "doc.text.fill",
     "concept": "TOPIC",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TORNADO": {
     "kind": "cupertino_glyph",
@@ -57303,31 +57303,31 @@
   },
   "UNARCHIVE": {
     "kind": "system_symbol",
-    "value": "folder",
+    "value": "tray.and.arrow.up.fill",
     "concept": "UNARCHIVE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "UNARCHIVE_OUTLINED": {
     "kind": "system_symbol",
-    "value": "folder",
+    "value": "tray.and.arrow.up.fill",
     "concept": "UNARCHIVE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "UNARCHIVE_ROUNDED": {
     "kind": "system_symbol",
-    "value": "folder",
+    "value": "tray.and.arrow.up.fill",
     "concept": "UNARCHIVE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "UNARCHIVE_SHARP": {
     "kind": "system_symbol",
-    "value": "folder",
+    "value": "tray.and.arrow.up.fill",
     "concept": "UNARCHIVE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "UNDO": {
     "kind": "system_symbol",
@@ -57527,31 +57527,31 @@
   },
   "UPCOMING": {
     "kind": "system_symbol",
-    "value": "bell",
+    "value": "calendar",
     "concept": "UPCOMING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "UPCOMING_OUTLINED": {
     "kind": "system_symbol",
-    "value": "bell",
+    "value": "calendar",
     "concept": "UPCOMING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "UPCOMING_ROUNDED": {
     "kind": "system_symbol",
-    "value": "bell",
+    "value": "calendar",
     "concept": "UPCOMING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "UPCOMING_SHARP": {
     "kind": "system_symbol",
-    "value": "bell",
+    "value": "calendar",
     "concept": "UPCOMING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "UPDATE": {
     "kind": "system_symbol",
@@ -59263,31 +59263,31 @@
   },
   "VOICEMAIL": {
     "kind": "system_symbol",
-    "value": "bell.circle",
+    "value": "recordingtape",
     "concept": "VOICEMAIL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VOICEMAIL_OUTLINED": {
     "kind": "system_symbol",
-    "value": "bell.circle",
+    "value": "recordingtape",
     "concept": "VOICEMAIL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VOICEMAIL_ROUNDED": {
     "kind": "system_symbol",
-    "value": "bell.circle",
+    "value": "recordingtape",
     "concept": "VOICEMAIL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VOICEMAIL_SHARP": {
     "kind": "system_symbol",
-    "value": "bell.circle",
+    "value": "recordingtape",
     "concept": "VOICEMAIL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VOLCANO": {
     "kind": "cupertino_glyph",

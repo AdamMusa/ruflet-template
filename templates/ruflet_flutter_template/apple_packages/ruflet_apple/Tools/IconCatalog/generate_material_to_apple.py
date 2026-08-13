@@ -24,6 +24,7 @@ Generation uses pinned/auditable inputs:
 * image_media_overrides.json -- the reviewed photography and image-media family.
 * text_editor_overrides.json -- the reviewed document and text-editor family.
 * home_household_overrides.json -- the reviewed home and household family.
+* communication_overrides.json -- the reviewed calls and messaging family.
 
 The installed public Apple symbol metadata is used only to choose and validate
 native symbols available at both deployment floors. Private and restricted
@@ -62,6 +63,7 @@ SOCIAL_ACTIVITIES_OVERRIDES_PATH = TOOL_DIR / "social_activities_overrides.json"
 IMAGE_MEDIA_OVERRIDES_PATH = TOOL_DIR / "image_media_overrides.json"
 TEXT_EDITOR_OVERRIDES_PATH = TOOL_DIR / "text_editor_overrides.json"
 HOME_HOUSEHOLD_OVERRIDES_PATH = TOOL_DIR / "home_household_overrides.json"
+COMMUNICATION_OVERRIDES_PATH = TOOL_DIR / "communication_overrides.json"
 AUDIT_PATH = TOOL_DIR / "material_to_apple_audit.json"
 
 CORE_GLYPHS = Path(
@@ -340,6 +342,7 @@ def load_reviewed_overrides() -> tuple[
         "image_media": IMAGE_MEDIA_OVERRIDES_PATH,
         "text_editor": TEXT_EDITOR_OVERRIDES_PATH,
         "home_household": HOME_HOUSEHOLD_OVERRIDES_PATH,
+        "communication": COMMUNICATION_OVERRIDES_PATH,
     }
     merged: dict[str, dict[str, str]] = {}
     families: dict[str, str] = {}

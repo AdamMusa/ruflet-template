@@ -316,6 +316,44 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             self.assertEqual(self.entries[concept]["kind"], kind)
             self.assertEqual(self.entries[concept]["value"], value)
 
+    def test_communication_family_is_explicit_reviewed_native_artwork(self):
+        family = MODULE.load_json(MODULE.COMMUNICATION_OVERRIDES_PATH)
+        low_confidence = {
+            item["concept"] for item in self.audit["low_confidence_concepts"]
+        }
+        self.assertEqual(self.audit["reviewed_families"]["communication"], len(family))
+        self.assertTrue(set(family).isdisjoint(low_confidence))
+        for concept, target in family.items():
+            entry = self.entries[concept]
+            self.assertEqual(entry["kind"], target["kind"])
+            self.assertEqual(entry["value"], target["value"])
+            self.assertEqual(entry["confidence"], "reviewed")
+            self.assertEqual(entry["source"], "reviewed_override")
+
+    def test_communication_distinct_semantics_do_not_regress(self):
+        expected = {
+            "CALL_MADE": ("system_symbol", "phone.arrow.up.right"),
+            "CALL_RECEIVED": ("system_symbol", "phone.arrow.down.left"),
+            "CANCEL_PRESENTATION": (
+                "system_symbol",
+                "rectangle.on.rectangle.slash",
+            ),
+            "CONTACT_EMERGENCY": (
+                "cupertino_glyph",
+                "PERSON_CROP_CIRCLE_BADGE_EXCLAM",
+            ),
+            "DIALPAD": ("system_symbol", "circle.grid.3x3.fill"),
+            "MARK_UNREAD_CHAT_ALT": (
+                "cupertino_glyph",
+                "EXCLAMATIONMARK_BUBBLE_FILL",
+            ),
+            "QR_CODE_2": ("system_symbol", "qrcode"),
+            "VOICEMAIL": ("system_symbol", "recordingtape"),
+        }
+        for concept, (kind, value) in expected.items():
+            self.assertEqual(self.entries[concept]["kind"], kind)
+            self.assertEqual(self.entries[concept]["value"], value)
+
     def test_checked_in_artifacts_are_reproducible(self):
         self.assertEqual(
             MODULE.OUTPUT_PATH.read_text(encoding="utf-8"),
