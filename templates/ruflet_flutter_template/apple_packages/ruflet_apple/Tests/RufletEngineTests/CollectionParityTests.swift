@@ -4,6 +4,24 @@ import RufletProtocol
 import XCTest
 
 final class CollectionParityTests: XCTestCase {
+  func testListTileHasOneNativeAppleRenderingPath() throws {
+    let package = URL(fileURLWithPath: #filePath)
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+    let source = try String(contentsOf: package.appendingPathComponent(
+      "Sources/RufletUI/Controls/CollectionControls.swift"))
+    let start = try XCTUnwrap(source.range(of: "struct ListTileControlView"))
+    let end = try XCTUnwrap(source.range(
+      of: "/// Exact type and visibility ownership", range: start.upperBound..<source.endIndex))
+    let listTile = source[start.lowerBound..<end.lowerBound]
+
+    XCTAssertTrue(listTile.contains("Button(action: nativeActivate)"))
+    XCTAssertTrue(listTile.contains("nativeTileContents"))
+    XCTAssertFalse(listTile.contains("materialTile"))
+    XCTAssertFalse(listTile.contains("requiresCustomRendering"))
+  }
+
   func testPinnedFletCollectionDefaultsAreResolvedWithoutScreenLiterals() {
     let list = CollectionDefaults.listView(ControlNode(id: 1, type: "ListView"))
     XCTAssertFalse(list.horizontal)
@@ -245,15 +263,6 @@ final class CollectionParityTests: XCTestCase {
     XCTAssertEqual(dense.subtitleFontSize, 12)
   }
 
-  func testStylelessMaterialListTileUsesNativeAppleRow() {
-    XCTAssertFalse(ListTilePresentation(node: ControlNode(
-      id: 1, type: "ListTile", props: [
-        "title": .string("Settings"),
-        "subtitle": .string("Application preferences"),
-        "leading": .string("settings"),
-    ])).requiresCustomRendering)
-  }
-
   func testNativeListTilePreservesLeadingAndTrailingTextStyle() {
     let tile = ListTilePresentation(node: ControlNode(
       id: 1, type: "ListTile", props: [
@@ -265,28 +274,10 @@ final class CollectionParityTests: XCTestCase {
         ]),
       ]))
 
-    // This semantic style is representable by native SwiftUI content and must
-    // not force the handwritten Material row. Both control and icon/string
-    // slots receive the same parsed style in `nativeTileContents`.
-    XCTAssertFalse(tile.requiresCustomRendering)
+    // Both control and icon/string slots receive the same parsed style in the
+    // single native Apple row implementation.
     XCTAssertEqual(tile.leadingTrailingTextStyle?.size, 21)
     XCTAssertEqual(tile.leadingTrailingTextStyle?.weight, .bold)
-  }
-
-  func testExplicitMaterialListTileVisualsPreserveCustomRoute() {
-    for property in [
-      "content_padding", "horizontal_spacing", "min_height", "dense", "shape",
-      "bgcolor", "selected", "selected_color", "title_text_style", "visual_density",
-    ] {
-      let value: RufletValue
-      switch property {
-      case "dense", "selected": value = .bool(true)
-      case "horizontal_spacing", "min_height": value = .double(12)
-      default: value = .string("explicit")
-      }
-      XCTAssertTrue(ListTilePresentation(node: ControlNode(
-        id: 1, type: "ListTile", props: [property: value])).requiresCustomRendering, property)
-    }
   }
 
   func testMaterialListTileShapePreservesFletShapeAndBorderSide() {

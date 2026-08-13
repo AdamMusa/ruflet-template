@@ -53,37 +53,24 @@ final class ButtonParityTests: XCTestCase {
 
   // MARK: - Native icon-button appearance
 
-  func testStylelessIconButtonsLeaveAppearanceToSwiftUI() {
-    for type in ["IconButton", "FilledIconButton", "FilledTonalIconButton",
-                 "OutlinedIconButton"] {
-      XCTAssertFalse(IconButtonPresentation(node: node(type)).requiresCustomRendering, type)
-    }
+  func testIconButtonsUseNativeAppleAppearances() {
     XCTAssertEqual(NativeButtonAppearance.resolve(.icon), .borderless)
     XCTAssertEqual(NativeButtonAppearance.resolve(.filledIcon), .borderedProminent)
     XCTAssertEqual(NativeButtonAppearance.resolve(.filledTonalIcon), .bordered)
     XCTAssertEqual(NativeButtonAppearance.resolve(.outlinedIcon), .bordered)
   }
 
-  func testExplicitIconAppearanceOptsIntoCustomRendering() {
-    XCTAssertTrue(IconButtonPresentation(
-      node: node("IconButton", ["icon_color": .string("red")])).requiresCustomRendering)
-    XCTAssertTrue(IconButtonPresentation(
-      node: node("FilledIconButton", internals: [
-        "style": .map(["padding": .double(4)]),
-      ])).requiresCustomRendering)
-  }
-
   // MARK: - Icon button geometry
 
   func testIconButtonDoesNotApplyMaterialTargetWhenUnconstrained() {
     let presentation = IconButtonPresentation(node: node("IconButton"))
-    XCTAssertFalse(presentation.requiresCustomRendering)
+    XCTAssertEqual(presentation.constraints.minWidth, 40)
+    XCTAssertEqual(presentation.constraints.minHeight, 40)
   }
 
   func testSplashRadiusNamesTheTargetUntilSizeConstraintsDo() {
     let splash = IconButtonPresentation(
       node: node("IconButton", ["splash_radius": .double(15)]))
-    XCTAssertTrue(splash.requiresCustomRendering)
     XCTAssertEqual(splash.constraints.minWidth, 30)
     XCTAssertEqual(splash.constraints.minHeight, 30)
 
@@ -117,7 +104,6 @@ final class ButtonParityTests: XCTestCase {
     let regular = FloatingActionPresentation(
       node: node("FloatingActionButton", ["icon": .string("add")]))
     XCTAssertFalse(regular.isExtended)
-    XCTAssertFalse(regular.requiresCustomRendering)
     XCTAssertEqual(regular.side, 56)
     XCTAssertEqual(regular.nativeLabelSide, 40)
     XCTAssertEqual(NativeButtonAppearance.resolve(.floatingAction), .borderedProminent)
@@ -127,7 +113,6 @@ final class ButtonParityTests: XCTestCase {
     XCTAssertTrue(mini.isMini)
     XCTAssertEqual(mini.side, 40)
     XCTAssertEqual(mini.nativeLabelSide, 24)
-    XCTAssertFalse(mini.requiresCustomRendering)
   }
 
   /// Flet reaches `FloatingActionButton.extended` only when both an icon and
@@ -177,7 +162,6 @@ final class ButtonParityTests: XCTestCase {
   func testFloatingActionButtonElevationsFollowItsState() {
     let pressed = FloatingActionPresentation(
       node: node("FloatingActionButton", ["highlight_elevation": .double(12)]))
-    XCTAssertTrue(pressed.requiresCustomRendering)
     XCTAssertEqual(pressed.pressedElevation, 12)
 
     // A disabled FAB flattens, and stays flat while it is pressed.

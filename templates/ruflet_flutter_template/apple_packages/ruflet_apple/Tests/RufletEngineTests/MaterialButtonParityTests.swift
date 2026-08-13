@@ -17,7 +17,6 @@ final class MaterialButtonParityTests: XCTestCase {
       let presentation = ButtonPresentation(
         node: ControlNode(id: 1, type: type), variant: ButtonVariant(wireType: type))
       XCTAssertFalse(presentation.hasExplicitStyle, type)
-      XCTAssertFalse(presentation.requiresCustomStyle, type)
       XCTAssertEqual(NativeButtonAppearance.resolve(ButtonVariant(wireType: type)), appearance)
       XCTAssertNotNil(presentation.color("color"), type)
       XCTAssertNotNil(presentation.color("bgcolor"), type)
@@ -33,7 +32,6 @@ final class MaterialButtonParityTests: XCTestCase {
         node: ControlNode(id: 1, type: type, internals: ["style": .map([:])]),
         variant: ButtonVariant(wireType: type))
       XCTAssertTrue(presentation.hasExplicitStyle, type)
-      XCTAssertTrue(presentation.requiresCustomStyle, type)
     }
   }
 
@@ -73,12 +71,6 @@ final class MaterialButtonParityTests: XCTestCase {
   }
 
   func testStylelessIconButtonsUseNativeCircularButtonFamilies() {
-    for type in ["IconButton", "FilledIconButton", "FilledTonalIconButton", "OutlinedIconButton"] {
-      XCTAssertFalse(
-        IconButtonPresentation(
-          node: ControlNode(id: 1, type: type)
-        ).requiresCustomRendering, type)
-    }
     XCTAssertEqual(NativeButtonAppearance.resolve(.icon), .borderless)
     XCTAssertEqual(NativeButtonAppearance.resolve(.filledIcon), .borderedProminent)
     XCTAssertEqual(NativeButtonAppearance.resolve(.outlinedIcon), .bordered)
@@ -103,8 +95,6 @@ final class MaterialButtonParityTests: XCTestCase {
     let mini = FloatingActionPresentation(
       node: ControlNode(
         id: 2, type: "FloatingActionButton", props: ["mini": .bool(true)]))
-    XCTAssertFalse(normal.requiresCustomRendering)
-    XCTAssertFalse(mini.requiresCustomRendering)
     XCTAssertEqual(NativeButtonAppearance.resolve(.floatingAction), .borderedProminent)
     XCTAssertEqual(normal.width, 56)
     XCTAssertEqual(normal.height, 56)
@@ -116,7 +106,7 @@ final class MaterialButtonParityTests: XCTestCase {
     let shaped = FloatingActionPresentation(
       node: ControlNode(
         id: 3, type: "FloatingActionButton", props: ["shape": .map(["radius": .double(6)])]))
-    XCTAssertTrue(shaped.requiresCustomRendering)
+    XCTAssertEqual(shaped.radius, 6)
   }
 
   func testSegmentedButtonImplementsFletValidationOrder() {
@@ -208,7 +198,6 @@ final class MaterialButtonParityTests: XCTestCase {
 
   func testStylelessChipRetainsInputChipDefaultsOnNativeAppleButton() {
     let styleless = ControlNode(id: 1, type: "Chip", props: ["label": .string("A")])
-    XCTAssertFalse(ChipPresentation.requiresCustomRendering(styleless))
     XCTAssertNotNil(ChipPresentation.foreground(styleless))
     XCTAssertEqual(ChipPresentation.padding(styleless).leading, 8)
     XCTAssertEqual(ChipPresentation.labelPadding(styleless).leading, 8)
@@ -231,18 +220,6 @@ final class MaterialButtonParityTests: XCTestCase {
       ])
     XCTAssertNotNil(ChipPresentation.background(selectedDisabled))
 
-    let explicitChipVisuals: [(String, RufletValue)] = [
-      ("bgcolor", .string("red")),
-      ("shape", .map(["radius": .double(8)])),
-      ("padding", .double(6)),
-      ("label_text_style", .map(["size": .double(12)])),
-    ]
-    for (key, value) in explicitChipVisuals {
-      XCTAssertTrue(
-        ChipPresentation.requiresCustomRendering(
-          ControlNode(
-            id: 2, type: "Chip", props: ["label": .string("A"), key: value])), key)
-    }
   }
 
   func testExplicitChipVisualsRetainFlutterMaterial3ConstructorDefaults() {
@@ -253,7 +230,6 @@ final class MaterialButtonParityTests: XCTestCase {
 
     let resting = ControlNode(
       id: 1, type: "Chip", props: ["label": .string("A"), "bgcolor": .string("red")])
-    XCTAssertTrue(ChipPresentation.requiresCustomRendering(resting))
     XCTAssertEqual(ChipPresentation.labelColorToken(resting), "onsurfacevariant")
     XCTAssertEqual(ChipPresentation.deleteIconColorToken(resting), "onsurfacevariant")
     XCTAssertEqual(ChipPresentation.borderColorToken(resting), "outlinevariant")

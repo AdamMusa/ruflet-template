@@ -242,9 +242,6 @@ struct ButtonPresentation {
     node.internals["style"]?.mapValue ?? node.props["style"]?.mapValue
   }
   var hasExplicitStyle: Bool { style != nil }
-  /// `parseButtonStyle(nil)` returns nil, while even an empty map constructs a
-  /// ButtonStyle populated with Flet's supplied defaults.
-  var requiresCustomStyle: Bool { style != nil }
 
   static func validationMessage(
     _ node: ControlNode,
@@ -626,15 +623,6 @@ struct IconButtonPresentation {
 
   private var palette: RufletThemeDefaults.IconButtonPalette { Self.palette(for: node) }
 
-  var requiresCustomRendering: Bool {
-    style?.isEmpty == false
-      || [
-        "bgcolor", "icon_color", "disabled_color", "selected_icon_color",
-        "padding", "alignment", "size_constraints", "splash_radius",
-        "highlight_color", "splash_color",
-      ].contains { node.props[$0] != nil }
-  }
-
   var foreground: Color? {
     if node.bool("disabled") == true {
       return MaterialPalette.color(node.string("disabled_color"))
@@ -700,14 +688,6 @@ struct FloatingActionPresentation {
   }
 
   var isMini: Bool { node.bool("mini") == true }
-
-  var requiresCustomRendering: Bool {
-    [
-      "shape", "elevation", "focus_elevation", "hover_elevation",
-      "highlight_elevation", "disabled_elevation", "splash_color",
-      "hover_color", "focus_color", "shadow_color",
-    ].contains { node.props[$0] != nil }
-  }
 
   /// A FAB carrying both an icon and content is `FloatingActionButton.extended`
   /// — a pill that grows with its label rather than a fixed square.
@@ -1034,21 +1014,6 @@ enum ChipPresentation {
   static func labelPadding(_ node: ControlNode) -> EdgeInsets {
     ControlProps.edgeInsets(node.props["label_padding"])
       ?? EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8)
-  }
-
-  /// Visual values are the boundary between a native Apple chip equivalent
-  /// and Flet's explicitly requested Material rendering. Content, state and
-  /// event properties do not opt out of the native control family.
-  static func requiresCustomRendering(_ node: ControlNode) -> Bool {
-    let visualKeys = [
-      "bgcolor", "color", "disabled_color", "selected_color", "check_color",
-      "delete_icon_color", "border_side", "shape", "padding", "label_padding",
-      "elevation", "elevation_on_click", "shadow_color", "selected_shadow_color",
-      "visual_density", "clip_behavior", "select_animation_style",
-      "leading_drawer_animation_style", "delete_drawer_animation_style",
-      "enable_animation_style", "label_text_style",
-    ]
-    return visualKeys.contains { node.props[$0] != nil || node.internals[$0] != nil }
   }
 
   static func validationMessage(_ node: ControlNode, label: ControlNode? = nil) -> String? {

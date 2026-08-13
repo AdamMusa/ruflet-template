@@ -1070,10 +1070,8 @@ struct ListTileControlView: View {
       Text(validationMessage).foregroundColor(.red)
     } else if node.type == "CupertinoListTile" {
       cupertinoTile
-    } else if !ListTilePresentation(node: node).requiresCustomRendering {
-      nativeTile
     } else {
-      materialTile
+      nativeTile
     }
   }
 
@@ -1082,7 +1080,7 @@ struct ListTileControlView: View {
     Group {
       if nativeInteractive {
         Button(action: nativeActivate) { nativeTileContents }
-          .buttonStyle(.plain)
+          .buttonStyle(ListTileNativeButtonStyle(pressed: $pressed))
       } else {
         nativeTileContents
       }
@@ -1093,6 +1091,8 @@ struct ListTileControlView: View {
     .focused($focused)
     .onAppear { if node.bool("autofocus") == true { focused = true } }
     .onChange(of: focused) { events.fire(node, $0 ? "focus" : "blur") }
+    .onHover { hovered = $0 }
+    .modifier(VisualDensityPadding(value: node.props["visual_density"]))
     .disabled(node.bool("disabled") == true)
   }
 
@@ -1104,70 +1104,12 @@ struct ListTileControlView: View {
     ) {
       if let leadingID = materialSlots.leadingID {
         ControlView(id: leadingID, axis: .none)
-          .modifier(OptionalListTileTextStyle(style: presentation.leadingTrailingTextStyle))
-          .frame(minWidth: presentation.minLeadingWidth)
-      } else if let leadingIcon = materialSlots.leadingIcon {
-        RufletIcon(value: leadingIcon)
-          .modifier(OptionalListTileTextStyle(style: presentation.leadingTrailingTextStyle))
-          .frame(minWidth: presentation.minLeadingWidth)
-      }
-
-      VStack(alignment: .leading, spacing: presentation.textSpacing) {
-        if let titleID = materialSlots.titleID {
-          ControlView(id: titleID, axis: .none)
-        } else if let title = materialSlots.titleText {
-          Text(title)
-        }
-        if let subtitleID = materialSlots.subtitleID {
-          ControlView(id: subtitleID, axis: .none).foregroundStyle(.secondary)
-        } else if let subtitle = materialSlots.subtitleText {
-          Text(subtitle).foregroundStyle(.secondary)
-        }
-      }
-      .frame(maxWidth: .infinity, alignment: .leading)
-
-      if let trailingID = materialSlots.trailingID {
-        ControlView(id: trailingID, axis: .none)
-          .modifier(OptionalListTileTextStyle(style: presentation.leadingTrailingTextStyle))
-      } else if let trailingIcon = materialSlots.trailingIcon {
-        RufletIcon(value: trailingIcon)
-          .modifier(OptionalListTileTextStyle(style: presentation.leadingTrailingTextStyle))
-      }
-    }
-    .padding(presentation.contentPadding)
-    .padding(.vertical, presentation.minVerticalPadding)
-    .frame(maxWidth: .infinity, minHeight: presentation.minHeight)
-    .contentShape(Rectangle())
-  }
-
-  private var nativeInteractive: Bool {
-    node.handlesEvent("click") || node.bool("toggle_inputs") == true || node.string("url") != nil
-  }
-
-  private func nativeActivate() {
-    RufletTapFeedback.perform(enabled: node.bool("enable_feedback") != false)
-    if node.bool("toggle_inputs") == true { tileClicks.click() }
-    if let url = node.string("url").flatMap(URL.init(string:)) { openURL(url) }
-    if node.handlesEvent("click") { events.fire(node, "click") }
-  }
-
-  private var materialTile: some View {
-    let presentation = ListTilePresentation(node: node)
-    let shape = presentation.shape
-    return HStack(
-      alignment: presentation.rowAlignment,
-      spacing: presentation.horizontalTitleGap
-    ) {
-      if let leadingID = materialSlots.leadingID {
-        ControlView(id: leadingID, axis: .none)
           .font(.system(size: presentation.leadingTrailingFontSize))
           .foregroundColor(presentation.leadingTrailingColor)
           .modifier(OptionalListTileTextStyle(style: presentation.leadingTrailingTextStyle))
           .frame(minWidth: presentation.minLeadingWidth)
       } else if let leadingIcon = materialSlots.leadingIcon {
-        RufletIcon(
-          value: leadingIcon, size: 24,
-          color: presentation.iconColor)
+        RufletIcon(value: leadingIcon, size: 24, color: presentation.iconColor)
           .frame(minWidth: presentation.minLeadingWidth)
       }
 
@@ -1203,31 +1145,30 @@ struct ListTileControlView: View {
           .foregroundColor(presentation.leadingTrailingColor)
           .modifier(OptionalListTileTextStyle(style: presentation.leadingTrailingTextStyle))
       } else if let trailingIcon = materialSlots.trailingIcon {
-        RufletIcon(
-          value: trailingIcon, size: 24,
-          color: presentation.iconColor)
+        RufletIcon(value: trailingIcon, size: 24, color: presentation.iconColor)
       }
     }
     .padding(presentation.contentPadding)
     .padding(.vertical, presentation.minVerticalPadding)
-    .frame(minHeight: presentation.minHeight)
-    .background(shape.fill(
+    .frame(maxWidth: .infinity, minHeight: presentation.minHeight)
+    .background(presentation.shape.fill(
       pressed
         ? MaterialPalette.color(node.string("splash_color"), default: .clear)
         : presentation.backgroundColor(hovered: hovered, focused: focused)))
-    .overlay(shape.stroke(presentation.outlineColor, lineWidth: presentation.outlineWidth))
-    .contentShape(shape)
-    .environment(\.rufletListTileClicks, node.bool("toggle_inputs") == true ? tileClicks : nil)
-    .onHover { hovered = $0 }
-    .modifier(NativeListTileFocusable(enabled: node.bool("disabled") != true))
-    .focused($focused)
-    .onAppear { if node.bool("autofocus") == true { focused = true } }
-    .onChange(of: focused) { events.fire(node, $0 ? "focus" : "blur") }
-    .modifier(ListTileInteraction(
-      node: node, events: events, openURL: openURL, tileClicks: tileClicks,
-      pressed: $pressed))
-    .modifier(VisualDensityPadding(value: node.props["visual_density"]))
-    .disabled(node.bool("disabled") == true)
+    .overlay(presentation.shape.stroke(
+      presentation.outlineColor, lineWidth: presentation.outlineWidth))
+    .contentShape(presentation.shape)
+  }
+
+  private var nativeInteractive: Bool {
+    node.handlesEvent("click") || node.bool("toggle_inputs") == true || node.string("url") != nil
+  }
+
+  private func nativeActivate() {
+    RufletTapFeedback.perform(enabled: node.bool("enable_feedback") != false)
+    if node.bool("toggle_inputs") == true { tileClicks.click() }
+    if let url = node.string("url").flatMap(URL.init(string:)) { openURL(url) }
+    if node.handlesEvent("click") { events.fire(node, "click") }
   }
 
   private var cupertinoTile: some View {
@@ -1480,18 +1421,6 @@ struct ListTilePresentation {
       outlineColor = MaterialPalette.color(side?["color"]?.stringValue, default: .clear)
       outlineWidth = CGFloat(side?["width"]?.doubleValue ?? 0)
     }
-  }
-
-  var requiresCustomRendering: Bool {
-    let materialVisualProperties = [
-      "content_padding", "horizontal_spacing", "min_leading_width",
-      "min_vertical_padding", "min_height", "dense", "is_three_line",
-      "visual_density", "title_alignment", "shape", "bgcolor", "focus_color",
-      "hover_color", "splash_color", "selected", "selected_color",
-      "selected_tile_color", "text_color", "icon_color", "title_text_style",
-      "subtitle_text_style", "enable_feedback",
-    ]
-    return materialVisualProperties.contains { node.props[$0] != nil }
   }
 
   static func validationMessage(_ node: ControlNode, title: ControlNode? = nil) -> String? {
