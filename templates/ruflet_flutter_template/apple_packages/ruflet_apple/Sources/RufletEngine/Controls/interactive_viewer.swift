@@ -323,10 +323,8 @@ struct RufletInteractivePointerConfiguration {
 
   init(control: RufletControl) {
     scaleFactor = max(control.number("scale_factor", default: 200) ?? 200, 0.000_001)
-    trackpadScrollCausesScale = control.boolean(
-      "trackpad_scroll_causes_scale",
-      default: false
-    )
+    let trackpadScaling = control.boolean("trackpad_scroll_causes_scale", default: false)
+    trackpadScrollCausesScale = trackpadScaling
   }
 
   func scaleMultiplier(for verticalDelta: CGFloat) -> Double {
