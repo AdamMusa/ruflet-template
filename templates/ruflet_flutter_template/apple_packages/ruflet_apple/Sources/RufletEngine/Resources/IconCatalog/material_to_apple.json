@@ -15102,29 +15102,29 @@
     "kind": "system_symbol",
     "value": "bell.slash.circle",
     "concept": "DO_NOT_DISTURB_ON_TOTAL_SILENCE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DO_NOT_DISTURB_ON_TOTAL_SILENCE_OUTLINED": {
     "kind": "system_symbol",
     "value": "bell.slash.circle",
     "concept": "DO_NOT_DISTURB_ON_TOTAL_SILENCE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DO_NOT_DISTURB_ON_TOTAL_SILENCE_ROUNDED": {
     "kind": "system_symbol",
     "value": "bell.slash.circle",
     "concept": "DO_NOT_DISTURB_ON_TOTAL_SILENCE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DO_NOT_DISTURB_ON_TOTAL_SILENCE_SHARP": {
     "kind": "system_symbol",
     "value": "bell.slash.circle",
     "concept": "DO_NOT_DISTURB_ON_TOTAL_SILENCE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DO_NOT_DISTURB_OUTLINED": {
     "kind": "system_symbol",

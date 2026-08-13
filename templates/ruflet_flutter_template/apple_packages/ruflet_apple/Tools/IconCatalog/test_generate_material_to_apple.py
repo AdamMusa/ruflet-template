@@ -1293,6 +1293,7 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
     def test_device_interaction_state_family_is_reviewed_native_artwork(self):
         family = MODULE.load_json(MODULE.DEVICE_INTERACTION_STATE_OVERRIDES_PATH)
         expected_concepts = {
+            "DO_NOT_DISTURB_ON_TOTAL_SILENCE",
             "MODE_STANDBY",
             "SENSOR_OCCUPIED",
             "VIBRATION",
@@ -1312,13 +1313,17 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             for name in material
             if MODULE.concept_for(name) in expected_concepts
         }
-        self.assertEqual(len(family_wire_identities), 12)
+        self.assertEqual(len(family_wire_identities), 16)
         for name in family_wire_identities:
             self.assertEqual(self.entries[name]["confidence"], "reviewed")
             self.assertEqual(self.entries[name]["source"], "reviewed_override")
 
     def test_device_interaction_state_semantics_do_not_regress(self):
         expected = {
+            "DO_NOT_DISTURB_ON_TOTAL_SILENCE": (
+                "system_symbol",
+                "bell.slash.circle",
+            ),
             "MODE_STANDBY": ("system_symbol", "power"),
             "SENSOR_OCCUPIED": ("system_symbol", "person.wave.2.fill"),
             "VIBRATION": (
@@ -1330,8 +1335,14 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             self.assertEqual(self.entries[material_name]["kind"], kind)
             self.assertEqual(self.entries[material_name]["value"], value)
 
-        # Radiowaves alone do not retain prediction or playback semantics.
-        for material_name in ("ONLINE_PREDICTION", "TAP_AND_PLAY"):
+        # Radiowaves alone do not retain prediction or playback semantics, and
+        # disabling DND means notifications are allowed rather than silenced.
+        for material_name in (
+            "DO_DISTURB_OFF",
+            "DO_NOT_DISTURB_OFF",
+            "ONLINE_PREDICTION",
+            "TAP_AND_PLAY",
+        ):
             self.assertNotEqual(self.entries[material_name]["confidence"], "reviewed")
 
     def test_checked_in_artifacts_are_reproducible(self):

@@ -81,8 +81,8 @@ Reviewed opaque legacy names for 4K display, night light, query-builder clock,
 and three-dimensional rotation live in `legacy_named_symbol_overrides.json`.
 Reviewed outer/inner/horizontal borders and direct vertical layout movement
 symbols live in `layout_manipulation_overrides.json`.
-Reviewed standby-power, occupied-sensor, and phone-vibration states live in
-`device_interaction_state_overrides.json`.
+Reviewed total-silence Do Not Disturb, standby-power, occupied-sensor, and
+phone-vibration states live in `device_interaction_state_overrides.json`.
 
 The 8,825 identities contain 2,235 concepts because Flet carries Outlined,
 Rounded, and Sharp Material variants. The generator records the collapsed
