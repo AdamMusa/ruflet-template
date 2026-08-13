@@ -30,18 +30,23 @@ public struct SnackBarControl: View {
   }
 
   private var snackBar: some View {
-    contentLayout
-      .padding(parsePadding(control.dynamicValue("padding"))
-        ?? EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16))
+    let presentation = RufletSnackBarPresentation(control: control)
+    return
+      contentLayout
+      .padding(
+        parsePadding(control.dynamicValue("padding"))
+          ?? EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16)
+      )
       .frame(width: effectiveWidth)
       .frame(maxWidth: behavior == .floating ? nil : .infinity, alignment: .leading)
       .background(backgroundColor)
-      .clipShape(shape)
+      .modifier(RufletSnackBarClipModifier(shape: shape, presentation: presentation))
       .overlay { shapeBorder }
       .shadow(
         color: .black.opacity(elevation > 0 ? 0.2 : 0),
         radius: elevation,
-        y: elevation / 2)
+        y: elevation / 2
+      )
       .padding(effectiveMargin)
       .contentShape(Rectangle())
       .gesture(dismissGesture)
@@ -183,6 +188,32 @@ public struct SnackBarControl: View {
   }
 }
 
+@MainActor
+struct RufletSnackBarPresentation {
+  let clipBehavior: String
+
+  init(control: RufletControl) {
+    clipBehavior = control.string("clip_behavior", default: "hardEdge")!.lowercased()
+  }
+
+  var clipsContent: Bool { clipBehavior != "none" }
+  var antialiasedClip: Bool { clipBehavior.contains("antialias") }
+}
+
+private struct RufletSnackBarClipModifier: ViewModifier {
+  let shape: RufletCornerShape
+  let presentation: RufletSnackBarPresentation
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if presentation.clipsContent {
+      content.clipShape(shape, style: FillStyle(antialiased: presentation.antialiasedClip))
+    } else {
+      content
+    }
+  }
+}
+
 enum RufletSnackBarBehavior: String { case fixed, floating }
 
 enum RufletSnackBarAction: Equatable {
@@ -191,9 +222,13 @@ enum RufletSnackBarAction: Equatable {
   case none
 
   @MainActor init(control: RufletControl) {
-    if let action = control.child("action") { self = .control(action) }
-    else if let text = control.value("action")?.text { self = .text(text) }
-    else { self = .none }
+    if let action = control.child("action") {
+      self = .control(action)
+    } else if let text = control.value("action")?.text {
+      self = .text(text)
+    } else {
+      self = .none
+    }
   }
 
   @MainActor var label: String? {
@@ -224,8 +259,7 @@ final class RufletSnackBarLifecycle: ObservableObject {
   func synchronize() {
     let open = control.boolean("open", default: false)
     let lastOpen = control.boolean("_open", default: false)
-    if open && !lastOpen { show() }
-    else if !open && lastOpen { closeFromControl() }
+    if open && !lastOpen { show() } else if !open && lastOpen { closeFromControl() }
   }
 
   func cancel() {
@@ -267,8 +301,8 @@ final class RufletSnackBarLifecycle: ObservableObject {
         try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
       }
       guard !Task.isCancelled, let self,
-            self.control.integer("_show_generation", default: 0) == generation,
-            !self.control.boolean("_dismissed", default: false)
+        self.control.integer("_show_generation", default: 0) == generation,
+        !self.control.boolean("_dismissed", default: false)
       else { return }
       self.dismiss()
     }
@@ -282,12 +316,12 @@ final class RufletSnackBarLifecycle: ObservableObject {
   }
 }
 
-private extension Color {
-  static var rufletSnackBarBackground: Color {
+extension Color {
+  fileprivate static var rufletSnackBarBackground: Color {
     #if os(iOS)
-    return Color(uiColor: .secondarySystemBackground)
+      return Color(uiColor: .secondarySystemBackground)
     #elseif os(macOS)
-    return Color(nsColor: .windowBackgroundColor)
+      return Color(nsColor: .windowBackgroundColor)
     #endif
   }
 }
