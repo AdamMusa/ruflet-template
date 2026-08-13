@@ -248,7 +248,7 @@ enum PinnedFletEngineInventory {
     .init(source: "utils/strings.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/strings.swift"),
     .init(source: "utils/tabs.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/tabs_utils.swift"),
     .init(source: "utils/text.dart", disposition: "combined", destination: "Sources/RufletEngine/Utils/text_utils.swift"),
-    .init(source: "utils/textfield.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/textfield.swift"),
+    .init(source: "utils/textfield.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/text_field_utils.swift"),
     .init(source: "utils/theme.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/theme.swift"),
     .init(source: "utils/time.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/time.swift"),
     .init(source: "utils/tooltip.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/tooltip.swift"),
