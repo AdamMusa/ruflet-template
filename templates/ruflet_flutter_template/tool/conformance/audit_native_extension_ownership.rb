@@ -13,20 +13,7 @@ module NativeExtensionOwnership
   TEMPLATE_ROOT = File.expand_path("../..", __dir__)
   APPLE_ROOT = File.join(TEMPLATE_ROOT, "apple_packages", "ruflet_apple")
   CONTRACT_PATH = File.join(__dir__, "flet_control_contract.json")
-  MANIFEST_PATH = File.join(
-    APPLE_ROOT, "Sources", "RufletEngine", "RufletExtensionManifest.swift"
-  )
-  REGISTRY_PATH = File.join(APPLE_ROOT, "Sources", "RufletUI", "ControlRegistry.swift")
-  DEFAULTS_PATH = File.join(
-    APPLE_ROOT, "Sources", "RufletEngine", "RufletControlDefaults.generated.swift"
-  )
-
-  ALLOWED_CORE_FILES = [
-    MANIFEST_PATH,
-    REGISTRY_PATH,
-    DEFAULTS_PATH,
-    File.join(APPLE_ROOT, "Sources", "RufletEngine", "Services", "DefaultServices.swift"),
-  ].freeze
+  PACKAGE_PATH = File.join(APPLE_ROOT, "Package.swift")
 
   def contract
     @contract ||= JSON.parse(File.read(CONTRACT_PATH))
@@ -36,42 +23,55 @@ module NativeExtensionOwnership
     contract.fetch("controls").reject { |control| control.fetch("package") == "flet" }
   end
 
-  def manifest
-    @manifest ||= File.read(MANIFEST_PATH).scan(
-      /fletPackage:\s*"([^"]+)".*?swiftProduct:\s*"([^"]+)".*?status:\s*\.([a-z]+)/m
-    ).to_h do |flet_package, swift_product, status|
-      [flet_package, { "swift_product" => swift_product, "status" => status }]
-    end
+  def products
+    @products ||= File.read(PACKAGE_PATH)
+      .scan(/\.library\(name:\s*"(Ruflet[A-Za-z0-9]+)"/).flatten
+      .reject { |name| %w[RufletProtocol RufletEngine RufletApple].include?(name) }
   end
 
   def product_source(product)
-    Dir.glob(File.join(APPLE_ROOT, "Sources", product, "**", "*.swift"))
+    Dir.glob(File.join(APPLE_ROOT, "Sources", "RufletExtensions", product, "**", "*.swift"))
       .sort.map { |path| File.read(path) }.join("\n")
+  end
+
+  def package_products
+    @package_products ||= begin
+      sources = products.to_h { |product| [product, product_source(product)] }
+      extension_controls.group_by { |control| control.fetch("package") }.to_h do |package, controls|
+        wires = controls.map { |control| control.fetch("wire_type") }
+        candidates = sources.filter_map do |product, source|
+          product if wires.all? { |wire| source.include?(%Q{"#{wire}"}) }
+        end
+        [package, candidates]
+      end
+    end
   end
 
   def core_implementation_hits(control)
     renderer = control.dig("renderer", "class")
     return [] unless renderer
 
-    core_paths = %w[RufletEngine RufletUI].flat_map do |target|
-      Dir.glob(File.join(APPLE_ROOT, "Sources", target, "**", "*.swift"))
-    end
-    core_paths.reject { |path| ALLOWED_CORE_FILES.include?(path) }.select do |path|
+    core_paths = Dir.glob(File.join(APPLE_ROOT, "Sources", "RufletEngine", "**", "*.swift"))
+    core_paths.reject { |path| path.end_with?("/RufletCoreExtension.swift") }.select do |path|
       File.read(path).match?(/\b(?:struct|class|enum|actor)\s+#{Regexp.escape(renderer)}\b/)
     end
   end
 
   def audit
     errors = []
-    products = manifest.transform_values { |entry| entry.fetch("swift_product") }
-    product_sources = products.values.uniq.to_h { |product| [product, product_source(product)] }
+    resolved = package_products
+    product_sources = products.to_h { |product| [product, product_source(product)] }
     grouped = extension_controls.group_by { |control| control.fetch("package") }
 
-    missing_packages = grouped.keys - products.keys
-    errors.concat(missing_packages.map { |package| "#{package}: no native manifest entry" })
+    resolved.each do |package, candidates|
+      errors << "#{package}: expected exactly one native product, found #{candidates.inspect}" unless candidates.length == 1
+    end
+    claimed = resolved.values.flatten
+    errors << "Unowned native products: #{(products - claimed).inspect}" unless (products - claimed).empty?
+    errors << "Native products claimed more than once: #{claimed.tally.select { |_key, count| count != 1 }.inspect}" unless claimed.uniq.length == claimed.length
 
     grouped.each do |package, controls|
-      product = products[package]
+      product = resolved.fetch(package, []).first
       next unless product
 
       source = product_sources.fetch(product)

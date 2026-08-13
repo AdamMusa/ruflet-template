@@ -22,6 +22,8 @@ struct RufletPageNavigator: View {
   let tint: Color?
   let onRequestPop: (RufletControl) -> Void
   let onDidRemove: (RufletControl) -> Void
+  @Environment(\.rufletHeroNamespace) private var heroNamespace
+  @EnvironmentObject private var heroTransitionState: RufletHeroTransitionState
 
   var body: some View {
     RufletNativePageNavigator(
@@ -32,6 +34,8 @@ struct RufletPageNavigator: View {
       themeMode: themeMode,
       theme: theme,
       tint: tint,
+      heroNamespace: heroNamespace,
+      heroTransitionState: heroTransitionState,
       onRequestPop: onRequestPop,
       onDidRemove: onDidRemove)
   }
@@ -47,6 +51,8 @@ private struct RufletHostedPage: View {
   let themeMode: RufletThemeMode
   let theme: RufletTheme
   let tint: Color?
+  let heroNamespace: Namespace.ID?
+  let heroTransitionState: RufletHeroTransitionState
 
   var body: some View {
     PageContext(themeMode: themeMode, theme: theme) {
@@ -58,6 +64,8 @@ private struct RufletHostedPage: View {
     .environmentObject(backend)
     .environmentObject(backend.extensionRegistry)
     .modifier(RufletHostedPageTint(color: tint))
+    .environment(\.rufletHeroNamespace, heroNamespace)
+    .environmentObject(heroTransitionState)
   }
 }
 
@@ -80,6 +88,8 @@ private struct RufletHostedPageTint: ViewModifier {
     let themeMode: RufletThemeMode
     let theme: RufletTheme
     let tint: Color?
+    let heroNamespace: Namespace.ID?
+    let heroTransitionState: RufletHeroTransitionState
     let onRequestPop: (RufletControl) -> Void
     let onDidRemove: (RufletControl) -> Void
 
@@ -92,6 +102,9 @@ private struct RufletHostedPageTint: ViewModifier {
       navigationController.setNavigationBarHidden(true, animated: false)
       navigationController.delegate = context.coordinator
       navigationController.interactivePopGestureRecognizer?.delegate = context.coordinator
+      navigationController.interactivePopGestureRecognizer?.addTarget(
+        context.coordinator,
+        action: #selector(Coordinator.interactivePopChanged(_:)))
       context.coordinator.navigationController = navigationController
       context.coordinator.synchronize(with: self, animated: false)
       return navigationController
@@ -130,7 +143,9 @@ private struct RufletHostedPageTint: ViewModifier {
               layoutDirection: parent.layoutDirection,
               themeMode: parent.themeMode,
               theme: parent.theme,
-              tint: parent.tint))
+              tint: parent.tint,
+              heroNamespace: parent.heroNamespace,
+              heroTransitionState: parent.heroTransitionState))
           if let controller = controllers[control.id] {
             controller.rootView = root
             controller.control = control
@@ -231,6 +246,17 @@ private struct RufletHostedPageTint: ViewModifier {
         }
         return false
       }
+
+      @objc func interactivePopChanged(_ gestureRecognizer: UIGestureRecognizer) {
+        switch gestureRecognizer.state {
+        case .began, .changed:
+          parent.heroTransitionState.updateInteractiveNavigation(true)
+        case .ended, .cancelled, .failed:
+          parent.heroTransitionState.updateInteractiveNavigation(false)
+        default:
+          break
+        }
+      }
     }
   }
 
@@ -258,6 +284,8 @@ private struct RufletHostedPageTint: ViewModifier {
     let themeMode: RufletThemeMode
     let theme: RufletTheme
     let tint: Color?
+    let heroNamespace: Namespace.ID?
+    let heroTransitionState: RufletHeroTransitionState
     let onRequestPop: (RufletControl) -> Void
     let onDidRemove: (RufletControl) -> Void
 
@@ -281,7 +309,9 @@ private struct RufletHostedPageTint: ViewModifier {
             layoutDirection: layoutDirection,
             themeMode: themeMode,
             theme: theme,
-            tint: tint))
+            tint: tint,
+            heroNamespace: heroNamespace,
+            heroTransitionState: heroTransitionState))
         return RufletMacHostingController(control: control, rootView: root)
       }
       container.synchronize(controllers)

@@ -24,6 +24,9 @@ public struct CupertinoActionSheetActionControl: View {
       }
       .buttonStyle(.plain)
       .disabled(control.disabled)
+      .modifier(RufletMouseCursorModifier(cursor: mouseCursor))
     }
   }
+
+  var mouseCursor: String? { control.string("mouse_cursor") }
 }

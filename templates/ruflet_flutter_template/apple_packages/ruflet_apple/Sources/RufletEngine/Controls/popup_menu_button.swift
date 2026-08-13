@@ -41,7 +41,8 @@ public struct PopupMenuButtonControl: View {
           appearance: RufletMenuButtonAppearance(control: control),
           focused: false,
           hovered: false,
-          disabled: control.disabled)
+          disabled: control.disabled,
+          splashRadius: splashRadius)
       )
       .disabled(control.disabled)
       .accessibilityLabel(control.string("tooltip") ?? "Show menu")
@@ -148,6 +149,7 @@ public struct PopupMenuButtonControl: View {
 
   private func open() {
     guard !control.disabled else { return }
+    if enableFeedback { performRufletSelectionFeedback() }
     setPresented(true)
   }
 
@@ -177,6 +179,10 @@ public struct PopupMenuButtonControl: View {
   private var iconSize: CGFloat {
     CGFloat(max(control.number("icon_size") ?? 22, 0))
   }
+  var splashRadius: CGFloat? {
+    control.number("splash_radius").map { CGFloat(max($0, 0)) }
+  }
+  var enableFeedback: Bool { control.boolean("enable_feedback") ?? true }
   private var menuPadding: EdgeInsets {
     parsePadding(control.dynamicValue("menu_padding"))
       ?? EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4)

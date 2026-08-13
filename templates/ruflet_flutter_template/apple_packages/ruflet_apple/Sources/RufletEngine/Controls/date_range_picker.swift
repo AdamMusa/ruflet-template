@@ -64,7 +64,11 @@ public struct DateRangePickerControl: View {
         }
         ToolbarItem(placement: .principal) {
           if entryMode.allowsToggle {
-            Button { toggleEntryMode() } label: { entryModeIcon }
+            Button {
+              toggleEntryMode()
+            } label: {
+              entryModeIcon
+            }
           }
         }
         ToolbarItem(placement: .confirmationAction) {
@@ -80,7 +84,8 @@ public struct DateRangePickerControl: View {
   @ViewBuilder
   private var entryModeIcon: some View {
     let presentation = presentation
-    let configured = entryMode.usesCalendar
+    let configured =
+      entryMode.usesCalendar
       ? presentation.switchToInputIcon
       : presentation.switchToCalendarIcon
     if let configured {
@@ -252,9 +257,11 @@ struct RufletDateRangePickerPresentation {
     currentDate = parseRufletDate(control.value("current_date"))
     startValue = parseRufletDate(control.value("start_value"))
     endValue = parseRufletDate(control.value("end_value"))
-    minimumDate = parseRufletDate(control.value("first_date"))
+    minimumDate =
+      parseRufletDate(control.value("first_date"))
       ?? Calendar.current.date(from: DateComponents(year: 1900, month: 1, day: 1))!
-    maximumDate = parseRufletDate(control.value("last_date"))
+    maximumDate =
+      parseRufletDate(control.value("last_date"))
       ?? Calendar.current.date(from: DateComponents(year: 2050, month: 1, day: 1))!
     helpText = control.string("help_text")
     cancelText = control.string("cancel_text", default: "Cancel") ?? "Cancel"
@@ -268,8 +275,9 @@ struct RufletDateRangePickerPresentation {
     fieldStartLabelText = control.string("field_start_label_text")
     fieldEndLabelText = control.string("field_end_label_text")
     keyboardType = control.string("keyboard_type", default: "text") ?? "text"
-    entryMode = parseEnum(
-      RufletDateEntryMode.self, control.string("entry_mode"), .calendar) ?? .calendar
+    entryMode =
+      parseEnum(
+        RufletDateEntryMode.self, control.string("entry_mode"), .calendar) ?? .calendar
     locale = parseLocale(control.dynamicValue("locale"))
     modal = control.boolean("modal", default: false)
     switchToCalendarIcon = Self.icon(control, property: "switch_to_calendar_icon")

@@ -89,7 +89,7 @@ private struct RufletDataTableHeading: View {
     return HStack(spacing: 5) {
       label
       if table.integer("sort_column_index") == index {
-        Image(systemName: table.integer("sort_arrow_icon").flatMap(table.backend.extensionRegistry.systemIconName) ?? "arrow.up")
+        sortArrow
           .foregroundStyle(parseColor(table.string("sort_arrow_icon_color"), .secondary) ?? .secondary)
           .rotationEffect(table.boolean("sort_ascending", default: false) ? .zero : .degrees(180))
       }
@@ -108,6 +108,17 @@ private struct RufletDataTableHeading: View {
       column.triggerEvent("sort", data: .map(["ci": .int(Int64(index)), "asc": .bool(ascending)]))
     }
     .help(column.string("tooltip") ?? "")
+  }
+
+  @ViewBuilder
+  private var sortArrow: some View {
+    if let code = table.integer("sort_arrow_icon"),
+       let icon = table.backend.extensionRegistry.appleIcon(for: code)
+    {
+      RufletAppleIconView.registered(icon: icon, size: 16)
+    } else {
+      Image(systemName: "arrow.up")
+    }
   }
 
   private var headingStyle: RufletTextStyle? { parseTextStyle(table.value("heading_text_style")) }

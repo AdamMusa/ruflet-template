@@ -12,6 +12,7 @@ import RufletGeolocator
 import RufletLottie
 import RufletMap
 import RufletPermissionHandler
+import RufletQRScanner
 import RufletRive
 import RufletSecureStorage
 import RufletSpinKit
@@ -51,6 +52,8 @@ final class OptionalExtensionCoverageTests: XCTestCase {
     assertCoverage(
       RufletPermissionHandlerExtension(), views: [], services: RufletPermissionHandler.controlTypes)
     assertCoverage(
+      RufletQRScannerExtension(), views: RufletQRScanner.controlTypes, services: [])
+    assertCoverage(
       RufletRiveExtension(), views: RufletRive.controlTypes, services: [])
     assertCoverage(
       RufletSecureStorageExtension(), views: [], services: RufletSecureStorage.controlTypes)
@@ -77,6 +80,7 @@ final class OptionalExtensionCoverageTests: XCTestCase {
       RufletLottieExtension(),
       RufletMap.Extension(),
       RufletPermissionHandlerExtension(),
+      RufletQRScannerExtension(),
       RufletRiveExtension(),
       RufletSecureStorageExtension(),
       RufletSpinKitExtension(),
@@ -118,9 +122,9 @@ final class OptionalExtensionCoverageTests: XCTestCase {
 
   private var expectedViewCount: Int {
     #if os(iOS)
-    59
+    61
     #else
-    58
+    60
     #endif
   }
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 # frozen_string_literal: true
 
-# Generates the primitive property resolver consumed by ControlNode. Its sole
+# Generates the primitive property resolver consumed by RufletControl. Its sole
 # semantic input is the versioned Flet contract generated from the vendored
 # Flet registries and renderer sources; Swift does not maintain a second list.
 

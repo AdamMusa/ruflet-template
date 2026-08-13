@@ -1,5 +1,25 @@
 import CoreText
 import Foundation
+import RufletProtocol
+
+/// Exact native parser for Flet's `parseFonts()` utility.
+///
+/// A missing value becomes an empty map. Non-string entries are rejected
+/// instead of being silently stringified, matching Dart's
+/// `Map<String, String>.from` contract.
+func parseFonts(
+  _ value: RufletValue?,
+  default defaultValue: [String: String]? = nil
+) -> [String: String]? {
+  guard let value else { return [:] }
+  guard let map = value.map else { return defaultValue }
+  var fonts: [String: String] = [:]
+  for (family, source) in map {
+    guard let source = source.text else { return defaultValue }
+    fonts[family] = source
+  }
+  return fonts
+}
 
 enum RufletUserFonts {
   static func load(from source: RufletAssetSource) async throws {

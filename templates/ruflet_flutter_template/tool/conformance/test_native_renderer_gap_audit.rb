@@ -32,13 +32,14 @@ class NativeRendererGapAuditTest < Minitest::Test
   def test_control_and_service_declarations_are_unioned
     camera = @surface.fetch("Camera")
     assert_includes camera.fetch("declarations"), "control_descriptor"
-    assert_includes camera.fetch("declarations"), "named_service"
+    refute_includes camera.fetch("declarations"), "named_service"
     # The pinned flet_camera control emits state_change and stream_image.
     # take_picture returns its result through the method completion; it does
     # not synthesize a picture_taken event.
     assert_includes camera.fetch("events"), "state_change"
     assert_includes camera.fetch("events"), "stream_image"
-    assert_includes camera.fetch("methods"), "request_permission"
+    assert_includes camera.fetch("methods"), "initialize"
+    assert_includes camera.fetch("methods"), "take_picture"
   end
 
   def test_registry_overrides_are_audited_instead_of_losing_behavior()
@@ -48,8 +49,8 @@ class NativeRendererGapAuditTest < Minitest::Test
   end
 
   def test_registry_composed_type_lists_are_expanded()
-    assert_equal "RufletSpinKit.SpinKitControlView", @surface.fetch("SpinKitRotatingPlain").fetch("implementation")
-    assert_equal "RufletSpinKit.SpinKitControlView", @surface.fetch("SpinKitWaveSpinner").fetch("implementation")
+    assert_equal "SpinKitControl", @surface.fetch("SpinKitRotatingPlain").fetch("implementation")
+    assert_equal "SpinKitControl", @surface.fetch("SpinKitWaveSpinner").fetch("implementation")
     refute @report.fetch("missing_types").any? { |gap| gap.fetch("wire_type").start_with?("SpinKit") }
   end
 

@@ -6,13 +6,15 @@ import XCTest
 
 @MainActor
 final class ServicePortTests: XCTestCase {
-  func testCoreFactoryContainsAppleServicesAndSkipsWebContextMenu() {
+  func testCoreFactoryContainsAllPinnedServicesIncludingBrowserContextMenuNoOp() {
     let backend = ServiceTestBackend()
     let factory = RufletCoreServiceExtension()
     XCTAssertTrue(factory.createService(for: backend.control(type: "Accelerometer")) is AccelerometerService)
     XCTAssertTrue(factory.createService(for: backend.control(type: "FilePicker")) is FilePickerService)
     XCTAssertTrue(factory.createService(for: backend.control(type: "Window")) is WindowService)
-    XCTAssertNil(factory.createService(for: backend.control(type: "BrowserContextMenu")))
+    XCTAssertTrue(
+      factory.createService(for: backend.control(type: "BrowserContextMenu"))
+        is BrowserContextMenuService)
   }
 
   func testAccelerometerSerializationPreservesFletWireNames() {
@@ -28,16 +30,35 @@ final class ServicePortTests: XCTestCase {
     }
   }
 
-  func testStoragePathsContainsApplePathsAndRejectsNonAppleMethods() async throws {
+  func testStoragePathsContainsApplePathsAndReturnsNullForAndroidOnlyMethods() async throws {
     let backend = ServiceTestBackend()
     let service = StoragePaths(control: backend.control(type: "StoragePaths"))
     let library = try await service.invoke("get_library_directory", arguments: [:])
     XCTAssertFalse(library?.text?.isEmpty ?? true)
+    let externalCaches = try await service.invoke("get_external_cache_directories", arguments: [:])
+    let externalDirectories = try await service.invoke(
+      "get_external_storage_directories", arguments: [:])
+    let externalDirectory = try await service.invoke(
+      "get_external_storage_directory", arguments: [:])
+    XCTAssertEqual(externalCaches, .null)
+    XCTAssertEqual(externalDirectories, .null)
+    XCTAssertEqual(externalDirectory, .null)
+  }
+
+  func testBrowserContextMenuRecognizesPinnedCommandsAsAppleNoOps() async throws {
+    let backend = ServiceTestBackend()
+    let service = BrowserContextMenuService(
+      control: backend.control(type: "BrowserContextMenu"))
+    let disabled = try await service.invoke("disable_menu", arguments: [:])
+    let enabled = try await service.invoke("enable_menu", arguments: [:])
+    XCTAssertNil(disabled)
+    XCTAssertNil(enabled)
     do {
-      _ = try await service.invoke("get_external_storage_directory", arguments: [:])
-      XCTFail("Non-Apple storage methods must not exist")
+      _ = try await service.invoke("unknown", arguments: [:])
+      XCTFail("Unknown BrowserContextMenu methods must fail")
     } catch let error as RufletServiceError {
-      XCTAssertEqual(error, .unknownMethod(service: "StoragePaths", method: "get_external_storage_directory"))
+      XCTAssertEqual(
+        error, .unknownMethod(service: "BrowserContextMenu", method: "unknown"))
     }
   }
 

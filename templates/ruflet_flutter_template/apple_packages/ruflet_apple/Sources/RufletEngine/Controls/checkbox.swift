@@ -9,7 +9,10 @@ public struct CheckboxControl: View {
   public init(control: RufletControl) { self.control = control }
 
   public var body: some View {
-    RufletCheckboxBody(control: control, kind: .standard)
+    RufletCheckboxBody(
+      control: control,
+      kind: .standard,
+      value: rufletCheckboxValue(control: control))
   }
 }
 
@@ -22,6 +25,7 @@ enum RufletCheckboxKind: Equatable {
 struct RufletCheckboxBody: View {
   @ObservedObject var control: RufletControl
   let kind: RufletCheckboxKind
+  let value: Bool?
   @FocusState private var focused: Bool
   @State private var hovered = false
 
@@ -34,6 +38,7 @@ struct RufletCheckboxBody: View {
           RufletCheckboxArtwork(
             control: control,
             kind: kind,
+            value: value,
             focused: focused,
             hovered: hovered)
           if presentation.labelPosition == .right { label(presentation) }
@@ -67,7 +72,7 @@ struct RufletCheckboxBody: View {
   }
 
   private var currentValue: Bool? {
-    rufletCheckboxValue(control: control)
+    value
   }
 
   private var accessibilityValue: String {
@@ -91,6 +96,7 @@ struct RufletCheckboxBody: View {
 private struct RufletCheckboxArtwork: View {
   @ObservedObject var control: RufletControl
   let kind: RufletCheckboxKind
+  let value: Bool?
   let focused: Bool
   let hovered: Bool
   @Environment(\.rufletCheckboxPressed) private var pressed
@@ -98,7 +104,7 @@ private struct RufletCheckboxArtwork: View {
   var body: some View {
     let presentation = RufletCheckboxPresentation(control: control, kind: kind)
     let states = presentation.states(
-      value: rufletCheckboxValue(control: control),
+      value: value,
       focused: focused,
       hovered: hovered,
       pressed: pressed,
@@ -130,11 +136,11 @@ private struct RufletCheckboxArtwork: View {
     _ presentation: RufletCheckboxPresentation,
     states: Set<RufletWidgetState>
   ) -> some View {
-    if rufletCheckboxValue(control: control) == true {
+    if value == true {
       Image(systemName: "checkmark")
         .font(.system(size: presentation.markSize, weight: .bold))
         .foregroundStyle(presentation.checkColor(states))
-    } else if rufletCheckboxValue(control: control) == nil {
+    } else if value == nil {
       Image(systemName: "minus")
         .font(.system(size: presentation.markSize, weight: .bold))
         .foregroundStyle(presentation.checkColor(states))

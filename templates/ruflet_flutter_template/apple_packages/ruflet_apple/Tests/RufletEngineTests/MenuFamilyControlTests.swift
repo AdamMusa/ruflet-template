@@ -164,6 +164,23 @@ final class MenuFamilyControlTests: XCTestCase {
     XCTAssertEqual(constraints.minHeight, 40)
     XCTAssertEqual(constraints.maxHeight, 500)
   }
+
+  func testPopupSplashRadiusConsumesPinnedProperty() {
+    let backend = MenuFamilyTestBackend()
+    let control = backend.control(
+      type: "PopupMenuButton",
+      properties: ["splash_radius": .double(31)])
+
+    XCTAssertEqual(PopupMenuButtonControl(control: control).splashRadius, 31)
+  }
+
+  func testPopupFeedbackConsumesPinnedDefaultAndOverride() {
+    let backend = MenuFamilyTestBackend()
+    XCTAssertTrue(PopupMenuButtonControl(
+      control: backend.control(type: "PopupMenuButton")).enableFeedback)
+    XCTAssertFalse(PopupMenuButtonControl(control: backend.control(
+      type: "PopupMenuButton", properties: ["enable_feedback": .bool(false)])).enableFeedback)
+  }
 }
 
 private func menuWireControl(

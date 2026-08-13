@@ -83,29 +83,41 @@ class FletControlContractTest < Minitest::Test
       .select { |name| File.directory?(File.join(FletControlContract.template_root, "flet_packages", name)) }
       .sort
 
-    manifest_path = File.join(
-      FletControlContract.template_root,
-      "apple_packages/ruflet_apple/Sources/RufletEngine/RufletExtensionManifest.swift"
-    )
-    manifest = File.read(manifest_path)
-    native = manifest.scan(
-      /fletPackage:\s*"([^"]+)".*?swiftProduct:\s*"([^"]+)".*?status:\s*\.([a-z]+)/m
-    ).to_h { |flet_package, swift_product, status| [flet_package, [swift_product, status]] }
-
     package_root = File.join(
       FletControlContract.template_root,
       "apple_packages/ruflet_apple"
     )
     package_swift = File.read(File.join(package_root, "Package.swift"))
+    products = package_swift.scan(/\.library\(name:\s*"(Ruflet[A-Za-z0-9]+)"/).flatten -
+      %w[RufletProtocol RufletEngine RufletApple]
+    product_sources = products.to_h do |product|
+      source_root = File.join(package_root, "Sources", "RufletExtensions", product)
+      sources = Dir.glob(File.join(source_root, "**/*.swift")).sort
+        .map { |path| File.read(path) }.join("\n")
+      [product, [source_root, sources]]
+    end
+    controls_by_package = @contract.fetch("controls")
+      .reject { |control| control.fetch("package") == "flet" }
+      .group_by { |control| control.fetch("package") }
+    native = controls_by_package.to_h do |flet_package, controls|
+      wire_types = controls.map { |control| control.fetch("wire_type") }
+      candidates = product_sources.filter_map do |product, (_root, sources)|
+        product if wire_types.all? { |wire_type| sources.include?(%Q{"#{wire_type}"}) }
+      end
+      assert_equal 1, candidates.length,
+        "#{flet_package} must map by its live wire types to exactly one Swift product: #{candidates.inspect}"
+      [flet_package, candidates.fetch(0)]
+    end
 
     assert_equal vendored, native.keys.sort,
       "Every vendored Flet extension must own one native Swift product"
     assert_equal native.keys.length, native.keys.uniq.length,
       "A vendored Flet extension must map to exactly one native package"
-    assert_equal native.values.map(&:first).sort, native.values.map(&:first).uniq.sort,
+    assert_equal native.values.sort, native.values.uniq.sort,
       "A native Swift product must not collapse multiple Flet extensions"
-    native.each do |flet_package, (swift_product, status)|
-      assert_equal "available", status, "#{flet_package} is not ported"
+    assert_equal products.sort, native.values.sort,
+      "Every optional Swift product must be owned by one vendored Flet extension"
+    native.each do |flet_package, swift_product|
       assert_match(/\ARuflet[A-Z]/, swift_product)
 
       assert_match(
@@ -119,13 +131,12 @@ class FletControlContractTest < Minitest::Test
         "#{flet_package} has no #{swift_product} target"
       )
 
-      source_root = File.join(package_root, "Sources", swift_product)
+      source_root, sources = product_sources.fetch(swift_product)
       assert_path_exists source_root, "#{flet_package} has no dedicated source directory"
-      sources = Dir.glob(File.join(source_root, "**/*.swift")).map { |path| File.read(path) }.join("\n")
       assert_match(
-        /\b#{Regexp.escape(swift_product)}\s*:\s*RufletExtension\b/,
+        /\b(?:struct|class)\s+[A-Za-z_][A-Za-z0-9_]*\s*:\s*RufletExtension\b/,
         sources,
-        "#{flet_package} does not expose a #{swift_product} RufletExtension entry point"
+        "#{flet_package} does not expose a RufletExtension entry point"
       )
     end
   end

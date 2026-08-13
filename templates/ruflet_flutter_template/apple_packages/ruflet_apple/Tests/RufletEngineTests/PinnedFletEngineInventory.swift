@@ -159,7 +159,7 @@ enum PinnedFletEngineInventory {
     .init(source: "services/barometer.dart", disposition: "direct", destination: "Sources/RufletEngine/Services/barometer.swift"),
     .init(source: "services/base_sensor.dart", disposition: "direct", destination: "Sources/RufletEngine/Services/base_sensor.swift"),
     .init(source: "services/battery.dart", disposition: "direct", destination: "Sources/RufletEngine/Services/battery.swift"),
-    .init(source: "services/browser_context_menu.dart", disposition: "apple-skip", destination: "-"),
+    .init(source: "services/browser_context_menu.dart", disposition: "direct", destination: "Sources/RufletEngine/Services/browser_context_menu.swift"),
     .init(source: "services/clipboard.dart", disposition: "direct", destination: "Sources/RufletEngine/Services/clipboard.swift"),
     .init(source: "services/connectivity.dart", disposition: "direct", destination: "Sources/RufletEngine/Services/connectivity.swift"),
     .init(source: "services/file_picker.dart", disposition: "direct", destination: "Sources/RufletEngine/Services/file_picker.swift"),

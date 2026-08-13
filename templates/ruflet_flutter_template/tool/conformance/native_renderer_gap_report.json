@@ -1,30 +1,22 @@
 {
-  "audit_version": 1,
+  "audit_version": 2,
   "contract_version": 1,
   "source": {
     "flet_contract": "flet_control_contract.json",
-    "native_registry": "apple_packages/ruflet_apple/Sources/RufletUI/ControlRegistry.swift",
+    "native_registry": "RufletCoreExtension + concrete RufletExtension implementations",
     "allowlist": "native_gap_allowlist.json"
   },
   "summary": {
     "flet_types": 213,
-    "native_declarations": 256,
+    "native_declarations": 264,
     "missing_types": 0,
-    "missing_events": 1,
+    "missing_events": 0,
     "missing_methods": 0,
     "undeclared_gaps": 0,
     "declared_baseline_matches": true,
     "unresolved_gap_set_sha256": "29eef116d0384848f3fe3924e0495f57dcc1919d59184fdc9420cbd92e4a1fc6"
   },
   "missing_types": [],
-  "missing_events": [
-    {
-      "wire_type": "SnackBar",
-      "native_type": "SnackBar",
-      "event": "click",
-      "allowed": true,
-      "reason": "The source extractor sees SnackBarAction.triggerEvent in snack_bar.dart; click belongs to the nested SnackBarAction, not the SnackBar parent."
-    }
-  ],
+  "missing_events": [],
   "missing_methods": []
 }

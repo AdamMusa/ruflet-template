@@ -118,7 +118,8 @@ public struct NavigationRailControl: View {
   }
 
   private var destinations: [RufletControl] {
-    rufletNavigationChildren(control)
+    // Keep the exact Flet slot visible at the concrete renderer boundary.
+    rufletNavigationChildren(control, property: "destinations")
   }
 
   private func synchronizeFromControl() {

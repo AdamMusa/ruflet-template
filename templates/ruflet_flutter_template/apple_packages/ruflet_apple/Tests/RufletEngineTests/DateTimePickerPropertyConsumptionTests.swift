@@ -21,6 +21,7 @@ final class DateTimePickerPropertyConsumptionTests: XCTestCase {
         "field_hint_text": "MM/DD/YYYY",
         "field_label_text": "Birthday",
         "keyboard_type": "datetime",
+        "barrier_color": "#80112233",
         "inset_padding": ["left": 11.0, "top": 12.0, "right": 13.0, "bottom": 14.0],
         "locale": ["language_code": "en", "country_code": "US"],
         "modal": true,
@@ -60,6 +61,7 @@ final class DateTimePickerPropertyConsumptionTests: XCTestCase {
         "field_start_label_text": "From",
         "field_end_label_text": "To",
         "keyboard_type": "datetime",
+        "barrier_color": "#80445566",
         "save_text": "Save",
         "switch_to_calendar_icon": 66_637,
         "switch_to_input_icon": 69_512,
@@ -91,6 +93,7 @@ final class DateTimePickerPropertyConsumptionTests: XCTestCase {
         "minute_label_text": "Minutes",
         "hour_format": "h24",
         "orientation": "landscape",
+        "barrier_color": "#80778899",
         "switch_to_timer_icon": 65_552,
         "switch_to_input_icon": 69_512,
       ])
@@ -154,7 +157,8 @@ final class DateTimePickerPropertyConsumptionTests: XCTestCase {
 
   private func date(_ year: Int, _ month: Int, _ day: Int) -> Date {
     Calendar(identifier: .gregorian).date(
-      from: DateComponents(timeZone: TimeZone(secondsFromGMT: 0), year: year, month: month, day: day))!
+      from: DateComponents(
+        timeZone: TimeZone(secondsFromGMT: 0), year: year, month: month, day: day))!
   }
 }
 

@@ -23,6 +23,7 @@ let package = Package(
     .library(name: "RufletFlashlight", targets: ["RufletFlashlight"]),
     .library(name: "RufletGeolocator", targets: ["RufletGeolocator"]),
     .library(name: "RufletPermissionHandler", targets: ["RufletPermissionHandler"]),
+    .library(name: "RufletQRScanner", targets: ["RufletQRScanner"]),
     .library(name: "RufletSecureStorage", targets: ["RufletSecureStorage"]),
     .library(name: "RufletSpinKit", targets: ["RufletSpinKit"]),
     .library(name: "RufletLottie", targets: ["RufletLottie"]),
@@ -103,6 +104,10 @@ let package = Package(
       dependencies: ["RufletEngine", "RufletProtocol"],
       path: "Sources/RufletExtensions/RufletPermissionHandler"),
     .target(
+      name: "RufletQRScanner",
+      dependencies: ["RufletEngine", "RufletProtocol"],
+      path: "Sources/RufletExtensions/RufletQRScanner"),
+    .target(
       name: "RufletSecureStorage",
       dependencies: ["RufletEngine", "RufletProtocol"],
       path: "Sources/RufletExtensions/RufletSecureStorage"),
@@ -146,7 +151,8 @@ let package = Package(
         "RufletEngine", "RufletAds", "RufletAudio", "RufletAudioRecorder", "RufletCamera",
         "RufletCharts", "RufletCodeEditor", "RufletColorPickers", "RufletDataTable2",
         "RufletFlashlight", "RufletGeolocator", "RufletLottie", "RufletMap",
-        "RufletPermissionHandler", "RufletRive", "RufletSecureStorage", "RufletSpinKit",
+        "RufletPermissionHandler", "RufletQRScanner", "RufletRive", "RufletSecureStorage",
+        "RufletSpinKit",
         "RufletVideo", "RufletWebView",
       ],
       path: "Tests/RufletExtensionsTests"),

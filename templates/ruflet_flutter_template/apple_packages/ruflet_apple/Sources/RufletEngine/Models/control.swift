@@ -148,7 +148,7 @@ public final class RufletControl: ObservableObject, Identifiable {
   }
 
   public func string(_ name: String, default defaultValue: String? = nil) -> String? {
-    guard let value = value(name) else { return defaultValue }
+    guard let value = primitiveValue(name) else { return defaultValue }
     switch value {
     case .string(let text): return text
     case .bool(let flag): return String(flag)
@@ -159,19 +159,27 @@ public final class RufletControl: ObservableObject, Identifiable {
   }
 
   public func boolean(_ name: String, default defaultValue: Bool? = nil) -> Bool? {
-    value(name)?.bool ?? defaultValue
+    primitiveValue(name)?.bool ?? defaultValue
   }
 
   public func boolean(_ name: String, default defaultValue: Bool) -> Bool {
-    value(name)?.bool ?? defaultValue
+    primitiveValue(name)?.bool ?? defaultValue
   }
 
   public func integer(_ name: String, default defaultValue: Int? = nil) -> Int? {
-    value(name)?.integer ?? defaultValue
+    primitiveValue(name)?.integer ?? defaultValue
   }
 
   public func number(_ name: String, default defaultValue: Double? = nil) -> Double? {
-    value(name)?.number ?? defaultValue
+    primitiveValue(name)?.number ?? defaultValue
+  }
+
+  /// Resolves the literal primitive default extracted from the exact pinned
+  /// Flet renderer when the wire omits or nulls the property. Raw `value(_:)`
+  /// deliberately stays wire-only for patching and property-presence checks.
+  private func primitiveValue(_ name: String) -> RufletValue? {
+    if let explicit = value(name), explicit != .null { return explicit }
+    return RufletControlDefaults.value(for: type, property: name)
   }
 
   public func child(_ name: String, visibleOnly: Bool = true) -> RufletControl? {
@@ -968,6 +976,18 @@ public final class RufletControl: ObservableObject, Identifiable {
       return value
     }
     throw RufletPatchError.invalidPath
+  }
+}
+
+extension RufletControl: @preconcurrency Equatable {
+  /// Pinned Flet `Control.operator ==` compares identity, wire type, and the
+  /// complete recursively materialized property map. The backend and parent
+  /// are deliberately not part of value equality.
+  public static func == (lhs: RufletControl, rhs: RufletControl) -> Bool {
+    lhs === rhs
+      || (lhs.id == rhs.id
+        && lhs.type == rhs.type
+        && lhs.properties == rhs.properties)
   }
 }
 

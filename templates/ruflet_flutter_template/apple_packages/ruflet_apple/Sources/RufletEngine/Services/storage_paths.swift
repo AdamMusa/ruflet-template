@@ -19,6 +19,12 @@ public final class StoragePaths: RufletInvokableService {
     case "get_temporary_directory": return .string(fileManager.temporaryDirectory.path)
     case "get_console_log_filename":
       return .string(try directory(.cachesDirectory).appendingPathComponent("console.log").path)
+    // Pinned path_provider exposes these methods on every platform and returns
+    // null outside Android. They are valid Flet methods on Apple too; treating
+    // them as unknown breaks the invoke contract.
+    case "get_external_cache_directories", "get_external_storage_directories",
+      "get_external_storage_directory":
+      return .null
     default: throw RufletServiceError.unknownMethod(service: "StoragePaths", method: name)
     }
   }
@@ -31,4 +37,3 @@ public final class StoragePaths: RufletInvokableService {
     return url
   }
 }
-

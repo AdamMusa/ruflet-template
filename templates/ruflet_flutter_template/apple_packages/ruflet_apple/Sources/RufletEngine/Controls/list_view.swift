@@ -27,6 +27,9 @@ public struct ListViewControl: View {
                 .background(alignment: .topLeading) { prototypeMeasurement }
                 .overlay(alignment: .topLeading) { RufletScrollViewportAttachment() }
         }
+        .modifier(RufletCollectionSemanticsModifier(
+            childCount: viewportConfiguration.resolvedSemanticChildCount(
+                actualCount: orderedControls.count)))
 
         if clipBehavior == "none" {
             return AnyView(scroll)
@@ -51,9 +54,24 @@ public struct ListViewControl: View {
 
     @ViewBuilder
     private var listItems: some View {
-        ForEach(Array(orderedControls.enumerated()), id: \.element.id) { index, child in
-            item(child)
-            if index < orderedControls.count - 1, spacing > 0 {
+        ForEach(Array(prefetchGroups.enumerated()), id: \.offset) { _, group in
+            if horizontal {
+                HStack(spacing: 0) {
+                    listEntries(group)
+                }
+            } else {
+                VStack(spacing: 0) {
+                    listEntries(group)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func listEntries(_ group: [RufletListEntry]) -> some View {
+        ForEach(group) { entry in
+            item(entry.control)
+            if entry.index < orderedControls.count - 1, spacing > 0 {
                 separator
             }
         }
@@ -131,7 +149,17 @@ public struct ListViewControl: View {
         if control.boolean("first_item_prototype", default: false) { return control.children("controls").first }
         return nil
     }
-    private var buildControlsOnDemand: Bool { control.boolean("build_controls_on_demand", default: true) }
+    private var viewportConfiguration: RufletCollectionViewportConfiguration {
+        RufletCollectionViewportConfiguration(control: control)
+    }
+    private var buildControlsOnDemand: Bool { viewportConfiguration.buildsOnDemand }
+    private var prefetchGroups: [[RufletListEntry]] {
+        let entries = orderedControls.enumerated().map {
+            RufletListEntry(index: $0.offset, control: $0.element)
+        }
+        return entries.rufletChunked(count: viewportConfiguration.prefetchGroupSize(
+            estimatedItemExtent: effectiveItemExtent ?? 44))
+    }
     private var padding: EdgeInsets { parsePadding(control.dynamicValue("padding")) ?? EdgeInsets() }
     private var clipBehavior: String { control.string("clip_behavior", default: "hardEdge")!.lowercased() }
 
@@ -139,6 +167,12 @@ public struct ListViewControl: View {
         let mode = parseEnum(RufletScrollMode.self, control.string("scroll"), RufletScrollMode.none)!
         return mode != .none && mode != .hidden
     }
+}
+
+private struct RufletListEntry: Identifiable {
+    let index: Int
+    let control: RufletControl
+    var id: Int { control.id }
 }
 
 private struct RufletListPrototypeExtentKey: PreferenceKey {

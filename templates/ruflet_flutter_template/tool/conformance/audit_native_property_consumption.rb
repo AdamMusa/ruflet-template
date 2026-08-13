@@ -3,6 +3,7 @@
 
 require "json"
 require "set"
+require_relative "generate_flet_control_contract"
 
 module NativePropertyConsumptionAudit
   ROOT = File.expand_path("../..", __dir__)
@@ -38,6 +39,16 @@ module NativePropertyConsumptionAudit
   # Metadata controls intentionally render EmptyView. Their properties are
   # read by these concrete parents; the parent source remains the evidence.
   PARENT_IMPLEMENTATIONS = {
+    # Ruflet's public DSL exposes these structural nodes even though Flet does
+    # not register them as standalone widgets. The Apple engine consumes them
+    # at the same parent boundaries as Flet's Page/View/control builders.
+    "Dialogs" => %w[ViewControl],
+    "Overlay" => %w[ViewControl],
+    "ServiceRegistry" => %w[PageServiceBindings],
+    "Badge" => %w[RufletBadgeModifier],
+    "PopupMenuItem" => %w[PopupMenuButtonControl],
+    "SnackBarAction" => %w[SnackBarControl],
+    "TextSpan" => %w[TextControl CanvasControl],
     "ExpansionPanel" => %w[ExpansionPanelListControl],
     "Tab" => %w[TabsControl TabBarControl],
     "DataColumn" => %w[DataTableControl],
@@ -236,6 +247,12 @@ module NativePropertyConsumptionAudit
           result[wire] << type
           file_wires << wire
         end
+        text.scan(/control\.type\s*==\s*([A-Za-z_][A-Za-z0-9_\.]+)\s*\?\s*AnyView\(([A-Za-z_][A-Za-z0-9_]*)\s*\(/m) do |constant, type|
+          if (wire = resolve_control_type_constant(constant))
+            result[wire] << type
+            file_wires << wire
+          end
+        end
         text.scan(/guard\s+control\.type\s*==\s*"([A-Za-z0-9_]+)".*?AnyView\(([A-Za-z_][A-Za-z0-9_]*)\s*\(/m) do |wire, type|
           result[wire] << type
           file_wires << wire
@@ -275,6 +292,19 @@ module NativePropertyConsumptionAudit
     []
   end
 
+  def resolve_control_type_constant(constant)
+    owner, name = constant.split(".", 2)
+    return unless owner && name
+    swift_files.each_value do |raw_lines|
+      text = code_lines(raw_lines).join("\n")
+      next unless text.match?(/\b(?:enum|struct|class)\s+#{Regexp.escape(owner)}\b/)
+      match = text.match(
+        /\bstatic\s+let\s+#{Regexp.escape(name)}\s*=\s*"([A-Za-z0-9_]+)"/)
+      return match[1] if match
+    end
+    nil
+  end
+
   def service_implementation_map
     @service_implementation_map ||= begin
       result = Hash.new { |hash, key| hash[key] = [] }
@@ -284,8 +314,13 @@ module NativePropertyConsumptionAudit
           text.scan(/control\.type\s*==\s*"([A-Za-z0-9_]+)"\s*\?\s*([A-Za-z_][A-Za-z0-9_]*Service)\s*\(/m) do |wire, type|
             result[wire] << type
           end
+          text.scan(/control\.type\s*==\s*([A-Za-z_][A-Za-z0-9_\.]+)\s*\?\s*([A-Za-z_][A-Za-z0-9_]*Service)\s*\(/m) do |constant, type|
+            wire = resolve_control_type_constant(constant)
+            result[wire] << type if wire
+          end
         elsif path.end_with?("/RufletEngine/Services/service_registry.swift")
-          wire_by_lowercase = surface_wire_types.to_h { |wire| [wire.downcase, wire] }
+          wire_by_lowercase = (surface_wire_types + core_service_wire_types)
+            .uniq.to_h { |wire| [wire.downcase, wire] }
           text.scan(/case\s+"([a-z0-9_]+)"\s*:\s*return\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/) do |lowercase, type|
             wire = wire_by_lowercase[lowercase]
             result[wire] << type if wire
@@ -299,6 +334,15 @@ module NativePropertyConsumptionAudit
   def surface_wire_types
     @surface_wire_types ||= JSON.parse(File.read(SURFACE_PATH)).fetch("entries")
       .map { |entry| entry.fetch("wire_type") }.uniq.sort
+  end
+
+  def core_service_wire_types
+    @core_service_wire_types ||= begin
+      path = File.join(SWIFT_ROOT, "RufletEngine", "Services", "service_registry.swift")
+      text = code_lines(swift_files.fetch(path)).join("\n")
+      body = text[/serviceControlTypes:\s*Set<String>\s*=\s*\[(.*?)\]/m, 1] || ""
+      body.scan(/"([A-Za-z0-9_]+)"/).flatten
+    end
   end
 
   # An `events.fire(` whose event name sits on a following line is the same
@@ -360,6 +404,9 @@ module NativePropertyConsumptionAudit
         call = commit[/\A[^)]*/]
         keys << "on_change" unless call.include?("event:")
         keys << "value" unless call.include?("key:")
+      end
+      if line.match?(/\b(?:rufletActivateCheckbox|rufletCommitExpansion|rufletCommitSelection)\s*\(/)
+        keys << "on_change"
       end
       keys.uniq.each do |key|
         reads[key] << { "path" => relative(path), "line" => start_line + index + 1 }
@@ -445,7 +492,12 @@ module NativePropertyConsumptionAudit
           body.scan(/:\s*(?:any\s+|some\s+)?([A-Z][A-Za-z0-9_]*(?:Controller|Coordinator|Configuration|ViewModel))\b/).flatten
         )
         dependencies.each do |dependency|
-          queue << dependency if type_scopes.key?(dependency)
+          next unless type_scopes.key?(dependency)
+          # Nested helper names such as `Coordinator`, `Configuration`, and
+          # `Reader` occur in unrelated files. Following a bare ambiguous name
+          # merges unrelated controls into the same executable contract.
+          declaration_paths = type_scopes.fetch(dependency).map { |item| item[:path] }.uniq
+          queue << dependency if declaration_paths.length == 1
         end
       end
     end
@@ -485,6 +537,27 @@ module NativePropertyConsumptionAudit
 
   def classifications
     @classifications ||= JSON.parse(File.read(CLASSIFICATIONS_PATH))
+  end
+
+  def flet_renderer_reads
+    @flet_renderer_reads ||= begin
+      contract = FletControlContract.build.fetch("controls").to_h do |control|
+        [control.fetch("wire_type"), control]
+      end
+      contract.to_h do |wire, control|
+        renderer = control.fetch("renderer")
+        path = File.join(ROOT, renderer.fetch("source"))
+        source = File.read(path)
+        class_name = renderer.fetch("class")
+        body = FletControlContract.renderer_scope(
+          FletControlContract.strip_dart_comments(source), class_name)
+        reads = body.scan(
+          /(?:get(?:Bool|Int|Double|String|Color|Padding|EdgeInsets|Shape|MouseCursor|WidgetState\w*)?|child(?:ren)?|buildWidget|buildIconOrWidget|buildTextOrWidget)\(\s*["']([^"']+)["']/
+        ).flatten
+        reads.concat(body.scan(/\b(?:hasEventHandler|triggerEvent)\(\s*["']([^"']+)["']/).flatten.map { |event| "on_#{event}" })
+        [wire, reads.uniq]
+      end
+    end
   end
 
   # The clean engine emits pinned names directly. Optional packages may expose
@@ -563,6 +636,12 @@ module NativePropertyConsumptionAudit
     if (detail = declared("unsupported", wire, keyword))
       return ["unsupported", [detail]]
     end
+    unless flet_renderer_reads.fetch(wire, []).include?(keyword)
+      return ["upstream_unused", [{
+        "consumer" => "pinned Flet renderer",
+        "reason" => "The dispatched Dart renderer does not read this Ruflet DSL field."
+      }]]
+    end
     ["unclassified", []]
   end
 
@@ -606,6 +685,7 @@ module NativePropertyConsumptionAudit
         "parent_consumed" => "read by the shared visual pipeline or an explicitly named structural parent",
         "service" => "read by the native service implementation",
         "unsupported" => "explicitly reviewed as platformUnsupported with a reason",
+        "upstream_unused" => "present in the Ruflet DSL but not read by the pinned Flet renderer",
         "unclassified" => "no executable consumption or reviewed unsupported contract was found"
       },
       "summary" => {

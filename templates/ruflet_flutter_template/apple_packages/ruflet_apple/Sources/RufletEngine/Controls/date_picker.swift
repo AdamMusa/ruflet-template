@@ -2,7 +2,7 @@ import RufletProtocol
 import SwiftUI
 
 #if os(iOS)
-import UIKit
+  import UIKit
 #endif
 
 /// Apple-native port of pinned `date_picker.dart`.
@@ -73,7 +73,9 @@ public struct DatePickerControl: View {
         }
         ToolbarItem(placement: .principal) {
           if entryMode.allowsToggle {
-            Button { toggleEntryMode() } label: {
+            Button {
+              toggleEntryMode()
+            } label: {
               entryModeIcon
             }
             .accessibilityLabel(entryMode.usesCalendar ? "Use date input" : "Use calendar")
@@ -106,7 +108,8 @@ public struct DatePickerControl: View {
   @ViewBuilder
   private var entryModeIcon: some View {
     let presentation = presentation
-    let configured = entryMode.usesCalendar
+    let configured =
+      entryMode.usesCalendar
       ? presentation.switchToInputIcon
       : presentation.switchToCalendarIcon
     if let configured {
@@ -214,9 +217,11 @@ struct RufletDatePickerPresentation {
   init(control: RufletControl) {
     value = parseRufletDate(control.value("value"))
     currentDate = parseRufletDate(control.value("current_date"))
-    minimumDate = parseRufletDate(control.value("first_date"))
+    minimumDate =
+      parseRufletDate(control.value("first_date"))
       ?? Calendar.current.date(from: DateComponents(year: 1900, month: 1, day: 1))!
-    maximumDate = parseRufletDate(control.value("last_date"))
+    maximumDate =
+      parseRufletDate(control.value("last_date"))
       ?? Calendar.current.date(from: DateComponents(year: 2050, month: 1, day: 1))!
     helpText = control.string("help_text")
     cancelText = control.string("cancel_text", default: "Cancel") ?? "Cancel"
@@ -224,13 +229,16 @@ struct RufletDatePickerPresentation {
     errorFormatText = control.string("error_format_text")
     errorInvalidText = control.string("error_invalid_text")
     keyboardType = control.string("keyboard_type", default: "text") ?? "text"
-    datePickerMode = parseEnum(
-      RufletDatePickerMode.self, control.string("date_picker_mode"), .day) ?? .day
-    entryMode = parseEnum(
-      RufletDateEntryMode.self, control.string("entry_mode"), .calendar) ?? .calendar
+    datePickerMode =
+      parseEnum(
+        RufletDatePickerMode.self, control.string("date_picker_mode"), .day) ?? .day
+    entryMode =
+      parseEnum(
+        RufletDateEntryMode.self, control.string("entry_mode"), .calendar) ?? .calendar
     fieldHintText = control.string("field_hint_text")
     fieldLabelText = control.string("field_label_text")
-    insetPadding = parsePadding(control.dynamicValue("inset_padding"))
+    insetPadding =
+      parsePadding(control.dynamicValue("inset_padding"))
       ?? EdgeInsets(top: 24, leading: 16, bottom: 24, trailing: 16)
     locale = parseLocale(control.dynamicValue("locale"))
     modal = control.boolean("modal", default: false)
@@ -270,26 +278,26 @@ struct RufletPickerKeyboardModifier: ViewModifier {
   @ViewBuilder
   func body(content: Content) -> some View {
     #if os(iOS)
-    content.keyboardType(keyboardType)
+      content.keyboardType(keyboardType)
     #else
-    content
+      content
     #endif
   }
 
   #if os(iOS)
-  private var keyboardType: UIKeyboardType {
-    switch type.lowercased() {
-    case "datetime": return .numbersAndPunctuation
-    case "email": return .emailAddress
-    case "name": return .namePhonePad
-    case "number": return .decimalPad
-    case "phone": return .phonePad
-    case "url": return .URL
-    case "visiblepassword": return .asciiCapable
-    case "websearch": return .webSearch
-    case "twitter": return .twitter
-    default: return .default
+    private var keyboardType: UIKeyboardType {
+      switch type.lowercased() {
+      case "datetime": return .numbersAndPunctuation
+      case "email": return .emailAddress
+      case "name": return .namePhonePad
+      case "number": return .decimalPad
+      case "phone": return .phonePad
+      case "url": return .URL
+      case "visiblepassword": return .asciiCapable
+      case "websearch": return .webSearch
+      case "twitter": return .twitter
+      default: return .default
+      }
     }
-  }
   #endif
 }

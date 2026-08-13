@@ -11,6 +11,7 @@ import SwiftUI
 public struct TextControl: View {
   @ObservedObject public var control: RufletControl
   @Environment(\.rufletPageTheme) private var pageTheme
+  @Environment(\.rufletSelectionAreaReporter) private var selectionAreaReporter
 
   public init(control: RufletControl) {
     self.control = control
@@ -24,7 +25,7 @@ public struct TextControl: View {
 
   @ViewBuilder
   private var renderedText: some View {
-    if control.boolean("selectable", default: false) {
+    if control.boolean("selectable", default: false) || selectionAreaReporter != nil {
       RufletNativeSelectableText(
         value: plainText,
         selectable: control.boolean("enable_interactive_selection", default: true),
@@ -82,6 +83,7 @@ public struct TextControl: View {
   }
 
   private func selectionChanged(_ selection: RufletTextSelection) {
+    selectionAreaReporter?(plainText, selection)
     guard control.hasEventHandler("selection_change") else { return }
     control.triggerEvent(
       "selection_change",

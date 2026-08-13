@@ -173,6 +173,7 @@ struct RufletAppleMenuButtonStyle: ButtonStyle {
   let focused: Bool
   let hovered: Bool
   let disabled: Bool
+  var splashRadius: CGFloat? = nil
 
   func makeBody(configuration: Configuration) -> some View {
     let states = states(configuration: configuration)
@@ -206,6 +207,12 @@ struct RufletAppleMenuButtonStyle: ButtonStyle {
       .overlay {
         if let side {
           shape.stroke(side.color, lineWidth: side.width)
+        }
+        if configuration.isPressed, let splashRadius {
+          Circle()
+            .fill(Color.accentColor.opacity(0.12))
+            .frame(width: splashRadius * 2, height: splashRadius * 2)
+            .allowsHitTesting(false)
         }
       }
       .shadow(color: shadow, radius: max(elevation, 0), y: max(elevation, 0) / 2)

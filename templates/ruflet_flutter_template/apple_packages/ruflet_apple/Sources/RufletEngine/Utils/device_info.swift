@@ -13,10 +13,10 @@ func getAppleDeviceInfo() -> RufletValue {
   var system = utsname()
   uname(&system)
   let locales: RufletValue = .array(Locale.preferredLanguages.map { identifier in
-    let components = Locale.components(fromIdentifier: identifier)
-    let languageCode = components[NSLocale.Key.languageCode.rawValue]
-    let countryCode = components[NSLocale.Key.countryCode.rawValue]
-    let scriptCode = components[NSLocale.Key.scriptCode.rawValue]
+    let locale = NSLocale(localeIdentifier: identifier)
+    let languageCode = locale.object(forKey: .languageCode) as? String
+    let countryCode = locale.object(forKey: .countryCode) as? String
+    let scriptCode = locale.object(forKey: .scriptCode) as? String
     let localeMap: [String: RufletValue] = [
       "language_code": languageCode.map { .string($0) } ?? .null,
       "country_code": countryCode.map { .string($0) } ?? .null,

@@ -5,7 +5,6 @@ import SwiftUI
 public struct CupertinoListTileControl: View {
   @ObservedObject public var control: RufletControl
   @StateObject private var clickNotifier = RufletListTileClickNotifier()
-  @GestureState private var pressed = false
 
   public init(control: RufletControl) {
     self.control = control
@@ -14,13 +13,24 @@ public struct CupertinoListTileControl: View {
   public var body: some View {
     LayoutControl(control: control) {
       if let title = control.buildTextOrWidget("title") {
-        tile(title: title)
+        interactiveTile(title: title)
           .environment(
             \.rufletListTileClickNotifier,
             control.boolean("toggle_inputs", default: false) ? clickNotifier : nil)
       } else {
         ErrorControl("CupertinoListTile.title must be provided and visible")
       }
+    }
+  }
+
+  @ViewBuilder
+  private func interactiveTile(title: AnyView) -> some View {
+    if activation.isEnabled {
+      Button(action: activation.callAsFunction) { tile(title: title) }
+        .buttonStyle(RufletCupertinoListTileButtonStyle(
+          pressedColor: activatedBackgroundColor))
+    } else {
+      tile(title: title)
     }
   }
 
@@ -56,9 +66,6 @@ public struct CupertinoListTileControl: View {
     .background(backgroundColor)
     .contentShape(Rectangle())
     .opacity(control.disabled ? 0.5 : 1)
-    .onTapGesture(perform: tap)
-    .simultaneousGesture(
-      DragGesture(minimumDistance: 0).updating($pressed) { _, state, _ in state = true })
   }
 
   private var notched: Bool {
@@ -83,23 +90,27 @@ public struct CupertinoListTileControl: View {
   }
 
   private var backgroundColor: Color {
-    if pressed {
-      return parseColor(control.string("bgcolor_activated")) ?? Color.primary.opacity(0.08)
-    }
     return parseColor(control.string("bgcolor")) ?? .clear
   }
 
-  private var canTap: Bool {
-    !control.disabled
-      && (control.boolean("on_click", default: false)
-        || control.boolean("toggle_inputs", default: false)
-        || parseURL(control.dynamicValue("url")) != nil)
+  private var activatedBackgroundColor: Color {
+    parseColor(control.string("bgcolor_activated")) ?? Color.primary.opacity(0.08)
   }
 
-  private func tap() {
-    guard canTap else { return }
-    if control.boolean("toggle_inputs", default: false) { clickNotifier.onClick() }
-    if let url = parseURL(control.dynamicValue("url")) { Task { await openURL(url) } }
-    if control.boolean("on_click", default: false) { control.triggerEvent("click") }
+  private var activation: RufletListTileActivation {
+    RufletListTileActivation(control: control, clickNotifier: clickNotifier)
+  }
+}
+
+private struct RufletCupertinoListTileButtonStyle: ButtonStyle {
+  let pressedColor: Color
+
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label
+      .overlay {
+        if configuration.isPressed {
+          Rectangle().fill(pressedColor).allowsHitTesting(false)
+        }
+      }
   }
 }

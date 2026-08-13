@@ -61,10 +61,23 @@ final class SpinKitCompatibilityTests: XCTestCase {
     }
   }
 
+  /// Literal translation of `flet_spinkit/test/spinkit_test.dart`.
+  func testMapsRufletSnakeCaseVariantsToFletSpinKitControlTypes() {
+    XCTAssertEqual(
+      RufletSpinKit.resolvedControlType(controlType: "RufletSpinKit", variant: nil),
+      "SpinKitRotatingCircle")
+    XCTAssertEqual(
+      RufletSpinKit.resolvedControlType(controlType: "RufletSpinKit", variant: "double_bounce"),
+      "SpinKitDoubleBounce")
+    XCTAssertEqual(
+      RufletSpinKit.resolvedControlType(
+        controlType: "RufletSpinKit", variant: "pouring_hour_glass_refined"),
+      "SpinKitPouringHourGlassRefined")
+  }
+
   func testUnknownCanonicalVariantIsRejectedByContract() {
     XCTAssertNil(
       RufletSpinKit.resolvedControlType(controlType: "RufletSpinKit", variant: "unknown"))
-    XCTAssertNil(RufletSpinKit.resolvedControlType(controlType: "RufletSpinKit", variant: nil))
     XCTAssertNil(RufletSpinKit.resolvedControlType(controlType: "Unknown", variant: nil))
   }
 

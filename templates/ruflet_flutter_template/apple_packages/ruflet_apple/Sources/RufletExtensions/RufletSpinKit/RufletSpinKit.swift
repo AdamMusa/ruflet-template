@@ -63,8 +63,7 @@ public enum RufletSpinKit {
 
   public static func resolvedControlType(controlType: String, variant: String?) -> String? {
     if controlType == canonicalControlType {
-      guard let variant else { return nil }
-      return variantControlTypes[variant]
+      return variantControlTypes[variant ?? "rotating_circle"]
     }
     return pinnedControlTypes.contains(controlType) ? controlType : nil
   }

@@ -36,7 +36,11 @@ public struct TimePickerControl: View {
           }
           ToolbarItem(placement: .principal) {
             if entryMode.allowsToggle {
-              Button { toggleEntryMode() } label: { entryModeIcon }
+              Button {
+                toggleEntryMode()
+              } label: {
+                entryModeIcon
+              }
             }
           }
           ToolbarItem(placement: .confirmationAction) {
@@ -81,7 +85,8 @@ public struct TimePickerControl: View {
   @ViewBuilder
   private var entryModeIcon: some View {
     let presentation = presentation
-    let configured = entryMode.usesDial
+    let configured =
+      entryMode.usesDial
       ? presentation.switchToInputIcon
       : presentation.switchToTimerIcon
     if let configured {
@@ -98,11 +103,12 @@ public struct TimePickerControl: View {
     else { return }
     let presentation = presentation
     let value = presentation.value ?? timeOfDay(from: Date())
-    draft = Calendar.current.date(
-      bySettingHour: value.hour,
-      minute: value.minute,
-      second: 0,
-      of: Date()) ?? Date()
+    draft =
+      Calendar.current.date(
+        bySettingHour: value.hour,
+        minute: value.minute,
+        second: 0,
+        of: Date()) ?? Date()
     entryMode = presentation.entryMode
     control.updateProperties(["_open": .bool(true)], server: false)
     closedByAction = false
@@ -175,8 +181,9 @@ struct RufletTimePickerPresentation {
     hourLabelText = control.string("hour_label_text")
     minuteLabelText = control.string("minute_label_text")
     errorInvalidText = control.string("error_invalid_text")
-    entryMode = parseEnum(
-      RufletTimeEntryMode.self, control.string("entry_mode"), .dial) ?? .dial
+    entryMode =
+      parseEnum(
+        RufletTimeEntryMode.self, control.string("entry_mode"), .dial) ?? .dial
     orientation = parseEnum(
       RufletPickerOrientation.self, control.string("orientation"), nil)
     locale = parseLocale(control.dynamicValue("locale"))

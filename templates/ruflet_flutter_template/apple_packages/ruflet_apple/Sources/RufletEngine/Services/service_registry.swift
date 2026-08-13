@@ -209,7 +209,7 @@ public struct RufletCoreServiceExtension: RufletExtension {
   public let serviceControlTypes: Set<String> = [
     "Accelerometer", "Barometer", "Battery", "Clipboard", "Connectivity", "FilePicker",
     "Gyroscope", "HapticFeedback", "Magnetometer", "ScreenBrightness", "SemanticsService",
-    "ShakeDetector", "Share", "SharedPreferences", "StoragePaths", "Tester", "UrlLauncher",
+    "BrowserContextMenu", "ShakeDetector", "Share", "SharedPreferences", "StoragePaths", "Tester", "UrlLauncher",
     "UserAccelerometer", "Wakelock", "Window",
   ]
 
@@ -219,6 +219,7 @@ public struct RufletCoreServiceExtension: RufletExtension {
     switch control.type.lowercased() {
     case "accelerometer": return AccelerometerService(control: control)
     case "barometer": return BarometerService(control: control)
+    case "browsercontextmenu": return BrowserContextMenuService(control: control)
     case "battery": return BatteryService(control: control)
     case "clipboard": return ClipboardService(control: control)
     case "connectivity": return ConnectivityService(control: control)

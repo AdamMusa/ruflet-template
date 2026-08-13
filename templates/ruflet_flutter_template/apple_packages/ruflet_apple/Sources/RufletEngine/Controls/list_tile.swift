@@ -38,6 +38,61 @@ final class RufletListTileClickNotifier: ObservableObject {
 }
 
 @MainActor
+struct RufletListTileActivation {
+  let control: RufletControl
+  let clickNotifier: RufletListTileClickNotifier
+
+  var isEnabled: Bool {
+    !control.disabled
+      && (control.boolean("on_click", default: false)
+        || control.boolean("toggle_inputs", default: false)
+        || parseURL(control.dynamicValue("url")) != nil)
+  }
+
+  var enableFeedback: Bool { control.boolean("enable_feedback") ?? true }
+
+  func callAsFunction() {
+    guard isEnabled else { return }
+    if enableFeedback { performRufletSelectionFeedback() }
+    if control.boolean("toggle_inputs", default: false) { clickNotifier.onClick() }
+    if let url = parseURL(control.dynamicValue("url")) { Task { await openURL(url) } }
+    if control.boolean("on_click", default: false) { control.triggerEvent("click") }
+  }
+}
+
+private struct RufletListTileButtonStyle: ButtonStyle {
+  let pressedColor: Color
+  let radius: RufletBorderRadius
+
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label
+      .overlay {
+        if configuration.isPressed {
+          RufletCornerShape(radius: radius)
+            .fill(pressedColor)
+            .allowsHitTesting(false)
+        }
+      }
+      .clipShape(RufletCornerShape(radius: radius))
+  }
+}
+
+private struct RufletListTileLongPressModifier: ViewModifier {
+  let enabled: Bool
+  let action: () -> Void
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if enabled {
+      content.highPriorityGesture(
+        LongPressGesture(minimumDuration: 0.5).onEnded { _ in action() })
+    } else {
+      content
+    }
+  }
+}
+
+@MainActor
 struct RufletListTileInputToggleModifier: ViewModifier {
   @Environment(\.rufletListTileClickNotifier) private var notifier
   @State private var listenerID: UUID?
@@ -72,7 +127,6 @@ struct RufletListTileInputToggleModifier: ViewModifier {
 public struct ListTileControl: View {
   @ObservedObject public var control: RufletControl
   @StateObject private var clickNotifier = RufletListTileClickNotifier()
-  @GestureState private var pressed = false
   @State private var focused = false
   @State private var hovered = false
 
@@ -82,43 +136,51 @@ public struct ListTileControl: View {
 
   public var body: some View {
     LayoutControl(control: control) {
-      tileContent
+      interactiveTile
         .environment(
           \.rufletListTileClickNotifier,
           control.boolean("toggle_inputs", default: false) ? clickNotifier : nil
         )
-        .padding(contentPadding)
-        .frame(minHeight: minimumHeight)
-        .background(backgroundColor)
-        .clipShape(RufletCornerShape(radius: radius))
-        .overlay { shapeBorder }
-        .contentShape(RufletCornerShape(radius: radius))
-        .opacity(control.disabled ? 0.5 : 1)
-        .overlay {
-          RufletNativeFocusTarget(
-            enabled: !control.disabled,
-            autofocus: control.boolean("autofocus", default: false),
-            request: 0,
-            onFocusChange: focusChanged
-          )
-          .frame(width: 0, height: 0)
-        }
-        .modifier(RufletMouseCursorModifier(cursor: control.string("mouse_cursor")))
-        .gesture(
-          LongPressGesture(minimumDuration: 0.5)
-            .exclusively(before: TapGesture())
-            .onEnded { result in
-              switch result {
-              case .first: longPress()
-              case .second: tap()
-              }
-            }
-        )
-        .simultaneousGesture(
-          DragGesture(minimumDistance: 0).updating($pressed) { _, state, _ in state = true }
-        )
-        .onHover { hovered = $0 }
     }
+  }
+
+  @ViewBuilder
+  private var interactiveTile: some View {
+    if activation.isEnabled {
+      Button(action: activation.callAsFunction) { tileSurface }
+        .buttonStyle(RufletListTileButtonStyle(
+          pressedColor: splashColor,
+          radius: radius))
+        .modifier(RufletListTileLongPressModifier(
+          enabled: canLongPress,
+          action: longPress))
+    } else if canLongPress {
+      tileSurface.onLongPressGesture(minimumDuration: 0.5, perform: longPress)
+    } else {
+      tileSurface
+    }
+  }
+
+  private var tileSurface: some View {
+    tileContent
+      .padding(contentPadding)
+      .frame(minHeight: minimumHeight)
+      .background(backgroundColor)
+      .clipShape(RufletCornerShape(radius: radius))
+      .overlay { shapeBorder }
+      .contentShape(RufletCornerShape(radius: radius))
+      .opacity(control.disabled ? 0.5 : 1)
+      .overlay {
+        RufletNativeFocusTarget(
+          enabled: !control.disabled,
+          autofocus: control.boolean("autofocus", default: false),
+          request: 0,
+          onFocusChange: focusChanged
+        )
+        .frame(width: 0, height: 0)
+      }
+      .modifier(RufletMouseCursorModifier(cursor: control.string("mouse_cursor")))
+      .onHover { hovered = $0 }
   }
 
   private var tileContent: some View {
@@ -225,9 +287,6 @@ public struct ListTileControl: View {
   }
 
   private var backgroundColor: Color {
-    if pressed, canTap || canLongPress {
-      return parseColor(control.string("splash_color")) ?? .accentColor.opacity(0.12)
-    }
     if focused, let color = parseColor(control.string("focus_color")) { return color }
     if hovered, let color = parseColor(control.string("hover_color")) { return color }
     if control.boolean("selected", default: false),
@@ -236,6 +295,10 @@ public struct ListTileControl: View {
       return color
     }
     return parseColor(control.string("bgcolor")) ?? .clear
+  }
+
+  private var splashColor: Color {
+    parseColor(control.string("splash_color")) ?? .accentColor.opacity(0.12)
   }
 
   private var titleStyle: RufletTextStyle? {
@@ -250,22 +313,12 @@ public struct ListTileControl: View {
     parseTextStyle(control.dynamicValue("leading_and_trailing_text_style"))
   }
 
-  private var canTap: Bool {
-    !control.disabled
-      && (control.boolean("on_click", default: false)
-        || control.boolean("toggle_inputs", default: false)
-        || parseURL(control.dynamicValue("url")) != nil)
+  private var activation: RufletListTileActivation {
+    RufletListTileActivation(control: control, clickNotifier: clickNotifier)
   }
 
   private var canLongPress: Bool {
     !control.disabled && control.boolean("on_long_press", default: false)
-  }
-
-  private func tap() {
-    guard canTap else { return }
-    if control.boolean("toggle_inputs", default: false) { clickNotifier.onClick() }
-    if let url = parseURL(control.dynamicValue("url")) { Task { await openURL(url) } }
-    if control.boolean("on_click", default: false) { control.triggerEvent("click") }
   }
 
   private func longPress() {

@@ -17,6 +17,12 @@ final class RendererRegistryContractTests: XCTestCase {
       "Every control type claimed by the extension registry must create a native view")
   }
 
+  func testRufletBasePageCreatesTheNativePageRenderer() {
+    let backend = RendererRegistryTestBackend()
+    XCTAssertTrue(backend.extensionRegistry.renderedControlTypes.contains("BasePage"))
+    XCTAssertNotNil(backend.extensionRegistry.view(for: backend.control(type: "BasePage")))
+  }
+
   func testEveryPinnedFletCoreWidgetTypeIsRegistered() {
     let backend = RendererRegistryTestBackend()
     let missing = PinnedFletCoreWidgetTypes.all

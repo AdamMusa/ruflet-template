@@ -11,7 +11,7 @@ public struct RufletCoreExtension: RufletExtension {
   public let renderedControlTypes: Set<String> = [
     "AdaptiveAlertDialog", "AdaptiveButton", "AdaptiveCheckbox", "AdaptiveRadio", "AdaptiveSlider",
     "AdaptiveSwitch", "AdaptiveTextField",
-    "AlertDialog", "AnimatedSwitcher", "AppBar", "AutoComplete", "AutofillGroup", "Banner",
+    "AlertDialog", "AnimatedSwitcher", "AppBar", "AutoComplete", "AutofillGroup", "Banner", "BasePage",
     "BottomAppBar", "BottomSheet", "Button", "Canvas", "Card", "Checkbox", "Chip", "CircleAvatar",
     "Column", "Container", "ContextMenu",
     "CupertinoButton", "CupertinoCheckbox", "CupertinoDialogAction", "CupertinoFilledButton",
@@ -63,6 +63,7 @@ public struct RufletCoreExtension: RufletExtension {
     case "AutoComplete": return AnyView(AutoCompleteControl(control: control))
     case "AutofillGroup": return AnyView(AutofillGroupControl(control: control))
     case "Banner": return AnyView(BannerControl(control: control))
+    case "BasePage": return AnyView(PageControl(control: control))
     case "BottomAppBar": return AnyView(BottomAppBarControl(control: control))
     case "BottomSheet": return AnyView(BottomSheetControl(control: control))
     case "Canvas": return AnyView(CanvasControl(control: control))
