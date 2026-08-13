@@ -65,14 +65,59 @@ final class ServicePortTests: XCTestCase {
     _ = try await service.invoke("tap", arguments: ["finder_id": 7, "finder_index": 1])
     XCTAssertEqual(tester.lastTapIndex, 1)
   }
+
+  func testHiddenServicesAreDisposedAndRecreatedWhenShown() throws {
+    VisibilityLifecycleService.initializeCount = 0
+    VisibilityLifecycleService.disposeCount = 0
+    let backend = ServiceTestBackend(extensions: [VisibilityLifecycleExtension()])
+    let host = backend.control(
+      type: "ServiceHost",
+      properties: [
+        "services": .array([
+          .map([
+            "_c": .string("VisibilityLifecycle"),
+            "_i": .int(100),
+            "visible": .bool(true),
+          ])
+        ])
+      ])
+    let registry = try ServiceRegistry(
+      control: host,
+      propertyName: "services",
+      backend: backend)
+    let serviceControl = try XCTUnwrap(host.children("services", visibleOnly: false).first)
+
+    XCTAssertEqual(VisibilityLifecycleService.initializeCount, 1)
+    XCTAssertEqual(VisibilityLifecycleService.disposeCount, 0)
+
+    serviceControl.update(["visible": .bool(false)], notify: false)
+    XCTAssertEqual(VisibilityLifecycleService.initializeCount, 1)
+    XCTAssertEqual(VisibilityLifecycleService.disposeCount, 1)
+
+    serviceControl.update(["visible": .bool(true)], notify: false)
+    XCTAssertEqual(VisibilityLifecycleService.initializeCount, 2)
+    XCTAssertEqual(VisibilityLifecycleService.disposeCount, 1)
+
+    registry.dispose()
+    XCTAssertEqual(VisibilityLifecycleService.disposeCount, 2)
+  }
 }
 
 @MainActor
 private final class ServiceTestBackend: RufletTestingBackend {
   var pageURI: URL? = URL(string: "https://example.test/app")
-  lazy var extensionRegistry = RufletExtensionRegistry([RufletCoreServiceExtension()])
+  private let extensions: [any RufletExtension]
+  lazy var extensionRegistry = RufletExtensionRegistry(extensions)
   var tester: RufletTester?
   private var nextID = 1
+
+  init() {
+    extensions = [RufletCoreServiceExtension()]
+  }
+
+  init(extensions: [any RufletExtension]) {
+    self.extensions = extensions
+  }
 
   func control(type: String, properties: [String: RufletValue] = [:]) -> RufletControl {
     defer { nextID += 1 }
@@ -87,6 +132,30 @@ private final class ServiceTestBackend: RufletTestingBackend {
   ) {}
   func resolveAssetSource(_ source: RufletValue) -> RufletAssetSource? { nil }
   func onWindowEvent(_ name: String, state: RufletWindowState) {}
+}
+
+@MainActor
+private struct VisibilityLifecycleExtension: RufletExtension {
+  let serviceControlTypes: Set<String> = ["VisibilityLifecycle"]
+
+  func createService(for control: RufletControl) -> RufletService? {
+    guard control.type == "VisibilityLifecycle" else { return nil }
+    return VisibilityLifecycleService(control: control)
+  }
+}
+
+@MainActor
+private final class VisibilityLifecycleService: RufletService {
+  static var initializeCount = 0
+  static var disposeCount = 0
+
+  override func initialize() {
+    Self.initializeCount += 1
+  }
+
+  override func dispose() {
+    Self.disposeCount += 1
+  }
 }
 
 @MainActor

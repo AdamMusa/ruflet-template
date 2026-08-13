@@ -30,7 +30,10 @@ public final class ServiceRegistry {
   /// service is disposed before the new service is initialized.
   public func synchronize() throws {
     guard !isDisposed else { return }
-    let containedControls = control.children(propertyName, visibleOnly: false)
+    // Pinned Flet calls `control.children(propertyName)` here, whose default
+    // is visible-only. Hiding a service therefore removes and disposes its
+    // binding; showing it again creates a fresh service instance.
+    let containedControls = control.children(propertyName)
     let previous = services
     var previousByID = Dictionary(uniqueKeysWithValues: previous.map { ($0.control.id, $0) })
     var next: [ServiceBinding] = []
@@ -39,7 +42,7 @@ public final class ServiceRegistry {
     do {
       for serviceControl in containedControls {
         if let existing = previousByID[serviceControl.id],
-           existing.control === serviceControl
+            existing.control === serviceControl
         {
           previousByID.removeValue(forKey: serviceControl.id)
           next.append(existing)
@@ -137,7 +140,8 @@ public final class PageServiceBindings {
     }
 
     let containedUID = containedRegistry.internals?["uid"]
-    let isReplacement = serviceRegistry == nil
+    let isReplacement =
+      serviceRegistry == nil
       || registryControl !== containedRegistry
       || registryUID != containedUID
     guard isReplacement else { return }
