@@ -8,7 +8,11 @@ struct RufletInputFilter: Sendable {
     func format(oldValue: String, newValue: String) -> String {
         let range = NSRange(newValue.startIndex..., in: newValue)
         let matches = expression.firstMatch(in: newValue, range: range) != nil
-        return matches == allow ? newValue : oldValue
+        // Pinned Flet's CustomFilteringTextInputFormatter intentionally accepts
+        // the complete edit whenever its pattern matches. The wire `allow` and
+        // `replacement_string` fields are retained for model parity, but its
+        // overridden formatter does not consult them.
+        return matches ? newValue : oldValue
     }
 }
 
