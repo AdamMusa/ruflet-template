@@ -8,6 +8,22 @@ import RufletProtocol
 /// so a dictionary is both the natural shape and the fast one. The tree
 /// structure lives in the `.controlRef` values inside each node's props.
 public final class ControlStore: ObservableObject {
+  private struct LocalPropertyKey: Hashable {
+    let controlID: Int
+    let name: String
+  }
+
+  /// Values produced by native controls but not yet observed in an inbound
+  /// Ruby patch. WebSocket messages are ordered, but a handler for an earlier
+  /// edit can publish a full control snapshot after the user has already made
+  /// a later edit. Retaining the short local history lets the renderer
+  /// acknowledge old snapshots without painting them over the newer value.
+  private struct PendingLocalProperty {
+    var values: [RufletValue]
+  }
+
+  private var pendingLocalProperties: [LocalPropertyKey: PendingLocalProperty] = [:]
+
   /// Bumped after every applied message. Views read it so SwiftUI has a single
   /// coarse invalidation signal rather than one publisher per control.
   @Published public private(set) var revision: Int = 0
@@ -63,6 +79,7 @@ public final class ControlStore: ObservableObject {
     }
 
     let previousNodes = nodes
+    let deliveredProperties = deliveredPropertyKeys(in: patch)
     var touched: Set<Int> = [patch.controlID]
 
     // A patch can arrive for a control the store has not seen when the runtime
@@ -153,7 +170,141 @@ public final class ControlStore: ObservableObject {
       return false
     }
 
+    reconcilePendingLocalProperties(deliveredProperties)
+
     return finishApply(touched: touched, previousNodes: previousNodes)
+  }
+
+  /// Finds scalar properties actually carried by this patch. Merely applying
+  /// an unrelated patch must not acknowledge a pending local edit just
+  /// because the store still contains its optimistic value.
+  private func deliveredPropertyKeys(in patch: ControlPatch) -> Set<LocalPropertyKey> {
+    var result: Set<LocalPropertyKey> = []
+
+    func collectControls(in value: RufletValue) {
+      switch value {
+      case .map(let entries):
+        if let id = entries[RufletControlKey.id]?.intValue {
+          for (key, child) in entries {
+            if key != RufletControlKey.id && key != RufletControlKey.type
+              && key != RufletControlKey.internals
+            {
+              result.insert(LocalPropertyKey(controlID: id, name: key))
+            }
+            collectControls(in: child)
+          }
+        } else {
+          for child in entries.values { collectControls(in: child) }
+        }
+      case .array(let values):
+        for child in values { collectControls(in: child) }
+      default:
+        break
+      }
+    }
+
+    for operation in patch.operations {
+      switch operation {
+      case .set(let key, let value):
+        result.insert(LocalPropertyKey(controlID: patch.controlID, name: key))
+        collectControls(in: value)
+      case .replace(let target, let key, let value), .add(let target, let key, let value):
+        if let name = key.stringValue,
+          let owner = propertyOwner(
+            rootID: patch.controlID, path: patch.pathIndex[target] ?? [])
+        {
+          result.insert(LocalPropertyKey(controlID: owner, name: name))
+        }
+        collectControls(in: value)
+      case .remove(let target, let key):
+        if let name = key.stringValue,
+          let owner = propertyOwner(
+            rootID: patch.controlID, path: patch.pathIndex[target] ?? [])
+        {
+          result.insert(LocalPropertyKey(controlID: owner, name: name))
+        }
+      case .move(let fromTarget, let fromKey, let toTarget, let toKey):
+        if let name = fromKey.stringValue,
+          let owner = propertyOwner(
+            rootID: patch.controlID, path: patch.pathIndex[fromTarget] ?? [])
+        {
+          result.insert(LocalPropertyKey(controlID: owner, name: name))
+        }
+        if let name = toKey.stringValue,
+          let owner = propertyOwner(
+            rootID: patch.controlID, path: patch.pathIndex[toTarget] ?? [])
+        {
+          result.insert(LocalPropertyKey(controlID: owner, name: name))
+        }
+      case .unsupported:
+        break
+      }
+    }
+    return result
+  }
+
+  /// Resolves the control whose property map a tree-index target addresses.
+  /// This mirrors `mutateTargetValue`: entering a control reference changes
+  /// ownership without consuming a path component.
+  private func propertyOwner(rootID: Int, path: [String]) -> Int? {
+    var value: RufletValue = .controlRef(rootID)
+    var ownerID = rootID
+    var index = 0
+    while true {
+      if case .controlRef(let id) = value {
+        guard let control = nodes[id] else { return nil }
+        ownerID = id
+        value = .map(control.props)
+        continue
+      }
+      guard index < path.count else { return ownerID }
+      let component = path[index]
+      index += 1
+      switch value {
+      case .map(let entries):
+        guard let child = entries[component] else { return nil }
+        value = child
+      case .array(let values):
+        guard let childIndex = Int(component), values.indices.contains(childIndex) else {
+          return nil
+        }
+        value = values[childIndex]
+      default:
+        return nil
+      }
+    }
+  }
+
+  private func reconcilePendingLocalProperties(_ delivered: Set<LocalPropertyKey>) {
+    for key in delivered {
+      guard var pending = pendingLocalProperties[key] else { continue }
+      let incoming = nodes[key.controlID]?.props[key.name]
+
+      if let incoming, let acknowledged = pending.values.firstIndex(of: incoming) {
+        pending.values.removeFirst(acknowledged + 1)
+        if pending.values.isEmpty {
+          pendingLocalProperties.removeValue(forKey: key)
+        } else {
+          pendingLocalProperties[key] = pending
+          restorePendingValue(pending.values.last, for: key)
+        }
+        continue
+      }
+
+      // This value was never produced by the native control, so it is an
+      // explicit Ruby decision and wins immediately.
+      pendingLocalProperties.removeValue(forKey: key)
+    }
+  }
+
+  private func restorePendingValue(_ value: RufletValue?, for key: LocalPropertyKey) {
+    guard var node = nodes[key.controlID] else { return }
+    if let value {
+      node.props[key.name] = value
+    } else {
+      node.props.removeValue(forKey: key.name)
+    }
+    nodes[key.controlID] = node
   }
 
   private func path(for target: Int, in patch: ControlPatch) throws -> [String] {
@@ -333,6 +484,17 @@ public final class ControlStore: ObservableObject {
     guard var node = nodes[id] else { return }
     guard node.props[key] != value else { return }
 
+    let propertyKey = LocalPropertyKey(controlID: id, name: key)
+    if var pending = pendingLocalProperties[propertyKey] {
+      if pending.values.last != value { pending.values.append(value) }
+      // Bound sustained typing while retaining enough ordered history to
+      // recognize delayed echoes from a busy server.
+      if pending.values.count > 256 { pending.values.removeFirst(pending.values.count - 256) }
+      pendingLocalProperties[propertyKey] = pending
+    } else {
+      pendingLocalProperties[propertyKey] = PendingLocalProperty(values: [value])
+    }
+
     // Local native edits change a scalar on one already-materialized node.
     // Running the full patch finalizer here copied the entire node dictionary,
     // walked inheritance, and garbage-collected the whole tree for every
@@ -355,6 +517,7 @@ public final class ControlStore: ObservableObject {
 
   public func reset() {
     nodes.removeAll()
+    pendingLocalProperties.removeAll()
     lastChangedIDs = []
     revision &+= 1
   }
@@ -502,6 +665,7 @@ public final class ControlStore: ObservableObject {
 
     guard reachable.count != nodes.count else { return }
     nodes = nodes.filter { reachable.contains($0.key) }
+    pendingLocalProperties = pendingLocalProperties.filter { reachable.contains($0.key.controlID) }
   }
 
   private func appendControlIDs(in value: RufletValue, to frontier: inout [Int]) {
