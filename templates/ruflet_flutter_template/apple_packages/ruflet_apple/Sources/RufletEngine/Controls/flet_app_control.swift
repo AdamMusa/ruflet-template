@@ -5,9 +5,11 @@ import SwiftUI
 @MainActor
 public struct FletAppControl: View {
   @ObservedObject public var control: RufletControl
+  @StateObject private var errorsHandler: RufletAppErrorsHandler
 
   public init(control: RufletControl) {
     self.control = control
+    _errorsHandler = StateObject(wrappedValue: RufletAppErrorsHandler())
   }
 
   public var body: some View {
@@ -19,6 +21,7 @@ public struct FletAppControl: View {
         appStartupScreenMessage: control.string("app_startup_screen_message"),
         appErrorMessage: control.string("app_error_message"),
         controlID: control.id,
+        errorsHandler: errorsHandler,
         reconnectIntervalMilliseconds: control.integer("reconnect_interval_ms"),
         reconnectTimeoutMilliseconds: control.integer("reconnect_timeout_ms"),
         extensions: control.backend.extensionRegistry.extensions,
