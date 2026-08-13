@@ -1,8 +1,61 @@
 import RufletEngine
 import RufletProtocol
 import XCTest
+import Combine
 
 final class OptimisticControlStoreParityTests: XCTestCase {
+  private var cancellables: Set<AnyCancellable> = []
+
+  override func tearDown() {
+    cancellables.removeAll()
+    super.tearDown()
+  }
+
+  func testPatchInvalidatesOnlyChangedControlAndItsAncestors() {
+    let store = ControlStore()
+    XCTAssertTrue(store.apply(ControlPatch(controlID: 1, operations: [
+      .set(key: "_c", value: .string("Page")),
+      .set(key: "controls", value: .array([
+        .map(["_i": .int(100), "_c": .string("Column"), "controls": .array([
+          .map(["_i": .int(101), "_c": .string("Text"), "value": .string("old")])
+        ])]),
+        .map(["_i": .int(200), "_c": .string("TextField"), "value": .string("")])
+      ]))
+    ])))
+
+    var invalidated: Set<Int> = []
+    for id in [1, 100, 101, 200] {
+      store.observation(for: id).objectWillChange.sink { invalidated.insert(id) }
+        .store(in: &cancellables)
+    }
+
+    XCTAssertTrue(store.apply(ControlPatch(controlID: 101, operations: [
+      .set(key: "value", value: .string("new"))
+    ])))
+    XCTAssertEqual(invalidated, [1, 100, 101])
+  }
+
+  func testParentStateInvalidatesItsSubtreeButNotSiblingSubtrees() {
+    let store = ControlStore()
+    XCTAssertTrue(store.apply(ControlPatch(controlID: 1, operations: [
+      .set(key: "_c", value: .string("Page")),
+      .set(key: "controls", value: .array([
+        .map(["_i": .int(100), "_c": .string("RadioGroup"), "value": .string("a"),
+          "content": .map(["_i": .int(101), "_c": .string("Radio"), "value": .string("a")])]),
+        .map(["_i": .int(200), "_c": .string("TextField"), "value": .string("")])
+      ]))
+    ])))
+
+    var invalidated: Set<Int> = []
+    for id in [1, 100, 101, 200] {
+      store.observation(for: id).objectWillChange.sink { invalidated.insert(id) }
+        .store(in: &cancellables)
+    }
+
+    store.setLocalProperty(100, key: "value", value: .string("b"))
+    XCTAssertEqual(invalidated, [1, 100, 101])
+  }
+
   func testStagedTextEditsDoNotInvalidateTheWholeControlTree() {
     let store = makeStore(value: "")
     let revision = store.revision

@@ -1,8 +1,6 @@
 import RufletEngine
 import RufletProtocol
 import SwiftUI
-import CoreText
-
 #if canImport(UIKit)
   import UIKit
 #elseif canImport(AppKit)
@@ -25,7 +23,6 @@ public enum IconMapping {
   public static let placeholderSymbol = "questionmark.square.dashed"
 
   public enum Rendering: Equatable, Sendable {
-    case materialGlyph(codepoint: Int, name: String)
     case systemSymbol(String)
   }
 
@@ -76,9 +73,8 @@ public enum IconMapping {
     if rawName.lowercased().hasPrefix("cupertinoicons.") {
       return .systemSymbol(symbol(forCupertinoName: rawName))
     }
-    if let codepoint = MaterialIconGlyphs.codepoint(forName: rawName) {
+    if MaterialIconNames.material.contains(canonical(rawName).uppercased()) {
       let symbol = symbol(forMaterialName: rawName)
-      _ = codepoint // Confirms this is a real Material catalog name.
       return .systemSymbol(symbol)
     }
     return .systemSymbol(symbol(forMaterialName: rawName))
@@ -122,109 +118,24 @@ public enum IconMapping {
     if let mapped = table[name], isAvailable(mapped) { return mapped }
     if let fallback = availableFallback(for: name) { return fallback }
 
+    // Flet's two catalogs share many exact logical names. Resolve that exact
+    // intersection through the Cupertino catalog before considering an icon
+    // unmapped; never infer meaning from a substring of the Material name.
+    if cupertinoNames.contains(name) {
+      return symbol(forCupertinoName: name)
+    }
+
     // Variants share a base icon: ADD_OUTLINED, ADD_ROUNDED, ADD_SHARP all
     // mean ADD, and Apple has no equivalent distinction.
     for suffix in ["_outlined", "_rounded", "_sharp"] where name.hasSuffix(suffix) {
       let base = String(name.dropLast(suffix.count))
       if let mapped = table[base], isAvailable(mapped) { return mapped }
       if let fallback = availableFallback(for: base) { return fallback }
-    }
-
-    // Flet intentionally sends the same Material icon name on every platform.
-    // For less-common names, derive a stable semantic SF Symbol from that
-    // catalog name. This keeps all 8,825 icons native while the explicit table
-    // above preserves high-fidelity mappings for common and ambiguous names.
-    if MaterialIconGlyphs.codepoint(forName: rawName) != nil {
-      return semanticMaterialFallback(for: name)
+      if cupertinoNames.contains(base) { return symbol(forCupertinoName: base) }
     }
 
     RufletLog.debug("No SF Symbol for Material icon `\(rawName)`")
     return placeholderSymbol
-  }
-
-  private static func semanticMaterialFallback(for name: String) -> String {
-    let semanticName = ["_outlined", "_rounded", "_sharp"]
-      .first(where: name.hasSuffix)
-      .map { String(name.dropLast($0.count)) } ?? name
-    let exact: [String: String] = [
-      "add_home": "house.badge.plus",
-      "add_home_work": "house.badge.plus",
-      "broadcast_on_home": "house.badge.wifi",
-      "home_work": "house",
-      "home_repair_service": "wrench.and.screwdriver",
-      "person_add": "person.badge.plus",
-      "person_remove": "person.badge.minus",
-      "add_a_photo": "camera.badge.ellipsis",
-      "create_new_folder": "folder.badge.plus",
-      "playlist_add": "text.badge.plus",
-      "playlist_remove": "text.badge.minus",
-      "new_label": "tag",
-    ]
-    if let symbol = exact[semanticName], isAvailable(symbol) { return symbol }
-
-    // Ordered from specific concepts to broad verbs. Every return value is
-    // checked against the running OS so an icon introduced on a newer Apple
-    // release cannot disappear on the supported deployment floor.
-    let semanticSymbols: [(String, String)] = [
-      ("home", "house"), ("house", "house"),
-      ("person", "person"), ("account", "person.crop.circle"),
-      ("people", "person.2"), ("group", "person.3"),
-      ("flight", "airplane"), ("airline", "airplane"), ("airplane", "airplane"),
-      ("seat", "chair"), ("hotel", "bed.double"),
-      ("camera", "camera"), ("photo", "photo"), ("image", "photo"),
-      ("video", "video"), ("movie", "film"), ("music", "music.note"),
-      ("audio", "waveform"), ("mic", "mic"), ("volume", "speaker.wave.2"),
-      ("folder", "folder"), ("file", "doc"), ("document", "doc"),
-      ("description", "doc.text"), ("article", "doc.text"),
-      ("calendar", "calendar"), ("date", "calendar"), ("schedule", "clock"),
-      ("time", "clock"), ("timer", "timer"), ("alarm", "alarm"),
-      ("location", "mappin"), ("place", "mappin"), ("map", "map"),
-      ("navigation", "location.north"), ("compass", "safari"),
-      ("phone", "phone"), ("call", "phone"), ("mail", "envelope"),
-      ("message", "bubble.left"), ("chat", "bubble.left"),
-      ("notification", "bell"), ("wifi", "wifi"), ("bluetooth", "wave.3.right"),
-      ("battery", "battery.100"), ("cloud", "cloud"), ("download", "arrow.down.circle"),
-      ("upload", "arrow.up.circle"), ("share", "square.and.arrow.up"),
-      ("link", "link"), ("lock", "lock"), ("security", "shield"),
-      ("shield", "shield"), ("key", "key"), ("fingerprint", "touchid"),
-      ("search", "magnifyingglass"), ("zoom", "magnifyingglass"),
-      ("settings", "gearshape"), ("build", "wrench"), ("tools", "wrench"),
-      ("edit", "pencil"), ("draw", "pencil.tip"), ("paint", "paintbrush"),
-      ("delete", "trash"), ("remove", "minus.circle"), ("clear", "xmark"),
-      ("close", "xmark"), ("cancel", "xmark.circle"),
-      ("add", "plus.circle"), ("create", "plus.circle"),
-      ("check", "checkmark"), ("done", "checkmark"),
-      ("warning", "exclamationmark.triangle"), ("error", "exclamationmark.octagon"),
-      ("info", "info.circle"), ("help", "questionmark.circle"),
-      ("star", "star"), ("favorite", "heart"), ("heart", "heart"),
-      ("bookmark", "bookmark"), ("flag", "flag"), ("label", "tag"),
-      ("cart", "cart"), ("shopping", "bag"), ("store", "storefront"),
-      ("payment", "creditcard"), ("money", "dollarsign.circle"),
-      ("car", "car"), ("bus", "bus"), ("train", "tram"), ("bike", "bicycle"),
-      ("walk", "figure.walk"), ("run", "figure.run"),
-      ("book", "book"), ("school", "graduationcap"), ("work", "briefcase"),
-      ("language", "globe"), ("public", "globe"), ("web", "globe"),
-      ("code", "chevron.left.forwardslash.chevron.right"),
-      ("terminal", "terminal"), ("print", "printer"), ("save", "square.and.arrow.down"),
-      ("play", "play"), ("pause", "pause"), ("stop", "stop"),
-      ("refresh", "arrow.clockwise"), ("sync", "arrow.triangle.2.circlepath"),
-      ("arrow", "arrow.right"), ("chevron", "chevron.right"),
-      ("menu", "line.3.horizontal"), ("list", "list.bullet"),
-      ("grid", "square.grid.2x2"), ("dashboard", "square.grid.2x2"),
-      ("visibility", "eye"), ("eye", "eye"), ("light", "lightbulb"),
-      ("dark", "moon"), ("sun", "sun.max"), ("weather", "cloud.sun"),
-      ("accessibility", "accessibility"), ("touch", "hand.tap"),
-      ("gesture", "hand.tap"), ("face", "face.smiling"),
-      ("emoji", "face.smiling"), ("sports", "sportscourt"),
-      ("game", "gamecontroller"), ("science", "flask"),
-      ("medical", "cross.case"), ("health", "heart.text.square"),
-    ]
-    if let symbol = semanticSymbols.first(where: { semanticName.contains($0.0) })?.1,
-      isAvailable(symbol)
-    {
-      return symbol
-    }
-    return isAvailable("app") ? "app" : "square"
   }
 
   /// Resolves Flutter's Cupertino icon catalog to SF Symbols. Cupertino icon
@@ -239,12 +150,6 @@ public enum IconMapping {
 
     let candidates = cupertinoCandidates(for: name)
     if let symbol = candidates.first(where: isAvailable) { return symbol }
-
-    // Shared semantic names can still use the curated Material-to-SF mapping.
-    let materialSymbol = symbol(forMaterialName: name)
-    if materialSymbol != placeholderSymbol, isAvailable(materialSymbol) {
-      return materialSymbol
-    }
 
     // Flutter's Cupertino catalog can contain symbols introduced after the
     // application's minimum Apple OS. Preserve a native, semantic image in
@@ -380,6 +285,9 @@ public enum IconMapping {
   /// disappearing, so a missing mapping is obvious on screen.
   private static let table: [String: String] = [
     // Navigation
+    "add_home": "house.badge.plus", "add_home_work": "house.badge.plus",
+    "broadcast_on_home": "house.badge.wifi", "home_work": "house",
+    "home_repair_service": "wrench.and.screwdriver",
     "add": "plus", "add_circle": "plus.circle.fill", "add_circle_outline": "plus.circle",
     "add_box": "plus.square", "remove": "minus", "remove_circle": "minus.circle.fill",
     "remove_circle_outline": "minus.circle", "close": "xmark", "clear": "xmark",
@@ -578,6 +486,9 @@ public enum IconMapping {
   /// floor. A current Apple OS should show the closest native meaning; older
   /// systems still receive a visible native icon rather than a blank image.
   private static let unavailableSymbolFallbacks: [String: [String]] = [
+    "add_home": ["house.badge.plus", "house"],
+    "add_home_work": ["house.badge.plus", "house"],
+    "broadcast_on_home": ["house.badge.wifi", "house"],
     "rocket": ["rocket", "arrow.up.right", "arrow.up"],
     "rocket_launch": ["rocket.fill", "rocket", "arrow.up.right", "arrow.up"],
     "view_module": ["square.grid.3x3.fill", "square.grid.3x3", "square.grid.2x2.fill"],
@@ -590,33 +501,6 @@ public enum IconMapping {
   }
 }
 
-/// Registers and exposes the exact font shipped with the pinned Flutter SDK.
-/// Registration is process-idempotent and remains internal to RufletUI's
-/// resource bundle, so an application does not have to edit Info.plist.
-enum MaterialIconsFont {
-  static let registrationSucceeded: Bool = {
-    guard let url = Bundle.module.url(
-      forResource: "MaterialIcons-Regular", withExtension: "otf") else { return false }
-    var error: Unmanaged<CFError>?
-    let registered = CTFontManagerRegisterFontsForURL(url as CFURL, .process, &error)
-    if registered { return true }
-    // CoreText reports alreadyRegistered when another Ruflet view initialized
-    // the font first; the named font being constructible is authoritative.
-    let font = CTFontCreateWithName(
-      MaterialIconGlyphs.postScriptName as CFString, 16, nil)
-    return CTFontCopyPostScriptName(font) as String == MaterialIconGlyphs.postScriptName
-  }()
-
-  static func font(size: CGFloat) -> Font {
-    _ = registrationSucceeded
-    return .custom(MaterialIconGlyphs.postScriptName, size: size)
-  }
-
-  static func glyphString(codepoint: Int) -> String? {
-    UnicodeScalar(codepoint).map(String.init)
-  }
-}
-
 /// Renders an icon prop the way every icon-bearing control needs it.
 public struct RufletIcon: View {
   public let value: RufletValue?
@@ -624,7 +508,6 @@ public struct RufletIcon: View {
   public var color: Color?
   var symbolWeight: Font.Weight?
   var filled: Bool
-  @Environment(\.layoutDirection) private var layoutDirection
   @Environment(\.rufletExtensions) private var extensions
 
   public init(value: RufletValue?, size: CGFloat? = nil, color: Color? = nil) {
@@ -663,19 +546,6 @@ public struct RufletIcon: View {
   @ViewBuilder
   private var standardIcon: some View {
     switch IconMapping.rendering(for: value) {
-    case .materialGlyph(let codepoint, let name):
-      if let glyph = MaterialIconsFont.glyphString(codepoint: codepoint) {
-        Text(glyph)
-          .font(MaterialIconsFont.font(size: size ?? 24))
-          .lineLimit(1)
-          .frame(width: size ?? 24, height: size ?? 24, alignment: .center)
-          .scaleEffect(
-            x: layoutDirection == .rightToLeft
-              && MaterialIconGlyphs.matchesTextDirection(name: name) ? -1 : 1,
-            y: 1)
-          .modifier(ExplicitIconColor(color: color))
-          .accessibilityHidden(true)
-      }
     case .systemSymbol(let symbol):
       Image(systemName: symbol)
         .font(size.map { Font.system(size: $0, weight: symbolWeight ?? .regular) })

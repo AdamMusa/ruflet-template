@@ -1,6 +1,4 @@
 import XCTest
-import CoreText
-
 @testable import RufletUI
 import RufletProtocol
 
@@ -32,17 +30,7 @@ final class IconMappingTests: XCTestCase {
       .cupertino)
   }
 
-  func testEveryMaterialCatalogEntryHasTheExactFlutterGlyphCodepoint() {
-    XCTAssertEqual(MaterialIconGlyphs.codepoints.count, MaterialIconNames.material.count)
-    XCTAssertEqual(MaterialIconGlyphs.codepoint(forName: "ABC"), 0xf04b6)
-    XCTAssertEqual(MaterialIconGlyphs.codepoint(forName: "HOME"), 0xe318)
-    XCTAssertEqual(MaterialIconGlyphs.codepoint(forName: "HOME_OUTLINED"), 0xf107)
-    XCTAssertTrue(MaterialIconGlyphs.matchesTextDirection(name: "ARROW_BACK"))
-    XCTAssertFalse(MaterialIconGlyphs.matchesTextDirection(name: "HOME"))
-    XCTAssertTrue(MaterialIconGlyphs.codepoints.allSatisfy { UnicodeScalar($0) != nil })
-  }
-
-  func testEveryMaterialWireIconHasVisibleAppleRendering() {
+  func testEveryMappedMaterialWireIconUsesOnlyAvailableAppleSymbols() {
     for (index, name) in MaterialIconNames.material.enumerated() {
       let wire = MaterialIconNames.firstCodepoint + index
       guard let rendering = IconMapping.rendering(for: .int(Int64(wire))) else {
@@ -50,10 +38,7 @@ final class IconMappingTests: XCTestCase {
       }
       switch rendering {
       case .systemSymbol(let symbol):
-        XCTAssertNotEqual(symbol, IconMapping.placeholderSymbol, "Placeholder for \(name)")
         XCTAssertTrue(IconMapping.nativeSymbolExists(symbol), "Unavailable SF Symbol \(symbol) for \(name)")
-      case .materialGlyph:
-        XCTFail("Material icon \(name) leaked Android font artwork on Apple")
       }
     }
   }
@@ -69,34 +54,6 @@ final class IconMappingTests: XCTestCase {
       for: .int(Int64(MaterialIconNames.cupertinoFirstCodepoint)))
     else { return XCTFail("Cupertino wire icon did not resolve to an SF Symbol") }
     XCTAssertTrue(IconMapping.nativeSymbolExists(symbol))
-  }
-
-  func testBundledMaterialFontRegistersAndContainsFlutterGlyphs() {
-    XCTAssertTrue(MaterialIconsFont.registrationSucceeded)
-    let font = CTFontCreateWithName(MaterialIconGlyphs.postScriptName as CFString, 24, nil)
-    XCTAssertEqual(CTFontCopyPostScriptName(font) as String, MaterialIconGlyphs.postScriptName)
-
-    var character = UniChar(0xe318) // Icons.home
-    var glyph = CGGlyph()
-    XCTAssertTrue(CTFontGetGlyphsForCharacters(font, &character, &glyph, 1))
-    XCTAssertNotEqual(glyph, 0)
-
-    for (index, codepoint) in MaterialIconGlyphs.codepoints.enumerated() {
-      guard let scalar = UnicodeScalar(codepoint) else {
-        return XCTFail("Invalid scalar for \(MaterialIconNames.material[index])")
-      }
-      let characters = Array(String(scalar).utf16)
-      var glyphs = Array(repeating: CGGlyph(), count: characters.count)
-      let mapped = characters.withUnsafeBufferPointer { characterBuffer in
-        glyphs.withUnsafeMutableBufferPointer { glyphBuffer in
-          CTFontGetGlyphsForCharacters(
-            font, characterBuffer.baseAddress!, glyphBuffer.baseAddress!, characters.count)
-        }
-      }
-      XCTAssertTrue(
-        mapped && glyphs.contains(where: { $0 != 0 }),
-        "Font has no glyph for \(MaterialIconNames.material[index]) (U+\(String(codepoint, radix: 16)))")
-    }
   }
 
   func testCupertinoNamesResolveToNativeSymbols() {
@@ -162,26 +119,19 @@ final class IconMappingTests: XCTestCase {
     }
   }
 
-  func testLessCommonMaterialNamesStillUseNativeAppleArtwork() throws {
-    let name = "AIRLINE_SEAT_INDIVIDUAL_SUITE"
-    let index = try XCTUnwrap(MaterialIconNames.material.firstIndex(of: name))
-    let wireCodepoint = MaterialIconNames.firstCodepoint + index
-    guard case .systemSymbol(let wireSymbol) = IconMapping.rendering(
-      for: .int(Int64(wireCodepoint))) else {
-      return XCTFail("Wire icon did not use SF Symbols")
-    }
-    guard case .systemSymbol(let namedSymbol) = IconMapping.rendering(for: .string(name)) else {
-      return XCTFail("Named icon did not use SF Symbols")
-    }
-    XCTAssertTrue(IconMapping.nativeSymbolExists(wireSymbol))
-    XCTAssertEqual(wireSymbol, namedSymbol)
+  func testUnmappedMaterialNameIsExplicitInsteadOfHeuristicallyGuessed() {
+    XCTAssertEqual(
+      IconMapping.symbol(forMaterialName: "AIRLINE_SEAT_INDIVIDUAL_SUITE"),
+      IconMapping.placeholderSymbol)
   }
 
   func testMaterialAddHomeVariantsMapToNativeHouseArtwork() {
     let addHome = IconMapping.symbol(forMaterialName: "ADD_HOME")
     let outlined = IconMapping.symbol(forMaterialName: "ADD_HOME_OUTLINED")
     XCTAssertTrue(IconMapping.nativeSymbolExists(addHome))
-    XCTAssertEqual(addHome, "house")
+    XCTAssertEqual(
+      addHome,
+      IconMapping.nativeSymbolExists("house.badge.plus") ? "house.badge.plus" : "house")
     XCTAssertEqual(outlined, addHome)
   }
 

@@ -172,8 +172,18 @@ public final class ServiceRegistry {
     streamingTypes.formUnion(wireTypes.map { $0.lowercased() })
   }
 
-  public func activateStreamingServices(in store: ControlStore, context: RufletServiceContext) {
-    for node in store.nodes.values {
+  public func activateStreamingServices(
+    in store: ControlStore,
+    controlIDs: Set<Int>? = nil,
+    context: RufletServiceContext
+  ) {
+    let nodes: [ControlNode]
+    if let controlIDs {
+      nodes = controlIDs.compactMap(store.node)
+    } else {
+      nodes = Array(store.nodes.values)
+    }
+    for node in nodes {
       let service: RufletStreamingService?
       if streamingTypes.contains(node.type.lowercased()) {
         service = self.service(for: node) as? RufletStreamingService

@@ -20,6 +20,22 @@ public struct ControlView: View {
   }
 
   public var body: some View {
+    ObservedControlView(
+      id: id, axis: axis, observation: store.observation(for: id))
+  }
+}
+
+/// The retained observation boundary for one wire control.
+private struct ObservedControlView: View {
+  let id: Int
+  let axis: LayoutAxis
+  @ObservedObject var observation: ControlStore.Observation
+  @EnvironmentObject private var store: ControlStore
+
+  var body: some View {
+    // Reading the token makes the dependency explicit even though the current
+    // node snapshot is fetched from the non-publishing retained store.
+    let _ = observation.revision
     if let node = store.node(id) {
       ControlBody(node: node, axis: axis)
         .rufletCommon(node, axis: axis)

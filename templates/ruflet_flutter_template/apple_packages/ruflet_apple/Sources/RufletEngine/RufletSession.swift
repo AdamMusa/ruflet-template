@@ -187,9 +187,10 @@ public final class RufletSession: ObservableObject {
 
   private func handlePatch(_ payload: RufletValue) {
     do {
-      store.apply(try ControlPatch.decode(payload: payload))
+      guard store.apply(try ControlPatch.decode(payload: payload)) else { return }
       services.prune(liveIDs: Set(store.nodes.keys))
-      services.activateStreamingServices(in: store, context: makeServiceContext())
+      services.activateStreamingServices(
+        in: store, controlIDs: store.lastChangedIDs, context: makeServiceContext())
     } catch {
       RufletLog.error("Discarded malformed patch: \(error)")
     }

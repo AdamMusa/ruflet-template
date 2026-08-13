@@ -8,6 +8,19 @@ import RufletProtocol
 /// so a dictionary is both the natural shape and the fast one. The tree
 /// structure lives in the `.controlRef` values inside each node's props.
 public final class ControlStore: ObservableObject {
+  /// Fine-grained invalidation token for one retained control identity.
+  ///
+  /// The store itself is intentionally not the UI publisher. A single global
+  /// publisher makes one TextField acknowledgement rebuild every control in a
+  /// large page. `ControlView` observes this token instead, while containers
+  /// are invalidated through the reverse control-reference graph when a
+  /// descendant can affect their layout.
+  public final class Observation: ObservableObject {
+    @Published public private(set) var revision: Int = 0
+
+    fileprivate func invalidate() { revision &+= 1 }
+  }
+
   private struct LocalPropertyKey: Hashable {
     let controlID: Int
     let name: String
@@ -24,10 +37,13 @@ public final class ControlStore: ObservableObject {
   }
 
   private var pendingLocalProperties: [LocalPropertyKey: PendingLocalProperty] = [:]
+  private var observations: [Int: Observation] = [:]
+  private var parentsByChild: [Int: Set<Int>] = [:]
+  private var childrenByParent: [Int: Set<Int>] = [:]
 
-  /// Bumped after every applied message. Views read it so SwiftUI has a single
-  /// coarse invalidation signal rather than one publisher per control.
-  @Published public private(set) var revision: Int = 0
+  /// Monotonic patch sequence retained for animation identity and diagnostics.
+  /// UI invalidation is published by each control's `Observation` instead.
+  public private(set) var revision: Int = 0
 
   public private(set) var nodes: [Int: ControlNode] = [:]
 
@@ -40,6 +56,13 @@ public final class ControlStore: ObservableObject {
   // MARK: - Reading
 
   public func node(_ id: Int) -> ControlNode? { nodes[id] }
+
+  public func observation(for id: Int) -> Observation {
+    if let observation = observations[id] { return observation }
+    let observation = Observation()
+    observations[id] = observation
+    return observation
+  }
 
   public var page: ControlNode? { nodes[RufletWireID.page] }
 
@@ -528,6 +551,7 @@ public final class ControlStore: ObservableObject {
     nodes[id] = node
     lastChangedIDs = [id]
     revision &+= 1
+    invalidate([id])
   }
 
   /// Records a native edit without invalidating the complete SwiftUI tree.
@@ -550,10 +574,15 @@ public final class ControlStore: ObservableObject {
   }
 
   public func reset() {
+    let existingObservations = observations.values
     nodes.removeAll()
     pendingLocalProperties.removeAll()
     lastChangedIDs = []
     revision &+= 1
+    existingObservations.forEach { $0.invalidate() }
+    observations.removeAll()
+    parentsByChild.removeAll()
+    childrenByParent.removeAll()
   }
 
   // MARK: - Materialization
@@ -666,17 +695,95 @@ public final class ControlStore: ObservableObject {
   private func finishApply(
     touched: Set<Int>, previousNodes: [Int: ControlNode]
   ) -> Bool {
-    let inheritedChanges = resolveInheritedBaseProperties(touched: touched)
-    collectGarbage()
-    guard nodes != previousNodes else {
+    // Ordinary scalar patches cannot alter ancestry or inherited base props.
+    // Avoid walking and comparing the complete retained tree for those very
+    // common acknowledgements. Structural/type/disabled/adaptive changes keep
+    // the exact full inheritance and reachability pass.
+    let requiresTreeMaintenance = touched.contains { id in
+      guard let current = nodes[id] else { return previousNodes[id] != nil }
+      guard let previous = previousNodes[id] else { return true }
+      return current.type != previous.type
+        || current.props["disabled"] != previous.props["disabled"]
+        || current.props["adaptive"] != previous.props["adaptive"]
+        || controlReferences(in: current) != controlReferences(in: previous)
+    }
+
+    let inheritedChanges = requiresTreeMaintenance
+      ? resolveInheritedBaseProperties(touched: touched) : []
+    let previousParents = parentsByChild
+    let previousChildren = childrenByParent
+    if requiresTreeMaintenance {
+      collectGarbage()
+      rebuildReferenceGraph()
+    }
+
+    var changed = Set(touched.union(inheritedChanges).filter {
+      previousNodes[$0] != nodes[$0]
+    })
+    if requiresTreeMaintenance {
+      changed.formUnion(previousNodes.keys.filter { nodes[$0] == nil })
+    }
+    guard !changed.isEmpty else {
       lastChangedIDs = []
       return false
     }
-    lastChangedIDs = Set(touched.union(inheritedChanges).filter {
-      previousNodes[$0] != nodes[$0]
-    })
+    lastChangedIDs = changed
     revision &+= 1
+    invalidate(
+      changed,
+      previousParents: requiresTreeMaintenance ? previousParents : nil,
+      previousChildren: requiresTreeMaintenance ? previousChildren : nil)
     return true
+  }
+
+  private func controlReferences(in node: ControlNode) -> Set<Int> {
+    var ids: [Int] = []
+    for value in node.props.values { appendControlIDs(in: value, to: &ids) }
+    return Set(ids)
+  }
+
+  private func rebuildReferenceGraph() {
+    parentsByChild.removeAll(keepingCapacity: true)
+    childrenByParent.removeAll(keepingCapacity: true)
+    for (parentID, node) in nodes {
+      let children = controlReferences(in: node)
+      childrenByParent[parentID] = children
+      for childID in children { parentsByChild[childID, default: []].insert(parentID) }
+    }
+  }
+
+  /// Invalidates changed controls, their original subtrees, and their
+  /// containment ancestors. This mirrors retained widget dependencies:
+  /// ancestor state can affect descendants, while descendant visibility and
+  /// geometry can affect every container above it. Sibling subtrees remain
+  /// untouched.
+  private func invalidate(
+    _ changed: Set<Int>,
+    previousParents: [Int: Set<Int>]? = nil,
+    previousChildren: [Int: Set<Int>]? = nil
+  ) {
+    let oldParents = previousParents ?? parentsByChild
+    let oldChildren = previousChildren ?? childrenByParent
+    var affected = changed
+    var frontier = Array(changed)
+
+    // Only descendants of the controls that actually changed. Ancestors
+    // added below must not fan back out through unrelated sibling branches.
+    while let id = frontier.popLast() {
+      let children = (childrenByParent[id] ?? []).union(oldChildren[id] ?? [])
+      for childID in children where affected.insert(childID).inserted {
+        frontier.append(childID)
+      }
+    }
+
+    frontier = Array(affected)
+    while let id = frontier.popLast() {
+      let parents = (parentsByChild[id] ?? []).union(oldParents[id] ?? [])
+      for parentID in parents where affected.insert(parentID).inserted {
+        frontier.append(parentID)
+      }
+    }
+    for id in affected { observations[id]?.invalidate() }
   }
 
   /// Drops controls no longer reachable from the page.
