@@ -123,10 +123,13 @@ final class IconMappingTests: XCTestCase {
 
   func testRubyMaterialNamesResolveToTheirNativeAppleMeaning() {
     XCTAssertEqual(IconMapping.symbol(forMaterialName: "home"), "house")
+    let nativeRocket = IconMapping.nativeSymbolExists("rocket")
     XCTAssertEqual(
       IconMapping.symbol(forMaterialName: "rocket_launch"),
-      "arrow.up.right.circle.fill")
-    XCTAssertEqual(IconMapping.symbol(forMaterialName: "rocket"), "arrow.up.right")
+      nativeRocket ? "rocket.fill" : "arrow.up.right")
+    XCTAssertEqual(
+      IconMapping.symbol(forMaterialName: "rocket"),
+      nativeRocket ? "rocket" : "arrow.up.right")
     XCTAssertEqual(IconMapping.symbol(forMaterialName: "account_circle"), "person.crop.circle")
     XCTAssertEqual(IconMapping.symbol(forMaterialName: "chevron_right"), "chevron.right")
     XCTAssertEqual(
@@ -142,12 +145,13 @@ final class IconMappingTests: XCTestCase {
 
   func testExplorerGalleryCategoriesUseClosestNativeAppleArtwork() {
     let expected: [String: String] = [
-      "rocket_launch": "arrow.up.right.circle.fill",
-      "view_module": "square.grid.3x3",
-      "widgets": "shippingbox.fill",
+      "rocket_launch": IconMapping.nativeSymbolExists("rocket")
+        ? "rocket.fill" : "arrow.up.right",
+      "view_module": "square.grid.3x3.fill",
+      "widgets": "square.grid.2x2.fill",
       "image": "photo.fill",
       "show_chart": "chart.line.uptrend.xyaxis",
-      "animation": "arrow.triangle.2.circlepath",
+      "animation": "circle.hexagongrid.fill",
       "auto_awesome": "sparkles",
       "settings": "gearshape.fill",
     ]
