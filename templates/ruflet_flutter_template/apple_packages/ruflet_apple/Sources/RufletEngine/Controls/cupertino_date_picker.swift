@@ -13,7 +13,26 @@ public struct CupertinoDatePickerControl: View {
   }
 
   public var body: some View {
+    let configuration = RufletCupertinoDateWheelConfiguration(control: control)
     LayoutControl(control: control) {
+      picker(configuration: configuration)
+        .frame(minHeight: configuration.itemExtent * 5)
+        .background(parseColor(control.string("bgcolor")) ?? .clear)
+    }
+    .onChange(of: control.properties) { _ in
+      if let next = parseRufletDate(control.value("value")), next != value { value = next }
+    }
+  }
+
+  @ViewBuilder
+  private func picker(configuration: RufletCupertinoDateWheelConfiguration) -> some View {
+    if pickerMode == .date || pickerMode == .monthYear {
+      RufletCupertinoDateWheel(
+        value: value,
+        configuration: configuration,
+        onChange: commit
+      )
+    } else {
       RufletNativeDatePicker(
         date: value,
         minimumDate: minimumDate,
@@ -24,18 +43,17 @@ public struct CupertinoDatePickerControl: View {
         locale: effectiveLocale,
         countdownDuration: nil
       ) { next, _ in
-        guard abs(next.timeIntervalSince1970 - value.timeIntervalSince1970) > 0.5 else { return }
-        value = next
-        let wire = rufletDateValue(next)
-        control.updateProperties(["value": wire])
-        control.triggerEvent("change", data: wire)
+        commit(next)
       }
-      .frame(minHeight: CGFloat(control.number("item_extent", default: 32) ?? 32) * 5)
-      .background(parseColor(control.string("bgcolor")) ?? .clear)
     }
-    .onChange(of: control.properties) { _ in
-      if let next = parseRufletDate(control.value("value")), next != value { value = next }
-    }
+  }
+
+  private func commit(_ next: Date) {
+    guard abs(next.timeIntervalSince1970 - value.timeIntervalSince1970) > 0.5 else { return }
+    value = next
+    let wire = rufletDateValue(next)
+    control.updateProperties(["value": wire])
+    control.triggerEvent("change", data: wire)
   }
 
   private var pickerMode: RufletCupertinoDatePickerMode {
@@ -48,10 +66,11 @@ public struct CupertinoDatePickerControl: View {
   private var minimumDate: Date? {
     if let date = parseRufletDate(control.value("first_date")) { return date }
     guard pickerMode == .date || pickerMode == .monthYear else { return nil }
-    return Calendar.current.date(from: DateComponents(
-      year: control.integer("minimum_year", default: 1) ?? 1,
-      month: 1,
-      day: 1))
+    return Calendar.current.date(
+      from: DateComponents(
+        year: control.integer("minimum_year", default: 1) ?? 1,
+        month: 1,
+        day: 1))
   }
   private var maximumDate: Date? {
     if let date = parseRufletDate(control.value("last_date")) { return date }
@@ -65,7 +84,7 @@ public struct CupertinoDatePickerControl: View {
   }
 }
 
-private enum RufletCupertinoDatePickerMode: String, CaseIterable, RufletStringEnum {
+enum RufletCupertinoDatePickerMode: String, CaseIterable, RufletStringEnum {
   case time, date, dateAndTime, monthYear
 
   var native: RufletNativeDatePickerMode {
