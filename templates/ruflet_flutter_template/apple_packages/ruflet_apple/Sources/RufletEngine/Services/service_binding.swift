@@ -6,6 +6,7 @@ public final class ServiceBinding {
   public let control: RufletControl
   private let service: RufletService
   private var updateListener: UUID?
+  private var isDisposed = false
 
   public init(control: RufletControl, backend: RufletBackendProtocol) throws {
     self.control = control
@@ -18,6 +19,8 @@ public final class ServiceBinding {
   }
 
   public func dispose() {
+    guard !isDisposed else { return }
+    isDisposed = true
     if let updateListener {
       control.removeListener(updateListener)
       self.updateListener = nil
