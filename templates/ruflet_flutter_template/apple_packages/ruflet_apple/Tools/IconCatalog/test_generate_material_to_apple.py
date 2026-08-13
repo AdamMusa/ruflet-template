@@ -194,6 +194,35 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             self.assertEqual(self.entries[concept]["kind"], kind)
             self.assertEqual(self.entries[concept]["value"], value)
 
+    def test_social_activities_family_is_explicit_reviewed_native_artwork(self):
+        family = MODULE.load_json(MODULE.SOCIAL_ACTIVITIES_OVERRIDES_PATH)
+        low_confidence = {
+            item["concept"] for item in self.audit["low_confidence_concepts"]
+        }
+        self.assertEqual(self.audit["reviewed_families"]["social_activities"], len(family))
+        self.assertTrue(set(family).isdisjoint(low_confidence))
+        for concept, target in family.items():
+            entry = self.entries[concept]
+            self.assertEqual(entry["kind"], target["kind"])
+            self.assertEqual(entry["value"], target["value"])
+            self.assertEqual(entry["confidence"], "reviewed")
+            self.assertEqual(entry["source"], "reviewed_override")
+
+    def test_social_activities_known_wrong_generic_targets_do_not_regress(self):
+        expected = {
+            "ARCHITECTURE": ("system_symbol", "ruler"),
+            "BLIND": ("system_symbol", "eye.slash"),
+            "CAMPAIGN": ("system_symbol", "megaphone.fill"),
+            "COMPOST": ("system_symbol", "leaf.arrow.circlepath"),
+            "CRUELTY_FREE": ("system_symbol", "hare.fill"),
+            "MASKS": ("system_symbol", "facemask.fill"),
+            "RECYCLING": ("system_symbol", "arrow.3.trianglepath"),
+            "THUNDERSTORM": ("system_symbol", "cloud.bolt.rain.fill"),
+        }
+        for concept, (kind, value) in expected.items():
+            self.assertEqual(self.entries[concept]["kind"], kind)
+            self.assertEqual(self.entries[concept]["value"], value)
+
     def test_checked_in_artifacts_are_reproducible(self):
         self.assertEqual(
             MODULE.OUTPUT_PATH.read_text(encoding="utf-8"),

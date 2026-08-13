@@ -21,6 +21,9 @@ Reviewed maps, places, and amenity concepts live in
 `maps_places_overrides.json`.
 Reviewed Apple device, display, connectivity, storage, keyboard, and peripheral
 concepts live in `device_hardware_overrides.json`.
+Reviewed social, community, health, weather, recreation, and activity concepts
+with direct floor-safe Apple equivalents live in
+`social_activities_overrides.json`.
 
 The 8,825 identities contain 2,235 concepts because Flet carries Outlined,
 Rounded, and Sharp Material variants. The generator records the collapsed

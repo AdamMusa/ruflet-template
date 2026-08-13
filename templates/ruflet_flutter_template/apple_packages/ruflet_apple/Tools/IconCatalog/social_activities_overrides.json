@@ -1,0 +1,277 @@
+{
+  "ARCHITECTURE": {
+    "kind": "system_symbol",
+    "value": "ruler",
+    "rationale": "public Apple drafting and design tool identity"
+  },
+  "BEDTIME": {
+    "kind": "system_symbol",
+    "value": "moon.fill",
+    "rationale": "public Apple nighttime and sleep identity"
+  },
+  "BIOTECH": {
+    "kind": "system_symbol",
+    "value": "atom",
+    "rationale": "public Apple laboratory science identity available at the deployment floor"
+  },
+  "BLIND": {
+    "kind": "system_symbol",
+    "value": "eye.slash",
+    "rationale": "public Apple visual-impairment identity"
+  },
+  "CAMPAIGN": {
+    "kind": "system_symbol",
+    "value": "megaphone.fill",
+    "rationale": "public Apple campaign announcement identity"
+  },
+  "CLEAN_HANDS": {
+    "kind": "system_symbol",
+    "value": "hands.sparkles.fill",
+    "rationale": "public Apple clean-hands identity"
+  },
+  "COMPOST": {
+    "kind": "system_symbol",
+    "value": "leaf.arrow.circlepath",
+    "rationale": "public Apple organic recycling identity"
+  },
+  "CONNECT_WITHOUT_CONTACT": {
+    "kind": "system_symbol",
+    "value": "dot.radiowaves.left.and.right",
+    "rationale": "public Apple contactless connection identity"
+  },
+  "CONSTRUCTION": {
+    "kind": "system_symbol",
+    "value": "hammer.fill",
+    "rationale": "public Apple construction tool identity"
+  },
+  "CRUELTY_FREE": {
+    "kind": "system_symbol",
+    "value": "hare.fill",
+    "rationale": "public Apple animal identity for cruelty-free products"
+  },
+  "CYCLONE": {
+    "kind": "system_symbol",
+    "value": "hurricane",
+    "rationale": "public Apple cyclone weather identity"
+  },
+  "DEW_POINT": {
+    "kind": "system_symbol",
+    "value": "humidity.fill",
+    "rationale": "public Apple atmospheric moisture identity"
+  },
+  "DOMAIN": {
+    "kind": "system_symbol",
+    "value": "building.2.fill",
+    "rationale": "public Apple organization and business-domain identity"
+  },
+  "ECO": {
+    "kind": "system_symbol",
+    "value": "leaf.fill",
+    "rationale": "public Apple ecological identity"
+  },
+  "EMOJI_EMOTIONS": {
+    "kind": "system_symbol",
+    "value": "face.smiling.fill",
+    "rationale": "public Apple emotion and smiling-face identity"
+  },
+  "EMOJI_OBJECTS": {
+    "kind": "system_symbol",
+    "value": "lightbulb.fill",
+    "rationale": "public Apple representative object identity"
+  },
+  "EMOJI_PEOPLE": {
+    "kind": "system_symbol",
+    "value": "person.3.fill",
+    "rationale": "public Apple people-group identity"
+  },
+  "EMOJI_TRANSPORTATION": {
+    "kind": "system_symbol",
+    "value": "car.fill",
+    "rationale": "public Apple transportation-category identity"
+  },
+  "FOGGY": {
+    "kind": "system_symbol",
+    "value": "cloud.fog.fill",
+    "rationale": "public Apple fog weather identity"
+  },
+  "FOLLOW_THE_SIGNS": {
+    "kind": "system_symbol",
+    "value": "signpost.right.fill",
+    "rationale": "public Apple directional signpost identity"
+  },
+  "FRONT_HAND": {
+    "kind": "system_symbol",
+    "value": "hand.raised.fill",
+    "rationale": "public Apple front-facing hand identity"
+  },
+  "HEALTH_AND_SAFETY": {
+    "kind": "system_symbol",
+    "value": "checkmark.shield.fill",
+    "rationale": "public Apple verified safety and protection identity"
+  },
+  "HIKING": {
+    "kind": "system_symbol",
+    "value": "figure.walk",
+    "rationale": "public Apple walking activity identity available at the deployment floor"
+  },
+  "HISTORY_EDU": {
+    "kind": "system_symbol",
+    "value": "clock.arrow.circlepath",
+    "rationale": "public Apple history and time-recall identity"
+  },
+  "HOW_TO_VOTE": {
+    "kind": "system_symbol",
+    "value": "checkmark.rectangle.fill",
+    "rationale": "public Apple marked ballot identity"
+  },
+  "INTERESTS": {
+    "kind": "system_symbol",
+    "value": "star.fill",
+    "rationale": "public Apple interests and favorites identity"
+  },
+  "LUGGAGE": {
+    "kind": "system_symbol",
+    "value": "suitcase.fill",
+    "rationale": "public Apple luggage identity"
+  },
+  "MASKS": {
+    "kind": "system_symbol",
+    "value": "facemask.fill",
+    "rationale": "public Apple face-mask identity"
+  },
+  "MOOD": {
+    "kind": "system_symbol",
+    "value": "face.smiling.fill",
+    "rationale": "public Apple mood and smiling-face identity"
+  },
+  "NIGHTS_STAY": {
+    "kind": "system_symbol",
+    "value": "moon.stars.fill",
+    "rationale": "public Apple overnight-stay identity"
+  },
+  "NORDIC_WALKING": {
+    "kind": "system_symbol",
+    "value": "figure.walk",
+    "rationale": "public Apple walking activity identity available at the deployment floor"
+  },
+  "PAGES": {
+    "kind": "system_symbol",
+    "value": "doc.on.doc.fill",
+    "rationale": "public Apple multiple-pages identity"
+  },
+  "PARTY_MODE": {
+    "kind": "system_symbol",
+    "value": "camera.fill",
+    "rationale": "public Apple event-photography identity"
+  },
+  "PEOPLE_OUTLINE": {
+    "kind": "system_symbol",
+    "value": "person.3",
+    "rationale": "public Apple outlined people-group identity"
+  },
+  "POLL": {
+    "kind": "system_symbol",
+    "value": "chart.bar.fill",
+    "rationale": "public Apple poll-results identity"
+  },
+  "PRECISION_MANUFACTURING": {
+    "kind": "system_symbol",
+    "value": "gearshape.2.fill",
+    "rationale": "public Apple precision machinery identity"
+  },
+  "REAL_ESTATE_AGENT": {
+    "kind": "system_symbol",
+    "value": "key.fill",
+    "rationale": "public Apple property-access identity"
+  },
+  "RECOMMEND": {
+    "kind": "system_symbol",
+    "value": "hand.thumbsup.fill",
+    "rationale": "public Apple recommendation identity"
+  },
+  "RECYCLING": {
+    "kind": "system_symbol",
+    "value": "arrow.3.trianglepath",
+    "rationale": "public Apple recycling identity"
+  },
+  "SANITIZER": {
+    "kind": "system_symbol",
+    "value": "hands.sparkles.fill",
+    "rationale": "public Apple hand-sanitizing identity"
+  },
+  "SENTIMENT_SATISFIED": {
+    "kind": "system_symbol",
+    "value": "face.smiling",
+    "rationale": "public Apple satisfied-face identity"
+  },
+  "SEVERE_COLD": {
+    "kind": "system_symbol",
+    "value": "snowflake",
+    "rationale": "public Apple severe-cold weather identity"
+  },
+  "SICK": {
+    "kind": "system_symbol",
+    "value": "facemask.fill",
+    "rationale": "public Apple illness and face-mask identity"
+  },
+  "SPORTS": {
+    "kind": "system_symbol",
+    "value": "sportscourt.fill",
+    "rationale": "public Apple general sports identity"
+  },
+  "SPORTS_MOTORSPORTS": {
+    "kind": "system_symbol",
+    "value": "car.fill",
+    "rationale": "public Apple motor-racing vehicle identity available at the deployment floor"
+  },
+  "SUPPORT_AGENT": {
+    "kind": "system_symbol",
+    "value": "headphones",
+    "rationale": "public Apple support-headset identity"
+  },
+  "THEATERS": {
+    "kind": "system_symbol",
+    "value": "theatermasks.fill",
+    "rationale": "public Apple theater identity"
+  },
+  "THUNDERSTORM": {
+    "kind": "system_symbol",
+    "value": "cloud.bolt.rain.fill",
+    "rationale": "public Apple thunderstorm weather identity"
+  },
+  "TOYS": {
+    "kind": "system_symbol",
+    "value": "gamecontroller.fill",
+    "rationale": "public Apple play and toys identity"
+  },
+  "TRAVEL_EXPLORE": {
+    "kind": "system_symbol",
+    "value": "globe",
+    "rationale": "public Apple world-exploration identity"
+  },
+  "VOLUNTEER_ACTIVISM": {
+    "kind": "system_symbol",
+    "value": "heart.fill",
+    "rationale": "public Apple volunteer-care identity"
+  },
+  "WALLET": {
+    "kind": "system_symbol",
+    "value": "wallet.pass.fill",
+    "rationale": "public Apple wallet identity"
+  },
+  "WHATSHOT": {
+    "kind": "system_symbol",
+    "value": "flame.fill",
+    "rationale": "public Apple hot and trending identity"
+  },
+  "WORKSPACES": {
+    "kind": "system_symbol",
+    "value": "rectangle.grid.2x2",
+    "rationale": "public Apple workspace-grid identity"
+  },
+  "WORKSPACE_PREMIUM": {
+    "kind": "system_symbol",
+    "value": "star.circle.fill",
+    "rationale": "public Apple premium achievement identity"
+  }
+}
