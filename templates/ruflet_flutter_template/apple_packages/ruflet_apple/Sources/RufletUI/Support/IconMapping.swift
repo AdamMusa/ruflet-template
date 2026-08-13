@@ -133,17 +133,12 @@ public enum IconMapping {
       of: "cupertinoicons.", with: "", options: [.caseInsensitive, .anchored])
     let name = canonical(unqualified)
     if let mapped = cupertinoTable[name], isAvailable(mapped) { return mapped }
+    if let fallback = cupertinoUnavailableFallbacks[name]?.first(where: isAvailable) {
+      return fallback
+    }
 
     let candidates = cupertinoCandidates(for: name)
     if let symbol = candidates.first(where: isAvailable) { return symbol }
-
-    // Flutter's Cupertino catalog can contain symbols introduced after the
-    // application's minimum Apple OS. Preserve a native, semantic image in
-    // that case instead of dropping the icon. Arbitrary extension names do not
-    // take this path and remain an explicit placeholder.
-    if cupertinoNames.contains(name) {
-      return semanticCupertinoFallback(for: name)
-    }
 
     RufletLog.debug("No SF Symbol for Cupertino icon `\(rawName)`")
     return placeholderSymbol
@@ -184,44 +179,6 @@ public enum IconMapping {
     #endif
   }
 
-  private static func semanticCupertinoFallback(for name: String) -> String {
-    let semanticSymbols: [(String, String)] = [
-      ("airplane", "airplane"), ("alarm", "alarm"),
-      ("antenna", "antenna.radiowaves.left.and.right"),
-      ("arrow", "arrow.right"), ("back", "chevron.left"), ("forward", "chevron.right"),
-      ("battery", "battery.100"), ("bell", "bell"), ("bluetooth", "wave.3.right"),
-      ("book", "book"), ("bookmark", "bookmark"), ("briefcase", "briefcase"),
-      ("bus", "bus"), ("calendar", "calendar"), ("camera", "camera"), ("car", "car"),
-      ("cart", "cart"), ("chart", "chart.bar"), ("chat", "bubble.left"),
-      ("check", "checkmark"), ("chevron", "chevron.right"), ("circle", "circle"),
-      ("clock", "clock"), ("cloud", "cloud"), ("compass", "safari"),
-      ("creditcard", "creditcard"), ("delete", "trash"), ("doc", "doc"),
-      ("download", "arrow.down.circle"), ("drop", "drop"), ("envelope", "envelope"),
-      ("exclamation", "exclamationmark.triangle"), ("eye", "eye"), ("face", "face.smiling"),
-      ("film", "film"), ("flag", "flag"), ("flame", "flame"), ("folder", "folder"),
-      ("game", "gamecontroller"), ("gear", "gearshape"), ("globe", "globe"),
-      ("hammer", "hammer"), ("hand", "hand.raised"), ("heart", "heart"),
-      ("home", "house"), ("house", "house"), ("info", "info.circle"),
-      ("keyboard", "keyboard"), ("leaf", "leaf"), ("lightbulb", "lightbulb"),
-      ("link", "link"), ("list", "list.bullet"), ("location", "mappin"),
-      ("lock", "lock"), ("mail", "envelope"), ("map", "map"), ("mic", "mic"),
-      ("minus", "minus"), ("moon", "moon"), ("music", "music.note"),
-      ("paint", "paintbrush"), ("paperplane", "paperplane"), ("pause", "pause"),
-      ("pencil", "pencil"), ("person", "person"), ("phone", "phone"),
-      ("photo", "photo"), ("play", "play"), ("plus", "plus"), ("printer", "printer"),
-      ("question", "questionmark.circle"), ("rectangle", "rectangle"),
-      ("scissors", "scissors"), ("search", "magnifyingglass"), ("settings", "gearshape"),
-      ("share", "square.and.arrow.up"), ("shield", "shield"), ("snow", "snowflake"),
-      ("speaker", "speaker.wave.2"), ("square", "square"), ("star", "star"),
-      ("stop", "stop"), ("sun", "sun.max"), ("tag", "tag"), ("text", "textformat"),
-      ("timer", "timer"), ("train", "tram"), ("trash", "trash"),
-      ("upload", "arrow.up.circle"), ("video", "video"), ("wave", "waveform"),
-      ("wifi", "wifi"), ("wind", "wind"), ("wrench", "wrench"), ("xmark", "xmark"),
-    ]
-
-    return semanticSymbols.first(where: { name.contains($0.0) })?.1 ?? "app"
-  }
-
   /// Internal test hook for corpus regressions. Mapping to a non-placeholder
   /// string is insufficient if that SF Symbol does not exist on the runtime.
   static func nativeSymbolExists(_ symbol: String) -> Bool {
@@ -229,6 +186,16 @@ public enum IconMapping {
   }
 
   private static let cupertinoNames = Set(MaterialIconNames.cupertino.map(canonical))
+
+  /// Exact deployment-floor fallbacks for newer SF Symbols. These aliases are
+  /// keyed by the full Cupertino wire name; no substring or category guessing
+  /// is permitted in the Apple renderer.
+  private static let cupertinoUnavailableFallbacks: [String: [String]] = [
+    "doc_checkmark": ["doc.badge.checkmark", "checkmark.circle", "doc"],
+    "doc_checkmark_fill": ["doc.badge.checkmark.fill", "checkmark.circle.fill", "doc.fill"],
+    "rocket": ["rocket", "arrow.up.right"],
+    "rocket_fill": ["rocket.fill", "rocket", "arrow.up.right"],
+  ]
 
   /// Cupertino names whose SF Symbol spelling is not a mechanical dotted
   /// conversion. This is platform vocabulary, not per-screen presentation.
@@ -264,6 +231,143 @@ public enum IconMapping {
     "question_circle_fill": "questionmark.circle.fill",
     "exclamationmark_triangle": "exclamationmark.triangle",
     "exclamationmark_triangle_fill": "exclamationmark.triangle.fill",
+
+    // Flutter Cupertino vocabulary whose spelling is semantic rather than a
+    // mechanical underscore-to-dot conversion. Keep every alias explicit: an
+    // Apple icon must never be guessed from a substring of the wire name.
+    "antenna_radiowaves_left_right": "antenna.radiowaves.left.and.right",
+    "arrow_down_right_arrow_up_left": "arrow.down.right.and.arrow.up.left",
+    "arrow_left_right": "arrow.left.arrow.right",
+    "arrow_left_right_circle": "arrow.left.arrow.right.circle",
+    "arrow_left_right_circle_fill": "arrow.left.arrow.right.circle.fill",
+    "arrow_left_right_square": "arrow.left.arrow.right.square",
+    "arrow_left_right_square_fill": "arrow.left.arrow.right.square.fill",
+    "arrow_up_down": "arrow.up.arrow.down",
+    "arrow_up_down_circle": "arrow.up.arrow.down.circle",
+    "arrow_up_down_circle_fill": "arrow.up.arrow.down.circle.fill",
+    "arrow_up_down_square": "arrow.up.arrow.down.square",
+    "arrow_up_down_square_fill": "arrow.up.arrow.down.square.fill",
+    "bars": "chart.bar", "battery_25_percent": "battery.25",
+    "battery_75_percent": "battery.75", "battery_charging": "battery.100.bolt",
+    "battery_empty": "battery.0", "battery_full": "battery.100",
+    "bitcoin": "bitcoinsign", "bitcoin_circle": "bitcoinsign.circle",
+    "bitcoin_circle_fill": "bitcoinsign.circle.fill", "bluetooth": "wave.3.right",
+    "brightness": "sun.max", "brightness_solid": "sun.max.fill",
+    "bubble_left_bubble_right": "bubble.left.and.bubble.right",
+    "bubble_left_bubble_right_fill": "bubble.left.and.bubble.right.fill",
+    "calendar_today": "calendar", "car_detailed": "car",
+    "chart_bar_alt_fill": "chart.bar.fill", "chart_bar_circle_fill": "chart.bar.fill",
+    "chart_bar_square": "chart.bar", "chart_bar_square_fill": "chart.bar.fill",
+    "chat_bubble": "bubble.left", "chat_bubble_fill": "bubble.left.fill",
+    "chat_bubble_2": "bubble.left.and.bubble.right",
+    "chat_bubble_2_fill": "bubble.left.and.bubble.right.fill",
+    "chat_bubble_text": "bubble.left", "chat_bubble_text_fill": "bubble.left.fill",
+    "checkmark_alt": "checkmark", "checkmark_alt_circle": "checkmark.circle",
+    "checkmark_alt_circle_fill": "checkmark.circle.fill", "chevron_back": "chevron.left",
+    "circle_filled": "circle.fill", "clear_thick": "xmark",
+    "clear_thick_circled": "xmark.circle", "cloud_download": "icloud.and.arrow.down",
+    "cloud_download_fill": "icloud.and.arrow.down.fill", "cloud_upload": "icloud.and.arrow.up",
+    "cloud_upload_fill": "icloud.and.arrow.up.fill", "collections": "square.stack",
+    "collections_solid": "square.stack.fill", "color_filter": "circle.lefthalf.filled",
+    "color_filter_fill": "circle.lefthalf.filled", "compass": "safari",
+    "compass_fill": "safari.fill", "conversation_bubble": "bubble.left.and.bubble.right",
+    "create": "pencil", "create_solid": "pencil", "delete_simple": "trash",
+    "device_desktop": "desktopcomputer", "device_laptop": "laptopcomputer",
+    "device_phone_landscape": "iphone.landscape", "device_phone_portrait": "iphone",
+    "doc_chart": "doc.text", "doc_chart_fill": "doc.text.fill",
+    "doc_checkmark": "doc.badge.checkmark", "doc_checkmark_fill": "doc.badge.checkmark.fill",
+    "doc_person": "person.text.rectangle", "doc_person_fill": "person.text.rectangle.fill",
+    "doc_text_search": "doc.text.magnifyingglass",
+    "dot_radiowaves_left_right": "dot.radiowaves.left.and.right",
+    "double_music_note": "music.note.list", "down_arrow": "arrow.down",
+    "download_circle": "arrow.down.circle", "download_circle_fill": "arrow.down.circle.fill",
+    "ellipsis_vertical": "ellipsis", "ellipsis_vertical_circle": "ellipsis.circle",
+    "ellipsis_vertical_circle_fill": "ellipsis.circle.fill", "floppy_disk": "externaldrive",
+    "fullscreen": "arrow.up.left.and.arrow.down.right",
+    "fullscreen_exit": "arrow.down.right.and.arrow.up.left",
+    "game_controller": "gamecontroller", "game_controller_solid": "gamecontroller.fill",
+    "gamecontroller_alt_fill": "gamecontroller.fill", "gear_alt": "gearshape",
+    "gear_alt_fill": "gearshape.fill", "gear_big": "gearshape",
+    "gift_alt": "gift", "gift_alt_fill": "gift.fill", "graph_circle": "chart.xyaxis.line",
+    "graph_circle_fill": "chart.xyaxis.line", "graph_square": "chart.xyaxis.line",
+    "graph_square_fill": "chart.xyaxis.line", "group": "person.2",
+    "group_solid": "person.2.fill", "house_alt": "house", "house_alt_fill": "house.fill",
+    "infinite": "infinity", "lab_flask": "flask", "lab_flask_solid": "flask.fill",
+    "layers": "square.3.layers.3d", "layers_fill": "square.3.layers.3d",
+    "layers_alt": "square.3.layers.3d", "layers_alt_fill": "square.3.layers.3d",
+    "loop": "arrow.triangle.2.circlepath", "loop_thick": "arrow.triangle.2.circlepath",
+    "map_pin": "mappin", "map_pin_ellipse": "mappin.circle",
+    "map_pin_slash": "mappin.slash", "mic_off": "mic.slash",
+    "money_dollar": "dollarsign", "money_dollar_circle": "dollarsign.circle",
+    "money_dollar_circle_fill": "dollarsign.circle.fill", "money_euro": "eurosign",
+    "money_euro_circle": "eurosign.circle", "money_euro_circle_fill": "eurosign.circle.fill",
+    "money_pound": "sterlingsign", "money_pound_circle": "sterlingsign.circle",
+    "money_pound_circle_fill": "sterlingsign.circle.fill", "money_rubl": "rublesign",
+    "money_rubl_circle": "rublesign.circle", "money_rubl_circle_fill": "rublesign.circle.fill",
+    "money_yen": "yensign", "money_yen_circle": "yensign.circle",
+    "money_yen_circle_fill": "yensign.circle.fill",
+    "move": "arrow.up.and.down.and.arrow.left.and.right",
+    "music_albums": "square.stack", "music_albums_fill": "square.stack.fill",
+    "music_note_2": "music.note", "news": "newspaper", "news_solid": "newspaper.fill",
+    "padlock": "lock", "padlock_solid": "lock.fill", "paw": "pawprint",
+    "paw_solid": "pawprint.fill", "pen": "pencil", "pencil_ellipsis_rectangle": "square.and.pencil",
+    "pencil_outline": "pencil", "person_2_alt": "person.2", "person_add": "person.badge.plus",
+    "person_add_solid": "person.badge.plus", "person_alt": "person",
+    "person_alt_circle": "person.crop.circle", "person_alt_circle_fill": "person.crop.circle.fill",
+    "photo_camera_solid": "camera.fill", "piano": "pianokeys",
+    "placemark": "mappin.circle", "placemark_fill": "mappin.circle.fill",
+    "profile_circled": "person.crop.circle", "question_diamond": "questionmark.diamond",
+    "question_diamond_fill": "questionmark.diamond.fill", "question_square": "questionmark.square",
+    "question_square_fill": "questionmark.square.fill",
+    "rectangle_arrow_up_right_arrow_down_left": "arrow.up.left.and.arrow.down.right",
+    "rectangle_arrow_up_right_arrow_down_left_slash": "arrow.down.right.and.arrow.up.left",
+    "rectangle_paperclip": "paperclip", "refresh": "arrow.clockwise",
+    "refresh_bold": "arrow.clockwise", "refresh_circled": "arrow.clockwise.circle",
+    "refresh_circled_solid": "arrow.clockwise.circle.fill", "refresh_thick": "arrow.clockwise",
+    "refresh_thin": "arrow.clockwise", "reply": "arrowshape.turn.up.left",
+    "reply_all": "arrowshape.turn.up.left.2", "reply_thick_solid": "arrowshape.turn.up.left.fill",
+    "resize": "arrow.up.left.and.arrow.down.right",
+    "resize_h": "arrow.left.and.right", "resize_v": "arrow.up.and.down",
+    "return_icon": "arrow.turn.down.left", "rocket": "rocket", "rocket_fill": "rocket.fill",
+    "scissors_alt": "scissors", "share": "square.and.arrow.up",
+    "share_solid": "square.and.arrow.up.fill", "share_up": "square.and.arrow.up",
+    "shopping_cart": "cart", "shuffle_medium": "shuffle", "shuffle_thick": "shuffle",
+    "sort_down": "arrow.down", "sort_down_circle": "arrow.down.circle",
+    "sort_down_circle_fill": "arrow.down.circle.fill", "sort_up": "arrow.up",
+    "sort_up_circle": "arrow.up.circle", "sort_up_circle_fill": "arrow.up.circle.fill",
+    "square_arrow_down_fill": "arrow.down.square.fill",
+    "square_arrow_down_on_square": "square.and.arrow.down",
+    "square_arrow_down_on_square_fill": "square.and.arrow.down.fill",
+    "square_arrow_left_fill": "arrow.left.square.fill",
+    "square_arrow_right_fill": "arrow.right.square.fill",
+    "square_arrow_up_fill": "arrow.up.square.fill",
+    "square_arrow_up_on_square": "square.and.arrow.up",
+    "square_arrow_up_on_square_fill": "square.and.arrow.up.fill",
+    "square_favorites": "heart.square", "square_favorites_fill": "heart.square.fill",
+    "square_favorites_alt": "heart.square", "square_favorites_alt_fill": "heart.square.fill",
+    "square_fill_line_vertical_square": "rectangle.split.2x1",
+    "square_fill_line_vertical_square_fill": "rectangle.split.2x1.fill",
+    "square_line_vertical_square": "rectangle.split.2x1",
+    "square_line_vertical_square_fill": "rectangle.split.2x1.fill",
+    "square_list": "list.bullet.rectangle", "square_list_fill": "list.bullet.rectangle.fill",
+    "square_pencil": "square.and.pencil", "square_pencil_fill": "square.and.pencil",
+    "switch_camera": "arrow.triangle.2.circlepath.camera",
+    "switch_camera_solid": "arrow.triangle.2.circlepath.camera.fill",
+    "tags": "tag", "tags_solid": "tag.fill", "tickets": "ticket",
+    "tickets_fill": "ticket.fill", "time": "clock", "time_solid": "clock.fill",
+    "today": "calendar", "today_fill": "calendar", "train_style_one": "tram",
+    "train_style_two": "tram.fill", "tray_arrow_down": "tray.and.arrow.down",
+    "tray_arrow_down_fill": "tray.and.arrow.down.fill", "tray_arrow_up": "tray.and.arrow.up",
+    "tray_arrow_up_fill": "tray.and.arrow.up.fill", "up_arrow": "arrow.up",
+    "upload_circle": "arrow.up.circle", "upload_circle_fill": "arrow.up.circle.fill",
+    "video_camera": "video", "video_camera_solid": "video.fill", "videocam": "video",
+    "videocam_fill": "video.fill", "videocam_circle": "video.circle",
+    "videocam_circle_fill": "video.circle.fill", "volume_down": "speaker.wave.1",
+    "volume_mute": "speaker.slash", "volume_off": "speaker.slash.fill",
+    "volume_up": "speaker.wave.3", "wand_rays": "wand.and.rays",
+    "wand_rays_inverse": "wand.and.rays.inverse", "wand_stars": "wand.and.stars",
+    "wand_stars_inverse": "wand.and.stars.inverse", "zoom_in": "plus.magnifyingglass",
+    "zoom_out": "minus.magnifyingglass",
   ]
 
   /// Material name to SF Symbol. Covers the icons Ruflet applications actually

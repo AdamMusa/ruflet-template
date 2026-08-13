@@ -37,7 +37,7 @@ final class IconMappingTests: XCTestCase {
       .cupertino)
   }
 
-  func testEveryMappedMaterialWireIconUsesOnlyAvailableAppleSymbols() {
+  func testEveryMaterialWireIconUsesAppleRenderingOnly() {
     for (index, name) in MaterialIconNames.material.enumerated() {
       let wire = MaterialIconNames.firstCodepoint + index
       guard let rendering = IconMapping.rendering(for: .int(Int64(wire))) else {
@@ -92,6 +92,15 @@ final class IconMappingTests: XCTestCase {
   func testUnknownCupertinoIconRemainsVisible() {
     XCTAssertEqual(
       IconMapping.symbol(forCupertinoName: "AN_ICON_THAT_CANNOT_EXIST"),
+      IconMapping.placeholderSymbol)
+  }
+
+  func testCupertinoResolutionNeverGuessesMeaningFromSubstrings() {
+    XCTAssertEqual(
+      IconMapping.symbol(forCupertinoName: "MY_HOME_AUTOMATION_VENDOR"),
+      IconMapping.placeholderSymbol)
+    XCTAssertEqual(
+      IconMapping.symbol(forCupertinoName: "UNRELATED_CAMERA_SERVICE"),
       IconMapping.placeholderSymbol)
   }
 
@@ -168,13 +177,13 @@ final class IconMappingTests: XCTestCase {
   }
 
   func testCupertinoCatalogHasBroadNativeCoverage() {
-    let mapped = MaterialIconNames.cupertino.filter {
-      IconMapping.symbol(forCupertinoName: $0) != IconMapping.placeholderSymbol
+    let missing = MaterialIconNames.cupertino.filter {
+      IconMapping.symbol(forCupertinoName: $0) == IconMapping.placeholderSymbol
     }
 
     XCTAssertEqual(
-      mapped.count,
-      MaterialIconNames.cupertino.count,
-      "Only \(mapped.count) of \(MaterialIconNames.cupertino.count) Cupertino icons mapped")
+      missing,
+      [],
+      "Unmapped Cupertino icons: \(missing.joined(separator: ", "))")
   }
 }
