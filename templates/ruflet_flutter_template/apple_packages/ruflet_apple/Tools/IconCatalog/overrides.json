@@ -2085,12 +2085,6 @@
     "value": "arrow.right",
     "rationale": "curated Material-to-SF vocabulary"
   },
-  "TRENDING_NEUTRAL": {
-    "kind": "system_symbol",
-    "value": "arrow.right",
-    "rationale": "native Apple neutral/flat trend",
-    "status": "review_required"
-  },
   "TRENDING_UP": {
     "kind": "system_symbol",
     "value": "arrow.up.right",

@@ -841,6 +841,66 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             self.assertEqual(self.entries[material_name]["kind"], kind)
             self.assertEqual(self.entries[material_name]["value"], value)
 
+    def test_interface_state_manipulation_family_is_reviewed_native_artwork(self):
+        family = MODULE.load_json(
+            MODULE.INTERFACE_STATE_MANIPULATION_OVERRIDES_PATH
+        )
+        expected_concepts = {
+            "CUT",
+            "DESELECT",
+            "DND_FORWARDSLASH",
+            "FLIP_TO_BACK",
+            "FLIP_TO_FRONT",
+            "PINCH",
+            "RADIO_BUTTON_OFF",
+            "RADIO_BUTTON_ON",
+            "TRENDING_NEUTRAL",
+        }
+        self.assertEqual(set(family), expected_concepts)
+        self.assertEqual(
+            self.audit["reviewed_families"]["interface_state_manipulation"],
+            len(expected_concepts),
+        )
+        low_confidence = {
+            item["concept"] for item in self.audit["low_confidence_concepts"]
+        }
+        self.assertTrue(expected_concepts.isdisjoint(low_confidence))
+        material = MODULE.load_json(MODULE.MATERIAL_PATH)
+        family_wire_identities = {
+            name
+            for name in material
+            if MODULE.concept_for(name) in expected_concepts
+        }
+        self.assertEqual(len(family_wire_identities), 36)
+        for name in family_wire_identities:
+            self.assertEqual(self.entries[name]["confidence"], "reviewed")
+            self.assertEqual(self.entries[name]["source"], "reviewed_override")
+
+    def test_interface_state_manipulation_distinct_semantics_do_not_regress(self):
+        expected = {
+            "CUT": ("system_symbol", "scissors"),
+            "DESELECT": ("system_symbol", "square.slash"),
+            "DND_FORWARDSLASH": ("system_symbol", "circle.slash"),
+            "FLIP_TO_BACK": (
+                "system_symbol",
+                "square.3.stack.3d.bottom.fill",
+            ),
+            "FLIP_TO_FRONT": (
+                "system_symbol",
+                "square.3.stack.3d.top.fill",
+            ),
+            "PINCH": (
+                "system_symbol",
+                "arrow.up.left.and.down.right.magnifyingglass",
+            ),
+            "RADIO_BUTTON_OFF": ("system_symbol", "circle"),
+            "RADIO_BUTTON_ON": ("system_symbol", "circle.inset.filled"),
+            "TRENDING_NEUTRAL": ("system_symbol", "arrow.right"),
+        }
+        for material_name, (kind, value) in expected.items():
+            self.assertEqual(self.entries[material_name]["kind"], kind)
+            self.assertEqual(self.entries[material_name]["value"], value)
+
     def test_checked_in_artifacts_are_reproducible(self):
         self.assertEqual(
             MODULE.OUTPUT_PATH.read_text(encoding="utf-8"),

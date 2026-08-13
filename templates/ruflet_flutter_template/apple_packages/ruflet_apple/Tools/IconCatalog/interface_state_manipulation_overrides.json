@@ -1,0 +1,47 @@
+{
+  "CUT": {
+    "kind": "system_symbol",
+    "value": "scissors",
+    "rationale": "public Apple scissors identity for the cut operation"
+  },
+  "DESELECT": {
+    "kind": "system_symbol",
+    "value": "square.slash",
+    "rationale": "public Apple slashed-selection identity for deselecting content"
+  },
+  "DND_FORWARDSLASH": {
+    "kind": "system_symbol",
+    "value": "circle.slash",
+    "rationale": "public Apple universal prohibition identity for the legacy do-not-disturb forward-slash icon"
+  },
+  "FLIP_TO_BACK": {
+    "kind": "system_symbol",
+    "value": "square.3.stack.3d.bottom.fill",
+    "rationale": "public Apple layered-stack identity with the back layer selected"
+  },
+  "FLIP_TO_FRONT": {
+    "kind": "system_symbol",
+    "value": "square.3.stack.3d.top.fill",
+    "rationale": "public Apple layered-stack identity with the front layer selected"
+  },
+  "PINCH": {
+    "kind": "system_symbol",
+    "value": "arrow.up.left.and.down.right.magnifyingglass",
+    "rationale": "public Apple two-axis magnification identity for the pinch-to-zoom gesture"
+  },
+  "RADIO_BUTTON_OFF": {
+    "kind": "system_symbol",
+    "value": "circle",
+    "rationale": "public Apple empty circular selection identity for an unselected radio button"
+  },
+  "RADIO_BUTTON_ON": {
+    "kind": "system_symbol",
+    "value": "circle.inset.filled",
+    "rationale": "public Apple inset-dot circular selection identity for a selected radio button"
+  },
+  "TRENDING_NEUTRAL": {
+    "kind": "system_symbol",
+    "value": "arrow.right",
+    "rationale": "public Apple level rightward trend identity for a neutral trend"
+  }
+}

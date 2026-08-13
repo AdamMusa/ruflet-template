@@ -12596,29 +12596,29 @@
     "kind": "system_symbol",
     "value": "scissors",
     "concept": "CUT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CUT_OUTLINED": {
     "kind": "system_symbol",
     "value": "scissors",
     "concept": "CUT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CUT_ROUNDED": {
     "kind": "system_symbol",
     "value": "scissors",
     "concept": "CUT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CUT_SHARP": {
     "kind": "system_symbol",
     "value": "scissors",
     "concept": "CUT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CYCLONE": {
     "kind": "system_symbol",
@@ -13406,31 +13406,31 @@
   },
   "DESELECT": {
     "kind": "system_symbol",
-    "value": "minus",
+    "value": "square.slash",
     "concept": "DESELECT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DESELECT_OUTLINED": {
     "kind": "system_symbol",
-    "value": "minus",
+    "value": "square.slash",
     "concept": "DESELECT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DESELECT_ROUNDED": {
     "kind": "system_symbol",
-    "value": "minus",
+    "value": "square.slash",
     "concept": "DESELECT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DESELECT_SHARP": {
     "kind": "system_symbol",
-    "value": "minus",
+    "value": "square.slash",
     "concept": "DESELECT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DESIGN_SERVICES": {
     "kind": "system_symbol",
@@ -14841,31 +14841,31 @@
   },
   "DND_FORWARDSLASH": {
     "kind": "system_symbol",
-    "value": "minus.forwardslash.plus",
+    "value": "circle.slash",
     "concept": "DND_FORWARDSLASH",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DND_FORWARDSLASH_OUTLINED": {
     "kind": "system_symbol",
-    "value": "minus.forwardslash.plus",
+    "value": "circle.slash",
     "concept": "DND_FORWARDSLASH",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DND_FORWARDSLASH_ROUNDED": {
     "kind": "system_symbol",
-    "value": "minus.forwardslash.plus",
+    "value": "circle.slash",
     "concept": "DND_FORWARDSLASH",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DND_FORWARDSLASH_SHARP": {
     "kind": "system_symbol",
-    "value": "minus.forwardslash.plus",
+    "value": "circle.slash",
     "concept": "DND_FORWARDSLASH",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DNS": {
     "kind": "system_symbol",
@@ -21287,60 +21287,60 @@
     "source": "semantic_rank"
   },
   "FLIP_TO_BACK": {
-    "kind": "cupertino_glyph",
-    "value": "BACK",
+    "kind": "system_symbol",
+    "value": "square.3.stack.3d.bottom.fill",
     "concept": "FLIP_TO_BACK",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FLIP_TO_BACK_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "BACK",
+    "kind": "system_symbol",
+    "value": "square.3.stack.3d.bottom.fill",
     "concept": "FLIP_TO_BACK",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FLIP_TO_BACK_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "BACK",
+    "kind": "system_symbol",
+    "value": "square.3.stack.3d.bottom.fill",
     "concept": "FLIP_TO_BACK",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FLIP_TO_BACK_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "BACK",
+    "kind": "system_symbol",
+    "value": "square.3.stack.3d.bottom.fill",
     "concept": "FLIP_TO_BACK",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FLIP_TO_FRONT": {
-    "kind": "cupertino_glyph",
-    "value": "PERSPECTIVE",
+    "kind": "system_symbol",
+    "value": "square.3.stack.3d.top.fill",
     "concept": "FLIP_TO_FRONT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FLIP_TO_FRONT_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "PERSPECTIVE",
+    "kind": "system_symbol",
+    "value": "square.3.stack.3d.top.fill",
     "concept": "FLIP_TO_FRONT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FLIP_TO_FRONT_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "PERSPECTIVE",
+    "kind": "system_symbol",
+    "value": "square.3.stack.3d.top.fill",
     "concept": "FLIP_TO_FRONT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FLIP_TO_FRONT_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "PERSPECTIVE",
+    "kind": "system_symbol",
+    "value": "square.3.stack.3d.top.fill",
     "concept": "FLIP_TO_FRONT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FLOOD": {
     "kind": "system_symbol",
@@ -40600,32 +40600,32 @@
     "source": "exact_apple_name"
   },
   "PINCH": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "arrow.up.left.and.down.right.magnifyingglass",
     "concept": "PINCH",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PINCH_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "arrow.up.left.and.down.right.magnifyingglass",
     "concept": "PINCH",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PINCH_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "arrow.up.left.and.down.right.magnifyingglass",
     "concept": "PINCH",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PINCH_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "arrow.up.left.and.down.right.magnifyingglass",
     "concept": "PINCH",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PIVOT_TABLE_CHART": {
     "kind": "cupertino_glyph",
@@ -42708,59 +42708,59 @@
   },
   "RADIO_BUTTON_OFF": {
     "kind": "system_symbol",
-    "value": "radio",
+    "value": "circle",
     "concept": "RADIO_BUTTON_OFF",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RADIO_BUTTON_OFF_OUTLINED": {
     "kind": "system_symbol",
-    "value": "radio",
+    "value": "circle",
     "concept": "RADIO_BUTTON_OFF",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RADIO_BUTTON_OFF_ROUNDED": {
     "kind": "system_symbol",
-    "value": "radio",
+    "value": "circle",
     "concept": "RADIO_BUTTON_OFF",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RADIO_BUTTON_OFF_SHARP": {
     "kind": "system_symbol",
-    "value": "radio",
+    "value": "circle",
     "concept": "RADIO_BUTTON_OFF",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RADIO_BUTTON_ON": {
     "kind": "system_symbol",
-    "value": "radio",
+    "value": "circle.inset.filled",
     "concept": "RADIO_BUTTON_ON",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RADIO_BUTTON_ON_OUTLINED": {
     "kind": "system_symbol",
-    "value": "radio",
+    "value": "circle.inset.filled",
     "concept": "RADIO_BUTTON_ON",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RADIO_BUTTON_ON_ROUNDED": {
     "kind": "system_symbol",
-    "value": "radio",
+    "value": "circle.inset.filled",
     "concept": "RADIO_BUTTON_ON",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RADIO_BUTTON_ON_SHARP": {
     "kind": "system_symbol",
-    "value": "radio",
+    "value": "circle.inset.filled",
     "concept": "RADIO_BUTTON_ON",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RADIO_BUTTON_UNCHECKED": {
     "kind": "system_symbol",
@@ -56374,29 +56374,29 @@
     "kind": "system_symbol",
     "value": "arrow.right",
     "concept": "TRENDING_NEUTRAL",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TRENDING_NEUTRAL_OUTLINED": {
     "kind": "system_symbol",
     "value": "arrow.right",
     "concept": "TRENDING_NEUTRAL",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TRENDING_NEUTRAL_ROUNDED": {
     "kind": "system_symbol",
     "value": "arrow.right",
     "concept": "TRENDING_NEUTRAL",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TRENDING_NEUTRAL_SHARP": {
     "kind": "system_symbol",
     "value": "arrow.right",
     "concept": "TRENDING_NEUTRAL",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TRENDING_UP": {
     "kind": "system_symbol",
