@@ -20,4 +20,7 @@ let package = Package(
       dependencies: [
         .product(name: "RufletApple", package: "ruflet_apple"),
       ]),
+    .testTarget(
+      name: "RufletAppExtensionsTests",
+      dependencies: ["RufletAppExtensions"]),
   ])

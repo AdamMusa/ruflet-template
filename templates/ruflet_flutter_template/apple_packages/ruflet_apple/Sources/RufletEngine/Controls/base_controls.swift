@@ -2,42 +2,52 @@ import RufletProtocol
 import SwiftUI
 
 @MainActor
-struct BaseControl<Content: View>: View {
+/// Applies the pinned Flet `BaseControl` contract to an extension-owned view.
+///
+/// Custom `RufletExtension` implementations should wrap non-layout controls
+/// with this type so opacity, tooltip, directionality, and base animation
+/// behavior stay identical to built-in controls.
+public struct BaseControl<Content: View>: View {
     @ObservedObject var control: RufletControl
     let child: Content
 
-    init(control: RufletControl, @ViewBuilder child: () -> Content) {
+    public init(control: RufletControl, @ViewBuilder child: () -> Content) {
         self.control = control
         self.child = child()
     }
 
-    init(control: RufletControl, child: Content) {
+    public init(control: RufletControl, child: Content) {
         self.control = control
         self.child = child
     }
 
-    var body: some View {
+    public var body: some View {
         child
             .modifier(RufletBaseControlModifier(control: control))
     }
 }
 
 @MainActor
-struct LayoutControl<Content: View>: View {
+/// Applies the pinned Flet `LayoutControl` contract to an extension-owned view.
+///
+/// This is the native Swift counterpart of the wrapper used by Flet extension
+/// widgets. It preserves the shared size, transform, alignment, margin, badge,
+/// opacity, tooltip, RTL, and animation-event behavior.
+public struct LayoutControl<Content: View>: View {
     @ObservedObject var control: RufletControl
     let child: Content
 
-    init(control: RufletControl, @ViewBuilder child: () -> Content) {
+    public init(control: RufletControl, @ViewBuilder child: () -> Content) {
         self.control = control
         self.child = child()
     }
 
-    init(control: RufletControl, child: Content) {
+    public init(control: RufletControl, child: Content) {
         self.control = control
         self.child = child
     }
 
-    var body: some View {
+    public var body: some View {
         child
             .modifier(RufletLayoutControlModifier(control: control))
             .modifier(RufletBaseControlModifier(control: control))
