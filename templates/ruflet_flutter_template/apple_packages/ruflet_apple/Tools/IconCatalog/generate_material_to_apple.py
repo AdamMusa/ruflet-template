@@ -18,6 +18,7 @@ Generation uses pinned/auditable inputs:
   Apple.
 * navigation_travel_overrides.json -- the reviewed navigation/transit family.
 * action_overrides.json -- the reviewed platform-neutral action family.
+* maps_places_overrides.json -- the reviewed maps, places, and amenities family.
 
 The installed public Apple symbol metadata is used only to choose and validate
 native symbols available at both deployment floors. Private and restricted
@@ -50,6 +51,7 @@ SEMANTICS_PATH = TOOL_DIR / "material_semantics.json"
 OVERRIDES_PATH = TOOL_DIR / "overrides.json"
 NAVIGATION_TRAVEL_OVERRIDES_PATH = TOOL_DIR / "navigation_travel_overrides.json"
 ACTION_OVERRIDES_PATH = TOOL_DIR / "action_overrides.json"
+MAPS_PLACES_OVERRIDES_PATH = TOOL_DIR / "maps_places_overrides.json"
 AUDIT_PATH = TOOL_DIR / "material_to_apple_audit.json"
 
 CORE_GLYPHS = Path(
@@ -322,6 +324,7 @@ def load_reviewed_overrides() -> tuple[
         "general": OVERRIDES_PATH,
         "navigation_travel": NAVIGATION_TRAVEL_OVERRIDES_PATH,
         "action": ACTION_OVERRIDES_PATH,
+        "maps_places": MAPS_PLACES_OVERRIDES_PATH,
     }
     merged: dict[str, dict[str, str]] = {}
     families: dict[str, str] = {}

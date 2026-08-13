@@ -17,6 +17,8 @@ change is auditable rather than a screen-specific patch. The navigation and
 transit family lives in `navigation_travel_overrides.json`; the generator
 rejects duplicate concepts across reviewed files. Platform-neutral action
 concepts live in `action_overrides.json`.
+Reviewed maps, places, and amenity concepts live in
+`maps_places_overrides.json`.
 
 The 8,825 identities contain 2,235 concepts because Flet carries Outlined,
 Rounded, and Sharp Material variants. The generator records the collapsed
