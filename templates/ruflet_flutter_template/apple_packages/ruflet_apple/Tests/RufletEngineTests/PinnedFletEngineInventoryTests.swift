@@ -49,6 +49,11 @@ final class PinnedFletEngineInventoryTests: XCTestCase {
       "\(present.count)/\(eligible.count) source entries have Swift destinations; " +
       "\(missing.count) remain structurally pending; 9 web/JS/mock files are Apple-excluded.")
     if !missing.isEmpty {
+      let groups = Dictionary(grouping: missing, by: structuralGroup)
+      let groupSummary = ["Controls", "Widgets", "Utils", "Extensions", "Other"]
+        .map { "\($0) \(groups[$0, default: []].count)" }
+        .joined(separator: ", ")
+      print("Structurally pending groups: \(groupSummary).")
       print("Structurally pending pinned sources:\n" + missing.map {
         "  \($0.source) -> \($0.destination)"
       }.joined(separator: "\n"))
@@ -66,5 +71,13 @@ final class PinnedFletEngineInventoryTests: XCTestCase {
       .deletingLastPathComponent()
       .deletingLastPathComponent()
       .deletingLastPathComponent()
+  }
+
+  private func structuralGroup(_ entry: PinnedFletEngineSource) -> String {
+    if entry.source.hasPrefix("controls/") { return "Controls" }
+    if entry.source.hasPrefix("widgets/") { return "Widgets" }
+    if entry.source == "utils.dart" || entry.source.hasPrefix("utils/") { return "Utils" }
+    if entry.source.hasPrefix("extensions/") { return "Extensions" }
+    return "Other"
   }
 }
