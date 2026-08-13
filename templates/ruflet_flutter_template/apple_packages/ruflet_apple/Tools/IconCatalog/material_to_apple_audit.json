@@ -25,6 +25,7 @@
     "home_household_overrides.json": "01241a64db5b3deb88bdc5d02ac16866dfc4ea2d2452b2d891c3edda8870ae60",
     "communication_overrides.json": "a92e706464f58602030dc8be3250a7cfbed7b31dcce4d09b7bd53ab7862c6010",
     "business_commerce_overrides.json": "c97061e90efefbbfec456de2c3cb7c84ea5bbfdeacb20c50f3b8aef3af6f0920",
+    "travel_amenity_overrides.json": "39be6913c53d65874aa9ffc28c1dfd73544b8187e8259c147bce130f6b7b5d09",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/name_availability.plist": "a277cf5b63017ed497d5b6b3ea96bbee4f407b76776af41bcb52943007335b5c",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_search.plist": "29a767651ce53d8861e28d3eaa20b50d3e02a85fe5a79d557ce1fbff7fa4ebad",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_restrictions.strings": "2e1b1c3d629d26ac1e75861f33cb1cbbb3348e142a2b6c1aaf9bba546273f13b"
@@ -32,8 +33,8 @@
   "sources": {
     "exact_apple_name": 48,
     "manual_review_required": 105,
-    "reviewed_override": 834,
-    "semantic_rank": 1248
+    "reviewed_override": 843,
+    "semantic_rank": 1239
   },
   "reviewed_families": {
     "action": 76,
@@ -46,21 +47,22 @@
     "maps_places": 76,
     "navigation_travel": 36,
     "social_activities": 55,
-    "text_editor": 49
+    "text_editor": 49,
+    "travel_amenity": 9
   },
   "confidence_grades": {
     "exact": 48,
     "high": 665,
-    "low": 570,
-    "medium": 118,
-    "reviewed": 834
+    "low": 564,
+    "medium": 115,
+    "reviewed": 843
   },
-  "unique_apple_targets": 862,
+  "unique_apple_targets": 866,
   "most_reused_targets": [
     {
       "kind": "system_symbol",
       "value": "person",
-      "concept_count": 47
+      "concept_count": 46
     },
     {
       "kind": "system_symbol",
@@ -139,11 +141,6 @@
     },
     {
       "kind": "cupertino_glyph",
-      "value": "CREATE",
-      "concept_count": 12
-    },
-    {
-      "kind": "cupertino_glyph",
       "value": "PHONE",
       "concept_count": 12
     },
@@ -169,6 +166,11 @@
     },
     {
       "kind": "cupertino_glyph",
+      "value": "CREATE",
+      "concept_count": 11
+    },
+    {
+      "kind": "cupertino_glyph",
       "value": "DEVICE_DESKTOP",
       "concept_count": 10
     },
@@ -188,11 +190,6 @@
       "concept_count": 10
     },
     {
-      "kind": "cupertino_glyph",
-      "value": "LOCATION_SLASH",
-      "concept_count": 10
-    },
-    {
       "kind": "system_symbol",
       "value": "bolt",
       "concept_count": 10
@@ -200,11 +197,6 @@
     {
       "kind": "cupertino_glyph",
       "value": "ALARM",
-      "concept_count": 9
-    },
-    {
-      "kind": "cupertino_glyph",
-      "value": "ARROW_RIGHT",
       "concept_count": 9
     },
     {
@@ -239,8 +231,18 @@
     },
     {
       "kind": "cupertino_glyph",
+      "value": "LOCATION_SLASH",
+      "concept_count": 9
+    },
+    {
+      "kind": "cupertino_glyph",
       "value": "CHECKMARK",
       "concept_count": 9
+    },
+    {
+      "kind": "cupertino_glyph",
+      "value": "ARROW_RIGHT",
+      "concept_count": 8
     },
     {
       "kind": "cupertino_glyph",
@@ -284,16 +286,6 @@
     },
     {
       "kind": "cupertino_glyph",
-      "value": "COLLECTIONS",
-      "concept_count": 7
-    },
-    {
-      "kind": "cupertino_glyph",
-      "value": "BACK",
-      "concept_count": 7
-    },
-    {
-      "kind": "cupertino_glyph",
       "value": "SQUARE_FILL_LINE_VERTICAL_SQUARE",
       "concept_count": 7
     },
@@ -306,9 +298,19 @@
       "kind": "cupertino_glyph",
       "value": "DEVICE_PHONE_PORTRAIT",
       "concept_count": 7
+    },
+    {
+      "kind": "cupertino_glyph",
+      "value": "PHOTO_CAMERA",
+      "concept_count": 7
+    },
+    {
+      "kind": "system_symbol",
+      "value": "4.circle",
+      "concept_count": 7
     }
   ],
-  "low_confidence_count": 688,
+  "low_confidence_count": 679,
   "low_confidence_concepts": [
     {
       "concept": "SIXTY_FPS_SELECT",
@@ -1076,57 +1078,6 @@
         "select",
         "vertical",
         "wide"
-      ]
-    },
-    {
-      "concept": "DO_NOT_TOUCH",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "LOCATION_SLASH"
-      },
-      "confidence": 0.1302,
-      "grade": "low",
-      "reason": "name=[] semantic=['place', 'slash'] extra=[]",
-      "tags": [
-        "access denied",
-        "barrier",
-        "beware",
-        "blocked",
-        "caution",
-        "constraint",
-        "control",
-        "cursor",
-        "delicate",
-        "disabled",
-        "do",
-        "don't touch",
-        "enabled",
-        "exclusion",
-        "finger",
-        "fingers",
-        "forbidden",
-        "gesture",
-        "halt",
-        "hand",
-        "interaction",
-        "limitation",
-        "no touching",
-        "not",
-        "not allowed",
-        "off",
-        "off limits",
-        "on",
-        "pointer",
-        "prevented",
-        "prohibit",
-        "restricted",
-        "restricted access",
-        "safety",
-        "sensitive",
-        "slash",
-        "stop",
-        "touch",
-        "warning"
       ]
     },
     {
@@ -7917,51 +7868,6 @@
       ]
     },
     {
-      "concept": "TIRE_REPAIR",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "GAUGE"
-      },
-      "confidence": 0.2808,
-      "grade": "low",
-      "reason": "name=[] semantic=['gauge'] extra=[]",
-      "tags": [
-        "alert",
-        "assistance",
-        "auto",
-        "automobile",
-        "automotive",
-        "car",
-        "cars",
-        "circular",
-        "fix",
-        "flat",
-        "gauge",
-        "inflate",
-        "issue",
-        "maintenance",
-        "mechanic",
-        "patch",
-        "plug",
-        "pressure",
-        "problem",
-        "pump",
-        "puncture",
-        "repair",
-        "roadside",
-        "round",
-        "service",
-        "spare",
-        "tire",
-        "tool",
-        "transportation",
-        "vehicle",
-        "warning",
-        "wheel",
-        "wrench"
-      ]
-    },
-    {
       "concept": "TRANSIT_ENTEREXIT",
       "target": {
         "kind": "cupertino_glyph",
@@ -11604,49 +11510,6 @@
       ]
     },
     {
-      "concept": "CARPENTER",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "CREATE"
-      },
-      "confidence": 0.3102,
-      "grade": "low",
-      "reason": "name=[] semantic=['edit'] extra=[]",
-      "tags": [
-        "build",
-        "building",
-        "career",
-        "carpenter",
-        "construct",
-        "construction",
-        "craft",
-        "create",
-        "cutting",
-        "employee",
-        "figure",
-        "fix",
-        "handyman",
-        "individual",
-        "job",
-        "labor",
-        "manual labor",
-        "occupation",
-        "outline",
-        "person",
-        "profession",
-        "repair",
-        "saw",
-        "silhouette",
-        "skill",
-        "tool",
-        "tools",
-        "trade",
-        "woodworking",
-        "work",
-        "worker"
-      ]
-    },
-    {
       "concept": "POLYLINE",
       "target": {
         "kind": "cupertino_glyph",
@@ -13095,55 +12958,6 @@
         "travel",
         "trip",
         "voyage"
-      ]
-    },
-    {
-      "concept": "MOPED",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "DROP"
-      },
-      "confidence": 0.3158,
-      "grade": "low",
-      "reason": "name=[] semantic=['drop'] extra=[]",
-      "tags": [
-        "automobile",
-        "bike",
-        "buy",
-        "car",
-        "cars",
-        "commerce",
-        "courier",
-        "delivery",
-        "dining",
-        "dispatch",
-        "driving",
-        "drop off",
-        "fast",
-        "food",
-        "line icon",
-        "logistics",
-        "maps",
-        "moped",
-        "motorcycle",
-        "movement",
-        "order",
-        "pick up",
-        "purchase",
-        "quick",
-        "riding",
-        "scooter",
-        "service",
-        "shipping",
-        "shop",
-        "store",
-        "transport",
-        "transportation",
-        "travel",
-        "two-wheeled",
-        "urban",
-        "vehicle",
-        "vespa"
       ]
     },
     {
@@ -15149,53 +14963,6 @@
         "sesame seeds",
         "snack",
         "takeaway"
-      ]
-    },
-    {
-      "concept": "BENTO",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "COLLECTIONS"
-      },
-      "confidence": 0.3244,
-      "grade": "low",
-      "reason": "name=[] semantic=['collection'] extra=[]",
-      "tags": [
-        "applications",
-        "arrangement",
-        "bento",
-        "blocks",
-        "box",
-        "collection",
-        "compartments",
-        "control",
-        "dashboard",
-        "dinner",
-        "display",
-        "food",
-        "grid",
-        "grouped",
-        "launcher",
-        "layout",
-        "lunch",
-        "matrix",
-        "meal",
-        "menu",
-        "modules",
-        "navigation",
-        "nine squares",
-        "options",
-        "organized",
-        "pattern",
-        "restaurant",
-        "sections",
-        "shortcuts",
-        "squares",
-        "structure",
-        "takeout",
-        "tiles",
-        "view",
-        "window"
       ]
     },
     {
@@ -17793,56 +17560,6 @@
         "three lines",
         "typography",
         "view"
-      ]
-    },
-    {
-      "concept": "DEPARTURE_BOARD",
-      "target": {
-        "kind": "system_symbol",
-        "value": "airplane.departure"
-      },
-      "confidence": 0.3959,
-      "grade": "low",
-      "reason": "name=['departure'] semantic=['departure'] extra=['airplane']",
-      "tags": [
-        "airport",
-        "arrival board",
-        "arrivals",
-        "automobile",
-        "board",
-        "bus",
-        "bus station",
-        "car",
-        "cars",
-        "clock",
-        "data",
-        "departure",
-        "departure board",
-        "departures",
-        "destinations",
-        "display",
-        "information board",
-        "itinerary",
-        "journeys",
-        "lines",
-        "list",
-        "maps",
-        "public",
-        "public transit",
-        "rectangle",
-        "rows",
-        "schedule",
-        "sign",
-        "status",
-        "terminal",
-        "time",
-        "time table",
-        "train station",
-        "transit",
-        "transportation",
-        "travel",
-        "updates",
-        "vehicle"
       ]
     },
     {
@@ -24338,54 +24055,6 @@
       ]
     },
     {
-      "concept": "FORK_RIGHT",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "ARROW_RIGHT"
-      },
-      "confidence": 0.6949,
-      "grade": "medium",
-      "reason": "name=['right'] semantic=['arrow', 'right'] extra=[]",
-      "tags": [
-        "arrow",
-        "arrow right",
-        "arrows",
-        "branch right",
-        "curve right",
-        "direction",
-        "direction right",
-        "directions",
-        "diverge right",
-        "divide right",
-        "drive right",
-        "fork",
-        "fork right",
-        "journey right",
-        "junction right",
-        "maps",
-        "merge right",
-        "movement right",
-        "navigate right",
-        "navigation",
-        "path",
-        "path right",
-        "right",
-        "right bend",
-        "right side",
-        "right turn",
-        "rightward",
-        "route",
-        "route right",
-        "side right",
-        "sign",
-        "split right",
-        "traffic",
-        "travel",
-        "travel right",
-        "turn right"
-      ]
-    },
-    {
       "concept": "VIEW_COMPACT_ALT",
       "target": {
         "kind": "cupertino_glyph",
@@ -24739,52 +24408,6 @@
         "user",
         "user icon",
         "user representation"
-      ]
-    },
-    {
-      "concept": "ELEVATOR",
-      "target": {
-        "kind": "system_symbol",
-        "value": "person"
-      },
-      "confidence": 0.7213,
-      "grade": "medium",
-      "reason": "name=[] semantic=['people', 'person'] extra=[]",
-      "tags": [
-        "abstract",
-        "access",
-        "architecture",
-        "arrows",
-        "body",
-        "building",
-        "button",
-        "construction",
-        "control",
-        "destination",
-        "direction",
-        "down",
-        "elevator",
-        "floors",
-        "human",
-        "indicator",
-        "indoor",
-        "interface",
-        "levels",
-        "lift",
-        "machinery",
-        "movement",
-        "navigation",
-        "people",
-        "person",
-        "pointer",
-        "simplified",
-        "symbol",
-        "technology",
-        "transport",
-        "travel",
-        "triangles",
-        "up",
-        "vertical"
       ]
     },
     {
@@ -26641,52 +26264,6 @@
       "reason": "name=['plus'] semantic=['plus'] extra=[]",
       "tags": [
         "four g plus mobiledata"
-      ]
-    },
-    {
-      "concept": "FORK_LEFT",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "BACK"
-      },
-      "confidence": 0.7742,
-      "grade": "medium",
-      "reason": "name=['left'] semantic=['left'] extra=[]",
-      "tags": [
-        "alternative",
-        "arrow",
-        "arrows",
-        "branch left",
-        "branching path",
-        "choice",
-        "decision",
-        "deviation",
-        "direction",
-        "directional",
-        "directions",
-        "diverge",
-        "divide",
-        "fork",
-        "fork left",
-        "junction",
-        "left",
-        "left turn",
-        "map",
-        "maps",
-        "navigation",
-        "options",
-        "path",
-        "pathway",
-        "road",
-        "road sign",
-        "route",
-        "sidetrack",
-        "sign",
-        "split left",
-        "traffic",
-        "travel",
-        "turn",
-        "veer"
       ]
     },
     {

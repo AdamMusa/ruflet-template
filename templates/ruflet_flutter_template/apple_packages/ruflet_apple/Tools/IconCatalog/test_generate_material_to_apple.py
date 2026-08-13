@@ -387,6 +387,35 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             self.assertEqual(self.entries[concept]["kind"], kind)
             self.assertEqual(self.entries[concept]["value"], value)
 
+    def test_travel_amenity_family_is_explicit_reviewed_native_artwork(self):
+        family = MODULE.load_json(MODULE.TRAVEL_AMENITY_OVERRIDES_PATH)
+        low_confidence = {
+            item["concept"] for item in self.audit["low_confidence_concepts"]
+        }
+        self.assertEqual(self.audit["reviewed_families"]["travel_amenity"], len(family))
+        self.assertTrue(set(family).isdisjoint(low_confidence))
+        for concept, target in family.items():
+            entry = self.entries[concept]
+            self.assertEqual(entry["kind"], target["kind"])
+            self.assertEqual(entry["value"], target["value"])
+            self.assertEqual(entry["confidence"], "reviewed")
+            self.assertEqual(entry["source"], "reviewed_override")
+
+    def test_travel_amenity_distinct_semantics_do_not_regress(self):
+        expected = {
+            "BENTO": ("system_symbol", "takeoutbag.and.cup.and.straw.fill"),
+            "DEPARTURE_BOARD": ("system_symbol", "airplane.departure"),
+            "DO_NOT_TOUCH": ("system_symbol", "hand.raised.slash.fill"),
+            "ELEVATOR": ("system_symbol", "arrow.up.arrow.down.square.fill"),
+            "FORK_LEFT": ("system_symbol", "arrow.turn.up.left"),
+            "FORK_RIGHT": ("system_symbol", "arrow.turn.up.right"),
+            "MOPED": ("system_symbol", "scooter"),
+            "TIRE_REPAIR": ("system_symbol", "wrench.fill"),
+        }
+        for concept, (kind, value) in expected.items():
+            self.assertEqual(self.entries[concept]["kind"], kind)
+            self.assertEqual(self.entries[concept]["value"], value)
+
     def test_checked_in_artifacts_are_reproducible(self):
         self.assertEqual(
             MODULE.OUTPUT_PATH.read_text(encoding="utf-8"),

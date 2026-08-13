@@ -1,0 +1,47 @@
+{
+  "BENTO": {
+    "kind": "system_symbol",
+    "value": "takeoutbag.and.cup.and.straw.fill",
+    "rationale": "public Apple boxed-meal identity"
+  },
+  "CARPENTER": {
+    "kind": "system_symbol",
+    "value": "hammer.fill",
+    "rationale": "public Apple carpenter identity"
+  },
+  "DEPARTURE_BOARD": {
+    "kind": "system_symbol",
+    "value": "airplane.departure",
+    "rationale": "public Apple departure identity"
+  },
+  "DO_NOT_TOUCH": {
+    "kind": "system_symbol",
+    "value": "hand.raised.slash.fill",
+    "rationale": "public Apple do-not-touch identity"
+  },
+  "ELEVATOR": {
+    "kind": "system_symbol",
+    "value": "arrow.up.arrow.down.square.fill",
+    "rationale": "public Apple elevator direction identity available at the deployment floor"
+  },
+  "FORK_LEFT": {
+    "kind": "system_symbol",
+    "value": "arrow.turn.up.left",
+    "rationale": "public Apple left route-turn identity"
+  },
+  "FORK_RIGHT": {
+    "kind": "system_symbol",
+    "value": "arrow.turn.up.right",
+    "rationale": "public Apple right route-turn identity"
+  },
+  "MOPED": {
+    "kind": "system_symbol",
+    "value": "scooter",
+    "rationale": "public Apple moped/scooter identity"
+  },
+  "TIRE_REPAIR": {
+    "kind": "system_symbol",
+    "value": "wrench.fill",
+    "rationale": "public Apple vehicle-repair identity available at the deployment floor"
+  }
+}
