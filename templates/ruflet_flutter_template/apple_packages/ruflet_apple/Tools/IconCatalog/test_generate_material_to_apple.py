@@ -284,6 +284,38 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             self.assertEqual(self.entries[concept]["kind"], kind)
             self.assertEqual(self.entries[concept]["value"], value)
 
+    def test_home_household_family_is_explicit_reviewed_native_artwork(self):
+        family = MODULE.load_json(MODULE.HOME_HOUSEHOLD_OVERRIDES_PATH)
+        low_confidence = {
+            item["concept"] for item in self.audit["low_confidence_concepts"]
+        }
+        self.assertEqual(self.audit["reviewed_families"]["home_household"], len(family))
+        self.assertTrue(set(family).isdisjoint(low_confidence))
+        for concept, target in family.items():
+            entry = self.entries[concept]
+            self.assertEqual(entry["kind"], target["kind"])
+            self.assertEqual(entry["value"], target["value"])
+            self.assertEqual(entry["confidence"], "reviewed")
+            self.assertEqual(entry["source"], "reviewed_override")
+
+    def test_home_household_distinct_semantics_do_not_regress(self):
+        expected = {
+            "BEDROOM_PARENT": ("system_symbol", "bed.double.fill"),
+            "BROADCAST_ON_PERSONAL": (
+                "system_symbol",
+                "antenna.radiowaves.left.and.right.circle.fill",
+            ),
+            "COFFEE": ("system_symbol", "cup.and.saucer.fill"),
+            "DESK": ("system_symbol", "studentdesk"),
+            "GAS_METER": ("system_symbol", "gauge"),
+            "HVAC": ("system_symbol", "fanblades.fill"),
+            "OUTLET": ("system_symbol", "powerplug.fill"),
+            "SNOWING": ("system_symbol", "cloud.snow.fill"),
+        }
+        for concept, (kind, value) in expected.items():
+            self.assertEqual(self.entries[concept]["kind"], kind)
+            self.assertEqual(self.entries[concept]["value"], value)
+
     def test_checked_in_artifacts_are_reproducible(self):
         self.assertEqual(
             MODULE.OUTPUT_PATH.read_text(encoding="utf-8"),

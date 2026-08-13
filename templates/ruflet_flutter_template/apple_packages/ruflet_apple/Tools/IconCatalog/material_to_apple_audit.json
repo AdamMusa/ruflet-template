@@ -22,6 +22,7 @@
     "social_activities_overrides.json": "355587ebb0e6605c4317ac1b68d924f466696070093af839c8f3948b9beddd7f",
     "image_media_overrides.json": "86e4731092243d19e2a408f8a33379eb9a7359719ce3881b45bcbf8b4056001a",
     "text_editor_overrides.json": "d46267d3dfa1008428a1efbfa1cdc6e35a98850cd7cc7228e34bdd17799d0f5e",
+    "home_household_overrides.json": "01241a64db5b3deb88bdc5d02ac16866dfc4ea2d2452b2d891c3edda8870ae60",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/name_availability.plist": "a277cf5b63017ed497d5b6b3ea96bbee4f407b76776af41bcb52943007335b5c",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_search.plist": "29a767651ce53d8861e28d3eaa20b50d3e02a85fe5a79d557ce1fbff7fa4ebad",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_restrictions.strings": "2e1b1c3d629d26ac1e75861f33cb1cbbb3348e142a2b6c1aaf9bba546273f13b"
@@ -29,13 +30,14 @@
   "sources": {
     "exact_apple_name": 48,
     "manual_review_required": 105,
-    "reviewed_override": 760,
-    "semantic_rank": 1322
+    "reviewed_override": 777,
+    "semantic_rank": 1305
   },
   "reviewed_families": {
     "action": 76,
     "device_hardware": 72,
     "general": 339,
+    "home_household": 17,
     "image_media": 57,
     "maps_places": 76,
     "navigation_travel": 36,
@@ -45,11 +47,11 @@
   "confidence_grades": {
     "exact": 48,
     "high": 665,
-    "low": 628,
-    "medium": 134,
-    "reviewed": 760
+    "low": 614,
+    "medium": 131,
+    "reviewed": 777
   },
-  "unique_apple_targets": 837,
+  "unique_apple_targets": 841,
   "most_reused_targets": [
     {
       "kind": "system_symbol",
@@ -64,7 +66,7 @@
     {
       "kind": "cupertino_glyph",
       "value": "CONTROL",
-      "concept_count": 35
+      "concept_count": 33
     },
     {
       "kind": "cupertino_glyph",
@@ -83,12 +85,12 @@
     },
     {
       "kind": "cupertino_glyph",
-      "value": "HOME",
-      "concept_count": 25
+      "value": "GEAR",
+      "concept_count": 24
     },
     {
       "kind": "cupertino_glyph",
-      "value": "GEAR",
+      "value": "HOME",
       "concept_count": 24
     },
     {
@@ -117,13 +119,13 @@
       "concept_count": 18
     },
     {
-      "kind": "cupertino_glyph",
-      "value": "MONEY_DOLLAR",
-      "concept_count": 16
-    },
-    {
       "kind": "system_symbol",
       "value": "fork.knife",
+      "concept_count": 17
+    },
+    {
+      "kind": "cupertino_glyph",
+      "value": "MONEY_DOLLAR",
       "concept_count": 16
     },
     {
@@ -193,11 +195,6 @@
     },
     {
       "kind": "cupertino_glyph",
-      "value": "POWER",
-      "concept_count": 10
-    },
-    {
-      "kind": "cupertino_glyph",
       "value": "BLUETOOTH",
       "concept_count": 10
     },
@@ -228,7 +225,7 @@
     },
     {
       "kind": "cupertino_glyph",
-      "value": "SQUARE_FILL_ON_SQUARE_FILL",
+      "value": "POWER",
       "concept_count": 9
     },
     {
@@ -263,6 +260,11 @@
     },
     {
       "kind": "cupertino_glyph",
+      "value": "SQUARE_FILL_ON_SQUARE_FILL",
+      "concept_count": 8
+    },
+    {
+      "kind": "cupertino_glyph",
       "value": "PIN",
       "concept_count": 8
     },
@@ -292,17 +294,17 @@
       "concept_count": 7
     },
     {
-      "kind": "system_symbol",
-      "value": "character",
+      "kind": "cupertino_glyph",
+      "value": "COLLECTIONS",
       "concept_count": 7
     },
     {
       "kind": "cupertino_glyph",
-      "value": "TABLE",
+      "value": "BACK",
       "concept_count": 7
     }
   ],
-  "low_confidence_count": 762,
+  "low_confidence_count": 745,
   "low_confidence_concepts": [
     {
       "concept": "SIXTY_FPS_SELECT",
@@ -2332,50 +2334,6 @@
         "triangle",
         "trouble",
         "warning"
-      ]
-    },
-    {
-      "concept": "COFFEE",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "SEARCH"
-      },
-      "confidence": 0.1604,
-      "grade": "low",
-      "reason": "name=[] semantic=['search'] extra=[]",
-      "tags": [
-        "barista",
-        "beverage",
-        "break",
-        "breakfast",
-        "cafe",
-        "cafe culture",
-        "cafe menu",
-        "caffeine",
-        "chocolate",
-        "coffee",
-        "coffee cup",
-        "cup",
-        "diner",
-        "drink",
-        "energy",
-        "food",
-        "hot",
-        "hot beverage",
-        "hot drink",
-        "kitchen",
-        "liquid",
-        "menu item",
-        "morning",
-        "mug",
-        "plate",
-        "refreshments",
-        "restaurant",
-        "set",
-        "steam",
-        "steaming",
-        "tea",
-        "warm"
       ]
     },
     {
@@ -8921,52 +8879,6 @@
       ]
     },
     {
-      "concept": "GAS_METER",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "GAUGE"
-      },
-      "confidence": 0.2808,
-      "grade": "low",
-      "reason": "name=[] semantic=['gauge'] extra=[]",
-      "tags": [
-        "analog indicator",
-        "analog meter",
-        "circular gauge",
-        "circular meter",
-        "consumption",
-        "dashboard",
-        "dashboard element",
-        "dial",
-        "droplet",
-        "energy",
-        "energy meter",
-        "fuel",
-        "fuel gauge",
-        "fuel level",
-        "gas",
-        "gas meter",
-        "gauge",
-        "indicator",
-        "level",
-        "level indicator",
-        "measure",
-        "measurement",
-        "measurement device",
-        "meter",
-        "nest",
-        "pointer",
-        "power",
-        "power meter",
-        "reading",
-        "scale",
-        "usage",
-        "usage indicator",
-        "utility",
-        "water"
-      ]
-    },
-    {
       "concept": "PROPANE_TANK",
       "target": {
         "kind": "cupertino_glyph",
@@ -14082,53 +13994,6 @@
       ]
     },
     {
-      "concept": "KITCHEN",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "HOME"
-      },
-      "confidence": 0.3134,
-      "grade": "low",
-      "reason": "name=[] semantic=['house'] extra=[]",
-      "tags": [
-        "appliance",
-        "appliances",
-        "building",
-        "building structure",
-        "cabinets",
-        "cold",
-        "cooking",
-        "cooking area",
-        "cooking space",
-        "culinary",
-        "dining",
-        "domestic",
-        "eat",
-        "food",
-        "food preparation",
-        "fridge",
-        "furniture",
-        "home",
-        "home appliance",
-        "house",
-        "ice",
-        "interior",
-        "kitchen",
-        "line art",
-        "outline",
-        "oven",
-        "places",
-        "rectangle",
-        "refrigerator",
-        "residential",
-        "room",
-        "shape",
-        "simple",
-        "storage",
-        "stove"
-      ]
-    },
-    {
       "concept": "LIVING",
       "target": {
         "kind": "cupertino_glyph",
@@ -14259,45 +14124,6 @@
         "smokestack",
         "structure",
         "warehouse"
-      ]
-    },
-    {
-      "concept": "OUTLET",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "POWER"
-      },
-      "confidence": 0.3143,
-      "grade": "low",
-      "reason": "name=[] semantic=['power'] extra=[]",
-      "tags": [
-        "adapter",
-        "charge",
-        "charging point",
-        "connect",
-        "connecter",
-        "connection",
-        "current",
-        "disconnect",
-        "electrical",
-        "electrical outlet",
-        "electricity",
-        "electricity symbol",
-        "energy",
-        "energy supply",
-        "outlet",
-        "plug",
-        "plug in",
-        "port",
-        "power",
-        "power connection",
-        "power cord",
-        "power source",
-        "power up",
-        "recharge",
-        "socket",
-        "voltage",
-        "wall socket"
       ]
     },
     {
@@ -14860,45 +14686,6 @@
         "wash",
         "water",
         "wc"
-      ]
-    },
-    {
-      "concept": "DESK",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "TABLE"
-      },
-      "confidence": 0.3182,
-      "grade": "low",
-      "reason": "name=[] semantic=['table'] extra=[]",
-      "tags": [
-        "business",
-        "computer desk",
-        "desk",
-        "education",
-        "equipment",
-        "flat surface",
-        "four legs",
-        "furniture",
-        "home office",
-        "indoor",
-        "interior",
-        "learning",
-        "line art",
-        "minimal",
-        "object",
-        "office",
-        "organization",
-        "planning",
-        "productivity",
-        "rectangular",
-        "silhouette",
-        "simple",
-        "storage",
-        "study",
-        "table",
-        "work",
-        "workspace"
       ]
     },
     {
@@ -16464,98 +16251,6 @@
         "update",
         "version control",
         "workflow"
-      ]
-    },
-    {
-      "concept": "HARDWARE",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "CONTROL"
-      },
-      "confidence": 0.3229,
-      "grade": "low",
-      "reason": "name=[] semantic=['control'] extra=[]",
-      "tags": [
-        "adjust",
-        "administration",
-        "break",
-        "circle",
-        "cog",
-        "configuration",
-        "construction",
-        "control",
-        "customize",
-        "engine",
-        "engineering",
-        "gear",
-        "hammer",
-        "hardware",
-        "industrial",
-        "machinery",
-        "management",
-        "mechanical",
-        "mechanism",
-        "nail",
-        "options",
-        "parameters",
-        "personalize",
-        "preferences",
-        "repair",
-        "rotate",
-        "settings",
-        "setup",
-        "sharp",
-        "system",
-        "technical",
-        "technology",
-        "tool",
-        "tools",
-        "turn",
-        "wheel"
-      ]
-    },
-    {
-      "concept": "HVAC",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "CONTROL"
-      },
-      "confidence": 0.3229,
-      "grade": "low",
-      "reason": "name=[] semantic=['control'] extra=[]",
-      "tags": [
-        "ac",
-        "adjustment",
-        "air",
-        "air conditioning",
-        "air flow",
-        "air vent",
-        "airflow",
-        "airflow direction",
-        "blower",
-        "building systems",
-        "central air",
-        "climate",
-        "climate control",
-        "comfort",
-        "conditioning",
-        "control",
-        "ductwork",
-        "environment",
-        "fan",
-        "heat",
-        "heating",
-        "hvac",
-        "interior",
-        "settings",
-        "smart home",
-        "system",
-        "temperature",
-        "temperature control",
-        "thermostat",
-        "vent",
-        "ventilation",
-        "wind"
       ]
     },
     {
@@ -18648,53 +18343,6 @@
         "travel",
         "up",
         "wayfinding"
-      ]
-    },
-    {
-      "concept": "COUNTERTOPS",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "LOCATION_SOLID"
-      },
-      "confidence": 0.3361,
-      "grade": "low",
-      "reason": "name=[] semantic=['place', 'solid'] extra=[]",
-      "tags": [
-        "abstract",
-        "bathroom",
-        "block",
-        "building",
-        "commercial",
-        "construction",
-        "counter",
-        "countertops",
-        "decor",
-        "design element",
-        "flat",
-        "furniture",
-        "home",
-        "horizontal",
-        "house",
-        "interior design",
-        "kitchen",
-        "laminate",
-        "line",
-        "material",
-        "outline",
-        "plane",
-        "renovation",
-        "residential",
-        "room",
-        "shape",
-        "simple",
-        "sink",
-        "slab",
-        "solid",
-        "stone",
-        "surface",
-        "table",
-        "tops",
-        "wood"
       ]
     },
     {
@@ -22942,49 +22590,6 @@
       ]
     },
     {
-      "concept": "BEDROOM_PARENT",
-      "target": {
-        "kind": "system_symbol",
-        "value": "bed.double"
-      },
-      "confidence": 0.5092,
-      "grade": "low",
-      "reason": "name=[] semantic=['bed', 'double', 'sleep'] extra=[]",
-      "tags": [
-        "adult",
-        "bed",
-        "bedroom",
-        "building",
-        "child",
-        "children",
-        "domestic",
-        "double",
-        "dwelling",
-        "family",
-        "full",
-        "furniture",
-        "guardian",
-        "home",
-        "hotel",
-        "house",
-        "kids",
-        "king",
-        "night",
-        "parent",
-        "parents",
-        "pillows",
-        "queen",
-        "relaxation",
-        "residential",
-        "rest",
-        "room",
-        "sizem master",
-        "sleep",
-        "sleeping",
-        "structure"
-      ]
-    },
-    {
       "concept": "SUNNY_SNOWING",
       "target": {
         "kind": "system_symbol",
@@ -23674,48 +23279,6 @@
       ]
     },
     {
-      "concept": "FLATWARE",
-      "target": {
-        "kind": "system_symbol",
-        "value": "fork.knife"
-      },
-      "confidence": 0.556,
-      "grade": "low",
-      "reason": "name=[] semantic=['food', 'fork', 'knife'] extra=[]",
-      "tags": [
-        "cafe",
-        "cafeteria",
-        "catering",
-        "cooking",
-        "cutlery",
-        "diner",
-        "dining",
-        "dinner",
-        "dishware",
-        "eat",
-        "eating",
-        "flatware",
-        "food",
-        "fork",
-        "glyph",
-        "kitchen",
-        "knife",
-        "local",
-        "meal",
-        "menu",
-        "outline",
-        "pictogram",
-        "restaurant",
-        "serving",
-        "silverware",
-        "simple",
-        "spoon",
-        "table setting",
-        "tools",
-        "utensils"
-      ]
-    },
-    {
       "concept": "TEXT_ROTATION_DOWN",
       "target": {
         "kind": "cupertino_glyph",
@@ -23962,46 +23525,6 @@
         "shutter",
         "slash",
         "visual media"
-      ]
-    },
-    {
-      "concept": "CLOUDY_SNOWING",
-      "target": {
-        "kind": "system_symbol",
-        "value": "cloud"
-      },
-      "confidence": 0.5698,
-      "grade": "low",
-      "reason": "name=[] semantic=['cloud', 'weather'] extra=[]",
-      "tags": [
-        "atmospheric",
-        "climate",
-        "cloud",
-        "cold",
-        "flakes",
-        "forecast",
-        "freezing",
-        "frosty",
-        "frozen",
-        "meteorology",
-        "nature",
-        "outdoors",
-        "precipitation",
-        "season",
-        "sky",
-        "snow",
-        "snowflake",
-        "snowing",
-        "snowy",
-        "storm",
-        "temperature",
-        "weather",
-        "weather app",
-        "weather conditions",
-        "weather widget",
-        "white",
-        "winter",
-        "winter weather"
       ]
     },
     {
@@ -24418,39 +23941,6 @@
         "turn off silent",
         "uninterrupted",
         "volume on"
-      ]
-    },
-    {
-      "concept": "SNOWING",
-      "target": {
-        "kind": "system_symbol",
-        "value": "snowflake"
-      },
-      "confidence": 0.5903,
-      "grade": "low",
-      "reason": "name=[] semantic=['snowflake', 'weather'] extra=[]",
-      "tags": [
-        "circles",
-        "climate",
-        "cold",
-        "dots",
-        "environment",
-        "falling",
-        "forecast",
-        "frost",
-        "frozen",
-        "icy",
-        "nature",
-        "outdoors",
-        "particles",
-        "precipitation",
-        "season",
-        "snow",
-        "snowflake",
-        "snowing",
-        "temperature",
-        "weather",
-        "winter"
       ]
     },
     {
@@ -24878,110 +24368,6 @@
         "two people",
         "virus",
         "warning"
-      ]
-    },
-    {
-      "concept": "LIGHT",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "LIGHT_MAX"
-      },
-      "confidence": 0.6029,
-      "grade": "low",
-      "reason": "name=['light'] semantic=['light'] extra=['max']",
-      "tags": [
-        "abstract",
-        "adjust",
-        "basic",
-        "bright",
-        "brightness",
-        "bulb",
-        "ceiling",
-        "concept",
-        "control",
-        "electricity",
-        "energy",
-        "glow",
-        "hanging",
-        "idea",
-        "illumination",
-        "indicator",
-        "inside",
-        "interior",
-        "lamp",
-        "light",
-        "lighting",
-        "minimal",
-        "modern",
-        "off",
-        "on",
-        "outline",
-        "pendent",
-        "power",
-        "preference",
-        "room",
-        "setting",
-        "shine",
-        "sign",
-        "simple",
-        "switch",
-        "symbol",
-        "toggle"
-      ]
-    },
-    {
-      "concept": "AUTO_MODE",
-      "target": {
-        "kind": "system_symbol",
-        "value": "character"
-      },
-      "confidence": 0.6041,
-      "grade": "low",
-      "reason": "name=[] semantic=['a', 'character'] extra=[]",
-      "tags": [
-        "a",
-        "ai",
-        "alphabet",
-        "around",
-        "arrow",
-        "arrows",
-        "artificial",
-        "auto",
-        "auto mode",
-        "automatic",
-        "automation",
-        "character",
-        "configuration",
-        "control",
-        "custom",
-        "direction",
-        "feature",
-        "function",
-        "genai",
-        "inprogress",
-        "intelligence",
-        "letter a",
-        "letters",
-        "load",
-        "loading refresh",
-        "magic",
-        "mode",
-        "navigation",
-        "nest",
-        "option",
-        "preference",
-        "renew",
-        "rotate",
-        "selection",
-        "setting",
-        "smart",
-        "spark",
-        "sparkle",
-        "star",
-        "switch",
-        "text",
-        "toggle",
-        "turn"
       ]
     },
     {
@@ -29091,48 +28477,6 @@
       ]
     },
     {
-      "concept": "SUNNY",
-      "target": {
-        "kind": "system_symbol",
-        "value": "rays"
-      },
-      "confidence": 0.7379,
-      "grade": "medium",
-      "reason": "name=[] semantic=['light', 'rays'] extra=[]",
-      "tags": [
-        "astronomy",
-        "beam",
-        "bright",
-        "circle",
-        "climate",
-        "condition",
-        "day",
-        "daylight",
-        "energy",
-        "environment",
-        "forecast",
-        "glow",
-        "happy",
-        "hot",
-        "light",
-        "meteorology",
-        "nature",
-        "outdoor",
-        "radiance",
-        "rays",
-        "shine",
-        "solar",
-        "summer",
-        "sun",
-        "sunny",
-        "temperature",
-        "warm",
-        "weather",
-        "weather app",
-        "yellow"
-      ]
-    },
-    {
       "concept": "NETWORK_WIFI_1_BAR",
       "target": {
         "kind": "system_symbol",
@@ -29226,51 +28570,6 @@
         "textbook",
         "university",
         "university icon"
-      ]
-    },
-    {
-      "concept": "DINING",
-      "target": {
-        "kind": "system_symbol",
-        "value": "fork.knife"
-      },
-      "confidence": 0.7476,
-      "grade": "medium",
-      "reason": "name=[] semantic=['drink', 'food', 'fork', 'knife'] extra=[]",
-      "tags": [
-        "beverage",
-        "bistro",
-        "breakfast",
-        "cafe",
-        "cafeteria",
-        "canteen",
-        "cuisine",
-        "cutlery",
-        "diner",
-        "dining",
-        "dinner",
-        "drink",
-        "eat",
-        "eating",
-        "fine dining",
-        "food",
-        "fork",
-        "hunger",
-        "kitchen",
-        "knife",
-        "lunch",
-        "meal",
-        "nourish",
-        "plateware",
-        "restaurant",
-        "room",
-        "satisfy",
-        "service",
-        "serving",
-        "silverware",
-        "spoon",
-        "table",
-        "taste"
       ]
     },
     {
@@ -30463,44 +29762,6 @@
         "sweet",
         "symbol",
         "treat"
-      ]
-    },
-    {
-      "concept": "BROADCAST_ON_PERSONAL",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "SQUARE_FILL_ON_SQUARE_FILL"
-      },
-      "confidence": 0.7932,
-      "grade": "medium",
-      "reason": "name=['on'] semantic=['on'] extra=['square']",
-      "tags": [
-        "account",
-        "antenna",
-        "avatar",
-        "broadcast",
-        "communication",
-        "connection",
-        "digital",
-        "feed",
-        "internet",
-        "live",
-        "me",
-        "network",
-        "online",
-        "person",
-        "personal",
-        "profile",
-        "publish",
-        "radiating",
-        "sharing",
-        "signal",
-        "social",
-        "stream",
-        "transmit",
-        "update",
-        "user",
-        "wave"
       ]
     },
     {
