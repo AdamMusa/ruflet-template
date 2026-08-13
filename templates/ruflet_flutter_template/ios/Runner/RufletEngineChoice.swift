@@ -1,5 +1,6 @@
 import Foundation
 import RufletApple
+import RufletAppExtensions
 
 // The optional extension modules. `canImport` is what makes them optional: a
 // target that does not link one simply compiles this file without it, so
@@ -97,7 +98,11 @@ enum RufletEngineChoice {
   /// added to the app target, their `canImport` branches belong here; the core
   /// renderer never imports their SDKs.
   static var extensions: [any RufletExtension.Type] {
-    var extensions: [any RufletExtension.Type] = []
+    // Application extensions are queried first, exactly like Flet's ordered
+    // FletExtension list. The CLI copies the developer-owned
+    // <project>/apple_extensions package beside the managed Apple engine, so
+    // regenerating the Flutter client never overwrites custom native code.
+    var extensions = RufletAppExtensionRegistry.extensions
     #if canImport(RufletMotion)
       extensions.append(RufletMotion.self)
     #endif

@@ -22,6 +22,7 @@
 
 /* Begin PBXBuildFile section */
 		F6EC9A513828690912E05F6D /* RufletEngineChoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39B0B9FF9288DD7CB7DE1C5C /* RufletEngineChoice.swift */; };
+		D30000000000000000000001 /* RufletAppExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = D40000000000000000000001 /* RufletAppExtensions */; };
 		A0264B45B9710F667105E4C8 /* RufletApple in Frameworks */ = {isa = PBXBuildFile; productRef = 5ED77199B3D9F2297851A757 /* RufletApple */; };
 		BC05365026C7F21FF1831F30 /* RufletMotion in Frameworks */ = {isa = PBXBuildFile; productRef = B4A410B5E2D8C74FB9A2BECE /* RufletMotion */; };
 		A20000000000000000000001 /* RufletGeolocator in Frameworks */ = {isa = PBXBuildFile; productRef = B20000000000000000000001 /* RufletGeolocator */; };
@@ -126,6 +127,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D30000000000000000000001 /* RufletAppExtensions in Frameworks */,
 				A0264B45B9710F667105E4C8 /* RufletApple in Frameworks */,
 				BC05365026C7F21FF1831F30 /* RufletMotion in Frameworks */,
 				A20000000000000000000001 /* RufletGeolocator in Frameworks */,
@@ -294,6 +296,7 @@
 			);
 			name = Runner;
 			packageProductDependencies = (
+				D40000000000000000000001 /* RufletAppExtensions */,
 				5ED77199B3D9F2297851A757 /* RufletApple */,
 				B4A410B5E2D8C74FB9A2BECE /* RufletMotion */,
 				B20000000000000000000001 /* RufletGeolocator */,
@@ -360,6 +363,7 @@
 				Base,
 			);
 			packageReferences = (
+				D50000000000000000000001 /* XCLocalSwiftPackageReference "../apple_extensions" */,
 				C894E0AD59020B5CC84739B7 /* XCLocalSwiftPackageReference "../apple_packages/ruflet_apple" */,
 			);
 			mainGroup = 33CC10E42044A3C60003C045;
@@ -870,6 +874,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		D40000000000000000000001 /* RufletAppExtensions */ = {isa = XCSwiftPackageProductDependency; package = D50000000000000000000001 /* XCLocalSwiftPackageReference "../apple_extensions" */; productName = RufletAppExtensions; };
 		5ED77199B3D9F2297851A757 /* RufletApple */ = {isa = XCSwiftPackageProductDependency; productName = RufletApple; };
 		B4A410B5E2D8C74FB9A2BECE /* RufletMotion */ = {isa = XCSwiftPackageProductDependency; productName = RufletMotion; };
 		B20000000000000000000001 /* RufletGeolocator */ = {isa = XCSwiftPackageProductDependency; productName = RufletGeolocator; };
@@ -894,6 +899,10 @@
 /* End XCSwiftPackageProductDependency section */
 
 /* Begin XCLocalSwiftPackageReference section */
+		D50000000000000000000001 /* XCLocalSwiftPackageReference "../apple_extensions" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../apple_extensions;
+		};
 		C894E0AD59020B5CC84739B7 /* XCLocalSwiftPackageReference "../apple_packages/ruflet_apple" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../apple_packages/ruflet_apple;

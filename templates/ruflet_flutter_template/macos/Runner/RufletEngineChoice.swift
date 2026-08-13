@@ -1,5 +1,6 @@
 import Foundation
 import RufletApple
+import RufletAppExtensions
 
 // The optional service modules. `canImport` is what makes them optional: a
 // target that does not link one simply compiles this file without it, so
@@ -91,7 +92,10 @@ enum RufletEngineChoice {
 
   /// The optional service modules this target links.
   static var extensions: [any RufletExtension.Type] {
-    var extensions: [any RufletExtension.Type] = []
+    // Application extensions are queried before optional built-in products.
+    // This package is copied from <project>/apple_extensions and is shared by
+    // server-driven and self-contained startup.
+    var extensions = RufletAppExtensionRegistry.extensions
     #if canImport(RufletMotion)
       extensions.append(RufletMotion.self)
     #endif
