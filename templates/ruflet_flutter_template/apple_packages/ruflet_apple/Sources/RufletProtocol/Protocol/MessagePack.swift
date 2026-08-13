@@ -47,6 +47,12 @@ public enum RufletMessagePack {
         writeString(key, to: &bytes)
         write(value, to: &bytes)
       }
+    case .keyedMap(let values):
+      writeMapHeader(values.count, to: &bytes)
+      for (key, value) in values {
+        write(key.value, to: &bytes)
+        write(value, to: &bytes)
+      }
     case .extensionValue(let type, let payload):
       let count = payload.count
       if count <= 0xff { bytes += [0xc7, UInt8(count)] }
@@ -191,14 +197,28 @@ public enum RufletMessagePack {
     }
 
     mutating func map(_ count: Int) throws -> RufletValue {
-      var result: [String: RufletValue] = [:]
+      var result: [RufletMapKey: RufletValue] = [:]
+      var hasIntegerKey = false
       for _ in 0 ..< count {
-        guard case .string(let key) = try readValue() else {
+        let key: RufletMapKey
+        switch try readValue() {
+        case .string(let value):
+          key = .string(value)
+        case .int(let value):
+          key = .int(value)
+          hasIntegerKey = true
+        default:
           throw RufletProtocolError.invalidMessage
         }
         result[key] = try readValue()
       }
-      return .map(result)
+      if hasIntegerKey { return .keyedMap(result) }
+      return .map(Dictionary(uniqueKeysWithValues: result.map { entry in
+        guard case .string(let key) = entry.key else {
+          preconditionFailure("String-only MessagePack map contained a non-string key")
+        }
+        return (key, entry.value)
+      }))
     }
 
     mutating func extensionValue(_ count: Int) throws -> RufletValue {

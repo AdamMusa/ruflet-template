@@ -45,6 +45,56 @@ final class MessagePackTests: XCTestCase {
     XCTAssertEqual(bytes(for: -129), [0xd1, 0xff, 0x7f])
   }
 
+  func testIntegerMapKeysRoundTripWithoutStringCoercion() throws {
+    let value = RufletValue.keyedMap([
+      .string("children"): .array([1, 2]),
+      .int(0): .array([3, 4]),
+      .int(12): "position",
+    ])
+
+    let decoded = try RufletMessagePack.decode(RufletMessagePack.encode(value))
+    XCTAssertEqual(decoded, value)
+    XCTAssertEqual(decoded.keyedMap?[.int(0)], .array([3, 4]))
+    XCTAssertNil(decoded.map)
+  }
+
+  func testStringOnlyMapsPreserveSourceCompatibleRepresentation() throws {
+    let value: RufletValue = ["route": "/", "page": ["width": 390]]
+    let decoded = try RufletMessagePack.decode(RufletMessagePack.encode(value))
+
+    XCTAssertEqual(decoded, value)
+    XCTAssertNotNil(decoded.map)
+    XCTAssertEqual(decoded.keyedMap?[.string("route")], "/")
+  }
+
+  func testPatchTreeIndexRetainsPropertyAndPositionKeyTypes() throws {
+    let tree = RufletValue.keyedMap([
+      .string("data_series"): .array([
+        1,
+        .keyedMap([
+          .int(0): .array([
+            2,
+            .map(["data_points": .array([3])]),
+          ]),
+        ]),
+      ]),
+    ])
+    let patch: RufletValue = .array([
+      .array([0, tree]),
+      .array([2, 3, 1]),
+    ])
+
+    let decoded = try RufletMessagePack.decode(RufletMessagePack.encode(patch))
+    guard let decodedTree = decoded.array?.first?.array?[1] else {
+      return XCTFail("patch tree index must survive the wire round trip")
+    }
+    XCTAssertNotNil(decodedTree.keyedMap?[.string("data_series")])
+    let positionMap = decodedTree.keyedMap?[.string("data_series")]?
+      .array?[1].keyedMap
+    XCTAssertNotNil(positionMap?[.int(0)])
+    XCTAssertNil(positionMap?[.string("0")])
+  }
+
   func testTemporalExtensionsMatchPinnedFletPayloads() {
     XCTAssertEqual(
       RufletMessagePack.temporalTime(hour: 9, minute: 5),

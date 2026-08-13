@@ -1,5 +1,22 @@
 import Foundation
 
+/// A MessagePack map key used by Flet's wire protocol.
+///
+/// Ordinary protocol bodies use string keys and remain represented by
+/// `RufletValue.map`. Flet control patch tree indexes also use integer keys
+/// for list positions, so those maps require an exact, lossless key type.
+public enum RufletMapKey: Hashable, Sendable {
+  case string(String)
+  case int(Int64)
+
+  public var value: RufletValue {
+    switch self {
+    case .string(let value): return .string(value)
+    case .int(let value): return .int(value)
+    }
+  }
+}
+
 /// A value in Flet's MessagePack protocol.
 ///
 /// The cases intentionally match the wire type system. Renderer-specific
@@ -13,6 +30,7 @@ public enum RufletValue: Equatable, Sendable {
   case binary(Data)
   case array([RufletValue])
   case map([String: RufletValue])
+  case keyedMap([RufletMapKey: RufletValue])
   case extensionValue(type: Int8, payload: Data)
 
   public var isNull: Bool {
@@ -51,6 +69,19 @@ public enum RufletValue: Equatable, Sendable {
   public var map: [String: RufletValue]? {
     guard case .map(let value) = self else { return nil }
     return value
+  }
+
+  public var keyedMap: [RufletMapKey: RufletValue]? {
+    switch self {
+    case .map(let value):
+      return Dictionary(uniqueKeysWithValues: value.map {
+        (.string($0.key), $0.value)
+      })
+    case .keyedMap(let value):
+      return value
+    default:
+      return nil
+    }
   }
 
   public subscript(_ key: String) -> RufletValue? { map?[key] }

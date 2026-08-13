@@ -5,7 +5,18 @@ public struct RufletInvokeMethodRequestBody: Equatable, Sendable {
   public let callID: String
   public let name: String
   public let arguments: RufletValue
-  public let timeout: Duration
+  /// Pinned Flet wire timeout in seconds.
+  ///
+  /// `Duration` and `Task.sleep(for:)` require iOS 16. Keeping the protocol
+  /// value as `TimeInterval` preserves the exact integer-seconds wire contract
+  /// while allowing the Apple engine to remain deployable on iOS 15.
+  public let timeoutSeconds: TimeInterval
+
+  public var timeoutNanoseconds: UInt64 {
+    guard timeoutSeconds > 0 else { return 0 }
+    let value = timeoutSeconds * 1_000_000_000
+    return value >= Double(UInt64.max) ? UInt64.max : UInt64(value)
+  }
 
   public init(value: RufletValue) throws {
     guard let map = value.map else { throw RufletProtocolError.invalidMessage }
@@ -23,6 +34,6 @@ public struct RufletInvokeMethodRequestBody: Equatable, Sendable {
     self.callID = callID
     self.name = name
     self.arguments = map["args"] ?? .null
-    self.timeout = .seconds(timeoutSeconds)
+    self.timeoutSeconds = TimeInterval(timeoutSeconds)
   }
 }

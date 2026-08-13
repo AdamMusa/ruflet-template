@@ -99,7 +99,9 @@ final class ProtocolBodyTests: XCTestCase {
     XCTAssertEqual(body.callID, "call-1")
     XCTAssertEqual(body.name, "focus")
     XCTAssertEqual(body.arguments, ["select_all": true])
-    XCTAssertEqual(body.timeout, .seconds(10))
+    let timeout: TimeInterval = body.timeoutSeconds
+    XCTAssertEqual(timeout, 10)
+    XCTAssertEqual(body.timeoutNanoseconds, 10_000_000_000)
   }
 
   func testInvokeMethodResponseUsesPinnedKeysAndNullError() {
