@@ -6,7 +6,10 @@ import UIKit
 import AppKit
 #endif
 
-private let materialColors: [String: UInt32] = [
+// Flet's wire protocol accepts these named color tokens. They are decoded
+// immediately into SwiftUI.Color; no Material palette or theme object enters
+// the Apple renderer.
+private let rufletWireNamedColors: [String: UInt32] = [
     "red50": 0xffffebee, "red100": 0xffffcdd2, "red200": 0xffef9a9a,
     "red300": 0xffe57373, "red400": 0xffef5350, "red500": 0xfff44336,
     "red600": 0xffe53935, "red700": 0xffd32f2f, "red800": 0xffc62828,
@@ -105,7 +108,7 @@ private let materialColors: [String: UInt32] = [
     "bluegrey900": 0xff263238,
 ]
 
-private let materialDefaults: [String: String] = [
+private let rufletWireColorAliases: [String: String] = [
     "red": "red500", "pink": "pink500", "purple": "purple500",
     "deeppurple": "deeppurple500", "indigo": "indigo500", "blue": "blue500",
     "lightblue": "lightblue500", "cyan": "cyan500", "teal": "teal500",
@@ -146,9 +149,9 @@ public func parseColor(_ value: String?, _ defaultColor: Color? = nil) -> Color?
         color = .white.opacity(Double(percent) / 100)
     } else if let percent = Int(normalized.dropFirst(5)), normalized.hasPrefix("black") {
         color = .black.opacity(Double(percent) / 100)
-    } else if let key = materialDefaults[normalized], let argb = materialColors[key] {
+    } else if let key = rufletWireColorAliases[normalized], let argb = rufletWireNamedColors[key] {
         color = colorFromARGB(argb)
-    } else if let argb = materialColors[normalized] {
+    } else if let argb = rufletWireNamedColors[normalized] {
         color = colorFromARGB(argb)
     } else {
         color = appleNamedColor(normalized)
