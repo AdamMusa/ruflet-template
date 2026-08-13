@@ -5,6 +5,8 @@ import SwiftUI
 public struct RufletSpinKitExtension: RufletExtension {
   public init() {}
 
+  public var renderedControlTypes: Set<String> { RufletSpinKit.controlTypes }
+
   public func createView(for control: RufletControl) -> AnyView? {
     guard RufletSpinKit.controlTypes.contains(control.type) else { return nil }
     return AnyView(SpinKitControl(control: control))

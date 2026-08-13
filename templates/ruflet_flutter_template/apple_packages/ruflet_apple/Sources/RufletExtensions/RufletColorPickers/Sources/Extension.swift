@@ -5,6 +5,8 @@ import SwiftUI
 public struct RufletColorPickersExtension: RufletExtension {
   public init() {}
 
+  public var renderedControlTypes: Set<String> { RufletColorPickers.controlTypes }
+
   public func createView(for control: RufletControl) -> AnyView? {
     switch control.type {
     case "ColorPicker": AnyView(ColorPickerControl(control: control))

@@ -5,6 +5,8 @@ import SwiftUI
 public struct RufletChartsExtension: RufletExtension {
   public init() {}
 
+  public var renderedControlTypes: Set<String> { RufletCharts.controlTypes }
+
   public func createView(for control: RufletControl) -> AnyView? {
     switch control.type {
     case "BarChart": AnyView(BarChartControl(control: control))

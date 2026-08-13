@@ -9,6 +9,8 @@ public final class RufletCameraExtension: RufletExtension {
 
   public init() {}
 
+  public var renderedControlTypes: Set<String> { RufletCamera.controlTypes }
+
   public func createView(for control: RufletControl) -> AnyView? {
     guard control.type == "Camera" else { return nil }
     let controller = controller(for: control)

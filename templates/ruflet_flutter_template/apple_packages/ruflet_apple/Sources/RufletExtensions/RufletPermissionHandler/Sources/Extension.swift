@@ -4,6 +4,9 @@ import RufletEngine
 public struct RufletPermissionHandlerExtension: RufletExtension {
   public init() {}
 
+  public var renderedControlTypes: Set<String> { [] }
+  public var serviceControlTypes: Set<String> { RufletPermissionHandler.controlTypes }
+
   public func createService(for control: RufletControl) -> RufletService? {
     control.type == "PermissionHandler" ? PermissionHandlerService(control: control) : nil
   }

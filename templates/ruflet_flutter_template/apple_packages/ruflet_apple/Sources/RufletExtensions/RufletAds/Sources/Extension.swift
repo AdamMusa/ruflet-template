@@ -17,6 +17,14 @@ public struct Extension: RufletExtension {
     #endif
   }
 
+  public var serviceControlTypes: Set<String> {
+    #if os(iOS)
+    [RufletAdsPackage.interstitialType]
+    #else
+    []
+    #endif
+  }
+
   public func ensureInitialized() {
     #if os(iOS)
     MobileAds.shared.start(completionHandler: nil)
