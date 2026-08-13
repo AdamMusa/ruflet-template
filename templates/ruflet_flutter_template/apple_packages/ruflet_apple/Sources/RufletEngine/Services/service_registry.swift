@@ -48,9 +48,19 @@ public struct RufletCoreServiceExtension: RufletExtension {
     switch control.type.lowercased() {
     case "accelerometer": return AccelerometerService(control: control)
     case "barometer": return BarometerService(control: control)
+    case "battery": return BatteryService(control: control)
+    case "clipboard": return ClipboardService(control: control)
+    case "connectivity": return ConnectivityService(control: control)
     case "gyroscope": return GyroscopeService(control: control)
+    case "hapticfeedback": return HapticFeedbackService(control: control)
     case "magnetometer": return MagnetometerService(control: control)
+    case "screenbrightness": return ScreenBrightnessService(control: control)
+    case "semanticsservice": return SemanticsServiceControl(control: control)
+    case "shakedetector": return ShakeDetectorService(control: control)
+    case "sharedpreferences": return SharedPreferencesService(control: control)
+    case "storagepaths": return StoragePaths(control: control)
     case "useraccelerometer": return UserAccelerometerService(control: control)
+    case "wakelock": return WakelockService(control: control)
     default: return nil
     }
   }
