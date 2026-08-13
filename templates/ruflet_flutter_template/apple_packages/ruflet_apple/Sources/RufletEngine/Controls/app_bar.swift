@@ -28,6 +28,7 @@ struct RufletAppleAppBar: View {
   let kind: Kind
 
   var body: some View {
+    let presentation = RufletAppBarPresentation(control: control, isMaterial: kind == .appBar)
     BaseControl(control: control) {
       VStack(spacing: 0) {
         barContent
@@ -44,16 +45,22 @@ struct RufletAppleAppBar: View {
       }
       .foregroundStyle(foregroundColor ?? pageTheme?.appleContentColor ?? .primary)
       .opacity(toolbarOpacity)
-      .background { background.modifier(RufletBarSafeAreaBackground(extendsIntoTop: extendsIntoTop)) }
+      .background {
+        background(presentation)
+          .allowsHitTesting(false)
+          .modifier(RufletBarSafeAreaBackground(extendsIntoTop: extendsIntoTop))
+      }
       .overlay { borderOverlay }
-      .clipShape(barShape)
+      .modifier(RufletAppBarClipModifier(shape: barShape, presentation: presentation))
       .shadow(
-        color: shadowColor.opacity(elevation > 0 ? 0.3 : 0),
-        radius: elevation,
-        y: elevation / 2)
+        color: shadowColor.opacity(presentation.forceTransparency ? 0 : (elevation > 0 ? 0.3 : 0)),
+        radius: presentation.forceTransparency ? 0 : elevation,
+        y: presentation.forceTransparency ? 0 : elevation / 2
+      )
       .modifier(RufletBarBrightnessModifier(value: control.string("brightness")))
       .animation(
-        control.boolean("transition_between_routes", default: true) ? .easeInOut(duration: 0.25) : nil,
+        control.boolean("transition_between_routes", default: true)
+          ? .easeInOut(duration: 0.25) : nil,
         value: control.string("title") ?? String(control.child("title")?.id ?? 0))
     }
   }
@@ -96,7 +103,9 @@ struct RufletAppleAppBar: View {
       Button(action: requestPop) {
         HStack(spacing: 4) {
           Image(systemName: "chevron.backward")
-          if kind == .cupertino, let previous = control.string("previous_page_title"), !previous.isEmpty {
+          if kind == .cupertino, let previous = control.string("previous_page_title"),
+            !previous.isEmpty
+          {
             Text(previous)
           }
         }
@@ -122,10 +131,13 @@ struct RufletAppleAppBar: View {
   }
 
   @ViewBuilder
-  private var background: some View {
-    if kind == .cupertino,
-       control.boolean("automatic_background_visibility", default: true),
-       !scrolledUnder {
+  private func background(_ presentation: RufletAppBarPresentation) -> some View {
+    if presentation.forceTransparency {
+      Color.clear
+    } else if kind == .cupertino,
+      control.boolean("automatic_background_visibility", default: true),
+      !scrolledUnder
+    {
       Color.clear
     } else if let backgroundColor = backgroundColor ?? pageBarBackgroundColor {
       backgroundColor
@@ -175,22 +187,28 @@ struct RufletAppleAppBar: View {
   }
 
   private var actionsPadding: EdgeInsets {
-    parsePadding(control.dynamicValue("actions_padding")) ?? EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8)
+    parsePadding(control.dynamicValue("actions_padding"))
+      ?? EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8)
   }
 
   private var foregroundColor: Color? { parseColor(control.string("color")) }
   private var backgroundColor: Color? { parseColor(control.string("bgcolor")) }
   private var shadowColor: Color { parseColor(control.string("shadow_color")) ?? .black }
   private var elevation: Double {
-    max(scrolledUnder
-      ? control.number("elevation_on_scroll") ?? control.number("elevation") ?? 0
-      : control.number("elevation") ?? 0, 0)
+    max(
+      scrolledUnder
+        ? control.number("elevation_on_scroll") ?? control.number("elevation") ?? 0
+        : control.number("elevation") ?? 0, 0)
   }
   private var excludeHeaderSemantics: Bool {
     control.boolean("exclude_header_semantics", default: false)
   }
-  private var titleStyle: RufletTextStyle? { parseTextStyle(control.dynamicValue("title_text_style")) }
-  private var toolbarStyle: RufletTextStyle? { parseTextStyle(control.dynamicValue("toolbar_text_style")) }
+  private var titleStyle: RufletTextStyle? {
+    parseTextStyle(control.dynamicValue("title_text_style"))
+  }
+  private var toolbarStyle: RufletTextStyle? {
+    parseTextStyle(control.dynamicValue("toolbar_text_style"))
+  }
   private var isLarge: Bool { kind == .cupertino && control.boolean("large", default: false) }
   private var extendsIntoTop: Bool {
     kind == .cupertino || !control.boolean("secondary", default: false)
@@ -217,6 +235,21 @@ struct RufletAppleAppBar: View {
   private var barShape: RufletAppBarShape {
     RufletAppBarShape(type: shapeDetails?["_type"] as? String, radius: shapeRadius)
   }
+}
+
+@MainActor
+struct RufletAppBarPresentation {
+  let clipBehavior: String
+  let forceTransparency: Bool
+
+  init(control: RufletControl, isMaterial: Bool = true) {
+    clipBehavior = control.string("clip_behavior", default: "none")!.lowercased()
+    let forced = control.boolean("force_material_transparency", default: false)
+    forceTransparency = isMaterial && forced
+  }
+
+  var clipsContent: Bool { clipBehavior != "none" }
+  var antialiasedClip: Bool { clipBehavior.contains("antialias") }
 }
 
 private struct RufletViewScrolledUnderKey: EnvironmentKey {
@@ -257,6 +290,20 @@ private struct RufletBarBrightnessModifier: ViewModifier {
     case "light": content.environment(\.colorScheme, .light)
     case "dark": content.environment(\.colorScheme, .dark)
     default: content
+    }
+  }
+}
+
+private struct RufletAppBarClipModifier: ViewModifier {
+  let shape: RufletAppBarShape
+  let presentation: RufletAppBarPresentation
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if presentation.clipsContent {
+      content.clipShape(shape, style: FillStyle(antialiased: presentation.antialiasedClip))
+    } else {
+      content
     }
   }
 }
