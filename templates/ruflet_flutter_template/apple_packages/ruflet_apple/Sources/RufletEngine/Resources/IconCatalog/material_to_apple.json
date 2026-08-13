@@ -176,31 +176,31 @@
   },
   "ACCESSIBILITY_NEW": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "figure.stand",
     "concept": "ACCESSIBILITY_NEW",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ACCESSIBILITY_NEW_OUTLINED": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "figure.stand",
     "concept": "ACCESSIBILITY_NEW",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ACCESSIBILITY_NEW_ROUNDED": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "figure.stand",
     "concept": "ACCESSIBILITY_NEW",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ACCESSIBILITY_NEW_SHARP": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "figure.stand",
     "concept": "ACCESSIBILITY_NEW",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ACCESSIBILITY_OUTLINED": {
     "kind": "system_symbol",
@@ -17438,31 +17438,31 @@
   },
   "EMOJI_FOOD_BEVERAGE": {
     "kind": "system_symbol",
-    "value": "cup.and.saucer",
+    "value": "cup.and.saucer.fill",
     "concept": "EMOJI_FOOD_BEVERAGE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "EMOJI_FOOD_BEVERAGE_OUTLINED": {
     "kind": "system_symbol",
-    "value": "cup.and.saucer",
+    "value": "cup.and.saucer.fill",
     "concept": "EMOJI_FOOD_BEVERAGE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "EMOJI_FOOD_BEVERAGE_ROUNDED": {
     "kind": "system_symbol",
-    "value": "cup.and.saucer",
+    "value": "cup.and.saucer.fill",
     "concept": "EMOJI_FOOD_BEVERAGE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "EMOJI_FOOD_BEVERAGE_SHARP": {
     "kind": "system_symbol",
-    "value": "cup.and.saucer",
+    "value": "cup.and.saucer.fill",
     "concept": "EMOJI_FOOD_BEVERAGE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "EMOJI_NATURE": {
     "kind": "system_symbol",
@@ -17634,31 +17634,31 @@
   },
   "ENGINEERING": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "wrench.and.screwdriver.fill",
     "concept": "ENGINEERING",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ENGINEERING_OUTLINED": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "wrench.and.screwdriver.fill",
     "concept": "ENGINEERING",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ENGINEERING_ROUNDED": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "wrench.and.screwdriver.fill",
     "concept": "ENGINEERING",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ENGINEERING_SHARP": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "wrench.and.screwdriver.fill",
     "concept": "ENGINEERING",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ENHANCE_PHOTO_TRANSLATE": {
     "kind": "cupertino_glyph",
@@ -32432,10 +32432,10 @@
   },
   "MEDICATION": {
     "kind": "system_symbol",
-    "value": "pills",
+    "value": "pills.fill",
     "concept": "MEDICATION",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MEDICATION_LIQUID": {
     "kind": "system_symbol",
@@ -32467,24 +32467,24 @@
   },
   "MEDICATION_OUTLINED": {
     "kind": "system_symbol",
-    "value": "pills",
+    "value": "pills.fill",
     "concept": "MEDICATION",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MEDICATION_ROUNDED": {
     "kind": "system_symbol",
-    "value": "pills",
+    "value": "pills.fill",
     "concept": "MEDICATION",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MEDICATION_SHARP": {
     "kind": "system_symbol",
-    "value": "pills",
+    "value": "pills.fill",
     "concept": "MEDICATION",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MEETING_ROOM": {
     "kind": "system_symbol",
@@ -39320,31 +39320,31 @@
   },
   "PERSONAL_INJURY": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "bandage.fill",
     "concept": "PERSONAL_INJURY",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PERSONAL_INJURY_OUTLINED": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "bandage.fill",
     "concept": "PERSONAL_INJURY",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PERSONAL_INJURY_ROUNDED": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "bandage.fill",
     "concept": "PERSONAL_INJURY",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PERSONAL_INJURY_SHARP": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "bandage.fill",
     "concept": "PERSONAL_INJURY",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PERSONAL_VIDEO": {
     "kind": "system_symbol",
@@ -45283,32 +45283,32 @@
     "source": "semantic_rank"
   },
   "SAFETY_DIVIDER": {
-    "kind": "cupertino_glyph",
-    "value": "DIVIDE",
+    "kind": "system_symbol",
+    "value": "figure.stand.line.dotted.figure.stand",
     "concept": "SAFETY_DIVIDER",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SAFETY_DIVIDER_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "DIVIDE",
+    "kind": "system_symbol",
+    "value": "figure.stand.line.dotted.figure.stand",
     "concept": "SAFETY_DIVIDER",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SAFETY_DIVIDER_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "DIVIDE",
+    "kind": "system_symbol",
+    "value": "figure.stand.line.dotted.figure.stand",
     "concept": "SAFETY_DIVIDER",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SAFETY_DIVIDER_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "DIVIDE",
+    "kind": "system_symbol",
+    "value": "figure.stand.line.dotted.figure.stand",
     "concept": "SAFETY_DIVIDER",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SAILING": {
     "kind": "cupertino_glyph",
@@ -45760,31 +45760,31 @@
   },
   "SCIENCE": {
     "kind": "cupertino_glyph",
-    "value": "LAB_FLASK",
+    "value": "LAB_FLASK_SOLID",
     "concept": "SCIENCE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SCIENCE_OUTLINED": {
     "kind": "cupertino_glyph",
-    "value": "LAB_FLASK",
+    "value": "LAB_FLASK_SOLID",
     "concept": "SCIENCE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SCIENCE_ROUNDED": {
     "kind": "cupertino_glyph",
-    "value": "LAB_FLASK",
+    "value": "LAB_FLASK_SOLID",
     "concept": "SCIENCE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SCIENCE_SHARP": {
     "kind": "cupertino_glyph",
-    "value": "LAB_FLASK",
+    "value": "LAB_FLASK_SOLID",
     "concept": "SCIENCE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SCORE": {
     "kind": "system_symbol",
@@ -49071,31 +49071,31 @@
   },
   "SIX_FT_APART": {
     "kind": "system_symbol",
-    "value": "arrow.left.and.right",
+    "value": "figure.stand.line.dotted.figure.stand",
     "concept": "SIX_FT_APART",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIX_FT_APART_OUTLINED": {
     "kind": "system_symbol",
-    "value": "arrow.left.and.right",
+    "value": "figure.stand.line.dotted.figure.stand",
     "concept": "SIX_FT_APART",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIX_FT_APART_ROUNDED": {
     "kind": "system_symbol",
-    "value": "arrow.left.and.right",
+    "value": "figure.stand.line.dotted.figure.stand",
     "concept": "SIX_FT_APART",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIX_FT_APART_SHARP": {
     "kind": "system_symbol",
-    "value": "arrow.left.and.right",
+    "value": "figure.stand.line.dotted.figure.stand",
     "concept": "SIX_FT_APART",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIX_K": {
     "kind": "system_symbol",
@@ -49890,31 +49890,31 @@
   },
   "SOCIAL_DISTANCE": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "figure.stand.line.dotted.figure.stand",
     "concept": "SOCIAL_DISTANCE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SOCIAL_DISTANCE_OUTLINED": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "figure.stand.line.dotted.figure.stand",
     "concept": "SOCIAL_DISTANCE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SOCIAL_DISTANCE_ROUNDED": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "figure.stand.line.dotted.figure.stand",
     "concept": "SOCIAL_DISTANCE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SOCIAL_DISTANCE_SHARP": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "figure.stand.line.dotted.figure.stand",
     "concept": "SOCIAL_DISTANCE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SOLAR_POWER": {
     "kind": "cupertino_glyph",
@@ -57751,31 +57751,31 @@
   },
   "VACCINES": {
     "kind": "system_symbol",
-    "value": "pills",
+    "value": "cross.vial.fill",
     "concept": "VACCINES",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VACCINES_OUTLINED": {
     "kind": "system_symbol",
-    "value": "pills",
+    "value": "cross.vial.fill",
     "concept": "VACCINES",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VACCINES_ROUNDED": {
     "kind": "system_symbol",
-    "value": "pills",
+    "value": "cross.vial.fill",
     "concept": "VACCINES",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VACCINES_SHARP": {
     "kind": "system_symbol",
-    "value": "pills",
+    "value": "cross.vial.fill",
     "concept": "VACCINES",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VAPE_FREE": {
     "kind": "cupertino_glyph",

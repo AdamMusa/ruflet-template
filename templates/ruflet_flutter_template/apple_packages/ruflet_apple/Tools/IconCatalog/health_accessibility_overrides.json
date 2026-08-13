@@ -1,0 +1,52 @@
+{
+  "ACCESSIBILITY_NEW": {
+    "kind": "system_symbol",
+    "value": "figure.stand",
+    "rationale": "public Apple standing-figure accessibility identity"
+  },
+  "EMOJI_FOOD_BEVERAGE": {
+    "kind": "system_symbol",
+    "value": "cup.and.saucer.fill",
+    "rationale": "public Apple hot beverage and refreshment identity"
+  },
+  "ENGINEERING": {
+    "kind": "system_symbol",
+    "value": "wrench.and.screwdriver.fill",
+    "rationale": "public Apple engineering and technical-tools identity"
+  },
+  "MEDICATION": {
+    "kind": "system_symbol",
+    "value": "pills.fill",
+    "rationale": "public Apple medication and pharmaceutical identity"
+  },
+  "PERSONAL_INJURY": {
+    "kind": "system_symbol",
+    "value": "bandage.fill",
+    "rationale": "public Apple injury and treatment identity"
+  },
+  "SAFETY_DIVIDER": {
+    "kind": "system_symbol",
+    "value": "figure.stand.line.dotted.figure.stand",
+    "rationale": "public Apple two-person safety-separation identity"
+  },
+  "SCIENCE": {
+    "kind": "cupertino_glyph",
+    "value": "LAB_FLASK_SOLID",
+    "rationale": "bundled Cupertino laboratory-flask identity for science"
+  },
+  "SIX_FT_APART": {
+    "kind": "system_symbol",
+    "value": "figure.stand.line.dotted.figure.stand",
+    "rationale": "public Apple two-person distance identity for the legacy six-feet-apart spelling"
+  },
+  "SOCIAL_DISTANCE": {
+    "kind": "system_symbol",
+    "value": "figure.stand.line.dotted.figure.stand",
+    "rationale": "public Apple two-person social-distance identity"
+  },
+  "VACCINES": {
+    "kind": "system_symbol",
+    "value": "cross.vial.fill",
+    "rationale": "public Apple medical-vial identity for vaccination"
+  }
+}

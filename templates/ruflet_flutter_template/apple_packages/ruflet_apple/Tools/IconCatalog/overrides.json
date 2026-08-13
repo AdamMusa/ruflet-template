@@ -699,12 +699,6 @@
     "value": "trophy.fill",
     "rationale": "curated Material-to-SF vocabulary"
   },
-  "EMOJI_FOOD_BEVERAGE": {
-    "kind": "system_symbol",
-    "value": "cup.and.saucer",
-    "rationale": "native Apple hot beverage",
-    "status": "review_required"
-  },
   "ERROR": {
     "kind": "system_symbol",
     "value": "exclamationmark.octagon.fill",
@@ -1248,12 +1242,6 @@
     "value": "map.fill",
     "rationale": "curated Material-to-SF vocabulary"
   },
-  "MEDICATION": {
-    "kind": "system_symbol",
-    "value": "pills",
-    "rationale": "native Apple medication",
-    "status": "review_required"
-  },
   "MEMORY": {
     "kind": "system_symbol",
     "value": "memorychip",
@@ -1728,11 +1716,6 @@
     "value": "graduationcap.fill",
     "rationale": "curated Material-to-SF vocabulary"
   },
-  "SCIENCE": {
-    "kind": "system_symbol",
-    "value": "flask.fill",
-    "rationale": "curated Material-to-SF vocabulary"
-  },
   "SEARCH": {
     "kind": "cupertino_glyph",
     "value": "SEARCH",
@@ -1839,12 +1822,6 @@
     "kind": "system_symbol",
     "value": "video",
     "rationale": "native Apple video identity for a frame-rate label",
-    "status": "review_required"
-  },
-  "SIX_FT_APART": {
-    "kind": "system_symbol",
-    "value": "arrow.left.and.right",
-    "rationale": "native Apple distancing direction",
     "status": "review_required"
   },
   "SIX_K": {
@@ -2207,12 +2184,6 @@
     "kind": "system_symbol",
     "value": "doc.badge.arrow.up",
     "rationale": "curated Material-to-SF vocabulary"
-  },
-  "VACCINES": {
-    "kind": "system_symbol",
-    "value": "pills",
-    "rationale": "iOS 15 has no syringe symbol; native medicine identity",
-    "status": "review_required"
   },
   "VERIFIED": {
     "kind": "system_symbol",

@@ -796,6 +796,51 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             self.assertEqual(self.entries[material_name]["kind"], kind)
             self.assertEqual(self.entries[material_name]["value"], value)
 
+    def test_health_accessibility_family_is_reviewed_native_artwork(self):
+        family = MODULE.load_json(MODULE.HEALTH_ACCESSIBILITY_OVERRIDES_PATH)
+        low_confidence = {
+            item["concept"] for item in self.audit["low_confidence_concepts"]
+        }
+        self.assertEqual(
+            self.audit["reviewed_families"]["health_accessibility"],
+            len(family),
+        )
+        self.assertTrue(set(family).isdisjoint(low_confidence))
+        for concept, target in family.items():
+            entry = self.entries[concept]
+            self.assertEqual(entry["kind"], target["kind"])
+            self.assertEqual(entry["value"], target["value"])
+            self.assertEqual(entry["confidence"], "reviewed")
+            self.assertEqual(entry["source"], "reviewed_override")
+
+    def test_health_accessibility_distinct_semantics_do_not_regress(self):
+        expected = {
+            "ACCESSIBILITY_NEW": ("system_symbol", "figure.stand"),
+            "EMOJI_FOOD_BEVERAGE": (
+                "system_symbol",
+                "cup.and.saucer.fill",
+            ),
+            "ENGINEERING": (
+                "system_symbol",
+                "wrench.and.screwdriver.fill",
+            ),
+            "MEDICATION": ("system_symbol", "pills.fill"),
+            "PERSONAL_INJURY": ("system_symbol", "bandage.fill"),
+            "SCIENCE": ("cupertino_glyph", "LAB_FLASK_SOLID"),
+            "SIX_FT_APART": (
+                "system_symbol",
+                "figure.stand.line.dotted.figure.stand",
+            ),
+            "SOCIAL_DISTANCE": (
+                "system_symbol",
+                "figure.stand.line.dotted.figure.stand",
+            ),
+            "VACCINES": ("system_symbol", "cross.vial.fill"),
+        }
+        for material_name, (kind, value) in expected.items():
+            self.assertEqual(self.entries[material_name]["kind"], kind)
+            self.assertEqual(self.entries[material_name]["value"], value)
+
     def test_checked_in_artifacts_are_reproducible(self):
         self.assertEqual(
             MODULE.OUTPUT_PATH.read_text(encoding="utf-8"),

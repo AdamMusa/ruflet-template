@@ -58,6 +58,9 @@ security-good/security-warning status concepts live in
 Reviewed screen presentation, SIP calling, phone-link state, verified domains,
 generic messenger aliases, and contact-card aliases live in
 `communication_access_overrides.json`.
+Reviewed accessibility, science, medication, vaccination, personal injury,
+engineering, refreshments, and physical-distance safety concepts live in
+`health_accessibility_overrides.json`.
 
 The 8,825 identities contain 2,235 concepts because Flet carries Outlined,
 Rounded, and Sharp Material variants. The generator records the collapsed

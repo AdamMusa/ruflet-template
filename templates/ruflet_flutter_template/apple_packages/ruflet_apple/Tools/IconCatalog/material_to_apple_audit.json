@@ -14,7 +14,7 @@
     "material_icons.json": "be2d1dee6c40a5dfeaacd8fe415301db3d7c976e6eabc7fca9da734cc5abfb85",
     "cupertino_glyphs.json": "dad0be1db615640c1a0dd86365f71d0dfa2ec01ed3e2773188895006d21ad012",
     "material_semantics.json": "b3a0e564b3661355757107b929add9bc22b8fd86e2038d12aaf3b7dac380d2dd",
-    "overrides.json": "bc36565ed42fcdbfa0e29d6926533d5f07b3391db3b2ce6812297d2a8e22e538",
+    "overrides.json": "86ac1288b09b4d9828bb1ca76cf5055068a1aa8aa879b2c4c2784a8a619e0409",
     "navigation_travel_overrides.json": "63fcf29579be8fab701bdf81b1b345a710ed66f91cf9e764fd91f008ac3b796c",
     "action_overrides.json": "1d0cb0f7ee23bba2caa6204baf5671e602124149451c28c778ba57bf00f1fad5",
     "maps_places_overrides.json": "0cc97806c2536763422e12967a7cdc7cbba78c39451f8b92534b8bf48cef9ba7",
@@ -34,15 +34,16 @@
     "local_service_transit_overrides.json": "8b54294919edbaeef4d88939fbd6014d42649676750af5a508ac1d2a9ad74f2c",
     "device_status_overrides.json": "ef232da7d3db4a5e5ec42a7269496b16faf8875724e34f5cfec35807bddf702e",
     "communication_access_overrides.json": "06b33f539d218d6fe8ef82ca392e97fbb6538a3ad330811282fb8a4a480b2bd6",
+    "health_accessibility_overrides.json": "9ad20e71cccecc9cd17758a3464e294f60422d31c5e27885b63b677456eb5199",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/name_availability.plist": "a277cf5b63017ed497d5b6b3ea96bbee4f407b76776af41bcb52943007335b5c",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_search.plist": "29a767651ce53d8861e28d3eaa20b50d3e02a85fe5a79d557ce1fbff7fa4ebad",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_restrictions.strings": "2e1b1c3d629d26ac1e75861f33cb1cbbb3348e142a2b6c1aaf9bba546273f13b"
   },
   "sources": {
     "exact_apple_name": 48,
-    "manual_review_required": 91,
-    "reviewed_override": 958,
-    "semantic_rank": 1138
+    "manual_review_required": 87,
+    "reviewed_override": 968,
+    "semantic_rank": 1132
   },
   "reviewed_families": {
     "action": 76,
@@ -55,6 +56,7 @@
     "device_status": 13,
     "file_content": 11,
     "general": 339,
+    "health_accessibility": 10,
     "home_household": 17,
     "image_media": 57,
     "interface_action": 21,
@@ -69,21 +71,21 @@
   "confidence_grades": {
     "exact": 48,
     "high": 665,
-    "low": 474,
-    "medium": 90,
-    "reviewed": 958
+    "low": 465,
+    "medium": 89,
+    "reviewed": 968
   },
-  "unique_apple_targets": 890,
+  "unique_apple_targets": 888,
   "most_reused_targets": [
-    {
-      "kind": "system_symbol",
-      "value": "person",
-      "concept_count": 46
-    },
     {
       "kind": "system_symbol",
       "value": "plus",
       "concept_count": 44
+    },
+    {
+      "kind": "system_symbol",
+      "value": "person",
+      "concept_count": 42
     },
     {
       "kind": "cupertino_glyph",
@@ -326,7 +328,7 @@
       "concept_count": 6
     }
   ],
-  "low_confidence_count": 564,
+  "low_confidence_count": 554,
   "low_confidence_concepts": [
     {
       "concept": "SIXTY_FPS_SELECT",
@@ -4233,49 +4235,6 @@
       ]
     },
     {
-      "concept": "SCIENCE",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "LAB_FLASK"
-      },
-      "confidence": 0.2301,
-      "grade": "low",
-      "reason": "name=[] semantic=['flask', 'lab'] extra=[]",
-      "tags": [
-        "analysis",
-        "beaker",
-        "beaker icon",
-        "chemical",
-        "chemistry",
-        "chemistry icon",
-        "container",
-        "discovery",
-        "education",
-        "experiment",
-        "experiment icon",
-        "flask",
-        "fluid",
-        "glass",
-        "glassware",
-        "innovation",
-        "knowledge",
-        "lab",
-        "lab icon",
-        "laboratory",
-        "learning",
-        "liquid",
-        "reaction",
-        "research",
-        "research icon",
-        "science",
-        "scientific",
-        "solution",
-        "study",
-        "test tube",
-        "tube"
-      ]
-    },
-    {
       "concept": "RECENT_ACTORS",
       "target": {
         "kind": "system_symbol",
@@ -5992,49 +5951,6 @@
       ]
     },
     {
-      "concept": "ACCESSIBILITY_NEW",
-      "target": {
-        "kind": "system_symbol",
-        "value": "person"
-      },
-      "confidence": 0.2737,
-      "grade": "low",
-      "reason": "name=[] semantic=['people', 'person'] extra=[]",
-      "tags": [
-        "access",
-        "accessibility",
-        "accessibility icon",
-        "accessibility statement",
-        "accessible",
-        "assistance",
-        "barrier-free",
-        "body",
-        "disability",
-        "disabled",
-        "figure",
-        "handicap",
-        "help",
-        "human",
-        "inclusion",
-        "inclusive",
-        "moving",
-        "needs",
-        "new",
-        "outline",
-        "people",
-        "person",
-        "pictogram",
-        "shape",
-        "silhouette",
-        "special needs",
-        "standing",
-        "support",
-        "symbol",
-        "universal access",
-        "user"
-      ]
-    },
-    {
       "concept": "EDGESENSOR_HIGH",
       "target": {
         "kind": "system_symbol",
@@ -6125,49 +6041,6 @@
         "unsatisfied",
         "upset",
         "user"
-      ]
-    },
-    {
-      "concept": "SAFETY_DIVIDER",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "DIVIDE"
-      },
-      "confidence": 0.2766,
-      "grade": "low",
-      "reason": "name=[] semantic=['divide'] extra=[]",
-      "tags": [
-        "apart",
-        "barrier",
-        "border",
-        "boundary",
-        "delineate",
-        "demarcation",
-        "distance",
-        "divide",
-        "divider",
-        "enclosed",
-        "fenced",
-        "guarded",
-        "horizontal line",
-        "horizontal rule",
-        "isolate",
-        "limit",
-        "line",
-        "line break",
-        "line segment",
-        "protect",
-        "rule",
-        "rule off",
-        "safety",
-        "section",
-        "secure",
-        "security",
-        "segment",
-        "separate",
-        "separation",
-        "social",
-        "space"
       ]
     },
     {
@@ -15755,45 +15628,6 @@
       ]
     },
     {
-      "concept": "EMOJI_FOOD_BEVERAGE",
-      "target": {
-        "kind": "system_symbol",
-        "value": "cup.and.saucer"
-      },
-      "confidence": 0.5,
-      "grade": "low",
-      "reason": "native Apple hot beverage",
-      "tags": [
-        "beverage",
-        "break",
-        "cafe",
-        "caffeine",
-        "ceramic",
-        "coffee",
-        "cup",
-        "curve",
-        "dining",
-        "drink",
-        "emoji",
-        "food",
-        "handle",
-        "hot drink",
-        "kitchen",
-        "liquid",
-        "morning",
-        "mug",
-        "plate",
-        "refreshments",
-        "relax",
-        "restaurant",
-        "saucer",
-        "set",
-        "steam",
-        "steam lines",
-        "tea"
-      ]
-    },
-    {
       "concept": "FACEBOOK",
       "target": {
         "kind": "system_symbol",
@@ -16032,47 +15866,6 @@
       "reason": "native Apple outlined label/tag",
       "tags": [
         "label outline"
-      ]
-    },
-    {
-      "concept": "MEDICATION",
-      "target": {
-        "kind": "system_symbol",
-        "value": "pills"
-      },
-      "confidence": 0.5,
-      "grade": "low",
-      "reason": "native Apple medication",
-      "tags": [
-        "capsule",
-        "doctor",
-        "drug",
-        "drug icon",
-        "emergency",
-        "health",
-        "healthcare",
-        "healthcare icon",
-        "healthcare item",
-        "hospital",
-        "medical",
-        "medical icon",
-        "medical treatment",
-        "medication",
-        "medication icon",
-        "medicine",
-        "medicine icon",
-        "pharmaceutical",
-        "pharmacy",
-        "pharmacy icon",
-        "pill",
-        "pill icon",
-        "pills",
-        "prescription",
-        "tablet",
-        "treatment",
-        "treatment and cure",
-        "treatment icon",
-        "wellness"
       ]
     },
     {
@@ -16473,19 +16266,6 @@
       ]
     },
     {
-      "concept": "SIX_FT_APART",
-      "target": {
-        "kind": "system_symbol",
-        "value": "arrow.left.and.right"
-      },
-      "confidence": 0.5,
-      "grade": "low",
-      "reason": "native Apple distancing direction",
-      "tags": [
-        "six ft apart"
-      ]
-    },
-    {
       "concept": "SIX_K",
       "target": {
         "kind": "system_symbol",
@@ -16842,57 +16622,6 @@
       "reason": "native Apple camera identity for a megapixel label",
       "tags": [
         "two mp"
-      ]
-    },
-    {
-      "concept": "VACCINES",
-      "target": {
-        "kind": "system_symbol",
-        "value": "pills"
-      },
-      "confidence": 0.5,
-      "grade": "low",
-      "reason": "iOS 15 has no syringe symbol; native medicine identity",
-      "tags": [
-        "aid",
-        "care",
-        "circle",
-        "clinic",
-        "covid",
-        "cross",
-        "disease",
-        "doctor",
-        "dose",
-        "drug",
-        "emergency",
-        "flu shot",
-        "health",
-        "healthcare",
-        "hospital",
-        "immunity",
-        "immunization",
-        "injection",
-        "jab",
-        "line",
-        "medical",
-        "medication",
-        "medicine",
-        "needle",
-        "nurse",
-        "pharmacy",
-        "plus",
-        "prevention",
-        "protection",
-        "shot",
-        "sick",
-        "syringe",
-        "therapy",
-        "treatment",
-        "vaccination",
-        "vaccine",
-        "vaccines",
-        "vial",
-        "virus"
       ]
     },
     {
@@ -18315,59 +18044,6 @@
       ]
     },
     {
-      "concept": "PERSONAL_INJURY",
-      "target": {
-        "kind": "system_symbol",
-        "value": "person"
-      },
-      "confidence": 0.5988,
-      "grade": "low",
-      "reason": "name=[] semantic=['people', 'person'] extra=[]",
-      "tags": [
-        "accident",
-        "accident claim",
-        "aid",
-        "anatomy",
-        "arm",
-        "bandage",
-        "body",
-        "bone",
-        "broke",
-        "broken bone",
-        "broken leg",
-        "cast",
-        "crutches",
-        "disability",
-        "emergency",
-        "foot",
-        "fracture",
-        "fractured leg",
-        "health",
-        "healthcare",
-        "human",
-        "injury",
-        "insurance",
-        "leg",
-        "legal",
-        "lower limb",
-        "medical",
-        "orthopedics",
-        "pain",
-        "patient",
-        "people",
-        "person",
-        "personal",
-        "personal injury",
-        "shin",
-        "skeletal",
-        "sling",
-        "social",
-        "support",
-        "trauma",
-        "walking aid"
-      ]
-    },
-    {
       "concept": "PREGNANT_WOMAN",
       "target": {
         "kind": "system_symbol",
@@ -18554,52 +18230,6 @@
         "straight face",
         "survey",
         "user"
-      ]
-    },
-    {
-      "concept": "SOCIAL_DISTANCE",
-      "target": {
-        "kind": "system_symbol",
-        "value": "person"
-      },
-      "confidence": 0.5988,
-      "grade": "low",
-      "reason": "name=[] semantic=['people', 'person'] extra=[]",
-      "tags": [
-        "6",
-        "alert",
-        "apart",
-        "body",
-        "caution",
-        "concept",
-        "covid-19",
-        "distance",
-        "distance between people",
-        "distancing",
-        "figures",
-        "ft",
-        "health",
-        "healthcare",
-        "human",
-        "hygiene",
-        "icon",
-        "infection",
-        "medical",
-        "pandemic",
-        "people",
-        "person",
-        "prevention",
-        "public health",
-        "safety",
-        "social",
-        "social distance",
-        "space",
-        "spread",
-        "standing",
-        "symbol",
-        "two people",
-        "virus",
-        "warning"
       ]
     },
     {
@@ -20280,59 +19910,6 @@
         "user",
         "user icon",
         "user representation"
-      ]
-    },
-    {
-      "concept": "ENGINEERING",
-      "target": {
-        "kind": "system_symbol",
-        "value": "person"
-      },
-      "confidence": 0.7213,
-      "grade": "medium",
-      "reason": "name=[] semantic=['people', 'person'] extra=[]",
-      "tags": [
-        "adjustment",
-        "automation",
-        "body",
-        "building",
-        "cog",
-        "cogs",
-        "cogwheel",
-        "configuration",
-        "construction",
-        "control",
-        "customize",
-        "development",
-        "engineering",
-        "fix",
-        "fixing",
-        "function",
-        "gear",
-        "gears",
-        "hat",
-        "helmet",
-        "human",
-        "industrial",
-        "industry",
-        "machinery",
-        "maintenance",
-        "management",
-        "mechanics",
-        "operation",
-        "options",
-        "people",
-        "person",
-        "process",
-        "repair",
-        "setting",
-        "settings",
-        "setup",
-        "system",
-        "technical",
-        "technology",
-        "tools",
-        "worker"
       ]
     },
     {
