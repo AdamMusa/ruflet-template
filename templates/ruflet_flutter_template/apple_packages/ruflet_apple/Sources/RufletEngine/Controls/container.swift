@@ -79,23 +79,123 @@ private struct RufletContainerShape: Shape {
 @MainActor
 private struct RufletContainerInteractionModifier: ViewModifier {
   @ObservedObject var control: RufletControl
-  @State private var tapDownSent = false
 
+  @ViewBuilder
   func body(content: Content) -> some View {
-    content
-      .contentShape(Rectangle())
-      .onTapGesture(perform: tapped)
-      .onLongPressGesture {
-        if enabled("long_press") { control.triggerEvent("long_press") }
-      }
-      .onHover { hovering in
-        if enabled("hover") { control.triggerEvent("hover", data: .bool(hovering)) }
-      }
-      .simultaneousGesture(
+    let contract = RufletContainerInteractionContract(control: control)
+    if contract.isEnabled {
+      content
+        .contentShape(Rectangle())
+        .modifier(
+          RufletContainerTapModifier(
+            enabled: contract.handlesTap,
+            action: tapped)
+        )
+        .modifier(
+          RufletContainerLongPressModifier(
+            enabled: contract.handlesLongPress,
+            action: { control.triggerEvent("long_press") })
+        )
+        .modifier(
+          RufletContainerHoverModifier(
+            enabled: contract.handlesHover,
+            action: { control.triggerEvent("hover", data: .bool($0)) })
+        )
+        .modifier(
+          RufletContainerTapDownModifier(
+            enabled: contract.handlesTapDown,
+            control: control))
+    } else {
+      // Pinned Flet does not install MouseRegion/GestureDetector at all when
+      // this Container owns no interaction. Keeping the child untouched is
+      // essential: an inert parent recognizer must not steal a Button tap.
+      content
+    }
+  }
+
+  private func tapped() {
+    if let url = parseURL(control.dynamicValue("url")) {
+      Task { await openURL(url) }
+    }
+    if control.hasEventHandler("click") { control.triggerEvent("click") }
+  }
+}
+
+@MainActor
+struct RufletContainerInteractionContract {
+  let handlesTap: Bool
+  let handlesTapDown: Bool
+  let handlesLongPress: Bool
+  let handlesHover: Bool
+  let isEnabled: Bool
+
+  init(control: RufletControl) {
+    let handlesURL = parseURL(control.dynamicValue("url")) != nil
+    handlesTap = control.hasEventHandler("click") || handlesURL
+    handlesTapDown = control.hasEventHandler("tap_down")
+    handlesLongPress = control.hasEventHandler("long_press")
+    handlesHover = control.hasEventHandler("hover")
+    isEnabled =
+      !control.disabled
+      && (handlesTap || handlesTapDown || handlesLongPress || handlesHover)
+  }
+}
+
+private struct RufletContainerTapModifier: ViewModifier {
+  let enabled: Bool
+  let action: () -> Void
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if enabled {
+      content.onTapGesture(perform: action)
+    } else {
+      content
+    }
+  }
+}
+
+private struct RufletContainerLongPressModifier: ViewModifier {
+  let enabled: Bool
+  let action: () -> Void
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if enabled {
+      content.onLongPressGesture(perform: action)
+    } else {
+      content
+    }
+  }
+}
+
+private struct RufletContainerHoverModifier: ViewModifier {
+  let enabled: Bool
+  let action: (Bool) -> Void
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if enabled {
+      content.onHover(perform: action)
+    } else {
+      content
+    }
+  }
+}
+
+private struct RufletContainerTapDownModifier: ViewModifier {
+  let enabled: Bool
+  let control: RufletControl
+  @State private var sent = false
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if enabled {
+      content.simultaneousGesture(
         DragGesture(minimumDistance: 0)
           .onChanged { value in
-            guard !tapDownSent, enabled("tap_down") else { return }
-            tapDownSent = true
+            guard !sent else { return }
+            sent = true
             control.triggerEvent(
               "tap_down",
               data: [
@@ -104,20 +204,10 @@ private struct RufletContainerInteractionModifier: ViewModifier {
                 "g": ["x": .double(value.location.x), "y": .double(value.location.y)],
               ])
           }
-          .onEnded { _ in tapDownSent = false }
-      )
-  }
-
-  private func tapped() {
-    guard !control.disabled else { return }
-    if let url = parseURL(control.dynamicValue("url")) {
-      Task { await openURL(url) }
+          .onEnded { _ in sent = false })
+    } else {
+      content
     }
-    if enabled("click") { control.triggerEvent("click") }
-  }
-
-  private func enabled(_ name: String) -> Bool {
-    !control.disabled && control.hasEventHandler(name)
   }
 }
 
