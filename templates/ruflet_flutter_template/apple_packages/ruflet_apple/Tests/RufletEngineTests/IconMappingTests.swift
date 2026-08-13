@@ -125,8 +125,8 @@ final class IconMappingTests: XCTestCase {
     XCTAssertEqual(IconMapping.symbol(forMaterialName: "home"), "house")
     XCTAssertEqual(
       IconMapping.symbol(forMaterialName: "rocket_launch"),
-      "airplane.departure")
-    XCTAssertEqual(IconMapping.symbol(forMaterialName: "rocket"), "airplane.departure")
+      "arrow.up.right.circle.fill")
+    XCTAssertEqual(IconMapping.symbol(forMaterialName: "rocket"), "arrow.up.right")
     XCTAssertEqual(IconMapping.symbol(forMaterialName: "account_circle"), "person.crop.circle")
     XCTAssertEqual(IconMapping.symbol(forMaterialName: "chevron_right"), "chevron.right")
     XCTAssertEqual(
@@ -142,12 +142,12 @@ final class IconMappingTests: XCTestCase {
 
   func testExplorerGalleryCategoriesUseClosestNativeAppleArtwork() {
     let expected: [String: String] = [
-      "rocket_launch": "airplane.departure",
-      "view_module": "square.grid.3x3.fill",
-      "widgets": "square.3.layers.3d.top.filled",
+      "rocket_launch": "arrow.up.right.circle.fill",
+      "view_module": "square.grid.3x3",
+      "widgets": "shippingbox.fill",
       "image": "photo.fill",
       "show_chart": "chart.line.uptrend.xyaxis",
-      "animation": "rotate.3d",
+      "animation": "arrow.triangle.2.circlepath",
       "auto_awesome": "sparkles",
       "settings": "gearshape.fill",
     ]

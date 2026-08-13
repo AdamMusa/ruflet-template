@@ -399,7 +399,7 @@ public enum IconMapping {
     "chevron_left": "chevron.left", "chevron_right": "chevron.right",
     "first_page": "chevron.left.2", "last_page": "chevron.right.2",
     "menu": "line.3.horizontal", "more_vert": "ellipsis", "more_horiz": "ellipsis",
-    "apps": "square.grid.2x2", "widgets": "square.3.layers.3d.top.filled",
+    "apps": "square.grid.2x2", "widgets": "shippingbox.fill",
     "dashboard": "square.grid.2x2.fill",
     "home": "house", "home_filled": "house.fill",
 
@@ -488,7 +488,7 @@ public enum IconMapping {
     "list": "list.bullet", "list_alt": "list.bullet.rectangle",
     "format_list_bulleted": "list.bullet", "format_list_numbered": "list.number",
     "table_chart": "tablecells", "grid_view": "square.grid.2x2",
-    "view_list": "list.bullet", "view_module": "square.grid.3x3.fill",
+    "view_list": "list.bullet", "view_module": "square.grid.3x3",
     "view_column": "rectangle.split.3x1", "view_stream": "rectangle.split.1x2",
     "tab": "rectangle.split.3x1", "crop_square": "square.dashed",
     "attach_money": "dollarsign.circle", "receipt": "receipt",
@@ -555,11 +555,12 @@ public enum IconMapping {
     "local_fire_department": "flame.fill", "restaurant": "fork.knife",
     "local_cafe": "cup.and.saucer.fill", "fitness_center": "dumbbell.fill",
     "sports_esports": "gamecontroller.fill", "emoji_events": "trophy.fill",
-    "auto_awesome": "sparkles", "animation": "rotate.3d",
-    // SF Symbols on Ruflet's deployment floor has no rocket. The departure
-    // symbol preserves the launch meaning; the fallback table below keeps the
-    // icon visible on an older Apple runtime without turning it into Send.
-    "rocket": "airplane.departure", "rocket_launch": "airplane.departure",
+    "auto_awesome": "sparkles", "animation": "arrow.triangle.2.circlepath",
+    // The deployment floor has no native rocket symbol. A diagonal launch
+    // arrow preserves the action without incorrectly turning RocketLaunch into
+    // Send (paperplane) or travel (airplane). These symbols exist throughout
+    // Ruflet's supported iOS/macOS range, so the meaning cannot change by OS.
+    "rocket": "arrow.up.right", "rocket_launch": "arrow.up.right.circle.fill",
     "psychology": "brain", "gavel": "hammer",
     "qr_code": "qrcode", "qr_code_scanner": "qrcode.viewfinder",
     "hub": "point.3.connected.trianglepath.dotted",
@@ -578,11 +579,11 @@ public enum IconMapping {
   /// floor. A current Apple OS should show the closest native meaning; older
   /// systems still receive a visible native icon rather than a blank image.
   private static let unavailableSymbolFallbacks: [String: [String]] = [
-    "rocket": ["arrow.up.circle.fill", "paperplane.fill"],
-    "rocket_launch": ["arrow.up.circle.fill", "paperplane.fill"],
-    "view_module": ["square.grid.2x2.fill"],
-    "widgets": ["cube.fill", "square.grid.2x2.fill"],
-    "animation": ["arrow.triangle.2.circlepath.circle.fill", "circle.hexagongrid.fill"],
+    "rocket": ["arrow.up.right", "arrow.up"],
+    "rocket_launch": ["arrow.up.right.circle.fill", "arrow.up.right", "arrow.up"],
+    "view_module": ["square.grid.3x3", "square.grid.2x2"],
+    "widgets": ["shippingbox.fill", "shippingbox", "cube.fill", "cube"],
+    "animation": ["arrow.triangle.2.circlepath", "arrow.clockwise"],
   ]
 
   private static func availableFallback(for materialName: String) -> String? {
