@@ -10297,32 +10297,32 @@
     "source": "reviewed_override"
   },
   "CODE_OFF": {
-    "kind": "cupertino_glyph",
-    "value": "FUNCTION",
+    "kind": "system_symbol",
+    "value": "chevron.left.slash.chevron.right",
     "concept": "CODE_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CODE_OFF_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "FUNCTION",
+    "kind": "system_symbol",
+    "value": "chevron.left.slash.chevron.right",
     "concept": "CODE_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CODE_OFF_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "FUNCTION",
+    "kind": "system_symbol",
+    "value": "chevron.left.slash.chevron.right",
     "concept": "CODE_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CODE_OFF_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "FUNCTION",
+    "kind": "system_symbol",
+    "value": "chevron.left.slash.chevron.right",
     "concept": "CODE_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CODE_OUTLINED": {
     "kind": "system_symbol",
@@ -24087,32 +24087,32 @@
     "source": "semantic_rank"
   },
   "GRID_OFF": {
-    "kind": "cupertino_glyph",
-    "value": "GRID",
+    "kind": "system_symbol",
+    "value": "rectangle.3.offgrid.fill",
     "concept": "GRID_OFF",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GRID_OFF_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "GRID",
+    "kind": "system_symbol",
+    "value": "rectangle.3.offgrid.fill",
     "concept": "GRID_OFF",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GRID_OFF_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "GRID",
+    "kind": "system_symbol",
+    "value": "rectangle.3.offgrid.fill",
     "concept": "GRID_OFF",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GRID_OFF_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "GRID",
+    "kind": "system_symbol",
+    "value": "rectangle.3.offgrid.fill",
     "concept": "GRID_OFF",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "GRID_ON": {
     "kind": "cupertino_glyph",
@@ -28532,32 +28532,32 @@
     "source": "reviewed_override"
   },
   "LABEL_OFF": {
-    "kind": "cupertino_glyph",
-    "value": "VOLUME_OFF",
+    "kind": "system_symbol",
+    "value": "tag.slash.fill",
     "concept": "LABEL_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LABEL_OFF_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "VOLUME_OFF",
+    "kind": "system_symbol",
+    "value": "tag.slash.fill",
     "concept": "LABEL_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LABEL_OFF_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "VOLUME_OFF",
+    "kind": "system_symbol",
+    "value": "tag.slash.fill",
     "concept": "LABEL_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LABEL_OFF_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "VOLUME_OFF",
+    "kind": "system_symbol",
+    "value": "tag.slash.fill",
     "concept": "LABEL_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LABEL_OUTLINE": {
     "kind": "system_symbol",
@@ -46711,60 +46711,60 @@
     "source": "semantic_rank"
   },
   "SENSORS": {
-    "kind": "cupertino_glyph",
-    "value": "CHART_BAR",
+    "kind": "system_symbol",
+    "value": "antenna.radiowaves.left.and.right",
     "concept": "SENSORS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SENSORS_OFF": {
     "kind": "system_symbol",
-    "value": "line.diagonal",
+    "value": "antenna.radiowaves.left.and.right.slash",
     "concept": "SENSORS_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SENSORS_OFF_OUTLINED": {
     "kind": "system_symbol",
-    "value": "line.diagonal",
+    "value": "antenna.radiowaves.left.and.right.slash",
     "concept": "SENSORS_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SENSORS_OFF_ROUNDED": {
     "kind": "system_symbol",
-    "value": "line.diagonal",
+    "value": "antenna.radiowaves.left.and.right.slash",
     "concept": "SENSORS_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SENSORS_OFF_SHARP": {
     "kind": "system_symbol",
-    "value": "line.diagonal",
+    "value": "antenna.radiowaves.left.and.right.slash",
     "concept": "SENSORS_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SENSORS_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "CHART_BAR",
+    "kind": "system_symbol",
+    "value": "antenna.radiowaves.left.and.right",
     "concept": "SENSORS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SENSORS_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "CHART_BAR",
+    "kind": "system_symbol",
+    "value": "antenna.radiowaves.left.and.right",
     "concept": "SENSORS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SENSORS_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "CHART_BAR",
+    "kind": "system_symbol",
+    "value": "antenna.radiowaves.left.and.right",
     "concept": "SENSORS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SENTIMENT_DISSATISFIED": {
     "kind": "cupertino_glyph",

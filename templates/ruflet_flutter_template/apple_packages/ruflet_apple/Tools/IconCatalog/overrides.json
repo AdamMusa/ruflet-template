@@ -1671,11 +1671,6 @@
     "value": "PAPERPLANE_FILL",
     "rationale": "curated Material-to-Cupertino vocabulary"
   },
-  "SENSORS": {
-    "kind": "system_symbol",
-    "value": "sensor.fill",
-    "rationale": "curated Material-to-SF vocabulary"
-  },
   "SETTINGS": {
     "kind": "cupertino_glyph",
     "value": "SETTINGS_SOLID",

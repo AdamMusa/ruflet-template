@@ -1141,6 +1141,56 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             self.assertEqual(self.entries[material_name]["kind"], kind)
             self.assertEqual(self.entries[material_name]["value"], value)
 
+    def test_disabled_interface_family_is_reviewed_native_artwork(self):
+        family = MODULE.load_json(MODULE.DISABLED_INTERFACE_OVERRIDES_PATH)
+        expected_concepts = {
+            "CODE_OFF",
+            "GRID_OFF",
+            "LABEL_OFF",
+            "SENSORS",
+            "SENSORS_OFF",
+        }
+        self.assertEqual(set(family), expected_concepts)
+        self.assertEqual(
+            self.audit["reviewed_families"]["disabled_interface"],
+            len(expected_concepts),
+        )
+        low_confidence = {
+            item["concept"] for item in self.audit["low_confidence_concepts"]
+        }
+        self.assertTrue(expected_concepts.isdisjoint(low_confidence))
+        material = MODULE.load_json(MODULE.MATERIAL_PATH)
+        family_wire_identities = {
+            name
+            for name in material
+            if MODULE.concept_for(name) in expected_concepts
+        }
+        self.assertEqual(len(family_wire_identities), 20)
+        for name in family_wire_identities:
+            self.assertEqual(self.entries[name]["confidence"], "reviewed")
+            self.assertEqual(self.entries[name]["source"], "reviewed_override")
+
+    def test_disabled_interface_distinct_semantics_do_not_regress(self):
+        expected = {
+            "CODE_OFF": (
+                "system_symbol",
+                "chevron.left.slash.chevron.right",
+            ),
+            "GRID_OFF": ("system_symbol", "rectangle.3.offgrid.fill"),
+            "LABEL_OFF": ("system_symbol", "tag.slash.fill"),
+            "SENSORS": (
+                "system_symbol",
+                "antenna.radiowaves.left.and.right",
+            ),
+            "SENSORS_OFF": (
+                "system_symbol",
+                "antenna.radiowaves.left.and.right.slash",
+            ),
+        }
+        for material_name, (kind, value) in expected.items():
+            self.assertEqual(self.entries[material_name]["kind"], kind)
+            self.assertEqual(self.entries[material_name]["value"], value)
+
     def test_checked_in_artifacts_are_reproducible(self):
         self.assertEqual(
             MODULE.OUTPUT_PATH.read_text(encoding="utf-8"),
