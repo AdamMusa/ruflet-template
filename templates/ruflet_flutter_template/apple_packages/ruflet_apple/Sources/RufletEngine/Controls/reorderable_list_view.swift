@@ -5,14 +5,14 @@ import UniformTypeIdentifiers
 @MainActor
 public struct ReorderableListViewControl: View {
     @ObservedObject public var control: RufletControl
-    @State private var orderedIDs: [Int]
-    @State private var draggingID: Int?
-    @State private var originalIndex: Int?
+    @StateObject private var coordinator: RufletReorderCoordinator
     @State private var prototypeExtent: CGFloat?
 
     public init(control: RufletControl) {
         self.control = control
-        _orderedIDs = State(initialValue: control.children("controls").map(\.id))
+        _coordinator = StateObject(
+            wrappedValue: RufletReorderCoordinator(
+                initialIDs: control.children("controls").map(\.id)))
     }
 
     public var body: some View {
@@ -22,7 +22,11 @@ public struct ReorderableListViewControl: View {
                 scrollDirection: horizontal ? .horizontal : .vertical
             ) { list }))
         }
-        .onChange(of: control.children("controls").map(\.id)) { orderedIDs = $0 }
+        .onAppear { coordinator.mount(control: control) }
+        .onChange(of: control.children("controls").map(\.id)) {
+            coordinator.synchronize(ids: $0)
+        }
+        .onDisappear { coordinator.unmount() }
     }
 
     private var list: AnyView {
@@ -75,12 +79,22 @@ public struct ReorderableListViewControl: View {
 
     @ViewBuilder
     private var contents: some View {
-        if let header = control.buildWidget("header") { header }
-        ForEach(Array(displayedControls.enumerated()), id: \.element.id) { _, child in
-            let logicalIndex = orderedControls.firstIndex { $0.id == child.id }!
-            item(child, index: logicalIndex)
+        if reverse {
+            if let footer = control.buildWidget("footer") { footer }
+            reorderableItems
+            if let header = control.buildWidget("header") { header }
+        } else {
+            if let header = control.buildWidget("header") { header }
+            reorderableItems
+            if let footer = control.buildWidget("footer") { footer }
         }
-        if let footer = control.buildWidget("footer") { footer }
+    }
+
+    @ViewBuilder
+    private var reorderableItems: some View {
+        ForEach(displayedEntries) { entry in
+            item(entry.control, index: entry.logicalIndex)
+        }
     }
 
     private func item(_ child: RufletControl, index: Int) -> some View {
@@ -92,15 +106,12 @@ public struct ReorderableListViewControl: View {
             width: horizontal ? effectiveItemExtent : nil,
             height: horizontal ? nil : effectiveItemExtent
         )
-        .id(child.string("key") ?? String(child.id))
+        .id(rufletReorderIdentity(child))
         .onDrop(
             of: [UTType.text],
             delegate: RufletReorderDropDelegate(
                 targetID: child.id,
-                orderedIDs: $orderedIDs,
-                draggingID: $draggingID,
-                originalIndex: $originalIndex,
-                control: control
+                coordinator: coordinator
             )
         )
     }
@@ -128,11 +139,7 @@ public struct ReorderableListViewControl: View {
     }
 
     private func beginDragging(_ index: Int) -> NSItemProvider {
-        guard orderedControls.indices.contains(index) else { return NSItemProvider() }
-        let id = orderedControls[index].id
-        draggingID = id
-        originalIndex = index
-        control.triggerEvent("reorder_start", data: ["old_index": .int(Int64(index))])
+        guard let id = coordinator.beginDragging(at: index) else { return NSItemProvider() }
         return NSItemProvider(object: NSString(string: String(id)))
     }
 
@@ -144,10 +151,16 @@ public struct ReorderableListViewControl: View {
     private var sourceControls: [RufletControl] { control.children("controls") }
     private var orderedControls: [RufletControl] {
         let indexed = Dictionary(uniqueKeysWithValues: sourceControls.map { ($0.id, $0) })
-        return orderedIDs.compactMap { indexed[$0] }
+        return coordinator.orderedIDs.compactMap { indexed[$0] }
     }
-    private var displayedControls: [RufletControl] {
-        reverse ? Array(orderedControls.reversed()) : orderedControls
+    private var displayedEntries: [RufletReorderDisplayEntry] {
+        let entries = orderedControls.enumerated().map {
+            RufletReorderDisplayEntry(
+                control: $0.element,
+                logicalIndex: $0.offset,
+                id: rufletReorderIdentity($0.element))
+        }
+        return reverse ? Array(entries.reversed()) : entries
     }
 
     private var horizontal: Bool { control.boolean("horizontal", default: false) }
@@ -166,6 +179,20 @@ public struct ReorderableListViewControl: View {
     }
 }
 
+/// Pinned `_buildItem` uses the user key's scalar value, falling back to the
+/// child control ID. Keeping the scalar (rather than stringifying it) preserves
+/// Flutter's distinction between `1`, `1.0`, `true`, and `"1"` ValueKeys.
+@MainActor
+func rufletReorderIdentity(_ child: RufletControl) -> ControlKeyValue {
+    parseKey(child.value("key"))?.rawValue ?? .integer(child.id)
+}
+
+private struct RufletReorderDisplayEntry: Identifiable {
+    let control: RufletControl
+    let logicalIndex: Int
+    let id: ControlKeyValue
+}
+
 private struct RufletReorderPrototypeExtentKey: PreferenceKey {
     static let defaultValue: CGFloat? = nil
     static func reduce(value: inout CGFloat?, nextValue: () -> CGFloat?) {
@@ -176,18 +203,10 @@ private struct RufletReorderPrototypeExtentKey: PreferenceKey {
 @MainActor
 private struct RufletReorderDropDelegate: DropDelegate {
     let targetID: Int
-    @Binding var orderedIDs: [Int]
-    @Binding var draggingID: Int?
-    @Binding var originalIndex: Int?
-    let control: RufletControl
+    let coordinator: RufletReorderCoordinator
 
     func dropEntered(info: DropInfo) {
-        guard let draggingID, draggingID != targetID,
-              let from = orderedIDs.firstIndex(of: draggingID),
-              let to = orderedIDs.firstIndex(of: targetID) else { return }
-        withAnimation {
-            orderedIDs.move(fromOffsets: IndexSet(integer: from), toOffset: to > from ? to + 1 : to)
-        }
+        withAnimation { coordinator.enter(targetID: targetID) }
     }
 
     func dropUpdated(info: DropInfo) -> DropProposal? {
@@ -195,16 +214,104 @@ private struct RufletReorderDropDelegate: DropDelegate {
     }
 
     func performDrop(info: DropInfo) -> Bool {
-        guard let draggingID,
+        coordinator.performDrop()
+    }
+}
+
+/// Stateful half of pinned Flet's reorderable list. The Dart control keeps a
+/// local child order, replaces it on every server update, and preserves the
+/// native callback order (`start`, then `end`, then `reorder` when moved).
+/// Keeping that contract out of the
+/// DropDelegate also makes one native drag session own exactly one lifecycle.
+@MainActor
+final class RufletReorderCoordinator: ObservableObject {
+    @Published private(set) var orderedIDs: [Int]
+
+    private weak var control: RufletControl?
+    private var updateListener: UUID?
+    private var draggingID: Int?
+    private var originalIndex: Int?
+
+    init(initialIDs: [Int]) {
+        orderedIDs = initialIDs
+    }
+
+    func mount(control: RufletControl) {
+        if self.control !== control { unmount() }
+        self.control = control
+        synchronize(with: control)
+        guard updateListener == nil else { return }
+        updateListener = control.addListener { [weak self, weak control] in
+            guard let self, let control else { return }
+            synchronize(with: control)
+        }
+    }
+
+    func unmount() {
+        if let control, let updateListener {
+            control.removeListener(updateListener)
+        }
+        updateListener = nil
+        control = nil
+        draggingID = nil
+        originalIndex = nil
+    }
+
+    @discardableResult
+    func beginDragging(at index: Int) -> Int? {
+        guard let control, !control.disabled, orderedIDs.indices.contains(index) else {
+            return nil
+        }
+        let id = orderedIDs[index]
+        draggingID = id
+        originalIndex = index
+        control.triggerEvent("reorder_start", data: [
+            "old_index": .int(Int64(index))
+        ])
+        return id
+    }
+
+    func enter(targetID: Int) {
+        guard let draggingID, draggingID != targetID,
+              let from = orderedIDs.firstIndex(of: draggingID),
+              let to = orderedIDs.firstIndex(of: targetID) else { return }
+        orderedIDs.move(
+            fromOffsets: IndexSet(integer: from),
+            toOffset: to > from ? to + 1 : to)
+    }
+
+    @discardableResult
+    func performDrop() -> Bool {
+        guard let control, let draggingID,
               let newIndex = orderedIDs.firstIndex(of: draggingID) else { return false }
         let oldIndex = originalIndex ?? newIndex
-        control.triggerEvent("reorder", data: [
-            "old_index": .int(Int64(oldIndex)),
-            "new_index": .int(Int64(newIndex)),
+        // Flutter's SliverReorderableList reports its insertion index to
+        // onReorderEnd before onReorder. Flet then adjusts a downward insertion
+        // by one before mutating its local controls and emitting `reorder`.
+        let insertionIndex = oldIndex < newIndex ? newIndex + 1 : newIndex
+        control.triggerEvent("reorder_end", data: [
+            "new_index": .int(Int64(insertionIndex))
         ])
-        control.triggerEvent("reorder_end", data: ["new_index": .int(Int64(newIndex))])
+        if oldIndex != insertionIndex {
+            control.triggerEvent("reorder", data: [
+                "old_index": .int(Int64(oldIndex)),
+                "new_index": .int(Int64(newIndex)),
+            ])
+        }
         self.draggingID = nil
         originalIndex = nil
         return true
+    }
+
+    func synchronize(ids: [Int]) {
+        orderedIDs = ids
+        if let draggingID, !orderedIDs.contains(draggingID) {
+            self.draggingID = nil
+            originalIndex = nil
+        }
+    }
+
+    private func synchronize(with control: RufletControl) {
+        synchronize(ids: control.children("controls").map(\.id))
     }
 }
