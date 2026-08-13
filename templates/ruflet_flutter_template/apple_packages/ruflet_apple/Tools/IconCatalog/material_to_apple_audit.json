@@ -14,7 +14,7 @@
     "material_icons.json": "be2d1dee6c40a5dfeaacd8fe415301db3d7c976e6eabc7fca9da734cc5abfb85",
     "cupertino_glyphs.json": "dad0be1db615640c1a0dd86365f71d0dfa2ec01ed3e2773188895006d21ad012",
     "material_semantics.json": "b3a0e564b3661355757107b929add9bc22b8fd86e2038d12aaf3b7dac380d2dd",
-    "overrides.json": "4a31b8ff8fd4b4fd48aa47d223dacfb55041760adb37271445a208e9e777e044",
+    "overrides.json": "bc36565ed42fcdbfa0e29d6926533d5f07b3391db3b2ce6812297d2a8e22e538",
     "navigation_travel_overrides.json": "63fcf29579be8fab701bdf81b1b345a710ed66f91cf9e764fd91f008ac3b796c",
     "action_overrides.json": "1d0cb0f7ee23bba2caa6204baf5671e602124149451c28c778ba57bf00f1fad5",
     "maps_places_overrides.json": "0cc97806c2536763422e12967a7cdc7cbba78c39451f8b92534b8bf48cef9ba7",
@@ -33,15 +33,16 @@
     "advanced_image_editing_overrides.json": "f2ff4dda82083f8b443712df6d81f39649e2bf3bccd703a2ad34e38c790ba6fd",
     "local_service_transit_overrides.json": "8b54294919edbaeef4d88939fbd6014d42649676750af5a508ac1d2a9ad74f2c",
     "device_status_overrides.json": "ef232da7d3db4a5e5ec42a7269496b16faf8875724e34f5cfec35807bddf702e",
+    "communication_access_overrides.json": "06b33f539d218d6fe8ef82ca392e97fbb6538a3ad330811282fb8a4a480b2bd6",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/name_availability.plist": "a277cf5b63017ed497d5b6b3ea96bbee4f407b76776af41bcb52943007335b5c",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_search.plist": "29a767651ce53d8861e28d3eaa20b50d3e02a85fe5a79d557ce1fbff7fa4ebad",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_restrictions.strings": "2e1b1c3d629d26ac1e75861f33cb1cbbb3348e142a2b6c1aaf9bba546273f13b"
   },
   "sources": {
     "exact_apple_name": 48,
-    "manual_review_required": 95,
-    "reviewed_override": 947,
-    "semantic_rank": 1145
+    "manual_review_required": 91,
+    "reviewed_override": 958,
+    "semantic_rank": 1138
   },
   "reviewed_families": {
     "action": 76,
@@ -49,6 +50,7 @@
     "audio_video": 24,
     "business_commerce": 21,
     "communication": 36,
+    "communication_access": 11,
     "device_hardware": 72,
     "device_status": 13,
     "file_content": 11,
@@ -67,11 +69,11 @@
   "confidence_grades": {
     "exact": 48,
     "high": 665,
-    "low": 483,
-    "medium": 92,
-    "reviewed": 947
+    "low": 474,
+    "medium": 90,
+    "reviewed": 958
   },
-  "unique_apple_targets": 888,
+  "unique_apple_targets": 890,
   "most_reused_targets": [
     {
       "kind": "system_symbol",
@@ -175,11 +177,6 @@
     },
     {
       "kind": "cupertino_glyph",
-      "value": "SHARE",
-      "concept_count": 10
-    },
-    {
-      "kind": "cupertino_glyph",
       "value": "ALARM",
       "concept_count": 9
     },
@@ -239,11 +236,6 @@
       "concept_count": 9
     },
     {
-      "kind": "system_symbol",
-      "value": "phone.connection",
-      "concept_count": 8
-    },
-    {
       "kind": "cupertino_glyph",
       "value": "ARROW_RIGHT",
       "concept_count": 8
@@ -256,6 +248,11 @@
     {
       "kind": "system_symbol",
       "value": "line.diagonal",
+      "concept_count": 8
+    },
+    {
+      "kind": "cupertino_glyph",
+      "value": "SHARE",
       "concept_count": 8
     },
     {
@@ -281,6 +278,11 @@
     {
       "kind": "system_symbol",
       "value": "clock",
+      "concept_count": 7
+    },
+    {
+      "kind": "system_symbol",
+      "value": "phone.connection",
       "concept_count": 7
     },
     {
@@ -324,7 +326,7 @@
       "concept_count": 6
     }
   ],
-  "low_confidence_count": 575,
+  "low_confidence_count": 564,
   "low_confidence_concepts": [
     {
       "concept": "SIXTY_FPS_SELECT",
@@ -1166,54 +1168,6 @@
         "unavailable",
         "unknown",
         "unsure"
-      ]
-    },
-    {
-      "concept": "PRESENT_TO_ALL",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "SHARE"
-      },
-      "confidence": 0.1357,
-      "grade": "low",
-      "reason": "name=[] semantic=['share'] extra=[]",
-      "tags": [
-        "all",
-        "arrow",
-        "audience",
-        "broadcast",
-        "cast",
-        "classroom",
-        "communicate",
-        "conference",
-        "demonstrate",
-        "display",
-        "distribute",
-        "education",
-        "everyone",
-        "global",
-        "group",
-        "lectern",
-        "meeting",
-        "multi-screen",
-        "output",
-        "present",
-        "presentation",
-        "project",
-        "public",
-        "screen",
-        "share",
-        "show",
-        "site",
-        "slides",
-        "speaker",
-        "stream",
-        "team",
-        "to",
-        "training",
-        "web",
-        "webinar",
-        "website"
       ]
     },
     {
@@ -6300,52 +6254,6 @@
       ]
     },
     {
-      "concept": "CO_PRESENT",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "SHARE"
-      },
-      "confidence": 0.2785,
-      "grade": "low",
-      "reason": "name=[] semantic=['share'] extra=[]",
-      "tags": [
-        "arrow",
-        "broadcast",
-        "broadcasting",
-        "cast",
-        "co-present",
-        "collaboration",
-        "conference",
-        "digital",
-        "display",
-        "meeting",
-        "online",
-        "person",
-        "present",
-        "presentation",
-        "profile",
-        "projection",
-        "rectangle",
-        "remote",
-        "screen",
-        "screen sharing",
-        "share",
-        "sharing",
-        "site",
-        "slides",
-        "streaming",
-        "togather",
-        "user",
-        "video",
-        "video call",
-        "view",
-        "web",
-        "webcam",
-        "website",
-        "window"
-      ]
-    },
-    {
       "concept": "MODEL_TRAINING",
       "target": {
         "kind": "cupertino_glyph",
@@ -8204,61 +8112,6 @@
       ]
     },
     {
-      "concept": "DIALER_SIP",
-      "target": {
-        "kind": "system_symbol",
-        "value": "phone.connection"
-      },
-      "confidence": 0.2997,
-      "grade": "low",
-      "reason": "name=[] semantic=['connection', 'phone'] extra=[]",
-      "tags": [
-        "alphabet",
-        "button",
-        "call",
-        "call icon",
-        "cell",
-        "character",
-        "communication",
-        "communication icon",
-        "connection",
-        "contact",
-        "device",
-        "dial",
-        "dialer",
-        "font",
-        "hardware",
-        "icon",
-        "initiation",
-        "internet",
-        "internet icon",
-        "ip",
-        "letters",
-        "line",
-        "mobile",
-        "network",
-        "network icon",
-        "outline",
-        "over",
-        "phone",
-        "phone icon",
-        "protocol",
-        "routing",
-        "session",
-        "sip",
-        "sip call",
-        "square",
-        "symbol",
-        "telephone",
-        "telephone icon",
-        "text",
-        "type",
-        "voice",
-        "voip",
-        "voip call"
-      ]
-    },
-    {
       "concept": "DOMAIN_DISABLED",
       "target": {
         "kind": "cupertino_glyph",
@@ -8491,61 +8344,6 @@
         "warning",
         "young",
         "zone"
-      ]
-    },
-    {
-      "concept": "PHONELINK_RING",
-      "target": {
-        "kind": "system_symbol",
-        "value": "phone.connection"
-      },
-      "confidence": 0.2997,
-      "grade": "low",
-      "reason": "name=[] semantic=['connection', 'phone'] extra=[]",
-      "tags": [
-        "alarm",
-        "alert",
-        "Android",
-        "audio",
-        "call",
-        "calling",
-        "cell",
-        "cellular",
-        "communication",
-        "communications",
-        "connection",
-        "data",
-        "device",
-        "hardware",
-        "incoming",
-        "iOS",
-        "line",
-        "lines",
-        "listen",
-        "listening",
-        "mobile",
-        "network",
-        "notification",
-        "OS",
-        "outbound",
-        "phone",
-        "phonelink",
-        "ring",
-        "ringing",
-        "service",
-        "signal",
-        "smartphone",
-        "sound",
-        "tablet",
-        "technology",
-        "telecommunication",
-        "telecommunications",
-        "telephone",
-        "vibrate",
-        "vibration",
-        "volume",
-        "waves",
-        "wireless"
       ]
     },
     {
@@ -13085,61 +12883,6 @@
       ]
     },
     {
-      "concept": "SIP",
-      "target": {
-        "kind": "system_symbol",
-        "value": "phone.connection"
-      },
-      "confidence": 0.3246,
-      "grade": "low",
-      "reason": "name=[] semantic=['connection', 'phone'] extra=[]",
-      "tags": [
-        "alphabet",
-        "audio call",
-        "call",
-        "call control",
-        "character",
-        "communication",
-        "connect",
-        "connection",
-        "contact",
-        "conversation",
-        "dial",
-        "dialer",
-        "earpiece",
-        "font",
-        "handset",
-        "incoming call",
-        "initiation",
-        "internet",
-        "internet call",
-        "letters",
-        "line",
-        "microphone",
-        "network",
-        "outgoing call",
-        "over",
-        "phone",
-        "phone call",
-        "protocol",
-        "ring",
-        "routing",
-        "session",
-        "signal",
-        "sip",
-        "softphone",
-        "symbol",
-        "talk",
-        "telephone",
-        "telephony",
-        "text",
-        "type",
-        "voice",
-        "voice call",
-        "VoIP"
-      ]
-    },
-    {
       "concept": "DECK",
       "target": {
         "kind": "cupertino_glyph",
@@ -16333,32 +16076,6 @@
       ]
     },
     {
-      "concept": "MESSENGER",
-      "target": {
-        "kind": "system_symbol",
-        "value": "bubble.left.and.bubble.right"
-      },
-      "confidence": 0.5,
-      "grade": "low",
-      "reason": "native Apple messaging concept",
-      "tags": [
-        "messenger"
-      ]
-    },
-    {
-      "concept": "MESSENGER_OUTLINE",
-      "target": {
-        "kind": "system_symbol",
-        "value": "bubble.left.and.bubble.right"
-      },
-      "confidence": 0.5,
-      "grade": "low",
-      "reason": "native Apple messaging concept",
-      "tags": [
-        "messenger outline"
-      ]
-    },
-    {
       "concept": "NINETEEN_MP",
       "target": {
         "kind": "system_symbol",
@@ -16523,66 +16240,6 @@
       "reason": "brand has no native Apple glyph; payment meaning",
       "tags": [
         "paypal"
-      ]
-    },
-    {
-      "concept": "PERM_CONTACT_CAL",
-      "target": {
-        "kind": "system_symbol",
-        "value": "person.crop.circle"
-      },
-      "confidence": 0.5,
-      "grade": "low",
-      "reason": "native Apple contact identity",
-      "tags": [
-        "perm contact cal"
-      ]
-    },
-    {
-      "concept": "PERM_CONTACT_CALENDAR",
-      "target": {
-        "kind": "system_symbol",
-        "value": "person.crop.circle"
-      },
-      "confidence": 0.5,
-      "grade": "low",
-      "reason": "native Apple contact identity",
-      "tags": [
-        "account",
-        "address book",
-        "appointment",
-        "button",
-        "calendar",
-        "contact",
-        "date",
-        "day",
-        "details",
-        "directory",
-        "element",
-        "event",
-        "face",
-        "graphic",
-        "human",
-        "icon",
-        "information",
-        "interface",
-        "meeting",
-        "month",
-        "organizer",
-        "people",
-        "perm",
-        "permanent",
-        "persistent",
-        "person",
-        "pictogram",
-        "profile",
-        "saved",
-        "schedule",
-        "symbol",
-        "time",
-        "ui element",
-        "user",
-        "year"
       ]
     },
     {
@@ -20116,63 +19773,6 @@
       ]
     },
     {
-      "concept": "DOMAIN_VERIFICATION",
-      "target": {
-        "kind": "system_symbol",
-        "value": "checkmark.circle"
-      },
-      "confidence": 0.6517,
-      "grade": "medium",
-      "reason": "name=[] semantic=['check', 'circle', 'select'] extra=[]",
-      "tags": [
-        "access",
-        "app",
-        "application desktop",
-        "approve",
-        "approved",
-        "authenticated",
-        "certified",
-        "check",
-        "circle",
-        "complete",
-        "confirmed",
-        "connectivity",
-        "design",
-        "domain",
-        "done",
-        "global",
-        "globe",
-        "interface",
-        "international",
-        "internet",
-        "layout",
-        "map",
-        "mark",
-        "network",
-        "ok",
-        "planet",
-        "screen",
-        "security",
-        "select",
-        "site",
-        "tick",
-        "trusted",
-        "ui",
-        "ux",
-        "validate",
-        "validated",
-        "verification",
-        "verified",
-        "verify",
-        "web",
-        "website",
-        "window",
-        "world",
-        "www",
-        "yes"
-      ]
-    },
-    {
       "concept": "FEMALE",
       "target": {
         "kind": "system_symbol",
@@ -23007,57 +22607,6 @@
         "x",
         "x mark",
         "yes"
-      ]
-    },
-    {
-      "concept": "PHONELINK_ERASE",
-      "target": {
-        "kind": "system_symbol",
-        "value": "xmark"
-      },
-      "confidence": 0.7954,
-      "grade": "medium",
-      "reason": "name=[] semantic=['clear', 'close', 'stop', 'x'] extra=['xmark']",
-      "tags": [
-        "action",
-        "Android",
-        "button",
-        "cancel",
-        "cell",
-        "clear",
-        "close",
-        "connection",
-        "control",
-        "cross",
-        "delete",
-        "device",
-        "diagonal line",
-        "disconnect",
-        "erase",
-        "exit",
-        "forbidden",
-        "hardware",
-        "iOS",
-        "line",
-        "mobile",
-        "negative",
-        "no",
-        "OS",
-        "outline",
-        "phone",
-        "phonelink",
-        "pictogram",
-        "prohibited",
-        "rectangle",
-        "remove",
-        "screen",
-        "shape",
-        "smartphone",
-        "stop",
-        "symbol",
-        "tablet",
-        "unavailable",
-        "x"
       ]
     },
     {

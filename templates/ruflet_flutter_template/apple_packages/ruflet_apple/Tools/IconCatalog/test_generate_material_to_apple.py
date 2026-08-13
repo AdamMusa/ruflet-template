@@ -741,6 +741,61 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             self.assertEqual(self.entries[material_name]["kind"], kind)
             self.assertEqual(self.entries[material_name]["value"], value)
 
+    def test_communication_access_family_is_reviewed_native_artwork(self):
+        family = MODULE.load_json(MODULE.COMMUNICATION_ACCESS_OVERRIDES_PATH)
+        low_confidence = {
+            item["concept"] for item in self.audit["low_confidence_concepts"]
+        }
+        self.assertEqual(
+            self.audit["reviewed_families"]["communication_access"],
+            len(family),
+        )
+        self.assertTrue(set(family).isdisjoint(low_confidence))
+        for concept, target in family.items():
+            entry = self.entries[concept]
+            self.assertEqual(entry["kind"], target["kind"])
+            self.assertEqual(entry["value"], target["value"])
+            self.assertEqual(entry["confidence"], "reviewed")
+            self.assertEqual(entry["source"], "reviewed_override")
+
+    def test_communication_access_distinct_semantics_do_not_regress(self):
+        expected = {
+            "CO_PRESENT": (
+                "system_symbol",
+                "person.crop.rectangle.stack.fill",
+            ),
+            "DIALER_SIP": ("system_symbol", "phone.connection"),
+            "DOMAIN_VERIFICATION": (
+                "system_symbol",
+                "network.badge.shield.half.filled",
+            ),
+            "MESSENGER": (
+                "system_symbol",
+                "bubble.left.and.bubble.right.fill",
+            ),
+            "MESSENGER_OUTLINE": (
+                "system_symbol",
+                "bubble.left.and.bubble.right",
+            ),
+            "PERM_CONTACT_CALENDAR": (
+                "system_symbol",
+                "person.text.rectangle.fill",
+            ),
+            "PHONELINK_ERASE": (
+                "system_symbol",
+                "iphone.homebutton.slash",
+            ),
+            "PHONELINK_RING": (
+                "system_symbol",
+                "iphone.homebutton.radiowaves.left.and.right",
+            ),
+            "PRESENT_TO_ALL": ("system_symbol", "airplayvideo"),
+            "SIP": ("system_symbol", "phone.connection"),
+        }
+        for material_name, (kind, value) in expected.items():
+            self.assertEqual(self.entries[material_name]["kind"], kind)
+            self.assertEqual(self.entries[material_name]["value"], value)
+
     def test_checked_in_artifacts_are_reproducible(self):
         self.assertEqual(
             MODULE.OUTPUT_PATH.read_text(encoding="utf-8"),

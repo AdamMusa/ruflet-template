@@ -10262,32 +10262,32 @@
     "source": "semantic_rank"
   },
   "CO_PRESENT": {
-    "kind": "cupertino_glyph",
-    "value": "SHARE",
+    "kind": "system_symbol",
+    "value": "person.crop.rectangle.stack.fill",
     "concept": "CO_PRESENT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CO_PRESENT_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "SHARE",
+    "kind": "system_symbol",
+    "value": "person.crop.rectangle.stack.fill",
     "concept": "CO_PRESENT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CO_PRESENT_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "SHARE",
+    "kind": "system_symbol",
+    "value": "person.crop.rectangle.stack.fill",
     "concept": "CO_PRESENT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CO_PRESENT_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "SHARE",
+    "kind": "system_symbol",
+    "value": "person.crop.rectangle.stack.fill",
     "concept": "CO_PRESENT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CODE": {
     "kind": "system_symbol",
@@ -13863,29 +13863,29 @@
     "kind": "system_symbol",
     "value": "phone.connection",
     "concept": "DIALER_SIP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DIALER_SIP_OUTLINED": {
     "kind": "system_symbol",
     "value": "phone.connection",
     "concept": "DIALER_SIP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DIALER_SIP_ROUNDED": {
     "kind": "system_symbol",
     "value": "phone.connection",
     "concept": "DIALER_SIP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DIALER_SIP_SHARP": {
     "kind": "system_symbol",
     "value": "phone.connection",
     "concept": "DIALER_SIP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DIALPAD": {
     "kind": "system_symbol",
@@ -15345,31 +15345,31 @@
   },
   "DOMAIN_VERIFICATION": {
     "kind": "system_symbol",
-    "value": "checkmark.circle",
+    "value": "network.badge.shield.half.filled",
     "concept": "DOMAIN_VERIFICATION",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DOMAIN_VERIFICATION_OUTLINED": {
     "kind": "system_symbol",
-    "value": "checkmark.circle",
+    "value": "network.badge.shield.half.filled",
     "concept": "DOMAIN_VERIFICATION",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DOMAIN_VERIFICATION_ROUNDED": {
     "kind": "system_symbol",
-    "value": "checkmark.circle",
+    "value": "network.badge.shield.half.filled",
     "concept": "DOMAIN_VERIFICATION",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DOMAIN_VERIFICATION_SHARP": {
     "kind": "system_symbol",
-    "value": "checkmark.circle",
+    "value": "network.badge.shield.half.filled",
     "concept": "DOMAIN_VERIFICATION",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DONE": {
     "kind": "cupertino_glyph",
@@ -32712,59 +32712,59 @@
   },
   "MESSENGER": {
     "kind": "system_symbol",
-    "value": "bubble.left.and.bubble.right",
+    "value": "bubble.left.and.bubble.right.fill",
     "concept": "MESSENGER",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MESSENGER_OUTLINE": {
     "kind": "system_symbol",
     "value": "bubble.left.and.bubble.right",
     "concept": "MESSENGER_OUTLINE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MESSENGER_OUTLINE_OUTLINED": {
     "kind": "system_symbol",
     "value": "bubble.left.and.bubble.right",
     "concept": "MESSENGER_OUTLINE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MESSENGER_OUTLINE_ROUNDED": {
     "kind": "system_symbol",
     "value": "bubble.left.and.bubble.right",
     "concept": "MESSENGER_OUTLINE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MESSENGER_OUTLINE_SHARP": {
     "kind": "system_symbol",
     "value": "bubble.left.and.bubble.right",
     "concept": "MESSENGER_OUTLINE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MESSENGER_OUTLINED": {
     "kind": "system_symbol",
-    "value": "bubble.left.and.bubble.right",
+    "value": "bubble.left.and.bubble.right.fill",
     "concept": "MESSENGER",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MESSENGER_ROUNDED": {
     "kind": "system_symbol",
-    "value": "bubble.left.and.bubble.right",
+    "value": "bubble.left.and.bubble.right.fill",
     "concept": "MESSENGER",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MESSENGER_SHARP": {
     "kind": "system_symbol",
-    "value": "bubble.left.and.bubble.right",
+    "value": "bubble.left.and.bubble.right.fill",
     "concept": "MESSENGER",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MIC": {
     "kind": "system_symbol",
@@ -38648,59 +38648,59 @@
   },
   "PERM_CONTACT_CAL": {
     "kind": "system_symbol",
-    "value": "person.crop.circle",
+    "value": "person.text.rectangle.fill",
     "concept": "PERM_CONTACT_CAL",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PERM_CONTACT_CAL_OUTLINED": {
     "kind": "system_symbol",
-    "value": "person.crop.circle",
+    "value": "person.text.rectangle.fill",
     "concept": "PERM_CONTACT_CAL",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PERM_CONTACT_CAL_ROUNDED": {
     "kind": "system_symbol",
-    "value": "person.crop.circle",
+    "value": "person.text.rectangle.fill",
     "concept": "PERM_CONTACT_CAL",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PERM_CONTACT_CAL_SHARP": {
     "kind": "system_symbol",
-    "value": "person.crop.circle",
+    "value": "person.text.rectangle.fill",
     "concept": "PERM_CONTACT_CAL",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PERM_CONTACT_CALENDAR": {
     "kind": "system_symbol",
-    "value": "person.crop.circle",
+    "value": "person.text.rectangle.fill",
     "concept": "PERM_CONTACT_CALENDAR",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PERM_CONTACT_CALENDAR_OUTLINED": {
     "kind": "system_symbol",
-    "value": "person.crop.circle",
+    "value": "person.text.rectangle.fill",
     "concept": "PERM_CONTACT_CALENDAR",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PERM_CONTACT_CALENDAR_ROUNDED": {
     "kind": "system_symbol",
-    "value": "person.crop.circle",
+    "value": "person.text.rectangle.fill",
     "concept": "PERM_CONTACT_CALENDAR",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PERM_CONTACT_CALENDAR_SHARP": {
     "kind": "system_symbol",
-    "value": "person.crop.circle",
+    "value": "person.text.rectangle.fill",
     "concept": "PERM_CONTACT_CALENDAR",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PERM_DATA_SETTING": {
     "kind": "cupertino_glyph",
@@ -39831,31 +39831,31 @@
   },
   "PHONELINK_ERASE": {
     "kind": "system_symbol",
-    "value": "xmark",
+    "value": "iphone.homebutton.slash",
     "concept": "PHONELINK_ERASE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHONELINK_ERASE_OUTLINED": {
     "kind": "system_symbol",
-    "value": "xmark",
+    "value": "iphone.homebutton.slash",
     "concept": "PHONELINK_ERASE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHONELINK_ERASE_ROUNDED": {
     "kind": "system_symbol",
-    "value": "xmark",
+    "value": "iphone.homebutton.slash",
     "concept": "PHONELINK_ERASE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHONELINK_ERASE_SHARP": {
     "kind": "system_symbol",
-    "value": "xmark",
+    "value": "iphone.homebutton.slash",
     "concept": "PHONELINK_ERASE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHONELINK_LOCK": {
     "kind": "system_symbol",
@@ -39922,31 +39922,31 @@
   },
   "PHONELINK_RING": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "iphone.homebutton.radiowaves.left.and.right",
     "concept": "PHONELINK_RING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHONELINK_RING_OUTLINED": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "iphone.homebutton.radiowaves.left.and.right",
     "concept": "PHONELINK_RING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHONELINK_RING_ROUNDED": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "iphone.homebutton.radiowaves.left.and.right",
     "concept": "PHONELINK_RING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHONELINK_RING_SHARP": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "iphone.homebutton.radiowaves.left.and.right",
     "concept": "PHONELINK_RING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHONELINK_ROUNDED": {
     "kind": "system_symbol",
@@ -41636,32 +41636,32 @@
     "source": "semantic_rank"
   },
   "PRESENT_TO_ALL": {
-    "kind": "cupertino_glyph",
-    "value": "SHARE",
+    "kind": "system_symbol",
+    "value": "airplayvideo",
     "concept": "PRESENT_TO_ALL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PRESENT_TO_ALL_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "SHARE",
+    "kind": "system_symbol",
+    "value": "airplayvideo",
     "concept": "PRESENT_TO_ALL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PRESENT_TO_ALL_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "SHARE",
+    "kind": "system_symbol",
+    "value": "airplayvideo",
     "concept": "PRESENT_TO_ALL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PRESENT_TO_ALL_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "SHARE",
+    "kind": "system_symbol",
+    "value": "airplayvideo",
     "concept": "PRESENT_TO_ALL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PREVIEW": {
     "kind": "system_symbol",
@@ -49045,29 +49045,29 @@
     "kind": "system_symbol",
     "value": "phone.connection",
     "concept": "SIP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIP_OUTLINED": {
     "kind": "system_symbol",
     "value": "phone.connection",
     "concept": "SIP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIP_ROUNDED": {
     "kind": "system_symbol",
     "value": "phone.connection",
     "concept": "SIP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIP_SHARP": {
     "kind": "system_symbol",
     "value": "phone.connection",
     "concept": "SIP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIX_FT_APART": {
     "kind": "system_symbol",

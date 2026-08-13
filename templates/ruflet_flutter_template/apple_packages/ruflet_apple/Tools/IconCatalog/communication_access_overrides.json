@@ -1,0 +1,57 @@
+{
+  "CO_PRESENT": {
+    "kind": "system_symbol",
+    "value": "person.crop.rectangle.stack.fill",
+    "rationale": "public Apple person-with-presentation-screens identity for co-presenting"
+  },
+  "DIALER_SIP": {
+    "kind": "system_symbol",
+    "value": "phone.connection",
+    "rationale": "public Apple connected-call identity for SIP dialing"
+  },
+  "DOMAIN_VERIFICATION": {
+    "kind": "system_symbol",
+    "value": "network.badge.shield.half.filled",
+    "rationale": "public Apple protected-network identity for verified domains"
+  },
+  "MESSENGER": {
+    "kind": "system_symbol",
+    "value": "bubble.left.and.bubble.right.fill",
+    "rationale": "public Apple two-party messaging identity for the legacy generic messenger alias"
+  },
+  "MESSENGER_OUTLINE": {
+    "kind": "system_symbol",
+    "value": "bubble.left.and.bubble.right",
+    "rationale": "public Apple outlined two-party messaging identity"
+  },
+  "PERM_CONTACT_CAL": {
+    "kind": "system_symbol",
+    "value": "person.text.rectangle.fill",
+    "rationale": "public Apple contact-card identity for Flet's abbreviated legacy spelling"
+  },
+  "PERM_CONTACT_CALENDAR": {
+    "kind": "system_symbol",
+    "value": "person.text.rectangle.fill",
+    "rationale": "public Apple contact-card and address-book identity"
+  },
+  "PHONELINK_ERASE": {
+    "kind": "system_symbol",
+    "value": "iphone.homebutton.slash",
+    "rationale": "public Apple disconnected or erased phone-link identity"
+  },
+  "PHONELINK_RING": {
+    "kind": "system_symbol",
+    "value": "iphone.homebutton.radiowaves.left.and.right",
+    "rationale": "public Apple ringing phone-link identity"
+  },
+  "PRESENT_TO_ALL": {
+    "kind": "system_symbol",
+    "value": "airplayvideo",
+    "rationale": "public Apple screen-presentation and broadcast identity"
+  },
+  "SIP": {
+    "kind": "system_symbol",
+    "value": "phone.connection",
+    "rationale": "public Apple connected-call identity for SIP telephony"
+  }
+}

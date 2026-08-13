@@ -34,6 +34,7 @@ Generation uses pinned/auditable inputs:
 * advanced_image_editing_overrides.json -- reviewed advanced image editing.
 * local_service_transit_overrides.json -- reviewed local services and transit.
 * device_status_overrides.json -- reviewed Apple device and connectivity status.
+* communication_access_overrides.json -- reviewed communication and contacts.
 
 The installed public Apple symbol metadata is used only to choose and validate
 native symbols available at both deployment floors. Private and restricted
@@ -86,6 +87,9 @@ LOCAL_SERVICE_TRANSIT_OVERRIDES_PATH = (
     TOOL_DIR / "local_service_transit_overrides.json"
 )
 DEVICE_STATUS_OVERRIDES_PATH = TOOL_DIR / "device_status_overrides.json"
+COMMUNICATION_ACCESS_OVERRIDES_PATH = (
+    TOOL_DIR / "communication_access_overrides.json"
+)
 AUDIT_PATH = TOOL_DIR / "material_to_apple_audit.json"
 
 CORE_GLYPHS = Path(
@@ -374,6 +378,7 @@ def load_reviewed_overrides() -> tuple[
         "advanced_image_editing": ADVANCED_IMAGE_EDITING_OVERRIDES_PATH,
         "local_service_transit": LOCAL_SERVICE_TRANSIT_OVERRIDES_PATH,
         "device_status": DEVICE_STATUS_OVERRIDES_PATH,
+        "communication_access": COMMUNICATION_ACCESS_OVERRIDES_PATH,
     }
     merged: dict[str, dict[str, str]] = {}
     families: dict[str, str] = {}

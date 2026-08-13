@@ -1269,18 +1269,6 @@
     "value": "message.fill",
     "rationale": "curated Material-to-SF vocabulary"
   },
-  "MESSENGER": {
-    "kind": "system_symbol",
-    "value": "bubble.left.and.bubble.right",
-    "rationale": "native Apple messaging concept",
-    "status": "review_required"
-  },
-  "MESSENGER_OUTLINE": {
-    "kind": "system_symbol",
-    "value": "bubble.left.and.bubble.right",
-    "rationale": "native Apple messaging concept",
-    "status": "review_required"
-  },
   "MIC": {
     "kind": "system_symbol",
     "value": "mic.fill",
@@ -1503,18 +1491,6 @@
     "kind": "system_symbol",
     "value": "person.2.fill",
     "rationale": "curated Material-to-SF vocabulary"
-  },
-  "PERM_CONTACT_CAL": {
-    "kind": "system_symbol",
-    "value": "person.crop.circle",
-    "rationale": "native Apple contact identity",
-    "status": "review_required"
-  },
-  "PERM_CONTACT_CALENDAR": {
-    "kind": "system_symbol",
-    "value": "person.crop.circle",
-    "rationale": "native Apple contact identity",
-    "status": "review_required"
   },
   "PERSON": {
     "kind": "cupertino_glyph",

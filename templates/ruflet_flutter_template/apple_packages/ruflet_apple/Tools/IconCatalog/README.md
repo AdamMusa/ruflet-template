@@ -55,6 +55,9 @@ printing, fast food, and general service-tool concepts live in
 Reviewed enabled airplane mode, unavailable radio/data, no-internet Wi-Fi, and
 security-good/security-warning status concepts live in
 `device_status_overrides.json`.
+Reviewed screen presentation, SIP calling, phone-link state, verified domains,
+generic messenger aliases, and contact-card aliases live in
+`communication_access_overrides.json`.
 
 The 8,825 identities contain 2,235 concepts because Flet carries Outlined,
 Rounded, and Sharp Material variants. The generator records the collapsed
