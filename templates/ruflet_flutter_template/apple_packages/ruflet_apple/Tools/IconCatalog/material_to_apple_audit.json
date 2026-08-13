@@ -42,7 +42,7 @@
     "media_library_overrides.json": "fe489f269e57f6ebf01ea459742215931dab8c48ece8ec889a94bdc99b276bea",
     "financial_wallet_overrides.json": "9c096ac6448e2ce8726960a1570050e441ebd6ffa0556ce2d5189b9a1458036f",
     "disabled_interface_overrides.json": "3c63685fb1ef10f169c96e3e82b381d0a6e5c579780a010cb6a8309d51bee214",
-    "legacy_named_symbol_overrides.json": "96792138a279e09248031129dee37aa1bcfe1fb8e8007464463b82a4f4f1a89a",
+    "legacy_named_symbol_overrides.json": "8300524044e228ee0e693a0d6a330793cb7e10d20dc167acd016b288b09bb4fc",
     "layout_manipulation_overrides.json": "4589877ebc63587e41ae2402c5f6219fa1db74370c3d148160c03186b1cefddd",
     "device_interaction_state_overrides.json": "4ca54bfecfe787d2cd7f7b45708705929331ca4009ce170c7d811ecb9266e1f4",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/name_availability.plist": "a277cf5b63017ed497d5b6b3ea96bbee4f407b76776af41bcb52943007335b5c",
@@ -52,8 +52,8 @@
   "sources": {
     "exact_apple_name": 48,
     "manual_review_required": 75,
-    "reviewed_override": 1026,
-    "semantic_rank": 1086
+    "reviewed_override": 1027,
+    "semantic_rank": 1085
   },
   "reviewed_families": {
     "action": 76,
@@ -77,7 +77,7 @@
     "interface_state_manipulation": 10,
     "layout_manipulation": 5,
     "legacy_interface_alias": 6,
-    "legacy_named_symbol": 4,
+    "legacy_named_symbol": 5,
     "local_service_transit": 9,
     "maps_places": 76,
     "media_library": 4,
@@ -91,11 +91,11 @@
   "confidence_grades": {
     "exact": 48,
     "high": 665,
-    "low": 417,
+    "low": 416,
     "medium": 79,
-    "reviewed": 1026
+    "reviewed": 1027
   },
-  "unique_apple_targets": 902,
+  "unique_apple_targets": 903,
   "most_reused_targets": [
     {
       "kind": "system_symbol",
@@ -348,7 +348,7 @@
       "concept_count": 6
     }
   ],
-  "low_confidence_count": 496,
+  "low_confidence_count": 495,
   "low_confidence_concepts": [
     {
       "concept": "SIXTY_FPS_SELECT",
@@ -17594,19 +17594,6 @@
         "trees",
         "walking",
         "wilderness"
-      ]
-    },
-    {
-      "concept": "EIGHTEEN_UP_RATING",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "ARROW_UP"
-      },
-      "confidence": 0.6486,
-      "grade": "low",
-      "reason": "name=['up'] semantic=['up'] extra=['arrow']",
-      "tags": [
-        "eighteen up rating"
       ]
     },
     {

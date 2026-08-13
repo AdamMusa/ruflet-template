@@ -1,4 +1,9 @@
 {
+  "EIGHTEEN_UP_RATING": {
+    "kind": "system_symbol",
+    "value": "18.circle",
+    "rationale": "public Apple 18 age-rating symbol exactly preserves the normalized Material 18_up_rating identity"
+  },
   "FOUR_K": {
     "kind": "system_symbol",
     "value": "4k.tv.fill",

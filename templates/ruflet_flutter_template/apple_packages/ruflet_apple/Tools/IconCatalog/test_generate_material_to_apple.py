@@ -1243,6 +1243,7 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
     def test_legacy_named_symbol_family_is_reviewed_native_artwork(self):
         family = MODULE.load_json(MODULE.LEGACY_NAMED_SYMBOL_OVERRIDES_PATH)
         expected_concepts = {
+            "EIGHTEEN_UP_RATING",
             "FOUR_K",
             "NIGHTLIGHT",
             "QUERY_BUILDER",
@@ -1263,13 +1264,14 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             for name in material
             if MODULE.concept_for(name) in expected_concepts
         }
-        self.assertEqual(len(family_wire_identities), 16)
+        self.assertEqual(len(family_wire_identities), 20)
         for name in family_wire_identities:
             self.assertEqual(self.entries[name]["confidence"], "reviewed")
             self.assertEqual(self.entries[name]["source"], "reviewed_override")
 
     def test_legacy_named_symbols_do_not_conflate_nearby_concepts(self):
         expected = {
+            "EIGHTEEN_UP_RATING": ("system_symbol", "18.circle"),
             "FOUR_K": ("system_symbol", "4k.tv.fill"),
             "NIGHTLIGHT": ("system_symbol", "moon.fill"),
             "QUERY_BUILDER": ("system_symbol", "clock.fill"),
@@ -1278,6 +1280,13 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
         for material_name, (kind, value) in expected.items():
             self.assertEqual(self.entries[material_name]["kind"], kind)
             self.assertEqual(self.entries[material_name]["value"], value)
+
+        # An 18+ age rating permits adult audiences; it is not the same
+        # semantic state as explicitly prohibiting adult content.
+        self.assertNotEqual(
+            self.entries["EIGHTEEN_UP_RATING"]["value"],
+            self.entries["NO_ADULT_CONTENT"]["value"],
+        )
 
         # Apple has no floor-safe 4K+ distinction; never silently collapse it
         # into the reviewed 4K identity.

@@ -16849,32 +16849,32 @@
     "source": "manual_review_required"
   },
   "EIGHTEEN_UP_RATING": {
-    "kind": "cupertino_glyph",
-    "value": "ARROW_UP",
+    "kind": "system_symbol",
+    "value": "18.circle",
     "concept": "EIGHTEEN_UP_RATING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "EIGHTEEN_UP_RATING_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "ARROW_UP",
+    "kind": "system_symbol",
+    "value": "18.circle",
     "concept": "EIGHTEEN_UP_RATING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "EIGHTEEN_UP_RATING_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "ARROW_UP",
+    "kind": "system_symbol",
+    "value": "18.circle",
     "concept": "EIGHTEEN_UP_RATING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "EIGHTEEN_UP_RATING_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "ARROW_UP",
+    "kind": "system_symbol",
+    "value": "18.circle",
     "concept": "EIGHTEEN_UP_RATING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "EJECT": {
     "kind": "cupertino_glyph",
