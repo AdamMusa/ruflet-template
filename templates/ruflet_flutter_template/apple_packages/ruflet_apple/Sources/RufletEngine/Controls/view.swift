@@ -115,6 +115,7 @@ public struct ViewControl: View {
       horizontalAlignment: horizontalAlignment,
       verticalAlignment: .center,
       frameAlignment: viewAlignment,
+      mainAxisAlignment: rufletMainAxisAlignment(control.string("vertical_alignment")),
       crossAxisStretch: control.string("horizontal_alignment")?.lowercased() == "stretch",
       tight: false
     )

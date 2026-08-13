@@ -119,6 +119,91 @@ final class BaseLayoutControlContractTests: XCTestCase {
     XCTAssertEqual(two!, CGFloat(920) / 3, accuracy: 0.001)
   }
 
+  func testMainAxisFreeSpaceMatchesPinnedSpaceModes() {
+    XCTAssertEqual(
+      rufletMainAxisDistribution(
+        alignment: .end,
+        availableExtent: 500,
+        occupiedExtent: 200,
+        childCount: 3),
+      RufletMainAxisDistribution(edgeInset: 300, additionalGap: 0))
+    XCTAssertEqual(
+      rufletMainAxisDistribution(
+        alignment: .center,
+        availableExtent: 500,
+        occupiedExtent: 200,
+        childCount: 3),
+      RufletMainAxisDistribution(edgeInset: 150, additionalGap: 0))
+    XCTAssertEqual(
+      rufletMainAxisDistribution(
+        alignment: .spaceBetween,
+        availableExtent: 500,
+        occupiedExtent: 200,
+        childCount: 3),
+      RufletMainAxisDistribution(edgeInset: 0, additionalGap: 150))
+    XCTAssertEqual(
+      rufletMainAxisDistribution(
+        alignment: .spaceAround,
+        availableExtent: 500,
+        occupiedExtent: 200,
+        childCount: 3),
+      RufletMainAxisDistribution(edgeInset: 50, additionalGap: 100))
+    XCTAssertEqual(
+      rufletMainAxisDistribution(
+        alignment: .spaceEvenly,
+        availableExtent: 500,
+        occupiedExtent: 200,
+        childCount: 3),
+      RufletMainAxisDistribution(edgeInset: 75, additionalGap: 75))
+  }
+
+  func testHorizontalWrapPlacesRunsAndItemsWithPinnedAlignments() {
+    let plan = rufletFlowPlan(
+      axis: .horizontal,
+      availableMainExtent: 100,
+      availableCrossExtent: 80,
+      spacing: 10,
+      runSpacing: 5,
+      alignment: .spaceBetween,
+      runAlignment: .spaceEvenly,
+      crossAlignment: .end,
+      itemSizes: [
+        CGSize(width: 30, height: 10),
+        CGSize(width: 30, height: 20),
+        CGSize(width: 60, height: 15),
+      ])
+
+    XCTAssertEqual(plan.positions[0].x, 0, accuracy: 0.001)
+    XCTAssertEqual(plan.positions[1].x, 70, accuracy: 0.001)
+    XCTAssertEqual(plan.positions[0].y, CGFloat(70) / 3, accuracy: 0.001)
+    XCTAssertEqual(plan.positions[1].y, CGFloat(40) / 3, accuracy: 0.001)
+    XCTAssertEqual(plan.positions[2].x, 0, accuracy: 0.001)
+    XCTAssertEqual(plan.positions[2].y, CGFloat(155) / 3, accuracy: 0.001)
+    XCTAssertEqual(plan.contentSize, CGSize(width: 70, height: 80))
+  }
+
+  func testVerticalWrapUsesColumnCrossAlignment() {
+    let plan = rufletFlowPlan(
+      axis: .vertical,
+      availableMainExtent: 55,
+      availableCrossExtent: nil,
+      spacing: 5,
+      runSpacing: 8,
+      alignment: .start,
+      runAlignment: .start,
+      crossAlignment: .center,
+      itemSizes: [
+        CGSize(width: 20, height: 20),
+        CGSize(width: 40, height: 30),
+        CGSize(width: 30, height: 30),
+      ])
+
+    XCTAssertEqual(plan.positions[0], CGPoint(x: 10, y: 0))
+    XCTAssertEqual(plan.positions[1], CGPoint(x: 0, y: 25))
+    XCTAssertEqual(plan.positions[2], CGPoint(x: 48, y: 0))
+    XCTAssertEqual(plan.contentSize, CGSize(width: 78, height: 55))
+  }
+
   private func parent(
     id: Int,
     type: String,

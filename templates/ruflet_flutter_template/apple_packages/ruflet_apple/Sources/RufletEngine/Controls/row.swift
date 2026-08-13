@@ -20,6 +20,10 @@ public struct RowControl: View {
           axis: .horizontal,
           spacing: spacing,
           runSpacing: control.number("run_spacing") ?? 10,
+          alignment: rufletMainAxisAlignment(control.string("alignment")),
+          runAlignment: rufletMainAxisAlignment(control.string("run_alignment")),
+          crossAlignment: rufletWrapCrossAlignment(control.string("vertical_alignment")),
+          crossExtent: control.number("height").map { CGFloat($0) },
           children: children.map { AnyView(ControlWidget(control: $0)) }
         ))
     }
@@ -31,8 +35,14 @@ public struct RowControl: View {
         horizontalAlignment: .leading,
         verticalAlignment: verticalAlignment,
         frameAlignment: horizontalAlignment,
+        mainAxisAlignment: rufletMainAxisAlignment(control.string("alignment")),
         crossAxisStretch: control.string("vertical_alignment")?.lowercased() == "stretch",
-        tight: control.boolean("tight", default: false)))
+        tight: control.boolean("tight", default: false)
+      )
+      .modifier(
+        RufletIntrinsicAxisModifier(
+          horizontal: false,
+          vertical: control.boolean("intrinsic_height", default: false))))
   }
 
   private func scrollable(_ content: AnyView) -> AnyView {

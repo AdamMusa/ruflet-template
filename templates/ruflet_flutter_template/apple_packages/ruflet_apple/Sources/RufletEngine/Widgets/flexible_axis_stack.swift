@@ -12,8 +12,10 @@ struct RufletFlexibleAxisStack: View {
   let horizontalAlignment: HorizontalAlignment
   let verticalAlignment: VerticalAlignment
   let frameAlignment: Alignment
+  let mainAxisAlignment: RufletMainAxisAlignment
   let crossAxisStretch: Bool
   let tight: Bool
+  var fixedMainExtents: [Int: CGFloat] = [:]
 
   @State private var availableMainExtent: CGFloat = 0
   @State private var intrinsicMainExtents: [Int: CGFloat] = [:]
@@ -21,15 +23,17 @@ struct RufletFlexibleAxisStack: View {
   var body: some View {
     Group {
       if axis == .horizontal {
-        HStack(alignment: verticalAlignment, spacing: spacing) {
+        HStack(alignment: verticalAlignment, spacing: resolvedSpacing) {
           stackChildren
         }
-        .frame(maxWidth: tight ? nil : .infinity, alignment: frameAlignment)
+        .padding(.horizontal, mainAxisInset)
+        .frame(maxWidth: tight ? nil : .infinity, alignment: resolvedFrameAlignment)
       } else {
-        VStack(alignment: horizontalAlignment, spacing: spacing) {
+        VStack(alignment: horizontalAlignment, spacing: resolvedSpacing) {
           stackChildren
         }
-        .frame(maxHeight: tight ? nil : .infinity, alignment: frameAlignment)
+        .padding(.vertical, mainAxisInset)
+        .frame(maxHeight: tight ? nil : .infinity, alignment: resolvedFrameAlignment)
       }
     }
     .background {
@@ -54,7 +58,7 @@ struct RufletFlexibleAxisStack: View {
           RufletFlexAllocationModifier(
             axis: axis,
             contract: rufletExpansionContract(for: child),
-            allocatedExtent: allocatedExtent(for: child))
+            allocatedExtent: fixedMainExtents[child.id] ?? allocatedExtent(for: child))
         )
         .background {
           if rufletExpansionContract(for: child) == nil {
@@ -69,13 +73,22 @@ struct RufletFlexibleAxisStack: View {
   }
 
   private func allocatedExtent(for child: RufletControl) -> CGFloat? {
+    if let fixed = fixedMainExtents[child.id] { return fixed }
     guard let expansion = rufletExpansionContract(for: child) else { return nil }
-    let flexTotal = children.compactMap { rufletExpansionContract(for: $0)?.flex }.reduce(0, +)
+    let flexTotal =
+      children
+      .filter { fixedMainExtents[$0.id] == nil }
+      .compactMap { rufletExpansionContract(for: $0)?.flex }
+      .reduce(0, +)
     guard flexTotal > 0, availableMainExtent > 0 else { return nil }
     let fixedExtent =
       children
-      .filter { rufletExpansionContract(for: $0) == nil }
-      .reduce(CGFloat.zero) { $0 + (intrinsicMainExtents[$1.id] ?? 0) }
+      .filter {
+        fixedMainExtents[$0.id] != nil || rufletExpansionContract(for: $0) == nil
+      }
+      .reduce(CGFloat.zero) {
+        $0 + (fixedMainExtents[$1.id] ?? intrinsicMainExtents[$1.id] ?? 0)
+      }
     return rufletFlexAllocation(
       availableExtent: availableMainExtent,
       fixedExtent: fixedExtent,
@@ -83,6 +96,99 @@ struct RufletFlexibleAxisStack: View {
       childCount: children.count,
       flex: expansion.flex,
       totalFlex: flexTotal)
+  }
+
+  private var resolvedSpacing: CGFloat {
+    guard !tight else { return spacing }
+    let distribution = rufletMainAxisDistribution(
+      alignment: mainAxisAlignment,
+      availableExtent: availableMainExtent,
+      occupiedExtent: occupiedMainExtent,
+      childCount: children.count)
+    return spacing + distribution.additionalGap
+  }
+
+  private var mainAxisInset: CGFloat {
+    guard !tight else { return 0 }
+    switch mainAxisAlignment {
+    case .spaceAround, .spaceEvenly:
+      return rufletMainAxisDistribution(
+        alignment: mainAxisAlignment,
+        availableExtent: availableMainExtent,
+        occupiedExtent: occupiedMainExtent,
+        childCount: children.count
+      ).edgeInset
+    default:
+      // Start/end/center are supplied by the containing frame rather than
+      // symmetric padding. SpaceBetween has no edge inset.
+      return 0
+    }
+  }
+
+  private var occupiedMainExtent: CGFloat {
+    let fixedExtent =
+      children
+      .filter {
+        fixedMainExtents[$0.id] != nil || rufletExpansionContract(for: $0) == nil
+      }
+      .reduce(CGFloat.zero) {
+        $0 + (fixedMainExtents[$1.id] ?? intrinsicMainExtents[$1.id] ?? 0)
+      }
+    let flexExtent =
+      children
+      .filter { fixedMainExtents[$0.id] == nil }
+      .compactMap { allocatedExtent(for: $0) }
+      .reduce(0, +)
+    let gaps = spacing * CGFloat(max(children.count - 1, 0))
+    return fixedExtent + flexExtent + gaps
+  }
+
+  private var resolvedFrameAlignment: Alignment {
+    switch mainAxisAlignment {
+    case .end:
+      return axis == .horizontal ? .trailing : .bottom
+    case .center:
+      return .center
+    default:
+      return frameAlignment
+    }
+  }
+}
+
+struct RufletMainAxisDistribution: Equatable {
+  let edgeInset: CGFloat
+  let additionalGap: CGFloat
+}
+
+/// Pure counterpart of Flutter's MainAxisAlignment free-space distribution.
+/// The Row/Column `spacing` value is already included in `occupiedExtent`;
+/// this result describes only the remaining alignment space.
+func rufletMainAxisDistribution(
+  alignment: RufletMainAxisAlignment,
+  availableExtent: CGFloat,
+  occupiedExtent: CGFloat,
+  childCount: Int
+) -> RufletMainAxisDistribution {
+  guard availableExtent > 0, childCount > 0 else {
+    return RufletMainAxisDistribution(edgeInset: 0, additionalGap: 0)
+  }
+  let free = max(availableExtent - occupiedExtent, 0)
+  switch alignment {
+  case .end:
+    return RufletMainAxisDistribution(edgeInset: free, additionalGap: 0)
+  case .center:
+    return RufletMainAxisDistribution(edgeInset: free / 2, additionalGap: 0)
+  case .spaceBetween where childCount > 1:
+    return RufletMainAxisDistribution(
+      edgeInset: 0, additionalGap: free / CGFloat(childCount - 1))
+  case .spaceAround:
+    let gap = free / CGFloat(childCount)
+    return RufletMainAxisDistribution(edgeInset: gap / 2, additionalGap: gap)
+  case .spaceEvenly:
+    let gap = free / CGFloat(childCount + 1)
+    return RufletMainAxisDistribution(edgeInset: gap, additionalGap: gap)
+  default:
+    return RufletMainAxisDistribution(edgeInset: 0, additionalGap: 0)
   }
 }
 
