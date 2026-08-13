@@ -270,14 +270,11 @@ String? parseBackendUrl(String value) {
   final raw = value.trim();
   final uri = Uri.tryParse(raw);
   if (uri != null &&
-      (uri.scheme == 'http' ||
-          uri.scheme == 'https' ||
-          uri.scheme == 'ws' ||
-          uri.scheme == 'wss') &&
+      (uri.scheme == 'http' || uri.scheme == 'https') &&
       uri.host.isNotEmpty) {
     return normalizePageUrlForPlatform(raw);
   }
-  final match = RegExp(r'(https?:\/\/[^\s]+|wss?:\/\/[^\s]+)').firstMatch(raw);
+  final match = RegExp(r'(https?:\/\/[^\s]+)').firstMatch(raw);
   if (match == null) return null;
   return normalizePageUrlForPlatform(match.group(0)!);
 }

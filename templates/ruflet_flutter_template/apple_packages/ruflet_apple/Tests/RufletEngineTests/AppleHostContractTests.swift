@@ -21,6 +21,8 @@ final class AppleHostContractTests: XCTestCase {
   func testPageAddressRejectsMalformedOrUnsupportedValues() {
     XCTAssertNil(RufletPageAddress.parse(""))
     XCTAssertNil(RufletPageAddress.parse(" https://example.com"))
+    XCTAssertNil(RufletPageAddress.parse("ws://example.com/ws"))
+    XCTAssertNil(RufletPageAddress.parse("wss://example.com/ws"))
     XCTAssertNil(RufletPageAddress.parse("file:///tmp/page"))
     XCTAssertNil(RufletPageAddress.parse("tcp://localhost"))
   }

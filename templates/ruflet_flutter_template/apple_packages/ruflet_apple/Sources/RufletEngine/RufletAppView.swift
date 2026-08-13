@@ -14,7 +14,7 @@ public enum RufletPageAddress {
     else { return nil }
 
     switch address.scheme?.lowercased() {
-    case "http", "https", "ws", "wss":
+    case "http", "https":
       return address.host == nil ? nil : address
     case "tcp":
       return address.host == nil || address.port == nil ? nil : address
