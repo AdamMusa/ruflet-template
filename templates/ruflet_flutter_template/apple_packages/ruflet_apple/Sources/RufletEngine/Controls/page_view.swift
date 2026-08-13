@@ -141,14 +141,41 @@ struct RufletPageViewConfiguration: Equatable {
   }
 }
 
-private struct RufletPageViewStorageKey: Hashable {
-  let backend: ObjectIdentifier
-  let controlID: Int
-}
-
 @MainActor
 private enum RufletPageViewPositionStore {
-  static var pages: [RufletPageViewStorageKey: Double] = [:]
+  private final class Entry {
+    weak var control: RufletControl?
+    var page: Double
+
+    init(control: RufletControl, page: Double) {
+      self.control = control
+      self.page = page
+    }
+  }
+
+  private static var pages: [ObjectIdentifier: Entry] = [:]
+
+  static func page(for control: RufletControl) -> Double? {
+    let key = ObjectIdentifier(control)
+    guard let entry = pages[key], entry.control === control else {
+      pages.removeValue(forKey: key)
+      return nil
+    }
+    return entry.page
+  }
+
+  static func setPage(_ page: Double, for control: RufletControl) {
+    let key = ObjectIdentifier(control)
+    if let entry = pages[key], entry.control === control {
+      entry.page = page
+    } else {
+      pages[key] = Entry(control: control, page: page)
+    }
+  }
+
+  static func removePage(for control: RufletControl) {
+    pages.removeValue(forKey: ObjectIdentifier(control))
+  }
 }
 
 @MainActor
@@ -161,7 +188,6 @@ final class RufletPageViewCoordinator: ObservableObject {
   private var pageLength: CGFloat = 1
   private var configuration: RufletPageViewConfiguration?
   private var invokeToken: UUID?
-  private var storageKey: RufletPageViewStorageKey?
 
   init(selectedIndex: Int) {
     self.selectedIndex = selectedIndex
@@ -176,20 +202,16 @@ final class RufletPageViewCoordinator: ObservableObject {
     self.control = control
     self.pageCount = pageCount
     self.configuration = configuration
-    storageKey = RufletPageViewStorageKey(
-      backend: ObjectIdentifier(control.backend),
-      controlID: control.id)
 
     let requested = bounded(control.integer("selected_index", default: 0) ?? 0)
     if configuration.keepPage,
-       let storageKey,
-       let stored = RufletPageViewPositionStore.pages[storageKey] {
+       let stored = RufletPageViewPositionStore.page(for: control) {
       continuousPage = bounded(stored)
       selectedIndex = bounded(Int(stored.rounded()))
     } else {
       selectedIndex = requested
       continuousPage = CGFloat(requested)
-      if let storageKey { RufletPageViewPositionStore.pages.removeValue(forKey: storageKey) }
+      RufletPageViewPositionStore.removePage(for: control)
     }
 
     guard invokeToken == nil else { return }
@@ -220,8 +242,8 @@ final class RufletPageViewCoordinator: ObservableObject {
     if oldIdentity != newConfiguration.controllerIdentity {
       selectedIndex = requested
       continuousPage = CGFloat(requested)
-      if !newConfiguration.keepPage, let storageKey {
-        RufletPageViewPositionStore.pages.removeValue(forKey: storageKey)
+      if !newConfiguration.keepPage {
+        RufletPageViewPositionStore.removePage(for: control)
       }
       persistPage()
       return
@@ -337,8 +359,8 @@ final class RufletPageViewCoordinator: ObservableObject {
   }
 
   private func persistPage() {
-    guard let storageKey, configuration?.keepPage == true else { return }
-    RufletPageViewPositionStore.pages[storageKey] = Double(continuousPage)
+    guard let control, configuration?.keepPage == true else { return }
+    RufletPageViewPositionStore.setPage(Double(continuousPage), for: control)
   }
 
   private func bounded(_ index: Int) -> Int {

@@ -101,6 +101,14 @@ struct PageViewControlTests {
     first.commitPage(2, animated: false, notify: false)
     first.unmount()
 
+    // PageStorage belongs to the mounted control instance, not a backend/control-ID pair.
+    // A new wire control can legitimately reuse both without inheriting native scroll state.
+    let distinctControl = makePageView(backend: backend)
+    let distinct = RufletPageViewCoordinator(selectedIndex: 0)
+    distinct.mount(control: distinctControl, pageCount: 3, configuration: configuration)
+    #expect(distinct.selectedIndex == 0)
+    distinct.unmount()
+
     let restored = RufletPageViewCoordinator(selectedIndex: 0)
     restored.mount(control: control, pageCount: 3, configuration: configuration)
     #expect(restored.selectedIndex == 2)
