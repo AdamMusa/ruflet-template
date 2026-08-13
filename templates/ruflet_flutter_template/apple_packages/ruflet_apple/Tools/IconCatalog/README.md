@@ -71,6 +71,8 @@ Reviewed privacy-protection verification and account access states live in
 `privacy_access_state_overrides.json`.
 Reviewed copy, paste, outbound, numeric-text, label, and widget-grid legacy
 aliases live in `legacy_interface_alias_overrides.json`.
+Reviewed music/video collections, add-to-library state, and recent-person media
+profiles live in `media_library_overrides.json`.
 
 The 8,825 identities contain 2,235 concepts because Flet carries Outlined,
 Rounded, and Sharp Material variants. The generator records the collapsed

@@ -40,6 +40,7 @@ Generation uses pinned/auditable inputs:
 * apple_platform_device_overrides.json -- reviewed Apple platform and device adaptation.
 * privacy_access_state_overrides.json -- reviewed privacy and account access states.
 * legacy_interface_alias_overrides.json -- reviewed legacy interface aliases.
+* media_library_overrides.json -- reviewed legacy media-library states.
 
 The installed public Apple symbol metadata is used only to choose and validate
 native symbols available at both deployment floors. Private and restricted
@@ -110,6 +111,7 @@ PRIVACY_ACCESS_STATE_OVERRIDES_PATH = (
 LEGACY_INTERFACE_ALIAS_OVERRIDES_PATH = (
     TOOL_DIR / "legacy_interface_alias_overrides.json"
 )
+MEDIA_LIBRARY_OVERRIDES_PATH = TOOL_DIR / "media_library_overrides.json"
 AUDIT_PATH = TOOL_DIR / "material_to_apple_audit.json"
 
 CORE_GLYPHS = Path(
@@ -404,6 +406,7 @@ def load_reviewed_overrides() -> tuple[
         "apple_platform_device": APPLE_PLATFORM_DEVICE_OVERRIDES_PATH,
         "privacy_access_state": PRIVACY_ACCESS_STATE_OVERRIDES_PATH,
         "legacy_interface_alias": LEGACY_INTERFACE_ALIAS_OVERRIDES_PATH,
+        "media_library": MEDIA_LIBRARY_OVERRIDES_PATH,
     }
     merged: dict[str, dict[str, str]] = {}
     families: dict[str, str] = {}

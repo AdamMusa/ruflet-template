@@ -1052,6 +1052,54 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             self.assertEqual(self.entries[material_name]["kind"], kind)
             self.assertEqual(self.entries[material_name]["value"], value)
 
+    def test_media_library_family_is_reviewed_native_artwork(self):
+        family = MODULE.load_json(MODULE.MEDIA_LIBRARY_OVERRIDES_PATH)
+        expected_concepts = {
+            "MY_LIBRARY_ADD",
+            "MY_LIBRARY_MUSIC",
+            "RECENT_ACTORS",
+            "VIDEO_LIBRARY",
+        }
+        self.assertEqual(set(family), expected_concepts)
+        self.assertEqual(
+            self.audit["reviewed_families"]["media_library"],
+            len(expected_concepts),
+        )
+        low_confidence = {
+            item["concept"] for item in self.audit["low_confidence_concepts"]
+        }
+        self.assertTrue(expected_concepts.isdisjoint(low_confidence))
+        material = MODULE.load_json(MODULE.MATERIAL_PATH)
+        family_wire_identities = {
+            name
+            for name in material
+            if MODULE.concept_for(name) in expected_concepts
+        }
+        self.assertEqual(len(family_wire_identities), 16)
+        for name in family_wire_identities:
+            self.assertEqual(self.entries[name]["confidence"], "reviewed")
+            self.assertEqual(self.entries[name]["source"], "reviewed_override")
+
+    def test_media_library_distinct_semantics_do_not_regress(self):
+        expected = {
+            "MY_LIBRARY_ADD": (
+                "system_symbol",
+                "rectangle.stack.badge.plus",
+            ),
+            "MY_LIBRARY_MUSIC": ("system_symbol", "music.note.list"),
+            "RECENT_ACTORS": (
+                "system_symbol",
+                "person.crop.circle.badge.clock.fill",
+            ),
+            "VIDEO_LIBRARY": (
+                "system_symbol",
+                "rectangle.stack.badge.play",
+            ),
+        }
+        for material_name, (kind, value) in expected.items():
+            self.assertEqual(self.entries[material_name]["kind"], kind)
+            self.assertEqual(self.entries[material_name]["value"], value)
+
     def test_checked_in_artifacts_are_reproducible(self):
         self.assertEqual(
             MODULE.OUTPUT_PATH.read_text(encoding="utf-8"),

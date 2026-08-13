@@ -2146,11 +2146,6 @@
     "value": "video.slash.fill",
     "rationale": "curated Material-to-SF vocabulary"
   },
-  "VIDEO_LIBRARY": {
-    "kind": "system_symbol",
-    "value": "film.stack",
-    "rationale": "curated Material-to-SF vocabulary"
-  },
   "VIEW_COLUMN": {
     "kind": "system_symbol",
     "value": "rectangle.split.3x1",

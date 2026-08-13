@@ -34538,32 +34538,32 @@
     "source": "semantic_rank"
   },
   "MY_LIBRARY_ADD": {
-    "kind": "cupertino_glyph",
-    "value": "ADD",
+    "kind": "system_symbol",
+    "value": "rectangle.stack.badge.plus",
     "concept": "MY_LIBRARY_ADD",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MY_LIBRARY_ADD_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "ADD",
+    "kind": "system_symbol",
+    "value": "rectangle.stack.badge.plus",
     "concept": "MY_LIBRARY_ADD",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MY_LIBRARY_ADD_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "ADD",
+    "kind": "system_symbol",
+    "value": "rectangle.stack.badge.plus",
     "concept": "MY_LIBRARY_ADD",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MY_LIBRARY_ADD_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "ADD",
+    "kind": "system_symbol",
+    "value": "rectangle.stack.badge.plus",
     "concept": "MY_LIBRARY_ADD",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MY_LIBRARY_BOOKS": {
     "kind": "cupertino_glyph",
@@ -34594,32 +34594,32 @@
     "source": "semantic_rank"
   },
   "MY_LIBRARY_MUSIC": {
-    "kind": "cupertino_glyph",
-    "value": "MUSIC_MIC",
+    "kind": "system_symbol",
+    "value": "music.note.list",
     "concept": "MY_LIBRARY_MUSIC",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MY_LIBRARY_MUSIC_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "MUSIC_MIC",
+    "kind": "system_symbol",
+    "value": "music.note.list",
     "concept": "MY_LIBRARY_MUSIC",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MY_LIBRARY_MUSIC_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "MUSIC_MIC",
+    "kind": "system_symbol",
+    "value": "music.note.list",
     "concept": "MY_LIBRARY_MUSIC",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MY_LIBRARY_MUSIC_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "MUSIC_MIC",
+    "kind": "system_symbol",
+    "value": "music.note.list",
     "concept": "MY_LIBRARY_MUSIC",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MY_LOCATION": {
     "kind": "system_symbol",
@@ -43128,31 +43128,31 @@
   },
   "RECENT_ACTORS": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "person.crop.circle.badge.clock.fill",
     "concept": "RECENT_ACTORS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RECENT_ACTORS_OUTLINED": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "person.crop.circle.badge.clock.fill",
     "concept": "RECENT_ACTORS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RECENT_ACTORS_ROUNDED": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "person.crop.circle.badge.clock.fill",
     "concept": "RECENT_ACTORS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RECENT_ACTORS_SHARP": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "person.crop.circle.badge.clock.fill",
     "concept": "RECENT_ACTORS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RECOMMEND": {
     "kind": "system_symbol",
@@ -58310,32 +58310,32 @@
     "source": "reviewed_override"
   },
   "VIDEO_LIBRARY": {
-    "kind": "cupertino_glyph",
-    "value": "VIDEO_CAMERA",
+    "kind": "system_symbol",
+    "value": "rectangle.stack.badge.play",
     "concept": "VIDEO_LIBRARY",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VIDEO_LIBRARY_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "VIDEO_CAMERA",
+    "kind": "system_symbol",
+    "value": "rectangle.stack.badge.play",
     "concept": "VIDEO_LIBRARY",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VIDEO_LIBRARY_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "VIDEO_CAMERA",
+    "kind": "system_symbol",
+    "value": "rectangle.stack.badge.play",
     "concept": "VIDEO_LIBRARY",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VIDEO_LIBRARY_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "VIDEO_CAMERA",
+    "kind": "system_symbol",
+    "value": "rectangle.stack.badge.play",
     "concept": "VIDEO_LIBRARY",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VIDEO_SETTINGS": {
     "kind": "cupertino_glyph",
