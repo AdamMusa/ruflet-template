@@ -7,6 +7,7 @@ public struct ChipControl: View {
   @ObservedObject public var control: RufletControl
   @StateObject private var coordinator: RufletChipCoordinator
   @FocusState private var focused: Bool
+  @State private var hovered = false
 
   public init(control: RufletControl) {
     self.control = control
@@ -32,11 +33,18 @@ public struct ChipControl: View {
   }
 
   private var chip: some View {
-    HStack(spacing: 6) {
+    let presentation = RufletChipPresentation(
+      control: control,
+      selected: coordinator.selected,
+      focused: focused,
+      hovered: hovered)
+    return HStack(spacing: 6) {
       Button(action: coordinator.activate) {
         HStack(spacing: 6) {
           if let leading = control.buildWidget("leading") {
-            leading.modifier(RufletChipSizeModifier(control.dynamicValue("leading_size_constraints")))
+            leading
+              .modifier(RufletChipSizeModifier(control.dynamicValue("leading_size_constraints")))
+              .transition(.scale.animation(presentation.leadingDrawerAnimation))
           }
           if coordinator.selected && control.boolean("show_checkmark", default: true) {
             Image(systemName: "checkmark")
@@ -44,12 +52,19 @@ public struct ChipControl: View {
               .foregroundStyle(checkColor)
           }
           label
-            .modifier(RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("label_text_style"))))
+            .modifier(
+              RufletTextStyleModifier(
+                style: parseTextStyle(control.dynamicValue("label_text_style")))
+            )
             .padding(parsePadding(control.dynamicValue("label_padding")) ?? EdgeInsets())
         }
         .contentShape(Rectangle())
       }
-      .buttonStyle(.plain)
+      .buttonStyle(
+        RufletChipActivationButtonStyle(
+          pressElevation: presentation.pressElevation,
+          shadowColor: presentation.shadowColor)
+      )
       .disabled(control.disabled || (!coordinator.onSelect && !coordinator.onClick))
       .focused($focused)
 
@@ -64,26 +79,32 @@ public struct ChipControl: View {
         .buttonStyle(.plain)
         .foregroundStyle(deleteColor)
         .modifier(RufletChipSizeModifier(control.dynamicValue("delete_icon_size_constraints")))
+        .transition(.scale.animation(presentation.deleteDrawerAnimation))
         .disabled(control.disabled)
-        .help(control.string("delete_button_tooltip") ?? "")
-        .accessibilityLabel(control.string("delete_button_tooltip") ?? "Delete")
+        .help(presentation.deleteTooltip ?? "")
+        .accessibilityLabel(presentation.deleteTooltip ?? "Delete")
       }
     }
-    .padding(parsePadding(control.dynamicValue("padding"))
-      ?? EdgeInsets(top: 6, leading: 10, bottom: 6, trailing: 8))
-    .foregroundStyle(foregroundColor)
-    .background(backgroundColor, in: shape)
+    .padding(presentation.padding)
+    .foregroundStyle(.primary)
+    .background(presentation.backgroundColor, in: shape)
     .overlay {
       if let border = parseBorderSide(control.dynamicValue("border_side")) {
         shape.stroke(border.color, lineWidth: border.width)
       }
     }
     .shadow(
-      color: shadowColor,
+      color: presentation.shadowColor,
       radius: max(control.number("elevation") ?? 0, 0),
-      y: max(control.number("elevation") ?? 0, 0) / 2)
+      y: max(control.number("elevation") ?? 0, 0) / 2
+    )
+    .modifier(RufletChipClipModifier(shape: shape, behavior: presentation.clipBehavior))
+    .modifier(RufletMouseCursorModifier(cursor: control.string("mouse_cursor")))
+    .padding(presentation.densityPadding)
     .opacity(control.disabled ? 0.55 : 1)
-    .animation(selectionAnimation, value: coordinator.selected)
+    .animation(presentation.selectionAnimation, value: coordinator.selected)
+    .animation(presentation.enableAnimation, value: control.disabled)
+    .onHover { hovered = $0 }
     .accessibilityElement(children: .combine)
     .accessibilityAddTraits(coordinator.selected ? .isSelected : [])
   }
@@ -91,28 +112,120 @@ public struct ChipControl: View {
   private var label: AnyView? { control.buildTextOrWidget("label") }
   private var checkColor: Color { parseColor(control.string("check_color")) ?? .white }
   private var deleteColor: Color { parseColor(control.string("delete_icon_color")) ?? .secondary }
-  private var foregroundColor: Color {
-    parseColor(control.string(control.disabled ? "disabled_color" : "color")) ?? .primary
-  }
-  private var backgroundColor: Color {
-    if control.disabled { return parseColor(control.string("disabled_color")) ?? .secondary.opacity(0.16) }
-    if coordinator.selected {
-      return parseColor(control.string("selected_color")) ?? .accentColor.opacity(0.2)
-    }
-    return parseColor(control.string("bgcolor")) ?? .secondary.opacity(0.12)
-  }
-  private var shadowColor: Color {
-    parseColor(control.string(coordinator.selected ? "selected_shadow_color" : "shadow_color"))
-      ?? .black.opacity(0.15)
-  }
   private var shape: RufletCornerShape {
-    let radius = parseBorderRadius(control.dynamicValue("shape"))
+    let radius =
+      parseBorderRadius(control.dynamicValue("shape"))
       ?? RufletBorderRadius(topLeft: 16, topRight: 16, bottomLeft: 16, bottomRight: 16)
     return RufletCornerShape(radius: radius)
   }
-  private var selectionAnimation: Animation? {
-    parseAnimation(control.dynamicValue("select_animation_style"))?.animation
+}
+
+@MainActor
+struct RufletChipPresentation {
+  let backgroundColor: Color
+  let shadowColor: Color
+  let pressElevation: Double
+  let padding: EdgeInsets
+  let densityPadding: EdgeInsets
+  let clipBehavior: String
+  let deleteTooltip: String?
+  let enableAnimation: Animation
+  let selectionAnimation: Animation
+  let leadingDrawerAnimation: Animation
+  let deleteDrawerAnimation: Animation
+
+  init(control: RufletControl, selected: Bool, focused: Bool, hovered: Bool) {
+    var states = Set<RufletWidgetState>()
+    if selected { states.insert(.selected) }
+    if focused { states.insert(.focused) }
+    if hovered { states.insert(.hovered) }
+    if control.disabled { states.insert(.disabled) }
+    let stateColor = RufletWidgetStateProperty<Color>(
+      control.dynamicValue("color"),
+      converter: { raw in
+        if let text = raw as? String { return parseColor(text) }
+        if let value = raw as? RufletValue { return parseColor(value.text) }
+        return nil
+      }
+    ).resolve(states)
+
+    if control.disabled {
+      backgroundColor =
+        parseColor(control.string("disabled_color"))
+        ?? stateColor ?? .secondary.opacity(0.16)
+    } else if selected {
+      backgroundColor =
+        parseColor(control.string("selected_color"))
+        ?? stateColor ?? .accentColor.opacity(0.2)
+    } else {
+      backgroundColor =
+        stateColor
+        ?? parseColor(control.string("bgcolor")) ?? .secondary.opacity(0.12)
+    }
+    if selected {
+      shadowColor = parseColor(control.string("selected_shadow_color")) ?? .black.opacity(0.15)
+    } else {
+      shadowColor = parseColor(control.string("shadow_color")) ?? .black.opacity(0.15)
+    }
+    pressElevation = control.number("elevation_on_click") ?? 0
+    padding =
+      parsePadding(control.dynamicValue("padding"))
+      ?? EdgeInsets(top: 6, leading: 10, bottom: 6, trailing: 8)
+    switch parseVisualDensity(control.string("visual_density")) {
+    case .compact:
+      densityPadding = EdgeInsets(top: -4, leading: -4, bottom: -4, trailing: -4)
+    case .comfortable:
+      densityPadding = EdgeInsets(top: -2, leading: -2, bottom: -2, trailing: -2)
+    case .adaptivePlatformDensity, .standard, nil:
+      densityPadding = EdgeInsets()
+    }
+    clipBehavior = control.string("clip_behavior", default: "none") ?? "none"
+    deleteTooltip =
+      control.string("delete_icon_tooltip")
+      ?? control.string("delete_button_tooltip")
+    enableAnimation =
+      parseAnimation(control.dynamicValue("enable_animation_style"))?.animation
       ?? .easeInOut(duration: 0.15)
+    selectionAnimation =
+      parseAnimation(control.dynamicValue("select_animation_style"))?.animation
+      ?? .easeInOut(duration: 0.15)
+    leadingDrawerAnimation =
+      parseAnimation(
+        control.dynamicValue("leading_drawer_animation_style"))?.animation
+      ?? .easeInOut(duration: 0.15)
+    deleteDrawerAnimation =
+      parseAnimation(
+        control.dynamicValue("delete_drawer_animation_style"))?.animation
+      ?? .easeInOut(duration: 0.15)
+  }
+}
+
+private struct RufletChipActivationButtonStyle: ButtonStyle {
+  let pressElevation: Double
+  let shadowColor: Color
+
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label
+      .shadow(
+        color: configuration.isPressed ? shadowColor : .clear,
+        radius: configuration.isPressed ? max(pressElevation, 0) : 0,
+        y: configuration.isPressed ? max(pressElevation, 0) / 2 : 0)
+  }
+}
+
+private struct RufletChipClipModifier: ViewModifier {
+  let shape: RufletCornerShape
+  let behavior: String
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if behavior.lowercased() == "none" {
+      content
+    } else {
+      content.clipShape(
+        shape,
+        style: FillStyle(antialiased: behavior.lowercased() != "hardedge"))
+    }
   }
 }
 
