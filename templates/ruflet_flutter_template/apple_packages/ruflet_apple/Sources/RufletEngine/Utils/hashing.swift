@@ -24,6 +24,16 @@ func rufletStableValueDescription(_ value: RufletValue) -> String {
             "\(key.count):\(key)=\(rufletStableValueDescription(value[key]!))"
         }
         return "{\(entries.joined(separator: ","))}"
+    case let .keyedMap(value):
+        let entries = value.map { key, item in
+            let keyDescription: String
+            switch key {
+            case .string(let value): keyDescription = "s:\(value.count):\(value)"
+            case .int(let value): keyDescription = "i:\(value)"
+            }
+            return "\(keyDescription)=\(rufletStableValueDescription(item))"
+        }.sorted()
+        return "k{\(entries.joined(separator: ","))}"
     case let .extensionValue(type, payload):
         return "x:\(type):\(payload.base64EncodedString())"
     }

@@ -31,6 +31,15 @@ func rufletAny(_ value: RufletValue) -> Any {
     case let .binary(value): return value
     case let .array(value): return value.map(rufletAny)
     case let .map(value): return value.mapValues(rufletAny)
+    case let .keyedMap(value):
+        return Dictionary(uniqueKeysWithValues: value.map { key, item in
+            let convertedKey: AnyHashable
+            switch key {
+            case .string(let value): convertedKey = value
+            case .int(let value): convertedKey = value
+            }
+            return (convertedKey, rufletAny(item))
+        })
     case let .extensionValue(type, payload):
         return ["type": type, "payload": payload]
     }
