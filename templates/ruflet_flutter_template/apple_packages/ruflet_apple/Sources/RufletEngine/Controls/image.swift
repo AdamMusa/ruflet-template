@@ -10,7 +10,8 @@ public struct ImageControl: View {
     LayoutControl(control: control) {
       if control.value("src") == nil {
         ErrorControl("Image must have \"src\" specified.")
-      } else if let source = parseImageSource(control.dynamicValue("src"), backend: control.backend) {
+      } else if let source = parseImageSource(control.dynamicValue("src"), backend: control.backend)
+      {
         image(source)
       } else if let errorContent = control.buildWidget("error_content") {
         errorContent
@@ -40,13 +41,15 @@ public struct ImageControl: View {
       tint: parseColor(control.string("color")),
       placeholder: placeholder,
       errorContent: control.buildWidget("error_content"),
-      fadeInAnimation: fade)
+      fadeInAnimation: fade,
+      svgFit: fit)
     let sized = AnyView(sourceView.frame(width: width, height: height))
     let clipped = AnyView(sized.clipShape(RufletCornerShape(radius: radius)))
-    return AnyView(clipped
-      .accessibilityHidden(control.boolean("exclude_from_semantics", default: false))
-      .accessibilityLabel(control.string("semantics_label") ?? "")
-      .opacity(control.disabled ? 0.38 : 1))
+    return AnyView(
+      clipped
+        .accessibilityHidden(control.boolean("exclude_from_semantics", default: false))
+        .accessibilityLabel(control.string("semantics_label") ?? "")
+        .opacity(control.disabled ? 0.38 : 1))
   }
 
   private func placeholderView(
@@ -54,20 +57,25 @@ public struct ImageControl: View {
     repeatMode: RufletImageRepeat,
     quality: RufletFilterQuality
   ) -> AnyView? {
-    guard let source = parseImageSource(control.dynamicValue("placeholder_src"), backend: control.backend) else {
+    guard
+      let source = parseImageSource(
+        control.dynamicValue("placeholder_src"), backend: control.backend)
+    else {
       return nil
     }
     let placeholderFit = parseEnum(
       RufletImageFit.self,
       control.string("placeholder_fit"),
       fit)!
-    return AnyView(RufletImageSourceView(
-      source: source,
-      contentMode: placeholderFit.contentMode,
-      onError: nil,
-      resizingMode: repeatMode.resizingMode,
-      interpolation: quality.interpolation,
-      antiAlias: control.boolean("anti_alias", default: false),
-      tint: parseColor(control.string("color"))))
+    return AnyView(
+      RufletImageSourceView(
+        source: source,
+        contentMode: placeholderFit.contentMode,
+        onError: nil,
+        resizingMode: repeatMode.resizingMode,
+        interpolation: quality.interpolation,
+        antiAlias: control.boolean("anti_alias", default: false),
+        tint: parseColor(control.string("color")),
+        svgFit: placeholderFit))
   }
 }

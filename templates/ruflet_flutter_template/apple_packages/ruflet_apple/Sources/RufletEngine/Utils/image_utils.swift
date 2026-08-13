@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import WebKit
 
 #if os(iOS)
 import UIKit
@@ -12,6 +13,43 @@ typealias RufletPlatformImage = NSImage
 enum RufletImageSource: Equatable {
     case data(Data)
     case url(URL)
+
+    var hasSVGPathExtension: Bool {
+        guard case .url(let url) = self else { return false }
+        return url.pathExtension.lowercased() == "svg"
+    }
+}
+
+enum RufletImageFormat: Equatable {
+    case bitmap
+    case svg
+}
+
+/// Pinned Flet uses this namespace marker to distinguish inline SVG markup
+/// from an asset path. Keep the recognition in the shared source parser so
+/// Image, Markdown, avatars, and future image consumers behave identically.
+private let rufletSVGNamespace = Data(#" xmlns="http://www.w3.org/2000/svg""#.utf8)
+
+func rufletIsSVGData(_ data: Data) -> Bool {
+    data.range(of: rufletSVGNamespace) != nil
+}
+
+func rufletImageFormat(
+    source: RufletImageSource,
+    data: Data,
+    mimeType: String? = nil
+) -> RufletImageFormat {
+    if rufletIsSVGData(data)
+        || source.hasSVGPathExtension
+        || mimeType?.lowercased() == "image/svg+xml"
+    {
+        return .svg
+    }
+    return .bitmap
+}
+
+func rufletDecodePlatformImage(_ data: Data) -> RufletPlatformImage? {
+    RufletPlatformImage(data: data)
 }
 
 @MainActor
@@ -22,6 +60,8 @@ func parseImageSource(_ value: Any?, backend: RufletBackendProtocol) -> RufletIm
     let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
     guard !text.isEmpty else { return nil }
 
+    let textData = Data(text.utf8)
+    if rufletIsSVGData(textData) { return .data(textData) }
     if text.hasPrefix("data:"), let data = Data(base64Encoded: text.stripBase64DataHeader()) {
         return data.isEmpty ? nil : .data(data)
     }
@@ -69,13 +109,18 @@ struct RufletImageSourceView: View {
     var placeholder: AnyView?
     var errorContent: AnyView?
     var fadeInAnimation: ImplicitAnimationDetails?
+    var svgFit: RufletImageFit?
     @State private var image: RufletPlatformImage?
+    @State private var svgData: Data?
     @State private var failed = false
     @State private var task: Task<Void, Never>?
 
     var body: some View {
         Group {
-            if let image {
+            if let svgData {
+                renderedSVG(svgData)
+                    .transition(.opacity)
+            } else if let image {
                 renderedImage(image)
                     .transition(.opacity)
             } else if failed, let errorContent {
@@ -88,6 +133,22 @@ struct RufletImageSourceView: View {
         }
         .task(id: source) { await load() }
         .onDisappear { task?.cancel() }
+    }
+
+    @ViewBuilder
+    private func renderedSVG(_ data: Data) -> some View {
+        let nativeView = RufletSVGNativeView(
+            data: data,
+            fit: svgFit ?? (contentMode == .fill ? .cover : .contain)
+        )
+        .allowsHitTesting(false)
+        if let tint {
+            nativeView
+                .overlay(tint.blendMode(.sourceAtop))
+                .compositingGroup()
+        } else {
+            nativeView
+        }
     }
 
     @ViewBuilder
@@ -121,6 +182,7 @@ struct RufletImageSourceView: View {
     private func load() async {
         do {
             let data: Data
+            var mimeType: String?
             switch source {
             case let .data(value): data = value
             case let .url(url) where url.isFileURL: data = try Data(contentsOf: url)
@@ -130,20 +192,157 @@ struct RufletImageSourceView: View {
                     throw URLError(.badServerResponse)
                 }
                 data = value
+                mimeType = response.mimeType
             }
-            guard let loaded = RufletPlatformImage(data: data) else { throw URLError(.cannotDecodeContentData) }
+            if rufletImageFormat(source: source, data: data, mimeType: mimeType) == .svg {
+                failed = false
+                if let fadeInAnimation {
+                    withAnimation(fadeInAnimation.animation) {
+                        image = nil
+                        svgData = data
+                    }
+                } else {
+                    image = nil
+                    svgData = data
+                }
+                return
+            }
+            guard let loaded = rufletDecodePlatformImage(data) else {
+                throw URLError(.cannotDecodeContentData)
+            }
             failed = false
             if let fadeInAnimation {
-                withAnimation(fadeInAnimation.animation) { image = loaded }
+                withAnimation(fadeInAnimation.animation) {
+                    svgData = nil
+                    image = loaded
+                }
             } else {
+                svgData = nil
                 image = loaded
             }
         } catch {
+            image = nil
+            svgData = nil
             failed = true
             onError?()
         }
     }
 }
+
+func rufletSVGDocument(data: Data, fit: RufletImageFit) -> String? {
+    guard var svg = String(data: data, encoding: .utf8) else { return nil }
+    let preserveAspectRatio: String
+    let sizing: String
+    switch fit {
+    case .fill:
+        preserveAspectRatio = "none"
+        sizing = "width:100%;height:100%;"
+    case .cover:
+        preserveAspectRatio = "xMidYMid slice"
+        sizing = "width:100%;height:100%;"
+    case .fitWidth:
+        preserveAspectRatio = "xMidYMid meet"
+        sizing = "width:100%;height:auto;max-height:100%;"
+    case .fitHeight:
+        preserveAspectRatio = "xMidYMid meet"
+        sizing = "width:auto;height:100%;max-width:100%;"
+    case .none:
+        preserveAspectRatio = "xMidYMid meet"
+        sizing = "width:auto;height:auto;max-width:none;max-height:none;"
+    case .scaleDown:
+        preserveAspectRatio = "xMidYMid meet"
+        sizing = "width:auto;height:auto;max-width:100%;max-height:100%;"
+    case .contain:
+        preserveAspectRatio = "xMidYMid meet"
+        sizing = "width:100%;height:100%;"
+    }
+
+    guard let openingStart = svg.range(of: "<svg", options: .caseInsensitive),
+        let openingEnd = svg[openingStart.lowerBound...].firstIndex(of: ">")
+    else { return nil }
+    let openingRange = openingStart.lowerBound..<svg.index(after: openingEnd)
+    var opening = String(svg[openingRange])
+    if let expression = try? NSRegularExpression(
+        pattern: #"(?i)\s+preserveAspectRatio\s*=\s*("[^"]*"|'[^']*')"#)
+    {
+        opening = expression.stringByReplacingMatches(
+            in: opening,
+            range: NSRange(opening.startIndex..., in: opening),
+            withTemplate: "")
+    }
+    opening.insert(
+        contentsOf: " preserveAspectRatio=\"\(preserveAspectRatio)\"",
+        at: opening.index(before: opening.endIndex))
+    svg.replaceSubrange(openingRange, with: opening)
+
+    return """
+        <!doctype html>
+        <html><head><meta name="viewport" content="width=device-width,initial-scale=1">
+        <style>
+        html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:transparent}
+        body{display:flex;align-items:center;justify-content:center}
+        svg{display:block;\(sizing)}
+        </style></head><body>\(svg)</body></html>
+        """
+}
+
+@MainActor
+private struct RufletSVGNativeView {
+    let data: Data
+    let fit: RufletImageFit
+
+    final class Coordinator {
+        var document: String?
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    func makeWebView() -> WKWebView {
+        let configuration = WKWebViewConfiguration()
+        configuration.defaultWebpagePreferences.allowsContentJavaScript = false
+        let webView = WKWebView(frame: .zero, configuration: configuration)
+        webView.underPageBackgroundColor = .clear
+        return webView
+    }
+
+    func update(_ webView: WKWebView, coordinator: Coordinator) {
+        guard let document = rufletSVGDocument(data: data, fit: fit),
+            coordinator.document != document
+        else { return }
+        coordinator.document = document
+        webView.loadHTMLString(document, baseURL: nil)
+    }
+}
+
+#if os(iOS)
+extension RufletSVGNativeView: UIViewRepresentable {
+    func makeUIView(context: Context) -> WKWebView {
+        let webView = makeWebView()
+        webView.isOpaque = false
+        webView.backgroundColor = .clear
+        webView.scrollView.isScrollEnabled = false
+        return webView
+    }
+
+    func updateUIView(_ webView: WKWebView, context: Context) {
+        update(webView, coordinator: context.coordinator)
+    }
+}
+#elseif os(macOS)
+extension RufletSVGNativeView: NSViewRepresentable {
+    func makeNSView(context: Context) -> WKWebView {
+        let webView = makeWebView()
+        webView.enclosingScrollView?.drawsBackground = false
+        webView.enclosingScrollView?.hasHorizontalScroller = false
+        webView.enclosingScrollView?.hasVerticalScroller = false
+        return webView
+    }
+
+    func updateNSView(_ webView: WKWebView, context: Context) {
+        update(webView, coordinator: context.coordinator)
+    }
+}
+#endif
 
 enum RufletImageFit: String, CaseIterable, RufletStringEnum {
     case fill, contain, cover, fitWidth, fitHeight, none, scaleDown
