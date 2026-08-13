@@ -252,6 +252,38 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             self.assertEqual(self.entries[concept]["kind"], kind)
             self.assertEqual(self.entries[concept]["value"], value)
 
+    def test_text_editor_family_is_explicit_reviewed_native_artwork(self):
+        family = MODULE.load_json(MODULE.TEXT_EDITOR_OVERRIDES_PATH)
+        low_confidence = {
+            item["concept"] for item in self.audit["low_confidence_concepts"]
+        }
+        self.assertEqual(self.audit["reviewed_families"]["text_editor"], len(family))
+        self.assertTrue(set(family).isdisjoint(low_confidence))
+        for concept, target in family.items():
+            entry = self.entries[concept]
+            self.assertEqual(entry["kind"], target["kind"])
+            self.assertEqual(entry["value"], target["value"])
+            self.assertEqual(entry["confidence"], "reviewed")
+            self.assertEqual(entry["source"], "reviewed_override")
+
+    def test_text_editor_distinct_semantics_do_not_regress(self):
+        expected = {
+            "ARCHIVE": ("system_symbol", "archivebox.fill"),
+            "ASSIGNMENT_IND": ("system_symbol", "person.text.rectangle.fill"),
+            "BORDER_ALL": ("system_symbol", "square.grid.2x2"),
+            "DATA_ARRAY": ("system_symbol", "list.bullet"),
+            "DATA_OBJECT": ("system_symbol", "curlybraces"),
+            "HIGHLIGHT": ("system_symbol", "highlighter"),
+            "INTEGRATION_INSTRUCTIONS": (
+                "cupertino_glyph",
+                "CHEVRON_LEFT_SLASH_CHEVRON_RIGHT",
+            ),
+            "SPELLCHECK": ("system_symbol", "textformat.abc.dottedunderline"),
+        }
+        for concept, (kind, value) in expected.items():
+            self.assertEqual(self.entries[concept]["kind"], kind)
+            self.assertEqual(self.entries[concept]["value"], value)
+
     def test_checked_in_artifacts_are_reproducible(self):
         self.assertEqual(
             MODULE.OUTPUT_PATH.read_text(encoding="utf-8"),
