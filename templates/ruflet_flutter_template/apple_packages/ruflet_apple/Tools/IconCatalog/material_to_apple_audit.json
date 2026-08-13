@@ -14,7 +14,7 @@
     "material_icons.json": "be2d1dee6c40a5dfeaacd8fe415301db3d7c976e6eabc7fca9da734cc5abfb85",
     "cupertino_glyphs.json": "dad0be1db615640c1a0dd86365f71d0dfa2ec01ed3e2773188895006d21ad012",
     "material_semantics.json": "b3a0e564b3661355757107b929add9bc22b8fd86e2038d12aaf3b7dac380d2dd",
-    "overrides.json": "fc51f95dc63b32d3e95acaad2b3bc697f30063c56fb7330828eb363b06eb462e",
+    "overrides.json": "d7dae95a2a264dd81219dedfbacd52c91aa137921472784461a01f3b1695e03f",
     "navigation_travel_overrides.json": "63fcf29579be8fab701bdf81b1b345a710ed66f91cf9e764fd91f008ac3b796c",
     "action_overrides.json": "1d0cb0f7ee23bba2caa6204baf5671e602124149451c28c778ba57bf00f1fad5",
     "maps_places_overrides.json": "0cc97806c2536763422e12967a7cdc7cbba78c39451f8b92534b8bf48cef9ba7",
@@ -38,14 +38,15 @@
     "interface_state_manipulation_overrides.json": "f4edf739bb36d749598204f7ec718835d79589d30ac9d91eea90e4dca5388fa3",
     "apple_platform_device_overrides.json": "3a5e1cd7026487c0dcf13d60fec1d3ff573572de5339aa7f43ee8d678d9db884",
     "privacy_access_state_overrides.json": "8be61702ea92ff6405b8d8057e30848425db0649a9355e08d0a8532ff4a06547",
+    "legacy_interface_alias_overrides.json": "ac3259eac1915026e5427da2c0f045c8650d35d097dbcee7aa84aa996acefc96",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/name_availability.plist": "a277cf5b63017ed497d5b6b3ea96bbee4f407b76776af41bcb52943007335b5c",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_search.plist": "29a767651ce53d8861e28d3eaa20b50d3e02a85fe5a79d557ce1fbff7fa4ebad",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_restrictions.strings": "2e1b1c3d629d26ac1e75861f33cb1cbbb3348e142a2b6c1aaf9bba546273f13b"
   },
   "sources": {
     "exact_apple_name": 48,
-    "manual_review_required": 84,
-    "reviewed_override": 990,
+    "manual_review_required": 78,
+    "reviewed_override": 996,
     "semantic_rank": 1113
   },
   "reviewed_families": {
@@ -65,6 +66,7 @@
     "image_media": 57,
     "interface_action": 21,
     "interface_state_manipulation": 9,
+    "legacy_interface_alias": 6,
     "local_service_transit": 9,
     "maps_places": 76,
     "navigation_travel": 36,
@@ -77,9 +79,9 @@
   "confidence_grades": {
     "exact": 48,
     "high": 665,
-    "low": 446,
+    "low": 440,
     "medium": 86,
-    "reviewed": 990
+    "reviewed": 996
   },
   "unique_apple_targets": 895,
   "most_reused_targets": [
@@ -334,7 +336,7 @@
       "concept_count": 6
     }
   ],
-  "low_confidence_count": 532,
+  "low_confidence_count": 526,
   "low_confidence_concepts": [
     {
       "concept": "SIXTY_FPS_SELECT",
@@ -14866,19 +14868,6 @@
       ]
     },
     {
-      "concept": "COPY",
-      "target": {
-        "kind": "system_symbol",
-        "value": "doc.on.doc"
-      },
-      "confidence": 0.5,
-      "grade": "low",
-      "reason": "native Apple copy command",
-      "tags": [
-        "copy"
-      ]
-    },
-    {
       "concept": "DISCORD",
       "target": {
         "kind": "system_symbol",
@@ -15211,19 +15200,6 @@
       ]
     },
     {
-      "concept": "LABEL_OUTLINE",
-      "target": {
-        "kind": "system_symbol",
-        "value": "tag"
-      },
-      "confidence": 0.5,
-      "grade": "low",
-      "reason": "native Apple outlined label/tag",
-      "tags": [
-        "label outline"
-      ]
-    },
-    {
       "concept": "NINETEEN_MP",
       "target": {
         "kind": "system_symbol",
@@ -15289,19 +15265,6 @@
       ]
     },
     {
-      "concept": "NOW_WIDGETS",
-      "target": {
-        "kind": "system_symbol",
-        "value": "square.grid.2x2"
-      },
-      "confidence": 0.5,
-      "grade": "low",
-      "reason": "legacy widgets/grid alias",
-      "tags": [
-        "now widgets"
-      ]
-    },
-    {
       "concept": "NO_MEALS_OULINE",
       "target": {
         "kind": "system_symbol",
@@ -15311,19 +15274,6 @@
       "grade": "low",
       "reason": "legacy misspelling; native Apple meal concept pending slash audit",
       "tags": []
-    },
-    {
-      "concept": "ONETWOTHREE",
-      "target": {
-        "kind": "system_symbol",
-        "value": "number"
-      },
-      "confidence": 0.5,
-      "grade": "low",
-      "reason": "native Apple numeric text concept",
-      "tags": [
-        "onetwothree"
-      ]
     },
     {
       "concept": "ONE_K",
@@ -15349,32 +15299,6 @@
       "reason": "native Apple numbered badge for Material resolution label",
       "tags": [
         "one k plus"
-      ]
-    },
-    {
-      "concept": "OUTBOND",
-      "target": {
-        "kind": "system_symbol",
-        "value": "arrow.up.right.square"
-      },
-      "confidence": 0.5,
-      "grade": "low",
-      "reason": "legacy misspelling of outbound",
-      "tags": [
-        "outbond"
-      ]
-    },
-    {
-      "concept": "PASTE",
-      "target": {
-        "kind": "system_symbol",
-        "value": "doc.on.clipboard"
-      },
-      "confidence": 0.5,
-      "grade": "low",
-      "reason": "native Apple paste command",
-      "tags": [
-        "paste"
       ]
     },
     {

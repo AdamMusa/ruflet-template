@@ -493,12 +493,6 @@
     "rationale": "iOS 15 has no native cookie glyph; circular cookie silhouette needs review",
     "status": "review_required"
   },
-  "COPY": {
-    "kind": "system_symbol",
-    "value": "doc.on.doc",
-    "rationale": "native Apple copy command",
-    "status": "review_required"
-  },
   "CREATE": {
     "kind": "system_symbol",
     "value": "pencil",
@@ -1109,12 +1103,6 @@
     "value": "tag.fill",
     "rationale": "curated Material-to-SF vocabulary"
   },
-  "LABEL_OUTLINE": {
-    "kind": "system_symbol",
-    "value": "tag",
-    "rationale": "native Apple outlined label/tag",
-    "status": "review_required"
-  },
   "LANGUAGE": {
     "kind": "system_symbol",
     "value": "globe",
@@ -1375,22 +1363,10 @@
     "rationale": "legacy wallpaper/photo alias",
     "status": "review_required"
   },
-  "NOW_WIDGETS": {
-    "kind": "system_symbol",
-    "value": "square.grid.2x2",
-    "rationale": "legacy widgets/grid alias",
-    "status": "review_required"
-  },
   "NO_MEALS_OULINE": {
     "kind": "system_symbol",
     "value": "fork.knife",
     "rationale": "legacy misspelling; native Apple meal concept pending slash audit",
-    "status": "review_required"
-  },
-  "ONETWOTHREE": {
-    "kind": "system_symbol",
-    "value": "number",
-    "rationale": "native Apple numeric text concept",
     "status": "review_required"
   },
   "ONE_K": {
@@ -1420,22 +1396,10 @@
     "value": "arrow.up.left.and.arrow.down.right",
     "rationale": "curated Material-to-SF vocabulary"
   },
-  "OUTBOND": {
-    "kind": "system_symbol",
-    "value": "arrow.up.right.square",
-    "rationale": "legacy misspelling of outbound",
-    "status": "review_required"
-  },
   "PALETTE": {
     "kind": "system_symbol",
     "value": "paintpalette.fill",
     "rationale": "curated Material-to-SF vocabulary"
-  },
-  "PASTE": {
-    "kind": "system_symbol",
-    "value": "doc.on.clipboard",
-    "rationale": "native Apple paste command",
-    "status": "review_required"
   },
   "PAUSE": {
     "kind": "cupertino_glyph",

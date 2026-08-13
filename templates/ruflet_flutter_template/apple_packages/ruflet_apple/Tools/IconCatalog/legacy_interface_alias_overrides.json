@@ -1,0 +1,32 @@
+{
+  "COPY": {
+    "kind": "system_symbol",
+    "value": "doc.on.doc",
+    "rationale": "public Apple copy-command identity"
+  },
+  "LABEL_OUTLINE": {
+    "kind": "system_symbol",
+    "value": "tag",
+    "rationale": "public Apple outlined tag identity for a label"
+  },
+  "NOW_WIDGETS": {
+    "kind": "system_symbol",
+    "value": "square.grid.2x2",
+    "rationale": "public Apple widget-grid identity for the legacy now-widgets alias"
+  },
+  "ONETWOTHREE": {
+    "kind": "cupertino_glyph",
+    "value": "TEXTFORMAT_123",
+    "rationale": "bundled Cupertino numeric-text identity for the legacy one-two-three alias"
+  },
+  "OUTBOND": {
+    "kind": "system_symbol",
+    "value": "arrow.up.right.square",
+    "rationale": "public Apple outbound-from-square identity for the legacy outbound misspelling"
+  },
+  "PASTE": {
+    "kind": "system_symbol",
+    "value": "doc.on.clipboard",
+    "rationale": "public Apple paste-from-clipboard identity"
+  }
+}

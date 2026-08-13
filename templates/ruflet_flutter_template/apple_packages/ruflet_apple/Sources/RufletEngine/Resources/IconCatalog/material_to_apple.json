@@ -11504,8 +11504,8 @@
     "kind": "system_symbol",
     "value": "doc.on.doc",
     "concept": "COPY",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "COPY_ALL": {
     "kind": "system_symbol",
@@ -11539,22 +11539,22 @@
     "kind": "system_symbol",
     "value": "doc.on.doc",
     "concept": "COPY",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "COPY_ROUNDED": {
     "kind": "system_symbol",
     "value": "doc.on.doc",
     "concept": "COPY",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "COPY_SHARP": {
     "kind": "system_symbol",
     "value": "doc.on.doc",
     "concept": "COPY",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "COPYRIGHT": {
     "kind": "system_symbol",
@@ -28563,22 +28563,22 @@
     "kind": "system_symbol",
     "value": "tag",
     "concept": "LABEL_OUTLINE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LABEL_OUTLINE_ROUNDED": {
     "kind": "system_symbol",
     "value": "tag",
     "concept": "LABEL_OUTLINE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LABEL_OUTLINE_SHARP": {
     "kind": "system_symbol",
     "value": "tag",
     "concept": "LABEL_OUTLINE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LABEL_OUTLINED": {
     "kind": "system_symbol",
@@ -36732,29 +36732,29 @@
     "kind": "system_symbol",
     "value": "square.grid.2x2",
     "concept": "NOW_WIDGETS",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NOW_WIDGETS_OUTLINED": {
     "kind": "system_symbol",
     "value": "square.grid.2x2",
     "concept": "NOW_WIDGETS",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NOW_WIDGETS_ROUNDED": {
     "kind": "system_symbol",
     "value": "square.grid.2x2",
     "concept": "NOW_WIDGETS",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NOW_WIDGETS_SHARP": {
     "kind": "system_symbol",
     "value": "square.grid.2x2",
     "concept": "NOW_WIDGETS",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NUMBERS": {
     "kind": "cupertino_glyph",
@@ -37037,32 +37037,32 @@
     "source": "semantic_rank"
   },
   "ONETWOTHREE": {
-    "kind": "system_symbol",
-    "value": "number",
+    "kind": "cupertino_glyph",
+    "value": "TEXTFORMAT_123",
     "concept": "ONETWOTHREE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ONETWOTHREE_OUTLINED": {
-    "kind": "system_symbol",
-    "value": "number",
+    "kind": "cupertino_glyph",
+    "value": "TEXTFORMAT_123",
     "concept": "ONETWOTHREE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ONETWOTHREE_ROUNDED": {
-    "kind": "system_symbol",
-    "value": "number",
+    "kind": "cupertino_glyph",
+    "value": "TEXTFORMAT_123",
     "concept": "ONETWOTHREE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ONETWOTHREE_SHARP": {
-    "kind": "system_symbol",
-    "value": "number",
+    "kind": "cupertino_glyph",
+    "value": "TEXTFORMAT_123",
     "concept": "ONETWOTHREE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ONLINE_PREDICTION": {
     "kind": "system_symbol",
@@ -37292,29 +37292,29 @@
     "kind": "system_symbol",
     "value": "arrow.up.right.square",
     "concept": "OUTBOND",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "OUTBOND_OUTLINED": {
     "kind": "system_symbol",
     "value": "arrow.up.right.square",
     "concept": "OUTBOND",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "OUTBOND_ROUNDED": {
     "kind": "system_symbol",
     "value": "arrow.up.right.square",
     "concept": "OUTBOND",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "OUTBOND_SHARP": {
     "kind": "system_symbol",
     "value": "arrow.up.right.square",
     "concept": "OUTBOND",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "OUTBOUND": {
     "kind": "system_symbol",
@@ -38118,29 +38118,29 @@
     "kind": "system_symbol",
     "value": "doc.on.clipboard",
     "concept": "PASTE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PASTE_OUTLINED": {
     "kind": "system_symbol",
     "value": "doc.on.clipboard",
     "concept": "PASTE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PASTE_ROUNDED": {
     "kind": "system_symbol",
     "value": "doc.on.clipboard",
     "concept": "PASTE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PASTE_SHARP": {
     "kind": "system_symbol",
     "value": "doc.on.clipboard",
     "concept": "PASTE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PATTERN": {
     "kind": "system_symbol",
