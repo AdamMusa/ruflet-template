@@ -133,10 +133,16 @@ public struct PageControl: View {
   private func popTopViewIfAllowed() {
     let views = effectiveViews
     guard views.count > 1, let top = views.last else { return }
-    guard top.boolean("can_pop", default: true),
-          !top.boolean("on_confirm_pop", default: false)
-    else { return }
-    markPopped(route(of: top))
+    guard top.boolean("can_pop", default: true) else { return }
+    if top.boolean("on_confirm_pop", default: false) {
+      Task {
+        if await RufletViewPopRegistry.confirmPop(control: top) {
+          markPopped(route(of: top))
+        }
+      }
+    } else {
+      markPopped(route(of: top))
+    }
   }
 
   private func markPopped(_ route: String) {
