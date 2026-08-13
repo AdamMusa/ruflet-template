@@ -12,66 +12,124 @@ struct PieChartControl: View {
   var body: some View {
     ChartFrame(control: control) {
       GeometryReader { proxy in
-        Canvas { context, size in draw(context: &context, size: size) }
-          .contentShape(Rectangle())
-          .gesture(DragGesture(minimumDistance: 0).onEnded { value in
-            emitTap(at: value.location, size: proxy.size)
-          })
+        let layout = chartLayout(size: proxy.size)
+        ZStack {
+          Canvas { context, _ in draw(context: &context, layout: layout) }
+          badges(layout: layout)
+        }
+        .contentShape(Rectangle())
+        .gesture(DragGesture(minimumDistance: 0).onEnded { value in
+          emitTap(at: value.location, layout: layout)
+        })
       }
     }
   }
 
-  private func draw(context: inout GraphicsContext, size: CGSize) {
-    let total = sections.reduce(0) { $0 + $1.value }
-    guard total > 0 else { return }
-    let center = CGPoint(x: size.width / 2, y: size.height / 2)
-    let outerRadius = min(size.width, size.height) / 2 - 8
-    let holeRadius = CGFloat(control.number("center_space_radius", default: 0) ?? 0)
-    var angle = Angle.degrees(control.number("start_degree_offset", default: -90) ?? -90)
+  private func chartLayout(size: CGSize) -> PieChartLayout {
+    PieChartLayout(
+      size: size,
+      sections: sections,
+      requestedCenterRadius: control.number("center_space_radius"),
+      sectionsSpace: control.number("sections_space", default: 2) ?? 2,
+      startDegreeOffset: control.number("start_degree_offset", default: 0) ?? 0)
+  }
 
-    for section in sections {
-      let next = angle + .degrees(section.value / total * 360)
-      var path = Path()
-      path.move(to: center)
-      path.addArc(center: center, radius: outerRadius, startAngle: angle, endAngle: next, clockwise: false)
-      path.closeSubpath()
-      context.fill(path, with: .color(section.color))
+  private func draw(context: inout GraphicsContext, layout: PieChartLayout) {
+    for slice in layout.slices {
+      guard sections.indices.contains(slice.index) else { continue }
+      let section = sections[slice.index]
+      context.drawLayer { layer in
+        layer.fill(wedgePath(slice: slice, center: layout.center), with: .color(section.color))
+        if slice.innerRadius > 0 {
+          layer.blendMode = .destinationOut
+          layer.fill(
+            Path(ellipseIn: CGRect(
+              x: layout.center.x - slice.innerRadius,
+              y: layout.center.y - slice.innerRadius,
+              width: slice.innerRadius * 2,
+              height: slice.innerRadius * 2)),
+            with: .color(.black))
+        }
+      }
 
       if let title = section.title {
-        let middle = (angle.radians + next.radians) / 2
-        let titleRadius = outerRadius * CGFloat(section.titlePosition)
         context.draw(
-          Text(title).foregroundColor(.white),
-          at: CGPoint(x: center.x + cos(middle) * titleRadius, y: center.y + sin(middle) * titleRadius))
+          styledTitle(title, style: section.titleStyle),
+          at: layout.point(in: slice, percentage: section.titlePosition))
       }
-      angle = next
     }
 
-    if holeRadius > 0 {
+    if layout.centerRadius > 0,
+       let centerColor = parseColor(control.string("center_space_color")) {
       context.fill(
         Path(ellipseIn: CGRect(
-          x: center.x - holeRadius, y: center.y - holeRadius,
-          width: holeRadius * 2, height: holeRadius * 2)),
-        with: .color(control.chartColor("center_space_color", default: .clear)))
+          x: layout.center.x - layout.centerRadius,
+          y: layout.center.y - layout.centerRadius,
+          width: layout.centerRadius * 2,
+          height: layout.centerRadius * 2)),
+        with: .color(centerColor))
     }
   }
 
-  private func emitTap(at location: CGPoint, size: CGSize) {
+  private func wedgePath(slice: PieChartLayout.Slice, center: CGPoint) -> Path {
+    var path = Path()
+    if slice.sweep >= 2 * .pi - 0.000_001 {
+      path.addEllipse(in: CGRect(
+        x: center.x - slice.outerRadius,
+        y: center.y - slice.outerRadius,
+        width: slice.outerRadius * 2,
+        height: slice.outerRadius * 2))
+      return path
+    }
+    path.move(to: center)
+    path.addLine(to: CGPoint(
+      x: center.x + cos(slice.start) * slice.outerRadius,
+      y: center.y + sin(slice.start) * slice.outerRadius))
+    path.addArc(
+      center: center,
+      radius: slice.outerRadius,
+      startAngle: .radians(slice.start),
+      endAngle: .radians(slice.end),
+      clockwise: false)
+    path.closeSubpath()
+    return path
+  }
+
+  private func styledTitle(_ title: String, style: RufletTextStyle?) -> Text {
+    var result = Text(title)
+    if let family = style?.fontFamily, let size = style?.size {
+      result = result.font(.custom(family, size: size))
+    } else if let size = style?.size {
+      result = result.font(.system(size: size))
+    }
+    if let weight = style?.weight { result = result.fontWeight(weight) }
+    if style?.italic == true { result = result.italic() }
+    if let color = style?.color { result = result.foregroundColor(color) }
+    if let spacing = style?.letterSpacing { result = result.kerning(spacing) }
+    if let style {
+      result = result.underline(style.decoration & 0x1 > 0, color: style.decorationColor)
+      result = result.strikethrough(style.decoration & 0x4 > 0, color: style.decorationColor)
+    }
+    return result
+  }
+
+  @ViewBuilder
+  private func badges(layout: PieChartLayout) -> some View {
+    ForEach(layout.slices, id: \.index) { slice in
+      if sections.indices.contains(slice.index), let badge = sections[slice.index].badge {
+        ControlWidget(control: badge)
+          .position(layout.point(in: slice, percentage: sections[slice.index].badgePosition))
+      }
+    }
+  }
+
+  private func emitTap(at location: CGPoint, layout: PieChartLayout) {
     guard control.hasEventHandler("event") else { return }
-    let center = CGPoint(x: size.width / 2, y: size.height / 2)
-    var degrees = atan2(location.y - center.y, location.x - center.x) * 180 / .pi
-    let start = control.number("start_degree_offset", default: -90) ?? -90
-    degrees = (degrees - start).truncatingRemainder(dividingBy: 360)
-    if degrees < 0 { degrees += 360 }
-    let total = sections.reduce(0) { $0 + $1.value }
-    var cumulative = 0.0
-    let index = total > 0 ? sections.firstIndex {
-      cumulative += $0.value / total * 360
-      return degrees <= cumulative
-    } : nil
     control.triggerEvent("event", data: chartEvent(
       type: "tapUp",
       location: location,
-      fields: ["section_index": index.map { .int(Int64($0)) } ?? .null]))
+      fields: [
+        "section_index": layout.sectionIndex(at: location).map { .int(Int64($0)) } ?? .null,
+      ]))
   }
 }

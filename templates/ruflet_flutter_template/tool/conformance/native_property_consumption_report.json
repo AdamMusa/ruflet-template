@@ -12,13 +12,13 @@
     "controls": 196,
     "properties": 5330,
     "classifications": {
-      "consumed": 3331,
-      "parent_consumed": 1030,
+      "consumed": 3332,
+      "parent_consumed": 1033,
       "service": 136,
-      "unclassified": 828,
+      "unclassified": 824,
       "unsupported": 5
     },
-    "unclassified": 828
+    "unclassified": 824
   },
   "unclassified": [
     {
@@ -2668,11 +2668,6 @@
     },
     {
       "family": "visual",
-      "wire_type": "PieChart",
-      "property": "sections_space"
-    },
-    {
-      "family": "visual",
       "wire_type": "Placeholder",
       "property": "disabled"
     },
@@ -4140,21 +4135,6 @@
       "family": "visual",
       "wire_type": "rod",
       "property": "rod_stack_items"
-    },
-    {
-      "family": "visual",
-      "wire_type": "section",
-      "property": "badge_position_percentage_offset"
-    },
-    {
-      "family": "visual",
-      "wire_type": "section",
-      "property": "badge_widget"
-    },
-    {
-      "family": "visual",
-      "wire_type": "section",
-      "property": "title_style"
     },
     {
       "family": "visual",
@@ -8353,27 +8333,19 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 58
+              "line": 125
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 59
+              "line": 126
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 60
+              "line": 127
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 70
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 71
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 72
+              "line": 128
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/RadarChart.swift",
@@ -9823,27 +9795,19 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 58
+              "line": 125
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 59
+              "line": 126
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 60
+              "line": 127
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 70
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 71
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 72
+              "line": 128
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/RadarChart.swift",
@@ -38374,27 +38338,19 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 58
+              "line": 125
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 59
+              "line": 126
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 60
+              "line": 127
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 70
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 71
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 72
+              "line": 128
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/RadarChart.swift",
@@ -46319,7 +46275,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 29
+              "line": 32
             }
           ]
         },
@@ -46409,27 +46365,19 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 58
+              "line": 125
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 59
+              "line": 126
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 60
+              "line": 127
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 70
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 71
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 72
+              "line": 128
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/RadarChart.swift",
@@ -46491,8 +46439,13 @@
           ]
         },
         "sections_space": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
+              "line": 33
+            }
+          ]
         },
         "tooltip": {
           "classification": "parent_consumed",
@@ -48843,27 +48796,19 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 58
+              "line": 125
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 59
+              "line": 126
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 60
+              "line": 127
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 70
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 71
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 72
+              "line": 128
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/RadarChart.swift",
@@ -54447,27 +54392,19 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 58
+              "line": 125
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 59
+              "line": 126
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 60
+              "line": 127
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 70
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 71
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/PieChart.swift",
-              "line": 72
+              "line": 128
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/RadarChart.swift",
@@ -68200,7 +68137,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/Utils/PieChartUtils.swift",
-              "line": 18
+              "line": 22
             }
           ]
         },
@@ -68407,19 +68344,29 @@
       "service_implementations": [],
       "properties": {
         "badge_position_percentage_offset": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "parent_consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/Utils/PieChartUtils.swift",
+              "line": 28
+            }
+          ]
         },
         "badge_widget": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "parent_consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/Utils/PieChartUtils.swift",
+              "line": 17
+            }
+          ]
         },
         "color": {
           "classification": "parent_consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/Utils/PieChartUtils.swift",
-              "line": 18
+              "line": 22
             }
           ]
         },
@@ -68428,7 +68375,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/Utils/PieChartUtils.swift",
-              "line": 19
+              "line": 23
             }
           ]
         },
@@ -68437,20 +68384,25 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/Utils/PieChartUtils.swift",
-              "line": 20
+              "line": 24
             }
           ]
         },
         "title_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "parent_consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/Utils/PieChartUtils.swift",
+              "line": 25
+            }
+          ]
         },
         "value": {
           "classification": "parent_consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCharts/Sources/Utils/PieChartUtils.swift",
-              "line": 17
+              "line": 21
             }
           ]
         }
