@@ -9,15 +9,15 @@ public struct RufletCoreExtension: RufletExtension {
   private let services = RufletCoreServiceExtension()
 
   public let renderedControlTypes: Set<String> = [
-    "AdaptiveButton", "AdaptiveCheckbox", "AdaptiveRadio", "AdaptiveSlider", "AdaptiveSwitch", "AdaptiveTextField",
-    "AnimatedSwitcher", "AppBar", "Button", "Card", "Checkbox", "CircleAvatar", "Column", "Container",
+    "AdaptiveAlertDialog", "AdaptiveButton", "AdaptiveCheckbox", "AdaptiveRadio", "AdaptiveSlider", "AdaptiveSwitch", "AdaptiveTextField",
+    "AlertDialog", "AnimatedSwitcher", "AppBar", "BottomAppBar", "BottomSheet", "Button", "Card", "Checkbox", "CircleAvatar", "Column", "Container",
     "CupertinoButton", "CupertinoCheckbox", "CupertinoDialogAction", "CupertinoFilledButton",
-    "CupertinoAppBar", "CupertinoRadio", "CupertinoSlider", "CupertinoSwitch", "CupertinoTextField", "CupertinoTintedButton", "Dismissible",
-    "Divider", "Draggable", "DragTarget", "Dropdown", "DropdownM2", "FilledButton", "FilledTonalButton", "GridView", "Hero",
-    "Icon", "InteractiveViewer", "ListView", "MergeSemantics", "OutlinedButton", "Page", "PageView",
+    "CupertinoActionSheet", "CupertinoActionSheetAction", "CupertinoAlertDialog", "CupertinoAppBar", "CupertinoBottomSheet", "CupertinoDatePicker", "CupertinoPicker", "CupertinoRadio", "CupertinoSlider", "CupertinoSwitch", "CupertinoTextField", "CupertinoTimerPicker", "CupertinoTintedButton", "Dismissible",
+    "DatePicker", "DateRangePicker", "Divider", "Draggable", "DragTarget", "Dropdown", "DropdownM2", "FilledButton", "FilledIconButton", "FilledTonalButton", "FilledTonalIconButton", "FloatingActionButton", "GridView", "Hero",
+    "CupertinoNavigationBar", "Icon", "IconButton", "Image", "InteractiveViewer", "KeyboardListener", "ListView", "MergeSemantics", "NavigationBar", "NavigationBarDestination", "NavigationDrawer", "NavigationRail", "OutlinedButton", "OutlinedIconButton", "Page", "PageView",
     "Placeholder", "ProgressBar", "ProgressRing", "Radio", "RadioGroup", "RangeSlider",
     "ReorderableDragHandle", "ReorderableListView", "ResponsiveRow", "Row", "SafeArea",
-    "SelectionArea", "Semantics", "Slider", "Stack", "Switch", "Text", "TextButton", "TextField", "View",
+    "SelectionArea", "Semantics", "Slider", "Stack", "Switch", "Tab", "TabBar", "TabBarView", "Tabs", "Text", "TextButton", "TextField", "TimePicker", "View",
     "TransparentPointer", "VerticalDivider",
   ]
 
@@ -25,6 +25,8 @@ public struct RufletCoreExtension: RufletExtension {
 
   public func createView(for control: RufletControl) -> AnyView? {
     switch control.type {
+    case "AdaptiveAlertDialog", "AlertDialog":
+      return AnyView(AdaptiveAlertDialogControl(control: control))
     case "AdaptiveButton", "Button", "FilledButton", "FilledTonalButton", "OutlinedButton", "TextButton":
       return AnyView(AdaptiveButtonControl(control: control))
     case "AdaptiveCheckbox", "Checkbox":
@@ -39,31 +41,52 @@ public struct RufletCoreExtension: RufletExtension {
       return AnyView(AdaptiveTextFieldControl(control: control))
     case "AnimatedSwitcher": return AnyView(AnimatedSwitcherControl(control: control))
     case "AppBar": return AnyView(AppBarControl(control: control))
+    case "BottomAppBar": return AnyView(BottomAppBarControl(control: control))
+    case "BottomSheet": return AnyView(BottomSheetControl(control: control))
     case "Card": return AnyView(CardControl(control: control))
     case "CircleAvatar": return AnyView(CircleAvatarControl(control: control))
     case "Container": return AnyView(ContainerControl(control: control))
     case "CupertinoButton", "CupertinoFilledButton", "CupertinoTintedButton":
       return AnyView(CupertinoButtonControl(control: control))
+    case "CupertinoActionSheet": return AnyView(CupertinoActionSheetControl(control: control))
+    case "CupertinoActionSheetAction": return AnyView(CupertinoActionSheetActionControl(control: control))
+    case "CupertinoAlertDialog": return AnyView(CupertinoAlertDialogControl(control: control))
     case "CupertinoCheckbox": return AnyView(CupertinoCheckboxControl(control: control))
     case "CupertinoDialogAction": return AnyView(CupertinoDialogActionControl(control: control))
     case "CupertinoAppBar": return AnyView(CupertinoAppBarControl(control: control))
+    case "CupertinoBottomSheet": return AnyView(CupertinoBottomSheetControl(control: control))
+    case "CupertinoDatePicker": return AnyView(CupertinoDatePickerControl(control: control))
+    case "CupertinoNavigationBar": return AnyView(CupertinoNavigationBarControl(control: control))
+    case "CupertinoPicker": return AnyView(CupertinoPickerControl(control: control))
     case "CupertinoRadio": return AnyView(CupertinoRadioControl(control: control))
     case "CupertinoSlider": return AnyView(CupertinoSliderControl(control: control))
     case "CupertinoSwitch": return AnyView(CupertinoSwitchControl(control: control))
     case "CupertinoTextField": return AnyView(CupertinoTextFieldControl(control: control))
+    case "CupertinoTimerPicker": return AnyView(CupertinoTimerPickerControl(control: control))
+    case "DatePicker": return AnyView(DatePickerControl(control: control))
+    case "DateRangePicker": return AnyView(DateRangePickerControl(control: control))
     case "Divider": return AnyView(DividerControl(control: control))
     case "Dismissible": return AnyView(DismissibleControl(control: control))
     case "Draggable": return AnyView(DraggableControl(control: control))
     case "DragTarget": return AnyView(DragTargetControl(control: control))
     case "Dropdown": return AnyView(DropdownControl(control: control))
     case "DropdownM2": return AnyView(DropdownM2Control(control: control))
+    case "FilledIconButton", "FilledTonalIconButton", "IconButton", "OutlinedIconButton":
+      return AnyView(IconButtonControl(control: control))
+    case "FloatingActionButton": return AnyView(FloatingActionButtonControl(control: control))
     case "VerticalDivider": return AnyView(VerticalDividerControl(control: control))
     case "View": return AnyView(ViewControl(control: control))
     case "Icon": return AnyView(IconControl(control: control))
+    case "Image": return AnyView(ImageControl(control: control))
     case "Hero": return AnyView(HeroControl(control: control))
     case "InteractiveViewer": return AnyView(InteractiveViewerControl(control: control))
     case "GridView": return AnyView(GridViewControl(control: control))
     case "ListView": return AnyView(ListViewControl(control: control))
+    case "KeyboardListener": return AnyView(KeyboardListenerControl(control: control))
+    case "NavigationBar": return AnyView(NavigationBarControl(control: control))
+    case "NavigationBarDestination": return AnyView(NavigationBarDestinationControl(control: control))
+    case "NavigationDrawer": return AnyView(NavigationDrawerControl(control: control))
+    case "NavigationRail": return AnyView(NavigationRailControl(control: control))
     case "ProgressBar": return AnyView(ProgressBarControl(control: control))
     case "ProgressRing": return AnyView(ProgressRingControl(control: control))
     case "PageView": return AnyView(PageViewControl(control: control))
@@ -72,7 +95,12 @@ public struct RufletCoreExtension: RufletExtension {
     case "ReorderableDragHandle": return AnyView(ReorderableDragHandleControl(control: control))
     case "ReorderableListView": return AnyView(ReorderableListViewControl(control: control))
     case "ResponsiveRow": return AnyView(ResponsiveRowControl(control: control))
+    case "Tab": return AnyView(TabControl(control: control))
+    case "TabBar": return AnyView(TabBarControl(control: control))
+    case "TabBarView": return AnyView(TabBarViewControl(control: control))
+    case "Tabs": return AnyView(TabsControl(control: control))
     case "Text": return AnyView(TextControl(control: control))
+    case "TimePicker": return AnyView(TimePickerControl(control: control))
     case "Row": return AnyView(RowControl(control: control))
     case "Column": return AnyView(ColumnControl(control: control))
     case "Stack": return AnyView(StackControl(control: control))

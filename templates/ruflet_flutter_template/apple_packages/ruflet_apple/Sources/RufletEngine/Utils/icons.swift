@@ -38,20 +38,18 @@ public enum RufletAppleIconCatalog {
   }
 
   public static func icon(forMaterialName rawName: String) -> RufletAppleIcon? {
-    let name = canonical(rawName)
-
-    for candidate in materialSemanticCandidates(name) {
-      if let glyph = cupertinoGlyph(named: candidate) {
-        return .cupertinoGlyph(glyph)
-      }
-      if let symbol = explicitSystemSymbols[candidate], systemSymbolExists(symbol) {
-        return .systemSymbol(symbol)
-      }
-      if let symbol = systemSymbolCandidate(for: candidate), systemSymbolExists(symbol) {
-        return .systemSymbol(symbol)
-      }
+    guard let translation = catalogs.materialToApple[canonical(rawName).uppercased()] else {
+      return nil
     }
-    return nil
+    switch translation.kind {
+    case "cupertino_glyph":
+      return catalogs.cupertinoGlyphs[translation.value.uppercased()]
+        .map(RufletAppleIcon.cupertinoGlyph)
+    case "system_symbol":
+      return .systemSymbol(translation.value)
+    default:
+      preconditionFailure("Invalid Apple icon translation kind: \(translation.kind)")
+    }
   }
 
   public static func icon(forCupertinoName rawName: String) -> RufletAppleIcon? {
@@ -555,11 +553,13 @@ public enum RufletAppleIconCatalog {
     let materialNamesByCode: [Int: String]
     let cupertinoNamesByCode: [Int: String]
     let cupertinoGlyphs: [String: UInt32]
+    let materialToApple: [String: AppleTranslation]
 
     init() {
       materialNamesByCode = Self.names(resource: "material_icons")
       cupertinoNamesByCode = Self.names(resource: "cupertino_icons")
       cupertinoGlyphs = Self.glyphs(resource: "cupertino_glyphs")
+      materialToApple = Self.translations(resource: "material_to_apple")
     }
 
     private static func names(resource: String) -> [Int: String] {
@@ -588,6 +588,19 @@ public enum RufletAppleIconCatalog {
       return object.mapValues { UInt32(truncating: $0) }
     }
 
+    private static func translations(resource: String) -> [String: AppleTranslation] {
+      guard let url = resourceURL(
+        name: resource,
+        extension: "json",
+        subdirectory: "IconCatalog"),
+        let data = try? Data(contentsOf: url),
+        let object = try? JSONDecoder().decode([String: AppleTranslation].self, from: data)
+      else {
+        preconditionFailure("Missing Ruflet Apple translation resource: \(resource).json")
+      }
+      return object
+    }
+
     private static func resourceURL(
       name: String,
       extension fileExtension: String,
@@ -602,6 +615,14 @@ public enum RufletAppleIconCatalog {
   }
 
   private static let catalogs = Catalogs()
+
+  private struct AppleTranslation: Decodable {
+    let kind: String
+    let value: String
+    let concept: String
+    let confidence: String
+    let source: String
+  }
 }
 
 @MainActor

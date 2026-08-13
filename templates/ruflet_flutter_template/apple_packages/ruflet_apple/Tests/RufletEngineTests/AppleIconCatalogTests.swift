@@ -61,7 +61,6 @@ final class AppleIconCatalogTests: XCTestCase {
         activity.add(XCTAttachment(string: unresolved.joined(separator: "\n")))
       }
     }
-    XCTExpectFailure("The Apple renderer is incomplete until all 8,825 Material wire icons have explicit Apple artwork")
     XCTAssertTrue(
       unresolved.isEmpty,
       "Unresolved Material icons: \(unresolved.count); first: \(unresolved.prefix(20).joined(separator: ", "))")
