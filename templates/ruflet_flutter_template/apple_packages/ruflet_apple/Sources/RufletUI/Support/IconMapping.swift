@@ -149,7 +149,9 @@ public enum IconMapping {
     let exact: [String: String] = [
       "add_home": "house.badge.plus",
       "add_home_work": "house.badge.plus",
+      "broadcast_on_home": "house.badge.wifi",
       "home_work": "house",
+      "home_repair_service": "wrench.and.screwdriver",
       "person_add": "person.badge.plus",
       "person_remove": "person.badge.minus",
       "add_a_photo": "camera.badge.ellipsis",
@@ -485,7 +487,7 @@ public enum IconMapping {
     "list": "list.bullet", "list_alt": "list.bullet.rectangle",
     "format_list_bulleted": "list.bullet", "format_list_numbered": "list.number",
     "table_chart": "tablecells", "grid_view": "square.grid.2x2",
-    "view_list": "list.bullet", "view_module": "square.grid.3x3.fill",
+    "view_list": "list.bullet", "view_module": "rectangle.grid.3x2.fill",
     "view_column": "rectangle.split.3x1", "view_stream": "rectangle.split.1x2",
     "tab": "rectangle.split.3x1", "crop_square": "square.dashed",
     "attach_money": "dollarsign.circle", "receipt": "receipt",

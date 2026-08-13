@@ -131,11 +131,17 @@ final class IconMappingTests: XCTestCase {
     XCTAssertEqual(
       IconMapping.symbol(forMaterialName: "cameraswitch"),
       "arrow.triangle.2.circlepath.camera")
+    XCTAssertEqual(
+      IconMapping.symbol(forMaterialName: "BROADCAST_ON_HOME_OUTLINED"),
+      "house.badge.wifi")
+    XCTAssertEqual(
+      IconMapping.symbol(forMaterialName: "HOME_REPAIR_SERVICE_ROUNDED"),
+      "wrench.and.screwdriver")
   }
 
   func testExplorerGalleryCategoriesUseClosestNativeAppleArtwork() {
     let expected: [String: String] = [
-      "view_module": "square.grid.3x3.fill",
+      "view_module": "rectangle.grid.3x2.fill",
       "widgets": "square.grid.2x2.fill",
       "image": "photo.fill",
       "show_chart": "chart.line.uptrend.xyaxis",
