@@ -495,6 +495,41 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             self.assertEqual(self.entries[concept]["kind"], kind)
             self.assertEqual(self.entries[concept]["value"], value)
 
+    def test_file_content_family_is_explicit_reviewed_native_artwork(self):
+        family = MODULE.load_json(MODULE.FILE_CONTENT_OVERRIDES_PATH)
+        low_confidence = {
+            item["concept"] for item in self.audit["low_confidence_concepts"]
+        }
+        self.assertEqual(self.audit["reviewed_families"]["file_content"], len(family))
+        self.assertTrue(set(family).isdisjoint(low_confidence))
+        for concept, target in family.items():
+            entry = self.entries[concept]
+            self.assertEqual(entry["kind"], target["kind"])
+            self.assertEqual(entry["value"], target["value"])
+            self.assertEqual(entry["confidence"], "reviewed")
+            self.assertEqual(entry["source"], "reviewed_override")
+
+    def test_file_content_distinct_semantics_do_not_regress(self):
+        expected = {
+            "BLOCK_FLIPPED": ("system_symbol", "circle.slash"),
+            "CONTENT_PASTE_GO": (
+                "system_symbol",
+                "arrow.right.doc.on.clipboard",
+            ),
+            "DIFFERENCE": ("system_symbol", "square.on.square.dashed"),
+            "DRIVE_FILE_RENAME_OUTLINE": (
+                "system_symbol",
+                "square.and.pencil",
+            ),
+            "DYNAMIC_FEED": ("system_symbol", "rectangle.stack.fill"),
+            "MARKUNREAD": ("system_symbol", "envelope.badge.fill"),
+            "POLICY": ("system_symbol", "checkmark.shield.fill"),
+            "WORKSPACES_OUTLINE": ("system_symbol", "rectangle.grid.2x2"),
+        }
+        for concept, (kind, value) in expected.items():
+            self.assertEqual(self.entries[concept]["kind"], kind)
+            self.assertEqual(self.entries[concept]["value"], value)
+
     def test_checked_in_artifacts_are_reproducible(self):
         self.assertEqual(
             MODULE.OUTPUT_PATH.read_text(encoding="utf-8"),

@@ -28,6 +28,7 @@
     "travel_amenity_overrides.json": "39be6913c53d65874aa9ffc28c1dfd73544b8187e8259c147bce130f6b7b5d09",
     "audio_video_overrides.json": "a52529f209de707f4569ef6262403d4c8a91d1043d052e5880d72ec4d5848e56",
     "notification_status_overrides.json": "229ae9a2f5f6c267134ede74e396416d9cf5d043895f7038b080c9c4b6bc90cd",
+    "file_content_overrides.json": "e449a1148e2246e509f26b9a2ae8de416306937d440215990239e20a4e77d2b4",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/name_availability.plist": "a277cf5b63017ed497d5b6b3ea96bbee4f407b76776af41bcb52943007335b5c",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_search.plist": "29a767651ce53d8861e28d3eaa20b50d3e02a85fe5a79d557ce1fbff7fa4ebad",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_restrictions.strings": "2e1b1c3d629d26ac1e75861f33cb1cbbb3348e142a2b6c1aaf9bba546273f13b"
@@ -35,8 +36,8 @@
   "sources": {
     "exact_apple_name": 48,
     "manual_review_required": 105,
-    "reviewed_override": 880,
-    "semantic_rank": 1202
+    "reviewed_override": 891,
+    "semantic_rank": 1191
   },
   "reviewed_families": {
     "action": 76,
@@ -44,6 +45,7 @@
     "business_commerce": 21,
     "communication": 36,
     "device_hardware": 72,
+    "file_content": 11,
     "general": 339,
     "home_household": 17,
     "image_media": 57,
@@ -57,11 +59,11 @@
   "confidence_grades": {
     "exact": 48,
     "high": 665,
-    "low": 539,
-    "medium": 103,
-    "reviewed": 880
+    "low": 530,
+    "medium": 101,
+    "reviewed": 891
   },
-  "unique_apple_targets": 879,
+  "unique_apple_targets": 883,
   "most_reused_targets": [
     {
       "kind": "system_symbol",
@@ -169,16 +171,6 @@
       "concept_count": 11
     },
     {
-      "kind": "system_symbol",
-      "value": "envelope",
-      "concept_count": 10
-    },
-    {
-      "kind": "cupertino_glyph",
-      "value": "DOC_TEXT",
-      "concept_count": 10
-    },
-    {
       "kind": "cupertino_glyph",
       "value": "SHARE",
       "concept_count": 10
@@ -194,6 +186,16 @@
       "concept_count": 9
     },
     {
+      "kind": "system_symbol",
+      "value": "envelope",
+      "concept_count": 9
+    },
+    {
+      "kind": "cupertino_glyph",
+      "value": "DOC_TEXT",
+      "concept_count": 9
+    },
+    {
       "kind": "cupertino_glyph",
       "value": "POWER",
       "concept_count": 9
@@ -201,11 +203,6 @@
     {
       "kind": "cupertino_glyph",
       "value": "BLUETOOTH",
-      "concept_count": 9
-    },
-    {
-      "kind": "system_symbol",
-      "value": "pencil",
       "concept_count": 9
     },
     {
@@ -246,6 +243,11 @@
     {
       "kind": "cupertino_glyph",
       "value": "SQUARE_FILL_ON_SQUARE_FILL",
+      "concept_count": 8
+    },
+    {
+      "kind": "system_symbol",
+      "value": "pencil",
       "concept_count": 8
     },
     {
@@ -314,7 +316,7 @@
       "concept_count": 7
     }
   ],
-  "low_confidence_count": 642,
+  "low_confidence_count": 631,
   "low_confidence_concepts": [
     {
       "concept": "SIXTY_FPS_SELECT",
@@ -1691,47 +1693,6 @@
       ]
     },
     {
-      "concept": "REPORT_GMAILERRORRED",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "FLAG"
-      },
-      "confidence": 0.1527,
-      "grade": "low",
-      "reason": "name=[] semantic=['flag'] extra=[]",
-      "tags": [
-        "!",
-        "abuse",
-        "alert",
-        "attention",
-        "caution",
-        "complaint",
-        "danger",
-        "error",
-        "exclamation",
-        "feedback",
-        "flag",
-        "gmail",
-        "gmailerrorred",
-        "important",
-        "issue",
-        "mark",
-        "notification",
-        "octagon",
-        "outline",
-        "problem",
-        "report",
-        "send",
-        "shape",
-        "spam",
-        "stroke",
-        "submit",
-        "symbol",
-        "triangle",
-        "warning"
-      ]
-    },
-    {
       "concept": "SPORTS_GOLF",
       "target": {
         "kind": "cupertino_glyph",
@@ -2042,70 +2003,6 @@
         "sports",
         "tennis",
         "wellness"
-      ]
-    },
-    {
-      "concept": "BLOCK_FLIPPED",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "STOP"
-      },
-      "confidence": 0.1582,
-      "grade": "low",
-      "reason": "name=[] semantic=['stop'] extra=[]",
-      "tags": [
-        "avoid",
-        "block",
-        "cancel",
-        "close",
-        "disturb",
-        "do not disturb",
-        "entry",
-        "exit",
-        "no",
-        "prohibited",
-        "quit",
-        "remove",
-        "stop"
-      ]
-    },
-    {
-      "concept": "REPORT",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "FLAG"
-      },
-      "confidence": 0.1599,
-      "grade": "low",
-      "reason": "name=[] semantic=['flag'] extra=[]",
-      "tags": [
-        "!",
-        "abuse",
-        "alert",
-        "attention",
-        "caution",
-        "complaint",
-        "danger",
-        "error",
-        "exclamation",
-        "feedback",
-        "flag",
-        "important",
-        "issue",
-        "mark",
-        "notification",
-        "octagon",
-        "outline",
-        "problem",
-        "report",
-        "send",
-        "shape",
-        "spam",
-        "stroke",
-        "submit",
-        "symbol",
-        "triangle",
-        "warning"
       ]
     },
     {
@@ -8902,46 +8799,6 @@
       ]
     },
     {
-      "concept": "DYNAMIC_FEED",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "SQUARE_LIST"
-      },
-      "confidence": 0.293,
-      "grade": "low",
-      "reason": "name=[] semantic=['list', 'square'] extra=[]",
-      "tags": [
-        "abstract",
-        "activity",
-        "articles",
-        "blocks",
-        "blog",
-        "changing",
-        "chronological",
-        "content",
-        "current",
-        "data",
-        "dynamic",
-        "feed",
-        "flowing",
-        "information",
-        "lines",
-        "list",
-        "live",
-        "news",
-        "posts",
-        "publication",
-        "recent",
-        "rectangle",
-        "square",
-        "stories",
-        "stream",
-        "summaries",
-        "timeline",
-        "updates"
-      ]
-    },
-    {
       "concept": "NO_TRANSFER",
       "target": {
         "kind": "system_symbol",
@@ -12505,27 +12362,6 @@
       ]
     },
     {
-      "concept": "WORKSPACES_FILLED",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "GROUP"
-      },
-      "confidence": 0.3163,
-      "grade": "low",
-      "reason": "name=[] semantic=['group'] extra=[]",
-      "tags": [
-        "circles",
-        "collaboration",
-        "dot",
-        "filled",
-        "group",
-        "space",
-        "team",
-        "work",
-        "workspaces"
-      ]
-    },
-    {
       "concept": "WASH",
       "target": {
         "kind": "cupertino_glyph",
@@ -12616,61 +12452,6 @@
         "travel",
         "vehicle",
         "winter"
-      ]
-    },
-    {
-      "concept": "POLICY",
-      "target": {
-        "kind": "system_symbol",
-        "value": "text.magnifyingglass"
-      },
-      "confidence": 0.3184,
-      "grade": "low",
-      "reason": "name=[] semantic=['search', 'text'] extra=[]",
-      "tags": [
-        "administration",
-        "agreement",
-        "certified",
-        "checklist",
-        "compliance",
-        "conditions",
-        "contract",
-        "data",
-        "declaration",
-        "document",
-        "ethics",
-        "file",
-        "find",
-        "glass",
-        "governance",
-        "guidelines",
-        "information",
-        "law",
-        "legal",
-        "list",
-        "look",
-        "magnify",
-        "magnifying",
-        "management",
-        "official",
-        "paper",
-        "policy",
-        "privacy",
-        "private",
-        "protect",
-        "protection",
-        "regulation",
-        "report",
-        "rules",
-        "search",
-        "security",
-        "see",
-        "shield",
-        "standards",
-        "statement",
-        "terms",
-        "text",
-        "verified"
       ]
     },
     {
@@ -14627,53 +14408,6 @@
       ]
     },
     {
-      "concept": "WORKSPACES_OUTLINE",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "PERSPECTIVE"
-      },
-      "confidence": 0.3244,
-      "grade": "low",
-      "reason": "name=[] semantic=['perspective'] extra=[]",
-      "tags": [
-        "application",
-        "arrangement",
-        "circles",
-        "collaboration",
-        "computer",
-        "dashboard",
-        "desktop",
-        "display",
-        "documents",
-        "dot",
-        "files",
-        "grid",
-        "group",
-        "interface",
-        "layers",
-        "layout",
-        "management",
-        "multiple",
-        "organization",
-        "outline",
-        "overview",
-        "panels",
-        "perspective",
-        "productivity",
-        "projects",
-        "screens",
-        "software",
-        "space",
-        "stacking",
-        "tabs",
-        "team",
-        "view",
-        "windows",
-        "work",
-        "workspaces"
-      ]
-    },
-    {
       "concept": "WYSIWYG",
       "target": {
         "kind": "cupertino_glyph",
@@ -15385,40 +15119,6 @@
         "to do",
         "work",
         "writing"
-      ]
-    },
-    {
-      "concept": "DIFFERENCE",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "DOC_TEXT"
-      },
-      "confidence": 0.3318,
-      "grade": "low",
-      "reason": "name=[] semantic=['doc', 'text'] extra=[]",
-      "tags": [
-        "choice",
-        "compare",
-        "content",
-        "contrast",
-        "copy",
-        "cut",
-        "diff",
-        "difference",
-        "doc",
-        "document",
-        "duplicate",
-        "file",
-        "layers",
-        "multiple",
-        "options",
-        "overlay",
-        "past",
-        "selection",
-        "split",
-        "stack",
-        "variations",
-        "versions"
       ]
     },
     {
@@ -20510,52 +20210,6 @@
       ]
     },
     {
-      "concept": "CONTENT_PASTE_GO",
-      "target": {
-        "kind": "system_symbol",
-        "value": "folder"
-      },
-      "confidence": 0.5892,
-      "grade": "low",
-      "reason": "name=[] semantic=['folder', 'move'] extra=[]",
-      "tags": [
-        "action",
-        "archive",
-        "arrow",
-        "box",
-        "clipboard",
-        "content",
-        "copy",
-        "data",
-        "deliver",
-        "disabled",
-        "doc",
-        "document",
-        "duplicate",
-        "enabled",
-        "file",
-        "folder",
-        "go",
-        "import",
-        "information",
-        "insert",
-        "material design",
-        "move",
-        "on",
-        "paper",
-        "paste",
-        "process",
-        "rectangle",
-        "right arrow",
-        "send",
-        "sheet",
-        "slash",
-        "square",
-        "transfer",
-        "workflow"
-      ]
-    },
-    {
       "concept": "DO_NOT_DISTURB_OFF",
       "target": {
         "kind": "cupertino_glyph",
@@ -25031,51 +24685,6 @@
       ]
     },
     {
-      "concept": "MARKUNREAD",
-      "target": {
-        "kind": "system_symbol",
-        "value": "envelope"
-      },
-      "confidence": 0.7866,
-      "grade": "medium",
-      "reason": "name=[] semantic=['letter', 'mail'] extra=[]",
-      "tags": [
-        "communication",
-        "communication icon",
-        "contact",
-        "contact icon",
-        "correspondence",
-        "diagonal lines",
-        "digital",
-        "electronic mail",
-        "email",
-        "empty",
-        "envelop",
-        "envelope",
-        "fold",
-        "icon",
-        "inbox",
-        "inbox icon",
-        "internet",
-        "letter",
-        "letters",
-        "mail",
-        "markunread",
-        "message",
-        "message icon",
-        "new message",
-        "online",
-        "outline",
-        "paper",
-        "receive",
-        "rectangle",
-        "send",
-        "symbol",
-        "thin line",
-        "unread"
-      ]
-    },
-    {
       "concept": "MMS",
       "target": {
         "kind": "system_symbol",
@@ -26275,50 +25884,6 @@
         "symbol",
         "unavailable",
         "zero"
-      ]
-    },
-    {
-      "concept": "DRIVE_FILE_RENAME_OUTLINE",
-      "target": {
-        "kind": "system_symbol",
-        "value": "pencil"
-      },
-      "confidence": 0.8223,
-      "grade": "medium",
-      "reason": "name=[] semantic=['edit', 'pencil', 'rename', 'write', 'writing'] extra=[]",
-      "tags": [
-        "archive",
-        "business",
-        "change",
-        "compose",
-        "create",
-        "data",
-        "document",
-        "draft",
-        "drive",
-        "e",
-        "edit",
-        "editing",
-        "file",
-        "folder",
-        "form",
-        "input",
-        "letter",
-        "marker",
-        "modify",
-        "office",
-        "outline",
-        "paper",
-        "pen",
-        "pencil",
-        "rename",
-        "save",
-        "sheet",
-        "square",
-        "text",
-        "update",
-        "write",
-        "writing"
       ]
     },
     {
