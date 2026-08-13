@@ -416,6 +416,41 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             self.assertEqual(self.entries[concept]["kind"], kind)
             self.assertEqual(self.entries[concept]["value"], value)
 
+    def test_audio_video_family_is_explicit_reviewed_native_artwork(self):
+        family = MODULE.load_json(MODULE.AUDIO_VIDEO_OVERRIDES_PATH)
+        low_confidence = {
+            item["concept"] for item in self.audit["low_confidence_concepts"]
+        }
+        self.assertEqual(self.audit["reviewed_families"]["audio_video"], len(family))
+        self.assertTrue(set(family).isdisjoint(low_confidence))
+        for concept, target in family.items():
+            entry = self.entries[concept]
+            self.assertEqual(entry["kind"], target["kind"])
+            self.assertEqual(entry["value"], target["value"])
+            self.assertEqual(entry["confidence"], "reviewed")
+            self.assertEqual(entry["source"], "reviewed_override")
+
+    def test_audio_video_distinct_semantics_do_not_regress(self):
+        expected = {
+            "AIRPLAY": ("system_symbol", "airplayvideo"),
+            "ART_TRACK": ("cupertino_glyph", "MUSIC_ALBUMS_FILL"),
+            "CLOSED_CAPTION": ("system_symbol", "captions.bubble.fill"),
+            "HEARING_DISABLED": (
+                "system_symbol",
+                "ear.trianglebadge.exclamationmark",
+            ),
+            "LYRICS": ("system_symbol", "music.note.list"),
+            "REPEAT_ONE_ON": ("system_symbol", "repeat.1.circle.fill"),
+            "SUBSCRIPTIONS": (
+                "system_symbol",
+                "rectangle.stack.badge.play.fill",
+            ),
+            "SURROUND_SOUND": ("system_symbol", "hifispeaker.2.fill"),
+        }
+        for concept, (kind, value) in expected.items():
+            self.assertEqual(self.entries[concept]["kind"], kind)
+            self.assertEqual(self.entries[concept]["value"], value)
+
     def test_checked_in_artifacts_are_reproducible(self):
         self.assertEqual(
             MODULE.OUTPUT_PATH.read_text(encoding="utf-8"),

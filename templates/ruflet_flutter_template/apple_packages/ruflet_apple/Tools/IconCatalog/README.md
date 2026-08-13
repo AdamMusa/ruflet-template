@@ -37,6 +37,8 @@ Reviewed currency, payments, shopping, financial, and business-data concepts
 live in `business_commerce_overrides.json`.
 Reviewed travel amenities and route concepts not owned by the primary
 navigation/transit family live in `travel_amenity_overrides.json`.
+Reviewed audio, video, captions, hearing, playback, streaming, and media-library
+concepts live in `audio_video_overrides.json`.
 
 The 8,825 identities contain 2,235 concepts because Flet carries Outlined,
 Rounded, and Sharp Material variants. The generator records the collapsed

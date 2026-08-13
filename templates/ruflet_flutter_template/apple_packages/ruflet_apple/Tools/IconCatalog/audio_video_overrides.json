@@ -1,0 +1,122 @@
+{
+  "AIRPLAY": {
+    "kind": "system_symbol",
+    "value": "airplayvideo",
+    "rationale": "public Apple native AirPlay video identity"
+  },
+  "ART_TRACK": {
+    "kind": "cupertino_glyph",
+    "value": "MUSIC_ALBUMS_FILL",
+    "rationale": "bundled Apple album-art track identity"
+  },
+  "AUDIO_FILE": {
+    "kind": "system_symbol",
+    "value": "waveform",
+    "rationale": "public Apple audio-content identity"
+  },
+  "CLOSED_CAPTION": {
+    "kind": "system_symbol",
+    "value": "captions.bubble.fill",
+    "rationale": "public Apple closed-caption identity"
+  },
+  "EQUALIZER": {
+    "kind": "system_symbol",
+    "value": "slider.vertical.3",
+    "rationale": "public Apple equalizer identity"
+  },
+  "EXPLICIT": {
+    "kind": "system_symbol",
+    "value": "e.square.fill",
+    "rationale": "public Apple explicit-content identity"
+  },
+  "FEATURED_VIDEO": {
+    "kind": "system_symbol",
+    "value": "play.rectangle.fill",
+    "rationale": "public Apple featured-video identity"
+  },
+  "HEARING": {
+    "kind": "system_symbol",
+    "value": "ear",
+    "rationale": "public Apple hearing identity"
+  },
+  "HEARING_DISABLED": {
+    "kind": "system_symbol",
+    "value": "ear.trianglebadge.exclamationmark",
+    "rationale": "public Apple impaired-hearing identity"
+  },
+  "HIGH_QUALITY": {
+    "kind": "system_symbol",
+    "value": "sparkles.tv.fill",
+    "rationale": "public Apple enhanced high-quality video identity"
+  },
+  "INTERPRETER_MODE": {
+    "kind": "system_symbol",
+    "value": "person.wave.2",
+    "rationale": "public Apple interpreted person-to-person communication identity"
+  },
+  "LIBRARY_ADD_CHECK": {
+    "kind": "system_symbol",
+    "value": "checkmark.rectangle.portrait.fill",
+    "rationale": "public Apple checked media-library item identity"
+  },
+  "LYRICS": {
+    "kind": "system_symbol",
+    "value": "music.note.list",
+    "rationale": "public Apple song-lyrics identity"
+  },
+  "NOT_INTERESTED": {
+    "kind": "system_symbol",
+    "value": "circle.slash",
+    "rationale": "public Apple not-interested identity"
+  },
+  "QUEUE_PLAY_NEXT": {
+    "kind": "system_symbol",
+    "value": "text.badge.plus",
+    "rationale": "public Apple add-to-playback-queue identity"
+  },
+  "REPEAT_ONE_ON": {
+    "kind": "system_symbol",
+    "value": "repeat.1.circle.fill",
+    "rationale": "public Apple active repeat-one identity"
+  },
+  "SLOW_MOTION_VIDEO": {
+    "kind": "system_symbol",
+    "value": "gauge",
+    "rationale": "public Apple slow-motion speed identity"
+  },
+  "SPATIAL_AUDIO": {
+    "kind": "system_symbol",
+    "value": "waveform.circle.fill",
+    "rationale": "public Apple spatial-audio identity available at the deployment floor"
+  },
+  "SPEED": {
+    "kind": "system_symbol",
+    "value": "speedometer",
+    "rationale": "public Apple playback-speed identity"
+  },
+  "STREAM": {
+    "kind": "system_symbol",
+    "value": "dot.radiowaves.left.and.right",
+    "rationale": "public Apple streaming identity"
+  },
+  "SUBSCRIPTIONS": {
+    "kind": "system_symbol",
+    "value": "rectangle.stack.badge.play.fill",
+    "rationale": "public Apple subscribed-video collection identity"
+  },
+  "SUBTITLES": {
+    "kind": "system_symbol",
+    "value": "captions.bubble.fill",
+    "rationale": "public Apple subtitles identity"
+  },
+  "SURROUND_SOUND": {
+    "kind": "system_symbol",
+    "value": "hifispeaker.2.fill",
+    "rationale": "public Apple surround-speaker identity"
+  },
+  "VIDEO_LABEL": {
+    "kind": "system_symbol",
+    "value": "play.rectangle",
+    "rationale": "public Apple labeled-video identity"
+  }
+}
