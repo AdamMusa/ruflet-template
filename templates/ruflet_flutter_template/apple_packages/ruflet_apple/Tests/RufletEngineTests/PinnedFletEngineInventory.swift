@@ -259,7 +259,7 @@ enum PinnedFletEngineInventory {
     .init(source: "utils/user_fonts_web.dart", disposition: "apple-skip", destination: "-"),
     .init(source: "utils/weak_value_map.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/weak_value_map.swift"),
     .init(source: "utils/widget_state.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/widget_state.swift"),
-    .init(source: "utils/window.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/window.swift"),
+    .init(source: "utils/window.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/window_utils.swift"),
     .init(source: "widgets/animated_transition_page.dart", disposition: "direct", destination: "Sources/RufletEngine/Widgets/animated_transition_page.swift"),
     .init(source: "widgets/control_inherited_notifier.dart", disposition: "direct", destination: "Sources/RufletEngine/Widgets/control_inherited_notifier.swift"),
     .init(source: "widgets/error.dart", disposition: "direct", destination: "Sources/RufletEngine/Widgets/error.swift"),
