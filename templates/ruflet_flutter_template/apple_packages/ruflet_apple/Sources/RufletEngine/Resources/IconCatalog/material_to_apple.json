@@ -1296,31 +1296,31 @@
   },
   "ADJUST": {
     "kind": "system_symbol",
-    "value": "target",
+    "value": "slider.horizontal.3",
     "concept": "ADJUST",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ADJUST_OUTLINED": {
     "kind": "system_symbol",
-    "value": "target",
+    "value": "slider.horizontal.3",
     "concept": "ADJUST",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ADJUST_ROUNDED": {
     "kind": "system_symbol",
-    "value": "target",
+    "value": "slider.horizontal.3",
     "concept": "ADJUST",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ADJUST_SHARP": {
     "kind": "system_symbol",
-    "value": "target",
+    "value": "slider.horizontal.3",
     "concept": "ADJUST",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ADMIN_PANEL_SETTINGS": {
     "kind": "cupertino_glyph",
@@ -3766,11 +3766,11 @@
     "source": "semantic_rank"
   },
   "ASSISTANT": {
-    "kind": "cupertino_glyph",
-    "value": "CONVERSATION_BUBBLE",
+    "kind": "system_symbol",
+    "value": "sparkles",
     "concept": "ASSISTANT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ASSISTANT_DIRECTION": {
     "kind": "cupertino_glyph",
@@ -3808,11 +3808,11 @@
     "source": "reviewed_override"
   },
   "ASSISTANT_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "CONVERSATION_BUBBLE",
+    "kind": "system_symbol",
+    "value": "sparkles",
     "concept": "ASSISTANT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ASSISTANT_PHOTO": {
     "kind": "system_symbol",
@@ -3843,18 +3843,18 @@
     "source": "semantic_rank"
   },
   "ASSISTANT_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "CONVERSATION_BUBBLE",
+    "kind": "system_symbol",
+    "value": "sparkles",
     "concept": "ASSISTANT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ASSISTANT_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "CONVERSATION_BUBBLE",
+    "kind": "system_symbol",
+    "value": "sparkles",
     "concept": "ASSISTANT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ASSURED_WORKLOAD": {
     "kind": "cupertino_glyph",
@@ -4249,60 +4249,60 @@
     "source": "semantic_rank"
   },
   "AUTO_FIX_HIGH": {
-    "kind": "cupertino_glyph",
-    "value": "WAND_STARS",
+    "kind": "system_symbol",
+    "value": "wand.and.stars",
     "concept": "AUTO_FIX_HIGH",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "AUTO_FIX_HIGH_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "WAND_STARS",
+    "kind": "system_symbol",
+    "value": "wand.and.stars",
     "concept": "AUTO_FIX_HIGH",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "AUTO_FIX_HIGH_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "WAND_STARS",
+    "kind": "system_symbol",
+    "value": "wand.and.stars",
     "concept": "AUTO_FIX_HIGH",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "AUTO_FIX_HIGH_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "WAND_STARS",
+    "kind": "system_symbol",
+    "value": "wand.and.stars",
     "concept": "AUTO_FIX_HIGH",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "AUTO_FIX_NORMAL": {
-    "kind": "cupertino_glyph",
-    "value": "WAND_STARS",
+    "kind": "system_symbol",
+    "value": "wand.and.stars",
     "concept": "AUTO_FIX_NORMAL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "AUTO_FIX_NORMAL_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "WAND_STARS",
+    "kind": "system_symbol",
+    "value": "wand.and.stars",
     "concept": "AUTO_FIX_NORMAL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "AUTO_FIX_NORMAL_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "WAND_STARS",
+    "kind": "system_symbol",
+    "value": "wand.and.stars",
     "concept": "AUTO_FIX_NORMAL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "AUTO_FIX_NORMAL_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "WAND_STARS",
+    "kind": "system_symbol",
+    "value": "wand.and.stars",
     "concept": "AUTO_FIX_NORMAL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "AUTO_FIX_OFF": {
     "kind": "cupertino_glyph",
@@ -4389,32 +4389,32 @@
     "source": "semantic_rank"
   },
   "AUTO_STORIES": {
-    "kind": "cupertino_glyph",
-    "value": "COLLECTIONS",
+    "kind": "system_symbol",
+    "value": "rectangle.stack.badge.play.fill",
     "concept": "AUTO_STORIES",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "AUTO_STORIES_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "COLLECTIONS",
+    "kind": "system_symbol",
+    "value": "rectangle.stack.badge.play.fill",
     "concept": "AUTO_STORIES",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "AUTO_STORIES_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "COLLECTIONS",
+    "kind": "system_symbol",
+    "value": "rectangle.stack.badge.play.fill",
     "concept": "AUTO_STORIES",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "AUTO_STORIES_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "COLLECTIONS",
+    "kind": "system_symbol",
+    "value": "rectangle.stack.badge.play.fill",
     "concept": "AUTO_STORIES",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "AUTOFPS_SELECT": {
     "kind": "system_symbol",
@@ -8134,32 +8134,32 @@
     "source": "semantic_rank"
   },
   "CAMERA_FRONT": {
-    "kind": "cupertino_glyph",
-    "value": "CAMERA",
+    "kind": "system_symbol",
+    "value": "camera.rotate.fill",
     "concept": "CAMERA_FRONT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CAMERA_FRONT_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "CAMERA",
+    "kind": "system_symbol",
+    "value": "camera.rotate.fill",
     "concept": "CAMERA_FRONT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CAMERA_FRONT_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "CAMERA",
+    "kind": "system_symbol",
+    "value": "camera.rotate.fill",
     "concept": "CAMERA_FRONT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CAMERA_FRONT_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "CAMERA",
+    "kind": "system_symbol",
+    "value": "camera.rotate.fill",
     "concept": "CAMERA_FRONT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CAMERA_INDOOR": {
     "kind": "cupertino_glyph",
@@ -8254,31 +8254,31 @@
   },
   "CAMERA_ROLL": {
     "kind": "cupertino_glyph",
-    "value": "CAMERA",
+    "value": "PHOTO_FILL_ON_RECTANGLE_FILL",
     "concept": "CAMERA_ROLL",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CAMERA_ROLL_OUTLINED": {
     "kind": "cupertino_glyph",
-    "value": "CAMERA",
+    "value": "PHOTO_FILL_ON_RECTANGLE_FILL",
     "concept": "CAMERA_ROLL",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CAMERA_ROLL_ROUNDED": {
     "kind": "cupertino_glyph",
-    "value": "CAMERA",
+    "value": "PHOTO_FILL_ON_RECTANGLE_FILL",
     "concept": "CAMERA_ROLL",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CAMERA_ROLL_SHARP": {
     "kind": "cupertino_glyph",
-    "value": "CAMERA",
+    "value": "PHOTO_FILL_ON_RECTANGLE_FILL",
     "concept": "CAMERA_ROLL",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CAMERA_ROUNDED": {
     "kind": "system_symbol",
@@ -8967,60 +8967,60 @@
     "source": "semantic_rank"
   },
   "CENTER_FOCUS_STRONG": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO_CAMERA",
+    "kind": "system_symbol",
+    "value": "viewfinder",
     "concept": "CENTER_FOCUS_STRONG",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CENTER_FOCUS_STRONG_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO_CAMERA",
+    "kind": "system_symbol",
+    "value": "viewfinder",
     "concept": "CENTER_FOCUS_STRONG",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CENTER_FOCUS_STRONG_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO_CAMERA",
+    "kind": "system_symbol",
+    "value": "viewfinder",
     "concept": "CENTER_FOCUS_STRONG",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CENTER_FOCUS_STRONG_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO_CAMERA",
+    "kind": "system_symbol",
+    "value": "viewfinder",
     "concept": "CENTER_FOCUS_STRONG",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CENTER_FOCUS_WEAK": {
     "kind": "system_symbol",
-    "value": "rectangle.center.inset.filled",
+    "value": "viewfinder.circle",
     "concept": "CENTER_FOCUS_WEAK",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CENTER_FOCUS_WEAK_OUTLINED": {
     "kind": "system_symbol",
-    "value": "rectangle.center.inset.filled",
+    "value": "viewfinder.circle",
     "concept": "CENTER_FOCUS_WEAK",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CENTER_FOCUS_WEAK_ROUNDED": {
     "kind": "system_symbol",
-    "value": "rectangle.center.inset.filled",
+    "value": "viewfinder.circle",
     "concept": "CENTER_FOCUS_WEAK",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CENTER_FOCUS_WEAK_SHARP": {
     "kind": "system_symbol",
-    "value": "rectangle.center.inset.filled",
+    "value": "viewfinder.circle",
     "concept": "CENTER_FOCUS_WEAK",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CHAIR": {
     "kind": "cupertino_glyph",
@@ -10654,11 +10654,11 @@
     "source": "reviewed_override"
   },
   "COMPARE": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO",
+    "kind": "system_symbol",
+    "value": "square.split.2x1",
     "concept": "COMPARE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "COMPARE_ARROWS": {
     "kind": "cupertino_glyph",
@@ -10689,25 +10689,25 @@
     "source": "semantic_rank"
   },
   "COMPARE_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO",
+    "kind": "system_symbol",
+    "value": "square.split.2x1",
     "concept": "COMPARE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "COMPARE_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO",
+    "kind": "system_symbol",
+    "value": "square.split.2x1",
     "concept": "COMPARE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "COMPARE_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO",
+    "kind": "system_symbol",
+    "value": "square.split.2x1",
     "concept": "COMPARE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "COMPASS_CALIBRATION": {
     "kind": "cupertino_glyph",
@@ -11354,32 +11354,32 @@
     "source": "reviewed_override"
   },
   "CONTRAST": {
-    "kind": "cupertino_glyph",
-    "value": "BRIGHTNESS",
+    "kind": "system_symbol",
+    "value": "circle.lefthalf.filled",
     "concept": "CONTRAST",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CONTRAST_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "BRIGHTNESS",
+    "kind": "system_symbol",
+    "value": "circle.lefthalf.filled",
     "concept": "CONTRAST",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CONTRAST_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "BRIGHTNESS",
+    "kind": "system_symbol",
+    "value": "circle.lefthalf.filled",
     "concept": "CONTRAST",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CONTRAST_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "BRIGHTNESS",
+    "kind": "system_symbol",
+    "value": "circle.lefthalf.filled",
     "concept": "CONTRAST",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CONTROL_CAMERA": {
     "kind": "cupertino_glyph",
@@ -18334,10 +18334,10 @@
   },
   "EXPOSURE": {
     "kind": "system_symbol",
-    "value": "minus",
+    "value": "plusminus.circle",
     "concept": "EXPOSURE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "EXPOSURE_MINUS_1": {
     "kind": "cupertino_glyph",
@@ -18453,10 +18453,10 @@
   },
   "EXPOSURE_OUTLINED": {
     "kind": "system_symbol",
-    "value": "minus",
+    "value": "plusminus.circle",
     "concept": "EXPOSURE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "EXPOSURE_PLUS_1": {
     "kind": "system_symbol",
@@ -18516,45 +18516,45 @@
   },
   "EXPOSURE_ROUNDED": {
     "kind": "system_symbol",
-    "value": "minus",
+    "value": "plusminus.circle",
     "concept": "EXPOSURE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "EXPOSURE_SHARP": {
     "kind": "system_symbol",
-    "value": "minus",
+    "value": "plusminus.circle",
     "concept": "EXPOSURE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "EXPOSURE_ZERO": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO_CAMERA",
+    "kind": "system_symbol",
+    "value": "0.circle",
     "concept": "EXPOSURE_ZERO",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "EXPOSURE_ZERO_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO_CAMERA",
+    "kind": "system_symbol",
+    "value": "0.circle",
     "concept": "EXPOSURE_ZERO",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "EXPOSURE_ZERO_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO_CAMERA",
+    "kind": "system_symbol",
+    "value": "0.circle",
     "concept": "EXPOSURE_ZERO",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "EXPOSURE_ZERO_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO_CAMERA",
+    "kind": "system_symbol",
+    "value": "0.circle",
     "concept": "EXPOSURE_ZERO",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "EXTENSION": {
     "kind": "system_symbol",
@@ -19736,246 +19736,246 @@
     "kind": "system_symbol",
     "value": "camera.filters",
     "concept": "FILTER",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_1": {
     "kind": "system_symbol",
     "value": "1.circle",
     "concept": "FILTER_1",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_1_OUTLINED": {
     "kind": "system_symbol",
     "value": "1.circle",
     "concept": "FILTER_1",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_1_ROUNDED": {
     "kind": "system_symbol",
     "value": "1.circle",
     "concept": "FILTER_1",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_1_SHARP": {
     "kind": "system_symbol",
     "value": "1.circle",
     "concept": "FILTER_1",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_2": {
     "kind": "system_symbol",
-    "value": "gearshape.2",
+    "value": "2.circle",
     "concept": "FILTER_2",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_2_OUTLINED": {
     "kind": "system_symbol",
-    "value": "gearshape.2",
+    "value": "2.circle",
     "concept": "FILTER_2",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_2_ROUNDED": {
     "kind": "system_symbol",
-    "value": "gearshape.2",
+    "value": "2.circle",
     "concept": "FILTER_2",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_2_SHARP": {
     "kind": "system_symbol",
-    "value": "gearshape.2",
+    "value": "2.circle",
     "concept": "FILTER_2",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_3": {
     "kind": "system_symbol",
     "value": "3.circle",
     "concept": "FILTER_3",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_3_OUTLINED": {
     "kind": "system_symbol",
     "value": "3.circle",
     "concept": "FILTER_3",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_3_ROUNDED": {
     "kind": "system_symbol",
     "value": "3.circle",
     "concept": "FILTER_3",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_3_SHARP": {
     "kind": "system_symbol",
     "value": "3.circle",
     "concept": "FILTER_3",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_4": {
     "kind": "system_symbol",
     "value": "4.circle",
     "concept": "FILTER_4",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_4_OUTLINED": {
     "kind": "system_symbol",
     "value": "4.circle",
     "concept": "FILTER_4",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_4_ROUNDED": {
     "kind": "system_symbol",
     "value": "4.circle",
     "concept": "FILTER_4",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_4_SHARP": {
     "kind": "system_symbol",
     "value": "4.circle",
     "concept": "FILTER_4",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_5": {
     "kind": "system_symbol",
     "value": "5.circle",
     "concept": "FILTER_5",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_5_OUTLINED": {
     "kind": "system_symbol",
     "value": "5.circle",
     "concept": "FILTER_5",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_5_ROUNDED": {
     "kind": "system_symbol",
     "value": "5.circle",
     "concept": "FILTER_5",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_5_SHARP": {
     "kind": "system_symbol",
     "value": "5.circle",
     "concept": "FILTER_5",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_6": {
     "kind": "system_symbol",
     "value": "6.circle",
     "concept": "FILTER_6",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_6_OUTLINED": {
     "kind": "system_symbol",
     "value": "6.circle",
     "concept": "FILTER_6",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_6_ROUNDED": {
     "kind": "system_symbol",
     "value": "6.circle",
     "concept": "FILTER_6",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_6_SHARP": {
     "kind": "system_symbol",
     "value": "6.circle",
     "concept": "FILTER_6",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_7": {
     "kind": "system_symbol",
     "value": "7.circle",
     "concept": "FILTER_7",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_7_OUTLINED": {
     "kind": "system_symbol",
     "value": "7.circle",
     "concept": "FILTER_7",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_7_ROUNDED": {
     "kind": "system_symbol",
     "value": "7.circle",
     "concept": "FILTER_7",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_7_SHARP": {
     "kind": "system_symbol",
     "value": "7.circle",
     "concept": "FILTER_7",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_8": {
     "kind": "system_symbol",
     "value": "8.circle",
     "concept": "FILTER_8",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_8_OUTLINED": {
     "kind": "system_symbol",
     "value": "8.circle",
     "concept": "FILTER_8",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_8_ROUNDED": {
     "kind": "system_symbol",
     "value": "8.circle",
     "concept": "FILTER_8",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_8_SHARP": {
     "kind": "system_symbol",
     "value": "8.circle",
     "concept": "FILTER_8",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_9": {
     "kind": "system_symbol",
     "value": "9.circle",
     "concept": "FILTER_9",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_9_OUTLINED": {
     "kind": "system_symbol",
     "value": "9.circle",
     "concept": "FILTER_9",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_9_PLUS": {
     "kind": "system_symbol",
@@ -20009,15 +20009,15 @@
     "kind": "system_symbol",
     "value": "9.circle",
     "concept": "FILTER_9",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_9_SHARP": {
     "kind": "system_symbol",
     "value": "9.circle",
     "concept": "FILTER_9",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_ALT": {
     "kind": "system_symbol",
@@ -20076,32 +20076,32 @@
     "source": "reviewed_override"
   },
   "FILTER_B_AND_W": {
-    "kind": "cupertino_glyph",
-    "value": "COLOR_FILTER",
+    "kind": "system_symbol",
+    "value": "circle.lefthalf.filled",
     "concept": "FILTER_B_AND_W",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_B_AND_W_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "COLOR_FILTER",
+    "kind": "system_symbol",
+    "value": "circle.lefthalf.filled",
     "concept": "FILTER_B_AND_W",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_B_AND_W_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "COLOR_FILTER",
+    "kind": "system_symbol",
+    "value": "circle.lefthalf.filled",
     "concept": "FILTER_B_AND_W",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_B_AND_W_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "COLOR_FILTER",
+    "kind": "system_symbol",
+    "value": "circle.lefthalf.filled",
     "concept": "FILTER_B_AND_W",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_CENTER_FOCUS": {
     "kind": "system_symbol",
@@ -20280,52 +20280,52 @@
   },
   "FILTER_NONE": {
     "kind": "system_symbol",
-    "value": "camera.filters",
+    "value": "square.on.square",
     "concept": "FILTER_NONE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_NONE_OUTLINED": {
     "kind": "system_symbol",
-    "value": "camera.filters",
+    "value": "square.on.square",
     "concept": "FILTER_NONE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_NONE_ROUNDED": {
     "kind": "system_symbol",
-    "value": "camera.filters",
+    "value": "square.on.square",
     "concept": "FILTER_NONE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_NONE_SHARP": {
     "kind": "system_symbol",
-    "value": "camera.filters",
+    "value": "square.on.square",
     "concept": "FILTER_NONE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_OUTLINED": {
     "kind": "system_symbol",
     "value": "camera.filters",
     "concept": "FILTER",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_ROUNDED": {
     "kind": "system_symbol",
     "value": "camera.filters",
     "concept": "FILTER",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_SHARP": {
     "kind": "system_symbol",
     "value": "camera.filters",
     "concept": "FILTER",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_TILT_SHIFT": {
     "kind": "cupertino_glyph",
@@ -20896,31 +20896,31 @@
   },
   "FLARE": {
     "kind": "system_symbol",
-    "value": "photo",
+    "value": "sun.max.fill",
     "concept": "FLARE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FLARE_OUTLINED": {
     "kind": "system_symbol",
-    "value": "photo",
+    "value": "sun.max.fill",
     "concept": "FLARE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FLARE_ROUNDED": {
     "kind": "system_symbol",
-    "value": "photo",
+    "value": "sun.max.fill",
     "concept": "FLARE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FLARE_SHARP": {
     "kind": "system_symbol",
-    "value": "photo",
+    "value": "sun.max.fill",
     "concept": "FLARE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FLASH_AUTO": {
     "kind": "system_symbol",
@@ -21210,60 +21210,60 @@
     "source": "semantic_rank"
   },
   "FLIP_CAMERA_ANDROID": {
-    "kind": "cupertino_glyph",
-    "value": "CAMERA",
+    "kind": "system_symbol",
+    "value": "camera.rotate.fill",
     "concept": "FLIP_CAMERA_ANDROID",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FLIP_CAMERA_ANDROID_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "CAMERA",
+    "kind": "system_symbol",
+    "value": "camera.rotate.fill",
     "concept": "FLIP_CAMERA_ANDROID",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FLIP_CAMERA_ANDROID_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "CAMERA",
+    "kind": "system_symbol",
+    "value": "camera.rotate.fill",
     "concept": "FLIP_CAMERA_ANDROID",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FLIP_CAMERA_ANDROID_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "CAMERA",
+    "kind": "system_symbol",
+    "value": "camera.rotate.fill",
     "concept": "FLIP_CAMERA_ANDROID",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FLIP_CAMERA_IOS": {
-    "kind": "cupertino_glyph",
-    "value": "CAMERA",
+    "kind": "system_symbol",
+    "value": "camera.rotate.fill",
     "concept": "FLIP_CAMERA_IOS",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FLIP_CAMERA_IOS_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "CAMERA",
+    "kind": "system_symbol",
+    "value": "camera.rotate.fill",
     "concept": "FLIP_CAMERA_IOS",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FLIP_CAMERA_IOS_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "CAMERA",
+    "kind": "system_symbol",
+    "value": "camera.rotate.fill",
     "concept": "FLIP_CAMERA_IOS",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FLIP_CAMERA_IOS_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "CAMERA",
+    "kind": "system_symbol",
+    "value": "camera.rotate.fill",
     "concept": "FLIP_CAMERA_IOS",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FLIP_OUTLINED": {
     "kind": "system_symbol",
@@ -25012,31 +25012,31 @@
   },
   "HEALING": {
     "kind": "system_symbol",
-    "value": "cross",
+    "value": "bandage.fill",
     "concept": "HEALING",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "HEALING_OUTLINED": {
     "kind": "system_symbol",
-    "value": "cross",
+    "value": "bandage.fill",
     "concept": "HEALING",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "HEALING_ROUNDED": {
     "kind": "system_symbol",
-    "value": "cross",
+    "value": "bandage.fill",
     "concept": "HEALING",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "HEALING_SHARP": {
     "kind": "system_symbol",
-    "value": "cross",
+    "value": "bandage.fill",
     "concept": "HEALING",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "HEALTH_AND_SAFETY": {
     "kind": "system_symbol",
@@ -27412,11 +27412,11 @@
     "source": "semantic_rank"
   },
   "INVERT_COLORS": {
-    "kind": "cupertino_glyph",
-    "value": "COLOR_FILTER",
+    "kind": "system_symbol",
+    "value": "circle.lefthalf.filled",
     "concept": "INVERT_COLORS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "INVERT_COLORS_OFF": {
     "kind": "system_symbol",
@@ -27475,25 +27475,25 @@
     "source": "semantic_rank"
   },
   "INVERT_COLORS_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "COLOR_FILTER",
+    "kind": "system_symbol",
+    "value": "circle.lefthalf.filled",
     "concept": "INVERT_COLORS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "INVERT_COLORS_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "COLOR_FILTER",
+    "kind": "system_symbol",
+    "value": "circle.lefthalf.filled",
     "concept": "INVERT_COLORS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "INVERT_COLORS_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "COLOR_FILTER",
+    "kind": "system_symbol",
+    "value": "circle.lefthalf.filled",
     "concept": "INVERT_COLORS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "IOS_SHARE": {
     "kind": "system_symbol",
@@ -29078,11 +29078,11 @@
     "source": "semantic_rank"
   },
   "LENS": {
-    "kind": "cupertino_glyph",
-    "value": "EYE_SOLID",
+    "kind": "system_symbol",
+    "value": "camera.aperture",
     "concept": "LENS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LENS_BLUR": {
     "kind": "system_symbol",
@@ -29113,25 +29113,25 @@
     "source": "reviewed_override"
   },
   "LENS_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "EYE_SOLID",
+    "kind": "system_symbol",
+    "value": "camera.aperture",
     "concept": "LENS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LENS_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "EYE_SOLID",
+    "kind": "system_symbol",
+    "value": "camera.aperture",
     "concept": "LENS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LENS_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "EYE_SOLID",
+    "kind": "system_symbol",
+    "value": "camera.aperture",
     "concept": "LENS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "LIBRARY_ADD": {
     "kind": "system_symbol",
@@ -34203,31 +34203,31 @@
   },
   "MOVIE_CREATION": {
     "kind": "cupertino_glyph",
-    "value": "VIDEO_CAMERA",
+    "value": "FILM_FILL",
     "concept": "MOVIE_CREATION",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MOVIE_CREATION_OUTLINED": {
     "kind": "cupertino_glyph",
-    "value": "VIDEO_CAMERA",
+    "value": "FILM_FILL",
     "concept": "MOVIE_CREATION",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MOVIE_CREATION_ROUNDED": {
     "kind": "cupertino_glyph",
-    "value": "VIDEO_CAMERA",
+    "value": "FILM_FILL",
     "concept": "MOVIE_CREATION",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MOVIE_CREATION_SHARP": {
     "kind": "cupertino_glyph",
-    "value": "VIDEO_CAMERA",
+    "value": "FILM_FILL",
     "concept": "MOVIE_CREATION",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MOVIE_EDIT": {
     "kind": "cupertino_glyph",
@@ -34679,17 +34679,17 @@
   },
   "NATURE": {
     "kind": "system_symbol",
-    "value": "photo",
+    "value": "leaf.fill",
     "concept": "NATURE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NATURE_OUTLINED": {
     "kind": "system_symbol",
-    "value": "photo",
+    "value": "leaf.fill",
     "concept": "NATURE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NATURE_PEOPLE": {
     "kind": "system_symbol",
@@ -34721,73 +34721,73 @@
   },
   "NATURE_ROUNDED": {
     "kind": "system_symbol",
-    "value": "photo",
+    "value": "leaf.fill",
     "concept": "NATURE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NATURE_SHARP": {
     "kind": "system_symbol",
-    "value": "photo",
+    "value": "leaf.fill",
     "concept": "NATURE",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NAVIGATE_BEFORE": {
     "kind": "system_symbol",
-    "value": "arrow.backward",
+    "value": "chevron.left",
     "concept": "NAVIGATE_BEFORE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NAVIGATE_BEFORE_OUTLINED": {
     "kind": "system_symbol",
-    "value": "arrow.backward",
+    "value": "chevron.left",
     "concept": "NAVIGATE_BEFORE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NAVIGATE_BEFORE_ROUNDED": {
     "kind": "system_symbol",
-    "value": "arrow.backward",
+    "value": "chevron.left",
     "concept": "NAVIGATE_BEFORE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NAVIGATE_BEFORE_SHARP": {
     "kind": "system_symbol",
-    "value": "arrow.backward",
+    "value": "chevron.left",
     "concept": "NAVIGATE_BEFORE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NAVIGATE_NEXT": {
     "kind": "system_symbol",
-    "value": "chevron.forward",
+    "value": "chevron.right",
     "concept": "NAVIGATE_NEXT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NAVIGATE_NEXT_OUTLINED": {
     "kind": "system_symbol",
-    "value": "chevron.forward",
+    "value": "chevron.right",
     "concept": "NAVIGATE_NEXT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NAVIGATE_NEXT_ROUNDED": {
     "kind": "system_symbol",
-    "value": "chevron.forward",
+    "value": "chevron.right",
     "concept": "NAVIGATE_NEXT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NAVIGATE_NEXT_SHARP": {
     "kind": "system_symbol",
-    "value": "chevron.forward",
+    "value": "chevron.right",
     "concept": "NAVIGATE_NEXT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NAVIGATION": {
     "kind": "system_symbol",
@@ -37094,31 +37094,31 @@
   },
   "OPACITY": {
     "kind": "system_symbol",
-    "value": "drop",
+    "value": "drop.fill",
     "concept": "OPACITY",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "OPACITY_OUTLINED": {
     "kind": "system_symbol",
-    "value": "drop",
+    "value": "drop.fill",
     "concept": "OPACITY",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "OPACITY_ROUNDED": {
     "kind": "system_symbol",
-    "value": "drop",
+    "value": "drop.fill",
     "concept": "OPACITY",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "OPACITY_SHARP": {
     "kind": "system_symbol",
-    "value": "drop",
+    "value": "drop.fill",
     "concept": "OPACITY",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "OPEN_IN_BROWSER": {
     "kind": "cupertino_glyph",
@@ -37696,10 +37696,10 @@
   },
   "PANORAMA": {
     "kind": "system_symbol",
-    "value": "photo",
+    "value": "pano.fill",
     "concept": "PANORAMA",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PANORAMA_FISH_EYE": {
     "kind": "cupertino_glyph",
@@ -37758,137 +37758,137 @@
     "source": "manual_review_required"
   },
   "PANORAMA_HORIZONTAL": {
-    "kind": "cupertino_glyph",
-    "value": "BOLT_HORIZONTAL",
+    "kind": "system_symbol",
+    "value": "pano.fill",
     "concept": "PANORAMA_HORIZONTAL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PANORAMA_HORIZONTAL_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "BOLT_HORIZONTAL",
+    "kind": "system_symbol",
+    "value": "pano.fill",
     "concept": "PANORAMA_HORIZONTAL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PANORAMA_HORIZONTAL_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "BOLT_HORIZONTAL",
+    "kind": "system_symbol",
+    "value": "pano.fill",
     "concept": "PANORAMA_HORIZONTAL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PANORAMA_HORIZONTAL_SELECT": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO",
+    "kind": "system_symbol",
+    "value": "pano.fill",
     "concept": "PANORAMA_HORIZONTAL_SELECT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PANORAMA_HORIZONTAL_SELECT_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO",
+    "kind": "system_symbol",
+    "value": "pano.fill",
     "concept": "PANORAMA_HORIZONTAL_SELECT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PANORAMA_HORIZONTAL_SELECT_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO",
+    "kind": "system_symbol",
+    "value": "pano.fill",
     "concept": "PANORAMA_HORIZONTAL_SELECT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PANORAMA_HORIZONTAL_SELECT_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO",
+    "kind": "system_symbol",
+    "value": "pano.fill",
     "concept": "PANORAMA_HORIZONTAL_SELECT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PANORAMA_HORIZONTAL_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "BOLT_HORIZONTAL",
+    "kind": "system_symbol",
+    "value": "pano.fill",
     "concept": "PANORAMA_HORIZONTAL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PANORAMA_OUTLINED": {
     "kind": "system_symbol",
-    "value": "photo",
+    "value": "pano.fill",
     "concept": "PANORAMA",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PANORAMA_PHOTOSPHERE": {
     "kind": "system_symbol",
-    "value": "photo",
+    "value": "view.3d",
     "concept": "PANORAMA_PHOTOSPHERE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PANORAMA_PHOTOSPHERE_OUTLINED": {
     "kind": "system_symbol",
-    "value": "photo",
+    "value": "view.3d",
     "concept": "PANORAMA_PHOTOSPHERE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PANORAMA_PHOTOSPHERE_ROUNDED": {
     "kind": "system_symbol",
-    "value": "photo",
+    "value": "view.3d",
     "concept": "PANORAMA_PHOTOSPHERE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PANORAMA_PHOTOSPHERE_SELECT": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO",
+    "kind": "system_symbol",
+    "value": "view.3d",
     "concept": "PANORAMA_PHOTOSPHERE_SELECT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PANORAMA_PHOTOSPHERE_SELECT_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO",
+    "kind": "system_symbol",
+    "value": "view.3d",
     "concept": "PANORAMA_PHOTOSPHERE_SELECT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PANORAMA_PHOTOSPHERE_SELECT_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO",
+    "kind": "system_symbol",
+    "value": "view.3d",
     "concept": "PANORAMA_PHOTOSPHERE_SELECT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PANORAMA_PHOTOSPHERE_SELECT_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO",
+    "kind": "system_symbol",
+    "value": "view.3d",
     "concept": "PANORAMA_PHOTOSPHERE_SELECT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PANORAMA_PHOTOSPHERE_SHARP": {
     "kind": "system_symbol",
-    "value": "photo",
+    "value": "view.3d",
     "concept": "PANORAMA_PHOTOSPHERE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PANORAMA_ROUNDED": {
     "kind": "system_symbol",
-    "value": "photo",
+    "value": "pano.fill",
     "concept": "PANORAMA",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PANORAMA_SHARP": {
     "kind": "system_symbol",
-    "value": "photo",
+    "value": "pano.fill",
     "concept": "PANORAMA",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PANORAMA_VERTICAL": {
     "kind": "cupertino_glyph",
@@ -37947,60 +37947,60 @@
     "source": "semantic_rank"
   },
   "PANORAMA_WIDE_ANGLE": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO_CAMERA",
+    "kind": "system_symbol",
+    "value": "pano.fill",
     "concept": "PANORAMA_WIDE_ANGLE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PANORAMA_WIDE_ANGLE_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO_CAMERA",
+    "kind": "system_symbol",
+    "value": "pano.fill",
     "concept": "PANORAMA_WIDE_ANGLE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PANORAMA_WIDE_ANGLE_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO_CAMERA",
+    "kind": "system_symbol",
+    "value": "pano.fill",
     "concept": "PANORAMA_WIDE_ANGLE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PANORAMA_WIDE_ANGLE_SELECT": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO",
+    "kind": "system_symbol",
+    "value": "pano.fill",
     "concept": "PANORAMA_WIDE_ANGLE_SELECT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PANORAMA_WIDE_ANGLE_SELECT_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO",
+    "kind": "system_symbol",
+    "value": "pano.fill",
     "concept": "PANORAMA_WIDE_ANGLE_SELECT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PANORAMA_WIDE_ANGLE_SELECT_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO",
+    "kind": "system_symbol",
+    "value": "pano.fill",
     "concept": "PANORAMA_WIDE_ANGLE_SELECT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PANORAMA_WIDE_ANGLE_SELECT_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO",
+    "kind": "system_symbol",
+    "value": "pano.fill",
     "concept": "PANORAMA_WIDE_ANGLE_SELECT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PANORAMA_WIDE_ANGLE_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO_CAMERA",
+    "kind": "system_symbol",
+    "value": "pano.fill",
     "concept": "PANORAMA_WIDE_ANGLE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PARAGLIDING": {
     "kind": "system_symbol",
@@ -44751,60 +44751,60 @@
     "source": "reviewed_override"
   },
   "ROTATE_90_DEGREES_CCW": {
-    "kind": "cupertino_glyph",
-    "value": "ROTATE_LEFT",
+    "kind": "system_symbol",
+    "value": "rotate.left",
     "concept": "ROTATE_90_DEGREES_CCW",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ROTATE_90_DEGREES_CCW_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "ROTATE_LEFT",
+    "kind": "system_symbol",
+    "value": "rotate.left",
     "concept": "ROTATE_90_DEGREES_CCW",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ROTATE_90_DEGREES_CCW_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "ROTATE_LEFT",
+    "kind": "system_symbol",
+    "value": "rotate.left",
     "concept": "ROTATE_90_DEGREES_CCW",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ROTATE_90_DEGREES_CCW_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "ROTATE_LEFT",
+    "kind": "system_symbol",
+    "value": "rotate.left",
     "concept": "ROTATE_90_DEGREES_CCW",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ROTATE_90_DEGREES_CW": {
-    "kind": "cupertino_glyph",
-    "value": "ROTATE_RIGHT",
+    "kind": "system_symbol",
+    "value": "rotate.right",
     "concept": "ROTATE_90_DEGREES_CW",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ROTATE_90_DEGREES_CW_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "ROTATE_RIGHT",
+    "kind": "system_symbol",
+    "value": "rotate.right",
     "concept": "ROTATE_90_DEGREES_CW",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ROTATE_90_DEGREES_CW_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "ROTATE_RIGHT",
+    "kind": "system_symbol",
+    "value": "rotate.right",
     "concept": "ROTATE_90_DEGREES_CW",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ROTATE_90_DEGREES_CW_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "ROTATE_RIGHT",
+    "kind": "system_symbol",
+    "value": "rotate.right",
     "concept": "ROTATE_90_DEGREES_CW",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ROTATE_LEFT": {
     "kind": "cupertino_glyph",
@@ -48259,31 +48259,31 @@
   },
   "SHUTTER_SPEED": {
     "kind": "system_symbol",
-    "value": "photo.circle",
+    "value": "timer",
     "concept": "SHUTTER_SPEED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SHUTTER_SPEED_OUTLINED": {
     "kind": "system_symbol",
-    "value": "photo.circle",
+    "value": "timer",
     "concept": "SHUTTER_SPEED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SHUTTER_SPEED_ROUNDED": {
     "kind": "system_symbol",
-    "value": "photo.circle",
+    "value": "timer",
     "concept": "SHUTTER_SPEED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SHUTTER_SPEED_SHARP": {
     "kind": "system_symbol",
-    "value": "photo.circle",
+    "value": "timer",
     "concept": "SHUTTER_SPEED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SICK": {
     "kind": "system_symbol",
@@ -49378,32 +49378,32 @@
     "source": "semantic_rank"
   },
   "SLIDESHOW": {
-    "kind": "cupertino_glyph",
-    "value": "ARROW_RIGHT_SQUARE",
+    "kind": "system_symbol",
+    "value": "play.rectangle.fill",
     "concept": "SLIDESHOW",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SLIDESHOW_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "ARROW_RIGHT_SQUARE",
+    "kind": "system_symbol",
+    "value": "play.rectangle.fill",
     "concept": "SLIDESHOW",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SLIDESHOW_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "ARROW_RIGHT_SQUARE",
+    "kind": "system_symbol",
+    "value": "play.rectangle.fill",
     "concept": "SLIDESHOW",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SLIDESHOW_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "ARROW_RIGHT_SQUARE",
+    "kind": "system_symbol",
+    "value": "play.rectangle.fill",
     "concept": "SLIDESHOW",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SLOW_MOTION_VIDEO": {
     "kind": "cupertino_glyph",
@@ -52018,31 +52018,31 @@
   },
   "STRAIGHTEN": {
     "kind": "system_symbol",
-    "value": "lines.measurement.horizontal",
+    "value": "ruler",
     "concept": "STRAIGHTEN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "STRAIGHTEN_OUTLINED": {
     "kind": "system_symbol",
-    "value": "lines.measurement.horizontal",
+    "value": "ruler",
     "concept": "STRAIGHTEN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "STRAIGHTEN_ROUNDED": {
     "kind": "system_symbol",
-    "value": "lines.measurement.horizontal",
+    "value": "ruler",
     "concept": "STRAIGHTEN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "STRAIGHTEN_SHARP": {
     "kind": "system_symbol",
-    "value": "lines.measurement.horizontal",
+    "value": "ruler",
     "concept": "STRAIGHTEN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "STREAM": {
     "kind": "cupertino_glyph",
@@ -52157,32 +52157,32 @@
     "source": "semantic_rank"
   },
   "STYLE": {
-    "kind": "cupertino_glyph",
-    "value": "PARAGRAPH",
+    "kind": "system_symbol",
+    "value": "paintpalette.fill",
     "concept": "STYLE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "STYLE_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "PARAGRAPH",
+    "kind": "system_symbol",
+    "value": "paintpalette.fill",
     "concept": "STYLE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "STYLE_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "PARAGRAPH",
+    "kind": "system_symbol",
+    "value": "paintpalette.fill",
     "concept": "STYLE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "STYLE_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "PARAGRAPH",
+    "kind": "system_symbol",
+    "value": "paintpalette.fill",
     "concept": "STYLE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SUBDIRECTORY_ARROW_LEFT": {
     "kind": "cupertino_glyph",
@@ -54663,32 +54663,32 @@
     "source": "semantic_rank"
   },
   "TEXTURE": {
-    "kind": "cupertino_glyph",
-    "value": "LAYERS",
+    "kind": "system_symbol",
+    "value": "scribble",
     "concept": "TEXTURE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TEXTURE_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "LAYERS",
+    "kind": "system_symbol",
+    "value": "scribble",
     "concept": "TEXTURE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TEXTURE_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "LAYERS",
+    "kind": "system_symbol",
+    "value": "scribble",
     "concept": "TEXTURE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TEXTURE_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "LAYERS",
+    "kind": "system_symbol",
+    "value": "scribble",
     "concept": "TEXTURE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "THEATER_COMEDY": {
     "kind": "system_symbol",
@@ -55840,31 +55840,31 @@
   },
   "TONALITY": {
     "kind": "system_symbol",
-    "value": "waveform",
+    "value": "circle.lefthalf.filled",
     "concept": "TONALITY",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TONALITY_OUTLINED": {
     "kind": "system_symbol",
-    "value": "waveform",
+    "value": "circle.lefthalf.filled",
     "concept": "TONALITY",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TONALITY_ROUNDED": {
     "kind": "system_symbol",
-    "value": "waveform",
+    "value": "circle.lefthalf.filled",
     "concept": "TONALITY",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TONALITY_SHARP": {
     "kind": "system_symbol",
-    "value": "waveform",
+    "value": "circle.lefthalf.filled",
     "concept": "TONALITY",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TOPIC": {
     "kind": "cupertino_glyph",
@@ -58646,11 +58646,11 @@
     "source": "semantic_rank"
   },
   "VIEW_COMFY": {
-    "kind": "cupertino_glyph",
-    "value": "COLLECTIONS",
+    "kind": "system_symbol",
+    "value": "rectangle.grid.2x2.fill",
     "concept": "VIEW_COMFY",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VIEW_COMFY_ALT": {
     "kind": "cupertino_glyph",
@@ -58681,32 +58681,32 @@
     "source": "semantic_rank"
   },
   "VIEW_COMFY_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "COLLECTIONS",
+    "kind": "system_symbol",
+    "value": "rectangle.grid.2x2.fill",
     "concept": "VIEW_COMFY",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VIEW_COMFY_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "COLLECTIONS",
+    "kind": "system_symbol",
+    "value": "rectangle.grid.2x2.fill",
     "concept": "VIEW_COMFY",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VIEW_COMFY_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "COLLECTIONS",
+    "kind": "system_symbol",
+    "value": "rectangle.grid.2x2.fill",
     "concept": "VIEW_COMFY",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VIEW_COMPACT": {
     "kind": "system_symbol",
-    "value": "mosaic",
+    "value": "rectangle.grid.1x2.fill",
     "concept": "VIEW_COMPACT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VIEW_COMPACT_ALT": {
     "kind": "cupertino_glyph",
@@ -58738,24 +58738,24 @@
   },
   "VIEW_COMPACT_OUTLINED": {
     "kind": "system_symbol",
-    "value": "mosaic",
+    "value": "rectangle.grid.1x2.fill",
     "concept": "VIEW_COMPACT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VIEW_COMPACT_ROUNDED": {
     "kind": "system_symbol",
-    "value": "mosaic",
+    "value": "rectangle.grid.1x2.fill",
     "concept": "VIEW_COMPACT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VIEW_COMPACT_SHARP": {
     "kind": "system_symbol",
-    "value": "mosaic",
+    "value": "rectangle.grid.1x2.fill",
     "concept": "VIEW_COMPACT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VIEW_COZY": {
     "kind": "cupertino_glyph",
@@ -59094,32 +59094,32 @@
     "source": "semantic_rank"
   },
   "VIGNETTE": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO_CAMERA",
+    "kind": "system_symbol",
+    "value": "smallcircle.filled.circle",
     "concept": "VIGNETTE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VIGNETTE_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO_CAMERA",
+    "kind": "system_symbol",
+    "value": "smallcircle.filled.circle",
     "concept": "VIGNETTE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VIGNETTE_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO_CAMERA",
+    "kind": "system_symbol",
+    "value": "smallcircle.filled.circle",
     "concept": "VIGNETTE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VIGNETTE_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "PHOTO_CAMERA",
+    "kind": "system_symbol",
+    "value": "smallcircle.filled.circle",
     "concept": "VIGNETTE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VILLA": {
     "kind": "system_symbol",
@@ -60137,32 +60137,32 @@
     "source": "reviewed_override"
   },
   "WB_INCANDESCENT": {
-    "kind": "cupertino_glyph",
-    "value": "LIGHTBULB",
+    "kind": "system_symbol",
+    "value": "lightbulb.fill",
     "concept": "WB_INCANDESCENT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WB_INCANDESCENT_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "LIGHTBULB",
+    "kind": "system_symbol",
+    "value": "lightbulb.fill",
     "concept": "WB_INCANDESCENT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WB_INCANDESCENT_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "LIGHTBULB",
+    "kind": "system_symbol",
+    "value": "lightbulb.fill",
     "concept": "WB_INCANDESCENT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WB_INCANDESCENT_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "LIGHTBULB",
+    "kind": "system_symbol",
+    "value": "lightbulb.fill",
     "concept": "WB_INCANDESCENT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WB_IRIDESCENT": {
     "kind": "system_symbol",
@@ -60257,31 +60257,31 @@
   },
   "WB_TWILIGHT": {
     "kind": "system_symbol",
-    "value": "photo",
+    "value": "sun.haze.fill",
     "concept": "WB_TWILIGHT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WB_TWILIGHT_OUTLINED": {
     "kind": "system_symbol",
-    "value": "photo",
+    "value": "sun.haze.fill",
     "concept": "WB_TWILIGHT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WB_TWILIGHT_ROUNDED": {
     "kind": "system_symbol",
-    "value": "photo",
+    "value": "sun.haze.fill",
     "concept": "WB_TWILIGHT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WB_TWILIGHT_SHARP": {
     "kind": "system_symbol",
-    "value": "photo",
+    "value": "sun.haze.fill",
     "concept": "WB_TWILIGHT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WC": {
     "kind": "cupertino_glyph",
@@ -60396,32 +60396,32 @@
     "source": "reviewed_override"
   },
   "WEB_STORIES": {
-    "kind": "cupertino_glyph",
-    "value": "DIVIDE",
+    "kind": "system_symbol",
+    "value": "rectangle.stack.badge.play.fill",
     "concept": "WEB_STORIES",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WEB_STORIES_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "DIVIDE",
+    "kind": "system_symbol",
+    "value": "rectangle.stack.badge.play.fill",
     "concept": "WEB_STORIES",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WEB_STORIES_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "DIVIDE",
+    "kind": "system_symbol",
+    "value": "rectangle.stack.badge.play.fill",
     "concept": "WEB_STORIES",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WEB_STORIES_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "DIVIDE",
+    "kind": "system_symbol",
+    "value": "rectangle.stack.badge.play.fill",
     "concept": "WEB_STORIES",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WEBHOOK": {
     "kind": "cupertino_glyph",

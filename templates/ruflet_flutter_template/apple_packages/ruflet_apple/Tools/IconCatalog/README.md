@@ -24,6 +24,8 @@ concepts live in `device_hardware_overrides.json`.
 Reviewed social, community, health, weather, recreation, and activity concepts
 with direct floor-safe Apple equivalents live in
 `social_activities_overrides.json`.
+Reviewed photography, image adjustment, panorama, filter, and visual-media
+concepts live in `image_media_overrides.json`.
 
 The 8,825 identities contain 2,235 concepts because Flet carries Outlined,
 Rounded, and Sharp Material variants. The generator records the collapsed

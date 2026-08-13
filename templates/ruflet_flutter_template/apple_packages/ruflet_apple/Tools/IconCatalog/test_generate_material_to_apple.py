@@ -223,6 +223,35 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             self.assertEqual(self.entries[concept]["kind"], kind)
             self.assertEqual(self.entries[concept]["value"], value)
 
+    def test_image_media_family_is_explicit_reviewed_native_artwork(self):
+        family = MODULE.load_json(MODULE.IMAGE_MEDIA_OVERRIDES_PATH)
+        low_confidence = {
+            item["concept"] for item in self.audit["low_confidence_concepts"]
+        }
+        self.assertEqual(self.audit["reviewed_families"]["image_media"], len(family))
+        self.assertTrue(set(family).isdisjoint(low_confidence))
+        for concept, target in family.items():
+            entry = self.entries[concept]
+            self.assertEqual(entry["kind"], target["kind"])
+            self.assertEqual(entry["value"], target["value"])
+            self.assertEqual(entry["confidence"], "reviewed")
+            self.assertEqual(entry["source"], "reviewed_override")
+
+    def test_image_media_distinct_semantics_do_not_regress(self):
+        expected = {
+            "ADJUST": ("system_symbol", "slider.horizontal.3"),
+            "CAMERA_ROLL": ("cupertino_glyph", "PHOTO_FILL_ON_RECTANGLE_FILL"),
+            "COMPARE": ("system_symbol", "square.split.2x1"),
+            "FILTER_4": ("system_symbol", "4.circle"),
+            "LENS": ("system_symbol", "camera.aperture"),
+            "MOVIE_CREATION": ("cupertino_glyph", "FILM_FILL"),
+            "PANORAMA_PHOTOSPHERE": ("system_symbol", "view.3d"),
+            "ROTATE_90_DEGREES_CW": ("system_symbol", "rotate.right"),
+        }
+        for concept, (kind, value) in expected.items():
+            self.assertEqual(self.entries[concept]["kind"], kind)
+            self.assertEqual(self.entries[concept]["value"], value)
+
     def test_checked_in_artifacts_are_reproducible(self):
         self.assertEqual(
             MODULE.OUTPUT_PATH.read_text(encoding="utf-8"),
