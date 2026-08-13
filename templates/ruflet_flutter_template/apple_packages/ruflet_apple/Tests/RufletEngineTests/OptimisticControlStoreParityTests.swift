@@ -27,6 +27,24 @@ final class OptimisticControlStoreParityTests: XCTestCase {
     XCTAssertEqual(store.node(100)?.string("value"), "ruby")
   }
 
+  func testDuplicateOldEchoDoesNotConsumeARepeatedLaterEdit() {
+    let store = makeStore(value: "")
+    for value in ["h", "ho", "hom", "home", "homes", "home"] {
+      store.stageLocalProperty(100, key: "value", value: .string(value))
+    }
+
+    XCTAssertFalse(applyValue("home", to: store))
+    XCTAssertEqual(store.node(100)?.string("value"), "home")
+    // Duplicate acknowledgement for the earlier `home` must not jump over
+    // `homes` and consume the final Backspace result.
+    XCTAssertFalse(applyValue("home", to: store))
+    XCTAssertEqual(store.node(100)?.string("value"), "home")
+    XCTAssertFalse(applyValue("homes", to: store))
+    XCTAssertEqual(store.node(100)?.string("value"), "home")
+    XCTAssertFalse(applyValue("home", to: store))
+    XCTAssertEqual(store.node(100)?.string("value"), "home")
+  }
+
   func testDelayedTextEchoNeverPaintsOverANewerNativeEdit() {
     let store = makeStore(value: "")
 

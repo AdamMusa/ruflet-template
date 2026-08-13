@@ -20,6 +20,7 @@ public final class ControlStore: ObservableObject {
   /// acknowledge old snapshots without painting them over the newer value.
   private struct PendingLocalProperty {
     var values: [RufletValue]
+    var lastAcknowledged: RufletValue?
   }
 
   private var pendingLocalProperties: [LocalPropertyKey: PendingLocalProperty] = [:]
@@ -280,11 +281,21 @@ public final class ControlStore: ObservableObject {
       guard var pending = pendingLocalProperties[key] else { continue }
       let incoming = nodes[key.controlID]?.props[key.name]
 
+      // Text entry sends update_control followed by the optional change event.
+      // A busy handler can therefore publish the same old value twice. When a
+      // user types `home`, adds `s`, then deletes back to `home`, that duplicate
+      // old `home` must not consume the later repeated edit across `homes`.
+      if incoming == pending.lastAcknowledged, pending.values.first != incoming {
+        restorePendingValue(pending.values.last, for: key)
+        continue
+      }
+
       if let incoming, let acknowledged = pending.values.firstIndex(of: incoming) {
         pending.values.removeFirst(acknowledged + 1)
         if pending.values.isEmpty {
           pendingLocalProperties.removeValue(forKey: key)
         } else {
+          pending.lastAcknowledged = incoming
           pendingLocalProperties[key] = pending
           restorePendingValue(pending.values.last, for: key)
         }
@@ -315,7 +326,7 @@ public final class ControlStore: ObservableObject {
       if pending.values.count > 256 { pending.values.removeFirst(pending.values.count - 256) }
       pendingLocalProperties[key] = pending
     } else {
-      pendingLocalProperties[key] = PendingLocalProperty(values: [value])
+      pendingLocalProperties[key] = PendingLocalProperty(values: [value], lastAcknowledged: nil)
     }
   }
 
