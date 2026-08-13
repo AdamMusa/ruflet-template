@@ -33,39 +33,8 @@ public struct SearchBarControl: View {
   }
 
   private var anchor: some View {
-    searchField(
-      leadingProperty: "bar_leading",
-      trailingProperty: "bar_trailing",
-      placeholderProperty: "bar_hint_text",
-      textStyleProperty: "bar_text_style",
-      hintStyleProperty: "bar_hint_text_style",
-      paddingProperty: "bar_padding")
-      .frame(minHeight: anchorHeight)
-      .modifier(RufletSearchConstraintsModifier(constraints: barConstraints))
-      .background(barBackground, in: barShape)
-      .overlay { barBorder }
-      .shadow(
-        color: barShadowColor,
-        radius: max(barElevation, 0),
-        y: max(barElevation, 0) / 2)
-      .overlay {
-        if coordinator.focused, let overlay = widgetStateColor("bar_overlay_color") {
-          barShape.fill(overlay).allowsHitTesting(false)
-        }
-      }
-      .opacity(control.disabled ? 0.55 : 1)
-  }
-
-  private func searchField(
-    leadingProperty: String,
-    trailingProperty: String,
-    placeholderProperty: String,
-    textStyleProperty: String,
-    hintStyleProperty: String,
-    paddingProperty: String
-  ) -> some View {
     HStack(spacing: 8) {
-      if let leading = control.buildWidget(leadingProperty) {
+      if let leading = control.buildWidget("bar_leading") {
         leading
       } else {
         Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
@@ -73,23 +42,46 @@ public struct SearchBarControl: View {
 
       RufletNativeTextInput(
         configuration: nativeConfiguration(
-          placeholder: control.string(placeholderProperty),
-          textStyle: widgetStateTextStyle(textStyleProperty),
-          hintStyle: widgetStateTextStyle(hintStyleProperty)),
+          placeholder: control.string("bar_hint_text"),
+          textStyle: widgetStateTextStyle(control.dynamicValue("bar_text_style")),
+          hintStyle: widgetStateTextStyle(control.dynamicValue("bar_hint_text_style")),
+          scrollPadding: parsePadding(control.dynamicValue("bar_scroll_padding"))
+            ?? EdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 20)),
         callbacks: RufletNativeTextInputCallbacks(
           onChange: coordinator.textChanged,
           onSubmit: coordinator.submitted,
           onFocusChange: coordinator.focusChanged,
           onSelectionChange: { _ in },
           onTap: coordinator.tapped,
-          onTapOutside: coordinator.tappedOutside))
-        .frame(minHeight: 28)
+          onTapOutside: coordinator.tappedOutside)
+      )
+      .frame(minHeight: 28)
 
-      ForEach(Array(control.buildWidgets(trailingProperty).enumerated()), id: \.offset) { _, item in
+      ForEach(Array(control.buildWidgets("bar_trailing").enumerated()), id: \.offset) { _, item in
         item
       }
     }
-    .padding(widgetStatePadding(paddingProperty) ?? EdgeInsets(top: 7, leading: 12, bottom: 7, trailing: 12))
+    .padding(
+      widgetStatePadding(control.dynamicValue("bar_padding"))
+        ?? EdgeInsets(top: 7, leading: 12, bottom: 7, trailing: 12)
+    )
+    .frame(minHeight: anchorHeight)
+    .modifier(RufletSearchConstraintsModifier(constraints: barConstraints))
+    .background(barBackground, in: barShape)
+    .overlay { barBorder }
+    .shadow(
+      color: barShadowColor,
+      radius: max(barElevation, 0),
+      y: max(barElevation, 0) / 2
+    )
+    .overlay {
+      if coordinator.focused,
+        let overlay = widgetStateColor(control.dynamicValue("bar_overlay_color"))
+      {
+        barShape.fill(overlay).allowsHitTesting(false)
+      }
+    }
+    .opacity(control.disabled ? 0.55 : 1)
   }
 
   private var suggestionsView: some View {
@@ -105,20 +97,25 @@ public struct SearchBarControl: View {
           configuration: nativeConfiguration(
             placeholder: control.string("view_hint_text") ?? control.string("bar_hint_text"),
             textStyle: parseTextStyle(control.dynamicValue("view_header_text_style")),
-            hintStyle: parseTextStyle(control.dynamicValue("view_hint_text_style"))),
+            hintStyle: parseTextStyle(control.dynamicValue("view_hint_text_style")),
+            scrollPadding: EdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 20)),
           callbacks: RufletNativeTextInputCallbacks(
             onChange: coordinator.textChanged,
             onSubmit: coordinator.submitted,
             onFocusChange: coordinator.focusChanged,
             onSelectionChange: { _ in },
             onTap: {},
-            onTapOutside: coordinator.tappedOutside))
-          .frame(minHeight: max(viewHeaderHeight - 16, 28))
+            onTapOutside: coordinator.tappedOutside)
+        )
+        .frame(minHeight: max(viewHeaderHeight - 16, 28))
 
-        ForEach(Array(control.buildWidgets("view_trailing").enumerated()), id: \.offset) { _, item in
+        ForEach(Array(control.buildWidgets("view_trailing").enumerated()), id: \.offset) {
+          _, item in
           item
         }
-        Button { coordinator.closeView() } label: {
+        Button {
+          coordinator.closeView()
+        } label: {
           Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
         }
         .buttonStyle(.plain)
@@ -135,7 +132,9 @@ public struct SearchBarControl: View {
     .modifier(RufletSearchConstraintsModifier(constraints: viewConstraints))
     .background(viewBackground, in: viewShape)
     .overlay { viewBorder }
-    .shadow(color: .black.opacity(0.16), radius: max(viewElevation, 0), y: max(viewElevation, 0) / 2)
+    .shadow(
+      color: .black.opacity(0.16), radius: max(viewElevation, 0), y: max(viewElevation, 0) / 2
+    )
     .padding(fullScreen ? 16 : 0)
   }
 
@@ -161,9 +160,10 @@ public struct SearchBarControl: View {
   private func nativeConfiguration(
     placeholder: String?,
     textStyle: RufletTextStyle?,
-    hintStyle: RufletTextStyle?
+    hintStyle: RufletTextStyle?,
+    scrollPadding: EdgeInsets
   ) -> RufletNativeTextInputConfiguration {
-    RufletNativeTextInputConfiguration(
+    var configuration = RufletNativeTextInputConfiguration(
       value: coordinator.value,
       selection: nil,
       multiline: false,
@@ -205,6 +205,8 @@ public struct SearchBarControl: View {
       reportsTapOutside: control.boolean("on_tap_outside_bar", default: false),
       focusRequest: coordinator.focusRequest,
       blurRequest: coordinator.blurRequest)
+    configuration.scrollPadding = scrollPadding
+    return configuration
   }
 
   private var activeStates: Set<RufletWidgetState> {
@@ -214,46 +216,49 @@ public struct SearchBarControl: View {
     return result
   }
 
-  private func widgetStateColor(_ property: String) -> Color? {
+  private func widgetStateColor(_ value: Any?) -> Color? {
     RufletWidgetStateProperty(
-      control.dynamicValue(property),
+      value,
       converter: { raw in
         if let text = raw as? String { return parseColor(text) }
         if let value = raw as? RufletValue { return parseColor(value.text) }
         return nil
-      })
+      }
+    )
+    .resolve(activeStates)
+  }
+
+  private func widgetStateDouble(_ value: Any?) -> Double? {
+    RufletWidgetStateProperty(value, converter: { parseDouble($0) })
       .resolve(activeStates)
   }
 
-  private func widgetStateDouble(_ property: String) -> Double? {
-    RufletWidgetStateProperty(control.dynamicValue(property), converter: { parseDouble($0) })
+  private func widgetStatePadding(_ value: Any?) -> EdgeInsets? {
+    RufletWidgetStateProperty(value, converter: { parsePadding($0) })
       .resolve(activeStates)
   }
 
-  private func widgetStatePadding(_ property: String) -> EdgeInsets? {
-    RufletWidgetStateProperty(control.dynamicValue(property), converter: { parsePadding($0) })
+  private func widgetStateTextStyle(_ value: Any?) -> RufletTextStyle? {
+    RufletWidgetStateProperty(value, converter: { parseTextStyle($0) })
       .resolve(activeStates)
   }
 
-  private func widgetStateTextStyle(_ property: String) -> RufletTextStyle? {
-    RufletWidgetStateProperty(control.dynamicValue(property), converter: { parseTextStyle($0) })
-      .resolve(activeStates)
-  }
-
-  private func widgetStateBorderSide(_ property: String) -> RufletBorderSide? {
-    RufletWidgetStateProperty(control.dynamicValue(property), converter: { parseBorderSide($0) })
+  private func widgetStateBorderSide(_ value: Any?) -> RufletBorderSide? {
+    RufletWidgetStateProperty(value, converter: { parseBorderSide($0) })
       .resolve(activeStates)
   }
 
   private var barBackground: Color {
-    widgetStateColor("bar_bgcolor") ?? .rufletSearchFieldBackground
+    widgetStateColor(control.dynamicValue("bar_bgcolor")) ?? .rufletSearchFieldBackground
   }
 
   private var barShadowColor: Color {
-    widgetStateColor("bar_shadow_color") ?? .black.opacity(0.16)
+    widgetStateColor(control.dynamicValue("bar_shadow_color")) ?? .black.opacity(0.16)
   }
 
-  private var barElevation: Double { widgetStateDouble("bar_elevation") ?? 0 }
+  private var barElevation: Double {
+    widgetStateDouble(control.dynamicValue("bar_elevation")) ?? 0
+  }
   private var anchorHeight: CGFloat { max(barConstraints.minHeight ?? 44, 36) }
   private var barConstraints: RufletSearchConstraints {
     RufletSearchConstraints(control.dynamicValue("bar_size_constraints"))
@@ -289,7 +294,7 @@ public struct SearchBarControl: View {
   private var fullScreen: Bool { control.boolean("full_screen", default: false) }
 
   @ViewBuilder private var barBorder: some View {
-    if let side = widgetStateBorderSide("bar_border_side") {
+    if let side = widgetStateBorderSide(control.dynamicValue("bar_border_side")) {
       barShape.stroke(side.color, lineWidth: side.width)
     }
   }
@@ -487,20 +492,20 @@ private struct RufletSearchConstraintsModifier: ViewModifier {
   }
 }
 
-private extension Color {
-  static var rufletSearchFieldBackground: Color {
+extension Color {
+  fileprivate static var rufletSearchFieldBackground: Color {
     #if os(iOS)
-    Color(uiColor: .secondarySystemFill)
+      Color(uiColor: .secondarySystemFill)
     #else
-    Color(nsColor: .controlBackgroundColor)
+      Color(nsColor: .controlBackgroundColor)
     #endif
   }
 
-  static var rufletSearchViewBackground: Color {
+  fileprivate static var rufletSearchViewBackground: Color {
     #if os(iOS)
-    Color(uiColor: .systemBackground)
+      Color(uiColor: .systemBackground)
     #else
-    Color(nsColor: .windowBackgroundColor)
+      Color(nsColor: .windowBackgroundColor)
     #endif
   }
 }
