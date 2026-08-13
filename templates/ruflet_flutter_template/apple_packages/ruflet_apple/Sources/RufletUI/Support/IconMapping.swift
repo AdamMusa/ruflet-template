@@ -397,7 +397,7 @@ public enum IconMapping {
     "chevron_left": "chevron.left", "chevron_right": "chevron.right",
     "first_page": "chevron.left.2", "last_page": "chevron.right.2",
     "menu": "line.3.horizontal", "more_vert": "ellipsis", "more_horiz": "ellipsis",
-    "apps": "square.grid.2x2", "widgets": "puzzlepiece.extension.fill", "dashboard": "square.grid.2x2.fill",
+    "apps": "square.grid.2x2", "widgets": "square.grid.2x2.fill", "dashboard": "square.grid.2x2.fill",
     "home": "house", "home_filled": "house.fill",
 
     // Actions
@@ -552,8 +552,11 @@ public enum IconMapping {
     "local_fire_department": "flame.fill", "restaurant": "fork.knife",
     "local_cafe": "cup.and.saucer.fill", "fitness_center": "dumbbell.fill",
     "sports_esports": "gamecontroller.fill", "emoji_events": "trophy.fill",
-    "auto_awesome": "sparkles", "animation": "atom",
-    "rocket_launch": "rocket.fill",
+    "auto_awesome": "sparkles", "animation": "circle.hexagongrid.circle.fill",
+    // `rocket` is not available on Ruflet's Apple deployment floor. Apple's
+    // launch/action glyph preserves the upward-launch meaning without turning
+    // the Ruby token into an unrelated paper airplane or aircraft.
+    "rocket_launch": "arrow.up.forward.circle.fill",
     "psychology": "brain", "gavel": "hammer",
     "qr_code": "qrcode", "qr_code_scanner": "qrcode.viewfinder",
     "hub": "point.3.connected.trianglepath.dotted",
@@ -571,13 +574,7 @@ public enum IconMapping {
   /// Semantic fallbacks for symbols introduced after Ruflet's deployment
   /// floor. A current Apple OS should show the closest native meaning; older
   /// systems still receive a visible native icon rather than a blank image.
-  private static let unavailableSymbolFallbacks: [String: [String]] = [
-    // SF Symbols has no rocket on Ruflet's supported Apple deployment floor.
-    // Prefer Apple's takeoff artwork where available; a plain aircraft keeps
-    // the icon visible on the oldest supported systems. Paperplane means send
-    // and was visibly wrong for Ruby's `rocket_launch` token.
-    "rocket_launch": ["airplane.departure", "airplane"],
-  ]
+  private static let unavailableSymbolFallbacks: [String: [String]] = [:]
 
   private static func availableFallback(for materialName: String) -> String? {
     unavailableSymbolFallbacks[materialName]?.first(where: isAvailable)
