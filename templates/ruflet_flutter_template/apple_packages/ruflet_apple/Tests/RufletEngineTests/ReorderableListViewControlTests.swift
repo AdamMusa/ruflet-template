@@ -104,6 +104,61 @@ struct ReorderableListViewControlTests {
         == .scroll(.boolean(true)))
   }
 
+  @Test("pinned viewport and prefetch properties drive native presentation")
+  func viewportAndPrefetchPresentation() {
+    let backend = ReorderableTestBackend()
+    let control = RufletControl(
+      id: 1,
+      type: "ReorderableListView",
+      properties: [
+        "anchor": 0.25,
+        "cache_extent": 220.0,
+        "auto_scroller_velocity_scalar": 80.0,
+      ],
+      backend: backend)
+    let presentation = RufletReorderListPresentation(control: control)
+
+    #expect(presentation.anchor == 0.25)
+    #expect(presentation.anchorInset(viewportExtent: 400) == 100)
+    #expect(presentation.cacheExtent == 220)
+    #expect(presentation.prefetchGroupSize(itemExtent: 44) == 6)
+    #expect(presentation.autoScrollerVelocityScalar == 80)
+  }
+
+  @Test("native edge auto-scroll honors orientation, direction, and velocity scalar")
+  func edgeAutoScrollPolicy() {
+    let ids = [10, 20, 30]
+    let upward = RufletReorderAutoScrollPolicy.request(
+      targetID: 20,
+      location: CGPoint(x: 22, y: 1),
+      itemExtent: 50,
+      horizontal: false,
+      displayedIDs: ids,
+      velocityScalar: 50)
+    #expect(upward?.targetID == 10)
+    #expect(upward?.anchor == .top)
+    #expect(upward?.duration == 0.1)
+
+    let rightward = RufletReorderAutoScrollPolicy.request(
+      targetID: 20,
+      location: CGPoint(x: 49, y: 22),
+      itemExtent: 50,
+      horizontal: true,
+      displayedIDs: ids,
+      velocityScalar: 100)
+    #expect(rightward?.targetID == 30)
+    #expect(rightward?.anchor == .trailing)
+    #expect(rightward?.duration == 0.05)
+
+    #expect(RufletReorderAutoScrollPolicy.request(
+      targetID: 20,
+      location: CGPoint(x: 25, y: 25),
+      itemExtent: 50,
+      horizontal: false,
+      displayedIDs: ids,
+      velocityScalar: nil) == nil)
+  }
+
   private func makeList(
     ids: [Int],
     backend: ReorderableTestBackend,
