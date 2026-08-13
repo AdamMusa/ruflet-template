@@ -1290,6 +1290,50 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
         for material_name in ("BORDER_TOP", "BORDER_BOTTOM", "BORDER_RIGHT"):
             self.assertNotEqual(self.entries[material_name]["confidence"], "reviewed")
 
+    def test_device_interaction_state_family_is_reviewed_native_artwork(self):
+        family = MODULE.load_json(MODULE.DEVICE_INTERACTION_STATE_OVERRIDES_PATH)
+        expected_concepts = {
+            "MODE_STANDBY",
+            "SENSOR_OCCUPIED",
+            "VIBRATION",
+        }
+        self.assertEqual(set(family), expected_concepts)
+        self.assertEqual(
+            self.audit["reviewed_families"]["device_interaction_state"],
+            len(expected_concepts),
+        )
+        low_confidence = {
+            item["concept"] for item in self.audit["low_confidence_concepts"]
+        }
+        self.assertTrue(expected_concepts.isdisjoint(low_confidence))
+        material = MODULE.load_json(MODULE.MATERIAL_PATH)
+        family_wire_identities = {
+            name
+            for name in material
+            if MODULE.concept_for(name) in expected_concepts
+        }
+        self.assertEqual(len(family_wire_identities), 12)
+        for name in family_wire_identities:
+            self.assertEqual(self.entries[name]["confidence"], "reviewed")
+            self.assertEqual(self.entries[name]["source"], "reviewed_override")
+
+    def test_device_interaction_state_semantics_do_not_regress(self):
+        expected = {
+            "MODE_STANDBY": ("system_symbol", "power"),
+            "SENSOR_OCCUPIED": ("system_symbol", "person.wave.2.fill"),
+            "VIBRATION": (
+                "system_symbol",
+                "iphone.homebutton.radiowaves.left.and.right",
+            ),
+        }
+        for material_name, (kind, value) in expected.items():
+            self.assertEqual(self.entries[material_name]["kind"], kind)
+            self.assertEqual(self.entries[material_name]["value"], value)
+
+        # Radiowaves alone do not retain prediction or playback semantics.
+        for material_name in ("ONLINE_PREDICTION", "TAP_AND_PLAY"):
+            self.assertNotEqual(self.entries[material_name]["confidence"], "reviewed")
+
     def test_checked_in_artifacts_are_reproducible(self):
         self.assertEqual(
             MODULE.OUTPUT_PATH.read_text(encoding="utf-8"),

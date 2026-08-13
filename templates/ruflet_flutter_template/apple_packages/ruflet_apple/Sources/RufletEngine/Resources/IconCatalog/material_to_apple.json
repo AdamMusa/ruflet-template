@@ -33411,32 +33411,32 @@
     "source": "semantic_rank"
   },
   "MODE_STANDBY": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "power",
     "concept": "MODE_STANDBY",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MODE_STANDBY_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "power",
     "concept": "MODE_STANDBY",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MODE_STANDBY_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "power",
     "concept": "MODE_STANDBY",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MODE_STANDBY_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "power",
     "concept": "MODE_STANDBY",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MODEL_TRAINING": {
     "kind": "cupertino_glyph",
@@ -46656,31 +46656,31 @@
   },
   "SENSOR_OCCUPIED": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "person.wave.2.fill",
     "concept": "SENSOR_OCCUPIED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SENSOR_OCCUPIED_OUTLINED": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "person.wave.2.fill",
     "concept": "SENSOR_OCCUPIED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SENSOR_OCCUPIED_ROUNDED": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "person.wave.2.fill",
     "concept": "SENSOR_OCCUPIED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SENSOR_OCCUPIED_SHARP": {
     "kind": "system_symbol",
-    "value": "person",
+    "value": "person.wave.2.fill",
     "concept": "SENSOR_OCCUPIED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SENSOR_WINDOW": {
     "kind": "cupertino_glyph",
@@ -58086,32 +58086,32 @@
     "source": "reviewed_override"
   },
   "VIBRATION": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_PHONE_PORTRAIT",
+    "kind": "system_symbol",
+    "value": "iphone.homebutton.radiowaves.left.and.right",
     "concept": "VIBRATION",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VIBRATION_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_PHONE_PORTRAIT",
+    "kind": "system_symbol",
+    "value": "iphone.homebutton.radiowaves.left.and.right",
     "concept": "VIBRATION",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VIBRATION_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_PHONE_PORTRAIT",
+    "kind": "system_symbol",
+    "value": "iphone.homebutton.radiowaves.left.and.right",
     "concept": "VIBRATION",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VIBRATION_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_PHONE_PORTRAIT",
+    "kind": "system_symbol",
+    "value": "iphone.homebutton.radiowaves.left.and.right",
     "concept": "VIBRATION",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VIDEO_CALL": {
     "kind": "cupertino_glyph",

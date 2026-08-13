@@ -44,6 +44,7 @@
     "disabled_interface_overrides.json": "3c63685fb1ef10f169c96e3e82b381d0a6e5c579780a010cb6a8309d51bee214",
     "legacy_named_symbol_overrides.json": "96792138a279e09248031129dee37aa1bcfe1fb8e8007464463b82a4f4f1a89a",
     "layout_manipulation_overrides.json": "4589877ebc63587e41ae2402c5f6219fa1db74370c3d148160c03186b1cefddd",
+    "device_interaction_state_overrides.json": "fd4513985151b5ced794709738b6cba3f9f4fc3ae07378b16c06ee63cf905c85",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/name_availability.plist": "a277cf5b63017ed497d5b6b3ea96bbee4f407b76776af41bcb52943007335b5c",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_search.plist": "29a767651ce53d8861e28d3eaa20b50d3e02a85fe5a79d557ce1fbff7fa4ebad",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_restrictions.strings": "2e1b1c3d629d26ac1e75861f33cb1cbbb3348e142a2b6c1aaf9bba546273f13b"
@@ -51,8 +52,8 @@
   "sources": {
     "exact_apple_name": 48,
     "manual_review_required": 75,
-    "reviewed_override": 1019,
-    "semantic_rank": 1093
+    "reviewed_override": 1022,
+    "semantic_rank": 1090
   },
   "reviewed_families": {
     "action": 76,
@@ -63,6 +64,7 @@
     "communication": 36,
     "communication_access": 11,
     "device_hardware": 72,
+    "device_interaction_state": 3,
     "device_status": 13,
     "disabled_interface": 5,
     "file_content": 11,
@@ -89,11 +91,11 @@
   "confidence_grades": {
     "exact": 48,
     "high": 665,
-    "low": 424,
+    "low": 421,
     "medium": 79,
-    "reviewed": 1019
+    "reviewed": 1022
   },
-  "unique_apple_targets": 901,
+  "unique_apple_targets": 902,
   "most_reused_targets": [
     {
       "kind": "system_symbol",
@@ -103,7 +105,7 @@
     {
       "kind": "system_symbol",
       "value": "person",
-      "concept_count": 41
+      "concept_count": 40
     },
     {
       "kind": "cupertino_glyph",
@@ -138,7 +140,7 @@
     {
       "kind": "cupertino_glyph",
       "value": "CONTROL",
-      "concept_count": 22
+      "concept_count": 21
     },
     {
       "kind": "cupertino_glyph",
@@ -346,7 +348,7 @@
       "concept_count": 6
     }
   ],
-  "low_confidence_count": 503,
+  "low_confidence_count": 500,
   "low_confidence_concepts": [
     {
       "concept": "SIXTY_FPS_SELECT",
@@ -3884,56 +3886,6 @@
       ]
     },
     {
-      "concept": "SENSOR_OCCUPIED",
-      "target": {
-        "kind": "system_symbol",
-        "value": "person"
-      },
-      "confidence": 0.2317,
-      "grade": "low",
-      "reason": "name=[] semantic=['people', 'person'] extra=[]",
-      "tags": [
-        "activated",
-        "active",
-        "alarm",
-        "alert",
-        "automation",
-        "body",
-        "body response",
-        "connection",
-        "detection",
-        "detection sensor",
-        "fitbit",
-        "human",
-        "human sensor",
-        "indicator",
-        "motion",
-        "motion sensor",
-        "movement",
-        "network",
-        "occupant",
-        "occupied",
-        "occupied sensor",
-        "people",
-        "person",
-        "person sensor",
-        "presence",
-        "presence sensor",
-        "scan",
-        "security",
-        "sensor",
-        "sensors",
-        "signal",
-        "smart body scan sensor",
-        "smart home",
-        "status",
-        "status indicator",
-        "surveillance",
-        "technology",
-        "wireless"
-      ]
-    },
-    {
       "concept": "SIGN_LANGUAGE",
       "target": {
         "kind": "system_symbol",
@@ -5985,50 +5937,6 @@
         "usage",
         "ventilation",
         "ventilation system"
-      ]
-    },
-    {
-      "concept": "MODE_STANDBY",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "CONTROL"
-      },
-      "confidence": 0.2856,
-      "grade": "low",
-      "reason": "name=[] semantic=['control'] extra=[]",
-      "tags": [
-        "button",
-        "control",
-        "control element",
-        "device",
-        "disturb",
-        "electronics",
-        "energy saver",
-        "energy saving",
-        "icon",
-        "idle",
-        "inactive",
-        "interface",
-        "mode",
-        "mode standby",
-        "on/off",
-        "pause",
-        "power",
-        "power button",
-        "power off",
-        "power on",
-        "sleep",
-        "standby",
-        "standby mode",
-        "stop",
-        "suspend",
-        "switch",
-        "symbol",
-        "system",
-        "system control",
-        "target",
-        "toggle",
-        "ui element"
       ]
     },
     {
@@ -13028,55 +12936,6 @@
         "transaction",
         "wealth",
         "yen"
-      ]
-    },
-    {
-      "concept": "VIBRATION",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "DEVICE_PHONE_PORTRAIT"
-      },
-      "confidence": 0.3496,
-      "grade": "low",
-      "reason": "name=[] semantic=['device', 'phone', 'portrait'] extra=[]",
-      "tags": [
-        "alert",
-        "Android",
-        "audio",
-        "cell",
-        "communication",
-        "control",
-        "device",
-        "handheld",
-        "haptic",
-        "hardware",
-        "intensity",
-        "iOS",
-        "lines",
-        "mobile",
-        "mode",
-        "motion",
-        "notification",
-        "off",
-        "OS",
-        "phone",
-        "portrait",
-        "rectangle",
-        "ring",
-        "rounded corners",
-        "settings",
-        "silence",
-        "silent",
-        "smartphone",
-        "sound",
-        "switch",
-        "tablet",
-        "technology",
-        "toggle",
-        "vertical",
-        "vibrate",
-        "vibration",
-        "waves"
       ]
     },
     {

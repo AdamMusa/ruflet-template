@@ -45,6 +45,7 @@ Generation uses pinned/auditable inputs:
 * disabled_interface_overrides.json -- reviewed disabled interface and sensor states.
 * legacy_named_symbol_overrides.json -- reviewed opaque legacy Material names.
 * layout_manipulation_overrides.json -- reviewed layout borders and movement.
+* device_interaction_state_overrides.json -- reviewed native device states.
 
 The installed public Apple symbol metadata is used only to choose and validate
 native symbols available at both deployment floors. Private and restricted
@@ -120,6 +121,9 @@ FINANCIAL_WALLET_OVERRIDES_PATH = TOOL_DIR / "financial_wallet_overrides.json"
 DISABLED_INTERFACE_OVERRIDES_PATH = TOOL_DIR / "disabled_interface_overrides.json"
 LEGACY_NAMED_SYMBOL_OVERRIDES_PATH = TOOL_DIR / "legacy_named_symbol_overrides.json"
 LAYOUT_MANIPULATION_OVERRIDES_PATH = TOOL_DIR / "layout_manipulation_overrides.json"
+DEVICE_INTERACTION_STATE_OVERRIDES_PATH = (
+    TOOL_DIR / "device_interaction_state_overrides.json"
+)
 AUDIT_PATH = TOOL_DIR / "material_to_apple_audit.json"
 
 CORE_GLYPHS = Path(
@@ -419,6 +423,7 @@ def load_reviewed_overrides() -> tuple[
         "disabled_interface": DISABLED_INTERFACE_OVERRIDES_PATH,
         "legacy_named_symbol": LEGACY_NAMED_SYMBOL_OVERRIDES_PATH,
         "layout_manipulation": LAYOUT_MANIPULATION_OVERRIDES_PATH,
+        "device_interaction_state": DEVICE_INTERACTION_STATE_OVERRIDES_PATH,
     }
     merged: dict[str, dict[str, str]] = {}
     families: dict[str, str] = {}

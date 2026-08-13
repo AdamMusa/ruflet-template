@@ -1,0 +1,17 @@
+{
+  "MODE_STANDBY": {
+    "kind": "system_symbol",
+    "value": "power",
+    "rationale": "public Apple standby-power symbol exactly preserves Material standby mode"
+  },
+  "SENSOR_OCCUPIED": {
+    "kind": "system_symbol",
+    "value": "person.wave.2.fill",
+    "rationale": "public Apple person with detection waves exactly preserves Material occupied sensor"
+  },
+  "VIBRATION": {
+    "kind": "system_symbol",
+    "value": "iphone.homebutton.radiowaves.left.and.right",
+    "rationale": "public Apple phone with bilateral motion waves exactly preserves Material vibration"
+  }
+}
