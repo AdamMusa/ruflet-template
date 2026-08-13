@@ -9,6 +9,11 @@
     "value": "archivebox.fill",
     "rationale": "public Apple archive identity"
   },
+  "ASSIGNMENT": {
+    "kind": "system_symbol",
+    "value": "doc.on.clipboard",
+    "rationale": "public floor-safe Apple document-on-clipboard identity exactly preserves a generic assignment"
+  },
   "ASSIGNMENT_IND": {
     "kind": "system_symbol",
     "value": "person.text.rectangle.fill",

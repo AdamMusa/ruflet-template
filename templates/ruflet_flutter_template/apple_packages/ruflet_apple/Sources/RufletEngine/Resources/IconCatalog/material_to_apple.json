@@ -3563,11 +3563,11 @@
     "source": "reviewed_override"
   },
   "ASSIGNMENT": {
-    "kind": "cupertino_glyph",
-    "value": "DOC_TEXT",
+    "kind": "system_symbol",
+    "value": "doc.on.clipboard",
     "concept": "ASSIGNMENT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ASSIGNMENT_ADD": {
     "kind": "system_symbol",
@@ -3633,11 +3633,11 @@
     "source": "semantic_rank"
   },
   "ASSIGNMENT_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "DOC_TEXT",
+    "kind": "system_symbol",
+    "value": "doc.on.clipboard",
     "concept": "ASSIGNMENT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ASSIGNMENT_RETURN": {
     "kind": "system_symbol",
@@ -3696,18 +3696,18 @@
     "source": "reviewed_override"
   },
   "ASSIGNMENT_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "DOC_TEXT",
+    "kind": "system_symbol",
+    "value": "doc.on.clipboard",
     "concept": "ASSIGNMENT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ASSIGNMENT_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "DOC_TEXT",
+    "kind": "system_symbol",
+    "value": "doc.on.clipboard",
     "concept": "ASSIGNMENT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ASSIGNMENT_TURNED_IN": {
     "kind": "system_symbol",

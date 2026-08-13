@@ -178,11 +178,6 @@
     "value": "doc.richtext",
     "rationale": "curated Material-to-SF vocabulary"
   },
-  "ASSIGNMENT": {
-    "kind": "system_symbol",
-    "value": "list.clipboard",
-    "rationale": "curated Material-to-SF vocabulary"
-  },
   "ATTACH_FILE": {
     "kind": "system_symbol",
     "value": "paperclip",

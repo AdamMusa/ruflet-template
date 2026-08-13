@@ -254,6 +254,7 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
 
     def test_text_editor_family_is_explicit_reviewed_native_artwork(self):
         family = MODULE.load_json(MODULE.TEXT_EDITOR_OVERRIDES_PATH)
+        self.assertEqual(len(family), 50)
         low_confidence = {
             item["concept"] for item in self.audit["low_confidence_concepts"]
         }
@@ -265,10 +266,16 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             self.assertEqual(entry["value"], target["value"])
             self.assertEqual(entry["confidence"], "reviewed")
             self.assertEqual(entry["source"], "reviewed_override")
+        material = MODULE.load_json(MODULE.MATERIAL_PATH)
+        family_wire_identities = {
+            name for name in material if MODULE.concept_for(name) in family
+        }
+        self.assertEqual(len(family_wire_identities), 200)
 
     def test_text_editor_distinct_semantics_do_not_regress(self):
         expected = {
             "ARCHIVE": ("system_symbol", "archivebox.fill"),
+            "ASSIGNMENT": ("system_symbol", "doc.on.clipboard"),
             "ASSIGNMENT_IND": ("system_symbol", "person.text.rectangle.fill"),
             "BORDER_ALL": ("system_symbol", "square.grid.2x2"),
             "DATA_ARRAY": ("system_symbol", "list.bullet"),
@@ -283,6 +290,10 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
         for concept, (kind, value) in expected.items():
             self.assertEqual(self.entries[concept]["kind"], kind)
             self.assertEqual(self.entries[concept]["value"], value)
+
+        # A late assignment carries a deadline/alert state that the generic
+        # clipboard does not encode, so keep it in the manual-audit debt.
+        self.assertNotEqual(self.entries["ASSIGNMENT_LATE"]["confidence"], "reviewed")
 
     def test_home_household_family_is_explicit_reviewed_native_artwork(self):
         family = MODULE.load_json(MODULE.HOME_HOUSEHOLD_OVERRIDES_PATH)
