@@ -5,8 +5,10 @@ struct LineChartSeries: Identifiable {
   let id: Int
   let points: [LineChartPoint]
   let color: Color
+  let gradient: ChartGradient?
   let strokeWidth: Double
   let curved: Bool
+  let roundedStrokeCap: Bool
   let dashPattern: [Double]
 
   @MainActor static func parse(_ control: RufletControl, index: Int) -> Self {
@@ -15,8 +17,10 @@ struct LineChartSeries: Identifiable {
       id: control.id,
       points: control.children("points").map(LineChartPoint.parse),
       color: control.chartColor("color", default: ChartPalette.defaults[index % ChartPalette.defaults.count]),
+      gradient: ChartGradient.parse(control.value("gradient")),
       strokeWidth: control.number("stroke_width", default: 2) ?? 2,
       curved: control.boolean("curved", default: false),
+      roundedStrokeCap: control.boolean("rounded_stroke_cap", default: false),
       dashPattern: control.value("dash_pattern")?.array?.compactMap(\.number) ?? [])
   }
 }

@@ -16,27 +16,57 @@ struct LineChartControl: View {
   var body: some View {
     ChartFrame(control: control) {
       GeometryReader { proxy in
-        Canvas { context, size in draw(context: &context, size: size) }
+        let domain = ChartDomain(points: allPoints, control: control)
+        let configuration = ChartCartesianConfiguration(control: control)
+        let layout = ChartCartesianLayout(size: proxy.size, axes: configuration.axes)
+        ZStack {
+          Canvas { context, _ in
+            drawCartesianDecoration(
+              context: &context, layout: layout, domain: domain,
+              configuration: configuration)
+            draw(context: &context, layout: layout, domain: domain)
+          }
+          ChartAxesOverlay(axes: configuration.axes, domain: domain, layout: layout)
+        }
           .contentShape(Rectangle())
           .gesture(DragGesture(minimumDistance: 0).onEnded { value in
-            emitTap(at: value.location, size: proxy.size)
+            emitTap(at: value.location, layout: layout, domain: domain)
           })
       }
     }
   }
 
-  private func draw(context: inout GraphicsContext, size: CGSize) {
-    let domain = ChartDomain(points: allPoints, control: control)
+  private func draw(
+    context: inout GraphicsContext,
+    layout: ChartCartesianLayout,
+    domain: ChartDomain
+  ) {
     for line in series {
-      let locations = line.points.map { domain.location(ChartPoint(x: $0.x, y: $0.y), in: size) }
+      let locations = line.points.map {
+        layout.location(ChartPoint(x: $0.x, y: $0.y), domain: domain)
+      }
       guard let first = locations.first else { continue }
       var path = Path()
       path.move(to: first)
-      for location in locations.dropFirst() { path.addLine(to: location) }
+      if line.curved {
+        for (previous, location) in zip(locations, locations.dropFirst()) {
+          let midpoint = CGPoint(x: (previous.x + location.x) / 2, y: (previous.y + location.y) / 2)
+          path.addQuadCurve(to: midpoint, control: previous)
+          path.addQuadCurve(to: location, control: location)
+        }
+      } else {
+        for location in locations.dropFirst() { path.addLine(to: location) }
+      }
+      let shading = line.gradient?.shading(
+        from: CGPoint(x: layout.plotRect.minX, y: layout.plotRect.midY),
+        to: CGPoint(x: layout.plotRect.maxX, y: layout.plotRect.midY)) ?? .color(line.color)
       context.stroke(
         path,
-        with: .color(line.color),
-        style: StrokeStyle(lineWidth: CGFloat(line.strokeWidth), dash: line.dashPattern.map { CGFloat($0) }))
+        with: shading,
+        style: StrokeStyle(
+          lineWidth: CGFloat(line.strokeWidth),
+          lineCap: line.roundedStrokeCap ? .round : .butt,
+          dash: line.dashPattern.map { CGFloat($0) }))
       for (index, point) in line.points.enumerated() {
         let radius: CGFloat = point.selected ? 6 : 3
         let circle = CGRect(
@@ -44,17 +74,21 @@ struct LineChartControl: View {
           y: locations[index].y - radius,
           width: radius * 2,
           height: radius * 2)
-        context.fill(Path(ellipseIn: circle), with: .color(line.color))
+        context.fill(Path(ellipseIn: circle), with: shading)
       }
     }
   }
 
-  private func emitTap(at location: CGPoint, size: CGSize) {
+  private func emitTap(
+    at location: CGPoint,
+    layout: ChartCartesianLayout,
+    domain: ChartDomain
+  ) {
     guard control.hasEventHandler("event"), control.boolean("interactive", default: true) else { return }
-    let domain = ChartDomain(points: allPoints, control: control)
     let candidates = series.enumerated().flatMap { seriesIndex, line in
       line.points.enumerated().map { pointIndex, point in
-        (seriesIndex, pointIndex, point, domain.location(ChartPoint(x: point.x, y: point.y), in: size))
+        (seriesIndex, pointIndex, point, layout.location(
+          ChartPoint(x: point.x, y: point.y), domain: domain))
       }
     }
     guard let nearest = candidates.min(by: {

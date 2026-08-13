@@ -94,6 +94,15 @@ class NativePropertyConsumptionAuditTest < Minitest::Test
     }
   end
 
+  def test_cartesian_chart_metadata_resolves_only_to_its_real_parents
+    assert_equal %w[BarChartControl CandlestickChartControl LineChartControl ScatterChartControl],
+      NativePropertyConsumptionAudit::PARENT_IMPLEMENTATIONS.fetch("axis")
+    assert_equal %w[BarChartControl CandlestickChartControl LineChartControl ScatterChartControl],
+      NativePropertyConsumptionAudit::PARENT_IMPLEMENTATIONS.fetch("l")
+    assert_equal %w[LineChartControl],
+      NativePropertyConsumptionAudit::PARENT_IMPLEMENTATIONS.fetch("data")
+  end
+
   def test_manual_classifications_are_specific_and_reviewed
     declarations = JSON.parse(File.read(NativePropertyConsumptionAudit::CLASSIFICATIONS_PATH))
     assert_equal %w[parent_consumed service unsupported], declarations.keys.sort

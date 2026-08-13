@@ -81,9 +81,9 @@ module NativePropertyConsumptionAudit
     "group" => %w[BarChartControl],
     "rod" => %w[BarChartControl],
     "stack_item" => %w[BarChartControl],
-    "axis" => %w[BarChartControl LineChartControl],
-    "l" => %w[LineChartControl],
-    "data" => %w[PieChartControl RadarChartControl],
+    "axis" => %w[BarChartControl CandlestickChartControl LineChartControl ScatterChartControl],
+    "l" => %w[BarChartControl CandlestickChartControl LineChartControl ScatterChartControl],
+    "data" => %w[LineChartControl],
     "p" => %w[LineChartControl],
     "section" => %w[PieChartControl]
   }.freeze
