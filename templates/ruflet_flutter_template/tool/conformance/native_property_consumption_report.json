@@ -12,13 +12,13 @@
     "controls": 196,
     "properties": 5330,
     "classifications": {
-      "consumed": 3970,
+      "consumed": 4011,
       "parent_consumed": 667,
       "service": 136,
-      "unclassified": 555,
+      "unclassified": 514,
       "unsupported": 2
     },
-    "unclassified": 555
+    "unclassified": 514
   },
   "unclassified": [
     {
@@ -1380,211 +1380,6 @@
       "family": "visual",
       "wire_type": "GestureDetector",
       "property": "adaptive"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "disabled"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_force_press_end"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_force_press_peak"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_force_press_start"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_force_press_update"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_horizontal_drag_cancel"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_horizontal_drag_end"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_horizontal_drag_start"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_horizontal_drag_update"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_long_press"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_long_press_cancel"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_long_press_down"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_long_press_end"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_long_press_move_update"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_long_press_start"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_long_press_up"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_pan_cancel"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_pan_end"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_pan_start"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_pan_update"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_secondary_long_press"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_secondary_long_press_cancel"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_secondary_long_press_down"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_secondary_long_press_end"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_secondary_long_press_move_update"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_secondary_long_press_start"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_secondary_long_press_up"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_secondary_tap_down"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_tap_down"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_tertiary_long_press"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_tertiary_long_press_cancel"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_tertiary_long_press_down"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_tertiary_long_press_end"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_tertiary_long_press_move_update"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_tertiary_long_press_start"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_tertiary_long_press_up"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_tertiary_tap_down"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_vertical_drag_cancel"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_vertical_drag_end"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_vertical_drag_start"
-    },
-    {
-      "family": "visual",
-      "wire_type": "GestureDetector",
-      "property": "on_vertical_drag_update"
     },
     {
       "family": "visual",
@@ -33333,7 +33128,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 118
+              "line": 120
             }
           ]
         },
@@ -33472,15 +33267,76 @@
           ]
         },
         "disabled": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 38
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 119
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 252
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 258
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 267
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 276
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 284
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 293
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 301
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 314
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 338
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 361
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 372
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 383
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 652
+            }
+          ]
         },
         "drag_interval": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 489
+              "line": 503
             }
           ]
         },
@@ -33529,7 +33385,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 256
+              "line": 260
             }
           ]
         },
@@ -33573,7 +33429,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 114
+              "line": 115
             }
           ]
         },
@@ -33582,7 +33438,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 759
+              "line": 854
             }
           ]
         },
@@ -33661,15 +33517,19 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 501
+              "line": 515
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 502
+              "line": 516
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 503
+              "line": 517
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 587
             }
           ]
         },
@@ -33678,19 +33538,23 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 224
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 225
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
               "line": 226
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 513
+              "line": 227
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 228
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 527
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 589
             }
           ]
         },
@@ -33699,11 +33563,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 133
+              "line": 135
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 134
+              "line": 136
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 588
             }
           ]
         },
@@ -33712,21 +33580,135 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 249
+              "line": 252
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 250
+              "line": 253
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 251
+              "line": 254
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 573
             }
           ]
         },
         "on_exit": {
           "classification": "consumed",
           "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 266
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 267
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 268
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 574
+            }
+          ]
+        },
+        "on_force_press_end": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 640
+            }
+          ]
+        },
+        "on_force_press_peak": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 638
+            }
+          ]
+        },
+        "on_force_press_start": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 637
+            }
+          ]
+        },
+        "on_force_press_update": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 639
+            }
+          ]
+        },
+        "on_horizontal_drag_cancel": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 623
+            }
+          ]
+        },
+        "on_horizontal_drag_down": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 137
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 619
+            }
+          ]
+        },
+        "on_horizontal_drag_end": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 622
+            }
+          ]
+        },
+        "on_horizontal_drag_start": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 620
+            }
+          ]
+        },
+        "on_horizontal_drag_update": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 621
+            }
+          ]
+        },
+        "on_hover": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 260
+            },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
               "line": 261
@@ -33737,110 +33719,99 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 263
-            }
-          ]
-        },
-        "on_force_press_end": {
-          "classification": "unclassified",
-          "evidence": []
-        },
-        "on_force_press_peak": {
-          "classification": "unclassified",
-          "evidence": []
-        },
-        "on_force_press_start": {
-          "classification": "unclassified",
-          "evidence": []
-        },
-        "on_force_press_update": {
-          "classification": "unclassified",
-          "evidence": []
-        },
-        "on_horizontal_drag_cancel": {
-          "classification": "unclassified",
-          "evidence": []
-        },
-        "on_horizontal_drag_down": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 135
-            }
-          ]
-        },
-        "on_horizontal_drag_end": {
-          "classification": "unclassified",
-          "evidence": []
-        },
-        "on_horizontal_drag_start": {
-          "classification": "unclassified",
-          "evidence": []
-        },
-        "on_horizontal_drag_update": {
-          "classification": "unclassified",
-          "evidence": []
-        },
-        "on_hover": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 256
+              "line": 570
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 257
+              "line": 571
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 258
+              "line": 572
             }
           ]
         },
         "on_long_press": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 592
+            }
+          ]
         },
         "on_long_press_cancel": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 591
+            }
+          ]
         },
         "on_long_press_down": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 590
+            }
+          ]
         },
         "on_long_press_end": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 596
+            }
+          ]
         },
         "on_long_press_move_update": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 594
+            }
+          ]
         },
         "on_long_press_start": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 593
+            }
+          ]
         },
         "on_long_press_up": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 595
+            }
+          ]
         },
         "on_multi_long_press": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 375
+              "line": 389
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 376
+              "line": 390
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 377
+              "line": 391
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 642
             }
           ]
         },
@@ -33849,57 +33820,89 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 368
+              "line": 382
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 369
+              "line": 383
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 370
+              "line": 384
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 641
             }
           ]
         },
         "on_pan_cancel": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 633
+            }
+          ]
         },
         "on_pan_down": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 137
+              "line": 139
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 629
             }
           ]
         },
         "on_pan_end": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 632
+            }
+          ]
         },
         "on_pan_start": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 630
+            }
+          ]
         },
         "on_pan_update": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 631
+            }
+          ]
         },
         "on_right_pan_end": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 292
+              "line": 301
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 293
+              "line": 302
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 294
+              "line": 303
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 646
             }
           ]
         },
@@ -33908,15 +33911,19 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 280
+              "line": 287
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 281
+              "line": 288
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 282
+              "line": 289
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 644
             }
           ]
         },
@@ -33925,15 +33932,19 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 286
+              "line": 294
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 287
+              "line": 295
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 288
+              "line": 296
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 645
             }
           ]
         },
@@ -33942,15 +33953,19 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 349
+              "line": 361
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 350
+              "line": 362
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 351
+              "line": 363
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 636
             }
           ]
         },
@@ -33959,15 +33974,19 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 309
+              "line": 319
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 310
+              "line": 320
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 311
+              "line": 321
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 634
             }
           ]
         },
@@ -33976,15 +33995,19 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 331
+              "line": 342
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 332
+              "line": 343
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 333
+              "line": 344
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 635
             }
           ]
         },
@@ -33993,52 +34016,111 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 269
+              "line": 275
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 270
+              "line": 276
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 271
+              "line": 277
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 643
             }
           ]
         },
         "on_secondary_long_press": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 601
+            }
+          ]
         },
         "on_secondary_long_press_cancel": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 599
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 600
+            }
+          ]
         },
         "on_secondary_long_press_down": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 597
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 598
+            }
+          ]
         },
         "on_secondary_long_press_end": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 607
+            }
+          ]
         },
         "on_secondary_long_press_move_update": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 604
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 605
+            }
+          ]
         },
         "on_secondary_long_press_start": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 602
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 603
+            }
+          ]
         },
         "on_secondary_long_press_up": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 606
+            }
+          ]
         },
         "on_secondary_tap": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 204
+              "line": 206
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 580
             }
           ]
         },
@@ -34047,25 +34129,8 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 199
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 200
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
               "line": 201
-            }
-          ]
-        },
-        "on_secondary_tap_down": {
-          "classification": "unclassified",
-          "evidence": []
-        },
-        "on_secondary_tap_up": {
-          "classification": "consumed",
-          "evidence": [
+            },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
               "line": 202
@@ -34073,6 +34138,36 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
               "line": 203
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 583
+            }
+          ]
+        },
+        "on_secondary_tap_down": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 581
+            }
+          ]
+        },
+        "on_secondary_tap_up": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 204
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 205
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 582
             }
           ]
         },
@@ -34102,15 +34197,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 494
+              "line": 508
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 495
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 496
+              "line": 509
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
@@ -34118,11 +34209,19 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 511
+              "line": 524
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 512
+              "line": 525
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 526
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 575
             }
           ]
         },
@@ -34131,36 +34230,49 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 194
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 195
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
               "line": 196
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 197
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 198
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 579
             }
           ]
         },
         "on_tap_down": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 576
+            }
+          ]
         },
         "on_tap_move": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 151
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 152
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
               "line": 153
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 154
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 155
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 578
             }
           ]
         },
@@ -34169,70 +34281,108 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 190
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 191
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
               "line": 192
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 193
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 194
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 577
             }
           ]
         },
         "on_tertiary_long_press": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 612
+            }
+          ]
         },
         "on_tertiary_long_press_cancel": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 610
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 611
+            }
+          ]
         },
         "on_tertiary_long_press_down": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 608
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 609
+            }
+          ]
         },
         "on_tertiary_long_press_end": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 618
+            }
+          ]
         },
         "on_tertiary_long_press_move_update": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 615
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 616
+            }
+          ]
         },
         "on_tertiary_long_press_start": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 613
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 614
+            }
+          ]
         },
         "on_tertiary_long_press_up": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 617
+            }
+          ]
         },
         "on_tertiary_tap_cancel": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 206
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 207
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
               "line": 208
-            }
-          ]
-        },
-        "on_tertiary_tap_down": {
-          "classification": "unclassified",
-          "evidence": []
-        },
-        "on_tertiary_tap_up": {
-          "classification": "consumed",
-          "evidence": [
+            },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
               "line": 209
@@ -34240,33 +34390,87 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
               "line": 210
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 586
+            }
+          ]
+        },
+        "on_tertiary_tap_down": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 584
+            }
+          ]
+        },
+        "on_tertiary_tap_up": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 211
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 212
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 585
             }
           ]
         },
         "on_vertical_drag_cancel": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 628
+            }
+          ]
         },
         "on_vertical_drag_down": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 136
+              "line": 138
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 624
             }
           ]
         },
         "on_vertical_drag_end": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 627
+            }
+          ]
         },
         "on_vertical_drag_start": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 625
+            }
+          ]
         },
         "on_vertical_drag_update": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 626
+            }
+          ]
         },
         "opacity": {
           "classification": "consumed",
@@ -34361,7 +34565,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 360
+              "line": 373
             }
           ]
         },
@@ -43361,6 +43565,66 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/floating_action_button.swift",
               "line": 49
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 38
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 119
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 252
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 258
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 267
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 276
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 284
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 293
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 301
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 314
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 338
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 361
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 372
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 383
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 652
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/icon_button.swift",
@@ -66087,6 +66351,66 @@
               "line": 49
             },
             {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 38
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 119
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 252
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 258
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 267
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 276
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 284
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 293
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 301
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 314
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 338
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 361
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 372
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 383
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 652
+            },
+            {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/icon_button.swift",
               "line": 16
             },
@@ -66786,15 +67110,19 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 269
+              "line": 275
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 270
+              "line": 276
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 271
+              "line": 277
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 643
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/grid_view.swift",

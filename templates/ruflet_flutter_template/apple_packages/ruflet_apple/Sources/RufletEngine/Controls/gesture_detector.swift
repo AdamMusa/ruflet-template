@@ -35,6 +35,7 @@ public struct GestureDetectorControl: View {
     .background(RufletPlatformGestureMonitor(coordinator: coordinator))
     .modifier(RufletMouseCursorModifier(cursor: control.string("mouse_cursor")))
     .accessibilityHidden(control.boolean("exclude_from_semantics", default: false))
+    .allowsHitTesting(!control.disabled)
   }
 }
 
@@ -110,11 +111,12 @@ final class RufletGestureEventCoordinator: ObservableObject {
   init(control: RufletControl) { self.control = control }
 
   var hasInteraction: Bool {
-    Self.eventProperties.contains { control.boolean($0, default: false) }
+    Self.eventProperties.contains(where: enabled)
       || Self.knownCursors.contains(control.string("mouse_cursor")?.lowercased() ?? "")
   }
 
   func accepts(deviceKind: String) -> Bool {
+    guard !control.disabled else { return false }
     guard let raw = control.value("allowed_devices") else { return true }
     let devices = Set(raw.array?.compactMap { $0.text?.lowercased() } ?? [])
     return devices.contains(deviceKind.lowercased())
@@ -247,11 +249,13 @@ final class RufletGestureEventCoordinator: ObservableObject {
   }
 
   func hoverEntered(_ sample: RufletGesturePointerSample) {
+    guard !control.disabled else { return }
     hoverOrigin = sample
     emit("enter", pointerValue(sample, previous: nil))
   }
 
   func hoverMoved(_ sample: RufletGesturePointerSample) {
+    guard !control.disabled else { return }
     let now = currentMilliseconds()
     guard now - hoverTimestamp > Int64(control.integer("hover_interval", default: 0) ?? 0) else { return }
     hoverTimestamp = now
@@ -260,6 +264,7 @@ final class RufletGestureEventCoordinator: ObservableObject {
   }
 
   func hoverExited(_ sample: RufletGesturePointerSample) {
+    guard !control.disabled else { return }
     emit("exit", pointerValue(sample, previous: nil))
     hoverOrigin = nil
   }
@@ -268,6 +273,7 @@ final class RufletGestureEventCoordinator: ObservableObject {
     _ sample: RufletGesturePointerSample,
     delta: RufletEventPoint
   ) {
+    guard !control.disabled else { return }
     emit("scroll", RufletPointerScrollDetails(
       localPosition: sample.local,
       globalPosition: sample.global,
@@ -275,6 +281,7 @@ final class RufletGestureEventCoordinator: ObservableObject {
   }
 
   func rightPanStarted(_ sample: RufletGesturePointerSample) {
+    guard !control.disabled else { return }
     guard enabled("on_right_pan_start") else { return }
     dragOrigins[.rightPan] = sample
     previousDragSamples[.rightPan] = sample
@@ -283,6 +290,7 @@ final class RufletGestureEventCoordinator: ObservableObject {
   }
 
   func rightPanMoved(_ sample: RufletGesturePointerSample) {
+    guard !control.disabled else { return }
     guard activeDrags.contains(.rightPan), dragIntervalAllows(.rightPan) else { return }
     let previous = previousDragSamples[.rightPan]
     emit("right_pan_update", pointerValue(sample, previous: previous))
@@ -290,6 +298,7 @@ final class RufletGestureEventCoordinator: ObservableObject {
   }
 
   func rightPanEnded(_ sample: RufletGesturePointerSample) {
+    guard !control.disabled else { return }
     guard activeDrags.remove(.rightPan) != nil else { return }
     emit("right_pan_end", pointerValue(sample, previous: nil))
     dragOrigins[.rightPan] = nil
@@ -302,6 +311,7 @@ final class RufletGestureEventCoordinator: ObservableObject {
     pointerCount: Int,
     timestamp: TimeInterval?
   ) {
+    guard !control.disabled else { return }
     guard !scaleActive else { return }
     scaleActive = true
     scaleLocalFocalPoint = localFocalPoint
@@ -325,6 +335,7 @@ final class RufletGestureEventCoordinator: ObservableObject {
     rotation: Double,
     timestamp: TimeInterval?
   ) {
+    guard !control.disabled else { return }
     if !scaleActive {
       scaleStarted(
         localFocalPoint: localFocalPoint, globalFocalPoint: globalFocalPoint,
@@ -347,6 +358,7 @@ final class RufletGestureEventCoordinator: ObservableObject {
   }
 
   func scaleEnded(pointerCount: Int, velocity: RufletEventPoint = .init(x: 0, y: 0)) {
+    guard !control.disabled else { return }
     guard scaleActive else { return }
     emit("scale_end", RufletScaleEndDetails(pointerCount: pointerCount, velocity: velocity).value)
     scaleActive = false
@@ -357,6 +369,7 @@ final class RufletGestureEventCoordinator: ObservableObject {
     delta: RufletEventPoint,
     ended: Bool
   ) {
+    guard !control.disabled else { return }
     guard control.boolean("trackpad_scroll_causes_scale", default: false) else { return }
     let scale = lastScale * exp(-delta.y / 200)
     scaleUpdated(
@@ -367,6 +380,7 @@ final class RufletGestureEventCoordinator: ObservableObject {
   }
 
   func multiTouchChanged(correctNumberOfTouches: Bool) {
+    guard !control.disabled else { return }
     emit("multi_tap", ["ct": .bool(correctNumberOfTouches)])
     multiLongPressTask?.cancel()
     multiLongPressTask = nil
@@ -549,12 +563,93 @@ final class RufletGestureEventCoordinator: ObservableObject {
     }
   }
 
-  private func enabled(_ property: String) -> Bool {
-    control.boolean(property, default: false)
+  func enabled(_ property: String) -> Bool {
+    // Keep every pinned callback as an executable read. Besides preventing a
+    // typo in an interpolated event name from silently enabling interaction,
+    // this is the native equivalent of the explicit `getBool("on_…")` reads
+    // in Flet's GestureDetectorControl.build().
+    switch property {
+    case "on_hover": control.hasEventHandler("hover")
+    case "on_enter": control.hasEventHandler("enter")
+    case "on_exit": control.hasEventHandler("exit")
+    case "on_tap": control.hasEventHandler("tap")
+    case "on_tap_down": control.hasEventHandler("tap_down")
+    case "on_tap_up": control.hasEventHandler("tap_up")
+    case "on_tap_move": control.hasEventHandler("tap_move")
+    case "on_tap_cancel": control.hasEventHandler("tap_cancel")
+    case "on_secondary_tap": control.hasEventHandler("secondary_tap")
+    case "on_secondary_tap_down": control.hasEventHandler("secondary_tap_down")
+    case "on_secondary_tap_up": control.hasEventHandler("secondary_tap_up")
+    case "on_secondary_tap_cancel": control.hasEventHandler("secondary_tap_cancel")
+    case "on_tertiary_tap_down": control.hasEventHandler("tertiary_tap_down")
+    case "on_tertiary_tap_up": control.hasEventHandler("tertiary_tap_up")
+    case "on_tertiary_tap_cancel": control.hasEventHandler("tertiary_tap_cancel")
+    case "on_double_tap": control.hasEventHandler("double_tap")
+    case "on_double_tap_down": control.hasEventHandler("double_tap_down")
+    case "on_double_tap_cancel": control.hasEventHandler("double_tap_cancel")
+    case "on_long_press_down": control.hasEventHandler("long_press_down")
+    case "on_long_press_cancel": control.hasEventHandler("long_press_cancel")
+    case "on_long_press": control.hasEventHandler("long_press")
+    case "on_long_press_start": control.hasEventHandler("long_press_start")
+    case "on_long_press_move_update": control.hasEventHandler("long_press_move_update")
+    case "on_long_press_up": control.hasEventHandler("long_press_up")
+    case "on_long_press_end": control.hasEventHandler("long_press_end")
+    case "on_secondary_long_press_down":
+      control.hasEventHandler("secondary_long_press_down")
+    case "on_secondary_long_press_cancel":
+      control.hasEventHandler("secondary_long_press_cancel")
+    case "on_secondary_long_press": control.hasEventHandler("secondary_long_press")
+    case "on_secondary_long_press_start":
+      control.hasEventHandler("secondary_long_press_start")
+    case "on_secondary_long_press_move_update":
+      control.hasEventHandler("secondary_long_press_move_update")
+    case "on_secondary_long_press_up": control.hasEventHandler("secondary_long_press_up")
+    case "on_secondary_long_press_end": control.hasEventHandler("secondary_long_press_end")
+    case "on_tertiary_long_press_down":
+      control.hasEventHandler("tertiary_long_press_down")
+    case "on_tertiary_long_press_cancel":
+      control.hasEventHandler("tertiary_long_press_cancel")
+    case "on_tertiary_long_press": control.hasEventHandler("tertiary_long_press")
+    case "on_tertiary_long_press_start":
+      control.hasEventHandler("tertiary_long_press_start")
+    case "on_tertiary_long_press_move_update":
+      control.hasEventHandler("tertiary_long_press_move_update")
+    case "on_tertiary_long_press_up": control.hasEventHandler("tertiary_long_press_up")
+    case "on_tertiary_long_press_end": control.hasEventHandler("tertiary_long_press_end")
+    case "on_horizontal_drag_down": control.hasEventHandler("horizontal_drag_down")
+    case "on_horizontal_drag_start": control.hasEventHandler("horizontal_drag_start")
+    case "on_horizontal_drag_update": control.hasEventHandler("horizontal_drag_update")
+    case "on_horizontal_drag_end": control.hasEventHandler("horizontal_drag_end")
+    case "on_horizontal_drag_cancel": control.hasEventHandler("horizontal_drag_cancel")
+    case "on_vertical_drag_down": control.hasEventHandler("vertical_drag_down")
+    case "on_vertical_drag_start": control.hasEventHandler("vertical_drag_start")
+    case "on_vertical_drag_update": control.hasEventHandler("vertical_drag_update")
+    case "on_vertical_drag_end": control.hasEventHandler("vertical_drag_end")
+    case "on_vertical_drag_cancel": control.hasEventHandler("vertical_drag_cancel")
+    case "on_pan_down": control.hasEventHandler("pan_down")
+    case "on_pan_start": control.hasEventHandler("pan_start")
+    case "on_pan_update": control.hasEventHandler("pan_update")
+    case "on_pan_end": control.hasEventHandler("pan_end")
+    case "on_pan_cancel": control.hasEventHandler("pan_cancel")
+    case "on_scale_start": control.hasEventHandler("scale_start")
+    case "on_scale_update": control.hasEventHandler("scale_update")
+    case "on_scale_end": control.hasEventHandler("scale_end")
+    case "on_force_press_start": control.hasEventHandler("force_press_start")
+    case "on_force_press_peak": control.hasEventHandler("force_press_peak")
+    case "on_force_press_update": control.hasEventHandler("force_press_update")
+    case "on_force_press_end": control.hasEventHandler("force_press_end")
+    case "on_multi_tap": control.hasEventHandler("multi_tap")
+    case "on_multi_long_press": control.hasEventHandler("multi_long_press")
+    case "on_scroll": control.hasEventHandler("scroll")
+    case "on_right_pan_start": control.hasEventHandler("right_pan_start")
+    case "on_right_pan_update": control.hasEventHandler("right_pan_update")
+    case "on_right_pan_end": control.hasEventHandler("right_pan_end")
+    default: false
+    }
   }
 
   private func emit(_ event: String, _ data: RufletValue = .null) {
-    guard enabled("on_\(event)") else { return }
+    guard !control.disabled, enabled("on_\(event)") else { return }
     control.triggerEvent(event, data: data)
   }
 
@@ -619,7 +714,7 @@ final class RufletGestureEventCoordinator: ObservableObject {
     ["l": sample.local.value, "g": sample.global.value, "v": velocity.value]
   }
 
-  private static let eventProperties = [
+  static let eventProperties = [
     "on_hover", "on_enter", "on_exit", "on_tap", "on_tap_down", "on_tap_up",
     "on_tap_move", "on_tap_cancel", "on_secondary_tap", "on_secondary_tap_down",
     "on_secondary_tap_up", "on_secondary_tap_cancel", "on_tertiary_tap_down",
@@ -793,7 +888,8 @@ private final class RufletGestureInstallerView: UIView, UIGestureRecognizerDeleg
       pressureMinimum: 0, pressureMaximum: Double(max(touch.maximumPossibleForce, 1)),
       device: touch.hash)
     let button: RufletGesturePointerButton
-    if event?.buttonMask.contains(.secondary) == true { button = .secondary }
+    if event?.buttonMask.contains(.button(2)) == true { button = .tertiary }
+    else if event?.buttonMask.contains(.secondary) == true { button = .secondary }
     else { button = .primary }
 
     switch phase {

@@ -45,6 +45,56 @@ final class GestureDetectorControlTests: XCTestCase {
     XCTAssertEqual(backend.events.map(\.name), ["secondary_tap"])
   }
 
+  func testDisabledControlRejectsEveryNativePointerButton() {
+    let backend = GestureDetectorTestBackend()
+    let coordinator = coordinator(
+      properties: [
+        "disabled": true,
+        "on_tap": true,
+        "on_secondary_tap": true,
+        "on_tertiary_tap_up": true,
+        "on_hover": true,
+        "on_scroll": true,
+        "on_scale_start": true,
+        "on_scale_update": true,
+        "on_scale_end": true,
+        "on_multi_tap": true,
+      ], backend: backend)
+    let pointer = sample(local: (1, 2), global: (10, 20), kind: "mouse")
+
+    XCTAssertTrue(coordinator.hasInteraction)
+    XCTAssertFalse(coordinator.accepts(deviceKind: "mouse"))
+    for button in [
+      RufletGesturePointerButton.primary, .secondary, .tertiary,
+    ] {
+      coordinator.pointerDown(pointer, button: button)
+      coordinator.pointerUp(pointer, button: button)
+    }
+    coordinator.hoverEntered(pointer)
+    coordinator.hoverMoved(pointer)
+    coordinator.hoverExited(pointer)
+    coordinator.scroll(pointer, delta: .init(x: 2, y: 3))
+    coordinator.scaleStarted(
+      localFocalPoint: pointer.local, globalFocalPoint: pointer.global,
+      pointerCount: 2, timestamp: pointer.timestamp)
+    coordinator.scaleUpdated(
+      localFocalPoint: pointer.local, globalFocalPoint: pointer.global,
+      pointerCount: 2, scale: 1.2, rotation: 0.1, timestamp: pointer.timestamp)
+    coordinator.scaleEnded(pointerCount: 0)
+    coordinator.multiTouchChanged(correctNumberOfTouches: true)
+    XCTAssertTrue(backend.events.isEmpty)
+  }
+
+  func testEveryPinnedEventPropertyIsAnExecutableSubscription() {
+    let backend = GestureDetectorTestBackend()
+    for property in RufletGestureEventCoordinator.eventProperties {
+      let coordinator = coordinator(properties: [property: true], backend: backend)
+      XCTAssertTrue(coordinator.enabled(property), property)
+      XCTAssertTrue(coordinator.hasInteraction, property)
+    }
+    XCTAssertFalse(coordinator(properties: [:], backend: backend).enabled("on_not_a_flet_event"))
+  }
+
   func testTapUsesPinnedNamesAndCompactDownPayload() {
     let backend = GestureDetectorTestBackend()
     let coordinator = coordinator(
@@ -118,6 +168,73 @@ final class GestureDetectorControlTests: XCTestCase {
     XCTAssertEqual(move?["ofo"]?.map?["y"], .double(9))
     XCTAssertEqual(move?["lofo"]?.map?["x"], .double(4))
     XCTAssertEqual(move?["lofo"]?.map?["y"], .double(6))
+  }
+
+  func testSecondaryAndTertiaryLongPressLifecycleUsesExactPinnedNames() async throws {
+    let backend = GestureDetectorTestBackend()
+    let coordinator = coordinator(
+      properties: [
+        "on_secondary_tap_down": true,
+        "on_secondary_long_press_down": true,
+        "on_secondary_long_press_start": true,
+        "on_secondary_long_press": true,
+        "on_secondary_long_press_move_update": true,
+        "on_secondary_long_press_end": true,
+        "on_secondary_long_press_up": true,
+        "on_tertiary_tap_down": true,
+        "on_tertiary_long_press_down": true,
+        "on_tertiary_long_press_start": true,
+        "on_tertiary_long_press": true,
+        "on_tertiary_long_press_move_update": true,
+        "on_tertiary_long_press_end": true,
+        "on_tertiary_long_press_up": true,
+      ], backend: backend)
+    let down = sample(local: (1, 2), global: (10, 20), kind: "mouse", timestamp: 1)
+    coordinator.pointerDown(down, button: .secondary)
+    coordinator.pointerDown(down, button: .tertiary)
+    try await Task.sleep(nanoseconds: 550_000_000)
+    let moved = sample(local: (5, 8), global: (17, 29), kind: "mouse", timestamp: 1.6)
+    coordinator.pointerMove(moved, button: .secondary)
+    coordinator.pointerMove(moved, button: .tertiary)
+    coordinator.pointerUp(moved, button: .secondary)
+    coordinator.pointerUp(moved, button: .tertiary)
+
+    let secondary = backend.events.map(\.name).filter { $0.hasPrefix("secondary_") }
+    XCTAssertEqual(secondary, [
+      "secondary_tap_down", "secondary_long_press_down", "secondary_long_press_start",
+      "secondary_long_press", "secondary_long_press_move_update", "secondary_long_press_end",
+      "secondary_long_press_up",
+    ])
+    let tertiary = backend.events.map(\.name).filter { $0.hasPrefix("tertiary_") }
+    XCTAssertEqual(tertiary, [
+      "tertiary_tap_down", "tertiary_long_press_down", "tertiary_long_press_start",
+      "tertiary_long_press", "tertiary_long_press_move_update", "tertiary_long_press_end",
+      "tertiary_long_press_up",
+    ])
+  }
+
+  func testForcePressPhasesPreservePinnedOrderAndPressure() {
+    let backend = GestureDetectorTestBackend()
+    let coordinator = coordinator(
+      properties: [
+        "on_force_press_start": true,
+        "on_force_press_peak": true,
+        "on_force_press_update": true,
+        "on_force_press_end": true,
+      ], backend: backend)
+    let pointer = RufletGesturePointerSample(
+      local: .init(x: 2, y: 3), global: .init(x: 20, y: 30),
+      deviceKind: "touch", timestamp: 2, pressure: 0.75)
+
+    coordinator.forcePress(.start, sample: pointer)
+    coordinator.forcePress(.update, sample: pointer)
+    coordinator.forcePress(.peak, sample: pointer)
+    coordinator.forcePress(.end, sample: pointer)
+
+    XCTAssertEqual(backend.events.map(\.name), [
+      "force_press_start", "force_press_update", "force_press_peak", "force_press_end",
+    ])
+    XCTAssertEqual(backend.events.map { $0.data.map?["p"] }, Array(repeating: .double(0.75), count: 4))
   }
 
   func testScrollTrackpadScaleAndMultiTapUsePinnedPayloads() {
