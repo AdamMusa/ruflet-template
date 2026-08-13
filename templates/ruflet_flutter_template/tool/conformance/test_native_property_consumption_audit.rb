@@ -94,6 +94,18 @@ class NativePropertyConsumptionAuditTest < Minitest::Test
     }
   end
 
+  def test_identical_source_scopes_are_scanned_once
+    path = NativePropertyConsumptionAudit.swift_files.keys.find do |candidate|
+      candidate.end_with?("/Controls/icon_button.swift")
+    end
+    refute_nil path
+
+    first = NativePropertyConsumptionAudit.cached_property_reads(path)
+    second = NativePropertyConsumptionAudit.cached_property_reads(path)
+
+    assert_same first, second
+  end
+
   def test_cartesian_chart_metadata_resolves_only_to_its_real_parents
     assert_equal %w[BarChartControl CandlestickChartControl LineChartControl ScatterChartControl],
       NativePropertyConsumptionAudit::PARENT_IMPLEMENTATIONS.fetch("axis")

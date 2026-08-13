@@ -368,6 +368,26 @@ module NativePropertyConsumptionAudit
     reads
   end
 
+  # A concrete Swift file can back several wire types (for example every
+  # IconButton variant). The previous implementation rescanned that entire
+  # file once for every wire type and repeatedly ran the same regular
+  # expressions over identical lines. Cache exact file/scope scans; callers
+  # still receive immutable evidence for the same source range, but report
+  # generation stays proportional to Swift source size rather than the
+  # Cartesian product of source files and wire controls.
+  def cached_property_reads(path, start_line: 0, finish_line: nil)
+    @cached_property_reads ||= {}
+    key = [path, start_line, finish_line].freeze
+    return @cached_property_reads.fetch(key) if @cached_property_reads.key?(key)
+
+    lines = if finish_line
+      swift_files.fetch(path)[start_line..finish_line]
+    else
+      swift_files.fetch(path)
+    end
+    @cached_property_reads[key] = property_reads(lines, path: path, start_line: start_line)
+  end
+
   def reads_for_types(types)
     @reads_for_types ||= {}
     key = types.sort.freeze
@@ -385,7 +405,7 @@ module NativePropertyConsumptionAudit
     whole_paths.each do |path|
       # File-per-file ownership includes free functions beside the concrete
       # Control/Service/Controller (checkbox activation, Canvas parsers, etc.).
-      property_reads(swift_files.fetch(path), path: path).each do |property, evidence|
+      cached_property_reads(path).each do |property, evidence|
         reads[property].concat(evidence)
       end
     end
@@ -396,8 +416,9 @@ module NativePropertyConsumptionAudit
         # Helper/modifier dependencies are scoped to their exact declaration;
         # scanning their entire file would let ListTile's own properties count
         # as Checkbox consumption merely because both share list_tile.swift.
-        lines = swift_files.fetch(scope[:path])[scope[:start]..scope[:finish]]
-        property_reads(lines, path: scope[:path], start_line: scope[:start]).each do |property, evidence|
+        cached_property_reads(
+          scope[:path], start_line: scope[:start], finish_line: scope[:finish]
+        ).each do |property, evidence|
           reads[property].concat(evidence)
         end
       end
