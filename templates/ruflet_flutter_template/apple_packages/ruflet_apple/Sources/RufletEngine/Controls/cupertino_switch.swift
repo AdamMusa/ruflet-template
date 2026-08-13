@@ -40,7 +40,7 @@ public struct CupertinoSwitchControl: View {
     parseEnum(RufletLabelPosition.self, control.string("label_position"), .right)!
   }
 
-  private func activate() {
+  func activate() {
     guard !control.disabled else { return }
     let next = !control.boolean("value", default: false)
     control.updateProperties(["value": .bool(next)], notify: true)
@@ -56,27 +56,30 @@ private struct RufletCupertinoSwitchArtwork: View {
   @Environment(\.rufletCupertinoSwitchPressed) private var pressed
 
   var body: some View {
+    let presentation = RufletCupertinoSwitchPresentation(control: control, states: states)
     ZStack {
       Capsule()
-        .fill(trackColor)
+        .fill(presentation.trackColor)
         .overlay(
           Capsule().stroke(
-            focused ? focusColor : trackOutlineColor,
-            lineWidth: focused ? max(trackOutlineWidth, 2) : trackOutlineWidth)
+            focused ? presentation.focusColor : presentation.trackOutlineColor,
+            lineWidth: focused
+              ? max(presentation.trackOutlineWidth, 2)
+              : presentation.trackOutlineWidth)
         )
         .frame(width: 51, height: 31)
         .overlay(alignment: value ? .leading : .trailing) {
           Image(systemName: value ? "checkmark" : "xmark")
             .font(.system(size: 9, weight: .bold))
-            .foregroundStyle(value ? onLabelColor : offLabelColor)
+            .foregroundStyle(value ? presentation.onLabelColor : presentation.offLabelColor)
             .padding(.horizontal, 7)
         }
       Circle()
-        .fill(thumbColor)
+        .fill(presentation.thumbColor)
         .frame(width: 27, height: 27)
         .shadow(color: .black.opacity(0.18), radius: pressed ? 2 : 1.5, y: 1)
         .overlay {
-          if let source = thumbImageSource {
+          if let source = presentation.thumbImageSource {
             RufletImageSourceView(
               source: source,
               contentMode: .fill,
@@ -87,7 +90,7 @@ private struct RufletCupertinoSwitchArtwork: View {
             )
             .clipShape(Circle())
             .allowsHitTesting(false)
-          } else if let icon = thumbIcon {
+          } else if let icon = presentation.thumbIcon {
             RufletAppleIconView.registered(icon: icon, size: 15)
               .foregroundStyle(value ? Color.white : Color.secondary)
           }
@@ -109,70 +112,62 @@ private struct RufletCupertinoSwitchArtwork: View {
     return result
   }
 
-  private var trackColor: Color {
-    parseColor(control.string(value ? "active_track_color" : "inactive_track_color"))
-      ?? (value ? .green : .secondary.opacity(0.28))
-  }
+}
 
-  private var thumbColor: Color {
-    widgetStateColor("thumb_color")
-      ?? parseColor(control.string(value ? "active_thumb_color" : "inactive_thumb_color"))
+@MainActor
+struct RufletCupertinoSwitchPresentation {
+  let activeTrackColor: Color?
+  let inactiveTrackColor: Color?
+  let inactiveThumbColor: Color?
+  let thumbColor: Color
+  let trackColor: Color
+  let trackOutlineColor: Color
+  let trackOutlineWidth: CGFloat
+  let thumbIcon: RufletAppleIcon?
+  let activeThumbImageSource: RufletImageSource?
+  let inactiveThumbImageSource: RufletImageSource?
+  let focusColor: Color
+  let onLabelColor: Color
+  let offLabelColor: Color
+  private let selected: Bool
+
+  init(control: RufletControl, states: Set<RufletWidgetState>) {
+    selected = states.contains(.selected)
+    activeTrackColor = parseColor(control.string("active_track_color"))
+    inactiveTrackColor = parseColor(control.string("inactive_track_color"))
+    inactiveThumbColor = parseColor(control.string("inactive_thumb_color"))
+
+    // Pinned CupertinoSwitch resolves thumb_color with an empty state set.
+    let defaultThumbColor = rufletSwitchStateColor(
+      control.dynamicValue("thumb_color"), states: [])
+    let outlineColor = rufletSwitchStateColor(
+      control.dynamicValue("track_outline_color"), states: states)
+    let outlineWidth = rufletSwitchStateDouble(
+      control.dynamicValue("track_outline_width"), states: states)
+    let iconCode = rufletSwitchStateInteger(
+      control.dynamicValue("thumb_icon"), states: states)
+
+    activeThumbImageSource = parseImageSource(
+      control.dynamicValue("active_thumb_image_src"), backend: control.backend)
+    inactiveThumbImageSource = parseImageSource(
+      control.dynamicValue("inactive_thumb_image_src"), backend: control.backend)
+    // Preserve the pinned 0.80.5 lookup spelling exactly.
+    focusColor = parseColor(control.string("focusColor")) ?? .accentColor
+    onLabelColor = parseColor(control.string("on_label_color")) ?? .white
+    offLabelColor = parseColor(control.string("off_label_color")) ?? .secondary
+
+    thumbColor = defaultThumbColor
+      ?? (selected ? nil : inactiveThumbColor)
       ?? .white
+    trackColor = (selected ? activeTrackColor : inactiveTrackColor)
+      ?? (selected ? .green : .secondary.opacity(0.28))
+    trackOutlineColor = outlineColor ?? .clear
+    trackOutlineWidth = CGFloat(outlineWidth ?? 0)
+    thumbIcon = iconCode.flatMap(control.backend.extensionRegistry.appleIcon(for:))
   }
 
-  private var trackOutlineColor: Color {
-    widgetStateColor("track_outline_color") ?? .clear
-  }
-
-  private var focusColor: Color {
-    parseColor(control.string("focus_color") ?? control.string("focusColor")) ?? .accentColor
-  }
-
-  private var trackOutlineWidth: CGFloat {
-    CGFloat(widgetStateDouble("track_outline_width") ?? 0)
-  }
-
-  private var onLabelColor: Color { parseColor(control.string("on_label_color")) ?? .white }
-  private var offLabelColor: Color { parseColor(control.string("off_label_color")) ?? .secondary }
-
-  private var thumbImageSource: RufletImageSource? {
-    let sourceProperty = value ? "active_thumb_image_src" : "inactive_thumb_image_src"
-    let aliasProperty = value ? "active_thumb_image" : "inactive_thumb_image"
-    return parseImageSource(
-      control.dynamicValue(sourceProperty) ?? control.dynamicValue(aliasProperty),
-      backend: control.backend)
-  }
-
-  private var thumbIcon: RufletAppleIcon? {
-    guard let code = widgetStateInteger("thumb_icon") else { return nil }
-    return control.backend.extensionRegistry.appleIcon(for: code)
-  }
-
-  private func widgetStateColor(_ property: String) -> Color? {
-    RufletWidgetStateProperty(
-      control.dynamicValue(property),
-      converter: { raw in
-        if let string = raw as? String { return parseColor(string) }
-        if let value = raw as? RufletValue { return parseColor(value.text) }
-        return nil
-      }
-    )
-    .resolve(states)
-  }
-
-  private func widgetStateDouble(_ property: String) -> Double? {
-    RufletWidgetStateProperty(control.dynamicValue(property), converter: { parseDouble($0) })
-      .resolve(states)
-  }
-
-  private func widgetStateInteger(_ property: String) -> Int? {
-    RufletWidgetStateProperty(
-      control.dynamicValue(property),
-      converter: { raw in
-        if let value = raw as? RufletValue { return value.integer }
-        return parseInt(raw)
-      }
-    ).resolve(states)
+  var thumbImageSource: RufletImageSource? {
+    selected ? activeThumbImageSource : inactiveThumbImageSource
   }
 }
 

@@ -14,7 +14,7 @@ public struct SwitchControl: View {
       Button(action: activate) {
         HStack(spacing: 6) {
           if labelPosition == .left { label }
-          RufletMaterialSwitchArtwork(control: control, focused: focused, hovered: hovered)
+          RufletStandardSwitchArtwork(control: control, focused: focused, hovered: hovered)
           if labelPosition == .right { label }
         }
         .padding(parsePadding(control.dynamicValue("padding")) ?? EdgeInsets())
@@ -45,7 +45,7 @@ public struct SwitchControl: View {
     parseEnum(RufletLabelPosition.self, control.string("label_position"), .right)!
   }
 
-  private func activate() {
+  func activate() {
     guard !control.disabled else { return }
     let next = !control.boolean("value", default: false)
     control.updateProperties(["value": .bool(next)], notify: true)
@@ -54,30 +54,35 @@ public struct SwitchControl: View {
 }
 
 @MainActor
-private struct RufletMaterialSwitchArtwork: View {
+private struct RufletStandardSwitchArtwork: View {
   @ObservedObject var control: RufletControl
   let focused: Bool
   let hovered: Bool
   @Environment(\.rufletSwitchPressed) private var pressed
 
   var body: some View {
+    let presentation = RufletStandardSwitchPresentation(control: control, states: states)
     ZStack {
       Capsule()
-        .fill(trackColor)
+        .fill(presentation.trackColor)
         .overlay(
           Capsule().stroke(
-            focused ? focusColor : trackOutlineColor,
-            lineWidth: focused ? max(trackOutlineWidth, 2) : trackOutlineWidth)
+            focused ? presentation.focusColor : presentation.trackOutlineColor,
+            lineWidth: focused
+              ? max(presentation.trackOutlineWidth, 2)
+              : presentation.trackOutlineWidth)
         )
-        .overlay(overlayColor)
+        .overlay(presentation.overlayColor)
         .frame(width: 51, height: 31)
-        .shadow(color: overlayColor, radius: pressed ? splashRadius : 0)
+        .shadow(
+          color: presentation.overlayColor,
+          radius: pressed ? presentation.splashRadius : 0)
       Circle()
-        .fill(thumbColor)
+        .fill(presentation.thumbColor)
         .frame(width: 27, height: 27)
         .shadow(color: .black.opacity(0.18), radius: 1.5, y: 1)
         .overlay {
-          if let icon = thumbIcon {
+          if let icon = presentation.thumbIcon {
             RufletAppleIconView.registered(icon: icon, size: 15)
               .foregroundStyle(value ? Color.white : Color.secondary)
           }
@@ -99,65 +104,87 @@ private struct RufletMaterialSwitchArtwork: View {
     return result
   }
 
-  private var thumbColor: Color {
-    widgetStateColor("thumb_color")
-      ?? parseColor(control.string(value ? "active_color" : "inactive_thumb_color"))
+}
+
+@MainActor
+struct RufletStandardSwitchPresentation {
+  let activeThumbColor: Color?
+  let activeTrackColor: Color?
+  let inactiveThumbColor: Color?
+  let inactiveTrackColor: Color?
+  let thumbColor: Color
+  let trackColor: Color
+  let overlayColor: Color
+  let trackOutlineColor: Color
+  let trackOutlineWidth: CGFloat
+  let thumbIcon: RufletAppleIcon?
+  let focusColor: Color
+  let hoverColor: Color?
+  let splashRadius: CGFloat
+
+  init(control: RufletControl, states: Set<RufletWidgetState>) {
+    activeThumbColor = parseColor(control.string("active_color"))
+    activeTrackColor = parseColor(control.string("active_track_color"))
+    inactiveThumbColor = parseColor(control.string("inactive_thumb_color"))
+    inactiveTrackColor = parseColor(control.string("inactive_track_color"))
+    let stateThumbColor = rufletSwitchStateColor(
+      control.dynamicValue("thumb_color"), states: states)
+    let stateTrackColor = rufletSwitchStateColor(
+      control.dynamicValue("track_color"), states: states)
+    let stateOverlayColor = rufletSwitchStateColor(
+      control.dynamicValue("overlay_color"), states: states)
+    let stateTrackOutlineColor = rufletSwitchStateColor(
+      control.dynamicValue("track_outline_color"), states: states)
+    let stateTrackOutlineWidth = rufletSwitchStateDouble(
+      control.dynamicValue("track_outline_width"), states: states)
+    let stateThumbIcon = rufletSwitchStateInteger(
+      control.dynamicValue("thumb_icon"), states: states)
+    focusColor = parseColor(control.string("focus_color")) ?? .accentColor
+    hoverColor = parseColor(control.string("hover_color"))
+    splashRadius = CGFloat(control.number("splash_radius") ?? 0)
+
+    let selected = states.contains(.selected)
+    thumbColor = stateThumbColor
+      ?? (selected ? activeThumbColor : inactiveThumbColor)
       ?? .white
+    trackColor = stateTrackColor
+      ?? (selected ? activeTrackColor : inactiveTrackColor)
+      ?? (selected ? .accentColor : .secondary.opacity(0.28))
+    overlayColor = stateOverlayColor
+      ?? (states.contains(.hovered) ? hoverColor?.opacity(0.14) : nil)
+      ?? .clear
+    trackOutlineColor = stateTrackOutlineColor ?? .clear
+    trackOutlineWidth = CGFloat(stateTrackOutlineWidth ?? 0)
+    thumbIcon = stateThumbIcon.flatMap(control.backend.extensionRegistry.appleIcon(for:))
   }
+}
 
-  private var trackColor: Color {
-    widgetStateColor("track_color")
-      ?? parseColor(control.string(value ? "active_track_color" : "inactive_track_color"))
-      ?? (value ? .accentColor : .secondary.opacity(0.28))
-  }
+func rufletSwitchStateColor(
+  _ raw: Any?,
+  states: Set<RufletWidgetState>
+) -> Color? {
+  RufletWidgetStateProperty(raw, converter: { value in
+    if let string = value as? String { return parseColor(string) }
+    if let value = value as? RufletValue { return parseColor(value.text) }
+    return nil
+  }).resolve(states)
+}
 
-  private var trackOutlineColor: Color {
-    widgetStateColor("track_outline_color") ?? .clear
-  }
+func rufletSwitchStateDouble(
+  _ raw: Any?,
+  states: Set<RufletWidgetState>
+) -> Double? {
+  RufletWidgetStateProperty(raw, converter: { parseDouble($0) }).resolve(states)
+}
 
-  private var focusColor: Color { parseColor(control.string("focus_color")) ?? .accentColor }
-  private var splashRadius: CGFloat { CGFloat(control.number("splash_radius") ?? 0) }
-
-  private var trackOutlineWidth: CGFloat {
-    CGFloat(widgetStateDouble("track_outline_width") ?? 0)
-  }
-
-  private var overlayColor: Color {
-    widgetStateColor("overlay_color")
-      ?? (hovered ? (parseColor(control.string("hover_color")) ?? .clear) : .clear)
-  }
-
-  private var thumbIcon: RufletAppleIcon? {
-    guard let code = widgetStateInteger("thumb_icon") else { return nil }
-    return control.backend.extensionRegistry.appleIcon(for: code)
-  }
-
-  private func widgetStateColor(_ property: String) -> Color? {
-    RufletWidgetStateProperty(
-      control.dynamicValue(property),
-      converter: { raw in
-        if let string = raw as? String { return parseColor(string) }
-        if let value = raw as? RufletValue { return parseColor(value.text) }
-        return nil
-      }
-    )
-    .resolve(states)
-  }
-
-  private func widgetStateDouble(_ property: String) -> Double? {
-    RufletWidgetStateProperty(control.dynamicValue(property), converter: { parseDouble($0) })
-      .resolve(states)
-  }
-
-  private func widgetStateInteger(_ property: String) -> Int? {
-    RufletWidgetStateProperty(
-      control.dynamicValue(property),
-      converter: { raw in
-        if let value = raw as? RufletValue { return value.integer }
-        return parseInt(raw)
-      }
-    ).resolve(states)
-  }
+func rufletSwitchStateInteger(
+  _ raw: Any?,
+  states: Set<RufletWidgetState>
+) -> Int? {
+  RufletWidgetStateProperty(raw, converter: { value in
+    if let value = value as? RufletValue { return value.integer }
+    return parseInt(value)
+  }).resolve(states)
 }
 
 private struct RufletSwitchPressedKey: EnvironmentKey {
