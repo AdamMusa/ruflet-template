@@ -431,12 +431,6 @@
     "value": "circle.fill",
     "rationale": "curated Material-to-SF vocabulary"
   },
-  "CLASS_": {
-    "kind": "system_symbol",
-    "value": "books.vertical",
-    "rationale": "native Apple books/classroom concept",
-    "status": "review_required"
-  },
   "CLEAR": {
     "kind": "system_symbol",
     "value": "xmark",

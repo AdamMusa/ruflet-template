@@ -530,6 +530,69 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             self.assertEqual(self.entries[concept]["kind"], kind)
             self.assertEqual(self.entries[concept]["value"], value)
 
+    def test_interface_action_family_is_explicit_reviewed_native_artwork(self):
+        family = MODULE.load_json(MODULE.INTERFACE_ACTION_OVERRIDES_PATH)
+        low_confidence = {
+            item["concept"] for item in self.audit["low_confidence_concepts"]
+        }
+        entries_by_concept = {}
+        for entry in self.entries.values():
+            entries_by_concept.setdefault(entry["concept"], entry)
+        self.assertEqual(
+            self.audit["reviewed_families"]["interface_action"], len(family)
+        )
+        self.assertTrue(set(family).isdisjoint(low_confidence))
+        for concept, target in family.items():
+            entry = entries_by_concept[concept]
+            self.assertEqual(entry["kind"], target["kind"])
+            self.assertEqual(entry["value"], target["value"])
+            self.assertEqual(entry["confidence"], "reviewed")
+            self.assertEqual(entry["source"], "reviewed_override")
+
+    def test_interface_action_distinct_semantics_do_not_regress(self):
+        expected = {
+            "API": (
+                "cupertino_glyph",
+                "CHEVRON_LEFT_SLASH_CHEVRON_RIGHT",
+            ),
+            "ASSESSMENT": ("system_symbol", "chart.bar.fill"),
+            "CLASS_": ("cupertino_glyph", "BOOK_FILL"),
+            "CLASS_OUTLINED": ("cupertino_glyph", "BOOK_FILL"),
+            "COMPRESS": (
+                "system_symbol",
+                "arrow.down.right.and.arrow.up.left",
+            ),
+            "EXPAND": (
+                "system_symbol",
+                "arrow.up.left.and.arrow.down.right",
+            ),
+            "FILTER_LIST_ALT": (
+                "system_symbol",
+                "line.3.horizontal.decrease",
+            ),
+            "FIT_SCREEN": (
+                "system_symbol",
+                "rectangle.and.arrow.up.right.and.arrow.down.left",
+            ),
+            "INPUT": (
+                "system_symbol",
+                "rectangle.portrait.and.arrow.right",
+            ),
+            "NOISE_AWARE": ("system_symbol", "ear.and.waveform"),
+            "PRIVACY_TIP": ("system_symbol", "hand.raised.fill"),
+            "RULE": ("system_symbol", "checklist"),
+            "SMART_BUTTON": ("system_symbol", "wand.and.stars"),
+            "SOURCE": ("system_symbol", "doc.text.fill"),
+            "VIEW_KANBAN": (
+                "system_symbol",
+                "rectangle.split.3x1.fill",
+            ),
+            "WYSIWYG": ("system_symbol", "textformat"),
+        }
+        for material_name, (kind, value) in expected.items():
+            self.assertEqual(self.entries[material_name]["kind"], kind)
+            self.assertEqual(self.entries[material_name]["value"], value)
+
     def test_checked_in_artifacts_are_reproducible(self):
         self.assertEqual(
             MODULE.OUTPUT_PATH.read_text(encoding="utf-8"),

@@ -43,6 +43,9 @@ Reviewed do-not-disturb, event, error, security, update, and notification-status
 concepts live in `notification_status_overrides.json`.
 Reviewed clipboard, file rename, content feed, policy, report, unread, and
 workspace-state concepts live in `file_content_overrides.json`.
+Reviewed assessment, source/class authoring, filter, resizing, privacy, rule,
+and other platform-neutral interface actions with direct Apple equivalents
+live in `interface_action_overrides.json`.
 
 The 8,825 identities contain 2,235 concepts because Flet carries Outlined,
 Rounded, and Sharp Material variants. The generator records the collapsed

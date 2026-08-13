@@ -2612,31 +2612,31 @@
   },
   "API": {
     "kind": "cupertino_glyph",
-    "value": "LINK",
+    "value": "CHEVRON_LEFT_SLASH_CHEVRON_RIGHT",
     "concept": "API",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "API_OUTLINED": {
     "kind": "cupertino_glyph",
-    "value": "LINK",
+    "value": "CHEVRON_LEFT_SLASH_CHEVRON_RIGHT",
     "concept": "API",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "API_ROUNDED": {
     "kind": "cupertino_glyph",
-    "value": "LINK",
+    "value": "CHEVRON_LEFT_SLASH_CHEVRON_RIGHT",
     "concept": "API",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "API_SHARP": {
     "kind": "cupertino_glyph",
-    "value": "LINK",
+    "value": "CHEVRON_LEFT_SLASH_CHEVRON_RIGHT",
     "concept": "API",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "APP_BLOCKING": {
     "kind": "cupertino_glyph",
@@ -3536,31 +3536,31 @@
   },
   "ASSESSMENT": {
     "kind": "system_symbol",
-    "value": "plus",
+    "value": "chart.bar.fill",
     "concept": "ASSESSMENT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ASSESSMENT_OUTLINED": {
     "kind": "system_symbol",
-    "value": "plus",
+    "value": "chart.bar.fill",
     "concept": "ASSESSMENT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ASSESSMENT_ROUNDED": {
     "kind": "system_symbol",
-    "value": "plus",
+    "value": "chart.bar.fill",
     "concept": "ASSESSMENT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ASSESSMENT_SHARP": {
     "kind": "system_symbol",
-    "value": "plus",
+    "value": "chart.bar.fill",
     "concept": "ASSESSMENT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ASSIGNMENT": {
     "kind": "cupertino_glyph",
@@ -9723,32 +9723,32 @@
     "source": "reviewed_override"
   },
   "CLASS_": {
-    "kind": "system_symbol",
-    "value": "books.vertical",
+    "kind": "cupertino_glyph",
+    "value": "BOOK_FILL",
     "concept": "CLASS_",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CLASS_OUTLINED": {
-    "kind": "system_symbol",
-    "value": "book",
+    "kind": "cupertino_glyph",
+    "value": "BOOK_FILL",
     "concept": "CLASS",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CLASS_ROUNDED": {
-    "kind": "system_symbol",
-    "value": "book",
+    "kind": "cupertino_glyph",
+    "value": "BOOK_FILL",
     "concept": "CLASS",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CLASS_SHARP": {
-    "kind": "system_symbol",
-    "value": "book",
+    "kind": "cupertino_glyph",
+    "value": "BOOK_FILL",
     "concept": "CLASS",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CLEAN_HANDS": {
     "kind": "system_symbol",
@@ -10766,32 +10766,32 @@
     "source": "reviewed_override"
   },
   "COMPRESS": {
-    "kind": "cupertino_glyph",
-    "value": "RECTANGLE_COMPRESS_VERTICAL",
+    "kind": "system_symbol",
+    "value": "arrow.down.right.and.arrow.up.left",
     "concept": "COMPRESS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "COMPRESS_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "RECTANGLE_COMPRESS_VERTICAL",
+    "kind": "system_symbol",
+    "value": "arrow.down.right.and.arrow.up.left",
     "concept": "COMPRESS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "COMPRESS_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "RECTANGLE_COMPRESS_VERTICAL",
+    "kind": "system_symbol",
+    "value": "arrow.down.right.and.arrow.up.left",
     "concept": "COMPRESS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "COMPRESS_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "RECTANGLE_COMPRESS_VERTICAL",
+    "kind": "system_symbol",
+    "value": "arrow.down.right.and.arrow.up.left",
     "concept": "COMPRESS",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "COMPUTER": {
     "kind": "system_symbol",
@@ -12901,32 +12901,32 @@
     "source": "semantic_rank"
   },
   "DATA_THRESHOLDING": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "slider.horizontal.3",
     "concept": "DATA_THRESHOLDING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DATA_THRESHOLDING_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "slider.horizontal.3",
     "concept": "DATA_THRESHOLDING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DATA_THRESHOLDING_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "slider.horizontal.3",
     "concept": "DATA_THRESHOLDING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DATA_THRESHOLDING_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "slider.horizontal.3",
     "concept": "DATA_THRESHOLDING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "DATA_USAGE": {
     "kind": "system_symbol",
@@ -18137,11 +18137,11 @@
     "source": "reviewed_override"
   },
   "EXPAND": {
-    "kind": "cupertino_glyph",
-    "value": "RECTANGLE_EXPAND_VERTICAL",
+    "kind": "system_symbol",
+    "value": "arrow.up.left.and.arrow.down.right",
     "concept": "EXPAND",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "EXPAND_CIRCLE_DOWN": {
     "kind": "cupertino_glyph",
@@ -18228,25 +18228,25 @@
     "source": "reviewed_override"
   },
   "EXPAND_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "RECTANGLE_EXPAND_VERTICAL",
+    "kind": "system_symbol",
+    "value": "arrow.up.left.and.arrow.down.right",
     "concept": "EXPAND",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "EXPAND_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "RECTANGLE_EXPAND_VERTICAL",
+    "kind": "system_symbol",
+    "value": "arrow.up.left.and.arrow.down.right",
     "concept": "EXPAND",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "EXPAND_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "RECTANGLE_EXPAND_VERTICAL",
+    "kind": "system_symbol",
+    "value": "arrow.up.left.and.arrow.down.right",
     "concept": "EXPAND",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "EXPLICIT": {
     "kind": "system_symbol",
@@ -19251,31 +19251,31 @@
   },
   "FEEDBACK": {
     "kind": "system_symbol",
-    "value": "speaker",
+    "value": "exclamationmark.bubble.fill",
     "concept": "FEEDBACK",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FEEDBACK_OUTLINED": {
     "kind": "system_symbol",
-    "value": "speaker",
+    "value": "exclamationmark.bubble.fill",
     "concept": "FEEDBACK",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FEEDBACK_ROUNDED": {
     "kind": "system_symbol",
-    "value": "speaker",
+    "value": "exclamationmark.bubble.fill",
     "concept": "FEEDBACK",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FEEDBACK_SHARP": {
     "kind": "system_symbol",
-    "value": "speaker",
+    "value": "exclamationmark.bubble.fill",
     "concept": "FEEDBACK",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FEMALE": {
     "kind": "system_symbol",
@@ -20223,11 +20223,11 @@
     "source": "reviewed_override"
   },
   "FILTER_LIST_ALT": {
-    "kind": "cupertino_glyph",
-    "value": "ALT",
+    "kind": "system_symbol",
+    "value": "line.3.horizontal.decrease",
     "concept": "FILTER_LIST_ALT",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FILTER_LIST_OFF": {
     "kind": "cupertino_glyph",
@@ -20615,32 +20615,32 @@
     "source": "reviewed_override"
   },
   "FIT_SCREEN": {
-    "kind": "cupertino_glyph",
-    "value": "FULLSCREEN",
+    "kind": "system_symbol",
+    "value": "rectangle.and.arrow.up.right.and.arrow.down.left",
     "concept": "FIT_SCREEN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FIT_SCREEN_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "FULLSCREEN",
+    "kind": "system_symbol",
+    "value": "rectangle.and.arrow.up.right.and.arrow.down.left",
     "concept": "FIT_SCREEN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FIT_SCREEN_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "FULLSCREEN",
+    "kind": "system_symbol",
+    "value": "rectangle.and.arrow.up.right.and.arrow.down.left",
     "concept": "FIT_SCREEN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FIT_SCREEN_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "FULLSCREEN",
+    "kind": "system_symbol",
+    "value": "rectangle.and.arrow.up.right.and.arrow.down.left",
     "concept": "FIT_SCREEN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FITBIT": {
     "kind": "cupertino_glyph",
@@ -26915,32 +26915,32 @@
     "source": "reviewed_override"
   },
   "INPUT": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "rectangle.portrait.and.arrow.right",
     "concept": "INPUT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "INPUT_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "rectangle.portrait.and.arrow.right",
     "concept": "INPUT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "INPUT_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "rectangle.portrait.and.arrow.right",
     "concept": "INPUT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "INPUT_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "rectangle.portrait.and.arrow.right",
     "concept": "INPUT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "INSERT_CHART": {
     "kind": "system_symbol",
@@ -32263,32 +32263,32 @@
     "source": "reviewed_override"
   },
   "MAXIMIZE": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "arrow.up.left.and.arrow.down.right",
     "concept": "MAXIMIZE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MAXIMIZE_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "arrow.up.left.and.arrow.down.right",
     "concept": "MAXIMIZE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MAXIMIZE_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "arrow.up.left.and.arrow.down.right",
     "concept": "MAXIMIZE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MAXIMIZE_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "arrow.up.left.and.arrow.down.right",
     "concept": "MAXIMIZE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MEDIA_BLUETOOTH_OFF": {
     "kind": "cupertino_glyph",
@@ -32963,32 +32963,32 @@
     "source": "semantic_rank"
   },
   "MINIMIZE": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "arrow.down.right.and.arrow.up.left",
     "concept": "MINIMIZE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MINIMIZE_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "arrow.down.right.and.arrow.up.left",
     "concept": "MINIMIZE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MINIMIZE_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "arrow.down.right.and.arrow.up.left",
     "concept": "MINIMIZE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MINIMIZE_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "arrow.down.right.and.arrow.up.left",
     "concept": "MINIMIZE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MINOR_CRASH": {
     "kind": "cupertino_glyph",
@@ -36085,32 +36085,32 @@
     "source": "semantic_rank"
   },
   "NOISE_AWARE": {
-    "kind": "cupertino_glyph",
-    "value": "MUSIC_NOTE",
+    "kind": "system_symbol",
+    "value": "ear.and.waveform",
     "concept": "NOISE_AWARE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NOISE_AWARE_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "MUSIC_NOTE",
+    "kind": "system_symbol",
+    "value": "ear.and.waveform",
     "concept": "NOISE_AWARE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NOISE_AWARE_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "MUSIC_NOTE",
+    "kind": "system_symbol",
+    "value": "ear.and.waveform",
     "concept": "NOISE_AWARE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NOISE_AWARE_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "MUSIC_NOTE",
+    "kind": "system_symbol",
+    "value": "ear.and.waveform",
     "concept": "NOISE_AWARE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NOISE_CONTROL_OFF": {
     "kind": "cupertino_glyph",
@@ -41832,32 +41832,32 @@
     "source": "reviewed_override"
   },
   "PRIVACY_TIP": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "hand.raised.fill",
     "concept": "PRIVACY_TIP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PRIVACY_TIP_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "hand.raised.fill",
     "concept": "PRIVACY_TIP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PRIVACY_TIP_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "hand.raised.fill",
     "concept": "PRIVACY_TIP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PRIVACY_TIP_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "CONTROL",
+    "kind": "system_symbol",
+    "value": "hand.raised.fill",
     "concept": "PRIVACY_TIP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PRIVATE_CONNECTIVITY": {
     "kind": "system_symbol",
@@ -42112,32 +42112,32 @@
     "source": "reviewed_override"
   },
   "PUBLISHED_WITH_CHANGES": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "arrow.triangle.2.circlepath.circle.fill",
     "concept": "PUBLISHED_WITH_CHANGES",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PUBLISHED_WITH_CHANGES_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "arrow.triangle.2.circlepath.circle.fill",
     "concept": "PUBLISHED_WITH_CHANGES",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PUBLISHED_WITH_CHANGES_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "arrow.triangle.2.circlepath.circle.fill",
     "concept": "PUBLISHED_WITH_CHANGES",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PUBLISHED_WITH_CHANGES_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "arrow.triangle.2.circlepath.circle.fill",
     "concept": "PUBLISHED_WITH_CHANGES",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PUNCH_CLOCK": {
     "kind": "cupertino_glyph",
@@ -45115,11 +45115,11 @@
     "source": "semantic_rank"
   },
   "RULE": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "checklist",
     "concept": "RULE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RULE_FOLDER": {
     "kind": "cupertino_glyph",
@@ -45150,25 +45150,25 @@
     "source": "semantic_rank"
   },
   "RULE_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "checklist",
     "concept": "RULE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RULE_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "checklist",
     "concept": "RULE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RULE_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "checklist",
     "concept": "RULE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "RUN_CIRCLE": {
     "kind": "system_symbol",
@@ -49434,32 +49434,32 @@
     "source": "reviewed_override"
   },
   "SMART_BUTTON": {
-    "kind": "cupertino_glyph",
-    "value": "LINK_CIRCLE",
+    "kind": "system_symbol",
+    "value": "wand.and.stars",
     "concept": "SMART_BUTTON",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SMART_BUTTON_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "LINK_CIRCLE",
+    "kind": "system_symbol",
+    "value": "wand.and.stars",
     "concept": "SMART_BUTTON",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SMART_BUTTON_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "LINK_CIRCLE",
+    "kind": "system_symbol",
+    "value": "wand.and.stars",
     "concept": "SMART_BUTTON",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SMART_BUTTON_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "LINK_CIRCLE",
+    "kind": "system_symbol",
+    "value": "wand.and.stars",
     "concept": "SMART_BUTTON",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SMART_DISPLAY": {
     "kind": "system_symbol",
@@ -50057,32 +50057,32 @@
     "source": "reviewed_override"
   },
   "SOURCE": {
-    "kind": "cupertino_glyph",
-    "value": "QUESTION",
+    "kind": "system_symbol",
+    "value": "doc.text.fill",
     "concept": "SOURCE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SOURCE_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "QUESTION",
+    "kind": "system_symbol",
+    "value": "doc.text.fill",
     "concept": "SOURCE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SOURCE_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "QUESTION",
+    "kind": "system_symbol",
+    "value": "doc.text.fill",
     "concept": "SOURCE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SOURCE_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "QUESTION",
+    "kind": "system_symbol",
+    "value": "doc.text.fill",
     "concept": "SOURCE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SOUTH": {
     "kind": "cupertino_glyph",
@@ -58870,32 +58870,32 @@
     "source": "semantic_rank"
   },
   "VIEW_KANBAN": {
-    "kind": "cupertino_glyph",
-    "value": "SQUARE_LIST",
+    "kind": "system_symbol",
+    "value": "rectangle.split.3x1.fill",
     "concept": "VIEW_KANBAN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VIEW_KANBAN_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "SQUARE_LIST",
+    "kind": "system_symbol",
+    "value": "rectangle.split.3x1.fill",
     "concept": "VIEW_KANBAN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VIEW_KANBAN_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "SQUARE_LIST",
+    "kind": "system_symbol",
+    "value": "rectangle.split.3x1.fill",
     "concept": "VIEW_KANBAN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VIEW_KANBAN_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "SQUARE_LIST",
+    "kind": "system_symbol",
+    "value": "rectangle.split.3x1.fill",
     "concept": "VIEW_KANBAN",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "VIEW_LIST": {
     "kind": "system_symbol",
@@ -61579,32 +61579,32 @@
     "source": "semantic_rank"
   },
   "WYSIWYG": {
-    "kind": "cupertino_glyph",
-    "value": "PARAGRAPH",
+    "kind": "system_symbol",
+    "value": "textformat",
     "concept": "WYSIWYG",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WYSIWYG_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "PARAGRAPH",
+    "kind": "system_symbol",
+    "value": "textformat",
     "concept": "WYSIWYG",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WYSIWYG_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "PARAGRAPH",
+    "kind": "system_symbol",
+    "value": "textformat",
     "concept": "WYSIWYG",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WYSIWYG_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "PARAGRAPH",
+    "kind": "system_symbol",
+    "value": "textformat",
     "concept": "WYSIWYG",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "YARD": {
     "kind": "system_symbol",
