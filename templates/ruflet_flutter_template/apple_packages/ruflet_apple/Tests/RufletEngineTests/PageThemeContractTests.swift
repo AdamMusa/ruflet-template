@@ -74,6 +74,92 @@ final class PageThemeContractTests: XCTestCase {
     XCTAssertEqual(RufletPageDesign.cupertino.rawValue, "cupertino")
   }
 
+  @MainActor
+  func testControlThemeInheritsParentOnlyWithoutExplicitMode() {
+    let backend = RufletBackend(
+      pageURL: URL(string: "http://127.0.0.1:8550")!,
+      assetsDirectory: "")
+    defer { backend.dispose() }
+    let control = RufletControl(
+      id: 30,
+      type: "Container",
+      properties: [
+        "theme": .map(["font_family": .string("Child Family")])
+      ],
+      backend: backend)
+    let parent = parseCupertinoTheme(
+      [
+        "font_family": "Parent Family",
+        "color_scheme": ["primary": "#112233"],
+      ], brightness: .dark)
+
+    let inherited = rufletControlThemeContext(
+      control: control,
+      inheritedMode: .light,
+      inheritedTheme: parent,
+      platformBrightness: .dark)
+    XCTAssertEqual(inherited?.mode, .light)
+    XCTAssertEqual(inherited?.brightness, .light)
+    XCTAssertEqual(inherited?.theme.fontFamily, "Child Family")
+    assertColor(inherited?.theme.appleAccentColor, rgb: (0x11, 0x22, 0x33))
+
+    control.update(["theme_mode": .string("light")])
+    let fresh = rufletControlThemeContext(
+      control: control,
+      inheritedMode: .dark,
+      inheritedTheme: parent,
+      platformBrightness: .dark)
+    XCTAssertEqual(fresh?.mode, .light)
+    XCTAssertEqual(fresh?.brightness, .light)
+    XCTAssertEqual(fresh?.theme.fontFamily, "Child Family")
+    assertSameColor(
+      fresh?.theme.appleAccentColor,
+      parseCupertinoTheme(
+        ["font_family": "Child Family"], brightness: .light
+      ).appleAccentColor)
+
+    control.update(["theme_mode": .null])
+    let inheritedDark = rufletControlThemeContext(
+      control: control,
+      inheritedMode: .dark,
+      inheritedTheme: parent,
+      platformBrightness: .light)
+    XCTAssertEqual(inheritedDark?.theme.fontFamily, "Parent Family")
+  }
+
+  @MainActor
+  func testControlThemeUsesDarkThemeAndHonorsSkipContract() {
+    let backend = RufletBackend(
+      pageURL: URL(string: "http://127.0.0.1:8550")!,
+      assetsDirectory: "")
+    defer { backend.dispose() }
+    let control = RufletControl(
+      id: 31,
+      type: "Container",
+      properties: [
+        "theme_mode": .string("system"),
+        "theme": .map(["font_family": .string("Light Family")]),
+        "dark_theme": .map(["font_family": .string("Dark Family")]),
+      ],
+      backend: backend)
+    let context = rufletControlThemeContext(
+      control: control,
+      inheritedMode: .light,
+      inheritedTheme: nil,
+      platformBrightness: .dark)
+    XCTAssertEqual(context?.theme.fontFamily, "Dark Family")
+
+    control.update([
+      "_internals": .map(["skip_inherited_notifier": .bool(true)])
+    ])
+    XCTAssertNil(
+      rufletControlThemeContext(
+        control: control,
+        inheritedMode: .light,
+        inheritedTheme: nil,
+        platformBrightness: .dark))
+  }
+
   private func assertColor(
     _ color: Color?,
     rgb: (Int, Int, Int),
@@ -94,6 +180,33 @@ final class PageThemeContractTests: XCTestCase {
         native.blueComponent, CGFloat(rgb.2) / 255, accuracy: 0.002, file: file, line: line)
     #else
       XCTAssertNotNil(color, file: file, line: line)
+    #endif
+  }
+
+  private func assertSameColor(
+    _ actual: Color?,
+    _ expected: Color,
+    file: StaticString = #filePath,
+    line: UInt = #line
+  ) {
+    #if os(macOS)
+      guard let actual,
+        let actualNative = NSColor(actual).usingColorSpace(.sRGB),
+        let expectedNative = NSColor(expected).usingColorSpace(.sRGB)
+      else {
+        return XCTFail("Expected comparable sRGB colors", file: file, line: line)
+      }
+      XCTAssertEqual(
+        actualNative.redComponent, expectedNative.redComponent, accuracy: 0.002,
+        file: file, line: line)
+      XCTAssertEqual(
+        actualNative.greenComponent, expectedNative.greenComponent, accuracy: 0.002,
+        file: file, line: line)
+      XCTAssertEqual(
+        actualNative.blueComponent, expectedNative.blueComponent, accuracy: 0.002,
+        file: file, line: line)
+    #else
+      XCTAssertNotNil(actual, file: file, line: line)
     #endif
   }
 }
