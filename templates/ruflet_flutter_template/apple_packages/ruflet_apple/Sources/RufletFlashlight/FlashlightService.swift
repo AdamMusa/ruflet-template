@@ -30,6 +30,7 @@ public protocol RufletFlashlightBackend: AnyObject {
 @MainActor
 public final class FlashlightService: RufletService {
   public static let wireType = "Flashlight"
+  public static let supportedMethods: [String] = ["on", "off", "is_available"]
 
   private let platform: FletFlashlightPlatform
   private let backend: RufletFlashlightBackend

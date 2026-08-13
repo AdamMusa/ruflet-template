@@ -10,49 +10,18 @@
     "AdaptiveTextField": "TextField",
     "FletApp": "RufletApp"
   },
-  "ignored_packages": {
-    "flet_ads": "Advertising controls are not exposed by the Ruflet DSL.",
-    "flet_color_pickers": "Color-picker extension controls are not exposed by the Ruflet DSL.",
-    "flet_datatable2": "DataTable2 is not exposed by the Ruflet DSL; Ruflet exposes the core DataTable.",
-    "flet_spinkit": "Ruflet consolidates Flet's per-animation extension types into the RufletSpinKit wire control."
-  },
+  "ignored_packages": {},
   "declared_baseline": {
     "classification": "audited_public_contract",
     "gap_set_sha256": "29eef116d0384848f3fe3924e0495f57dcc1919d59184fdc9420cbd92e4a1fc6",
-    "reason": "All remaining upstream type/event/method records are explicitly classified as outside the Ruflet public DSL, source-extractor sibling leakage, or a documented Apple host limitation. Any change requires conformance review."
+    "reason": "The live Flet registry has no unresolved native type, event, or method gaps. Any change to this empty set requires conformance review."
   },
-  "type_gaps": {
-    "RichAttribution": {
-      "classification": "extension_not_exposed",
-      "reason": "Ruflet does not expose Flet Map's RichAttribution or its extension-only attribution child wire types."
-    },
-    "Tester": {
-      "classification": "upstream_test_utility",
-      "reason": "Flet's internal Tester service is not part of the Ruflet public DSL."
-    }
-  },
+  "type_gaps": {},
   "event_gaps": {
-    "Page": {
-      "names": ["confirm_pop"],
-      "reason": "The current Apple host has no NavigationStack pop handshake; this is explicitly platform-unsupported until host navigation owns view popping."
-    },
     "SnackBar": {
       "names": ["click"],
       "reason": "The source extractor sees SnackBarAction.triggerEvent in snack_bar.dart; click belongs to the nested SnackBarAction, not the SnackBar parent."
-    },
-    "Tab": {
-      "names": ["change", "click", "hover"],
-      "reason": "The source extractor attributes Tabs/TabBar sibling events from tabs.dart to structural Tab; Tab itself emits no events."
-    },
-    "View": {
-      "names": ["confirm_pop"],
-      "reason": "The current Apple host has no NavigationStack pop handshake; this is explicitly platform-unsupported until host navigation owns view popping."
     }
   },
-  "method_gaps": {
-    "Tab": {
-      "names": ["move_to"],
-      "reason": "The source extractor attributes the sibling Tabs invoke listener from tabs.dart to structural Tab; Tab has no invoke method listener."
-    }
-  }
+  "method_gaps": {}
 }

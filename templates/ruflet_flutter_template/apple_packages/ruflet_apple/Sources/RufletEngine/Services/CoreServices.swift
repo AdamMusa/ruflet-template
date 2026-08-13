@@ -771,6 +771,9 @@ public enum FletSharedPreferencesSemantics {
 @MainActor
 public final class SharedPreferencesService: RufletService {
   public static let wireType = "SharedPreferences"
+  public static let supportedMethods: [String] = [
+    "set", "get", "contains_key", "get_keys", "remove", "clear",
+  ]
 
   private let defaults: UserDefaults
 
@@ -1076,6 +1079,9 @@ public enum FletHapticFeedbackSemantics {
 @MainActor
 public final class HapticFeedbackService: RufletService {
   public static let wireType = "HapticFeedback"
+  public static let supportedMethods: [String] = [
+    "heavy_impact", "light_impact", "medium_impact", "vibrate", "selection_click",
+  ]
 
   public init() {}
 
@@ -1153,6 +1159,7 @@ public enum FletWakelockSemantics {
 @MainActor
 public final class WakelockService: RufletService {
   public static let wireType = "Wakelock"
+  public static let supportedMethods: [String] = ["enable", "disable", "is_enabled"]
 
   #if canImport(AppKit)
     private var assertion: NSObjectProtocol?
@@ -1336,6 +1343,9 @@ public enum FletSemanticsServiceSemantics {
 @MainActor
 public final class SemanticsAnnouncementService: RufletService {
   public static let wireType = "SemanticsService"
+  public static let supportedMethods: [String] = [
+    "announce_message", "announce_tooltip", "get_accessibility_features",
+  ]
 
   public init() {}
 

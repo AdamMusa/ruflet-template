@@ -201,6 +201,9 @@ module NativeRendererGapAudit
           .flatten
           .flat_map { |clause| clause.scan(/["']([^"']+)["']/).flatten }
         compared_methods = implementation.scan(/call\.name\s*==\s*["']([^"']+)["']/).flatten
+        declared_methods = implementation.scan(
+          /static\s+let\s+supportedMethods(?:\s*:\s*\[String\])?\s*=\s*(\[[^\]]*\])/m
+        ).flatten.flat_map { |expression| string_array(expression) }
 
         declaration = {
           "wire_type" => wire_type,
@@ -213,7 +216,7 @@ module NativeRendererGapAudit
           # required to cross an actor boundary (Connectivity is one example).
           # Both are the same live renderer contract.
           "events" => implementation.scan(/\bemitEvent\([^,]+,\s*["']([^"']+)["']/m).flatten.uniq.sort,
-          "methods" => (case_methods + compared_methods).uniq.sort
+          "methods" => (case_methods + compared_methods + declared_methods).uniq.sort
         }
         declarations[wire_type] = declaration
         class_declarations[class_name] = declaration
@@ -263,7 +266,10 @@ module NativeRendererGapAudit
   end
 
   def build
-    contract = JSON.parse(File.read(FletControlContract.output_path))
+    # Audit the live vendored Flet registry, not a potentially stale checked-in
+    # snapshot. The snapshot remains a review artifact, but it must never be
+    # able to hide a newly registered control, event, or method from CI.
+    contract = FletControlContract.build
     allowlist = load_allowlist
     native = declared_native_surface
     aliases = allowlist.fetch("aliases", {})

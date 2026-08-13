@@ -7,164 +7,24 @@
     "allowlist": "native_gap_allowlist.json"
   },
   "summary": {
-    "flet_types": 212,
-    "native_declarations": 240,
-    "missing_types": 12,
-    "missing_events": 6,
-    "missing_methods": 1,
+    "flet_types": 213,
+    "native_declarations": 256,
+    "missing_types": 0,
+    "missing_events": 1,
+    "missing_methods": 0,
     "undeclared_gaps": 0,
     "declared_baseline_matches": true,
     "unresolved_gap_set_sha256": "29eef116d0384848f3fe3924e0495f57dcc1919d59184fdc9420cbd92e4a1fc6"
   },
-  "missing_types": [
-    {
-      "wire_type": "BannerAd",
-      "package": "flet_ads",
-      "classification": "widget",
-      "allowed": true,
-      "gap_classification": "ignored_package",
-      "reason": "Advertising controls are not exposed by the Ruflet DSL."
-    },
-    {
-      "wire_type": "BlockPicker",
-      "package": "flet_color_pickers",
-      "classification": "widget",
-      "allowed": true,
-      "gap_classification": "ignored_package",
-      "reason": "Color-picker extension controls are not exposed by the Ruflet DSL."
-    },
-    {
-      "wire_type": "ColorPicker",
-      "package": "flet_color_pickers",
-      "classification": "widget",
-      "allowed": true,
-      "gap_classification": "ignored_package",
-      "reason": "Color-picker extension controls are not exposed by the Ruflet DSL."
-    },
-    {
-      "wire_type": "DataTable2",
-      "package": "flet_datatable2",
-      "classification": "widget",
-      "allowed": true,
-      "gap_classification": "ignored_package",
-      "reason": "DataTable2 is not exposed by the Ruflet DSL; Ruflet exposes the core DataTable."
-    },
-    {
-      "wire_type": "HueRingPicker",
-      "package": "flet_color_pickers",
-      "classification": "widget",
-      "allowed": true,
-      "gap_classification": "ignored_package",
-      "reason": "Color-picker extension controls are not exposed by the Ruflet DSL."
-    },
-    {
-      "wire_type": "InterstitialAd",
-      "package": "flet_ads",
-      "classification": "service",
-      "allowed": true,
-      "gap_classification": "ignored_package",
-      "reason": "Advertising controls are not exposed by the Ruflet DSL."
-    },
-    {
-      "wire_type": "MaterialPicker",
-      "package": "flet_color_pickers",
-      "classification": "widget",
-      "allowed": true,
-      "gap_classification": "ignored_package",
-      "reason": "Color-picker extension controls are not exposed by the Ruflet DSL."
-    },
-    {
-      "wire_type": "MultipleChoiceBlockPicker",
-      "package": "flet_color_pickers",
-      "classification": "widget",
-      "allowed": true,
-      "gap_classification": "ignored_package",
-      "reason": "Color-picker extension controls are not exposed by the Ruflet DSL."
-    },
-    {
-      "wire_type": "NativeAd",
-      "package": "flet_ads",
-      "classification": "widget",
-      "allowed": true,
-      "gap_classification": "ignored_package",
-      "reason": "Advertising controls are not exposed by the Ruflet DSL."
-    },
-    {
-      "wire_type": "RichAttribution",
-      "package": "flet_map",
-      "classification": "widget",
-      "allowed": true,
-      "gap_classification": "extension_not_exposed",
-      "reason": "Ruflet does not expose Flet Map's RichAttribution or its extension-only attribution child wire types."
-    },
-    {
-      "wire_type": "SlidePicker",
-      "package": "flet_color_pickers",
-      "classification": "widget",
-      "allowed": true,
-      "gap_classification": "ignored_package",
-      "reason": "Color-picker extension controls are not exposed by the Ruflet DSL."
-    },
-    {
-      "wire_type": "Tester",
-      "package": "flet",
-      "classification": "service",
-      "allowed": true,
-      "gap_classification": "upstream_test_utility",
-      "reason": "Flet's internal Tester service is not part of the Ruflet public DSL."
-    }
-  ],
+  "missing_types": [],
   "missing_events": [
-    {
-      "wire_type": "Page",
-      "native_type": "Page",
-      "event": "confirm_pop",
-      "allowed": true,
-      "reason": "The current Apple host has no NavigationStack pop handshake; this is explicitly platform-unsupported until host navigation owns view popping."
-    },
     {
       "wire_type": "SnackBar",
       "native_type": "SnackBar",
       "event": "click",
       "allowed": true,
       "reason": "The source extractor sees SnackBarAction.triggerEvent in snack_bar.dart; click belongs to the nested SnackBarAction, not the SnackBar parent."
-    },
-    {
-      "wire_type": "Tab",
-      "native_type": "Tab",
-      "event": "change",
-      "allowed": true,
-      "reason": "The source extractor attributes Tabs/TabBar sibling events from tabs.dart to structural Tab; Tab itself emits no events."
-    },
-    {
-      "wire_type": "Tab",
-      "native_type": "Tab",
-      "event": "click",
-      "allowed": true,
-      "reason": "The source extractor attributes Tabs/TabBar sibling events from tabs.dart to structural Tab; Tab itself emits no events."
-    },
-    {
-      "wire_type": "Tab",
-      "native_type": "Tab",
-      "event": "hover",
-      "allowed": true,
-      "reason": "The source extractor attributes Tabs/TabBar sibling events from tabs.dart to structural Tab; Tab itself emits no events."
-    },
-    {
-      "wire_type": "View",
-      "native_type": "View",
-      "event": "confirm_pop",
-      "allowed": true,
-      "reason": "The current Apple host has no NavigationStack pop handshake; this is explicitly platform-unsupported until host navigation owns view popping."
     }
   ],
-  "missing_methods": [
-    {
-      "wire_type": "Tab",
-      "native_type": "Tab",
-      "method": "move_to",
-      "allowed": true,
-      "reason": "The source extractor attributes the sibling Tabs invoke listener from tabs.dart to structural Tab; Tab has no invoke method listener."
-    }
-  ]
+  "missing_methods": []
 }

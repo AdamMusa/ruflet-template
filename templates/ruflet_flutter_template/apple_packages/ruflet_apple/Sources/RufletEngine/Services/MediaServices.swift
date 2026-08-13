@@ -483,6 +483,7 @@ public enum FletShareSemantics {
 @MainActor
 public final class ShareService: RufletService {
   public static let wireType = "Share"
+  public static let supportedMethods: [String] = ["share_text", "share_uri", "share_files"]
 
   public init() {}
 

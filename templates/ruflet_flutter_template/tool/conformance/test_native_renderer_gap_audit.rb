@@ -64,6 +64,19 @@ class NativeRendererGapAuditTest < Minitest::Test
     assert_equal "named_service", @surface.fetch("Gyroscope").fetch("declaration")
   end
 
+  def test_enum_and_helper_dispatched_service_methods_are_explicit
+    {
+      "Flashlight" => %w[is_available off on],
+      "HapticFeedback" => %w[heavy_impact light_impact medium_impact selection_click vibrate],
+      "SemanticsService" => %w[announce_message announce_tooltip get_accessibility_features],
+      "Share" => %w[share_files share_text share_uri],
+      "SharedPreferences" => %w[clear contains_key get get_keys remove set],
+      "Wakelock" => %w[disable enable is_enabled],
+    }.each do |wire_type, methods|
+      assert_equal methods.sort, @surface.fetch(wire_type).fetch("methods")
+    end
+  end
+
   def test_audio_declares_the_flet_push_and_method_contract
     audio = @surface.fetch("Audio")
     %w[duration_change loaded position_change seek_complete state_change].each do |event|
