@@ -135,7 +135,9 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
   }
 
   public func connect() async {
-    guard let pageURI, !disposed, receivedFirstPageSize, !connectionInProgress else { return }
+    guard let pageURI, !disposed, receivedFirstPageSize,
+          backendChannel == nil, !connectionInProgress
+    else { return }
     connectionInProgress = true
     defer { connectionInProgress = false }
     do {
@@ -410,6 +412,7 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
 
   private func didDisconnect() {
     guard !disposed, let channel = backendChannel else { return }
+    backendChannel = nil
     if reconnectStartedUptime == nil {
       reconnectStartedUptime = ProcessInfo.processInfo.systemUptime
     }

@@ -92,11 +92,45 @@ final class BackendPipelineContractTests: XCTestCase {
     XCTAssertEqual(fixture.channel?.sentMessages[1].payload["data"]?["route"], "/next")
     XCTAssertEqual(backend.page.string("route"), "/next")
   }
+
+  func testLaterPageSizeUpdatesDoNotOpenAnotherBackendSession() async throws {
+    let fixture = BackendPipelineFixture()
+    let backend = fixture.makeBackend()
+    backend.updatePageSize(CGSize(width: 390, height: 844))
+    backend.onRouteUpdated("/")
+    try await waitUntil { fixture.channel?.sentMessages.first?.action == .registerClient }
+    fixture.channel?.deliver(RufletMessage(
+      action: .registerClient,
+      payload: ["page_patch": [:], "error": nil]))
+
+    backend.updatePageSize(CGSize(width: 844, height: 390))
+    await drainMainActor()
+
+    XCTAssertEqual(fixture.channels.count, 1)
+    XCTAssertEqual(
+      fixture.channel?.sentMessages.filter { $0.action == .registerClient }.count,
+      1)
+  }
+
+  func testDisconnectClearsSessionBeforeReconnect() async throws {
+    let fixture = BackendPipelineFixture()
+    let backend = fixture.makeBackend()
+    backend.updatePageSize(CGSize(width: 390, height: 844))
+    backend.onRouteUpdated("/")
+    try await waitUntil { fixture.channels.count == 1 }
+
+    fixture.channel?.disconnectFromServer()
+
+    try await waitUntil { fixture.channels.count == 2 }
+    XCTAssertEqual(fixture.channels[1].connectCount, 1)
+    XCTAssertEqual(fixture.channels[1].sentMessages.first?.action, .registerClient)
+  }
 }
 
 @MainActor
 private final class BackendPipelineFixture {
-  var channel: BackendPipelineChannel?
+  var channels: [BackendPipelineChannel] = []
+  var channel: BackendPipelineChannel? { channels.last }
   private let onSend: (RufletMessage) -> Void
 
   init(onSend: @escaping (RufletMessage) -> Void = { _ in }) {
@@ -112,7 +146,7 @@ private final class BackendPipelineFixture {
           onDisconnect: onDisconnect,
           onMessage: onMessage,
           onSend: self?.onSend ?? { _ in })
-        self?.channel = channel
+        self?.channels.append(channel)
         return channel
       })
   }
@@ -121,7 +155,7 @@ private final class BackendPipelineFixture {
 @MainActor
 private final class BackendPipelineChannel: RufletBackendChannel {
   var isLocalConnection = true
-  var defaultReconnectIntervalMilliseconds = 200
+  var defaultReconnectIntervalMilliseconds = 0
   var connectCount = 0
   var sentMessages: [RufletMessage] = []
   private let onDisconnect: () -> Void
@@ -149,6 +183,10 @@ private final class BackendPipelineChannel: RufletBackendChannel {
 
   func deliver(_ message: RufletMessage) {
     onMessage(message)
+  }
+
+  func disconnectFromServer() {
+    onDisconnect()
   }
 }
 
