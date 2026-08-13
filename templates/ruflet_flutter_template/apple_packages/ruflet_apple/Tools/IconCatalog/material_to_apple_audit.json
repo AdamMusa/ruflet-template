@@ -14,7 +14,7 @@
     "material_icons.json": "be2d1dee6c40a5dfeaacd8fe415301db3d7c976e6eabc7fca9da734cc5abfb85",
     "cupertino_glyphs.json": "dad0be1db615640c1a0dd86365f71d0dfa2ec01ed3e2773188895006d21ad012",
     "material_semantics.json": "b3a0e564b3661355757107b929add9bc22b8fd86e2038d12aaf3b7dac380d2dd",
-    "overrides.json": "811a99f444c6f5589c4be66c994832cccfd35f877233971eb213b1516b4e6094",
+    "overrides.json": "fc51f95dc63b32d3e95acaad2b3bc697f30063c56fb7330828eb363b06eb462e",
     "navigation_travel_overrides.json": "63fcf29579be8fab701bdf81b1b345a710ed66f91cf9e764fd91f008ac3b796c",
     "action_overrides.json": "1d0cb0f7ee23bba2caa6204baf5671e602124149451c28c778ba57bf00f1fad5",
     "maps_places_overrides.json": "0cc97806c2536763422e12967a7cdc7cbba78c39451f8b92534b8bf48cef9ba7",
@@ -36,19 +36,21 @@
     "communication_access_overrides.json": "06b33f539d218d6fe8ef82ca392e97fbb6538a3ad330811282fb8a4a480b2bd6",
     "health_accessibility_overrides.json": "9ad20e71cccecc9cd17758a3464e294f60422d31c5e27885b63b677456eb5199",
     "interface_state_manipulation_overrides.json": "f4edf739bb36d749598204f7ec718835d79589d30ac9d91eea90e4dca5388fa3",
+    "apple_platform_device_overrides.json": "3a5e1cd7026487c0dcf13d60fec1d3ff573572de5339aa7f43ee8d678d9db884",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/name_availability.plist": "a277cf5b63017ed497d5b6b3ea96bbee4f407b76776af41bcb52943007335b5c",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_search.plist": "29a767651ce53d8861e28d3eaa20b50d3e02a85fe5a79d557ce1fbff7fa4ebad",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_restrictions.strings": "2e1b1c3d629d26ac1e75861f33cb1cbbb3348e142a2b6c1aaf9bba546273f13b"
   },
   "sources": {
     "exact_apple_name": 48,
-    "manual_review_required": 86,
-    "reviewed_override": 977,
-    "semantic_rank": 1124
+    "manual_review_required": 84,
+    "reviewed_override": 986,
+    "semantic_rank": 1117
   },
   "reviewed_families": {
     "action": 76,
     "advanced_image_editing": 13,
+    "apple_platform_device": 9,
     "audio_video": 24,
     "business_commerce": 21,
     "communication": 36,
@@ -73,11 +75,11 @@
   "confidence_grades": {
     "exact": 48,
     "high": 665,
-    "low": 459,
+    "low": 450,
     "medium": 86,
-    "reviewed": 977
+    "reviewed": 986
   },
-  "unique_apple_targets": 892,
+  "unique_apple_targets": 894,
   "most_reused_targets": [
     {
       "kind": "system_symbol",
@@ -92,7 +94,7 @@
     {
       "kind": "cupertino_glyph",
       "value": "VOLUME_OFF",
-      "concept_count": 29
+      "concept_count": 28
     },
     {
       "kind": "system_symbol",
@@ -176,11 +178,6 @@
     },
     {
       "kind": "cupertino_glyph",
-      "value": "CHECK_MARK",
-      "concept_count": 10
-    },
-    {
-      "kind": "cupertino_glyph",
       "value": "ALARM",
       "concept_count": 9
     },
@@ -222,6 +219,11 @@
     {
       "kind": "cupertino_glyph",
       "value": "CAR",
+      "concept_count": 9
+    },
+    {
+      "kind": "cupertino_glyph",
+      "value": "CHECK_MARK",
       "concept_count": 9
     },
     {
@@ -330,7 +332,7 @@
       "concept_count": 6
     }
   ],
-  "low_confidence_count": 545,
+  "low_confidence_count": 536,
   "low_confidence_concepts": [
     {
       "concept": "SIXTY_FPS_SELECT",
@@ -3778,61 +3780,6 @@
       ]
     },
     {
-      "concept": "MOBILE_FRIENDLY",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "CHECK_MARK"
-      },
-      "confidence": 0.2136,
-      "grade": "low",
-      "reason": "name=[] semantic=['check', 'mark'] extra=[]",
-      "tags": [
-        "Android",
-        "approve",
-        "approved",
-        "cell",
-        "check",
-        "checkmark",
-        "complete",
-        "device",
-        "display",
-        "done",
-        "friendly",
-        "good",
-        "hardware",
-        "icon",
-        "iOS",
-        "mark",
-        "mobile",
-        "mobile check",
-        "mobile phone",
-        "ok",
-        "OS",
-        "phone",
-        "protection",
-        "safe",
-        "screen",
-        "secure",
-        "security",
-        "security update",
-        "select",
-        "smartphone",
-        "success",
-        "symbol",
-        "system",
-        "system update",
-        "tablet",
-        "technology",
-        "tick",
-        "ui",
-        "update",
-        "validate",
-        "validated",
-        "verified",
-        "yes"
-      ]
-    },
-    {
       "concept": "SENSORS",
       "target": {
         "kind": "cupertino_glyph",
@@ -5971,47 +5918,6 @@
         "unsatisfied",
         "upset",
         "user"
-      ]
-    },
-    {
-      "concept": "TABLET",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "RECTANGLE"
-      },
-      "confidence": 0.2769,
-      "grade": "low",
-      "reason": "name=[] semantic=['rectangle'] extra=[]",
-      "tags": [
-        "Android",
-        "border",
-        "communication",
-        "computer",
-        "device",
-        "digital",
-        "display",
-        "drawing",
-        "education",
-        "electronic",
-        "entertainment",
-        "frame",
-        "gadget",
-        "handheld",
-        "hardware",
-        "iOS",
-        "ipad",
-        "media",
-        "mobile",
-        "OS",
-        "portable",
-        "reading",
-        "rectangle",
-        "screen",
-        "square",
-        "tablet",
-        "technology",
-        "web",
-        "work"
       ]
     },
     {
@@ -8556,49 +8462,6 @@
         "two lines",
         "unavailable",
         "update disabled"
-      ]
-    },
-    {
-      "concept": "FITBIT",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "HEART"
-      },
-      "confidence": 0.3048,
-      "grade": "low",
-      "reason": "name=[] semantic=['heart'] extra=[]",
-      "tags": [
-        "abstract",
-        "activity",
-        "app",
-        "application",
-        "athlete",
-        "athletic",
-        "brand",
-        "brand identity",
-        "company",
-        "corporate",
-        "device",
-        "digital",
-        "exercise",
-        "fitbit",
-        "fitness",
-        "glyph",
-        "health",
-        "heart",
-        "hobby",
-        "logo",
-        "logotype",
-        "modern",
-        "monitoring",
-        "pulse",
-        "smart device",
-        "sport",
-        "symbol",
-        "technology",
-        "tracking",
-        "trademark",
-        "wearable"
       ]
     },
     {
@@ -11521,51 +11384,6 @@
       ]
     },
     {
-      "concept": "SYSTEM_SECURITY_UPDATE",
-      "target": {
-        "kind": "system_symbol",
-        "value": "arrow.down"
-      },
-      "confidence": 0.3203,
-      "grade": "low",
-      "reason": "name=[] semantic=['arrow', 'down', 'download'] extra=[]",
-      "tags": [
-        "Android",
-        "app",
-        "app install",
-        "app promo",
-        "arrow",
-        "cell",
-        "device",
-        "down",
-        "down arrow",
-        "download",
-        "download app",
-        "hardware",
-        "install",
-        "install app",
-        "install mobile",
-        "iOS",
-        "marketing",
-        "mobile",
-        "mobile download",
-        "OS",
-        "phone",
-        "phone download",
-        "promotion",
-        "security",
-        "security update",
-        "software",
-        "software update",
-        "system",
-        "system update",
-        "system upgrade",
-        "tablet",
-        "update",
-        "upgrade"
-      ]
-    },
-    {
       "concept": "MANAGE_ACCOUNTS",
       "target": {
         "kind": "system_symbol",
@@ -12683,51 +12501,6 @@
         "terrace",
         "umbrella",
         "yard"
-      ]
-    },
-    {
-      "concept": "WATCH",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "BELL_CIRCLE"
-      },
-      "confidence": 0.3261,
-      "grade": "low",
-      "reason": "name=[] semantic=['bell', 'circle'] extra=[]",
-      "tags": [
-        "accessory",
-        "alert",
-        "analog",
-        "band",
-        "circle",
-        "clock",
-        "device",
-        "digital",
-        "display",
-        "face",
-        "fitness",
-        "futuristic",
-        "gadget",
-        "hands",
-        "health",
-        "notification",
-        "pointers",
-        "retro",
-        "rounded corners",
-        "screen",
-        "smart",
-        "square",
-        "strap",
-        "technology",
-        "time",
-        "timepiece",
-        "tracking",
-        "watch",
-        "wearable",
-        "wearables",
-        "web",
-        "wrist",
-        "wristwatch"
       ]
     },
     {
@@ -13868,50 +13641,6 @@
         "transaction",
         "wealth",
         "yen"
-      ]
-    },
-    {
-      "concept": "SECURITY_UPDATE",
-      "target": {
-        "kind": "system_symbol",
-        "value": "arrow.down"
-      },
-      "confidence": 0.3489,
-      "grade": "low",
-      "reason": "name=[] semantic=['arrow', 'down', 'download'] extra=[]",
-      "tags": [
-        "Android",
-        "app",
-        "app install",
-        "app promo",
-        "arrow",
-        "device",
-        "down",
-        "down arrow",
-        "download",
-        "download app",
-        "hardware",
-        "install",
-        "install app",
-        "install mobile",
-        "iOS",
-        "marketing",
-        "mobile",
-        "mobile download",
-        "OS",
-        "phone",
-        "phone download",
-        "promotion",
-        "security",
-        "security update",
-        "software",
-        "software update",
-        "system",
-        "system update",
-        "system upgrade",
-        "tablet",
-        "update",
-        "upgrade"
       ]
     },
     {
@@ -15218,58 +14947,6 @@
       "reason": "native Apple airplane-mode identity; iOS 15 has no airplane-slash symbol",
       "tags": [
         "airplanemode off"
-      ]
-    },
-    {
-      "concept": "ANDROID",
-      "target": {
-        "kind": "system_symbol",
-        "value": "applelogo"
-      },
-      "confidence": 0.5,
-      "grade": "low",
-      "reason": "Apple-platform equivalent for a platform-brand identity",
-      "tags": [
-        "alien",
-        "android",
-        "antenna",
-        "application",
-        "brand",
-        "bugdroid",
-        "character",
-        "developer",
-        "device",
-        "digital",
-        "eyes",
-        "google",
-        "head",
-        "logo",
-        "mascot",
-        "mobile",
-        "operating system",
-        "os",
-        "platform",
-        "robot",
-        "smart",
-        "smartphone",
-        "software",
-        "system",
-        "tech",
-        "technology",
-        "toy"
-      ]
-    },
-    {
-      "concept": "APPLE",
-      "target": {
-        "kind": "system_symbol",
-        "value": "applelogo"
-      },
-      "confidence": 0.5,
-      "grade": "low",
-      "reason": "Apple-platform equivalent for a platform-brand identity",
-      "tags": [
-        "apple"
       ]
     },
     {
@@ -18532,58 +18209,6 @@
         "switch off",
         "toggle off",
         "zoom off"
-      ]
-    },
-    {
-      "concept": "PHONELINK_OFF",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "VOLUME_OFF"
-      },
-      "confidence": 0.6103,
-      "grade": "low",
-      "reason": "name=['off'] semantic=['off'] extra=['volume']",
-      "tags": [
-        "Android",
-        "broken link",
-        "cancelled",
-        "computer",
-        "connection off",
-        "cross out",
-        "desktop",
-        "device",
-        "devices off",
-        "diagonal line",
-        "disabled",
-        "disconnected",
-        "enabled",
-        "hardware",
-        "iOS",
-        "laptop",
-        "link",
-        "link off",
-        "mobile",
-        "monitor",
-        "no connection",
-        "no signal",
-        "not available",
-        "off",
-        "offline",
-        "on",
-        "OS",
-        "pairing off",
-        "phone",
-        "phonelink",
-        "phonelink off",
-        "screen",
-        "slash",
-        "tablet",
-        "unavailable",
-        "unlink",
-        "unpair",
-        "watch",
-        "wearable",
-        "web"
       ]
     },
     {

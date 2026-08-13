@@ -1,0 +1,47 @@
+{
+  "ANDROID": {
+    "kind": "system_symbol",
+    "value": "applelogo",
+    "rationale": "public Apple platform-brand identity replacing the Android platform identity in the Apple-only renderer"
+  },
+  "APPLE": {
+    "kind": "system_symbol",
+    "value": "applelogo",
+    "rationale": "public Apple platform-brand identity"
+  },
+  "FITBIT": {
+    "kind": "system_symbol",
+    "value": "applewatch.case.inset.filled",
+    "rationale": "public unrestricted Apple wearable-device equivalent for the Apple-only renderer"
+  },
+  "MOBILE_FRIENDLY": {
+    "kind": "system_symbol",
+    "value": "checkmark.rectangle.portrait",
+    "rationale": "public Apple checked portrait-device identity for mobile compatibility"
+  },
+  "PHONELINK_OFF": {
+    "kind": "system_symbol",
+    "value": "iphone.homebutton.slash",
+    "rationale": "public unrestricted Apple phone-disabled identity"
+  },
+  "SECURITY_UPDATE": {
+    "kind": "system_symbol",
+    "value": "arrow.down.app.fill",
+    "rationale": "public Apple application-update identity for a security update"
+  },
+  "SYSTEM_SECURITY_UPDATE": {
+    "kind": "system_symbol",
+    "value": "arrow.down.app.fill",
+    "rationale": "public Apple application-update identity for a system security update"
+  },
+  "TABLET": {
+    "kind": "system_symbol",
+    "value": "ipad.homebutton",
+    "rationale": "public unrestricted Apple tablet-device identity"
+  },
+  "WATCH": {
+    "kind": "system_symbol",
+    "value": "applewatch.case.inset.filled",
+    "rationale": "public unrestricted Apple watch-device identity"
+  }
+}

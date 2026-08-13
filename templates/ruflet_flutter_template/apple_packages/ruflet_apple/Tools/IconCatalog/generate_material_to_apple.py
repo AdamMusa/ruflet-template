@@ -37,6 +37,7 @@ Generation uses pinned/auditable inputs:
 * communication_access_overrides.json -- reviewed communication and contacts.
 * health_accessibility_overrides.json -- reviewed health and accessibility.
 * interface_state_manipulation_overrides.json -- reviewed selection and direct manipulation.
+* apple_platform_device_overrides.json -- reviewed Apple platform and device adaptation.
 
 The installed public Apple symbol metadata is used only to choose and validate
 native symbols available at both deployment floors. Private and restricted
@@ -97,6 +98,9 @@ HEALTH_ACCESSIBILITY_OVERRIDES_PATH = (
 )
 INTERFACE_STATE_MANIPULATION_OVERRIDES_PATH = (
     TOOL_DIR / "interface_state_manipulation_overrides.json"
+)
+APPLE_PLATFORM_DEVICE_OVERRIDES_PATH = (
+    TOOL_DIR / "apple_platform_device_overrides.json"
 )
 AUDIT_PATH = TOOL_DIR / "material_to_apple_audit.json"
 
@@ -389,6 +393,7 @@ def load_reviewed_overrides() -> tuple[
         "communication_access": COMMUNICATION_ACCESS_OVERRIDES_PATH,
         "health_accessibility": HEALTH_ACCESSIBILITY_OVERRIDES_PATH,
         "interface_state_manipulation": INTERFACE_STATE_MANIPULATION_OVERRIDES_PATH,
+        "apple_platform_device": APPLE_PLATFORM_DEVICE_OVERRIDES_PATH,
     }
     merged: dict[str, dict[str, str]] = {}
     families: dict[str, str] = {}

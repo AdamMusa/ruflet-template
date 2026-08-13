@@ -2474,29 +2474,29 @@
     "kind": "system_symbol",
     "value": "applelogo",
     "concept": "ANDROID",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ANDROID_OUTLINED": {
     "kind": "system_symbol",
     "value": "applelogo",
     "concept": "ANDROID",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ANDROID_ROUNDED": {
     "kind": "system_symbol",
     "value": "applelogo",
     "concept": "ANDROID",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ANDROID_SHARP": {
     "kind": "system_symbol",
     "value": "applelogo",
     "concept": "ANDROID",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ANIMATION": {
     "kind": "cupertino_glyph",
@@ -2754,29 +2754,29 @@
     "kind": "system_symbol",
     "value": "applelogo",
     "concept": "APPLE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "APPLE_OUTLINED": {
     "kind": "system_symbol",
     "value": "applelogo",
     "concept": "APPLE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "APPLE_ROUNDED": {
     "kind": "system_symbol",
     "value": "applelogo",
     "concept": "APPLE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "APPLE_SHARP": {
     "kind": "system_symbol",
     "value": "applelogo",
     "concept": "APPLE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "APPROVAL": {
     "kind": "cupertino_glyph",
@@ -20643,32 +20643,32 @@
     "source": "reviewed_override"
   },
   "FITBIT": {
-    "kind": "cupertino_glyph",
-    "value": "HEART",
+    "kind": "system_symbol",
+    "value": "applewatch.case.inset.filled",
     "concept": "FITBIT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FITBIT_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "HEART",
+    "kind": "system_symbol",
+    "value": "applewatch.case.inset.filled",
     "concept": "FITBIT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FITBIT_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "HEART",
+    "kind": "system_symbol",
+    "value": "applewatch.case.inset.filled",
     "concept": "FITBIT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FITBIT_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "HEART",
+    "kind": "system_symbol",
+    "value": "applewatch.case.inset.filled",
     "concept": "FITBIT",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FITNESS_CENTER": {
     "kind": "system_symbol",
@@ -33103,32 +33103,32 @@
     "source": "semantic_rank"
   },
   "MOBILE_FRIENDLY": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "checkmark.rectangle.portrait",
     "concept": "MOBILE_FRIENDLY",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MOBILE_FRIENDLY_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "checkmark.rectangle.portrait",
     "concept": "MOBILE_FRIENDLY",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MOBILE_FRIENDLY_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "checkmark.rectangle.portrait",
     "concept": "MOBILE_FRIENDLY",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MOBILE_FRIENDLY_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "checkmark.rectangle.portrait",
     "concept": "MOBILE_FRIENDLY",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MOBILE_OFF": {
     "kind": "system_symbol",
@@ -39886,32 +39886,32 @@
     "source": "semantic_rank"
   },
   "PHONELINK_OFF": {
-    "kind": "cupertino_glyph",
-    "value": "VOLUME_OFF",
+    "kind": "system_symbol",
+    "value": "iphone.homebutton.slash",
     "concept": "PHONELINK_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHONELINK_OFF_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "VOLUME_OFF",
+    "kind": "system_symbol",
+    "value": "iphone.homebutton.slash",
     "concept": "PHONELINK_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHONELINK_OFF_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "VOLUME_OFF",
+    "kind": "system_symbol",
+    "value": "iphone.homebutton.slash",
     "concept": "PHONELINK_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHONELINK_OFF_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "VOLUME_OFF",
+    "kind": "system_symbol",
+    "value": "iphone.homebutton.slash",
     "concept": "PHONELINK_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "PHONELINK_OUTLINED": {
     "kind": "system_symbol",
@@ -46320,10 +46320,10 @@
   },
   "SECURITY_UPDATE": {
     "kind": "system_symbol",
-    "value": "arrow.down",
+    "value": "arrow.down.app.fill",
     "concept": "SECURITY_UPDATE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SECURITY_UPDATE_GOOD": {
     "kind": "system_symbol",
@@ -46355,24 +46355,24 @@
   },
   "SECURITY_UPDATE_OUTLINED": {
     "kind": "system_symbol",
-    "value": "arrow.down",
+    "value": "arrow.down.app.fill",
     "concept": "SECURITY_UPDATE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SECURITY_UPDATE_ROUNDED": {
     "kind": "system_symbol",
-    "value": "arrow.down",
+    "value": "arrow.down.app.fill",
     "concept": "SECURITY_UPDATE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SECURITY_UPDATE_SHARP": {
     "kind": "system_symbol",
-    "value": "arrow.down",
+    "value": "arrow.down.app.fill",
     "concept": "SECURITY_UPDATE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SECURITY_UPDATE_WARNING": {
     "kind": "system_symbol",
@@ -53460,10 +53460,10 @@
   },
   "SYSTEM_SECURITY_UPDATE": {
     "kind": "system_symbol",
-    "value": "arrow.down",
+    "value": "arrow.down.app.fill",
     "concept": "SYSTEM_SECURITY_UPDATE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SYSTEM_SECURITY_UPDATE_GOOD": {
     "kind": "system_symbol",
@@ -53495,24 +53495,24 @@
   },
   "SYSTEM_SECURITY_UPDATE_OUTLINED": {
     "kind": "system_symbol",
-    "value": "arrow.down",
+    "value": "arrow.down.app.fill",
     "concept": "SYSTEM_SECURITY_UPDATE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SYSTEM_SECURITY_UPDATE_ROUNDED": {
     "kind": "system_symbol",
-    "value": "arrow.down",
+    "value": "arrow.down.app.fill",
     "concept": "SYSTEM_SECURITY_UPDATE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SYSTEM_SECURITY_UPDATE_SHARP": {
     "kind": "system_symbol",
-    "value": "arrow.down",
+    "value": "arrow.down.app.fill",
     "concept": "SYSTEM_SECURITY_UPDATE",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SYSTEM_SECURITY_UPDATE_WARNING": {
     "kind": "system_symbol",
@@ -53823,11 +53823,11 @@
     "source": "semantic_rank"
   },
   "TABLET": {
-    "kind": "cupertino_glyph",
-    "value": "RECTANGLE",
+    "kind": "system_symbol",
+    "value": "ipad.homebutton",
     "concept": "TABLET",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TABLET_ANDROID": {
     "kind": "system_symbol",
@@ -53886,25 +53886,25 @@
     "source": "reviewed_override"
   },
   "TABLET_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "RECTANGLE",
+    "kind": "system_symbol",
+    "value": "ipad.homebutton",
     "concept": "TABLET",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TABLET_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "RECTANGLE",
+    "kind": "system_symbol",
+    "value": "ipad.homebutton",
     "concept": "TABLET",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TABLET_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "RECTANGLE",
+    "kind": "system_symbol",
+    "value": "ipad.homebutton",
     "concept": "TABLET",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TAG": {
     "kind": "cupertino_glyph",
@@ -59829,11 +59829,11 @@
     "source": "semantic_rank"
   },
   "WATCH": {
-    "kind": "cupertino_glyph",
-    "value": "BELL_CIRCLE",
+    "kind": "system_symbol",
+    "value": "applewatch.case.inset.filled",
     "concept": "WATCH",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WATCH_LATER": {
     "kind": "cupertino_glyph",
@@ -59892,25 +59892,25 @@
     "source": "semantic_rank"
   },
   "WATCH_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "BELL_CIRCLE",
+    "kind": "system_symbol",
+    "value": "applewatch.case.inset.filled",
     "concept": "WATCH",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WATCH_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "BELL_CIRCLE",
+    "kind": "system_symbol",
+    "value": "applewatch.case.inset.filled",
     "concept": "WATCH",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WATCH_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "BELL_CIRCLE",
+    "kind": "system_symbol",
+    "value": "applewatch.case.inset.filled",
     "concept": "WATCH",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WATER": {
     "kind": "system_symbol",

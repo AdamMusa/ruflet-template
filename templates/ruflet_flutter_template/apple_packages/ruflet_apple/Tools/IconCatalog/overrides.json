@@ -115,22 +115,10 @@
     "value": "chart.bar.xaxis",
     "rationale": "curated Material-to-SF vocabulary"
   },
-  "ANDROID": {
-    "kind": "system_symbol",
-    "value": "applelogo",
-    "rationale": "Apple-platform equivalent for a platform-brand identity",
-    "status": "review_required"
-  },
   "ANIMATION": {
     "kind": "cupertino_glyph",
     "value": "CIRCLE_GRID_HEX_FILL",
     "rationale": "curated Material-to-Cupertino vocabulary"
-  },
-  "APPLE": {
-    "kind": "system_symbol",
-    "value": "applelogo",
-    "rationale": "Apple-platform equivalent for a platform-brand identity",
-    "status": "review_required"
   },
   "APPS": {
     "kind": "cupertino_glyph",
@@ -1939,11 +1927,6 @@
     "value": "rectangle.split.3x1",
     "rationale": "curated Material-to-SF vocabulary"
   },
-  "TABLET": {
-    "kind": "system_symbol",
-    "value": "ipad",
-    "rationale": "curated Material-to-SF vocabulary"
-  },
   "TABLE_CHART": {
     "kind": "system_symbol",
     "value": "tablecells",
@@ -2267,11 +2250,6 @@
   "WARNING_AMBER": {
     "kind": "system_symbol",
     "value": "exclamationmark.triangle",
-    "rationale": "curated Material-to-SF vocabulary"
-  },
-  "WATCH": {
-    "kind": "system_symbol",
-    "value": "applewatch",
     "rationale": "curated Material-to-SF vocabulary"
   },
   "WATER_DROP": {
