@@ -83,6 +83,7 @@ public struct PageControl: View {
       try await invoke(name, arguments: arguments)
     }
     controlListener = control.addListener { controlUpdated() }
+    RufletPagePopRegistry.register(page: control) { view in requestPop(view) }
     localeChanged()
     Task { await loadFontsIfNeeded() }
   }
@@ -93,6 +94,7 @@ public struct PageControl: View {
     invokeToken = nil
     controlListener = nil
     RufletPageCaptureRegistry.unregister(backend: control.backend)
+    RufletPagePopRegistry.unregister(page: control)
   }
 
   private func controlUpdated() {
@@ -133,6 +135,12 @@ public struct PageControl: View {
   private func popTopViewIfAllowed() {
     let views = effectiveViews
     guard views.count > 1, let top = views.last else { return }
+    requestPop(top)
+  }
+
+  private func requestPop(_ top: RufletControl) {
+    let views = effectiveViews
+    guard views.count > 1, views.last === top else { return }
     guard top.boolean("can_pop", default: true) else { return }
     if top.boolean("on_confirm_pop", default: false) {
       Task {

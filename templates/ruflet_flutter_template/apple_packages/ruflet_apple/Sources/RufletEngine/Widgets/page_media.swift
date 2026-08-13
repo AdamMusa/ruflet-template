@@ -109,3 +109,21 @@ enum RufletViewPopRegistry {
     await handlers[ObjectIdentifier(control)]?() ?? false
   }
 }
+
+@MainActor
+enum RufletPagePopRegistry {
+  typealias Handler = (RufletControl) -> Void
+  private static var handlers: [ObjectIdentifier: Handler] = [:]
+
+  static func register(page: RufletControl, handler: @escaping Handler) {
+    handlers[ObjectIdentifier(page)] = handler
+  }
+
+  static func unregister(page: RufletControl) {
+    handlers.removeValue(forKey: ObjectIdentifier(page))
+  }
+
+  static func requestPop(page: RufletControl, view: RufletControl) {
+    handlers[ObjectIdentifier(page)]?(view)
+  }
+}

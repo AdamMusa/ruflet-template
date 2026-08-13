@@ -12,6 +12,7 @@ public struct ViewControl: View {
   @State private var slotRevision = 0
   @State private var drawerPresented = false
   @State private var endDrawerPresented = false
+  @State private var scrolledUnderAppBar = false
 
   public init(control: RufletControl) {
     self.control = control
@@ -20,9 +21,13 @@ public struct ViewControl: View {
   public var body: some View {
     decoratedView
       .environment(\.layoutDirection, page.boolean("rtl", default: false) ? .rightToLeft : .leftToRight)
+      .environment(\.rufletViewScrolledUnder, scrolledUnderAppBar)
       .onAppear(perform: mount)
       .onDisappear(perform: unmount)
       .onChange(of: control.properties) { _ in controlUpdated() }
+      .onPreferenceChange(RufletViewScrollPositionKey.self) { position in
+        scrolledUnderAppBar = position < -0.5
+      }
   }
 
   private var decoratedView: some View {
@@ -85,12 +90,20 @@ public struct ViewControl: View {
       }
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: viewAlignment)
+    .background {
+      GeometryReader { proxy in
+        Color.clear.preference(
+          key: RufletViewScrollPositionKey.self,
+          value: proxy.frame(in: .named("ruflet_view_scroll_\(control.id)")).minY)
+      }
+    }
 
     let scrollable = ScrollableControl(
       control: control,
       scrollDirection: .vertical,
       wrapIntoScrollableView: true
     ) { column }
+    .coordinateSpace(name: "ruflet_view_scroll_\(control.id)")
 
     if control.boolean("on_scroll", default: false) {
       ScrollNotificationControl(control: control) { scrollable }
@@ -250,6 +263,11 @@ public struct ViewControl: View {
     default: .bottomTrailing
     }
   }
+}
+
+private struct RufletViewScrollPositionKey: PreferenceKey {
+  static let defaultValue = 0.0
+  static func reduce(value: inout Double, nextValue: () -> Double) { value = nextValue() }
 }
 
 @MainActor
