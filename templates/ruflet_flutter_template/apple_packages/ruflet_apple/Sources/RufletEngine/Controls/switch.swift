@@ -23,6 +23,10 @@ public struct SwitchControl: View {
             .contentShape(Rectangle())
             .onChange(of: focused) { control.triggerEvent($0 ? "focus" : "blur") }
         }
+        .modifier(RufletListTileInputToggleModifier {
+            guard !control.disabled else { return }
+            binding.wrappedValue = !binding.wrappedValue
+        })
     }
 
     private var binding: Binding<Bool> {

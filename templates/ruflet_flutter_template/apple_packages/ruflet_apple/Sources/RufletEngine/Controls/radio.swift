@@ -34,7 +34,10 @@ public struct RadioControl: View {
             .contentShape(Rectangle())
             .onTapGesture { if !control.disabled { select() } }
             .onChange(of: focused) { control.triggerEvent($0 ? "focus" : "blur") }
-        })
+        }
+        .modifier(RufletListTileInputToggleModifier {
+            if !control.disabled { select() }
+        }))
     }
 
     private var selected: Bool { groupSelection?.wrappedValue == control.string("value", default: "")! }

@@ -41,6 +41,9 @@ public struct CheckboxControl: View {
             .onTapGesture { if !control.disabled { toggle() } }
             .onChange(of: focused) { control.triggerEvent($0 ? "focus" : "blur") }
         }
+        .modifier(RufletListTileInputToggleModifier {
+            if !control.disabled { toggle() }
+        })
     }
 
     private var value: Bool? {
