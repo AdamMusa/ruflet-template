@@ -7,7 +7,7 @@ public final class ServiceBinding {
   private let service: RufletService
   private var updateListener: UUID?
 
-  public init(control: RufletControl, backend: RufletBackend) throws {
+  public init(control: RufletControl, backend: RufletBackendProtocol) throws {
     self.control = control
     guard let service = backend.extensionRegistry.service(for: control) else {
       throw RufletServiceError.unavailable("Unknown service: \(control.type)")
@@ -25,4 +25,3 @@ public final class ServiceBinding {
     service.dispose()
   }
 }
-

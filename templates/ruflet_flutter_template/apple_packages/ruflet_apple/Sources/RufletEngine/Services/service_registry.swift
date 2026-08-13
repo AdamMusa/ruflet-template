@@ -61,9 +61,11 @@ public struct RufletCoreServiceExtension: RufletExtension {
     case "share": return ShareService(control: control)
     case "sharedpreferences": return SharedPreferencesService(control: control)
     case "storagepaths": return StoragePaths(control: control)
+    case "tester": return TesterService(control: control)
     case "urllauncher": return UrlLauncherService(control: control)
     case "useraccelerometer": return UserAccelerometerService(control: control)
     case "wakelock": return WakelockService(control: control)
+    case "window": return WindowService(control: control)
     default: return nil
     }
   }

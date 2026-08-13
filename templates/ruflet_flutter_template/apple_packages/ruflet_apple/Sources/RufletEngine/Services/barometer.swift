@@ -5,6 +5,11 @@ import RufletProtocol
 public struct RufletBarometerReading: Sendable {
   public let pressure: Double
   public let timestamp: Date
+
+  public init(pressure: Double, timestamp: Date) {
+    self.pressure = pressure
+    self.timestamp = timestamp
+  }
 }
 
 @MainActor

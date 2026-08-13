@@ -7,6 +7,13 @@ public struct RufletGyroscopeReading: Sendable {
   public let y: Double
   public let z: Double
   public let timestamp: Date
+
+  public init(x: Double, y: Double, z: Double, timestamp: Date) {
+    self.x = x
+    self.y = y
+    self.z = z
+    self.timestamp = timestamp
+  }
 }
 
 @MainActor
