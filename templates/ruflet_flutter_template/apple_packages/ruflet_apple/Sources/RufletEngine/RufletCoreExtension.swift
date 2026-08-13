@@ -1,0 +1,97 @@
+import SwiftUI
+
+/// Core control and Apple service entry point, mirroring FletCoreExtension.
+///
+/// Every exposed wire control is registered explicitly. A missing case is a
+/// porting error, never a request to switch to another renderer.
+@MainActor
+public struct RufletCoreExtension: RufletExtension {
+  private let services = RufletCoreServiceExtension()
+
+  public let renderedControlTypes: Set<String> = [
+    "AdaptiveButton", "AdaptiveCheckbox", "AdaptiveRadio", "AdaptiveSlider", "AdaptiveSwitch", "AdaptiveTextField",
+    "AnimatedSwitcher", "AppBar", "Button", "Card", "Checkbox", "CircleAvatar", "Column", "Container",
+    "CupertinoButton", "CupertinoCheckbox", "CupertinoDialogAction", "CupertinoFilledButton",
+    "CupertinoAppBar", "CupertinoRadio", "CupertinoSlider", "CupertinoSwitch", "CupertinoTextField", "CupertinoTintedButton", "Dismissible",
+    "Divider", "Draggable", "DragTarget", "Dropdown", "DropdownM2", "FilledButton", "FilledTonalButton", "GridView", "Hero",
+    "Icon", "InteractiveViewer", "ListView", "MergeSemantics", "OutlinedButton", "Page", "PageView",
+    "Placeholder", "ProgressBar", "ProgressRing", "Radio", "RadioGroup", "RangeSlider",
+    "ReorderableDragHandle", "ReorderableListView", "ResponsiveRow", "Row", "SafeArea",
+    "SelectionArea", "Semantics", "Slider", "Stack", "Switch", "Text", "TextButton", "TextField", "View",
+    "TransparentPointer", "VerticalDivider",
+  ]
+
+  public init() {}
+
+  public func createView(for control: RufletControl) -> AnyView? {
+    switch control.type {
+    case "AdaptiveButton", "Button", "FilledButton", "FilledTonalButton", "OutlinedButton", "TextButton":
+      return AnyView(AdaptiveButtonControl(control: control))
+    case "AdaptiveCheckbox", "Checkbox":
+      return AnyView(AdaptiveCheckboxControl(control: control))
+    case "AdaptiveRadio", "Radio":
+      return AnyView(AdaptiveRadioControl(control: control))
+    case "AdaptiveSlider", "Slider":
+      return AnyView(AdaptiveSliderControl(control: control))
+    case "AdaptiveSwitch", "Switch":
+      return AnyView(AdaptiveSwitchControl(control: control))
+    case "AdaptiveTextField", "TextField":
+      return AnyView(AdaptiveTextFieldControl(control: control))
+    case "AnimatedSwitcher": return AnyView(AnimatedSwitcherControl(control: control))
+    case "AppBar": return AnyView(AppBarControl(control: control))
+    case "Card": return AnyView(CardControl(control: control))
+    case "CircleAvatar": return AnyView(CircleAvatarControl(control: control))
+    case "Container": return AnyView(ContainerControl(control: control))
+    case "CupertinoButton", "CupertinoFilledButton", "CupertinoTintedButton":
+      return AnyView(CupertinoButtonControl(control: control))
+    case "CupertinoCheckbox": return AnyView(CupertinoCheckboxControl(control: control))
+    case "CupertinoDialogAction": return AnyView(CupertinoDialogActionControl(control: control))
+    case "CupertinoAppBar": return AnyView(CupertinoAppBarControl(control: control))
+    case "CupertinoRadio": return AnyView(CupertinoRadioControl(control: control))
+    case "CupertinoSlider": return AnyView(CupertinoSliderControl(control: control))
+    case "CupertinoSwitch": return AnyView(CupertinoSwitchControl(control: control))
+    case "CupertinoTextField": return AnyView(CupertinoTextFieldControl(control: control))
+    case "Divider": return AnyView(DividerControl(control: control))
+    case "Dismissible": return AnyView(DismissibleControl(control: control))
+    case "Draggable": return AnyView(DraggableControl(control: control))
+    case "DragTarget": return AnyView(DragTargetControl(control: control))
+    case "Dropdown": return AnyView(DropdownControl(control: control))
+    case "DropdownM2": return AnyView(DropdownM2Control(control: control))
+    case "VerticalDivider": return AnyView(VerticalDividerControl(control: control))
+    case "View": return AnyView(ViewControl(control: control))
+    case "Icon": return AnyView(IconControl(control: control))
+    case "Hero": return AnyView(HeroControl(control: control))
+    case "InteractiveViewer": return AnyView(InteractiveViewerControl(control: control))
+    case "GridView": return AnyView(GridViewControl(control: control))
+    case "ListView": return AnyView(ListViewControl(control: control))
+    case "ProgressBar": return AnyView(ProgressBarControl(control: control))
+    case "ProgressRing": return AnyView(ProgressRingControl(control: control))
+    case "PageView": return AnyView(PageViewControl(control: control))
+    case "RadioGroup": return AnyView(RadioGroupControl(control: control))
+    case "RangeSlider": return AnyView(RangeSliderControl(control: control))
+    case "ReorderableDragHandle": return AnyView(ReorderableDragHandleControl(control: control))
+    case "ReorderableListView": return AnyView(ReorderableListViewControl(control: control))
+    case "ResponsiveRow": return AnyView(ResponsiveRowControl(control: control))
+    case "Text": return AnyView(TextControl(control: control))
+    case "Row": return AnyView(RowControl(control: control))
+    case "Column": return AnyView(ColumnControl(control: control))
+    case "Stack": return AnyView(StackControl(control: control))
+    case "SafeArea": return AnyView(SafeAreaControl(control: control))
+    case "TransparentPointer": return AnyView(TransparentPointerControl(control: control))
+    case "MergeSemantics": return AnyView(MergeSemanticsControl(control: control))
+    case "SelectionArea": return AnyView(SelectionAreaControl(control: control))
+    case "Semantics": return AnyView(SemanticsControl(control: control))
+    case "Placeholder": return AnyView(PlaceholderControl(control: control))
+    case "Page": return AnyView(PageControl(control: control))
+    default: return nil
+    }
+  }
+
+  public func createService(for control: RufletControl) -> RufletService? {
+    services.createService(for: control)
+  }
+
+  public func createAppleIcon(for iconCode: Int) -> RufletAppleIcon? {
+    RufletAppleIconCatalog.icon(for: iconCode)
+  }
+}

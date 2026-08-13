@@ -9,18 +9,20 @@ public struct IconControl: View {
 
     public var body: some View {
         LayoutControl(control: control) {
-            Image(systemName: iconName)
-                .font(.system(size: control.number("size") ?? 24, weight: iconWeight))
+            RufletAppleIconView.registered(
+                icon: icon,
+                size: control.number("size") ?? 24,
+                weight: iconWeight)
                 .foregroundStyle(parseColor(control.string("color")) ?? .primary)
                 .accessibilityLabel(control.string("semantics_label") ?? "")
         }
     }
 
-    private var iconName: String {
-        guard let code = control.integer("icon"), let name = registry.systemIconName(for: code) else {
+    private var icon: RufletAppleIcon {
+        guard let code = control.integer("icon"), let icon = registry.appleIcon(for: code) else {
             preconditionFailure("Unknown Ruflet icon: \(control.string("icon") ?? "nil")")
         }
-        return name
+        return icon
     }
 
     private var iconWeight: Font.Weight {

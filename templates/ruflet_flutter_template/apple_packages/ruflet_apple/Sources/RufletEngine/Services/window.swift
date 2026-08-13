@@ -52,7 +52,8 @@ public final class WindowService: RufletInvokableService {
 
   public override func initialize() {
     #if os(macOS)
-    if let window = NSApp.keyWindow ?? NSApp.mainWindow ?? NSApp.windows.first {
+    if let app = NSApp,
+       let window = app.keyWindow ?? app.mainWindow ?? app.windows.first {
       attach(to: window)
     } else {
       waitingForWindowObserver = NotificationCenter.default.addObserver(

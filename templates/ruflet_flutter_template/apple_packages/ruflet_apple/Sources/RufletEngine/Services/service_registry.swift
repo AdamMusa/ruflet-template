@@ -1,6 +1,5 @@
 import Foundation
 import RufletProtocol
-import RufletProtocol
 import SwiftUI
 
 @MainActor
@@ -203,6 +202,13 @@ public final class PageServiceBindings {
 /// Core service factory matching FletCoreExtension's service branch.
 @MainActor
 public struct RufletCoreServiceExtension: RufletExtension {
+  public let serviceControlTypes: Set<String> = [
+    "Accelerometer", "Barometer", "Battery", "Clipboard", "Connectivity", "FilePicker",
+    "Gyroscope", "HapticFeedback", "Magnetometer", "ScreenBrightness", "SemanticsService",
+    "ShakeDetector", "Share", "SharedPreferences", "StoragePaths", "Tester", "UrlLauncher",
+    "UserAccelerometer", "Wakelock", "Window",
+  ]
+
   public init() {}
 
   public func createService(for control: RufletControl) -> RufletService? {

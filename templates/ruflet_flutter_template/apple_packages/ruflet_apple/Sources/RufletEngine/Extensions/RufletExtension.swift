@@ -7,6 +7,8 @@ public protocol RufletExtension {
   /// Flet's extension dispatch is type-driven. Declaring that same contract
   /// makes renderer registration auditable without constructing app screens.
   var renderedControlTypes: Set<String> { get }
+  /// Exact wire control types for which this extension creates services.
+  var serviceControlTypes: Set<String> { get }
   func ensureInitialized()
   func createView(for control: RufletControl) -> AnyView?
   func createService(for control: RufletControl) -> RufletService?
@@ -15,6 +17,7 @@ public protocol RufletExtension {
 
 public extension RufletExtension {
   var renderedControlTypes: Set<String> { [] }
+  var serviceControlTypes: Set<String> { [] }
   func ensureInitialized() {}
   func createView(for control: RufletControl) -> AnyView? { nil }
   func createService(for control: RufletControl) -> RufletService? { nil }
@@ -34,6 +37,12 @@ public final class RufletExtensionRegistry: ObservableObject {
   public var renderedControlTypes: Set<String> {
     extensions.reduce(into: []) { result, item in
       result.formUnion(item.renderedControlTypes)
+    }
+  }
+
+  public var serviceControlTypes: Set<String> {
+    extensions.reduce(into: []) { result, item in
+      result.formUnion(item.serviceControlTypes)
     }
   }
 

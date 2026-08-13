@@ -7,7 +7,6 @@ import SwiftUI
 @MainActor
 public struct ControlWidget: View {
     @ObservedObject private var control: RufletControl
-    @EnvironmentObject private var registry: RufletExtensionRegistry
 
     public init(control: RufletControl) {
         self.control = control
@@ -19,7 +18,7 @@ public struct ControlWidget: View {
     }
 
     private var resolvedView: AnyView {
-        guard let view = registry.view(for: control) else {
+        guard let view = control.backend.extensionRegistry.view(for: control) else {
             preconditionFailure("Unknown Ruflet control: \(control.type)")
         }
         return view
@@ -82,14 +81,14 @@ struct RufletSystemIcon: View {
     @EnvironmentObject private var registry: RufletExtensionRegistry
 
     var body: some View {
-        Image(systemName: resolvedName)
+        RufletAppleIconView.registered(icon: resolvedIcon)
     }
 
-    private var resolvedName: String {
-        guard let name = registry.systemIconName(for: code) else {
+    private var resolvedIcon: RufletAppleIcon {
+        guard let icon = registry.appleIcon(for: code) else {
             preconditionFailure("Unknown Ruflet icon code: \(code)")
         }
-        return name
+        return icon
     }
 }
 
