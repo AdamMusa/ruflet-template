@@ -20,6 +20,12 @@ final class TransportContractTests: XCTestCase {
       "wss://example.com/p/demo/ws")
   }
 
+  func testPinnedNonWebEndpointAlwaysAppendsWebSocketSegment() throws {
+    XCTAssertEqual(
+      try rufletWebSocketEndpoint(URL(string: "https://example.com/ws")!).absoluteString,
+      "wss://example.com/ws/ws")
+  }
+
   func testPrivateHostRangesMatchPinnedFletNetworkingContract() {
     XCTAssertTrue(rufletIsPrivateHost("localhost"))
     XCTAssertTrue(rufletIsPrivateHost("127.0.1.1"))
@@ -28,10 +34,35 @@ final class TransportContractTests: XCTestCase {
     XCTAssertTrue(rufletIsPrivateHost("172.31.255.255"))
     XCTAssertTrue(rufletIsPrivateHost("10.0.5.100"))
     XCTAssertTrue(rufletIsPrivateHost("::1"))
+    XCTAssertTrue(rufletIsPrivateHost("fe80::1"))
+    XCTAssertTrue(rufletIsPrivateHost("febf::ffff"))
+    XCTAssertFalse(rufletIsPrivateHost("fec0::1"))
     XCTAssertFalse(rufletIsPrivateHost("172.32.0.1"))
     XCTAssertFalse(rufletIsPrivateHost("216.34.2.201"))
     XCTAssertFalse(rufletIsPrivateHost("45.3.2.2"))
     XCTAssertFalse(rufletIsPrivateHost("example.com"))
+  }
+
+  func testPrivateHostResolutionSupportsPinnedDNSBehavior() async throws {
+    let localhostIsPrivate = try await rufletIsPrivateHostResolving("localhost")
+    XCTAssertTrue(localhostIsPrivate)
+    do {
+      _ = try await rufletIsPrivateHostResolving(
+        "host-that-does-not-exist.invalid")
+      XCTFail("an unresolvable host must fail instead of silently becoming public")
+    } catch let error as RufletTransportError {
+      XCTAssertEqual(error, .cannotResolveHost("host-that-does-not-exist.invalid"))
+    }
+  }
+
+  func testWebSocketChannelInitializerPropagatesEndpointErrors() {
+    let address = URL(string: "https:relative-without-authority")!
+    XCTAssertThrowsError(try RufletWebSocketBackendChannel(
+      address: address,
+      onDisconnect: {},
+      onMessage: { _ in })) {
+      XCTAssertEqual($0 as? RufletTransportError, .missingHost)
+    }
   }
 
   func testFactoryRoutesHTTPAndTCPWithoutPlatformFallbacks() throws {
