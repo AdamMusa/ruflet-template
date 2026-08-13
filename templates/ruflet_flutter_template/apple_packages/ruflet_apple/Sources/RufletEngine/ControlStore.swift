@@ -307,6 +307,18 @@ public final class ControlStore: ObservableObject {
     nodes[key.controlID] = node
   }
 
+  private func recordPendingLocalProperty(_ key: LocalPropertyKey, value: RufletValue) {
+    if var pending = pendingLocalProperties[key] {
+      if pending.values.last != value { pending.values.append(value) }
+      // Bound sustained typing while retaining enough ordered history to
+      // recognize delayed echoes from a busy server.
+      if pending.values.count > 256 { pending.values.removeFirst(pending.values.count - 256) }
+      pendingLocalProperties[key] = pending
+    } else {
+      pendingLocalProperties[key] = PendingLocalProperty(values: [value])
+    }
+  }
+
   private func path(for target: Int, in patch: ControlPatch) throws -> [String] {
     guard let path = patch.pathIndex[target] else {
       throw PatchApplicationError.unknownTarget(target)
@@ -485,15 +497,7 @@ public final class ControlStore: ObservableObject {
     guard node.props[key] != value else { return }
 
     let propertyKey = LocalPropertyKey(controlID: id, name: key)
-    if var pending = pendingLocalProperties[propertyKey] {
-      if pending.values.last != value { pending.values.append(value) }
-      // Bound sustained typing while retaining enough ordered history to
-      // recognize delayed echoes from a busy server.
-      if pending.values.count > 256 { pending.values.removeFirst(pending.values.count - 256) }
-      pendingLocalProperties[propertyKey] = pending
-    } else {
-      pendingLocalProperties[propertyKey] = PendingLocalProperty(values: [value])
-    }
+    recordPendingLocalProperty(propertyKey, value: value)
 
     // Local native edits change a scalar on one already-materialized node.
     // Running the full patch finalizer here copied the entire node dictionary,
@@ -513,6 +517,25 @@ public final class ControlStore: ObservableObject {
     nodes[id] = node
     lastChangedIDs = [id]
     revision &+= 1
+  }
+
+  /// Records a native edit without invalidating the complete SwiftUI tree.
+  ///
+  /// UIKit/AppKit text controls already own and repaint their live editing
+  /// buffer. Publishing the coarse store revision for every character forces
+  /// every rendered control to rebuild, which makes typing and Backspace lag
+  /// badly on pages containing large grids. The pending history still protects
+  /// the native buffer from delayed Ruby echoes; the next inbound patch either
+  /// acknowledges this value or applies an explicit Ruby override.
+  public func stageLocalProperty(_ id: Int, key: String, value: RufletValue) {
+    guard var node = nodes[id] else { return }
+    guard node.props[key] != value else { return }
+    recordPendingLocalProperty(LocalPropertyKey(controlID: id, name: key), value: value)
+    // Keep the authoritative local snapshot current for view recreation, but
+    // do not publish `revision`: the hosted platform editor has already
+    // painted this value and owns its selection/caret until Ruby responds.
+    node.props[key] = value
+    nodes[id] = node
   }
 
   public func reset() {

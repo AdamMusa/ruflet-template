@@ -3,6 +3,30 @@ import RufletProtocol
 import XCTest
 
 final class OptimisticControlStoreParityTests: XCTestCase {
+  func testStagedTextEditsDoNotInvalidateTheWholeControlTree() {
+    let store = makeStore(value: "")
+    let revision = store.revision
+
+    store.stageLocalProperty(100, key: "value", value: .string("h"))
+    store.stageLocalProperty(100, key: "value", value: .string("ho"))
+
+    XCTAssertEqual(store.revision, revision)
+    XCTAssertEqual(store.node(100)?.string("value"), "ho")
+
+    XCTAssertFalse(applyValue("h", to: store))
+    XCTAssertEqual(store.node(100)?.string("value"), "ho")
+    XCTAssertFalse(applyValue("ho", to: store))
+    XCTAssertEqual(store.node(100)?.string("value"), "ho")
+  }
+
+  func testExplicitRubyOverrideWinsOverStagedNativeText() {
+    let store = makeStore(value: "old")
+    store.stageLocalProperty(100, key: "value", value: .string("native"))
+
+    XCTAssertTrue(applyValue("ruby", to: store))
+    XCTAssertEqual(store.node(100)?.string("value"), "ruby")
+  }
+
   func testDelayedTextEchoNeverPaintsOverANewerNativeEdit() {
     let store = makeStore(value: "")
 

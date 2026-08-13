@@ -1392,7 +1392,7 @@ enum RufletTextFieldDefaults {
 enum RufletTextFieldEvents {
   static func change(_ value: String, on node: ControlNode, to events: RufletEventSink) {
     let wire = RufletValue.string(value)
-    events.setLocal(node.id, "value", wire)
+    events.stageLocal(node.id, "value", wire)
     events.update(node.id, ["value": wire])
     if node.bool("on_change") == true || node.handlesEvent("change") {
       events.fire(node, "change", data: wire)

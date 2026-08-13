@@ -18,6 +18,11 @@ public struct RufletEventSink {
   /// control tracks the finger while Ruby catches up.
   public var setLocal: (_ target: Int, _ key: String, _ value: RufletValue) -> Void
 
+  /// Records a locally-owned native edit without publishing the store's
+  /// coarse whole-tree revision. Platform text inputs use this while UIKit or
+  /// AppKit owns the live buffer.
+  public var stageLocal: (_ target: Int, _ key: String, _ value: RufletValue) -> Void
+
   /// Sends an `update_control`: state Ruby should know about but did not ask to
   /// be notified of.
   public var update: (_ target: Int, _ props: [String: RufletValue]) -> Void
@@ -25,10 +30,12 @@ public struct RufletEventSink {
   public init(
     send: @escaping (Int, String, RufletValue) -> Void = { _, _, _ in },
     setLocal: @escaping (Int, String, RufletValue) -> Void = { _, _, _ in },
+    stageLocal: ((Int, String, RufletValue) -> Void)? = nil,
     update: @escaping (Int, [String: RufletValue]) -> Void = { _, _ in }
   ) {
     self.send = send
     self.setLocal = setLocal
+    self.stageLocal = stageLocal ?? setLocal
     self.update = update
   }
 
@@ -64,6 +71,9 @@ public struct RufletEventSink {
       },
       setLocal: { target, key, value in
         session.store.setLocalProperty(target, key: key, value: value)
+      },
+      stageLocal: { target, key, value in
+        session.store.stageLocalProperty(target, key: key, value: value)
       },
       update: { target, props in
         session.updateControl(id: target, props: props)
