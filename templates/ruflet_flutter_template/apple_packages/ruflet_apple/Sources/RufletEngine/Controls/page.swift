@@ -40,7 +40,9 @@ public struct PageControl: View {
         }
       }
       .environment(\.locale, localeConfiguration.locale ?? environmentLocale)
-      .environment(\.layoutDirection, control.boolean("rtl", default: false) ? .rightToLeft : .leftToRight)
+      .environment(
+        \.layoutDirection, control.boolean("rtl", default: false) ? .rightToLeft : .leftToRight
+      )
       .modifier(RufletPageTintModifier(color: pageTint))
     }
     .onAppear(perform: mount)
@@ -49,7 +51,9 @@ public struct PageControl: View {
     .onChange(of: colorScheme) { scheme in
       backend.updateBrightness(scheme == .dark ? "dark" : "light")
     }
-    .onReceive(NotificationCenter.default.publisher(for: NSLocale.currentLocaleDidChangeNotification)) { _ in
+    .onReceive(
+      NotificationCenter.default.publisher(for: NSLocale.currentLocaleDidChangeNotification)
+    ) { _ in
       localeChanged()
     }
   }
@@ -58,18 +62,20 @@ public struct PageControl: View {
   private var pageStack: some View {
     let views = effectiveViews
     if views.isEmpty {
-      Color.clear
-    } else {
       ZStack {
-        ForEach(Array(views.enumerated()), id: \.element.id) { index, view in
-          ControlWidget(control: view)
-            .zIndex(Double(index))
-            .allowsHitTesting(index == views.count - 1)
-            .accessibilityHidden(index != views.count - 1)
-            .transition(.opacity)
-        }
+        Color.clear
+        RufletPageMedia(control: control)
       }
-      .animation(.easeInOut(duration: 0.3), value: views.map(\.id))
+    } else {
+      RufletPageNavigator(
+        page: control,
+        views: views,
+        locale: localeConfiguration.locale ?? environmentLocale,
+        layoutDirection: control.boolean("rtl", default: false) ? .rightToLeft : .leftToRight,
+        themeMode: themeMode,
+        tint: pageTint,
+        onRequestPop: markPoppedView,
+        onDidRemove: markPoppedView)
     }
   }
 
@@ -121,9 +127,10 @@ public struct PageControl: View {
     previousLocales = identifiers
     let locales: [RufletValue] = identifiers.map { identifier in
       let locale = Locale(identifier: identifier)
-      return .map(locale.rufletMap.mapValues { value in
-        value.map(RufletValue.string) ?? .null
-      })
+      return .map(
+        locale.rufletMap.mapValues { value in
+          value.map(RufletValue.string) ?? .null
+        })
     }
     control.triggerEvent("locale_change", data: ["locales": .array(locales)])
   }
@@ -134,23 +141,35 @@ public struct PageControl: View {
 
   private func popTopViewIfAllowed() {
     let views = effectiveViews
-    guard views.count > 1, let top = views.last else { return }
+    guard let top = views.last else { return }
     requestPop(top)
   }
 
   private func requestPop(_ top: RufletControl) {
     let views = effectiveViews
-    guard views.count > 1, views.last === top else { return }
-    guard top.boolean("can_pop", default: true) else { return }
-    if top.boolean("on_confirm_pop", default: false) {
+    guard views.last === top else { return }
+    if top.boolean("can_pop", default: true) {
+      completePop(top, viewCount: views.count)
+    } else if top.boolean("on_confirm_pop", default: false) {
       Task {
         if await RufletViewPopRegistry.confirmPop(control: top) {
-          markPopped(route(of: top))
+          completePop(top, viewCount: views.count)
         }
       }
-    } else {
-      markPopped(route(of: top))
     }
+  }
+
+  private func completePop(_ view: RufletControl, viewCount: Int) {
+    if viewCount <= 1 {
+      rufletCloseNativeScene()
+    } else {
+      markPoppedView(view)
+    }
+  }
+
+  private func markPoppedView(_ view: RufletControl) {
+    guard effectiveViews.count > 1 else { return }
+    markPopped(route(of: view))
   }
 
   private func markPopped(_ route: String) {
@@ -200,8 +219,8 @@ public struct PageControl: View {
     guard let fonts = control.value("fonts")?.map else { return }
     for sourceValue in fonts.values {
       guard let sourceText = sourceValue.text,
-            !loadedFontSources.contains(sourceText),
-            let source = control.backend.resolveAssetSource(sourceValue)
+        !loadedFontSources.contains(sourceText),
+        let source = control.backend.resolveAssetSource(sourceValue)
       else { continue }
       do {
         try await RufletUserFonts.load(from: source)
@@ -228,7 +247,8 @@ public struct PageControl: View {
   }
 
   private var pageTint: Color? {
-    let theme = rufletDictionary(control.dynamicValue(colorScheme == .dark ? "dark_theme" : "theme"))
+    let theme =
+      rufletDictionary(control.dynamicValue(colorScheme == .dark ? "dark_theme" : "theme"))
       ?? rufletDictionary(control.dynamicValue("theme"))
     let scheme = rufletDictionary(theme?["color_scheme"])
     return parseColor(scheme?["primary"] as? String)

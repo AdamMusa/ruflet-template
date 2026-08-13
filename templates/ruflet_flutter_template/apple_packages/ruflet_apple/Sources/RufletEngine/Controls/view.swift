@@ -13,6 +13,9 @@ public struct ViewControl: View {
   @State private var drawerPresented = false
   @State private var endDrawerPresented = false
   @State private var scrolledUnderAppBar = false
+  @State private var bottomBarHeight = 0.0
+  @State private var topBarHeight = 0.0
+  @Environment(\.rufletTopViewID) private var topViewID
 
   public init(control: RufletControl) {
     self.control = control
@@ -20,7 +23,9 @@ public struct ViewControl: View {
 
   public var body: some View {
     decoratedView
-      .environment(\.layoutDirection, page.boolean("rtl", default: false) ? .rightToLeft : .leftToRight)
+      .environment(
+        \.layoutDirection, page.boolean("rtl", default: false) ? .rightToLeft : .leftToRight
+      )
       .environment(\.rufletViewScrolledUnder, scrolledUnderAppBar)
       .onAppear(perform: mount)
       .onDisappear(perform: unmount)
@@ -49,13 +54,24 @@ public struct ViewControl: View {
       VStack(spacing: 0) {
         if let appBar = control.child("appbar") {
           appBarView(appBar)
+            .background {
+              GeometryReader { proxy in
+                Color.clear.preference(key: RufletTopBarSizeKey.self, value: proxy.size.height)
+              }
+            }
         }
         content
           .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: viewAlignment)
-          .padding(parsePadding(control.dynamicValue("padding"))
-            ?? EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
+          .padding(
+            parsePadding(control.dynamicValue("padding"))
+              ?? EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
         if let bottom = control.child("navigation_bar") ?? control.child("bottom_appbar") {
           ControlWidget(control: bottom)
+            .background {
+              GeometryReader { proxy in
+                Color.clear.preference(key: RufletBottomBarSizeKey.self, value: proxy.size.height)
+              }
+            }
         }
       }
 
@@ -64,9 +80,13 @@ public struct ViewControl: View {
       }
 
       if let floating = control.child("floating_action_button") {
-        ControlWidget(control: floating)
-          .padding(16)
-          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: floatingAlignment)
+        RufletFloatingActionPlacement(
+          location: control.dynamicValue("floating_action_button_location"),
+          topBarHeight: topBarHeight,
+          bottomBarHeight: bottomBarHeight
+        ) {
+          ControlWidget(control: floating)
+        }
       }
 
       if shouldShowLoading {
@@ -74,12 +94,15 @@ public struct ViewControl: View {
           isLoading: backend.isLoading,
           message: backend.isLoading
             ? backend.appStartupScreenMessage ?? ""
-            : backend.formatAppErrorMessage(backend.error))
-          .zIndex(40)
+            : backend.formatAppErrorMessage(backend.error)
+        )
+        .zIndex(40)
       }
 
       drawerLayers
     }
+    .onPreferenceChange(RufletTopBarSizeKey.self) { topBarHeight = $0 }
+    .onPreferenceChange(RufletBottomBarSizeKey.self) { bottomBarHeight = $0 }
   }
 
   @ViewBuilder
@@ -197,7 +220,9 @@ public struct ViewControl: View {
     case "show_end_drawer":
       endDrawerPresented = control.child("end_drawer") != nil
     case "close_end_drawer":
-      if let drawer = control.child("end_drawer"), endDrawerPresented { closeDrawer(drawer, end: true) }
+      if let drawer = control.child("end_drawer"), endDrawerPresented {
+        closeDrawer(drawer, end: true)
+      }
     case "confirm_pop":
       popState.confirm(arguments.map?["should_pop"]?.bool ?? false)
     default:
@@ -230,7 +255,9 @@ public struct ViewControl: View {
     return backend
   }
 
-  private var isTopView: Bool { page.children("views").last === control }
+  private var isTopView: Bool {
+    topViewID.map { $0 == control.id } ?? (page.children("views").last === control)
+  }
 
   private var shouldShowLoading: Bool {
     (backend.isLoading || !backend.error.isEmpty) && (backend.showAppStartupScreen ?? false)
@@ -250,19 +277,161 @@ public struct ViewControl: View {
     case "center":
       return horizontal == .center ? .center : (horizontal == .trailing ? .trailing : .leading)
     case "end":
-      return horizontal == .center ? .bottom : (horizontal == .trailing ? .bottomTrailing : .bottomLeading)
+      return horizontal == .center
+        ? .bottom : (horizontal == .trailing ? .bottomTrailing : .bottomLeading)
     default:
       return horizontal == .center ? .top : (horizontal == .trailing ? .topTrailing : .topLeading)
     }
   }
 
-  private var floatingAlignment: Alignment {
-    switch control.string("floating_action_button_location")?.lowercased() {
-    case let value? where value.contains("center"): .bottom
-    case let value? where value.contains("start"): .bottomLeading
-    default: .bottomTrailing
-    }
+}
+
+private struct RufletTopViewIDKey: EnvironmentKey {
+  static let defaultValue: Int? = nil
+}
+
+extension EnvironmentValues {
+  var rufletTopViewID: Int? {
+    get { self[RufletTopViewIDKey.self] }
+    set { self[RufletTopViewIDKey.self] = newValue }
   }
+}
+
+struct RufletFloatingActionLocation: Equatable {
+  enum Horizontal { case start, center, end }
+  enum Vertical { case top, float, docked, contained }
+
+  let horizontal: Horizontal
+  let vertical: Vertical
+  let mini: Bool
+  let customOffset: CGSize?
+
+  static func parse(_ value: Any?) -> RufletFloatingActionLocation {
+    if let details = rufletDictionary(value), details["dx"] != nil || details["dy"] != nil {
+      return RufletFloatingActionLocation(
+        horizontal: .end,
+        vertical: .float,
+        mini: false,
+        customOffset: CGSize(
+          width: parseDouble(details["dx"], 0)!,
+          height: parseDouble(details["dy"], 0)!))
+    }
+    if let offset = parseOffset(value) {
+      return RufletFloatingActionLocation(
+        horizontal: .end,
+        vertical: .float,
+        mini: false,
+        customOffset: offset)
+    }
+
+    let raw = (value as? String)?.lowercased() ?? "endfloat"
+    let mini = raw.hasPrefix("mini")
+    let normalized = mini ? String(raw.dropFirst(4)) : raw
+    let horizontal: Horizontal =
+      normalized.hasPrefix("start")
+      ? .start : (normalized.hasPrefix("center") ? .center : .end)
+    let vertical: Vertical
+    if normalized.hasSuffix("top") {
+      vertical = .top
+    } else if normalized.hasSuffix("docked") {
+      vertical = .docked
+    } else if normalized.hasSuffix("contained") {
+      vertical = .contained
+    } else {
+      vertical = .float
+    }
+    return RufletFloatingActionLocation(
+      horizontal: horizontal,
+      vertical: vertical,
+      mini: mini,
+      customOffset: nil)
+  }
+}
+
+private struct RufletFloatingActionPlacement<Content: View>: View {
+  let location: RufletFloatingActionLocation
+  let topBarHeight: Double
+  let bottomBarHeight: Double
+  @ViewBuilder let content: () -> Content
+
+  init(
+    location: Any?,
+    topBarHeight: Double,
+    bottomBarHeight: Double,
+    @ViewBuilder content: @escaping () -> Content
+  ) {
+    self.location = .parse(location)
+    self.topBarHeight = topBarHeight
+    self.bottomBarHeight = bottomBarHeight
+    self.content = content
+  }
+
+  var body: some View {
+    GeometryReader { proxy in
+      content()
+        .background {
+          GeometryReader { buttonProxy in
+            Color.clear
+              .preference(key: RufletFloatingActionSizeKey.self, value: buttonProxy.size)
+          }
+        }
+        .position(position(in: proxy.size))
+        .onPreferenceChange(RufletFloatingActionSizeKey.self) { size = $0 }
+    }
+    .allowsHitTesting(true)
+  }
+
+  @State private var size = CGSize(width: 56, height: 56)
+
+  private func position(in container: CGSize) -> CGPoint {
+    if let custom = location.customOffset {
+      return CGPoint(
+        x: container.width - custom.width + size.width / 2,
+        y: container.height - custom.height + size.height / 2)
+    }
+
+    let margin = 16.0
+    let x: Double
+    switch location.horizontal {
+    case .start: x = margin + size.width / 2
+    case .center: x = container.width / 2
+    case .end: x = container.width - margin - size.width / 2
+    }
+
+    let y: Double
+    switch location.vertical {
+    case .top:
+      y = topBarHeight + margin + size.height / 2
+    case .contained:
+      y =
+        bottomBarHeight > 0
+        ? container.height - bottomBarHeight / 2
+        : container.height - margin - size.height / 2
+    case .docked:
+      y =
+        bottomBarHeight > 0
+        ? container.height - bottomBarHeight
+        : container.height - margin - size.height / 2
+    case .float:
+      y = container.height - bottomBarHeight - margin - size.height / 2
+    }
+    return CGPoint(x: x, y: y)
+  }
+}
+
+private struct RufletBottomBarSizeKey: PreferenceKey {
+  static let defaultValue = 0.0
+  static func reduce(value: inout Double, nextValue: () -> Double) { value = nextValue() }
+}
+
+private struct RufletTopBarSizeKey: PreferenceKey {
+  static let defaultValue = 0.0
+  static func reduce(value: inout Double, nextValue: () -> Double) { value = nextValue() }
+}
+
+private struct RufletFloatingActionSizeKey: PreferenceKey {
+  static let defaultValue = CGSize(width: 56, height: 56)
+  static func reduce(value: inout CGSize, nextValue: () -> CGSize) { value = nextValue() }
 }
 
 private struct RufletViewScrollPositionKey: PreferenceKey {
