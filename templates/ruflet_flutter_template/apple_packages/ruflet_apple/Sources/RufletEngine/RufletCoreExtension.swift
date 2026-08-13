@@ -14,7 +14,7 @@ public struct RufletCoreExtension: RufletExtension {
     "CupertinoButton", "CupertinoCheckbox", "CupertinoDialogAction", "CupertinoFilledButton",
     "CupertinoActionSheet", "CupertinoActionSheetAction", "CupertinoActivityIndicator", "CupertinoAlertDialog", "CupertinoAppBar", "CupertinoBottomSheet", "CupertinoDatePicker", "CupertinoPicker", "CupertinoRadio", "CupertinoSlider", "CupertinoSwitch", "CupertinoTextField", "CupertinoTimerPicker", "CupertinoTintedButton", "Dismissible",
     "DatePicker", "DateRangePicker", "Divider", "Draggable", "DragTarget", "Dropdown", "DropdownM2", "FilledButton", "FilledIconButton", "FilledTonalButton", "FilledTonalIconButton", "FloatingActionButton", "GridView", "Hero",
-    "CupertinoNavigationBar", "Icon", "IconButton", "Image", "InteractiveViewer", "KeyboardListener", "ListView", "MergeSemantics", "NavigationBar", "NavigationBarDestination", "NavigationDrawer", "NavigationRail", "OutlinedButton", "OutlinedIconButton", "Page", "PageView",
+    "CupertinoNavigationBar", "FletApp", "Icon", "IconButton", "Image", "InteractiveViewer", "KeyboardListener", "ListView", "MergeSemantics", "NavigationBar", "NavigationBarDestination", "NavigationDrawer", "NavigationRail", "OutlinedButton", "OutlinedIconButton", "Page", "PageView", "Pagelet",
     "Placeholder", "ProgressBar", "ProgressRing", "Radio", "RadioGroup", "RangeSlider",
     "ReorderableDragHandle", "ReorderableListView", "ResponsiveRow", "Row", "SafeArea",
     "SelectionArea", "Semantics", "ShaderMask", "Shimmer", "Slider", "Stack", "Switch", "Tab", "TabBar", "TabBarView", "Tabs", "Text", "TextButton", "TextField", "TimePicker", "View",
@@ -76,6 +76,7 @@ public struct RufletCoreExtension: RufletExtension {
     case "FilledIconButton", "FilledTonalIconButton", "IconButton", "OutlinedIconButton":
       return AnyView(IconButtonControl(control: control))
     case "FloatingActionButton": return AnyView(FloatingActionButtonControl(control: control))
+    case "FletApp": return AnyView(FletAppControl(control: control))
     case "VerticalDivider": return AnyView(VerticalDividerControl(control: control))
     case "View": return AnyView(ViewControl(control: control))
     case "Icon": return AnyView(IconControl(control: control))
@@ -92,6 +93,7 @@ public struct RufletCoreExtension: RufletExtension {
     case "ProgressBar": return AnyView(ProgressBarControl(control: control))
     case "ProgressRing": return AnyView(ProgressRingControl(control: control))
     case "PageView": return AnyView(PageViewControl(control: control))
+    case "Pagelet": return AnyView(PageletControl(control: control))
     case "RadioGroup": return AnyView(RadioGroupControl(control: control))
     case "RangeSlider": return AnyView(RangeSliderControl(control: control))
     case "ReorderableDragHandle": return AnyView(ReorderableDragHandleControl(control: control))
