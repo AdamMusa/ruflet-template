@@ -46,6 +46,9 @@ workspace-state concepts live in `file_content_overrides.json`.
 Reviewed assessment, source/class authoring, filter, resizing, privacy, rule,
 and other platform-neutral interface actions with direct Apple equivalents
 live in `interface_action_overrides.json`.
+Reviewed numbered looks, blur/focus, transform, white-balance lighting,
+color-inversion, and panorama-editing concepts live in
+`advanced_image_editing_overrides.json`.
 
 The 8,825 identities contain 2,235 concepts because Flet carries Outlined,
 Rounded, and Sharp Material variants. The generator records the collapsed

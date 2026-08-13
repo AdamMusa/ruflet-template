@@ -1515,12 +1515,6 @@
     "value": "paintpalette.fill",
     "rationale": "curated Material-to-SF vocabulary"
   },
-  "PANORAMA_FISHEYE": {
-    "kind": "system_symbol",
-    "value": "circle",
-    "rationale": "native Apple circular fisheye outline",
-    "status": "review_required"
-  },
   "PASTE": {
     "kind": "system_symbol",
     "value": "doc.on.clipboard",

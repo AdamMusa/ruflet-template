@@ -1,0 +1,67 @@
+{
+  "AUTO_AWESOME_MOTION": {
+    "kind": "system_symbol",
+    "value": "sparkles.rectangle.stack.fill",
+    "rationale": "public Apple automatically enhanced sequence-of-frames identity"
+  },
+  "BLUR_CIRCULAR": {
+    "kind": "system_symbol",
+    "value": "circle.dotted",
+    "rationale": "public Apple dotted radial-area identity for circular blur"
+  },
+  "CONTROL_POINT_DUPLICATE": {
+    "kind": "cupertino_glyph",
+    "value": "SMALLCIRCLE_FILL_CIRCLE",
+    "rationale": "bundled Cupertino overlapping control-point identity"
+  },
+  "DEBLUR": {
+    "kind": "system_symbol",
+    "value": "viewfinder",
+    "rationale": "public Apple focus and image-clarity identity"
+  },
+  "FILTER_TILT_SHIFT": {
+    "kind": "system_symbol",
+    "value": "scope",
+    "rationale": "public Apple targeted lens-focus identity for tilt-shift filtering"
+  },
+  "INVERT_COLORS_ON": {
+    "kind": "system_symbol",
+    "value": "circle.lefthalf.filled",
+    "rationale": "public Apple half-inverted circle used for color-inversion state"
+  },
+  "LOOKS_3": {
+    "kind": "system_symbol",
+    "value": "3.square.fill",
+    "rationale": "public Apple filled number-three square matching the third-look identity"
+  },
+  "LOOKS_ONE": {
+    "kind": "system_symbol",
+    "value": "1.square.fill",
+    "rationale": "public Apple filled number-one square matching the first-look identity"
+  },
+  "LOOKS_TWO": {
+    "kind": "system_symbol",
+    "value": "2.square.fill",
+    "rationale": "public Apple filled number-two square matching the second-look identity"
+  },
+  "PANORAMA_FISHEYE": {
+    "kind": "system_symbol",
+    "value": "circle",
+    "rationale": "public Apple circular outline matching the fisheye panorama identity"
+  },
+  "TRANSFORM": {
+    "kind": "system_symbol",
+    "value": "rectangle.and.arrow.up.right.and.arrow.down.left",
+    "rationale": "public Apple image-frame transform and resize identity"
+  },
+  "WB_IRIDESCENT": {
+    "kind": "system_symbol",
+    "value": "lightbulb.fill",
+    "rationale": "public Apple artificial-light source identity for iridescent white balance"
+  },
+  "WB_TWIGHLIGHT": {
+    "kind": "system_symbol",
+    "value": "sunset.fill",
+    "rationale": "public Apple twilight lighting identity for twilight white balance"
+  }
+}

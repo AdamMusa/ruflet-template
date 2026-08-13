@@ -14,7 +14,7 @@
     "material_icons.json": "be2d1dee6c40a5dfeaacd8fe415301db3d7c976e6eabc7fca9da734cc5abfb85",
     "cupertino_glyphs.json": "dad0be1db615640c1a0dd86365f71d0dfa2ec01ed3e2773188895006d21ad012",
     "material_semantics.json": "b3a0e564b3661355757107b929add9bc22b8fd86e2038d12aaf3b7dac380d2dd",
-    "overrides.json": "9bcd3a2b826a04811478c8803e46dc81c0f1ccb4f9745143e99ddfb5df202058",
+    "overrides.json": "f11367be97aaf71dd4a73b1b9bb28da7a2f71dd5bb2b0537827007227d7aea01",
     "navigation_travel_overrides.json": "63fcf29579be8fab701bdf81b1b345a710ed66f91cf9e764fd91f008ac3b796c",
     "action_overrides.json": "1d0cb0f7ee23bba2caa6204baf5671e602124149451c28c778ba57bf00f1fad5",
     "maps_places_overrides.json": "0cc97806c2536763422e12967a7cdc7cbba78c39451f8b92534b8bf48cef9ba7",
@@ -30,18 +30,20 @@
     "notification_status_overrides.json": "229ae9a2f5f6c267134ede74e396416d9cf5d043895f7038b080c9c4b6bc90cd",
     "file_content_overrides.json": "e449a1148e2246e509f26b9a2ae8de416306937d440215990239e20a4e77d2b4",
     "interface_action_overrides.json": "3c09440fc6bdb2a4caf69da9aea0d1da2b608dea2f678da4fa2dfcfb6d082d92",
+    "advanced_image_editing_overrides.json": "f2ff4dda82083f8b443712df6d81f39649e2bf3bccd703a2ad34e38c790ba6fd",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/name_availability.plist": "a277cf5b63017ed497d5b6b3ea96bbee4f407b76776af41bcb52943007335b5c",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_search.plist": "29a767651ce53d8861e28d3eaa20b50d3e02a85fe5a79d557ce1fbff7fa4ebad",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_restrictions.strings": "2e1b1c3d629d26ac1e75861f33cb1cbbb3348e142a2b6c1aaf9bba546273f13b"
   },
   "sources": {
     "exact_apple_name": 48,
-    "manual_review_required": 104,
-    "reviewed_override": 912,
-    "semantic_rank": 1171
+    "manual_review_required": 103,
+    "reviewed_override": 925,
+    "semantic_rank": 1159
   },
   "reviewed_families": {
     "action": 76,
+    "advanced_image_editing": 13,
     "audio_video": 24,
     "business_commerce": 21,
     "communication": 36,
@@ -61,11 +63,11 @@
   "confidence_grades": {
     "exact": 48,
     "high": 665,
-    "low": 513,
-    "medium": 97,
-    "reviewed": 912
+    "low": 503,
+    "medium": 94,
+    "reviewed": 925
   },
-  "unique_apple_targets": 883,
+  "unique_apple_targets": 886,
   "most_reused_targets": [
     {
       "kind": "system_symbol",
@@ -85,12 +87,7 @@
     {
       "kind": "system_symbol",
       "value": "photo",
-      "concept_count": 25
-    },
-    {
-      "kind": "cupertino_glyph",
-      "value": "CONTROL",
-      "concept_count": 25
+      "concept_count": 24
     },
     {
       "kind": "cupertino_glyph",
@@ -105,6 +102,11 @@
     {
       "kind": "cupertino_glyph",
       "value": "ALT",
+      "concept_count": 23
+    },
+    {
+      "kind": "cupertino_glyph",
+      "value": "CONTROL",
       "concept_count": 23
     },
     {
@@ -178,11 +180,6 @@
       "concept_count": 10
     },
     {
-      "kind": "system_symbol",
-      "value": "bolt",
-      "concept_count": 10
-    },
-    {
       "kind": "cupertino_glyph",
       "value": "ALARM",
       "concept_count": 9
@@ -238,13 +235,13 @@
       "concept_count": 9
     },
     {
-      "kind": "cupertino_glyph",
-      "value": "ARROW_RIGHT",
-      "concept_count": 8
+      "kind": "system_symbol",
+      "value": "bolt",
+      "concept_count": 9
     },
     {
       "kind": "cupertino_glyph",
-      "value": "SQUARE_FILL_ON_SQUARE_FILL",
+      "value": "ARROW_RIGHT",
       "concept_count": 8
     },
     {
@@ -289,7 +286,7 @@
     },
     {
       "kind": "cupertino_glyph",
-      "value": "FILM",
+      "value": "SQUARE_FILL_ON_SQUARE_FILL",
       "concept_count": 7
     },
     {
@@ -314,11 +311,16 @@
     },
     {
       "kind": "system_symbol",
+      "value": "lightbulb.fill",
+      "concept_count": 7
+    },
+    {
+      "kind": "system_symbol",
       "value": "4.circle",
       "concept_count": 7
     }
   ],
-  "low_confidence_count": 610,
+  "low_confidence_count": 597,
   "low_confidence_concepts": [
     {
       "concept": "SIXTY_FPS_SELECT",
@@ -1352,51 +1354,6 @@
         "system status",
         "triangle",
         "warning"
-      ]
-    },
-    {
-      "concept": "LOOKS_ONE",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "NUMBER_SQUARE"
-      },
-      "confidence": 0.1421,
-      "grade": "low",
-      "reason": "name=[] semantic=['number', 'square'] extra=[]",
-      "tags": [
-        "1",
-        "beginning",
-        "competition",
-        "count",
-        "counting",
-        "digit",
-        "exclusive",
-        "first",
-        "initial",
-        "leading",
-        "looks",
-        "major",
-        "math",
-        "mathematics",
-        "number one",
-        "numbers",
-        "numeral",
-        "numerical",
-        "one",
-        "original",
-        "position",
-        "primary",
-        "principal",
-        "ranked",
-        "ranking",
-        "single",
-        "sole",
-        "square",
-        "start",
-        "symbol",
-        "top",
-        "unique",
-        "winner"
       ]
     },
     {
@@ -4035,45 +3992,6 @@
       ]
     },
     {
-      "concept": "LOOKS_TWO",
-      "target": {
-        "kind": "system_symbol",
-        "value": "eye"
-      },
-      "confidence": 0.2075,
-      "grade": "low",
-      "reason": "name=[] semantic=['eye', 'look'] extra=[]",
-      "tags": [
-        "2",
-        "digit",
-        "double",
-        "eye",
-        "eyes",
-        "glasses",
-        "lenses",
-        "look",
-        "looks",
-        "numbers",
-        "observation",
-        "oculist",
-        "opthalmology",
-        "optical",
-        "optics",
-        "pair",
-        "perceive",
-        "seeing",
-        "sight",
-        "spectacles",
-        "square",
-        "symbol",
-        "two",
-        "view",
-        "vision",
-        "visual",
-        "watch"
-      ]
-    },
-    {
       "concept": "INVERT_COLORS_OFF",
       "target": {
         "kind": "system_symbol",
@@ -5300,54 +5218,6 @@
         "unfold",
         "up",
         "vertical arrows"
-      ]
-    },
-    {
-      "concept": "AUTO_AWESOME_MOTION",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "FILM"
-      },
-      "confidence": 0.2501,
-      "grade": "low",
-      "reason": "name=[] semantic=['film'] extra=[]",
-      "tags": [
-        "adjust",
-        "AI",
-        "animate",
-        "animation",
-        "auto",
-        "automatic",
-        "automation",
-        "awesome",
-        "collage",
-        "create",
-        "dynamic",
-        "edit",
-        "editing",
-        "effect",
-        "enhance",
-        "enhancement",
-        "film",
-        "filmstrip",
-        "frames",
-        "generate",
-        "generate video",
-        "image",
-        "improve",
-        "magic",
-        "magical",
-        "motion",
-        "movement",
-        "photo",
-        "process",
-        "quality",
-        "sequence",
-        "smart",
-        "sparkle",
-        "stars",
-        "timeline",
-        "video"
       ]
     },
     {
@@ -6621,48 +6491,6 @@
       ]
     },
     {
-      "concept": "BLUR_CIRCULAR",
-      "target": {
-        "kind": "system_symbol",
-        "value": "photo.circle"
-      },
-      "confidence": 0.2754,
-      "grade": "low",
-      "reason": "name=[] semantic=['circle', 'photo'] extra=[]",
-      "tags": [
-        "aesthetic",
-        "art",
-        "blur",
-        "circle",
-        "circular",
-        "design",
-        "diffused",
-        "dots",
-        "dreamy",
-        "edit",
-        "editing",
-        "effect",
-        "enhance",
-        "filter",
-        "focus",
-        "fuzzy",
-        "gaussian",
-        "graphic",
-        "halo",
-        "image",
-        "out of focus",
-        "photo",
-        "photography",
-        "radial",
-        "radial blur",
-        "smooth",
-        "soft",
-        "soft focus",
-        "unfocus",
-        "visual"
-      ]
-    },
-    {
       "concept": "SENTIMENT_DISSATISFIED",
       "target": {
         "kind": "cupertino_glyph",
@@ -7438,19 +7266,6 @@
         "video size",
         "width",
         "window size"
-      ]
-    },
-    {
-      "concept": "INVERT_COLORS_ON",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "SQUARE_FILL_ON_SQUARE_FILL"
-      },
-      "confidence": 0.2858,
-      "grade": "low",
-      "reason": "name=['on'] semantic=['on'] extra=['square']",
-      "tags": [
-        "invert colors on"
       ]
     },
     {
@@ -12946,48 +12761,6 @@
       ]
     },
     {
-      "concept": "DEBLUR",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "CONTROL"
-      },
-      "confidence": 0.3229,
-      "grade": "low",
-      "reason": "name=[] semantic=['control'] extra=[]",
-      "tags": [
-        "adjust",
-        "adjustment",
-        "application",
-        "button",
-        "clarity",
-        "contrast",
-        "control",
-        "correction",
-        "deblur",
-        "detail",
-        "edit",
-        "editing",
-        "effect",
-        "enhance",
-        "face",
-        "filter",
-        "focus",
-        "graphic",
-        "horizontal lines",
-        "image",
-        "lines",
-        "photo",
-        "photography",
-        "sharpen",
-        "software",
-        "squiggly lines",
-        "straight lines",
-        "tool",
-        "visual",
-        "waves"
-      ]
-    },
-    {
       "concept": "DRY",
       "target": {
         "kind": "cupertino_glyph",
@@ -13720,52 +13493,6 @@
         "vision",
         "vr",
         "world"
-      ]
-    },
-    {
-      "concept": "TRANSFORM",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "PERSPECTIVE"
-      },
-      "confidence": 0.3244,
-      "grade": "low",
-      "reason": "name=[] semantic=['perspective'] extra=[]",
-      "tags": [
-        "adjust",
-        "alter",
-        "anchors",
-        "aspect ratio",
-        "box",
-        "change",
-        "contract",
-        "corners",
-        "crop",
-        "distortion",
-        "edit",
-        "editing",
-        "enlarge",
-        "expand",
-        "format",
-        "graphic design",
-        "image",
-        "image editing",
-        "layout",
-        "modify",
-        "move",
-        "perspective",
-        "photo",
-        "picture",
-        "points",
-        "position",
-        "rearrange",
-        "resize",
-        "scale",
-        "shrink",
-        "size",
-        "square",
-        "transform",
-        "visual"
       ]
     },
     {
@@ -15429,56 +15156,6 @@
         "three lines",
         "typography",
         "view"
-      ]
-    },
-    {
-      "concept": "WB_IRIDESCENT",
-      "target": {
-        "kind": "system_symbol",
-        "value": "bolt"
-      },
-      "confidence": 0.4137,
-      "grade": "low",
-      "reason": "name=[] semantic=['camera', 'energy', 'power'] extra=['bolt']",
-      "tags": [
-        "adjustments",
-        "balance",
-        "bright",
-        "brightness",
-        "camera",
-        "edit",
-        "editing",
-        "effects",
-        "electric",
-        "electricity",
-        "energy",
-        "filter",
-        "fluorescent",
-        "gleam",
-        "glow",
-        "illumination",
-        "image",
-        "incandescent",
-        "indoor",
-        "iridescent",
-        "lamp",
-        "light",
-        "light bulb",
-        "lightbulb",
-        "lighting",
-        "photo",
-        "photography",
-        "picture",
-        "power",
-        "setting",
-        "settings",
-        "shimmer",
-        "sparkle",
-        "tungsten",
-        "wb",
-        "white",
-        "white balance",
-        "wp"
       ]
     },
     {
@@ -17410,19 +17087,6 @@
       ]
     },
     {
-      "concept": "PANORAMA_FISHEYE",
-      "target": {
-        "kind": "system_symbol",
-        "value": "circle"
-      },
-      "confidence": 0.5,
-      "grade": "low",
-      "reason": "native Apple circular fisheye outline",
-      "tags": [
-        "panorama fisheye"
-      ]
-    },
-    {
       "concept": "PASTE",
       "target": {
         "kind": "system_symbol",
@@ -18983,27 +18647,6 @@
         "symbol",
         "tag",
         "topic"
-      ]
-    },
-    {
-      "concept": "WB_TWIGHLIGHT",
-      "target": {
-        "kind": "system_symbol",
-        "value": "photo"
-      },
-      "confidence": 0.5629,
-      "grade": "low",
-      "reason": "name=[] semantic=['photo', 'sun'] extra=[]",
-      "tags": [
-        "balance",
-        "light",
-        "lighting",
-        "noon",
-        "sun",
-        "sunset",
-        "twilight",
-        "wb",
-        "white"
       ]
     },
     {
@@ -21531,50 +21174,6 @@
         "warning",
         "wifi",
         "wireless"
-      ]
-    },
-    {
-      "concept": "LOOKS_3",
-      "target": {
-        "kind": "system_symbol",
-        "value": "3.square"
-      },
-      "confidence": 0.7119,
-      "grade": "medium",
-      "reason": "name=['3'] semantic=['3', 'square'] extra=[]",
-      "tags": [
-        "3",
-        "arrangement",
-        "controls",
-        "count",
-        "customization",
-        "data",
-        "digit",
-        "filter",
-        "grouping",
-        "hierarchy",
-        "information",
-        "layers",
-        "level",
-        "list",
-        "looks",
-        "menu",
-        "number 3",
-        "numbers",
-        "numerical",
-        "options",
-        "ordered",
-        "organization",
-        "priority",
-        "ranking",
-        "segmentation",
-        "sequence",
-        "settings",
-        "sort",
-        "square",
-        "stacking",
-        "symbol",
-        "three"
       ]
     },
     {
@@ -24655,90 +24254,6 @@
         "update",
         "waypoint",
         "write"
-      ]
-    },
-    {
-      "concept": "FILTER_TILT_SHIFT",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "SHIFT"
-      },
-      "confidence": 0.8144,
-      "grade": "medium",
-      "reason": "name=['shift'] semantic=['shift'] extra=[]",
-      "tags": [
-        "adjustment",
-        "aperture",
-        "blur",
-        "camera",
-        "center",
-        "circle",
-        "circular",
-        "control",
-        "dash",
-        "dashed",
-        "depth of field",
-        "dot",
-        "edit",
-        "editing",
-        "effect",
-        "filter",
-        "filter settings",
-        "focus",
-        "image",
-        "images",
-        "lens",
-        "lens focus",
-        "miniature",
-        "optic",
-        "perspective",
-        "photo",
-        "photography",
-        "photography tool",
-        "picture",
-        "pictures",
-        "point",
-        "precision",
-        "settings",
-        "shift",
-        "target",
-        "tilt",
-        "tilt shift",
-        "zoom"
-      ]
-    },
-    {
-      "concept": "CONTROL_POINT_DUPLICATE",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "CONTROL"
-      },
-      "confidence": 0.8165,
-      "grade": "medium",
-      "reason": "name=['control'] semantic=['control'] extra=[]",
-      "tags": [
-        "+",
-        "add",
-        "addmultiple",
-        "circle",
-        "circles",
-        "clone",
-        "control",
-        "copy",
-        "create",
-        "double",
-        "duplicate",
-        "generatemultiples",
-        "make",
-        "multiple",
-        "new",
-        "overlapping circles",
-        "overlay",
-        "plus",
-        "point",
-        "replicate",
-        "symbol",
-        "two circles"
       ]
     },
     {

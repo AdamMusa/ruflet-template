@@ -593,6 +593,55 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             self.assertEqual(self.entries[material_name]["kind"], kind)
             self.assertEqual(self.entries[material_name]["value"], value)
 
+    def test_advanced_image_editing_family_is_reviewed_native_artwork(self):
+        family = MODULE.load_json(MODULE.ADVANCED_IMAGE_EDITING_OVERRIDES_PATH)
+        low_confidence = {
+            item["concept"] for item in self.audit["low_confidence_concepts"]
+        }
+        self.assertEqual(
+            self.audit["reviewed_families"]["advanced_image_editing"],
+            len(family),
+        )
+        self.assertTrue(set(family).isdisjoint(low_confidence))
+        for concept, target in family.items():
+            entry = self.entries[concept]
+            self.assertEqual(entry["kind"], target["kind"])
+            self.assertEqual(entry["value"], target["value"])
+            self.assertEqual(entry["confidence"], "reviewed")
+            self.assertEqual(entry["source"], "reviewed_override")
+
+    def test_advanced_image_editing_distinct_semantics_do_not_regress(self):
+        expected = {
+            "AUTO_AWESOME_MOTION": (
+                "system_symbol",
+                "sparkles.rectangle.stack.fill",
+            ),
+            "BLUR_CIRCULAR": ("system_symbol", "circle.dotted"),
+            "CONTROL_POINT_DUPLICATE": (
+                "cupertino_glyph",
+                "SMALLCIRCLE_FILL_CIRCLE",
+            ),
+            "DEBLUR": ("system_symbol", "viewfinder"),
+            "FILTER_TILT_SHIFT": ("system_symbol", "scope"),
+            "INVERT_COLORS_ON": (
+                "system_symbol",
+                "circle.lefthalf.filled",
+            ),
+            "LOOKS_ONE": ("system_symbol", "1.square.fill"),
+            "LOOKS_TWO": ("system_symbol", "2.square.fill"),
+            "LOOKS_3": ("system_symbol", "3.square.fill"),
+            "PANORAMA_FISHEYE": ("system_symbol", "circle"),
+            "TRANSFORM": (
+                "system_symbol",
+                "rectangle.and.arrow.up.right.and.arrow.down.left",
+            ),
+            "WB_IRIDESCENT": ("system_symbol", "lightbulb.fill"),
+            "WB_TWIGHLIGHT": ("system_symbol", "sunset.fill"),
+        }
+        for material_name, (kind, value) in expected.items():
+            self.assertEqual(self.entries[material_name]["kind"], kind)
+            self.assertEqual(self.entries[material_name]["value"], value)
+
     def test_checked_in_artifacts_are_reproducible(self):
         self.assertEqual(
             MODULE.OUTPUT_PATH.read_text(encoding="utf-8"),
