@@ -1,7 +1,10 @@
 import Foundation
+import RufletProtocol
 
 func parseDouble(_ value: Any?, _ defaultValue: Double? = nil) -> Double? {
     switch value {
+    case let value as RufletValue:
+        return value.number ?? value.text.flatMap(Double.init) ?? defaultValue
     case let value as Double:
         return value
     case let value as Float:
@@ -41,6 +44,8 @@ func parseDouble(_ value: Any?, _ defaultValue: Double? = nil) -> Double? {
 
 func parseInt(_ value: Any?, _ defaultValue: Int? = nil) -> Int? {
     switch value {
+    case let value as RufletValue:
+        return value.integer ?? value.text.flatMap(Int.init) ?? defaultValue
     case let value as Int:
         return value
     case let value as NSNumber:
@@ -56,6 +61,8 @@ func parseInt(_ value: Any?, _ defaultValue: Int? = nil) -> Int? {
 
 func parseBool(_ value: Any?, _ defaultValue: Bool? = nil) -> Bool? {
     switch value {
+    case let value as RufletValue:
+        return value.bool ?? value.text.map { $0.lowercased() == "true" } ?? defaultValue
     case let value as Bool:
         return value
     case .none:

@@ -1,8 +1,8 @@
 import Foundation
 
-protocol RufletStringEnum: RawRepresentable, CaseIterable where RawValue == String {}
+public protocol RufletStringEnum: RawRepresentable, CaseIterable where RawValue == String {}
 
-extension RufletStringEnum {
+public extension RufletStringEnum {
     static func parse(_ value: String?, _ defaultValue: Self? = nil) -> Self? {
         guard let value else { return defaultValue }
         return allCases.first {
@@ -11,7 +11,7 @@ extension RufletStringEnum {
     }
 }
 
-func parseEnum<T: RufletStringEnum>(
+public func parseEnum<T: RufletStringEnum>(
     _ type: T.Type,
     _ value: String?,
     _ defaultValue: T? = nil

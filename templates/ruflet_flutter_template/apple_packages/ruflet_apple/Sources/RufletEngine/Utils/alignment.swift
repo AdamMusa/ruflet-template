@@ -1,8 +1,13 @@
 import SwiftUI
 
-struct RufletAlignment: Equatable, Sendable {
-    let x: Double
-    let y: Double
+public struct RufletAlignment: Equatable, Sendable {
+    public let x: Double
+    public let y: Double
+
+    public init(x: Double, y: Double) {
+        self.x = x
+        self.y = y
+    }
 
     static let center = RufletAlignment(x: 0, y: 0)
 
@@ -18,7 +23,7 @@ struct RufletAlignment: Equatable, Sendable {
     }
 }
 
-func parseAlignment(_ value: Any?, _ defaultValue: RufletAlignment? = nil) -> RufletAlignment? {
+public func parseAlignment(_ value: Any?, _ defaultValue: RufletAlignment? = nil) -> RufletAlignment? {
     guard let value = rufletDictionary(value) else { return defaultValue }
     return RufletAlignment(
         x: parseDouble(value["x"], 0)!,
