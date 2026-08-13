@@ -10,6 +10,7 @@ public struct BottomAppBarControl: View {
   }
 
   public var body: some View {
+    let presentation = RufletBottomAppBarPresentation(control: control)
     LayoutControl(control: control) {
       ZStack {
         shape
@@ -23,7 +24,10 @@ public struct BottomAppBarControl: View {
           .padding(parsePadding(control.dynamicValue("padding")) ?? EdgeInsets())
       }
       .frame(height: control.number("height").map { CGFloat($0) })
-      .clipShape(RufletCornerShape(radius: radius))
+      .modifier(
+        RufletBottomAppBarClipModifier(
+          shape: RufletCornerShape(radius: radius),
+          presentation: presentation))
     }
   }
 
@@ -39,6 +43,40 @@ public struct BottomAppBarControl: View {
     parseBorderRadius(control.dynamicValue("border_radius"), .zero)!
   }
   private var elevation: Double { max(control.number("elevation", default: 0) ?? 0, 0) }
+}
+
+@MainActor
+struct RufletBottomAppBarPresentation {
+  let clipBehavior: String
+  let hasBorderRadius: Bool
+
+  init(control: RufletControl) {
+    let radius = parseBorderRadius(control.dynamicValue("border_radius"), .zero)!
+    hasBorderRadius = radius != .zero
+    let requested = control.string("clip_behavior")?.lowercased()
+    if hasBorderRadius, requested == nil || requested == "none" {
+      clipBehavior = "antialias"
+    } else {
+      clipBehavior = requested ?? "none"
+    }
+  }
+
+  var clipsContent: Bool { clipBehavior != "none" }
+  var antialiasedClip: Bool { clipBehavior.contains("antialias") }
+}
+
+private struct RufletBottomAppBarClipModifier: ViewModifier {
+  let shape: RufletCornerShape
+  let presentation: RufletBottomAppBarPresentation
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if presentation.clipsContent {
+      content.clipShape(shape, style: FillStyle(antialiased: presentation.antialiasedClip))
+    } else {
+      content
+    }
+  }
 }
 
 private struct RufletBottomAppBarShape: Shape {
@@ -59,8 +97,10 @@ private struct RufletBottomAppBarShape: Shape {
     path.addLine(to: CGPoint(x: centerX - notchRadius, y: top))
     path.addCurve(
       to: CGPoint(x: centerX + notchRadius, y: top),
-      control1: CGPoint(x: centerX - notchRadius * 0.55, y: inverted ? top - notchRadius : top + notchRadius),
-      control2: CGPoint(x: centerX + notchRadius * 0.55, y: inverted ? top - notchRadius : top + notchRadius))
+      control1: CGPoint(
+        x: centerX - notchRadius * 0.55, y: inverted ? top - notchRadius : top + notchRadius),
+      control2: CGPoint(
+        x: centerX + notchRadius * 0.55, y: inverted ? top - notchRadius : top + notchRadius))
     path.addLine(to: CGPoint(x: rect.maxX, y: top))
     path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
     path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
