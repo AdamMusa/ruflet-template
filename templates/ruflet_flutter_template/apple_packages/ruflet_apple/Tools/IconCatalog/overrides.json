@@ -771,11 +771,6 @@
     "value": "CHEVRON_DOWN",
     "rationale": "curated Material-to-Cupertino vocabulary"
   },
-  "EXPLORE": {
-    "kind": "system_symbol",
-    "value": "safari",
-    "rationale": "curated Material-to-SF vocabulary"
-  },
   "EXTENSION": {
     "kind": "system_symbol",
     "value": "puzzlepiece.fill",

@@ -12,6 +12,11 @@ with Apple product-usage restrictions are excluded from automatic matching.
 There is no Material-font target, placeholder target, or runtime fuzzy fallback
 in the generated resource.
 
+Reviewed concepts are split into disjoint semantic-family files so a corpus
+change is auditable rather than a screen-specific patch. The navigation and
+transit family lives in `navigation_travel_overrides.json`; the generator
+rejects duplicate concepts across reviewed files.
+
 The 8,825 identities contain 2,235 concepts because Flet carries Outlined,
 Rounded, and Sharp Material variants. The generator records the collapsed
 concept on every entry and tests that variants do not change meaning.

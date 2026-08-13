@@ -8,7 +8,7 @@ and macOS 13.1 deployment floors. This tool expands every pinned wire identity
 into an explicit, auditable mapping. It never emits a Material-font glyph, a
 generic placeholder, or an unresolved entry.
 
-Generation uses four pinned/auditable inputs:
+Generation uses pinned/auditable inputs:
 
 * material_icons.json -- the Flet 0.80.5 wire corpus;
 * cupertino_glyphs.json -- the bundled Flutter Cupertino glyph corpus;
@@ -16,6 +16,7 @@ Generation uses four pinned/auditable inputs:
   tags for the 2,235 Flet concepts;
 * overrides.json -- reviewed vocabulary differences between Material and
   Apple.
+* navigation_travel_overrides.json -- the reviewed navigation/transit family.
 
 The installed public Apple symbol metadata is used only to choose and validate
 native symbols available at both deployment floors. Private and restricted
@@ -46,6 +47,7 @@ CUPERTINO_PATH = CATALOG_DIR / "cupertino_glyphs.json"
 OUTPUT_PATH = CATALOG_DIR / "material_to_apple.json"
 SEMANTICS_PATH = TOOL_DIR / "material_semantics.json"
 OVERRIDES_PATH = TOOL_DIR / "overrides.json"
+NAVIGATION_TRAVEL_OVERRIDES_PATH = TOOL_DIR / "navigation_travel_overrides.json"
 AUDIT_PATH = TOOL_DIR / "material_to_apple_audit.json"
 
 CORE_GLYPHS = Path(
@@ -310,6 +312,28 @@ def reviewed_override(
     return Target(kind, value, "reviewed_override", 1.0, item.get("rationale", "reviewed"))
 
 
+def load_reviewed_overrides() -> tuple[
+    dict[str, dict[str, str]], dict[str, str], dict[str, Path]
+]:
+    """Merge disjoint, human-reviewed semantic families deterministically."""
+    paths = {
+        "general": OVERRIDES_PATH,
+        "navigation_travel": NAVIGATION_TRAVEL_OVERRIDES_PATH,
+    }
+    merged: dict[str, dict[str, str]] = {}
+    families: dict[str, str] = {}
+    for family, path in paths.items():
+        for concept, item in load_json(path).items():
+            if concept in merged:
+                raise ValueError(
+                    f"Reviewed icon concept {concept} is duplicated in "
+                    f"{families[concept]} and {family}"
+                )
+            merged[concept] = item
+            families[concept] = family
+    return merged, families, paths
+
+
 def exact_target(
     concept: str,
     candidates_by_canonical: dict[str, list[Candidate]],
@@ -415,7 +439,7 @@ def generate() -> tuple[dict[str, Any], dict[str, Any]]:
     material: dict[str, int] = load_json(MATERIAL_PATH)
     cupertino: dict[str, int] = load_json(CUPERTINO_PATH)
     semantics: dict[str, dict[str, Any]] = load_json(SEMANTICS_PATH)
-    overrides: dict[str, dict[str, str]] = load_json(OVERRIDES_PATH)
+    overrides, override_families, override_paths = load_reviewed_overrides()
     availability, search, releases, restrictions, metadata_hashes = apple_metadata()
     deployment_available_symbols = deployment_symbols(availability, releases)
     symbols = deployment_available_symbols - set(restrictions)
@@ -468,6 +492,11 @@ def generate() -> tuple[dict[str, Any], dict[str, Any]]:
 
     grade_counts = Counter(confidence_grade(target) for target in concept_targets.values())
     source_counts = Counter(target.source for target in concept_targets.values())
+    reviewed_family_counts = Counter(
+        override_families[concept]
+        for concept, target in concept_targets.items()
+        if target.source == "reviewed_override"
+    )
     target_counts = Counter((target.kind, target.value) for target in concept_targets.values())
     low_confidence = []
     for concept, target in concept_targets.items():
@@ -498,10 +527,11 @@ def generate() -> tuple[dict[str, Any], dict[str, Any]]:
             "material_icons.json": sha256(MATERIAL_PATH),
             "cupertino_glyphs.json": sha256(CUPERTINO_PATH),
             "material_semantics.json": sha256(SEMANTICS_PATH),
-            "overrides.json": sha256(OVERRIDES_PATH),
+            **{path.name: sha256(path) for path in override_paths.values()},
             **metadata_hashes,
         },
         "sources": dict(sorted(source_counts.items())),
+        "reviewed_families": dict(sorted(reviewed_family_counts.items())),
         "confidence_grades": dict(sorted(grade_counts.items())),
         "unique_apple_targets": len(target_counts),
         "most_reused_targets": [

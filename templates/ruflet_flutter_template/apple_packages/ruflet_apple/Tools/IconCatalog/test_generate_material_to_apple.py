@@ -78,6 +78,36 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
                 },
             )
 
+    def test_navigation_travel_family_is_explicit_reviewed_native_artwork(self):
+        family = MODULE.load_json(MODULE.NAVIGATION_TRAVEL_OVERRIDES_PATH)
+        low_confidence = {
+            item["concept"] for item in self.audit["low_confidence_concepts"]
+        }
+        self.assertEqual(self.audit["reviewed_families"]["navigation_travel"], len(family))
+        self.assertTrue(set(family).isdisjoint(low_confidence))
+        for concept, target in family.items():
+            entry = self.entries[concept]
+            self.assertEqual(entry["kind"], target["kind"])
+            self.assertEqual(entry["value"], target["value"])
+            self.assertEqual(entry["confidence"], "reviewed")
+            self.assertEqual(entry["source"], "reviewed_override")
+
+    def test_navigation_travel_known_wrong_generic_targets_do_not_regress(self):
+        expected = {
+            "EXPLORE": ("cupertino_glyph", "COMPASS"),
+            "FLIGHT_TAKEOFF": ("system_symbol", "airplane.departure"),
+            "MENU_OPEN": ("system_symbol", "sidebar.leading"),
+            "ROUTE": (
+                "system_symbol",
+                "point.topleft.down.curvedto.point.bottomright.up",
+            ),
+            "U_TURN_RIGHT": ("system_symbol", "arrow.uturn.right"),
+            "LOCAL_SHIPPING": ("system_symbol", "shippingbox.fill"),
+        }
+        for concept, (kind, value) in expected.items():
+            self.assertEqual(self.entries[concept]["kind"], kind)
+            self.assertEqual(self.entries[concept]["value"], value)
+
     def test_checked_in_artifacts_are_reproducible(self):
         self.assertEqual(
             MODULE.OUTPUT_PATH.read_text(encoding="utf-8"),
