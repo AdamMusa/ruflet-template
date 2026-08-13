@@ -118,9 +118,9 @@ final class OptionalExtensionCoverageTests: XCTestCase {
 
   private var expectedViewCount: Int {
     #if os(iOS)
-    58
+    59
     #else
-    57
+    58
     #endif
   }
 
