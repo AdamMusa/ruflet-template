@@ -9,8 +9,8 @@ import SwiftUI
 public enum RufletPageAddress {
   public static func parse(_ rawValue: String) -> URL? {
     guard !rawValue.isEmpty,
-          rawValue == rawValue.trimmingCharacters(in: .whitespacesAndNewlines),
-          let address = URL(string: rawValue)
+      rawValue == rawValue.trimmingCharacters(in: .whitespacesAndNewlines),
+      let address = URL(string: rawValue)
     else { return nil }
 
     switch address.scheme?.lowercased() {
@@ -112,10 +112,7 @@ public final class RufletMultiViewApplication: ObservableObject {
       initialData: initialData)
     nextViewID += 1
     scenes.append(scene)
-    backend.triggerControlEvent(
-      controlID: backend.page.id,
-      name: "multi_view_add",
-      data: scene.multiView.value)
+    RufletPageEventContract.multiViewAdded(backend.page, view: scene.multiView)
 
     if !registeredFromMultiViews {
       registeredFromMultiViews = true
@@ -127,14 +124,13 @@ public final class RufletMultiViewApplication: ObservableObject {
   }
 
   public func disconnect(sessionIdentifier: String) {
-    guard let index = scenes.firstIndex(where: {
-      $0.sessionIdentifier == sessionIdentifier
-    }) else { return }
+    guard
+      let index = scenes.firstIndex(where: {
+        $0.sessionIdentifier == sessionIdentifier
+      })
+    else { return }
     let scene = scenes.remove(at: index)
-    backend.triggerControlEvent(
-      controlID: backend.page.id,
-      name: "multi_view_remove",
-      data: .int(Int64(scene.viewID)))
+    RufletPageEventContract.multiViewRemoved(backend.page, viewID: scene.viewID)
   }
 
   public func scene(sessionIdentifier: String) -> RufletNativeScene? {
@@ -262,7 +258,7 @@ private struct RufletMultiViewSceneContent: View {
   }
 
   private var multiViewControl: RufletControl? {
-    page.children("multi_views", visibleOnly: false).first {
+    RufletPageEventContract.multiViewControls(in: page).first {
       $0.integer("view_id") == scene.viewID
     }
   }

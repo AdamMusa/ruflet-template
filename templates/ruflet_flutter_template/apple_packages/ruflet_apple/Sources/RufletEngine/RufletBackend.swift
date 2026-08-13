@@ -1,5 +1,5 @@
-import CoreGraphics
 import Combine
+import CoreGraphics
 import Foundation
 import RufletProtocol
 
@@ -55,11 +55,12 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
   private var pageListener: UUID?
   private var errorListener: AnyCancellable?
 
-  public typealias RufletBackendChannelFactoryClosure = @MainActor (
-    URL,
-    @escaping () -> Void,
-    @escaping (RufletMessage) -> Void
-  ) throws -> RufletBackendChannel
+  public typealias RufletBackendChannelFactoryClosure =
+    @MainActor (
+      URL,
+      @escaping () -> Void,
+      @escaping (RufletMessage) -> Void
+    ) throws -> RufletBackendChannel
 
   public init(
     pageURL: URL,
@@ -122,7 +123,8 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
       errorListener = errorsHandler.$error.dropFirst().sink { [weak self] error in
         guard let self, let error else { return }
         if let controlID, let parentBackend {
-          parentBackend.triggerControlEvent(controlID: controlID, name: "error", data: .string(error))
+          parentBackend.triggerControlEvent(
+            controlID: controlID, name: "error", data: .string(error))
         } else {
           self.triggerControlEvent(self.page, name: "error", data: .string(error))
         }
@@ -136,7 +138,7 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
 
   public func connect() async {
     guard let pageURI, !disposed, receivedFirstPageSize,
-          backendChannel == nil, !connectionInProgress
+      backendChannel == nil, !connectionInProgress
     else { return }
     connectionInProgress = true
     defer { connectionInProgress = false }
@@ -196,9 +198,10 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
   }
 
   public func triggerControlEvent(controlID: Int, name: String, data: RufletValue) {
-    send(RufletMessage(
-      action: .controlEvent,
-      payload: RufletControlEventBody(target: controlID, name: name, data: data).value))
+    send(
+      RufletMessage(
+        action: .controlEvent,
+        payload: RufletControlEventBody(target: controlID, name: name, data: data).value))
   }
 
   public func updateControl(
@@ -211,9 +214,10 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
     guard let control = control(id: id) else { return }
     if client { _ = control.update(properties, notify: notify) }
     if server {
-      send(RufletMessage(
-        action: .updateControl,
-        payload: RufletUpdateControlBody(id: id, properties: properties).value))
+      send(
+        RufletMessage(
+          action: .updateControl,
+          payload: RufletUpdateControlBody(id: id, properties: properties).value))
     }
   }
 
@@ -258,7 +262,7 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
     guard newRoute != route else { return }
     route = newRoute
     updateControl(page.id, properties: ["route": .string(newRoute)], notify: true)
-    triggerControlEvent(controlID: page.id, name: "route_change", data: ["route": .string(newRoute)])
+    RufletPageEventContract.routeChanged(page, route: newRoute)
   }
 
   public func updatePageSize(_ size: CGSize, view: RufletControl? = nil) {
@@ -277,23 +281,20 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
   public func updateBrightness(_ brightness: String) {
     platformBrightness = brightness
     updateControl(page.id, properties: ["platform_brightness": .string(brightness)])
-    triggerControlEvent(
-      controlID: page.id,
-      name: "platform_brightness_change",
-      data: .string(brightness))
+    RufletPageEventContract.platformBrightnessChanged(page, brightness: brightness)
   }
 
   public func updateMedia(_ media: RufletPageMediaData, view: RufletControl? = nil) {
     self.media = media
     let control = view ?? page!
     updateControl(control.id, properties: ["media": media.value])
-    triggerControlEvent(control, name: "media_change", data: media.value)
+    RufletPageEventContract.mediaChanged(control, media: media)
   }
 
   public func formatAppErrorMessage(_ rawError: String) -> String {
     guard !rawError.isEmpty else { return "" }
     var template = appErrorMessage ?? Self.defaultAppErrorMessageTemplate
-    let lines = rawError.split(whereSeparator: \ .isNewline).map(String.init)
+    let lines = rawError.split(whereSeparator: \.isNewline).map(String.init)
     template = template.replacingOccurrences(of: "{message}", with: lines.first ?? "")
     let details = lines.dropFirst().joined(separator: "\n")
     if details.isEmpty {
@@ -383,7 +384,9 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
     if let control = control(id: request.controlID) {
       do {
         result = try await withThrowingTaskGroup(of: RufletValue.self) { group in
-          group.addTask { try await control.invokeMethod(request.name, arguments: request.arguments) }
+          group.addTask {
+            try await control.invokeMethod(request.name, arguments: request.arguments)
+          }
           group.addTask {
             try await Task<Never, Never>.sleep(nanoseconds: request.timeoutNanoseconds)
             throw RufletBackendError.methodTimedOut(request.name)
@@ -401,13 +404,15 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
       result = .null
       failure = "Calling \(request.name) method of inexistent control: \(request.controlID)"
     }
-    send(RufletMessage(
-      action: .invokeControlMethod,
-      payload: RufletInvokeMethodResponseBody(
-        controlID: request.controlID,
-        callID: request.callID,
-        result: result,
-        error: failure).value))
+    send(
+      RufletMessage(
+        action: .invokeControlMethod,
+        payload: RufletInvokeMethodResponseBody(
+          controlID: request.controlID,
+          callID: request.callID,
+          result: result,
+          error: failure
+        ).value))
   }
 
   private func didDisconnect() {
@@ -418,18 +423,21 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
     }
     let nextDelay: Int
     if reconnectDelayMilliseconds == 0 || channel.isLocalConnection {
-      nextDelay = reconnectIntervalMilliseconds
+      nextDelay =
+        reconnectIntervalMilliseconds
         ?? channel.defaultReconnectIntervalMilliseconds
     } else {
       nextDelay = reconnectDelayMilliseconds * 2
     }
 
     if let timeout = reconnectTimeoutMilliseconds,
-       let started = reconnectStartedUptime,
-       ProcessInfo.processInfo.systemUptime - started >= Double(timeout) / 1_000 {
-      errorsHandler?.onError(error.isEmpty
-        ? "Error connecting to a Ruflet service in a timely manner."
-        : error)
+      let started = reconnectStartedUptime,
+      ProcessInfo.processInfo.systemUptime - started >= Double(timeout) / 1_000
+    {
+      errorsHandler?.onError(
+        error.isEmpty
+          ? "Error connecting to a Ruflet service in a timely manner."
+          : error)
       return
     }
 
@@ -470,9 +478,9 @@ public enum RufletBackendError: Error, Equatable {
 
 private var rufletApplePlatformName: String {
   #if os(iOS)
-  return "ios"
+    return "ios"
   #elseif os(macOS)
-  return "macos"
+    return "macos"
   #endif
 }
 

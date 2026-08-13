@@ -56,6 +56,11 @@ public struct PageControl: View {
     ) { _ in
       localeChanged()
     }
+    .overlay(alignment: .topTrailing) {
+      if control.boolean("show_semantics_debugger", default: false) {
+        RufletPageSemanticsDebugger(page: control)
+      }
+    }
   }
 
   @ViewBuilder
@@ -117,9 +122,7 @@ public struct PageControl: View {
   }
 
   private func lifecycleTransition(_ state: String) {
-    control.triggerEventWithoutSubscribers(
-      "app_lifecycle_state_change",
-      data: ["state": .string(state)])
+    RufletPageEventContract.appLifecycleChanged(control, state: state)
   }
 
   private func localeChanged() {
@@ -259,6 +262,101 @@ public struct PageControl: View {
 
   private var pageTint: Color? {
     activePageTheme.appleAccentColor
+  }
+}
+
+/// Centralizes the Page events which pinned Flet raises from both its Page
+/// widget and backend. Keeping the exact subscriber policy here prevents
+/// scene, media, and route integrations from drifting apart.
+@MainActor
+enum RufletPageEventContract {
+  static func appLifecycleChanged(_ page: RufletControl, state: String) {
+    page.triggerEventWithoutSubscribers(
+      "app_lifecycle_state_change",
+      data: ["state": .string(state)])
+  }
+
+  static func routeChanged(_ page: RufletControl, route: String) {
+    page.triggerEventWithoutSubscribers("route_change", data: ["route": .string(route)])
+  }
+
+  static func platformBrightnessChanged(_ page: RufletControl, brightness: String) {
+    page.triggerEventWithoutSubscribers("platform_brightness_change", data: .string(brightness))
+  }
+
+  static func mediaChanged(
+    _ pageOrView: RufletControl,
+    media: RufletPageMediaData
+  ) {
+    pageOrView.triggerEvent("media_change", data: media.value)
+  }
+
+  static func multiViewAdded(_ page: RufletControl, view: RufletMultiView) {
+    page.triggerEventWithoutSubscribers("multi_view_add", data: view.value)
+  }
+
+  static func multiViewRemoved(_ page: RufletControl, viewID: Int) {
+    page.triggerEventWithoutSubscribers("multi_view_remove", data: .int(Int64(viewID)))
+  }
+
+  static func multiViewControls(in page: RufletControl) -> [RufletControl] {
+    page.children("multi_views", visibleOnly: false)
+  }
+}
+
+/// Native counterpart of Flutter's `showSemanticsDebugger` development aid.
+/// Apple does not expose its Accessibility Inspector as an embeddable view,
+/// so the renderer presents the live control accessibility contract without
+/// intercepting application input.
+@MainActor
+struct RufletPageSemanticsDebugger: View {
+  @ObservedObject var page: RufletControl
+
+  var body: some View {
+    ScrollView {
+      LazyVStack(alignment: .leading, spacing: 4) {
+        Text("Accessibility tree")
+          .font(.caption.bold())
+        ForEach(Array(entries.enumerated()), id: \.offset) { _, entry in
+          Text(entry)
+            .font(.caption2.monospaced())
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+      }
+      .padding(8)
+    }
+    .frame(width: 300)
+    .frame(maxHeight: 320)
+    .background(.black.opacity(0.82), in: RoundedRectangle(cornerRadius: 8))
+    .foregroundStyle(.white)
+    .padding(8)
+    .allowsHitTesting(false)
+    .accessibilityHidden(true)
+  }
+
+  var entries: [String] {
+    var result: [String] = []
+    var visited: Set<ObjectIdentifier> = []
+
+    func append(_ control: RufletControl, depth: Int) {
+      guard visited.insert(ObjectIdentifier(control)).inserted else { return }
+      let semanticText =
+        control.string("semantics_label")
+        ?? control.string("label")
+        ?? control.string("tooltip")
+      let prefix = String(repeating: "  ", count: depth)
+      result.append(
+        prefix + control.type + "#\(control.id)"
+          + (semanticText.map { ": \($0)" } ?? ""))
+      for property in control.properties.keys.sorted() {
+        for child in control.children(property) {
+          append(child, depth: depth + 1)
+        }
+      }
+    }
+
+    append(page, depth: 0)
+    return result
   }
 }
 
