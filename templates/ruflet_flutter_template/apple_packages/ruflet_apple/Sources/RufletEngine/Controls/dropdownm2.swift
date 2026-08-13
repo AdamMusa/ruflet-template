@@ -1,5 +1,10 @@
 import RufletProtocol
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 
 /// Apple-native port of pinned `dropdownm2.dart`.
 @MainActor
@@ -7,6 +12,8 @@ public struct DropdownM2Control: View {
   @ObservedObject public var control: RufletControl
   @State private var selectedValue: String?
   @State private var focused = false
+  @State private var hovered = false
+  @State private var menuPresented = false
   @State private var focusRequest = 0
   @State private var invokeToken: UUID?
 
@@ -19,12 +26,17 @@ public struct DropdownM2Control: View {
     LayoutControl(control: control) {
       VStack(alignment: .leading, spacing: 4) {
         if let label = control.buildTextOrWidget("label") {
-          label.modifier(RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("label_style"))))
+          label
+            .modifier(RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("label_style"))))
+            .frame(
+              maxWidth: .infinity,
+              alignment: presentation.alignLabelWithHint ? .topLeading : .leading)
         }
         menu
         supportingRow
       }
       .frame(width: control.number("width") == nil ? 300 : nil)
+      .modifier(RufletDropdownM2ConstraintsModifier(presentation.sizeConstraints))
       .background {
         RufletNativeFocusTarget(
           enabled: !control.disabled,
@@ -35,6 +47,7 @@ public struct DropdownM2Control: View {
           .opacity(0.001)
       }
       .opacity(control.disabled ? 0.55 : 1)
+      .onHover { hovered = $0 }
     }
     .onAppear(perform: mount)
     .onDisappear(perform: unmount)
@@ -42,48 +55,81 @@ public struct DropdownM2Control: View {
   }
 
   private var menu: some View {
-    Menu {
-      ForEach(options, id: \.id) { option in
-        Button {
-          option.control.triggerEvent("click")
-          selectedValue = option.value
-          control.updateProperties(["value": .string(option.value)])
-          control.triggerEvent("change", data: .string(option.value))
-        } label: {
-          HStack {
-            if let content = option.control.buildWidget("content") {
-              content
-            } else {
-              Text(option.label)
-                .modifier(RufletTextStyleModifier(style: parseTextStyle(option.control.dynamicValue("text_style"))))
-            }
-          }
-        }
-        .disabled(option.disabled)
-      }
-    } label: {
-      HStack(spacing: 8) {
-        selectedContent
-          .frame(maxWidth: control.boolean("options_fill_horizontally", default: true) ? .infinity : nil,
-                 alignment: optionAlignment)
-        if let icon = control.buildIconOrWidget("select_icon") {
-          icon
-        } else {
-          Image(systemName: "chevron.down")
-            .font(.system(size: control.number("select_icon_size", default: 24) ?? 24))
-            .foregroundStyle(selectIconColor)
-        }
-      }
-      .contentShape(Rectangle())
-      .modifier(RufletDropdownM2Chrome(control: control, focused: focused))
-    }
-    .buttonStyle(.plain)
-    .disabled(control.disabled)
-    .simultaneousGesture(TapGesture().onEnded {
+    Button {
       guard !control.disabled else { return }
       focusRequest &+= 1
       control.triggerEvent("click")
-    })
+      menuPresented.toggle()
+    } label: {
+      HStack(spacing: 6) {
+        if let icon = control.buildIconOrWidget("icon") { icon }
+        decoratedField
+          .contentShape(Rectangle())
+          .modifier(RufletDropdownM2Chrome(
+            control: control, focused: focused, hovered: hovered,
+            presentation: presentation))
+      }
+    }
+    .buttonStyle(.plain)
+    .disabled(control.disabled)
+    .popover(isPresented: $menuPresented) { optionPanel }
+  }
+
+  private var decoratedField: some View {
+    HStack(spacing: 6) {
+      if let prefixIcon = control.buildIconOrWidget("prefix_icon") {
+        prefixIcon.modifier(RufletDropdownM2ConstraintsModifier(presentation.prefixIconConstraints))
+      }
+      if let prefix = control.buildTextOrWidget("prefix") {
+        prefix.modifier(RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("prefix_style"))))
+      }
+      selectedContent
+        .frame(
+          maxWidth: control.boolean("options_fill_horizontally", default: true) ? .infinity : nil,
+          alignment: optionAlignment)
+      if let suffix = control.buildTextOrWidget("suffix") {
+        suffix.modifier(RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("suffix_style"))))
+      }
+      if let suffixIcon = control.buildIconOrWidget("suffix_icon") {
+        suffixIcon.modifier(RufletDropdownM2ConstraintsModifier(presentation.suffixIconConstraints))
+      }
+      if let icon = control.buildIconOrWidget("select_icon") {
+        icon.foregroundStyle(selectIconColor)
+      } else {
+        Image(systemName: "chevron.down")
+          .font(.system(size: control.number("select_icon_size", default: 24) ?? 24))
+          .foregroundStyle(selectIconColor)
+      }
+    }
+    .frame(maxWidth: .infinity, alignment: optionAlignment)
+  }
+
+  private var optionPanel: some View {
+    ScrollView {
+      LazyVStack(alignment: .leading, spacing: 0) {
+        ForEach(options, id: \.id) { option in
+          Button {
+            select(option)
+          } label: {
+            RufletDropdownOptionLabel(option: option, richSlots: false)
+              .frame(
+                maxWidth: .infinity,
+                alignment: parseAlignment(option.control.dynamicValue("alignment"))?.swiftUI ?? .leading)
+              .contentShape(Rectangle())
+          }
+          .buttonStyle(.plain)
+          .disabled(option.disabled || control.disabled)
+          .frame(minHeight: control.number("item_height").map { CGFloat($0) })
+          .padding(.horizontal, 10)
+          .padding(.vertical, presentation.dense ? 4 : 8)
+        }
+      }
+    }
+    .frame(maxHeight: presentation.maxMenuHeight)
+    .padding(2)
+    .background(parseColor(control.string("bgcolor")) ?? Color.rufletSystemBackground)
+    .clipShape(RufletCornerShape(radius: presentation.borderRadius))
+    .shadow(color: .black.opacity(0.2), radius: presentation.elevation, y: presentation.elevation / 2)
   }
 
   @ViewBuilder
@@ -99,7 +145,10 @@ public struct DropdownM2Control: View {
     } else if let hint = control.buildWidget("hint") {
       hint
     } else if let hintText = control.string("hint_text") {
-      Text(hintText).foregroundStyle(.secondary)
+      Text(hintText)
+        .modifier(RufletTextStyleModifier(style: presentation.hintStyle))
+        .foregroundStyle(presentation.hintStyle?.color ?? .secondary)
+        .lineLimit(presentation.hintMaxLines)
     } else {
       Text("")
     }
@@ -107,16 +156,25 @@ public struct DropdownM2Control: View {
 
   @ViewBuilder
   private var supportingRow: some View {
-    if let error = control.buildTextOrWidget("error") {
-      error
-        .modifier(RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("error_style"))))
-        .foregroundStyle(.red)
-        .font(.caption)
-    } else if let helper = control.buildTextOrWidget("helper") {
-      helper
-        .modifier(RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("helper_style"))))
-        .font(.caption)
+    HStack(alignment: .top) {
+      if let error = control.buildTextOrWidget("error") {
+        error
+          .modifier(RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("error_style"))))
+          .foregroundStyle(.red)
+          .lineLimit(presentation.errorMaxLines)
+      } else if let helper = control.buildTextOrWidget("helper") {
+        helper
+          .modifier(RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("helper_style"))))
+          .lineLimit(presentation.helperMaxLines)
+      }
+      Spacer(minLength: 4)
+      if let counter = control.buildTextOrWidget("counter") {
+        counter.modifier(RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("counter_style"))))
+      } else if let counter = presentation.counterText {
+        Text(counter).modifier(RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("counter_style"))))
+      }
     }
+    .font(.caption)
   }
 
   private func mount() {
@@ -143,6 +201,23 @@ public struct DropdownM2Control: View {
     guard focused != next else { return }
     focused = next
     control.triggerEvent(next ? "focus" : "blur")
+  }
+
+  private func select(_ option: RufletDropdownOption) {
+    option.control.triggerEvent("click")
+    selectedValue = option.value
+    control.updateProperties(["value": .string(option.value)])
+    control.triggerEvent("change", data: .string(option.value))
+    menuPresented = false
+    if presentation.enableFeedback { performSelectionFeedback() }
+  }
+
+  private func performSelectionFeedback() {
+    #if canImport(UIKit)
+    UISelectionFeedbackGenerator().selectionChanged()
+    #elseif canImport(AppKit)
+    NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now)
+    #endif
   }
 
   private var options: [RufletDropdownOption] {
@@ -177,31 +252,124 @@ public struct DropdownM2Control: View {
     parseAlignment(control.dynamicValue("alignment"))?.swiftUI ?? .leading
   }
   private var selectIconColor: Color {
-    parseColor(control.string(control.disabled ? "select_icon_disabled_color" : "select_icon_enabled_color"))
-      ?? .secondary
+    if control.disabled {
+      return parseColor(control.string("select_icon_disabled_color")) ?? .secondary
+    }
+    return parseColor(control.string("select_icon_enabled_color")) ?? .secondary
+  }
+  private var presentation: RufletDropdownM2Presentation {
+    RufletDropdownM2Presentation(control: control, focused: focused, hovered: hovered)
+  }
+}
+
+struct RufletDropdownM2Presentation {
+  let alignLabelWithHint: Bool
+  let border: RufletDropdownM2Border
+  let borderRadius: RufletBorderRadius
+  let backgroundColor: Color?
+  let collapsed: Bool
+  let dense: Bool
+  let elevation: CGFloat
+  let enableFeedback: Bool
+  let errorMaxLines: Int?
+  let fillColor: Color?
+  let filled: Bool
+  let focusColor: Color?
+  let focusedBackgroundColor: Color?
+  let helperMaxLines: Int?
+  let hintFadeDuration: TimeInterval
+  let hintMaxLines: Int?
+  let hintStyle: RufletTextStyle?
+  let hoverColor: Color?
+  let maxMenuHeight: CGFloat?
+  let counterText: String?
+  let prefixIconConstraints: RufletTextFieldConstraints
+  let sizeConstraints: RufletTextFieldConstraints
+  let suffixIconConstraints: RufletTextFieldConstraints
+
+  @MainActor
+  init(control: RufletControl, focused: Bool = false, hovered: Bool = false) {
+    alignLabelWithHint = control.boolean("align_label_with_hint", default: false)
+    border = parseEnum(
+      RufletDropdownM2Border.self, control.string("border"), RufletDropdownM2Border.outline)!
+    borderRadius = parseBorderRadius(
+      control.dynamicValue("border_radius"),
+      RufletBorderRadius(topLeft: 5, topRight: 5, bottomLeft: 5, bottomRight: 5))!
+    backgroundColor = parseColor(control.string("bgcolor"))
+    collapsed = control.boolean("collapsed", default: false)
+    dense = control.boolean("dense", default: false)
+    elevation = CGFloat(max(control.integer("elevation", default: 8) ?? 8, 0))
+    enableFeedback = control.boolean("enable_feedback") ?? true
+    errorMaxLines = control.integer("error_max_lines")
+    fillColor = parseColor(control.string("fill_color"))
+    filled = control.boolean("filled", default: false)
+    focusColor = parseColor(control.string("focus_color"))
+    focusedBackgroundColor = parseColor(control.string("focused_bgcolor"))
+    helperMaxLines = control.integer("helper_max_lines")
+    hintFadeDuration = parseDuration(control.dynamicValue("hint_fade_duration"), 0.2)!
+    hintMaxLines = control.integer("hint_max_lines")
+    hintStyle = parseTextStyle(control.dynamicValue("hint_style"))
+    hoverColor = parseColor(control.string("hover_color"))
+    maxMenuHeight = control.number("max_menu_height").map { CGFloat($0) }
+    counterText = control.string("counter")?
+      .replacingOccurrences(of: "{value_length}", with: "null")
+      .replacingOccurrences(of: "{max_length}", with: "None")
+      .replacingOccurrences(of: "{symbols_left}", with: "None")
+    prefixIconConstraints = RufletTextFieldConstraints(
+      control.dynamicValue("prefix_icon_constraints"))
+    sizeConstraints = RufletTextFieldConstraints(control.dynamicValue("size_constraints"))
+    suffixIconConstraints = RufletTextFieldConstraints(
+      control.dynamicValue("suffix_icon_constraints"))
+  }
+
+  func resolvedBackgroundColor(focused: Bool, hovered: Bool) -> Color {
+    if hovered, let hoverColor { return hoverColor }
+    if focused, let focusColor { return focusColor }
+    guard filled else { return .clear }
+    return fillColor ?? (focused ? focusedBackgroundColor ?? backgroundColor : backgroundColor)
+      ?? Color.rufletSystemBackground
+  }
+
+  var contentPadding: EdgeInsets {
+    if collapsed { return EdgeInsets() }
+    if dense { return EdgeInsets(top: 4, leading: 7, bottom: 4, trailing: 7) }
+    return EdgeInsets(top: 8, leading: 10, bottom: 8, trailing: 10)
   }
 }
 
 private struct RufletDropdownM2Chrome: ViewModifier {
   @ObservedObject var control: RufletControl
   let focused: Bool
+  let hovered: Bool
+  let presentation: RufletDropdownM2Presentation
 
   func body(content: Content) -> some View {
     content
-      .padding(parsePadding(control.dynamicValue("padding"))
-        ?? parsePadding(control.dynamicValue("content_padding"))
-        ?? EdgeInsets(top: 8, leading: 10, bottom: 8, trailing: 10))
+      .padding(parsePadding(control.dynamicValue("padding")) ?? EdgeInsets())
+      .padding(parsePadding(control.dynamicValue("content_padding")) ?? presentation.contentPadding)
       .frame(minHeight: control.number("item_height").map { CGFloat($0) })
-      .background(parseColor(control.string("bgcolor")) ?? .clear)
+      .background(presentation.resolvedBackgroundColor(focused: focused, hovered: hovered))
       .clipShape(RufletCornerShape(radius: radius))
-      .overlay {
-        RufletCornerShape(radius: radius)
-          .stroke(borderColor, lineWidth: borderWidth)
-      }
+      .overlay { border }
+      .animation(.linear(duration: presentation.hintFadeDuration), value: focused)
+  }
+
+  @ViewBuilder
+  private var border: some View {
+    switch presentation.border {
+    case .none:
+      EmptyView()
+    case .underline:
+      Rectangle().fill(borderColor).frame(height: borderWidth)
+        .frame(maxHeight: .infinity, alignment: .bottom)
+    case .outline:
+      RufletCornerShape(radius: radius).stroke(borderColor, lineWidth: borderWidth)
+    }
   }
 
   private var radius: RufletBorderRadius {
-    parseBorderRadius(control.dynamicValue("border_radius"),
+    if presentation.border == .underline { return .zero }
+    return parseBorderRadius(control.dynamicValue("border_radius"),
       RufletBorderRadius(topLeft: 5, topRight: 5, bottomLeft: 5, bottomRight: 5))!
   }
   private var borderWidth: CGFloat {
@@ -215,6 +383,20 @@ private struct RufletDropdownM2Chrome: ViewModifier {
       : control.string("border_color"))
       ?? (focused ? .accentColor : .secondary.opacity(0.6))
   }
+}
+
+private struct RufletDropdownM2ConstraintsModifier: ViewModifier {
+  let constraints: RufletTextFieldConstraints
+  init(_ constraints: RufletTextFieldConstraints) { self.constraints = constraints }
+  func body(content: Content) -> some View {
+    content.frame(
+      minWidth: constraints.minWidth, maxWidth: constraints.maxWidth,
+      minHeight: constraints.minHeight, maxHeight: constraints.maxHeight)
+  }
+}
+
+enum RufletDropdownM2Border: String, CaseIterable, RufletStringEnum {
+  case outline, underline, none
 }
 
 private enum RufletDropdownM2Error: Error {

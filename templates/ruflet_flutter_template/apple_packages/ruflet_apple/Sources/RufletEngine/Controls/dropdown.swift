@@ -18,6 +18,7 @@ public struct DropdownControl: View {
   @State private var selectedValue: String?
   @State private var text: String
   @State private var focused = false
+  @State private var menuPresented = false
   @State private var focusRequest = 0
   @State private var invokeToken: UUID?
 
@@ -54,8 +55,9 @@ public struct DropdownControl: View {
       }
       .modifier(RufletDropdownChrome(control: control, focused: focused))
     } else {
-      Menu {
-        optionButtons
+      Button {
+        guard !control.disabled else { return }
+        menuPresented.toggle()
       } label: {
         HStack(spacing: 6) {
           if let leading = control.buildIconOrWidget("leading_icon") { leading }
@@ -75,6 +77,7 @@ public struct DropdownControl: View {
       }
       .buttonStyle(.plain)
       .disabled(control.disabled)
+      .popover(isPresented: $menuPresented) { optionPanel }
     }
   }
 
@@ -141,8 +144,10 @@ public struct DropdownControl: View {
   }
 
   private func menuButton(iconProperty: String) -> some View {
-    Menu {
-      optionButtons
+    Button {
+      guard !control.disabled else { return }
+      focusRequest &+= 1
+      menuPresented.toggle()
     } label: {
       if let icon = control.buildIconOrWidget(iconProperty) {
         icon
@@ -150,23 +155,32 @@ public struct DropdownControl: View {
         Image(systemName: "chevron.up.chevron.down")
       }
     }
-    .menuStyle(.borderlessButton)
+    .buttonStyle(.plain)
     .disabled(control.disabled)
-    .simultaneousGesture(TapGesture().onEnded {
-      if editable && !control.disabled { focusRequest &+= 1 }
-    })
+    .popover(isPresented: $menuPresented) { optionPanel }
   }
 
-  @ViewBuilder
-  private var optionButtons: some View {
-    ForEach(filteredOptions, id: \.id) { option in
-      Button {
-        select(option)
-      } label: {
-        RufletDropdownOptionLabel(option: option, richSlots: true)
+  private var optionPanel: some View {
+    ScrollView {
+      LazyVStack(alignment: .leading, spacing: 0) {
+        ForEach(filteredOptions, id: \.id) { option in
+          Button {
+            select(option)
+            menuPresented = false
+          } label: {
+            RufletDropdownOptionLabel(option: option, richSlots: true)
+              .frame(maxWidth: .infinity, alignment: .leading)
+              .contentShape(Rectangle())
+          }
+          .buttonStyle(.plain)
+          .disabled(option.disabled || control.disabled)
+          .padding(.horizontal, 8)
+          .padding(.vertical, presentation.dense ? 4 : 8)
+        }
       }
-      .disabled(option.disabled || control.disabled)
     }
+    .frame(maxHeight: presentation.menuHeight)
+    .modifier(RufletDropdownMenuSurfaceModifier(presentation: presentation))
   }
 
   @ViewBuilder
@@ -267,10 +281,13 @@ public struct DropdownControl: View {
   private var textColor: Color {
     parseColor(control.string("color")) ?? textStyle?.color ?? .primary
   }
+  private var presentation: RufletDropdownPresentation {
+    RufletDropdownPresentation(control: control, focused: focused)
+  }
 }
 
 @MainActor
-private struct RufletDropdownOptionLabel: View {
+struct RufletDropdownOptionLabel: View {
   let option: RufletDropdownOption
   let richSlots: Bool
 
@@ -288,13 +305,102 @@ private struct RufletDropdownOptionLabel: View {
   }
 }
 
+struct RufletDropdownPresentation {
+  let dense: Bool
+  let menuHeight: CGFloat?
+  let menuWidth: CGFloat?
+  let menuStyle: RufletMenuStyle?
+  let rawMenuStyle: Any?
+  private let backgroundColor: RufletWidgetStateProperty<Color>
+  private let elevation: RufletWidgetStateProperty<Double>
+  private let states: Set<RufletWidgetState>
+
+  @MainActor
+  init(control: RufletControl, focused: Bool = false) {
+    dense = control.boolean("dense", default: false)
+    menuHeight = control.number("menu_height").map { CGFloat($0) }
+    menuWidth = control.number("menu_width").map { CGFloat($0) }
+    rawMenuStyle = control.dynamicValue("menu_style")
+    menuStyle = parseMenuStyle(rawMenuStyle)
+    backgroundColor = RufletWidgetStateProperty(
+      control.dynamicValue("bgcolor"), converter: { parseColor($0 as? String) })
+    elevation = RufletWidgetStateProperty(
+      control.dynamicValue("elevation"), converter: { parseDouble($0) })
+    var active = Set<RufletWidgetState>()
+    if focused { active.insert(.focused) }
+    if control.disabled { active.insert(.disabled) }
+    states = active
+  }
+
+  var resolvedBackgroundColor: Color? {
+    backgroundColor.resolve(states) ?? menuStyle?.backgroundColor.resolve(states)
+  }
+  var resolvedElevation: CGFloat {
+    CGFloat(max(elevation.resolve(states) ?? menuStyle?.elevation.resolve(states) ?? 0, 0))
+  }
+  var resolvedShadowColor: Color {
+    menuStyle?.shadowColor.resolve(states) ?? .black.opacity(0.2)
+  }
+  var resolvedPadding: EdgeInsets {
+    menuStyle?.padding.resolve(states) ?? EdgeInsets(top: 2, leading: 2, bottom: 2, trailing: 2)
+  }
+  var resolvedSide: RufletBorderSide? { menuStyle?.side.resolve(states) }
+  var resolvedMinimumSize: CGSize? { menuStyle?.minimumSize.resolve(states) }
+  var resolvedMaximumSize: CGSize? { menuStyle?.maximumSize.resolve(states) }
+  var resolvedFixedSize: CGSize? { menuStyle?.fixedSize.resolve(states) }
+  var resolvedAlignment: Alignment { menuStyle?.alignment?.swiftUI ?? .leading }
+  var radius: CGFloat {
+    guard let details = rufletDictionary(rawMenuStyle), let shape = details["shape"] else { return 10 }
+    let shapeDetails = rufletDictionary(shape)
+    return CGFloat(parseBorderRadius(
+      shapeDetails?["border_radius"] ?? shapeDetails?["radius"] ?? shape,
+      RufletBorderRadius(topLeft: 10, topRight: 10, bottomLeft: 10, bottomRight: 10))?.uniform ?? 10)
+  }
+}
+
+private struct RufletDropdownMenuSurfaceModifier: ViewModifier {
+  let presentation: RufletDropdownPresentation
+
+  func body(content: Content) -> some View {
+    let fixed = presentation.resolvedFixedSize
+    let minimum = presentation.resolvedMinimumSize
+    let maximum = presentation.resolvedMaximumSize
+    let width = presentation.menuWidth ?? fixed?.width
+    let height = fixed?.height
+    return content
+      .padding(presentation.resolvedPadding)
+      .frame(width: width, height: height)
+      .frame(
+        minWidth: minimum?.width,
+        maxWidth: maximum?.width,
+        minHeight: minimum?.height,
+        maxHeight: maximum?.height,
+        alignment: presentation.resolvedAlignment)
+      .background(presentation.resolvedBackgroundColor ?? Color.rufletSystemBackground)
+      .clipShape(RoundedRectangle(cornerRadius: presentation.radius, style: .continuous))
+      .overlay {
+        if let side = presentation.resolvedSide {
+          RoundedRectangle(cornerRadius: presentation.radius, style: .continuous)
+            .stroke(side.color, lineWidth: side.width)
+        }
+      }
+      .shadow(
+        color: presentation.resolvedShadowColor,
+        radius: presentation.resolvedElevation,
+        y: presentation.resolvedElevation / 2)
+  }
+}
+
 private struct RufletDropdownChrome: ViewModifier {
   @ObservedObject var control: RufletControl
   let focused: Bool
 
   func body(content: Content) -> some View {
+    let dense = control.boolean("dense", default: false)
     content
-      .padding(parsePadding(control.dynamicValue("content_padding")) ?? EdgeInsets(top: 8, leading: 10, bottom: 8, trailing: 10))
+      .padding(parsePadding(control.dynamicValue("content_padding")) ?? EdgeInsets(
+        top: dense ? 4 : 8, leading: dense ? 7 : 10,
+        bottom: dense ? 4 : 8, trailing: dense ? 7 : 10))
       .background(backgroundColor)
       .clipShape(RufletCornerShape(radius: radius))
       .overlay { border }

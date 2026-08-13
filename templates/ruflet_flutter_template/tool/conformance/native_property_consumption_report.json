@@ -12,13 +12,13 @@
     "controls": 196,
     "properties": 5330,
     "classifications": {
-      "consumed": 4079,
+      "consumed": 4113,
       "parent_consumed": 663,
       "service": 136,
-      "unclassified": 450,
+      "unclassified": 416,
       "unsupported": 2
     },
-    "unclassified": 450
+    "unclassified": 416
   },
   "unclassified": [
     {
@@ -724,16 +724,6 @@
     {
       "family": "visual",
       "wire_type": "Dropdown",
-      "property": "dense"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Dropdown",
-      "property": "elevation"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Dropdown",
       "property": "expanded_insets"
     },
     {
@@ -744,52 +734,7 @@
     {
       "family": "visual",
       "wire_type": "Dropdown",
-      "property": "menu_height"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Dropdown",
-      "property": "menu_style"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Dropdown",
-      "property": "menu_width"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Dropdown",
       "property": "selected_suffix"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "align_label_with_hint"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "border"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "collapsed"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "counter"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "counter_style"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "dense"
     },
     {
       "family": "visual",
@@ -799,47 +744,7 @@
     {
       "family": "visual",
       "wire_type": "DropdownM2",
-      "property": "elevation"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "enable_feedback"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "error_max_lines"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "fill_color"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "filled"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
       "property": "fit_parent_size"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "focus_color"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "focused_bgcolor"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "helper_max_lines"
     },
     {
       "family": "visual",
@@ -849,87 +754,12 @@
     {
       "family": "visual",
       "wire_type": "DropdownM2",
-      "property": "hint_fade_duration"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "hint_max_lines"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "hint_style"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "hover_color"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "icon"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "max_menu_height"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "prefix"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "prefix_icon"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
       "property": "prefix_icon_size_constraints"
     },
     {
       "family": "visual",
       "wire_type": "DropdownM2",
-      "property": "prefix_style"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "select_icon_disabled_color"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "select_icon_enabled_color"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "size_constraints"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "suffix"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "suffix_icon"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
       "property": "suffix_icon_size_constraints"
-    },
-    {
-      "family": "visual",
-      "wire_type": "DropdownM2",
-      "property": "suffix_style"
     },
     {
       "family": "visual",
@@ -12137,11 +11967,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 112
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 120
+              "line": 139
             }
           ]
         },
@@ -12311,7 +12137,44 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 131
+              "line": 221
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
+              "line": 222
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
+              "line": 223
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
+              "line": 226
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
+              "line": 227
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
+              "line": 228
+            }
+          ]
+        },
+        "on_click": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
+              "line": 118
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
+              "line": 119
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
+              "line": 120
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
@@ -12323,32 +12186,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 136
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 137
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 138
-            }
-          ]
-        },
-        "on_click": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 114
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 115
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 116
+              "line": 134
             }
           ]
         },
@@ -12357,15 +12195,19 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 90
+              "line": 100
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 91
+              "line": 101
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 92
+              "line": 102
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
+              "line": 137
             }
           ]
         },
@@ -12374,15 +12216,19 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 87
+              "line": 95
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 88
+              "line": 96
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 89
+              "line": 97
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
+              "line": 136
             }
           ]
         },
@@ -12412,11 +12258,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 98
+              "line": 135
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 99
+              "line": 198
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
+              "line": 199
             }
           ]
         },
@@ -12556,7 +12406,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 113
+              "line": 117
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
+              "line": 133
             }
           ]
         },
@@ -26350,7 +26204,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 93
+              "line": 96
             }
           ]
         },
@@ -26373,6 +26227,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
               "line": 422
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 326
             }
           ]
         },
@@ -26381,7 +26239,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 305
+              "line": 411
             }
           ]
         },
@@ -26390,11 +26248,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 326
+              "line": 432
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 327
+              "line": 433
             }
           ]
         },
@@ -26403,7 +26261,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 316
+              "line": 422
             }
           ]
         },
@@ -26412,11 +26270,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 321
+              "line": 427
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 322
+              "line": 428
             }
           ]
         },
@@ -26434,7 +26292,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 100
+              "line": 103
             }
           ]
         },
@@ -26452,7 +26310,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 268
+              "line": 282
             }
           ]
         },
@@ -26461,7 +26319,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 297
+              "line": 401
             }
           ]
         },
@@ -26475,8 +26333,17 @@
           ]
         },
         "dense": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 320
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 399
+            }
+          ]
         },
         "disabled": {
           "classification": "consumed",
@@ -26487,27 +26354,35 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 40
+              "line": 41
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 77
+              "line": 59
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 92
+              "line": 79
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 154
+              "line": 95
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 156
+              "line": 148
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 168
+              "line": 159
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 176
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 331
             }
           ]
         },
@@ -26516,20 +26391,25 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 262
+              "line": 276
             }
           ]
         },
         "elevation": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 328
+            }
+          ]
         },
         "enable_filter": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 254
+              "line": 268
             }
           ]
         },
@@ -26538,7 +26418,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 131
+              "line": 134
             }
           ]
         },
@@ -26547,7 +26427,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 176
+              "line": 190
             }
           ]
         },
@@ -26556,7 +26436,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 174
+              "line": 188
             }
           ]
         },
@@ -26587,7 +26467,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 332
+              "line": 438
             }
           ]
         },
@@ -26596,7 +26476,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 331
+              "line": 437
             }
           ]
         },
@@ -26605,7 +26485,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 326
+              "line": 432
             }
           ]
         },
@@ -26614,7 +26494,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 321
+              "line": 427
             }
           ]
         },
@@ -26636,7 +26516,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 181
+              "line": 195
             }
           ]
         },
@@ -26645,7 +26525,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 179
+              "line": 193
             }
           ]
         },
@@ -26654,7 +26534,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 117
+              "line": 120
             }
           ]
         },
@@ -26663,11 +26543,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 116
+              "line": 119
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 260
+              "line": 274
             }
           ]
         },
@@ -26680,7 +26560,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 107
+              "line": 110
             }
           ]
         },
@@ -26689,11 +26569,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 246
+              "line": 260
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 247
+              "line": 261
             }
           ]
         },
@@ -26706,7 +26586,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 34
+              "line": 35
             }
           ]
         },
@@ -26715,7 +26595,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 35
+              "line": 36
             }
           ]
         },
@@ -26724,15 +26604,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 51
+              "line": 52
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 61
+              "line": 63
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 279
+              "line": 296
             }
           ]
         },
@@ -26759,16 +26639,31 @@
           ]
         },
         "menu_height": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 321
+            }
+          ]
         },
         "menu_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 323
+            }
+          ]
         },
         "menu_width": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 322
+            }
+          ]
         },
         "offset": {
           "classification": "consumed",
@@ -26845,15 +26740,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 238
+              "line": 252
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 239
+              "line": 253
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 240
+              "line": 254
             }
           ]
         },
@@ -26862,15 +26757,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 238
+              "line": 252
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 239
+              "line": 253
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 240
+              "line": 254
             }
           ]
         },
@@ -26879,15 +26774,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 232
+              "line": 246
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 233
+              "line": 247
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 234
+              "line": 248
             }
           ]
         },
@@ -26917,15 +26812,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 224
+              "line": 238
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 225
+              "line": 239
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 226
+              "line": 240
             }
           ]
         },
@@ -26951,7 +26846,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 244
+              "line": 258
             }
           ]
         },
@@ -27008,7 +26903,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 65
+              "line": 67
             }
           ]
         },
@@ -27026,15 +26921,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 28
+              "line": 29
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 246
+              "line": 260
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 247
+              "line": 261
             }
           ]
         },
@@ -27043,7 +26938,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 264
+              "line": 278
             }
           ]
         },
@@ -27052,7 +26947,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 109
+              "line": 112
             }
           ]
         },
@@ -27061,11 +26956,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 266
+              "line": 280
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 284
+              "line": 301
             }
           ]
         },
@@ -27092,11 +26987,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 67
+              "line": 69
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 286
+              "line": 303
             }
           ]
         },
@@ -27105,11 +27000,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 26
+              "line": 27
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 202
+              "line": 216
             }
           ]
         },
@@ -27164,8 +27059,13 @@
           ]
         },
         "align_label_with_hint": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 292
+            }
+          ]
         },
         "alignment": {
           "classification": "consumed",
@@ -27176,7 +27076,11 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 177
+              "line": 117
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 252
             }
           ]
         },
@@ -27270,7 +27174,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 31
+              "line": 43
             }
           ]
         },
@@ -27296,24 +27200,33 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 195
+              "line": 130
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 298
             }
           ]
         },
         "border": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 294
+            }
+          ]
         },
         "border_color": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 214
+              "line": 382
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 215
+              "line": 383
             }
           ]
         },
@@ -27322,7 +27235,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 204
+              "line": 296
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 372
             }
           ]
         },
@@ -27331,11 +27248,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 209
+              "line": 377
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 210
+              "line": 378
             }
           ]
         },
@@ -27358,19 +27275,24 @@
           ]
         },
         "collapsed": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 299
+            }
+          ]
         },
         "color": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 168
+              "line": 243
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 169
+              "line": 244
             }
           ]
         },
@@ -27379,17 +27301,35 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 192
+              "line": 349
             }
           ]
         },
         "counter": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 171
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 314
+            }
+          ]
         },
         "counter_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 172
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 174
+            }
+          ]
         },
         "data": {
           "classification": "parent_consumed",
@@ -27401,39 +27341,44 @@
           ]
         },
         "dense": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 300
+            }
+          ]
         },
         "disabled": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 30
+              "line": 42
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 37
+              "line": 49
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 62
+              "line": 59
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 81
+              "line": 74
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 83
+              "line": 121
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 97
+              "line": 143
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 180
+              "line": 255
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
@@ -27446,32 +27391,47 @@
           "evidence": []
         },
         "elevation": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 301
+            }
+          ]
         },
         "enable_feedback": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 302
+            }
+          ]
         },
         "error": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 110
+              "line": 160
             }
           ]
         },
         "error_max_lines": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 303
+            }
+          ]
         },
         "error_style": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 112
+              "line": 162
             }
           ]
         },
@@ -27494,31 +27454,51 @@
           ]
         },
         "fill_color": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 304
+            }
+          ]
         },
         "filled": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 305
+            }
+          ]
         },
         "fit_parent_size": {
           "classification": "unclassified",
           "evidence": []
         },
         "focus_color": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 306
+            }
+          ]
         },
         "focused_bgcolor": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 307
+            }
+          ]
         },
         "focused_border_color": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 214
+              "line": 382
             }
           ]
         },
@@ -27527,7 +27507,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 209
+              "line": 377
             }
           ]
         },
@@ -27536,7 +27516,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 168
+              "line": 243
             }
           ]
         },
@@ -27558,20 +27538,25 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 115
+              "line": 165
             }
           ]
         },
         "helper_max_lines": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 308
+            }
+          ]
         },
         "helper_style": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 117
+              "line": 167
             }
           ]
         },
@@ -27580,40 +27565,69 @@
           "evidence": []
         },
         "hint_fade_duration": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 309
+            }
+          ]
         },
         "hint_max_lines": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 310
+            }
+          ]
         },
         "hint_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 311
+            }
+          ]
         },
         "hint_text": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 101
+              "line": 147
             }
           ]
         },
         "hover_color": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 312
+            }
+          ]
         },
         "icon": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 65
+            }
+          ]
         },
         "item_height": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 194
+              "line": 122
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 350
             }
           ]
         },
@@ -27622,7 +27636,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 151
+              "line": 226
             }
           ]
         },
@@ -27635,7 +27649,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 21
+              "line": 28
             }
           ]
         },
@@ -27644,7 +27658,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 22
+              "line": 30
             }
           ]
         },
@@ -27671,8 +27685,13 @@
           ]
         },
         "max_menu_height": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 313
+            }
+          ]
         },
         "offset": {
           "classification": "consumed",
@@ -27749,15 +27768,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 143
+              "line": 201
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 144
+              "line": 202
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 145
+              "line": 203
             }
           ]
         },
@@ -27766,15 +27785,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 49
+              "line": 208
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 50
+              "line": 209
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 51
+              "line": 210
             }
           ]
         },
@@ -27783,27 +27802,27 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 46
+              "line": 59
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 47
+              "line": 60
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 48
+              "line": 61
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 83
+              "line": 205
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 84
+              "line": 206
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 85
+              "line": 207
             }
           ]
         },
@@ -27812,15 +27831,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 143
+              "line": 201
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 144
+              "line": 202
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 145
+              "line": 203
             }
           ]
         },
@@ -27867,7 +27886,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 149
+              "line": 224
             }
           ]
         },
@@ -27876,7 +27895,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 67
+              "line": 88
             }
           ]
         },
@@ -27889,25 +27908,40 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 191
+              "line": 348
             }
           ]
         },
         "prefix": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 83
+            }
+          ]
         },
         "prefix_icon": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 80
+            }
+          ]
         },
         "prefix_icon_size_constraints": {
           "classification": "unclassified",
           "evidence": []
         },
         "prefix_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 84
+            }
+          ]
         },
         "right": {
           "classification": "consumed",
@@ -27958,24 +27992,34 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 69
+              "line": 96
             }
           ]
         },
         "select_icon_disabled_color": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 256
+            }
+          ]
         },
         "select_icon_enabled_color": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 258
+            }
+          ]
         },
         "select_icon_size": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 73
+              "line": 100
             }
           ]
         },
@@ -27989,31 +28033,51 @@
           ]
         },
         "size_constraints": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 320
+            }
+          ]
         },
         "suffix": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 90
+            }
+          ]
         },
         "suffix_icon": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 93
+            }
+          ]
         },
         "suffix_icon_size_constraints": {
           "classification": "unclassified",
           "evidence": []
         },
         "suffix_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 91
+            }
+          ]
         },
         "text_size": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 159
+              "line": 234
             }
           ]
         },
@@ -28022,11 +28086,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 58
+              "line": 232
             },
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 157
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 301
             }
           ]
         },
@@ -28057,11 +28121,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 15
+              "line": 22
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 138
+              "line": 196
             }
           ]
         },
@@ -28087,7 +28151,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 27
+              "line": 38
             }
           ]
         }
@@ -43391,11 +43455,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 112
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 120
+              "line": 139
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/context_menu.swift",
@@ -43483,55 +43543,63 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 40
+              "line": 41
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 77
+              "line": 59
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 92
+              "line": 79
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 154
+              "line": 95
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 156
+              "line": 148
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 168
+              "line": 159
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 176
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 331
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 30
+              "line": 42
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 37
+              "line": 49
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 62
+              "line": 59
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 81
+              "line": 74
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 83
+              "line": 121
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 97
+              "line": 143
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 180
+              "line": 255
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/expansion_panel.swift",
@@ -44017,15 +44085,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 246
+              "line": 260
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 247
+              "line": 261
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 151
+              "line": 226
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/grid_view.swift",
@@ -44668,7 +44736,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 27
+              "line": 38
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/image.swift",
@@ -66171,8 +66239,16 @@
               "line": 599
             },
             {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 326
+            },
+            {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 195
+              "line": 130
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 298
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/expansion_panel.swift",
@@ -66480,11 +66556,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 112
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 120
+              "line": 139
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/context_menu.swift",
@@ -66572,55 +66644,63 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 40
+              "line": 41
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 77
+              "line": 59
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 92
+              "line": 79
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 154
+              "line": 95
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 156
+              "line": 148
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 168
+              "line": 159
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 176
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 331
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 30
+              "line": 42
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 37
+              "line": 49
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 62
+              "line": 59
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 81
+              "line": 74
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 83
+              "line": 121
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 97
+              "line": 143
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 180
+              "line": 255
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/expansion_panel.swift",
@@ -67219,15 +67299,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 246
+              "line": 260
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 247
+              "line": 261
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 151
+              "line": 226
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/grid_view.swift",
@@ -67368,27 +67448,27 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 131
+              "line": 221
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 132
+              "line": 222
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 133
+              "line": 223
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 136
+              "line": 226
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 137
+              "line": 227
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 138
+              "line": 228
             }
           ]
         },
@@ -67553,7 +67633,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 191
+              "line": 348
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/grid_view.swift",
@@ -67911,7 +67991,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 27
+              "line": 38
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/image.swift",
