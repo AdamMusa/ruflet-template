@@ -108,6 +108,34 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             self.assertEqual(self.entries[concept]["kind"], kind)
             self.assertEqual(self.entries[concept]["value"], value)
 
+    def test_action_family_is_explicit_reviewed_native_artwork(self):
+        family = MODULE.load_json(MODULE.ACTION_OVERRIDES_PATH)
+        low_confidence = {
+            item["concept"] for item in self.audit["low_confidence_concepts"]
+        }
+        self.assertEqual(self.audit["reviewed_families"]["action"], len(family))
+        self.assertTrue(set(family).isdisjoint(low_confidence))
+        for concept, target in family.items():
+            entry = self.entries[concept]
+            self.assertEqual(entry["kind"], target["kind"])
+            self.assertEqual(entry["value"], target["value"])
+            self.assertEqual(entry["confidence"], "reviewed")
+            self.assertEqual(entry["source"], "reviewed_override")
+
+    def test_action_family_known_wrong_generic_targets_do_not_regress(self):
+        expected = {
+            "BACKSPACE": ("cupertino_glyph", "DELETE_LEFT"),
+            "BUG_REPORT": ("system_symbol", "ladybug.fill"),
+            "CHANGE_HISTORY": ("cupertino_glyph", "TRIANGLE"),
+            "OPEN_IN_BROWSER": ("cupertino_glyph", "GLOBE"),
+            "PICTURE_IN_PICTURE_ALT": ("system_symbol", "pip.enter"),
+            "TURNED_IN": ("cupertino_glyph", "BOOKMARK_FILL"),
+            "WEB_ASSET": ("system_symbol", "macwindow"),
+        }
+        for concept, (kind, value) in expected.items():
+            self.assertEqual(self.entries[concept]["kind"], kind)
+            self.assertEqual(self.entries[concept]["value"], value)
+
     def test_checked_in_artifacts_are_reproducible(self):
         self.assertEqual(
             MODULE.OUTPUT_PATH.read_text(encoding="utf-8"),

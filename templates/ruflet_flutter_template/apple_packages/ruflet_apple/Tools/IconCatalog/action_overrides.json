@@ -1,0 +1,382 @@
+{
+  "ALL_INBOX": {
+    "kind": "cupertino_glyph",
+    "value": "TRAY_2",
+    "rationale": "native Apple stacked inbox trays"
+  },
+  "ALL_INCLUSIVE": {
+    "kind": "system_symbol",
+    "value": "infinity",
+    "rationale": "public Apple infinity symbol for the all-inclusive concept"
+  },
+  "ADS_CLICK": {
+    "kind": "system_symbol",
+    "value": "cursorarrow.click",
+    "rationale": "public Apple pointer-click action"
+  },
+  "ANNOUNCEMENT": {
+    "kind": "system_symbol",
+    "value": "megaphone.fill",
+    "rationale": "public Apple announcement megaphone"
+  },
+  "APPROVAL": {
+    "kind": "cupertino_glyph",
+    "value": "CHECKMARK_SEAL",
+    "rationale": "native Apple approval/certification seal"
+  },
+  "ARROW_OUTWARD": {
+    "kind": "system_symbol",
+    "value": "arrow.up.forward",
+    "rationale": "public Apple logical outward arrow"
+  },
+  "ASPECT_RATIO": {
+    "kind": "cupertino_glyph",
+    "value": "RESIZE",
+    "rationale": "native Apple aspect/size adjustment glyph"
+  },
+  "AUTORENEW": {
+    "kind": "cupertino_glyph",
+    "value": "ARROW_CLOCKWISE",
+    "rationale": "native Apple clockwise renewal action"
+  },
+  "BACKSPACE": {
+    "kind": "cupertino_glyph",
+    "value": "DELETE_LEFT",
+    "rationale": "native Apple backspace key glyph"
+  },
+  "BROWSE_GALLERY": {
+    "kind": "system_symbol",
+    "value": "photo.on.rectangle",
+    "rationale": "public Apple stacked-photo gallery"
+  },
+  "BUG_REPORT": {
+    "kind": "system_symbol",
+    "value": "ladybug.fill",
+    "rationale": "public Apple software-bug glyph"
+  },
+  "CALENDAR_VIEW_DAY": {
+    "kind": "system_symbol",
+    "value": "calendar.day.timeline.leading",
+    "rationale": "public Apple day-calendar timeline"
+  },
+  "CELEBRATION": {
+    "kind": "cupertino_glyph",
+    "value": "BURST",
+    "rationale": "native Apple celebratory burst"
+  },
+  "CHANGE_HISTORY": {
+    "kind": "cupertino_glyph",
+    "value": "TRIANGLE",
+    "rationale": "native Apple triangle matching the Material change-history identity"
+  },
+  "CHROME_READER_MODE": {
+    "kind": "system_symbol",
+    "value": "text.book.closed",
+    "rationale": "public Apple text-reader/book mode"
+  },
+  "COMMENT_BANK": {
+    "kind": "cupertino_glyph",
+    "value": "CHAT_BUBBLE_TEXT",
+    "rationale": "native Apple stored text-comment glyph"
+  },
+  "CONTACT_PAGE": {
+    "kind": "system_symbol",
+    "value": "person.text.rectangle",
+    "rationale": "public Apple contact-card/page glyph"
+  },
+  "COPYRIGHT": {
+    "kind": "system_symbol",
+    "value": "c.circle",
+    "rationale": "public Apple circled-C copyright form"
+  },
+  "DANGEROUS": {
+    "kind": "cupertino_glyph",
+    "value": "EXCLAMATIONMARK_OCTAGON",
+    "rationale": "native Apple danger/warning octagon"
+  },
+  "DISABLED_BY_DEFAULT": {
+    "kind": "system_symbol",
+    "value": "xmark.square",
+    "rationale": "public Apple disabled/default-off square"
+  },
+  "DONUT_SMALL": {
+    "kind": "cupertino_glyph",
+    "value": "CHART_PIE",
+    "rationale": "native Apple circular segmented chart"
+  },
+  "DOWNLOADING": {
+    "kind": "system_symbol",
+    "value": "arrow.down.circle",
+    "rationale": "public Apple in-progress download action"
+  },
+  "FIND_IN_PAGE": {
+    "kind": "cupertino_glyph",
+    "value": "DOC_TEXT_SEARCH",
+    "rationale": "native Apple search-within-document glyph"
+  },
+  "GESTURE": {
+    "kind": "system_symbol",
+    "value": "hand.draw",
+    "rationale": "public Apple touch/drawing gesture"
+  },
+  "HELP_CENTER": {
+    "kind": "cupertino_glyph",
+    "value": "QUESTION_CIRCLE",
+    "rationale": "native Apple help center question glyph"
+  },
+  "HIDE_SOURCE": {
+    "kind": "system_symbol",
+    "value": "eye.slash",
+    "rationale": "public Apple hidden-source visibility action"
+  },
+  "HOTEL_CLASS": {
+    "kind": "cupertino_glyph",
+    "value": "STAR",
+    "rationale": "native Apple hotel class/rating star"
+  },
+  "HOW_TO_REG": {
+    "kind": "system_symbol",
+    "value": "person.badge.plus",
+    "rationale": "public Apple person-registration glyph"
+  },
+  "INSTALL_MOBILE": {
+    "kind": "system_symbol",
+    "value": "arrow.down.app",
+    "rationale": "public Apple application-install glyph"
+  },
+  "KEYBOARD_COMMAND_KEY": {
+    "kind": "cupertino_glyph",
+    "value": "COMMAND",
+    "rationale": "native Apple Command modifier key"
+  },
+  "KEYBOARD_CONTROL_KEY": {
+    "kind": "cupertino_glyph",
+    "value": "CONTROL",
+    "rationale": "native Apple Control modifier key"
+  },
+  "KEYBOARD_DOUBLE_ARROW_LEFT": {
+    "kind": "cupertino_glyph",
+    "value": "CHEVRON_LEFT_2",
+    "rationale": "native Apple double-left keyboard navigation glyph"
+  },
+  "KEYBOARD_DOUBLE_ARROW_RIGHT": {
+    "kind": "cupertino_glyph",
+    "value": "CHEVRON_RIGHT_2",
+    "rationale": "native Apple double-right keyboard navigation glyph"
+  },
+  "LABEL_IMPORTANT": {
+    "kind": "cupertino_glyph",
+    "value": "TAG_FILL",
+    "rationale": "native Apple emphasized label/tag"
+  },
+  "LAUNCH": {
+    "kind": "system_symbol",
+    "value": "arrow.up.forward.square",
+    "rationale": "public Apple launch/open-external action"
+  },
+  "MANAGE_HISTORY": {
+    "kind": "system_symbol",
+    "value": "clock.arrow.circlepath",
+    "rationale": "public Apple history-management action"
+  },
+  "NIGHTLIGHT_ROUND": {
+    "kind": "cupertino_glyph",
+    "value": "MOON_FILL",
+    "rationale": "native Apple filled night/moon glyph"
+  },
+  "NOT_STARTED": {
+    "kind": "cupertino_glyph",
+    "value": "PLAY_CIRCLE",
+    "rationale": "native Apple outlined play/start status"
+  },
+  "OPEN_IN_BROWSER": {
+    "kind": "cupertino_glyph",
+    "value": "GLOBE",
+    "rationale": "platform-neutral native Apple web/browser glyph without restricted Safari artwork"
+  },
+  "OUTBOUND": {
+    "kind": "system_symbol",
+    "value": "arrow.up.forward",
+    "rationale": "public Apple logical outbound arrow"
+  },
+  "OUTBOX": {
+    "kind": "cupertino_glyph",
+    "value": "TRAY_ARROW_UP",
+    "rationale": "native Apple outgoing tray/outbox"
+  },
+  "OUTPUT": {
+    "kind": "system_symbol",
+    "value": "rectangle.portrait.and.arrow.right",
+    "rationale": "public Apple output-from-container action"
+  },
+  "PAID": {
+    "kind": "cupertino_glyph",
+    "value": "MONEY_DOLLAR_CIRCLE",
+    "rationale": "native Apple paid/currency glyph"
+  },
+  "PAN_TOOL": {
+    "kind": "cupertino_glyph",
+    "value": "HAND_RAISED",
+    "rationale": "native Apple hand/pan tool"
+  },
+  "PERM_IDENTITY": {
+    "kind": "cupertino_glyph",
+    "value": "PERSON",
+    "rationale": "native Apple identity/person permission glyph"
+  },
+  "PERM_MEDIA": {
+    "kind": "cupertino_glyph",
+    "value": "PHOTO",
+    "rationale": "native Apple media/photo permission glyph"
+  },
+  "PICTURE_IN_PICTURE_ALT": {
+    "kind": "system_symbol",
+    "value": "pip.enter",
+    "rationale": "public Apple picture-in-picture entry action"
+  },
+  "PLAGIARISM": {
+    "kind": "cupertino_glyph",
+    "value": "DOC_TEXT_SEARCH",
+    "rationale": "native Apple inspect/search-document glyph"
+  },
+  "PUBLISH": {
+    "kind": "system_symbol",
+    "value": "arrow.up.circle",
+    "rationale": "public Apple publish/upload action"
+  },
+  "REORDER": {
+    "kind": "system_symbol",
+    "value": "line.3.horizontal",
+    "rationale": "public Apple reorder handle/list glyph"
+  },
+  "RESTORE": {
+    "kind": "system_symbol",
+    "value": "clock.arrow.circlepath",
+    "rationale": "public Apple restore-from-history action"
+  },
+  "RESTORE_PAGE": {
+    "kind": "cupertino_glyph",
+    "value": "ARROW_COUNTERCLOCKWISE",
+    "rationale": "native Apple page-restore action"
+  },
+  "ROOM": {
+    "kind": "cupertino_glyph",
+    "value": "MAP_PIN",
+    "rationale": "native Apple room/place pin"
+  },
+  "SELECT_ALL": {
+    "kind": "system_symbol",
+    "value": "square.dashed",
+    "rationale": "public Apple selection-boundary square"
+  },
+  "SNOOZE": {
+    "kind": "system_symbol",
+    "value": "moon.zzz",
+    "rationale": "public Apple snooze/sleep action"
+  },
+  "SORT_BY_ALPHA": {
+    "kind": "cupertino_glyph",
+    "value": "TEXTFORMAT_ABC",
+    "rationale": "native Apple alphabetic text sorting glyph"
+  },
+  "START": {
+    "kind": "cupertino_glyph",
+    "value": "PLAY",
+    "rationale": "native Apple start/play action"
+  },
+  "SUPPORT": {
+    "kind": "cupertino_glyph",
+    "value": "HEADPHONES",
+    "rationale": "native Apple support/headset glyph"
+  },
+  "THUMB_DOWN_OFF_ALT": {
+    "kind": "cupertino_glyph",
+    "value": "HAND_THUMBSDOWN",
+    "rationale": "native Apple outline thumbs-down action"
+  },
+  "THUMB_UP_OFF_ALT": {
+    "kind": "cupertino_glyph",
+    "value": "HAND_THUMBSUP",
+    "rationale": "native Apple outline thumbs-up action"
+  },
+  "TIPS_AND_UPDATES": {
+    "kind": "cupertino_glyph",
+    "value": "LIGHTBULB",
+    "rationale": "native Apple tip/idea lightbulb"
+  },
+  "TOC": {
+    "kind": "cupertino_glyph",
+    "value": "LIST_BULLET",
+    "rationale": "native Apple table-of-contents list"
+  },
+  "TOUR": {
+    "kind": "cupertino_glyph",
+    "value": "FLAG",
+    "rationale": "native Apple tour/destination flag"
+  },
+  "TRACK_CHANGES": {
+    "kind": "cupertino_glyph",
+    "value": "SCOPE",
+    "rationale": "native Apple target/scope matching Material track-changes artwork"
+  },
+  "TROUBLESHOOT": {
+    "kind": "system_symbol",
+    "value": "wrench.and.screwdriver",
+    "rationale": "public Apple troubleshooting tools"
+  },
+  "TURNED_IN": {
+    "kind": "cupertino_glyph",
+    "value": "BOOKMARK_FILL",
+    "rationale": "native Apple filled turned-in/bookmark state"
+  },
+  "TURNED_IN_NOT": {
+    "kind": "cupertino_glyph",
+    "value": "BOOKMARK",
+    "rationale": "native Apple outline not-turned-in/bookmark state"
+  },
+  "UPDATE": {
+    "kind": "system_symbol",
+    "value": "clock.arrow.circlepath",
+    "rationale": "public Apple update/history action"
+  },
+  "UPGRADE": {
+    "kind": "system_symbol",
+    "value": "arrow.up.circle",
+    "rationale": "public Apple upgrade action"
+  },
+  "VIEW_DAY": {
+    "kind": "system_symbol",
+    "value": "rectangle.3.group",
+    "rationale": "public Apple grouped-card day layout"
+  },
+  "VIEW_QUILT": {
+    "kind": "system_symbol",
+    "value": "mosaic",
+    "rationale": "public Apple quilt/mosaic layout"
+  },
+  "VIEW_SIDEBAR": {
+    "kind": "cupertino_glyph",
+    "value": "SIDEBAR_RIGHT",
+    "rationale": "native Apple sidebar layout"
+  },
+  "WATCH_LATER": {
+    "kind": "cupertino_glyph",
+    "value": "CLOCK",
+    "rationale": "native Apple watch-later clock"
+  },
+  "WEB": {
+    "kind": "cupertino_glyph",
+    "value": "GLOBE",
+    "rationale": "platform-neutral native Apple web glyph"
+  },
+  "WEB_ASSET": {
+    "kind": "system_symbol",
+    "value": "macwindow",
+    "rationale": "public Apple browser/application window glyph"
+  },
+  "WORK_OUTLINE": {
+    "kind": "cupertino_glyph",
+    "value": "BRIEFCASE",
+    "rationale": "native Apple outline work/briefcase glyph"
+  }
+}
