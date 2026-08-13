@@ -684,6 +684,63 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             self.assertEqual(self.entries[material_name]["kind"], kind)
             self.assertEqual(self.entries[material_name]["value"], value)
 
+    def test_device_status_family_is_explicit_reviewed_native_artwork(self):
+        family = MODULE.load_json(MODULE.DEVICE_STATUS_OVERRIDES_PATH)
+        low_confidence = {
+            item["concept"] for item in self.audit["low_confidence_concepts"]
+        }
+        self.assertEqual(
+            self.audit["reviewed_families"]["device_status"], len(family)
+        )
+        self.assertTrue(set(family).isdisjoint(low_confidence))
+        for concept, target in family.items():
+            entry = self.entries[concept]
+            self.assertEqual(entry["kind"], target["kind"])
+            self.assertEqual(entry["value"], target["value"])
+            self.assertEqual(entry["confidence"], "reviewed")
+            self.assertEqual(entry["source"], "reviewed_override")
+
+    def test_device_status_distinct_semantics_do_not_regress(self):
+        expected = {
+            "AIRPLANEMODE_ACTIVE": ("system_symbol", "airplane"),
+            "AIRPLANEMODE_ON": ("system_symbol", "airplane"),
+            "MOBILEDATA_OFF": (
+                "system_symbol",
+                "antenna.radiowaves.left.and.right.slash",
+            ),
+            "NEARBY_OFF": (
+                "system_symbol",
+                "antenna.radiowaves.left.and.right.slash",
+            ),
+            "SECURITY_UPDATE_GOOD": (
+                "system_symbol",
+                "checkmark.shield.fill",
+            ),
+            "SECURITY_UPDATE_WARNING": (
+                "system_symbol",
+                "exclamationmark.shield.fill",
+            ),
+            "SIGNAL_CELLULAR_NODATA": (
+                "system_symbol",
+                "antenna.radiowaves.left.and.right.slash",
+            ),
+            "SIGNAL_WIFI_CONNECTED_NO_INTERNET_4": (
+                "system_symbol",
+                "wifi.exclamationmark",
+            ),
+            "SYSTEM_SECURITY_UPDATE_GOOD": (
+                "system_symbol",
+                "checkmark.shield.fill",
+            ),
+            "SYSTEM_SECURITY_UPDATE_WARNING": (
+                "system_symbol",
+                "exclamationmark.shield.fill",
+            ),
+        }
+        for material_name, (kind, value) in expected.items():
+            self.assertEqual(self.entries[material_name]["kind"], kind)
+            self.assertEqual(self.entries[material_name]["value"], value)
+
     def test_checked_in_artifacts_are_reproducible(self):
         self.assertEqual(
             MODULE.OUTPUT_PATH.read_text(encoding="utf-8"),

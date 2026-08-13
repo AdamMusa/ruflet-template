@@ -1774,29 +1774,29 @@
     "kind": "system_symbol",
     "value": "airplane",
     "concept": "AIRPLANEMODE_ACTIVE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "AIRPLANEMODE_ACTIVE_OUTLINED": {
     "kind": "system_symbol",
     "value": "airplane",
     "concept": "AIRPLANEMODE_ACTIVE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "AIRPLANEMODE_ACTIVE_ROUNDED": {
     "kind": "system_symbol",
     "value": "airplane",
     "concept": "AIRPLANEMODE_ACTIVE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "AIRPLANEMODE_ACTIVE_SHARP": {
     "kind": "system_symbol",
     "value": "airplane",
     "concept": "AIRPLANEMODE_ACTIVE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "AIRPLANEMODE_INACTIVE": {
     "kind": "system_symbol",
@@ -1858,29 +1858,29 @@
     "kind": "system_symbol",
     "value": "airplane",
     "concept": "AIRPLANEMODE_ON",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "AIRPLANEMODE_ON_OUTLINED": {
     "kind": "system_symbol",
     "value": "airplane",
     "concept": "AIRPLANEMODE_ON",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "AIRPLANEMODE_ON_ROUNDED": {
     "kind": "system_symbol",
     "value": "airplane",
     "concept": "AIRPLANEMODE_ON",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "AIRPLANEMODE_ON_SHARP": {
     "kind": "system_symbol",
     "value": "airplane",
     "concept": "AIRPLANEMODE_ON",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "AIRPLAY": {
     "kind": "system_symbol",
@@ -33187,32 +33187,32 @@
     "source": "semantic_rank"
   },
   "MOBILEDATA_OFF": {
-    "kind": "cupertino_glyph",
-    "value": "VOLUME_OFF",
+    "kind": "system_symbol",
+    "value": "antenna.radiowaves.left.and.right.slash",
     "concept": "MOBILEDATA_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MOBILEDATA_OFF_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "VOLUME_OFF",
+    "kind": "system_symbol",
+    "value": "antenna.radiowaves.left.and.right.slash",
     "concept": "MOBILEDATA_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MOBILEDATA_OFF_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "VOLUME_OFF",
+    "kind": "system_symbol",
+    "value": "antenna.radiowaves.left.and.right.slash",
     "concept": "MOBILEDATA_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MOBILEDATA_OFF_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "VOLUME_OFF",
+    "kind": "system_symbol",
+    "value": "antenna.radiowaves.left.and.right.slash",
     "concept": "MOBILEDATA_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "MODE": {
     "kind": "system_symbol",
@@ -34902,32 +34902,32 @@
     "source": "semantic_rank"
   },
   "NEARBY_OFF": {
-    "kind": "cupertino_glyph",
-    "value": "VOLUME_OFF",
+    "kind": "system_symbol",
+    "value": "antenna.radiowaves.left.and.right.slash",
     "concept": "NEARBY_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NEARBY_OFF_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "VOLUME_OFF",
+    "kind": "system_symbol",
+    "value": "antenna.radiowaves.left.and.right.slash",
     "concept": "NEARBY_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NEARBY_OFF_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "VOLUME_OFF",
+    "kind": "system_symbol",
+    "value": "antenna.radiowaves.left.and.right.slash",
     "concept": "NEARBY_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NEARBY_OFF_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "VOLUME_OFF",
+    "kind": "system_symbol",
+    "value": "antenna.radiowaves.left.and.right.slash",
     "concept": "NEARBY_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "NEST_CAM_WIRED_STAND": {
     "kind": "system_symbol",
@@ -46326,32 +46326,32 @@
     "source": "semantic_rank"
   },
   "SECURITY_UPDATE_GOOD": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "checkmark.shield.fill",
     "concept": "SECURITY_UPDATE_GOOD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SECURITY_UPDATE_GOOD_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "checkmark.shield.fill",
     "concept": "SECURITY_UPDATE_GOOD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SECURITY_UPDATE_GOOD_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "checkmark.shield.fill",
     "concept": "SECURITY_UPDATE_GOOD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SECURITY_UPDATE_GOOD_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "checkmark.shield.fill",
     "concept": "SECURITY_UPDATE_GOOD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SECURITY_UPDATE_OUTLINED": {
     "kind": "system_symbol",
@@ -46375,32 +46375,32 @@
     "source": "semantic_rank"
   },
   "SECURITY_UPDATE_WARNING": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_PHONE_PORTRAIT",
+    "kind": "system_symbol",
+    "value": "exclamationmark.shield.fill",
     "concept": "SECURITY_UPDATE_WARNING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SECURITY_UPDATE_WARNING_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_PHONE_PORTRAIT",
+    "kind": "system_symbol",
+    "value": "exclamationmark.shield.fill",
     "concept": "SECURITY_UPDATE_WARNING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SECURITY_UPDATE_WARNING_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_PHONE_PORTRAIT",
+    "kind": "system_symbol",
+    "value": "exclamationmark.shield.fill",
     "concept": "SECURITY_UPDATE_WARNING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SECURITY_UPDATE_WARNING_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_PHONE_PORTRAIT",
+    "kind": "system_symbol",
+    "value": "exclamationmark.shield.fill",
     "concept": "SECURITY_UPDATE_WARNING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SEGMENT": {
     "kind": "system_symbol",
@@ -48567,87 +48567,87 @@
   },
   "SIGNAL_CELLULAR_NODATA": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "antenna.radiowaves.left.and.right.slash",
     "concept": "SIGNAL_CELLULAR_NODATA",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIGNAL_CELLULAR_NODATA_OUTLINED": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "antenna.radiowaves.left.and.right.slash",
     "concept": "SIGNAL_CELLULAR_NODATA",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIGNAL_CELLULAR_NODATA_ROUNDED": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "antenna.radiowaves.left.and.right.slash",
     "concept": "SIGNAL_CELLULAR_NODATA",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIGNAL_CELLULAR_NODATA_SHARP": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "antenna.radiowaves.left.and.right.slash",
     "concept": "SIGNAL_CELLULAR_NODATA",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIGNAL_CELLULAR_NULL": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "antenna.radiowaves.left.and.right.slash",
     "concept": "SIGNAL_CELLULAR_NULL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIGNAL_CELLULAR_NULL_OUTLINED": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "antenna.radiowaves.left.and.right.slash",
     "concept": "SIGNAL_CELLULAR_NULL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIGNAL_CELLULAR_NULL_ROUNDED": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "antenna.radiowaves.left.and.right.slash",
     "concept": "SIGNAL_CELLULAR_NULL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIGNAL_CELLULAR_NULL_SHARP": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "antenna.radiowaves.left.and.right.slash",
     "concept": "SIGNAL_CELLULAR_NULL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIGNAL_CELLULAR_OFF": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "antenna.radiowaves.left.and.right.slash",
     "concept": "SIGNAL_CELLULAR_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIGNAL_CELLULAR_OFF_OUTLINED": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "antenna.radiowaves.left.and.right.slash",
     "concept": "SIGNAL_CELLULAR_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIGNAL_CELLULAR_OFF_ROUNDED": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "antenna.radiowaves.left.and.right.slash",
     "concept": "SIGNAL_CELLULAR_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIGNAL_CELLULAR_OFF_SHARP": {
     "kind": "system_symbol",
-    "value": "phone.connection",
+    "value": "antenna.radiowaves.left.and.right.slash",
     "concept": "SIGNAL_CELLULAR_OFF",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIGNAL_WIFI_0_BAR": {
     "kind": "cupertino_glyph",
@@ -48762,32 +48762,32 @@
     "source": "semantic_rank"
   },
   "SIGNAL_WIFI_CONNECTED_NO_INTERNET_4": {
-    "kind": "cupertino_glyph",
-    "value": "WIFI",
+    "kind": "system_symbol",
+    "value": "wifi.exclamationmark",
     "concept": "SIGNAL_WIFI_CONNECTED_NO_INTERNET_4",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIGNAL_WIFI_CONNECTED_NO_INTERNET_4_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "WIFI",
+    "kind": "system_symbol",
+    "value": "wifi.exclamationmark",
     "concept": "SIGNAL_WIFI_CONNECTED_NO_INTERNET_4",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIGNAL_WIFI_CONNECTED_NO_INTERNET_4_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "WIFI",
+    "kind": "system_symbol",
+    "value": "wifi.exclamationmark",
     "concept": "SIGNAL_WIFI_CONNECTED_NO_INTERNET_4",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIGNAL_WIFI_CONNECTED_NO_INTERNET_4_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "WIFI",
+    "kind": "system_symbol",
+    "value": "wifi.exclamationmark",
     "concept": "SIGNAL_WIFI_CONNECTED_NO_INTERNET_4",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIGNAL_WIFI_OFF": {
     "kind": "cupertino_glyph",
@@ -48846,32 +48846,32 @@
     "source": "semantic_rank"
   },
   "SIGNAL_WIFI_STATUSBAR_CONNECTED_NO_INTERNET_4": {
-    "kind": "cupertino_glyph",
-    "value": "WIFI",
+    "kind": "system_symbol",
+    "value": "wifi.exclamationmark",
     "concept": "SIGNAL_WIFI_STATUSBAR_CONNECTED_NO_INTERNET_4",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIGNAL_WIFI_STATUSBAR_CONNECTED_NO_INTERNET_4_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "WIFI",
+    "kind": "system_symbol",
+    "value": "wifi.exclamationmark",
     "concept": "SIGNAL_WIFI_STATUSBAR_CONNECTED_NO_INTERNET_4",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIGNAL_WIFI_STATUSBAR_CONNECTED_NO_INTERNET_4_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "WIFI",
+    "kind": "system_symbol",
+    "value": "wifi.exclamationmark",
     "concept": "SIGNAL_WIFI_STATUSBAR_CONNECTED_NO_INTERNET_4",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIGNAL_WIFI_STATUSBAR_CONNECTED_NO_INTERNET_4_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "WIFI",
+    "kind": "system_symbol",
+    "value": "wifi.exclamationmark",
     "concept": "SIGNAL_WIFI_STATUSBAR_CONNECTED_NO_INTERNET_4",
-    "confidence": "medium",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SIGNAL_WIFI_STATUSBAR_NULL": {
     "kind": "cupertino_glyph",
@@ -53466,32 +53466,32 @@
     "source": "semantic_rank"
   },
   "SYSTEM_SECURITY_UPDATE_GOOD": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "checkmark.shield.fill",
     "concept": "SYSTEM_SECURITY_UPDATE_GOOD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SYSTEM_SECURITY_UPDATE_GOOD_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "checkmark.shield.fill",
     "concept": "SYSTEM_SECURITY_UPDATE_GOOD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SYSTEM_SECURITY_UPDATE_GOOD_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "checkmark.shield.fill",
     "concept": "SYSTEM_SECURITY_UPDATE_GOOD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SYSTEM_SECURITY_UPDATE_GOOD_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "CHECK_MARK",
+    "kind": "system_symbol",
+    "value": "checkmark.shield.fill",
     "concept": "SYSTEM_SECURITY_UPDATE_GOOD",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SYSTEM_SECURITY_UPDATE_OUTLINED": {
     "kind": "system_symbol",
@@ -53515,32 +53515,32 @@
     "source": "semantic_rank"
   },
   "SYSTEM_SECURITY_UPDATE_WARNING": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_PHONE_PORTRAIT",
+    "kind": "system_symbol",
+    "value": "exclamationmark.shield.fill",
     "concept": "SYSTEM_SECURITY_UPDATE_WARNING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SYSTEM_SECURITY_UPDATE_WARNING_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_PHONE_PORTRAIT",
+    "kind": "system_symbol",
+    "value": "exclamationmark.shield.fill",
     "concept": "SYSTEM_SECURITY_UPDATE_WARNING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SYSTEM_SECURITY_UPDATE_WARNING_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_PHONE_PORTRAIT",
+    "kind": "system_symbol",
+    "value": "exclamationmark.shield.fill",
     "concept": "SYSTEM_SECURITY_UPDATE_WARNING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SYSTEM_SECURITY_UPDATE_WARNING_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "DEVICE_PHONE_PORTRAIT",
+    "kind": "system_symbol",
+    "value": "exclamationmark.shield.fill",
     "concept": "SYSTEM_SECURITY_UPDATE_WARNING",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "SYSTEM_UPDATE": {
     "kind": "system_symbol",

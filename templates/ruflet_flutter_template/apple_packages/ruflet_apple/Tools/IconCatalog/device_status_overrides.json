@@ -1,0 +1,67 @@
+{
+  "AIRPLANEMODE_ACTIVE": {
+    "kind": "system_symbol",
+    "value": "airplane",
+    "rationale": "public Apple airplane identity for enabled airplane mode"
+  },
+  "AIRPLANEMODE_ON": {
+    "kind": "system_symbol",
+    "value": "airplane",
+    "rationale": "public Apple airplane identity for the legacy airplane-mode-on spelling"
+  },
+  "MOBILEDATA_OFF": {
+    "kind": "system_symbol",
+    "value": "antenna.radiowaves.left.and.right.slash",
+    "rationale": "public Apple disabled radio-data identity"
+  },
+  "NEARBY_OFF": {
+    "kind": "system_symbol",
+    "value": "antenna.radiowaves.left.and.right.slash",
+    "rationale": "public Apple disabled nearby-radio discovery identity"
+  },
+  "SECURITY_UPDATE_GOOD": {
+    "kind": "system_symbol",
+    "value": "checkmark.shield.fill",
+    "rationale": "public Apple verified-security status identity"
+  },
+  "SECURITY_UPDATE_WARNING": {
+    "kind": "system_symbol",
+    "value": "exclamationmark.shield.fill",
+    "rationale": "public Apple security-warning status identity"
+  },
+  "SIGNAL_CELLULAR_NODATA": {
+    "kind": "system_symbol",
+    "value": "antenna.radiowaves.left.and.right.slash",
+    "rationale": "public Apple unavailable cellular-data radio identity"
+  },
+  "SIGNAL_CELLULAR_NULL": {
+    "kind": "system_symbol",
+    "value": "antenna.radiowaves.left.and.right.slash",
+    "rationale": "public Apple unavailable cellular-signal identity"
+  },
+  "SIGNAL_CELLULAR_OFF": {
+    "kind": "system_symbol",
+    "value": "antenna.radiowaves.left.and.right.slash",
+    "rationale": "public Apple disabled cellular-radio identity"
+  },
+  "SIGNAL_WIFI_CONNECTED_NO_INTERNET_4": {
+    "kind": "system_symbol",
+    "value": "wifi.exclamationmark",
+    "rationale": "public Apple connected Wi-Fi with connectivity-warning identity"
+  },
+  "SIGNAL_WIFI_STATUSBAR_CONNECTED_NO_INTERNET_4": {
+    "kind": "system_symbol",
+    "value": "wifi.exclamationmark",
+    "rationale": "public Apple status-bar Wi-Fi connectivity-warning identity"
+  },
+  "SYSTEM_SECURITY_UPDATE_GOOD": {
+    "kind": "system_symbol",
+    "value": "checkmark.shield.fill",
+    "rationale": "public Apple verified system-security status identity"
+  },
+  "SYSTEM_SECURITY_UPDATE_WARNING": {
+    "kind": "system_symbol",
+    "value": "exclamationmark.shield.fill",
+    "rationale": "public Apple system-security warning identity"
+  }
+}

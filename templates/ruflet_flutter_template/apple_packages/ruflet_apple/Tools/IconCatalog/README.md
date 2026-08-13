@@ -52,6 +52,9 @@ color-inversion, and panorama-editing concepts live in
 Reviewed ferry and rail directions, tickets, transit entry/exit, local dining,
 printing, fast food, and general service-tool concepts live in
 `local_service_transit_overrides.json`.
+Reviewed enabled airplane mode, unavailable radio/data, no-internet Wi-Fi, and
+security-good/security-warning status concepts live in
+`device_status_overrides.json`.
 
 The 8,825 identities contain 2,235 concepts because Flet carries Outlined,
 Rounded, and Sharp Material variants. The generator records the collapsed

@@ -88,12 +88,6 @@
     "value": "wind",
     "rationale": "curated Material-to-SF vocabulary"
   },
-  "AIRPLANEMODE_ACTIVE": {
-    "kind": "system_symbol",
-    "value": "airplane",
-    "rationale": "native Apple airplane-mode identity; iOS 15 has no airplane-slash symbol",
-    "status": "review_required"
-  },
   "AIRPLANEMODE_INACTIVE": {
     "kind": "system_symbol",
     "value": "airplane",
@@ -101,12 +95,6 @@
     "status": "review_required"
   },
   "AIRPLANEMODE_OFF": {
-    "kind": "system_symbol",
-    "value": "airplane",
-    "rationale": "native Apple airplane-mode identity; iOS 15 has no airplane-slash symbol",
-    "status": "review_required"
-  },
-  "AIRPLANEMODE_ON": {
     "kind": "system_symbol",
     "value": "airplane",
     "rationale": "native Apple airplane-mode identity; iOS 15 has no airplane-slash symbol",
