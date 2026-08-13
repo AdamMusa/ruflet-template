@@ -41,7 +41,8 @@ Reviewed audio, video, captions, hearing, playback, streaming, and media-library
 concepts live in `audio_video_overrides.json`.
 Reviewed do-not-disturb, event, error, security, update, and notification-status
 concepts live in `notification_status_overrides.json`.
-Reviewed clipboard, file rename, content feed, policy, report, unread, and
+Reviewed clipboard, file rename, article and dynamic content feeds, policy,
+report, unread, and
 workspace-state concepts live in `file_content_overrides.json`.
 Reviewed assessment, source/class authoring, filter, resizing, privacy, rule,
 and other platform-neutral interface actions with direct Apple equivalents

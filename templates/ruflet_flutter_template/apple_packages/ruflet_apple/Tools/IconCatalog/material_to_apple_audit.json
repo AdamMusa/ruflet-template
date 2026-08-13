@@ -28,7 +28,7 @@
     "travel_amenity_overrides.json": "39be6913c53d65874aa9ffc28c1dfd73544b8187e8259c147bce130f6b7b5d09",
     "audio_video_overrides.json": "a52529f209de707f4569ef6262403d4c8a91d1043d052e5880d72ec4d5848e56",
     "notification_status_overrides.json": "229ae9a2f5f6c267134ede74e396416d9cf5d043895f7038b080c9c4b6bc90cd",
-    "file_content_overrides.json": "e449a1148e2246e509f26b9a2ae8de416306937d440215990239e20a4e77d2b4",
+    "file_content_overrides.json": "d8fdc8b6685342e3a3e0c2ab8663f418aa121e8efce8aad55a1e6e7111241c90",
     "interface_action_overrides.json": "3c09440fc6bdb2a4caf69da9aea0d1da2b608dea2f678da4fa2dfcfb6d082d92",
     "advanced_image_editing_overrides.json": "f2ff4dda82083f8b443712df6d81f39649e2bf3bccd703a2ad34e38c790ba6fd",
     "local_service_transit_overrides.json": "8b54294919edbaeef4d88939fbd6014d42649676750af5a508ac1d2a9ad74f2c",
@@ -52,8 +52,8 @@
   "sources": {
     "exact_apple_name": 48,
     "manual_review_required": 75,
-    "reviewed_override": 1024,
-    "semantic_rank": 1088
+    "reviewed_override": 1025,
+    "semantic_rank": 1087
   },
   "reviewed_families": {
     "action": 76,
@@ -67,7 +67,7 @@
     "device_interaction_state": 4,
     "device_status": 13,
     "disabled_interface": 5,
-    "file_content": 11,
+    "file_content": 12,
     "financial_wallet": 5,
     "general": 339,
     "health_accessibility": 10,
@@ -91,11 +91,11 @@
   "confidence_grades": {
     "exact": 48,
     "high": 665,
-    "low": 419,
+    "low": 418,
     "medium": 79,
-    "reviewed": 1024
+    "reviewed": 1025
   },
-  "unique_apple_targets": 903,
+  "unique_apple_targets": 902,
   "most_reused_targets": [
     {
       "kind": "system_symbol",
@@ -348,7 +348,7 @@
       "concept_count": 6
     }
   ],
-  "low_confidence_count": 498,
+  "low_confidence_count": 497,
   "low_confidence_concepts": [
     {
       "concept": "SIXTY_FPS_SELECT",
@@ -11738,55 +11738,6 @@
         "transportation",
         "warehouse",
         "wood"
-      ]
-    },
-    {
-      "concept": "FEED",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "SEARCH_CIRCLE"
-      },
-      "confidence": 0.3269,
-      "grade": "low",
-      "reason": "name=[] semantic=['circle', 'search'] extra=[]",
-      "tags": [
-        "abstract",
-        "article",
-        "atom",
-        "blog",
-        "broadcasting",
-        "circle",
-        "communication",
-        "content",
-        "curves",
-        "data",
-        "distribution",
-        "dots",
-        "feed",
-        "headline",
-        "information",
-        "information flow",
-        "internet",
-        "lines",
-        "media",
-        "network",
-        "news",
-        "newspaper",
-        "paper",
-        "public",
-        "publishing",
-        "rss",
-        "signal",
-        "social",
-        "square",
-        "stream",
-        "subscription",
-        "symbol",
-        "syndicated",
-        "timeline",
-        "updates",
-        "waves",
-        "web"
       ]
     },
     {

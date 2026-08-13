@@ -497,6 +497,21 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
 
     def test_file_content_family_is_explicit_reviewed_native_artwork(self):
         family = MODULE.load_json(MODULE.FILE_CONTENT_OVERRIDES_PATH)
+        expected_concepts = {
+            "BLOCK_FLIPPED",
+            "CONTENT_PASTE_GO",
+            "DIFFERENCE",
+            "DRIVE_FILE_RENAME_OUTLINE",
+            "DYNAMIC_FEED",
+            "FEED",
+            "MARKUNREAD",
+            "POLICY",
+            "REPORT",
+            "REPORT_GMAILERRORRED",
+            "WORKSPACES_FILLED",
+            "WORKSPACES_OUTLINE",
+        }
+        self.assertEqual(set(family), expected_concepts)
         low_confidence = {
             item["concept"] for item in self.audit["low_confidence_concepts"]
         }
@@ -508,6 +523,16 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             self.assertEqual(entry["value"], target["value"])
             self.assertEqual(entry["confidence"], "reviewed")
             self.assertEqual(entry["source"], "reviewed_override")
+        material = MODULE.load_json(MODULE.MATERIAL_PATH)
+        family_wire_identities = {
+            name
+            for name in material
+            if MODULE.concept_for(name) in expected_concepts
+        }
+        self.assertEqual(len(family_wire_identities), 39)
+        for name in family_wire_identities:
+            self.assertEqual(self.entries[name]["confidence"], "reviewed")
+            self.assertEqual(self.entries[name]["source"], "reviewed_override")
 
     def test_file_content_distinct_semantics_do_not_regress(self):
         expected = {
@@ -522,6 +547,7 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
                 "square.and.pencil",
             ),
             "DYNAMIC_FEED": ("system_symbol", "rectangle.stack.fill"),
+            "FEED": ("system_symbol", "newspaper"),
             "MARKUNREAD": ("system_symbol", "envelope.badge.fill"),
             "POLICY": ("system_symbol", "checkmark.shield.fill"),
             "WORKSPACES_OUTLINE": ("system_symbol", "rectangle.grid.2x2"),
@@ -529,6 +555,10 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
         for concept, (kind, value) in expected.items():
             self.assertEqual(self.entries[concept]["kind"], kind)
             self.assertEqual(self.entries[concept]["value"], value)
+
+        # A dynamic form is interactive form structure, not article content;
+        # do not promote it to the newspaper/feed identity.
+        self.assertNotEqual(self.entries["DYNAMIC_FORM"]["confidence"], "reviewed")
 
     def test_interface_action_family_is_explicit_reviewed_native_artwork(self):
         family = MODULE.load_json(MODULE.INTERFACE_ACTION_OVERRIDES_PATH)

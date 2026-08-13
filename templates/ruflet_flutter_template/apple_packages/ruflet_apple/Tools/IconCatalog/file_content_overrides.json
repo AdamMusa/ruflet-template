@@ -24,6 +24,11 @@
     "value": "rectangle.stack.fill",
     "rationale": "public Apple dynamic content-feed identity"
   },
+  "FEED": {
+    "kind": "system_symbol",
+    "value": "newspaper",
+    "rationale": "public Apple article and news-feed identity exactly preserves Material feed content"
+  },
   "MARKUNREAD": {
     "kind": "system_symbol",
     "value": "envelope.badge.fill",

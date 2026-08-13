@@ -19222,32 +19222,32 @@
     "source": "reviewed_override"
   },
   "FEED": {
-    "kind": "cupertino_glyph",
-    "value": "SEARCH_CIRCLE",
+    "kind": "system_symbol",
+    "value": "newspaper",
     "concept": "FEED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FEED_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "SEARCH_CIRCLE",
+    "kind": "system_symbol",
+    "value": "newspaper",
     "concept": "FEED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FEED_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "SEARCH_CIRCLE",
+    "kind": "system_symbol",
+    "value": "newspaper",
     "concept": "FEED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FEED_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "SEARCH_CIRCLE",
+    "kind": "system_symbol",
+    "value": "newspaper",
     "concept": "FEED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "FEEDBACK": {
     "kind": "system_symbol",
