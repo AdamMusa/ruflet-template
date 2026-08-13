@@ -1,14 +1,15 @@
 import AVFoundation
 import AVKit
 import Foundation
+import QuartzCore
 import RufletEngine
 import RufletProtocol
 import SwiftUI
 
 #if os(iOS)
-import UIKit
+  import UIKit
 #elseif os(macOS)
-import AppKit
+  import AppKit
 #endif
 
 public enum RufletVideoError: Error, Equatable, Sendable {
@@ -60,7 +61,9 @@ final class RufletVideoController: ObservableObject {
       return try await self.invoke(name, arguments: arguments.map ?? [:])
     }
     #if os(iOS)
-    if control.boolean("wakelock", default: true) { UIApplication.shared.isIdleTimerDisabled = true }
+      if control.boolean("wakelock", default: true) {
+        UIApplication.shared.isIdleTimerDisabled = true
+      }
     #endif
   }
 
@@ -72,18 +75,21 @@ final class RufletVideoController: ObservableObject {
       self.invokeToken = nil
     }
     #if os(iOS)
-    if control.boolean("wakelock", default: true) { UIApplication.shared.isIdleTimerDisabled = false }
+      if control.boolean("wakelock", default: true) {
+        UIApplication.shared.isIdleTimerDisabled = false
+      }
     #endif
   }
 
   func synchronizeProperties() {
-    if let volume = control.number("volume"), (0 ... 100).contains(volume) {
+    if let volume = control.number("volume"), (0...100).contains(volume) {
       player.volume = Float(volume / 100)
     }
     player.isMuted = control.boolean("muted", default: false)
     let rate = Float(control.number("playback_rate", default: 1) ?? 1)
     if player.timeControlStatus == .playing, rate > 0 { player.rate = rate }
     player.currentItem?.audioTimePitchAlgorithm = pitchAlgorithm(control.number("pitch"))
+    if let item = player.currentItem { applyConfiguration(to: item) }
     let requestedFullscreen = control.boolean("fullscreen", default: false)
     if requestedFullscreen != isFullscreen { setFullscreen(requestedFullscreen, report: false) }
   }
@@ -91,7 +97,8 @@ final class RufletVideoController: ObservableObject {
   func setFullscreen(_ value: Bool, report: Bool = true) {
     guard value != isFullscreen else { return }
     isFullscreen = value
-    control.updateProperties(["_fullscreen": .bool(value), "fullscreen": .bool(value)], client: true, server: report)
+    control.updateProperties(
+      ["_fullscreen": .bool(value), "fullscreen": .bool(value)], client: true, server: report)
     control.triggerEvent(value ? "enter_fullscreen" : "exit_fullscreen")
   }
 
@@ -103,7 +110,9 @@ final class RufletVideoController: ObservableObject {
       queue: .main
     ) { [weak self] notification in
       Task { @MainActor [weak self] in
-        guard let self, notification.object as? AVPlayerItem === self.player.currentItem else { return }
+        guard let self, notification.object as? AVPlayerItem === self.player.currentItem else {
+          return
+        }
         self.completeCurrentItem()
       }
     }
@@ -114,7 +123,9 @@ final class RufletVideoController: ObservableObject {
     ) { [weak self] notification in
       Task { @MainActor [weak self] in
         guard let self else { return }
-        let message = (notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? Error)?.localizedDescription
+        let message =
+          (notification.userInfo?[AVPlayerItemFailedToPlayToEndTimeErrorKey] as? Error)?
+          .localizedDescription
           ?? "Video playback failed"
         self.control.triggerEvent("error", data: .string(message))
       }
@@ -130,38 +141,44 @@ final class RufletVideoController: ObservableObject {
 
   private func registerLifecycleObservers() {
     #if os(iOS)
-    let background = UIApplication.didEnterBackgroundNotification
-    let foreground = UIApplication.willEnterForegroundNotification
+      let background = UIApplication.didEnterBackgroundNotification
+      let foreground = UIApplication.willEnterForegroundNotification
     #elseif os(macOS)
-    let background = NSApplication.didResignActiveNotification
-    let foreground = NSApplication.didBecomeActiveNotification
+      let background = NSApplication.didResignActiveNotification
+      let foreground = NSApplication.didBecomeActiveNotification
     #endif
-    foregroundObservers.append(NotificationCenter.default.addObserver(
-      forName: background, object: nil, queue: .main
-    ) { [weak self] _ in
-      Task { @MainActor [weak self] in
-        guard let self else { return }
-        self.wasPlayingBeforeBackground = self.player.timeControlStatus == .playing
-        if self.control.boolean("pause_upon_entering_background_mode", default: true) { self.player.pause() }
-      }
-    })
-    foregroundObservers.append(NotificationCenter.default.addObserver(
-      forName: foreground, object: nil, queue: .main
-    ) { [weak self] _ in
-      Task { @MainActor [weak self] in
-        guard let self,
-              self.wasPlayingBeforeBackground,
-              self.control.boolean("resume_upon_entering_foreground_mode", default: false)
-        else { return }
-        self.player.playImmediately(atRate: Float(self.control.number("playback_rate", default: 1) ?? 1))
-      }
-    })
+    foregroundObservers.append(
+      NotificationCenter.default.addObserver(
+        forName: background, object: nil, queue: .main
+      ) { [weak self] _ in
+        Task { @MainActor [weak self] in
+          guard let self else { return }
+          self.wasPlayingBeforeBackground = self.player.timeControlStatus == .playing
+          if self.control.boolean("pause_upon_entering_background_mode", default: true) {
+            self.player.pause()
+          }
+        }
+      })
+    foregroundObservers.append(
+      NotificationCenter.default.addObserver(
+        forName: foreground, object: nil, queue: .main
+      ) { [weak self] _ in
+        Task { @MainActor [weak self] in
+          guard let self,
+            self.wasPlayingBeforeBackground,
+            self.control.boolean("resume_upon_entering_foreground_mode", default: false)
+          else { return }
+          self.player.playImmediately(
+            atRate: Float(self.control.number("playback_rate", default: 1) ?? 1))
+        }
+      })
   }
 
   private func load(index: Int, autoplay: Bool) {
     guard playlist.indices.contains(index) else { return }
     do {
       let item = try makeVideoItem(playlist[index], control: control)
+      applyConfiguration(to: item)
       currentIndex = index
       itemStatusObservation?.invalidate()
       player.replaceCurrentItem(with: item)
@@ -172,20 +189,37 @@ final class RufletVideoController: ObservableObject {
           if item.status == .readyToPlay {
             self.control.triggerEvent("loaded")
           } else if item.status == .failed {
-            self.control.triggerEvent("error", data: .string(item.error?.localizedDescription ?? "Video failed to load"))
+            self.control.triggerEvent(
+              "error", data: .string(item.error?.localizedDescription ?? "Video failed to load"))
           }
         }
       }
       control.triggerEvent("track_change", data: .int(Int64(index)))
-      if autoplay { player.playImmediately(atRate: Float(control.number("playback_rate", default: 1) ?? 1)) }
+      if autoplay {
+        player.playImmediately(atRate: Float(control.number("playback_rate", default: 1) ?? 1))
+      }
     } catch {
       control.triggerEvent("error", data: .string(String(describing: error)))
     }
   }
 
+  private func applyConfiguration(to item: AVPlayerItem) {
+    let configuration = RufletVideoConfiguration(control: control)
+    item.preferredMaximumResolution = configuration.preferredMaximumResolution ?? .zero
+
+    #if os(iOS)
+      let title = AVMutableMetadataItem()
+      title.identifier = .commonIdentifierTitle
+      title.value = configuration.title as NSString
+      item.externalMetadata = [title]
+    #endif
+  }
+
   private func completeCurrentItem() {
     control.triggerEvent("complete", data: .bool(true))
-    switch RufletVideoPlaylistMode(rawValue: control.string("playlist_mode")?.lowercased() ?? "") ?? .none {
+    switch RufletVideoPlaylistMode(rawValue: control.string("playlist_mode")?.lowercased() ?? "")
+      ?? .none
+    {
     case .single:
       player.seek(to: .zero)
       player.playImmediately(atRate: Float(control.number("playback_rate", default: 1) ?? 1))
@@ -196,17 +230,26 @@ final class RufletVideoController: ObservableObject {
     }
   }
 
-  private func invoke(_ name: String, arguments: [String: RufletValue]) async throws -> RufletValue {
+  private func invoke(_ name: String, arguments: [String: RufletValue]) async throws -> RufletValue
+  {
     switch name {
     case "play":
-      player.playImmediately(atRate: Float(control.number("playback_rate", default: 1) ?? 1)); return .null
-    case "pause": player.pause(); return .null
+      player.playImmediately(atRate: Float(control.number("playback_rate", default: 1) ?? 1))
+      return .null
+    case "pause":
+      player.pause()
+      return .null
     case "play_or_pause":
-      if player.timeControlStatus == .playing { player.pause() }
-      else { player.playImmediately(atRate: Float(control.number("playback_rate", default: 1) ?? 1)) }
+      if player.timeControlStatus == .playing {
+        player.pause()
+      } else {
+        player.playImmediately(atRate: Float(control.number("playback_rate", default: 1) ?? 1))
+      }
       return .null
     case "stop":
-      player.pause(); await player.seek(to: .zero); return .null
+      player.pause()
+      await player.seek(to: .zero)
+      return .null
     case "seek":
       if let seconds = parseVideoDuration(arguments["position"]) {
         await player.seek(to: CMTime(seconds: seconds, preferredTimescale: 600))
@@ -214,25 +257,36 @@ final class RufletVideoController: ObservableObject {
       return .null
     case "next":
       guard !playlist.isEmpty else { return .null }
-      let index = control.boolean("shuffle_playlist", default: false)
+      let index =
+        control.boolean("shuffle_playlist", default: false)
         ? Int.random(in: playlist.indices)
         : min(currentIndex + 1, playlist.count - 1)
-      load(index: index, autoplay: true); return .null
+      load(index: index, autoplay: true)
+      return .null
     case "previous":
-      load(index: max(currentIndex - 1, 0), autoplay: true); return .null
+      load(index: max(currentIndex - 1, 0), autoplay: true)
+      return .null
     case "jump_to":
       if let index = arguments["media_index"]?.integer { load(index: index, autoplay: true) }
       return .null
     case "playlist_add":
-      guard let media = parseVideoMedia(arguments["media"]) else { throw RufletVideoError.invalidMedia }
-      playlist.append(media); return .null
+      guard let media = parseVideoMedia(arguments["media"]) else {
+        throw RufletVideoError.invalidMedia
+      }
+      playlist.append(media)
+      return .null
     case "playlist_remove":
       if let index = arguments["media_index"]?.integer, playlist.indices.contains(index) {
         playlist.remove(at: index)
         if index == currentIndex {
-          if playlist.isEmpty { player.replaceCurrentItem(with: nil) }
-          else { load(index: min(index, playlist.count - 1), autoplay: false) }
-        } else if index < currentIndex { currentIndex -= 1 }
+          if playlist.isEmpty {
+            player.replaceCurrentItem(with: nil)
+          } else {
+            load(index: min(index, playlist.count - 1), autoplay: false)
+          }
+        } else if index < currentIndex {
+          currentIndex -= 1
+        }
       }
       return .null
     case "is_playing": return .bool(player.timeControlStatus == .playing)
@@ -257,9 +311,9 @@ final class RufletVideoController: ObservableObject {
 
   private func loadSubtitles() async {
     guard let value = control.value("subtitle_track")?.map,
-          let source = value["src"]?.text,
-          source != "none",
-          source != "auto"
+      let source = value["src"]?.text,
+      source != "none",
+      source != "auto"
     else { return }
     let text: String
     if source.hasPrefix("http://") || source.hasPrefix("https://"), let url = URL(string: source) {
@@ -282,88 +336,99 @@ final class RufletVideoController: ObservableObject {
 }
 
 #if os(iOS)
-private struct RufletVideoSurface: UIViewControllerRepresentable {
-  let player: AVPlayer
-  let showControls: Bool
-  let fit: String?
-  let fullscreenController: RufletVideoController
+  private struct RufletVideoSurface: UIViewControllerRepresentable {
+    let player: AVPlayer
+    let showControls: Bool
+    let fit: String?
+    let filterQuality: RufletVideoFilterQuality
+    let title: String
+    let fullscreenController: RufletVideoController
 
-  func makeUIViewController(context: Context) -> AVPlayerViewController {
-    let controller = AVPlayerViewController()
-    controller.player = player
-    controller.showsPlaybackControls = showControls
-    controller.videoGravity = gravity
-    return controller
-  }
+    func makeUIViewController(context: Context) -> AVPlayerViewController {
+      let controller = AVPlayerViewController()
+      controller.player = player
+      controller.showsPlaybackControls = showControls
+      controller.videoGravity = gravity
+      controller.view.accessibilityLabel = title
+      applyVideoFilterQuality(filterQuality, to: controller.view.layer)
+      return controller
+    }
 
-  func updateUIViewController(_ controller: AVPlayerViewController, context: Context) {
-    controller.player = player
-    controller.showsPlaybackControls = showControls
-    controller.videoGravity = gravity
-  }
+    func updateUIViewController(_ controller: AVPlayerViewController, context: Context) {
+      controller.player = player
+      controller.showsPlaybackControls = showControls
+      controller.videoGravity = gravity
+      controller.view.accessibilityLabel = title
+      applyVideoFilterQuality(filterQuality, to: controller.view.layer)
+    }
 
-  private var gravity: AVLayerVideoGravity {
-    switch fit?.lowercased() {
-    case "fill": .resize
-    case "cover": .resizeAspectFill
-    default: .resizeAspect
+    private var gravity: AVLayerVideoGravity {
+      switch fit?.lowercased() {
+      case "fill": .resize
+      case "cover": .resizeAspectFill
+      default: .resizeAspect
+      }
     }
   }
-}
 #elseif os(macOS)
-private struct RufletVideoSurface: NSViewRepresentable {
-  let player: AVPlayer
-  let showControls: Bool
-  let fit: String?
-  let fullscreenController: RufletVideoController
+  private struct RufletVideoSurface: NSViewRepresentable {
+    let player: AVPlayer
+    let showControls: Bool
+    let fit: String?
+    let filterQuality: RufletVideoFilterQuality
+    let title: String
+    let fullscreenController: RufletVideoController
 
-  func makeNSView(context: Context) -> AVPlayerView {
-    let view = AVPlayerView()
-    view.player = player
-    view.delegate = context.coordinator
-    update(view)
-    return view
-  }
+    func makeNSView(context: Context) -> AVPlayerView {
+      let view = AVPlayerView()
+      view.player = player
+      view.delegate = context.coordinator
+      view.wantsLayer = true
+      update(view)
+      return view
+    }
 
-  func updateNSView(_ view: AVPlayerView, context: Context) {
-    view.player = player
-    update(view)
-    if fullscreenController.isFullscreen, !view.isInFullScreenMode,
-       let screen = view.window?.screen ?? NSScreen.main
-    {
-      _ = view.enterFullScreenMode(screen, withOptions: nil)
-    } else if !fullscreenController.isFullscreen, view.isInFullScreenMode {
-      view.exitFullScreenMode(options: nil)
+    func updateNSView(_ view: AVPlayerView, context: Context) {
+      view.player = player
+      update(view)
+      if fullscreenController.isFullscreen, !view.isInFullScreenMode,
+        let screen = view.window?.screen ?? NSScreen.main
+      {
+        _ = view.enterFullScreenMode(screen, withOptions: nil)
+      } else if !fullscreenController.isFullscreen, view.isInFullScreenMode {
+        view.exitFullScreenMode(options: nil)
+      }
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator(controller: fullscreenController) }
+
+    final class Coordinator: NSObject, AVPlayerViewDelegate {
+      let controller: RufletVideoController
+
+      init(controller: RufletVideoController) {
+        self.controller = controller
+      }
+
+      func playerViewDidEnterFullScreen(_ playerView: AVPlayerView) {
+        Task { @MainActor [controller] in controller.setFullscreen(true) }
+      }
+
+      func playerViewDidExitFullScreen(_ playerView: AVPlayerView) {
+        Task { @MainActor [controller] in controller.setFullscreen(false) }
+      }
+    }
+
+    private func update(_ view: AVPlayerView) {
+      view.controlsStyle = showControls ? .floating : .none
+      view.setAccessibilityLabel(title)
+      switch fit?.lowercased() {
+      case "fill": view.videoGravity = .resize
+      case "cover": view.videoGravity = .resizeAspectFill
+      default: view.videoGravity = .resizeAspect
+      }
+      applyVideoFilterQuality(filterQuality, to: view.layer)
     }
   }
-
-  func makeCoordinator() -> Coordinator { Coordinator(controller: fullscreenController) }
-
-  final class Coordinator: NSObject, AVPlayerViewDelegate {
-    let controller: RufletVideoController
-
-    init(controller: RufletVideoController) {
-      self.controller = controller
-    }
-
-    func playerViewDidEnterFullScreen(_ playerView: AVPlayerView) {
-      Task { @MainActor [controller] in controller.setFullscreen(true) }
-    }
-
-    func playerViewDidExitFullScreen(_ playerView: AVPlayerView) {
-      Task { @MainActor [controller] in controller.setFullscreen(false) }
-    }
-  }
-
-  private func update(_ view: AVPlayerView) {
-    view.controlsStyle = showControls ? .floating : .none
-    switch fit?.lowercased() {
-    case "fill": view.videoGravity = .resize
-    case "cover": view.videoGravity = .resizeAspectFill
-    default: view.videoGravity = .resizeAspect
-    }
-  }
-}
 #endif
 
 struct VideoControl: View {
@@ -377,24 +442,24 @@ struct VideoControl: View {
 
   var body: some View {
     #if os(iOS)
-    playerContent
-      .background(parseColor(control.string("fill_color"), .black) ?? .black)
-      .onAppear {
-        controller.attach()
-        controller.synchronizeProperties()
-      }
-      .onDisappear { controller.detach() }
-      .onChange(of: propertyIdentity) { _ in controller.synchronizeProperties() }
-      .fullScreenCover(isPresented: fullscreenBinding) { playerContent.background(Color.black) }
+      playerContent
+        .background(parseColor(control.string("fill_color"), .black) ?? .black)
+        .onAppear {
+          controller.attach()
+          controller.synchronizeProperties()
+        }
+        .onDisappear { controller.detach() }
+        .onChange(of: propertyIdentity) { _ in controller.synchronizeProperties() }
+        .fullScreenCover(isPresented: fullscreenBinding) { playerContent.background(Color.black) }
     #elseif os(macOS)
-    playerContent
-      .background(parseColor(control.string("fill_color"), .black) ?? .black)
-      .onAppear {
-        controller.attach()
-        controller.synchronizeProperties()
-      }
-      .onDisappear { controller.detach() }
-      .onChange(of: propertyIdentity) { _ in controller.synchronizeProperties() }
+      playerContent
+        .background(parseColor(control.string("fill_color"), .black) ?? .black)
+        .onAppear {
+          controller.attach()
+          controller.synchronizeProperties()
+        }
+        .onDisappear { controller.detach() }
+        .onChange(of: propertyIdentity) { _ in controller.synchronizeProperties() }
     #endif
   }
 
@@ -403,8 +468,11 @@ struct VideoControl: View {
       player: controller.player,
       showControls: control.boolean("show_controls", default: true),
       fit: control.string("fit"),
-      fullscreenController: controller)
-      .overlay(alignment: .bottom) { subtitleView }
+      filterQuality: RufletVideoFilterQuality(control.string("filter_quality")),
+      title: RufletVideoConfiguration(control: control).title,
+      fullscreenController: controller
+    )
+    .overlay(alignment: .bottom) { subtitleView }
   }
 
   @ViewBuilder
@@ -429,7 +497,7 @@ struct VideoControl: View {
   }
 
   private var propertyIdentity: String {
-    ["volume", "muted", "pitch", "playback_rate", "fullscreen"]
+    ["volume", "muted", "pitch", "playback_rate", "fullscreen", "configuration", "title"]
       .map { String(describing: control.value($0)) }
       .joined(separator: "\u{1f}")
   }
