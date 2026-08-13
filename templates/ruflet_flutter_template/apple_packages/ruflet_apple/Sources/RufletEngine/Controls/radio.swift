@@ -13,9 +13,9 @@ public struct RadioControl: View {
             preconditionFailure("Radio must be enclosed within RadioGroup")
         }
         return AnyView(LayoutControl(control: control) {
-            HStack(spacing: 6) {
-                if labelPosition == .left { label }
-                Button(action: select) {
+            Button(action: select) {
+                HStack(spacing: 6) {
+                    if labelPosition == .left { label }
                     ZStack {
                         Circle().stroke(parseColor(control.string("fill_color")) ?? .secondary, lineWidth: 1.5)
                         if selected {
@@ -25,14 +25,13 @@ public struct RadioControl: View {
                         }
                     }
                     .frame(width: 18, height: 18)
+                    if labelPosition == .right { label }
                 }
-                .buttonStyle(.plain)
-                .disabled(control.disabled)
-                .focused($focused)
-                if labelPosition == .right { label }
+                .contentShape(Rectangle())
             }
-            .contentShape(Rectangle())
-            .onTapGesture { if !control.disabled { select() } }
+            .buttonStyle(.plain)
+            .disabled(control.disabled)
+            .focused($focused)
             .onChange(of: focused) { control.triggerEvent($0 ? "focus" : "blur") }
         }
         .modifier(RufletListTileInputToggleModifier {
@@ -52,10 +51,27 @@ public struct RadioControl: View {
 
     private func select() {
         guard let groupSelection else { return }
-        if selected, control.boolean("toggleable", default: false) {
-            groupSelection.wrappedValue = nil
-        } else {
-            groupSelection.wrappedValue = control.string("value", default: "")!
-        }
+        rufletActivateRadio(
+            selection: groupSelection,
+            selected: selected,
+            toggleable: control.boolean("toggleable", default: false),
+            value: control.string("value", default: "")!)
     }
+}
+
+func rufletNextRadioSelection(selected: Bool, toggleable: Bool, value: String) -> String? {
+    selected && toggleable ? nil : value
+}
+
+@MainActor
+func rufletActivateRadio(
+    selection: Binding<String?>,
+    selected: Bool,
+    toggleable: Bool,
+    value: String
+) {
+    selection.wrappedValue = rufletNextRadioSelection(
+        selected: selected,
+        toggleable: toggleable,
+        value: value)
 }

@@ -305,41 +305,119 @@ final class RufletTextInputUIView: UIView, UITextFieldDelegate, UITextViewDelega
     shouldChangeCharactersIn range: NSRange,
     replacementString string: String
   ) -> Bool {
-    shouldAccept(current: textField.text ?? "", range: range, replacement: string)
+    shouldApply(
+      to: textField,
+      current: textField.text ?? "",
+      selection: textFieldSelection(textField),
+      composing: textRange(textField.markedTextRange, in: textField),
+      range: range,
+      replacement: string)
+  }
+
+  func textFieldShouldClear(_ textField: UITextField) -> Bool {
+    shouldApply(
+      to: textField,
+      current: textField.text ?? "",
+      selection: textFieldSelection(textField),
+      composing: textRange(textField.markedTextRange, in: textField),
+      range: NSRange(location: 0, length: (textField.text ?? "").utf16.count),
+      replacement: "")
   }
 
   func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
     if text == "\n", configuration?.shiftEnter == true {
       if (textView as? RufletSubmitTextView)?.insertingShiftReturn == true {
-        return shouldAccept(current: textView.text, range: range, replacement: text)
+        return shouldApply(
+          to: textView,
+          current: textView.text,
+          selection: textView.selectedRange,
+          composing: textRange(textView.markedTextRange, in: textView),
+          range: range,
+          replacement: text)
       }
       callbacks?.onSubmit(textView.text)
       return false
     }
-    return shouldAccept(current: textView.text, range: range, replacement: text)
+    return shouldApply(
+      to: textView,
+      current: textView.text,
+      selection: textView.selectedRange,
+      composing: textRange(textView.markedTextRange, in: textView),
+      range: range,
+      replacement: text)
   }
 
-  private func shouldAccept(current: String, range: NSRange, replacement: String) -> Bool {
+  private func shouldApply(
+    to input: UITextInput,
+    current: String,
+    selection: NSRange,
+    composing: NSRange?,
+    range: NSRange,
+    replacement: String
+  ) -> Bool {
     guard let configuration, !configuration.readOnly,
-          let swiftRange = Range(range, in: current)
+      let transaction = formatRufletTextEdit(
+        current: RufletTextEditSnapshot(
+          text: current,
+          selection: selection,
+          composing: composing),
+        replacementRange: range,
+        replacement: replacement,
+        capitalization: configuration.capitalization,
+        maxLength: configuration.maxLength,
+        inputFilter: configuration.inputFilter)
     else { return false }
-    var proposed = current.replacingCharacters(in: swiftRange, with: replacement)
-    proposed = applyCapitalization(proposed, configuration.capitalization)
-    if let maxLength = configuration.maxLength, proposed.utf16.count > maxLength { return false }
-    if let filter = configuration.inputFilter,
-       filter.format(oldValue: current, newValue: proposed) == current,
-       proposed != current { return false }
-    return true
+    guard transaction.requiresManualMutation else { return true }
+    apply(transaction.formattedValue, to: input)
+    return false
   }
 
   private func changed(_ value: String) {
-    guard !applying, let configuration else { return }
-    let capitalized = applyCapitalization(value, configuration.capitalization)
-    if capitalized != value {
-      textField.text = capitalized
-      textView.text = capitalized
+    guard !applying else { return }
+    callbacks?.onChange(value)
+  }
+
+  private func apply(_ value: RufletTextEditSnapshot, to input: UITextInput) {
+    applying = true
+    defer { applying = false }
+    if let field = input as? UITextField { field.text = value.text }
+    if let view = input as? UITextView { view.text = value.text }
+    if let composing = value.composing,
+      let range = textRange(composing, in: input),
+      let marked = Range(composing, in: value.text).map({ String(value.text[$0]) })
+    {
+      input.selectedTextRange = range
+      let relative = NSRange(
+        location: min(max(value.selection.location - composing.location, 0), composing.length),
+        length: min(value.selection.length, composing.length))
+      input.setMarkedText(marked, selectedRange: relative)
+    } else if let range = textRange(value.selection, in: input) {
+      input.selectedTextRange = range
     }
-    callbacks?.onChange(capitalized)
+    callbacks?.onChange(value.text)
+    callbacks?.onSelectionChange(RufletTextSelection(
+      baseOffset: value.selection.location,
+      extentOffset: NSMaxRange(value.selection)))
+  }
+
+  private func textFieldSelection(_ textField: UITextField) -> NSRange {
+    textRange(textField.selectedTextRange, in: textField) ?? NSRange(
+      location: (textField.text ?? "").utf16.count,
+      length: 0)
+  }
+
+  private func textRange(_ range: UITextRange?, in input: UITextInput) -> NSRange? {
+    guard let range else { return nil }
+    return NSRange(
+      location: input.offset(from: input.beginningOfDocument, to: range.start),
+      length: input.offset(from: range.start, to: range.end))
+  }
+
+  private func textRange(_ range: NSRange, in input: UITextInput) -> UITextRange? {
+    guard let start = input.position(from: input.beginningOfDocument, offset: range.location),
+      let end = input.position(from: start, offset: range.length)
+    else { return nil }
+    return input.textRange(from: start, to: end)
   }
 
   private func applySelection(_ selection: RufletTextSelection?) {
@@ -641,7 +719,11 @@ final class RufletTextInputNSView: NSView, NSTextFieldDelegate, NSTextViewDelega
     shouldChangeTextIn affectedCharRange: NSRange,
     replacementString: String?
   ) -> Bool {
-    shouldAccept(current: textView.string, range: affectedCharRange, replacement: replacementString ?? "")
+    shouldApply(
+      to: textView,
+      current: textView.string,
+      range: affectedCharRange,
+      replacement: replacementString ?? "")
   }
   func control(
     _ control: NSControl,
@@ -649,31 +731,67 @@ final class RufletTextInputNSView: NSView, NSTextFieldDelegate, NSTextViewDelega
     shouldChangeCharactersIn affectedCharRange: NSRange,
     replacementString: String?
   ) -> Bool {
-    shouldAccept(
-      current: activeField.stringValue,
+    shouldApply(
+      to: textView,
+      current: textView.string,
       range: affectedCharRange,
       replacement: replacementString ?? "")
   }
 
-  private func shouldAccept(current: String, range: NSRange, replacement: String) -> Bool {
+  private func shouldApply(
+    to editor: NSTextView,
+    current: String,
+    range: NSRange,
+    replacement: String
+  ) -> Bool {
     guard let configuration, !configuration.readOnly,
-          let swiftRange = Range(range, in: current)
+      let transaction = formatRufletTextEdit(
+        current: RufletTextEditSnapshot(
+          text: current,
+          selection: editor.selectedRange(),
+          composing: editor.markedRange().location == NSNotFound ? nil : editor.markedRange()),
+        replacementRange: range,
+        replacement: replacement,
+        capitalization: configuration.capitalization,
+        maxLength: configuration.maxLength,
+        inputFilter: configuration.inputFilter)
     else { return false }
-    let proposed = applyCapitalization(current.replacingCharacters(in: swiftRange, with: replacement), configuration.capitalization)
-    if let maxLength = configuration.maxLength, proposed.utf16.count > maxLength { return false }
-    if let filter = configuration.inputFilter,
-       filter.format(oldValue: current, newValue: proposed) == current,
-       proposed != current { return false }
-    return true
+    guard transaction.requiresManualMutation else { return true }
+    apply(transaction.formattedValue, to: editor)
+    return false
   }
 
   private func changed(_ value: String) {
-    guard !applying, let configuration else { return }
-    let capitalized = applyCapitalization(value, configuration.capitalization)
-    callbacks?.onChange(capitalized)
+    guard !applying else { return }
+    callbacks?.onChange(value)
     if let editor = window?.fieldEditor(false, for: activeField) as? NSTextView {
       selectionChanged(editor.selectedRange())
     }
+  }
+
+  private func apply(_ value: RufletTextEditSnapshot, to editor: NSTextView) {
+    applying = true
+    defer { applying = false }
+    if editor !== textView { activeField.stringValue = value.text }
+    editor.string = value.text
+    if let composing = value.composing,
+      let range = Range(composing, in: value.text)
+    {
+      editor.setSelectedRange(composing)
+      let relative = NSRange(
+        location: min(max(value.selection.location - composing.location, 0), composing.length),
+        length: min(value.selection.length, composing.length))
+      editor.setMarkedText(
+        String(value.text[range]),
+        selectedRange: relative,
+        replacementRange: composing)
+    } else {
+      editor.setSelectedRange(value.selection)
+    }
+    callbacks?.onChange(value.text)
+    callbacks?.onSelectionChange(RufletTextSelection(
+      baseOffset: value.selection.location,
+      extentOffset: NSMaxRange(value.selection)))
   }
 
   private func applySelection(_ selection: RufletTextSelection?) {

@@ -10,9 +10,9 @@ public struct CupertinoRadioControl: View {
     public var body: some View {
         guard groupSelection != nil else { preconditionFailure("CupertinoRadio must be enclosed within RadioGroup") }
         return AnyView(LayoutControl(control: control) {
-            HStack(spacing: 6) {
-                if labelPosition == .left { label }
-                Button(action: select) {
+            Button(action: select) {
+                HStack(spacing: 6) {
+                    if labelPosition == .left { label }
                     ZStack {
                         Circle().stroke(parseColor(control.string("inactive_color")) ?? .secondary, lineWidth: 1.5)
                         if selected {
@@ -23,12 +23,11 @@ public struct CupertinoRadioControl: View {
                             }
                         }
                     }.frame(width: 18, height: 18)
+                    if labelPosition == .right { label }
                 }
-                .buttonStyle(.plain).disabled(control.disabled).focused($focused)
-                if labelPosition == .right { label }
+                .contentShape(Rectangle())
             }
-            .contentShape(Rectangle())
-            .onTapGesture { if !control.disabled { select() } }
+            .buttonStyle(.plain).disabled(control.disabled).focused($focused)
             .onChange(of: focused) { control.triggerEvent($0 ? "focus" : "blur") }
         })
     }
@@ -37,7 +36,11 @@ public struct CupertinoRadioControl: View {
     private var labelPosition: RufletLabelPosition { parseEnum(RufletLabelPosition.self, control.string("label_position"), .right)! }
     @ViewBuilder private var label: some View { if let value = control.string("label"), !value.isEmpty { Text(value) } }
     private func select() {
-        if selected, control.boolean("toggleable", default: false) { groupSelection?.wrappedValue = nil }
-        else { groupSelection?.wrappedValue = control.string("value", default: "")! }
+        guard let groupSelection else { return }
+        rufletActivateRadio(
+            selection: groupSelection,
+            selected: selected,
+            toggleable: control.boolean("toggleable", default: false),
+            value: control.string("value", default: "")!)
     }
 }

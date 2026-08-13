@@ -10,9 +10,9 @@ public struct CheckboxControl: View {
 
     public var body: some View {
         LayoutControl(control: control) {
-            HStack(spacing: 6) {
-                if labelPosition == .left { label }
-                Button(action: toggle) {
+            Button(action: toggle) {
+                HStack(spacing: 6) {
+                    if labelPosition == .left { label }
                     ZStack {
                         RoundedRectangle(cornerRadius: 3)
                             .fill(fillColor)
@@ -29,16 +29,15 @@ public struct CheckboxControl: View {
                         }
                     }
                     .frame(width: 18, height: 18)
+                    if labelPosition == .right { label }
                 }
-                .buttonStyle(.plain)
-                .disabled(control.disabled)
-                .focused($focused)
-                .accessibilityLabel(control.string("semantics_label") ?? control.string("label") ?? "")
-                .accessibilityValue(value.map(String.init) ?? "mixed")
-                if labelPosition == .right { label }
+                .contentShape(Rectangle())
             }
-            .contentShape(Rectangle())
-            .onTapGesture { if !control.disabled { toggle() } }
+            .buttonStyle(.plain)
+            .disabled(control.disabled)
+            .focused($focused)
+            .accessibilityLabel(control.string("semantics_label") ?? control.string("label") ?? "")
+            .accessibilityValue(value.map(String.init) ?? "mixed")
             .onChange(of: focused) { control.triggerEvent($0 ? "focus" : "blur") }
         }
         .modifier(RufletListTileInputToggleModifier {
@@ -77,17 +76,23 @@ public struct CheckboxControl: View {
     }
 
     private func toggle() {
-        let next: RufletValue
-        if !control.boolean("tristate", default: false) {
-            next = .bool(!(value ?? false))
-        } else if value == nil {
-            next = .bool(false)
-        } else if value == false {
-            next = .bool(true)
-        } else {
-            next = .null
-        }
-        control.updateProperties(["value": next], notify: true)
-        control.triggerEvent("change", data: next)
+        rufletActivateCheckbox(
+            control: control,
+            current: value,
+            tristate: control.boolean("tristate", default: false))
     }
+}
+
+@MainActor
+func rufletActivateCheckbox(control: RufletControl, current: Bool?, tristate: Bool) {
+    let next = rufletNextCheckboxValue(current: current, tristate: tristate)
+    control.updateProperties(["value": next], notify: true)
+    control.triggerEvent("change", data: next)
+}
+
+func rufletNextCheckboxValue(current: Bool?, tristate: Bool) -> RufletValue {
+    if !tristate { return .bool(!(current ?? false)) }
+    if current == nil { return .bool(false) }
+    if current == false { return .bool(true) }
+    return .null
 }
