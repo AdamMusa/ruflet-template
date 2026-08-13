@@ -83,6 +83,17 @@ class NativePropertyConsumptionAuditTest < Minitest::Test
     end
   end
 
+  def test_clean_control_extension_accessors_and_child_closures_are_consumption
+    reads = NativePropertyConsumptionAudit.reads_for_types(["RadarChartControl"])
+
+    assert reads.key?("fill_color"), "chartColor must prove the concrete color property read"
+    assert reads.key?("border_color"), "chartColor must prove the concrete color property read"
+    assert reads.key?("value"), "$0.number must prove the child entry value read"
+    assert reads.fetch("fill_color").all? { |item|
+      item.fetch("path").include?("/Sources/RufletExtensions/RufletCharts/Sources/")
+    }
+  end
+
   def test_manual_classifications_are_specific_and_reviewed
     declarations = JSON.parse(File.read(NativePropertyConsumptionAudit::CLASSIFICATIONS_PATH))
     assert_equal %w[parent_consumed service unsupported], declarations.keys.sort

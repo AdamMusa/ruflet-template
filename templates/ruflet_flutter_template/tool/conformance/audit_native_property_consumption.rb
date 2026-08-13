@@ -89,9 +89,13 @@ module NativePropertyConsumptionAudit
   }.freeze
 
   ACCESSORS = %w[
-    array bool boolean buildIconOrWidget buildTextOrWidget buildWidget buildWidgets child children
-    controlID controlIDs double dynamicValue enumValue integer number rufletBool rufletDouble
-    rufletString int map skipsProperty skipsRufletProperty string value
+    array badgeConfiguration bool boolean brightness buildIconOrWidget buildTextOrWidget buildWidget
+    buildWidgets chartColor child children colorScheme controlID controlIDs cupertinoTheme dismissDirection
+    dismissThresholds double dynamicValue enumValue fileType integer markdownCodeTheme markdownExtensionSet
+    markdownStyleSheet menuStyle number paint paintingStyle paintStrokeDashPattern propertyContent rufletBool
+    rufletDouble rufletString int map skipsProperty skipsRufletProperty string systemUIOverlayStyle
+    tabBarIndicatorSize tabIndicatorAnimation textTheme theme tooltipTriggerMode underlineTabIndicator value
+    visualDensity windowResizeEdge
   ].freeze
 
   module_function
@@ -314,6 +318,7 @@ module NativePropertyConsumptionAudit
       # The accessor names are deliberately RufletControl-specific so an
       # unrelated framework helper cannot prove a DSL property by accident.
       line.scan(/\b[a-z][A-Za-z0-9_]*\??\.(?:#{accessor_pattern})\(\s*(?:forKey:\s*)?"([^"]+)"/) { |match| keys << match[0] }
+      line.scan(/\$\d+\.(?:#{accessor_pattern})\(\s*(?:forKey:\s*)?"([^"]+)"/) { |match| keys << match[0] }
       line.scan(/\b[a-z][A-Za-z0-9_]*\??\.(disabled|adaptive|visible)\b/) { |match| keys << match[0] }
       line.scan(/\bnode\.props\[\s*"([^"]+)"\s*\]/) { |match| keys << match[0] }
       line.scan(/\b(?:child|control|item|option|suggestion|value)?\.?(?:props)\[\s*"([^"]+)"\s*\]/) { |match| keys << match[0] }
