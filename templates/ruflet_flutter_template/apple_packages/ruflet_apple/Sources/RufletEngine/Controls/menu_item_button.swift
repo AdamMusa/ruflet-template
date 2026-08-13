@@ -126,6 +126,7 @@ struct RufletMenuButtonAppearance {
   let textStyle: RufletWidgetStateProperty<RufletTextStyle>
   let radius: Double
   let alignment: Alignment
+  let clipBehavior: String
 
   @MainActor
   init(control: RufletControl) {
@@ -151,7 +152,11 @@ struct RufletMenuButtonAppearance {
     textStyle = .init(details["text_style"], converter: { parseTextStyle($0) })
     radius = Self.radius(details["shape"])
     alignment = parseAlignment(details["alignment"], .center)!.swiftUI
+    clipBehavior = control.string("clip_behavior", default: "none")!.lowercased()
   }
+
+  var clipsContent: Bool { clipBehavior != "none" }
+  var antialiasedClip: Bool { clipBehavior.contains("antialias") }
 
   private static func radius(_ value: Any?) -> Double {
     guard let details = rufletDictionary(value) else {
@@ -182,6 +187,7 @@ struct RufletAppleMenuButtonStyle: ButtonStyle {
     let minimum = appearance.minimumSize.resolve(states)
     let maximum = appearance.maximumSize.resolve(states)
 
+    let shape = RoundedRectangle(cornerRadius: appearance.radius, style: .continuous)
     return configuration.label
       .modifier(RufletTextStyleModifier(style: appearance.textStyle.resolve(states)))
       .foregroundStyle(foreground)
@@ -194,18 +200,17 @@ struct RufletAppleMenuButtonStyle: ButtonStyle {
         maxHeight: maximum?.height,
         alignment: appearance.alignment
       )
-      .background(background)
-      .background(overlay.opacity(configuration.isPressed || hovered ? 1 : 0))
-      .clipShape(RoundedRectangle(cornerRadius: appearance.radius, style: .continuous))
+      .background(background, in: shape)
+      .background(overlay.opacity(configuration.isPressed || hovered ? 1 : 0), in: shape)
+      .modifier(RufletMenuItemClipModifier(shape: shape, appearance: appearance))
       .overlay {
         if let side {
-          RoundedRectangle(cornerRadius: appearance.radius, style: .continuous)
-            .stroke(side.color, lineWidth: side.width)
+          shape.stroke(side.color, lineWidth: side.width)
         }
       }
       .shadow(color: shadow, radius: max(elevation, 0), y: max(elevation, 0) / 2)
       .opacity(disabled ? 0.45 : 1)
-      .contentShape(RoundedRectangle(cornerRadius: appearance.radius, style: .continuous))
+      .contentShape(shape)
       .scaleEffect(configuration.isPressed ? 0.98 : 1)
   }
 
@@ -216,5 +221,19 @@ struct RufletAppleMenuButtonStyle: ButtonStyle {
     if hovered { result.insert(.hovered) }
     if disabled { result.insert(.disabled) }
     return result
+  }
+}
+
+private struct RufletMenuItemClipModifier: ViewModifier {
+  let shape: RoundedRectangle
+  let appearance: RufletMenuButtonAppearance
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if appearance.clipsContent {
+      content.clipShape(shape, style: FillStyle(antialiased: appearance.antialiasedClip))
+    } else {
+      content
+    }
   }
 }
