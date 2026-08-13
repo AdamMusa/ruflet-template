@@ -23,6 +23,7 @@ struct RufletTextInputControl: View {
   let style: Style
   @State private var value: String
   @State private var focused = false
+  @State private var hovered = false
   @State private var revealPassword = false
   @State private var selection: RufletTextSelection?
   @State private var focusRequest = 0
@@ -43,7 +44,12 @@ struct RufletTextInputControl: View {
       chrome
         .frame(width: control.number("width") == nil ? 300 : nil)
         .frame(maxWidth: fitParentSize ? .infinity : nil, maxHeight: fitParentSize ? .infinity : nil)
+        .modifier(RufletTextFieldConstraintsModifier(presentation.sizeConstraints))
+        .modifier(RufletTextFieldClipModifier(behavior: presentation.clipBehavior))
+        .modifier(RufletMouseCursorModifier(cursor: presentation.mouseCursor))
+        .modifier(RufletTextFieldShadowModifier(shadows: presentation.shadows))
         .allowsHitTesting(!control.boolean("ignore_pointers", default: false))
+        .onHover { hovered = $0 }
     }
     .onAppear(perform: mount)
     .onDisappear(perform: unmount)
@@ -56,17 +62,22 @@ struct RufletTextInputControl: View {
         label
           .modifier(RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("label_style"))))
           .foregroundStyle(activeTextColor)
+          .frame(
+            maxWidth: .infinity,
+            alignment: presentation.alignLabelWithHint && multiline ? .topLeading : .leading)
       }
 
       HStack(spacing: 6) {
         if style == .form, let icon = control.buildIconOrWidget("icon") { icon }
-        if style == .form, let prefix = control.buildIconOrWidget("prefix_icon") { prefix }
-        if overlayVisible("prefix_visibility_mode", default: .always),
+        if style == .form, let prefix = control.buildIconOrWidget("prefix_icon") {
+          prefix.modifier(RufletTextFieldConstraintsModifier(presentation.prefixIconConstraints))
+        }
+        if presentation.isVisible(presentation.prefixVisibilityMode, focused: focused),
            let prefix = control.buildTextOrWidget("prefix") {
           prefix.modifier(RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("prefix_style"))))
         }
 
-        nativeInput
+        inputLayer
           .frame(minHeight: minimumNativeHeight)
 
         if password && control.boolean("can_reveal_password", default: false) {
@@ -76,9 +87,9 @@ struct RufletTextInputControl: View {
           .buttonStyle(.plain)
           .accessibilityLabel(Text(revealPassword ? "Hide password" : "Show password"))
         } else if style == .form, let suffix = control.buildIconOrWidget("suffix_icon") {
-          suffix
+          suffix.modifier(RufletTextFieldConstraintsModifier(presentation.suffixIconConstraints))
         }
-        if overlayVisible("suffix_visibility_mode", default: .always),
+        if presentation.isVisible(presentation.suffixVisibilityMode, focused: focused),
            let suffix = control.buildTextOrWidget("suffix") {
           suffix.modifier(RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("suffix_style"))))
         }
@@ -87,6 +98,7 @@ struct RufletTextInputControl: View {
       .background(inputBackground)
       .overlay { inputBorder }
       .clipShape(RufletCornerShape(radius: borderRadius))
+      .animation(.linear(duration: presentation.hintFadeDuration), value: focused)
 
       if style == .form { supportingRow }
     }
@@ -105,6 +117,21 @@ struct RufletTextInputControl: View {
         onTapOutside: { control.triggerEvent("tap_outside") }))
   }
 
+  private var inputLayer: some View {
+    ZStack(alignment: presentation.textVerticalAlignment.swiftUI) {
+      nativeInput
+      if value.isEmpty, let placeholder {
+        Text(placeholder)
+          .modifier(RufletTextStyleModifier(style: presentation.placeholderStyle))
+          .foregroundStyle(presentation.placeholderStyle?.color ?? .secondary)
+          .lineLimit(presentation.hintMaxLines)
+          .frame(maxWidth: .infinity, alignment: configuration.textAlignment.rufletSwiftUIAlignment)
+          .opacity(placeholderIsVisible ? 1 : 0)
+          .allowsHitTesting(false)
+      }
+    }
+  }
+
   @ViewBuilder
   private var supportingRow: some View {
     let error = control.buildTextOrWidget("error")
@@ -113,8 +140,10 @@ struct RufletTextInputControl: View {
       if let error {
         error.modifier(RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("error_style"))))
           .foregroundStyle(Color.red)
+          .lineLimit(presentation.errorMaxLines)
       } else if let helper {
         helper.modifier(RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("helper_style"))))
+          .lineLimit(presentation.helperMaxLines)
       }
       Spacer(minLength: 4)
       if let counter = control.buildTextOrWidget("counter") {
@@ -129,11 +158,31 @@ struct RufletTextInputControl: View {
 
   @ViewBuilder
   private var inputBackground: some View {
-    if let gradient = style == .cupertino ? parseGradient(control.dynamicValue("gradient")) : nil {
-      RufletGradientShapeStyle(gradient: gradient)
-    } else {
-      activeBackgroundColor
+    ZStack {
+      if let gradient = style == .cupertino ? parseGradient(control.dynamicValue("gradient")) : nil {
+        RufletGradientShapeStyle(gradient: gradient)
+      } else {
+        effectiveBackgroundColor
+      }
+      if let image = presentation.decorationImage {
+        RufletImageSourceView(
+          source: image.source,
+          contentMode: image.fit.contentMode,
+          onError: nil,
+          resizingMode: image.repeatMode.resizingMode,
+          interpolation: image.quality.interpolation,
+          antiAlias: image.antiAlias,
+          tint: image.tint,
+          svgFit: image.fit)
+          .opacity(image.opacity)
+          .scaleEffect(image.scale)
+          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: image.alignment)
+          .blendMode(image.colorBlendMode)
+          .modifier(RufletTextFieldInvertModifier(enabled: image.invertColors))
+          .flipsForRightToLeftLayoutDirection(image.matchTextDirection)
+      }
     }
+    .blendMode(presentation.blendMode)
   }
 
   @ViewBuilder
@@ -248,10 +297,21 @@ struct RufletTextInputControl: View {
       fontWeight: styleDetails?.weight,
       italic: styleDetails?.italic ?? false,
       textColor: activeTextColor,
-      cursorColor: parseColor(control.string("cursor_color")),
+      cursorColor: presentation.hasError
+        ? parseColor(control.string("cursor_error_color")) ?? parseColor(control.string("cursor_color"))
+        : parseColor(control.string("cursor_color")),
+      cursorHeight: presentation.cursorHeight,
+      cursorWidth: presentation.cursorWidth,
+      cursorRadius: presentation.cursorRadius,
+      animateCursorOpacity: presentation.animateCursorOpacity,
       selectionColor: parseColor(control.string("selection_color")),
-      placeholder: placeholder,
-      placeholderColor: parseTextStyle(control.dynamicValue(style == .cupertino ? "placeholder_style" : "hint_style"))?.color,
+      placeholder: nil,
+      placeholderColor: presentation.placeholderStyle?.color,
+      scrollPadding: presentation.scrollPadding,
+      textVerticalAlignment: presentation.textVerticalAlignment,
+      strutStyle: presentation.strutStyle,
+      enableStylusHandwriting: presentation.enableStylusHandwriting,
+      clearButtonSemanticsLabel: presentation.clearButtonSemanticsLabel,
       obscuringCharacter: control.string("obscuring_character", default: "•")?.first ?? "•",
       clearButtonMode: parseEnum(
         RufletOverlayVisibilityMode.self,
@@ -272,6 +332,12 @@ struct RufletTextInputControl: View {
   }
   private var fitParentSize: Bool { control.boolean("fit_parent_size", default: false) }
   private var password: Bool { control.boolean("password", default: false) }
+  private var presentation: RufletTextFieldPresentation {
+    RufletTextFieldPresentation(control: control, style: style)
+  }
+  private var placeholderIsVisible: Bool {
+    style == .cupertino || control.value("label") == nil || focused
+  }
   private var minimumNativeHeight: CGFloat {
     fitParentSize ? 0 : CGFloat(max(control.integer("min_lines", default: 1) ?? 1, 1)) * 20 + 4
   }
@@ -282,8 +348,7 @@ struct RufletTextInputControl: View {
     return control.string("hint_text")
   }
   private var inputPadding: EdgeInsets {
-    parsePadding(control.dynamicValue(style == .cupertino ? "padding" : "content_padding"))
-      ?? EdgeInsets(top: 7, leading: 7, bottom: 7, trailing: 7)
+    presentation.contentPadding
   }
   private var borderKind: RufletFormFieldBorder {
     parseEnum(RufletFormFieldBorder.self, control.string("border"), .outline)!
@@ -310,6 +375,12 @@ struct RufletTextInputControl: View {
       : control.string("fill_color") ?? control.string("bgcolor"))
       ?? (style == .cupertino ? Color.rufletSystemBackground : .clear)
   }
+  private var effectiveBackgroundColor: Color {
+    if hovered, let color = presentation.hoverColor { return color }
+    if focused, let color = presentation.focusColor { return color }
+    if style == .form, !presentation.filled { return .clear }
+    return activeBackgroundColor
+  }
   private var activeTextColor: Color {
     parseColor(focused
       ? control.string("focused_color") ?? control.string("color")
@@ -326,19 +397,6 @@ struct RufletTextInputControl: View {
       of: "{symbols_left}",
       with: maxLength.map { String($0 - value.utf16.count) } ?? "None")
     return text
-  }
-
-  private func overlayVisible(
-    _ property: String,
-    default defaultValue: RufletOverlayVisibilityMode
-  ) -> Bool {
-    let mode = parseEnum(RufletOverlayVisibilityMode.self, control.string(property), defaultValue)!
-    return switch mode {
-    case .never: false
-    case .always: true
-    case .editing: focused
-    case .notEditing: !focused
-    }
   }
 
   private static func parseSelection(_ value: RufletValue?, maximum: Int) -> RufletTextSelection? {
@@ -358,4 +416,305 @@ private enum RufletFormFieldBorder: String, CaseIterable, RufletStringEnum {
 
 private enum RufletTextFieldError: Error {
   case unknownMethod(String)
+}
+
+struct RufletTextFieldConstraints: Equatable {
+  let minWidth: CGFloat?
+  let maxWidth: CGFloat?
+  let minHeight: CGFloat?
+  let maxHeight: CGFloat?
+
+  init(_ value: Any?) {
+    let values = rufletDictionary(value)
+    minWidth = parseDouble(values?["min_width"]).map { CGFloat($0) }
+    maxWidth = parseDouble(values?["max_width"]).map { CGFloat($0) }
+    minHeight = parseDouble(values?["min_height"]).map { CGFloat($0) }
+    maxHeight = parseDouble(values?["max_height"]).map { CGFloat($0) }
+  }
+}
+
+private struct RufletTextFieldConstraintsModifier: ViewModifier {
+  let constraints: RufletTextFieldConstraints
+
+  init(_ constraints: RufletTextFieldConstraints) { self.constraints = constraints }
+
+  func body(content: Content) -> some View {
+    content.frame(
+      minWidth: constraints.minWidth,
+      maxWidth: constraints.maxWidth,
+      minHeight: constraints.minHeight,
+      maxHeight: constraints.maxHeight)
+  }
+}
+
+enum RufletTextFieldVerticalAlignment: Equatable {
+  case top, center, bottom
+
+  init(_ value: Double?) {
+    guard let value else { self = .center; return }
+    if value < 0 { self = .top }
+    else if value > 0 { self = .bottom }
+    else { self = .center }
+  }
+
+  var swiftUI: Alignment {
+    switch self {
+    case .top: .topLeading
+    case .center: .leading
+    case .bottom: .bottomLeading
+    }
+  }
+}
+
+struct RufletTextFieldStrutStyle: Equatable {
+  let size: Double?
+  let height: Double?
+  let leading: Double?
+  let forceHeight: Bool
+
+  init?(_ value: Any?) {
+    guard let values = rufletDictionary(value) else { return nil }
+    size = parseDouble(values["size"])
+    height = parseDouble(values["height"])
+    leading = parseDouble(values["leading"])
+    forceHeight = parseBool(values["force_strut_height"], false)!
+  }
+
+  var lineHeight: CGFloat? {
+    guard let size else { return nil }
+    return CGFloat(size * (height ?? 1) + (leading ?? 0))
+  }
+}
+
+struct RufletTextFieldShadow {
+  let color: Color
+  let radius: CGFloat
+  let x: CGFloat
+  let y: CGFloat
+
+  init?(_ value: Any?) {
+    guard let values = rufletDictionary(value) else { return nil }
+    let offset = parseOffset(values["offset"])
+    color = parseColor(values["color"] as? String, .black)!
+    radius = CGFloat(parseDouble(values["blur_radius"], 0)!)
+    x = offset?.width ?? 0
+    y = offset?.height ?? 0
+  }
+}
+
+struct RufletTextFieldDecorationImage {
+  let source: RufletImageSource
+  let fit: RufletImageFit
+  let repeatMode: RufletImageRepeat
+  let quality: RufletFilterQuality
+  let alignment: Alignment
+  let scale: CGFloat
+  let opacity: Double
+  let antiAlias: Bool
+  let invertColors: Bool
+  let matchTextDirection: Bool
+  let tint: Color?
+  let colorBlendMode: BlendMode
+
+  @MainActor
+  init?(_ value: Any?, control: RufletControl) {
+    guard let values = rufletDictionary(value),
+          let source = parseImageSource(values["src"], backend: control.backend)
+    else { return nil }
+    self.source = source
+    fit = parseEnum(RufletImageFit.self, values["fit"] as? String, .fill)!
+    repeatMode = parseEnum(RufletImageRepeat.self, values["repeat"] as? String, .noRepeat)!
+    quality = parseEnum(RufletFilterQuality.self, values["filter_quality"] as? String, .medium)!
+    alignment = parseAlignment(values["alignment"], .center)!.swiftUI
+    scale = CGFloat(parseDouble(values["scale"], 1)!)
+    opacity = parseDouble(values["opacity"], 1)!
+    antiAlias = parseBool(values["anti_alias"], false)!
+    invertColors = parseBool(values["invert_colors"], false)!
+    matchTextDirection = parseBool(values["match_text_direction"], false)!
+    let colorFilter = rufletDictionary(values["color_filter"])
+    tint = parseColor(colorFilter?["color"] as? String)
+    colorBlendMode = rufletTextFieldBlendMode(colorFilter?["blend_mode"] as? String)
+  }
+}
+
+@MainActor
+struct RufletTextFieldPresentation {
+  let alignLabelWithHint: Bool
+  let animateCursorOpacity: Bool
+  let clipBehavior: String
+  let contentPadding: EdgeInsets
+  let cursorHeight: CGFloat?
+  let cursorWidth: CGFloat
+  let cursorRadius: CGFloat?
+  let enableStylusHandwriting: Bool
+  let errorMaxLines: Int?
+  let filled: Bool
+  let focusColor: Color?
+  let helperMaxLines: Int?
+  let hintFadeDuration: TimeInterval
+  let hintMaxLines: Int?
+  let hoverColor: Color?
+  let mouseCursor: String?
+  let placeholderStyle: RufletTextStyle?
+  let prefixIconConstraints: RufletTextFieldConstraints
+  let prefixVisibilityMode: RufletOverlayVisibilityMode
+  let scrollPadding: EdgeInsets
+  let shadows: [RufletTextFieldShadow]
+  let sizeConstraints: RufletTextFieldConstraints
+  let strutStyle: RufletTextFieldStrutStyle?
+  let suffixIconConstraints: RufletTextFieldConstraints
+  let suffixVisibilityMode: RufletOverlayVisibilityMode
+  let textVerticalAlignment: RufletTextFieldVerticalAlignment
+  let clearButtonSemanticsLabel: String?
+  let decorationImage: RufletTextFieldDecorationImage?
+  let blendMode: BlendMode
+  let hasError: Bool
+
+  init(control: RufletControl, style: RufletTextInputControl.Style) {
+    alignLabelWithHint = control.boolean("align_label_with_hint", default: false)
+    #if os(iOS)
+    let cursorAnimationDefault = true
+    #else
+    let cursorAnimationDefault = false
+    #endif
+    animateCursorOpacity = control.boolean("animate_cursor_opacity", default: cursorAnimationDefault)
+    clipBehavior = control.string("clip_behavior", default: "hardEdge") ?? "hardEdge"
+    let defaultPadding = control.boolean("collapsed", default: false)
+      ? EdgeInsets()
+      : (control.boolean("dense", default: false)
+        ? EdgeInsets(top: 4, leading: 7, bottom: 4, trailing: 7)
+        : EdgeInsets(top: 7, leading: 7, bottom: 7, trailing: 7))
+    if style == .cupertino {
+      contentPadding = parsePadding(control.dynamicValue("padding")) ?? defaultPadding
+    } else {
+      contentPadding = parsePadding(control.dynamicValue("content_padding")) ?? defaultPadding
+    }
+    cursorHeight = control.number("cursor_height").map { CGFloat($0) }
+    cursorWidth = CGFloat(control.number("cursor_width", default: 2) ?? 2)
+    cursorRadius = control.number("cursor_radius").map { CGFloat($0) }
+      ?? (style == .cupertino ? 2 : nil)
+    enableStylusHandwriting = control.boolean("enable_stylus_handwriting", default: true)
+    errorMaxLines = control.integer("error_max_lines")
+    filled = control.boolean("filled", default: false)
+    focusColor = parseColor(control.string("focus_color"))
+    helperMaxLines = control.integer("helper_max_lines")
+    hintFadeDuration = parseDuration(control.dynamicValue("hint_fade_duration"), 0.2)!
+    hintMaxLines = control.integer("hint_max_lines")
+    hoverColor = parseColor(control.string("hover_color"))
+    mouseCursor = control.string("mouse_cursor")
+    if style == .cupertino {
+      placeholderStyle = parseTextStyle(control.dynamicValue("placeholder_style"))
+        ?? parseTextStyle(control.dynamicValue("label_style"))
+    } else {
+      placeholderStyle = parseTextStyle(control.dynamicValue("hint_style"))
+    }
+    prefixIconConstraints = RufletTextFieldConstraints(
+      control.dynamicValue("prefix_icon_constraints")
+        ?? control.dynamicValue("prefix_icon_size_constraints"))
+    prefixVisibilityMode = parseEnum(
+      RufletOverlayVisibilityMode.self,
+      control.string("prefix_visibility_mode"),
+      .always)!
+    scrollPadding = parsePadding(
+      control.dynamicValue("scroll_padding"),
+      EdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 20))!
+    let shadowValue = control.dynamicValue("shadows")
+    if let values = rufletArray(shadowValue) {
+      shadows = values.compactMap(RufletTextFieldShadow.init)
+    } else {
+      shadows = RufletTextFieldShadow(shadowValue).map { [$0] } ?? []
+    }
+    sizeConstraints = RufletTextFieldConstraints(control.dynamicValue("size_constraints"))
+    strutStyle = RufletTextFieldStrutStyle(control.dynamicValue("strut_style"))
+    suffixIconConstraints = RufletTextFieldConstraints(
+      control.dynamicValue("suffix_icon_constraints")
+        ?? control.dynamicValue("suffix_icon_size_constraints"))
+    suffixVisibilityMode = parseEnum(
+      RufletOverlayVisibilityMode.self,
+      control.string("suffix_visibility_mode"),
+      .always)!
+    textVerticalAlignment = RufletTextFieldVerticalAlignment(
+      control.number("text_vertical_align"))
+    clearButtonSemanticsLabel = control.string("clear_button_semantics_label")
+    decorationImage = style == .cupertino
+      ? RufletTextFieldDecorationImage(control.dynamicValue("image"), control: control)
+      : nil
+    blendMode = rufletTextFieldBlendMode(control.string("blend_mode"))
+    hasError = control.value("error") != nil
+  }
+
+  func isVisible(_ mode: RufletOverlayVisibilityMode, focused: Bool) -> Bool {
+    switch mode {
+    case .never: false
+    case .always: true
+    case .editing: focused
+    case .notEditing: !focused
+    }
+  }
+}
+
+private struct RufletTextFieldClipModifier: ViewModifier {
+  let behavior: String
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    switch behavior.replacingOccurrences(of: "_", with: "").lowercased() {
+    case "none": content
+    case "antialias", "antialiaswithsavelayer": content.clipped(antialiased: true)
+    default: content.clipped()
+    }
+  }
+}
+
+private struct RufletTextFieldShadowModifier: ViewModifier {
+  let shadows: [RufletTextFieldShadow]
+
+  func body(content: Content) -> some View {
+    var result = AnyView(content)
+    for shadow in shadows {
+      result = AnyView(result.shadow(
+        color: shadow.color, radius: shadow.radius, x: shadow.x, y: shadow.y))
+    }
+    return result
+  }
+}
+
+private struct RufletTextFieldInvertModifier: ViewModifier {
+  let enabled: Bool
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if enabled { content.colorInvert() } else { content }
+  }
+}
+
+private extension TextAlignment {
+  var rufletSwiftUIAlignment: Alignment {
+    switch self {
+    case .leading: .leading
+    case .center: .center
+    case .trailing: .trailing
+    }
+  }
+}
+
+private func rufletTextFieldBlendMode(_ value: String?) -> BlendMode {
+  switch value?.lowercased() {
+  case "multiply": .multiply
+  case "screen": .screen
+  case "overlay": .overlay
+  case "darken": .darken
+  case "lighten": .lighten
+  case "colordodge": .colorDodge
+  case "colorburn": .colorBurn
+  case "softlight": .softLight
+  case "hardlight": .hardLight
+  case "difference": .difference
+  case "exclusion": .exclusion
+  case "hue": .hue
+  case "saturation": .saturation
+  case "color": .color
+  case "luminosity": .luminosity
+  default: .normal
+  }
 }

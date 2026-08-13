@@ -12,13 +12,13 @@
     "controls": 196,
     "properties": 5330,
     "classifications": {
-      "consumed": 4011,
-      "parent_consumed": 667,
+      "consumed": 4079,
+      "parent_consumed": 663,
       "service": 136,
-      "unclassified": 514,
+      "unclassified": 450,
       "unsupported": 2
     },
-    "unclassified": 514
+    "unclassified": 450
   },
   "unclassified": [
     {
@@ -255,16 +255,6 @@
       "family": "visual",
       "wire_type": "Column",
       "property": "adaptive"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Column",
-      "property": "intrinsic_width"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Column",
-      "property": "run_alignment"
     },
     {
       "family": "visual",
@@ -580,171 +570,6 @@
       "family": "visual",
       "wire_type": "CupertinoTextField",
       "property": "adaptive"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "align_label_with_hint"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "animate_cursor_opacity"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "blend_mode"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "clear_button_semantics_label"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "clip_behavior"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "collapsed"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "content_padding"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "cursor_error_color"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "cursor_height"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "cursor_radius"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "cursor_width"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "dense"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "enable_stylus_handwriting"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "error_max_lines"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "filled"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "focus_color"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "helper_max_lines"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "hint_fade_duration"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "hint_max_lines"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "hint_style"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "hover_color"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "image"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "mouse_cursor"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "placeholder_style"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "prefix_icon_size_constraints"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "prefix_visibility_mode"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "scroll_padding"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "shadows"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "size_constraints"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "strut_style"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "suffix_icon_size_constraints"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "suffix_visibility_mode"
-    },
-    {
-      "family": "visual",
-      "wire_type": "CupertinoTextField",
-      "property": "text_vertical_align"
     },
     {
       "family": "visual",
@@ -1983,16 +1808,6 @@
     },
     {
       "family": "visual",
-      "wire_type": "Row",
-      "property": "intrinsic_height"
-    },
-    {
-      "family": "visual",
-      "wire_type": "Row",
-      "property": "run_alignment"
-    },
-    {
-      "family": "visual",
       "wire_type": "RufletApp",
       "property": "app_error_message"
     },
@@ -2380,141 +2195,6 @@
       "family": "visual",
       "wire_type": "TextButton",
       "property": "clip_behavior"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "adaptive"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "align_label_with_hint"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "animate_cursor_opacity"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "clip_behavior"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "collapsed"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "content_padding"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "cursor_error_color"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "cursor_height"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "cursor_radius"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "cursor_width"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "dense"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "enable_stylus_handwriting"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "error_max_lines"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "filled"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "focus_color"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "helper_max_lines"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "hint_fade_duration"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "hint_max_lines"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "hint_style"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "hover_color"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "mouse_cursor"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "prefix_icon_size_constraints"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "scroll_padding"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "size_constraints"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "strut_style"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "suffix_icon_size_constraints"
-    },
-    {
-      "family": "visual",
-      "wire_type": "TextField",
-      "property": "text_vertical_align"
     },
     {
       "family": "visual",
@@ -3032,7 +2712,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -4579,7 +4259,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -4712,7 +4392,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -4997,7 +4677,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -5085,7 +4765,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -5438,7 +5118,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -5539,7 +5219,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -6246,7 +5926,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -7132,7 +6812,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -7675,7 +7355,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -8669,7 +8349,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -9173,7 +8853,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -9697,7 +9377,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -10340,7 +10020,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -11224,7 +10904,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -11321,7 +11001,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -11645,7 +11325,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/column.swift",
-              "line": 61
+              "line": 23
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/column.swift",
+              "line": 39
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/column.swift",
+              "line": 72
             }
           ]
         },
@@ -11778,7 +11466,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -11861,24 +11549,33 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/column.swift",
-              "line": 34
+              "line": 26
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/column.swift",
-              "line": 53
+              "line": 40
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/column.swift",
+              "line": 64
             }
           ]
         },
         "intrinsic_width": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/column.swift",
+              "line": 45
+            }
+          ]
         },
         "key": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -11979,7 +11676,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/column.swift",
-              "line": 48
+              "line": 59
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/scroll_notification_control.swift",
@@ -12065,8 +11762,13 @@
           ]
         },
         "run_alignment": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/column.swift",
+              "line": 24
+            }
+          ]
         },
         "run_spacing": {
           "classification": "consumed",
@@ -12131,7 +11833,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/column.swift",
-              "line": 35
+              "line": 41
             }
           ]
         },
@@ -12172,6 +11874,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
               "line": 160
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/column.swift",
+              "line": 27
             }
           ]
         },
@@ -12184,7 +11890,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/column.swift",
-              "line": 42
+              "line": 53
             }
           ]
         }
@@ -12396,7 +12102,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -13016,7 +12722,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -13112,7 +12818,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -13605,7 +13311,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -13675,7 +13381,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -14060,7 +13766,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -14546,7 +14252,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -15078,7 +14784,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -15689,7 +15395,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -16300,7 +16006,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -16401,7 +16107,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -16909,7 +16615,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -17521,7 +17227,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -18104,7 +17810,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -18593,7 +18299,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -18698,7 +18404,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -19141,7 +18847,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -19692,7 +19398,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -20218,7 +19924,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -20755,7 +20461,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -21275,7 +20981,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -21727,15 +21433,20 @@
           ]
         },
         "align_label_with_hint": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 574
+            }
+          ]
         },
         "always_call_on_tap": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 264
+              "line": 324
             }
           ]
         },
@@ -21749,8 +21460,13 @@
           ]
         },
         "animate_cursor_opacity": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 580
+            }
+          ]
         },
         "animate_margin": {
           "classification": "consumed",
@@ -21833,7 +21549,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 239
+              "line": 288
             }
           ]
         },
@@ -21842,7 +21558,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 260
+              "line": 320
             }
           ]
         },
@@ -21851,7 +21567,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 230
+              "line": 279
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 216
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 420
             }
           ]
         },
@@ -21877,24 +21601,29 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 309
+              "line": 374
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 310
+              "line": 375
             }
           ]
         },
         "blend_mode": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 642
+            }
+          ]
         },
         "border": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 289
+              "line": 354
             }
           ]
         },
@@ -21903,11 +21632,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 303
+              "line": 368
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 304
+              "line": 369
             }
           ]
         },
@@ -21916,7 +21645,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 293
+              "line": 358
             }
           ]
         },
@@ -21925,11 +21654,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 298
+              "line": 363
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 299
+              "line": 364
             }
           ]
         },
@@ -21947,7 +21676,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 232
+              "line": 281
             }
           ]
         },
@@ -21956,7 +21685,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 72
+              "line": 83
             }
           ]
         },
@@ -21965,71 +21694,91 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 237
+              "line": 286
             }
           ]
         },
         "clear_button_semantics_label": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 638
+            }
+          ]
         },
         "clear_button_visibility_mode": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 258
+              "line": 318
             }
           ]
         },
         "clip_behavior": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 581
+            }
+          ]
         },
         "col": {
           "classification": "parent_consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
         "collapsed": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 582
+            }
+          ]
         },
         "color": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 315
+              "line": 386
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 316
+              "line": 387
             }
           ]
         },
         "content_padding": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 590
+            }
+          ]
         },
         "counter": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 120
+              "line": 149
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 122
+              "line": 151
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 321
+              "line": 392
             }
           ]
         },
@@ -22038,11 +21787,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 121
+              "line": 150
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 124
+              "line": 153
             }
           ]
         },
@@ -22051,25 +21800,49 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 251
+              "line": 301
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 302
             }
           ]
         },
         "cursor_error_color": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 301
+            }
+          ]
         },
         "cursor_height": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 592
+            }
+          ]
         },
         "cursor_radius": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 594
+            }
+          ]
         },
         "cursor_width": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 593
+            }
+          ]
         },
         "data": {
           "classification": "parent_consumed",
@@ -22081,19 +21854,40 @@
           ]
         },
         "dense": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 584
+            }
+          ]
         },
         "disabled": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 93
+              "line": 105
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 229
+              "line": 278
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 211
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 212
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 414
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 415
             }
           ]
         },
@@ -22110,20 +21904,25 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 233
+              "line": 282
             }
           ]
         },
         "enable_stylus_handwriting": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 596
+            }
+          ]
         },
         "enable_suggestions": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 240
+              "line": 289
             }
           ]
         },
@@ -22132,20 +21931,29 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 110
+              "line": 137
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 643
             }
           ]
         },
         "error_max_lines": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 597
+            }
+          ]
         },
         "error_style": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 114
+              "line": 141
             }
           ]
         },
@@ -22172,37 +21980,55 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 309
+              "line": 374
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 310
+              "line": 375
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletVideo/Sources/Video.swift",
+              "line": 381
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletVideo/Sources/Video.swift",
+              "line": 391
             }
           ]
         },
         "filled": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 598
+            }
+          ]
         },
         "fit_parent_size": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 273
+              "line": 333
             }
           ]
         },
         "focus_color": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 599
+            }
+          ]
         },
         "focused_bgcolor": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 309
+              "line": 374
             }
           ]
         },
@@ -22211,7 +22037,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 303
+              "line": 368
             }
           ]
         },
@@ -22220,7 +22046,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 298
+              "line": 363
             }
           ]
         },
@@ -22229,7 +22055,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 315
+              "line": 386
             }
           ]
         },
@@ -22238,7 +22064,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 132
+              "line": 162
             }
           ]
         },
@@ -22260,54 +22086,79 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 111
+              "line": 138
             }
           ]
         },
         "helper_max_lines": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 600
+            }
+          ]
         },
         "helper_style": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 117
+              "line": 145
             }
           ]
         },
         "hint_fade_duration": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 601
+            }
+          ]
         },
         "hint_max_lines": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 602
+            }
+          ]
         },
         "hint_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 609
+            }
+          ]
         },
         "hint_text": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 282
+              "line": 348
             }
           ]
         },
         "hover_color": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 603
+            }
+          ]
         },
         "icon": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 62
+              "line": 71
             }
           ]
         },
@@ -22316,7 +22167,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 46
+              "line": 51
             }
           ]
         },
@@ -22325,29 +22176,34 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 262
+              "line": 322
             }
           ]
         },
         "image": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 640
+            }
+          ]
         },
         "input_filter": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 244
+              "line": 293
             }
           ]
         },
         "key": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "consumer": "Ruflet::Control wire construction",
-              "reason": "Ruflet control identity used while constructing and reconciling the wire tree"
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
+              "line": 37
             }
           ]
         },
@@ -22356,7 +22212,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 263
+              "line": 323
             }
           ]
         },
@@ -22365,7 +22221,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 234
+              "line": 283
             }
           ]
         },
@@ -22378,11 +22234,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 55
+              "line": 61
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 280
+              "line": 339
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 346
             }
           ]
         },
@@ -22391,7 +22251,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 57
+              "line": 63
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 607
             }
           ]
         },
@@ -22422,11 +22286,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 243
+              "line": 292
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 322
+              "line": 393
             }
           ]
         },
@@ -22435,7 +22299,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 225
+              "line": 274
             }
           ]
         },
@@ -22444,24 +22308,29 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 224
+              "line": 273
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 276
+              "line": 342
             }
           ]
         },
         "mouse_cursor": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 604
+            }
+          ]
         },
         "multiline": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 271
+              "line": 331
             }
           ]
         },
@@ -22470,7 +22339,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 255
+              "line": 315
             }
           ]
         },
@@ -22549,15 +22418,23 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 199
+              "line": 248
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 200
+              "line": 249
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 201
+              "line": 250
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 224
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 428
             }
           ]
         },
@@ -22566,15 +22443,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 193
+              "line": 242
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 194
+              "line": 243
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 195
+              "line": 244
             }
           ]
         },
@@ -22583,14 +22460,38 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 114
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 115
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 116
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletAds/Sources/Banner.swift",
+              "line": 92
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletAds/Sources/Banner.swift",
+              "line": 93
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletAds/Sources/Banner.swift",
+              "line": 94
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletAds/Sources/Native.swift",
               "line": 102
             },
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletAds/Sources/Native.swift",
               "line": 103
             },
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletAds/Sources/Native.swift",
               "line": 104
             }
           ]
@@ -22600,15 +22501,39 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 199
+              "line": 248
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 200
+              "line": 249
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 201
+              "line": 250
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 221
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 222
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 223
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 425
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 426
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 427
             }
           ]
         },
@@ -22617,27 +22542,27 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 205
+              "line": 254
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 206
+              "line": 255
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 207
+              "line": 256
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 210
+              "line": 259
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 211
+              "line": 260
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 212
+              "line": 261
             }
           ]
         },
@@ -22667,15 +22592,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 99
+              "line": 111
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 100
+              "line": 112
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 101
+              "line": 113
             }
           ]
         },
@@ -22684,11 +22609,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 105
+              "line": 117
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 265
+              "line": 325
             }
           ]
         },
@@ -22715,6 +22640,14 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
               "line": 419
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 588
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/Utils/CodeEditorUtils.swift",
+              "line": 86
             }
           ]
         },
@@ -22723,20 +22656,25 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 274
+              "line": 334
             }
           ]
         },
         "placeholder_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 606
+            }
+          ]
         },
         "placeholder_text": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 280
+              "line": 346
             }
           ]
         },
@@ -22745,7 +22683,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 65
+              "line": 76
             }
           ]
         },
@@ -22754,33 +22692,51 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 63
+              "line": 72
             }
           ]
         },
         "prefix_icon_size_constraints": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 613
+            }
+          ]
         },
         "prefix_style": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 66
+              "line": 77
             }
           ]
         },
         "prefix_visibility_mode": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 616
+            }
+          ]
         },
         "read_only": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 227
+              "line": 276
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 211
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 414
             }
           ]
         },
@@ -22829,19 +22785,24 @@
           ]
         },
         "scroll_padding": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 619
+            }
+          ]
         },
         "selection": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 38
+              "line": 39
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 173
+              "line": 222
             }
           ]
         },
@@ -22850,24 +22811,29 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 252
+              "line": 307
             }
           ]
         },
         "shadows": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 621
+            }
+          ]
         },
         "shift_enter": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 261
+              "line": 321
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 271
+              "line": 331
             }
           ]
         },
@@ -22876,7 +22842,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 231
+              "line": 280
             }
           ]
         },
@@ -22890,15 +22856,20 @@
           ]
         },
         "size_constraints": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 627
+            }
+          ]
         },
         "smart_dashes_type": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 241
+              "line": 290
             }
           ]
         },
@@ -22907,20 +22878,25 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 242
+              "line": 291
             }
           ]
         },
         "strut_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 628
+            }
+          ]
         },
         "suffix": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 82
+              "line": 93
             }
           ]
         },
@@ -22929,33 +22905,43 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 78
+              "line": 89
             }
           ]
         },
         "suffix_icon_size_constraints": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 631
+            }
+          ]
         },
         "suffix_style": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 83
+              "line": 94
             }
           ]
         },
         "suffix_visibility_mode": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 634
+            }
+          ]
         },
         "text_align": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 245
+              "line": 294
             }
           ]
         },
@@ -22964,7 +22950,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 246
+              "line": 295
             }
           ]
         },
@@ -22973,17 +22959,26 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 219
+              "line": 268
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 317
+              "line": 388
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/Utils/CodeEditorUtils.swift",
+              "line": 49
             }
           ]
         },
         "text_vertical_align": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 637
+            }
+          ]
         },
         "tooltip": {
           "classification": "consumed",
@@ -23008,20 +23003,20 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 37
+              "line": 38
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 171
+              "line": 220
             }
           ]
         },
         "visible": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Models/control.swift",
-              "line": 179
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletVideo/Sources/Video.swift",
+              "line": 413
             }
           ]
         },
@@ -23038,7 +23033,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 44
+              "line": 45
             }
           ]
         }
@@ -23208,7 +23203,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -23741,7 +23736,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -24413,7 +24408,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -24962,7 +24957,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -25098,7 +25093,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -25300,7 +25295,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -25453,7 +25448,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -25772,7 +25767,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -25882,7 +25877,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -26448,7 +26443,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -27358,7 +27353,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -28277,7 +28272,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -28763,7 +28758,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -29289,7 +29284,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -29449,7 +29444,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -29973,7 +29968,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -30657,7 +30652,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -31332,7 +31327,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -32016,7 +32011,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -32683,7 +32678,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -33244,7 +33239,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -34778,7 +34773,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -34874,7 +34869,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -35349,7 +35344,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -35806,7 +35801,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -36322,7 +36317,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -37007,7 +37002,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -37125,7 +37120,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -38030,7 +38025,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -38835,7 +38830,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -38962,7 +38957,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -39472,7 +39467,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -39564,7 +39559,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -40077,7 +40072,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -40700,7 +40695,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -41272,7 +41267,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -41892,7 +41887,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -42554,7 +42549,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -43265,6 +43260,10 @@
               "line": 5
             },
             {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/adaptive_texfield.swift",
+              "line": 20
+            },
+            {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Models/control.swift",
               "line": 138
             }
@@ -43296,7 +43295,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -43306,6 +43305,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/page.swift",
               "line": 253
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Widgets/control_inherited_notifier.swift",
+              "line": 60
             }
           ]
         },
@@ -43323,7 +43326,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
-              "line": 324
+              "line": 326
             }
           ]
         },
@@ -43880,11 +43883,11 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 93
+              "line": 105
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 229
+              "line": 278
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Models/control.swift",
@@ -43988,12 +43991,16 @@
               "line": 19
             },
             {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/row.swift",
+              "line": 26
+            },
+            {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/tabs.swift",
               "line": 190
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
-              "line": 331
+              "line": 333
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
@@ -44006,7 +44013,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
@@ -44048,7 +44055,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
-              "line": 334
+              "line": 336
             }
           ]
         },
@@ -44057,7 +44064,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
-              "line": 327
+              "line": 329
             }
           ]
         },
@@ -44358,7 +44365,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
-              "line": 310
+              "line": 312
             }
           ]
         },
@@ -44367,7 +44374,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
-              "line": 329
+              "line": 331
             }
           ]
         },
@@ -44376,7 +44383,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
-              "line": 322
+              "line": 324
             }
           ]
         },
@@ -44385,7 +44392,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
-              "line": 328
+              "line": 330
             }
           ]
         },
@@ -44398,7 +44405,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
-              "line": 321
+              "line": 323
             }
           ]
         },
@@ -44440,7 +44447,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
-              "line": 326
+              "line": 328
             }
           ]
         },
@@ -44450,6 +44457,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/page.swift",
               "line": 252
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Widgets/control_inherited_notifier.swift",
+              "line": 59
             }
           ]
         },
@@ -44459,6 +44470,10 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/page.swift",
               "line": 247
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Widgets/control_inherited_notifier.swift",
+              "line": 58
             }
           ]
         },
@@ -44581,7 +44596,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/view.swift",
-              "line": 265
+              "line": 266
             }
           ]
         },
@@ -44611,7 +44626,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
-              "line": 325
+              "line": 327
             }
           ]
         },
@@ -44620,7 +44635,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
-              "line": 323
+              "line": 325
             }
           ]
         },
@@ -44648,6 +44663,10 @@
               "line": 642
             },
             {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/column.swift",
+              "line": 27
+            },
+            {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
               "line": 27
             },
@@ -44661,7 +44680,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 44
+              "line": 45
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/vertical_divider.swift",
@@ -44669,7 +44688,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
-              "line": 330
+              "line": 332
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
@@ -44682,11 +44701,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
-              "line": 244
+              "line": 246
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
-              "line": 333
+              "line": 335
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/service_registry.swift",
@@ -44843,7 +44862,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -44955,7 +44974,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -45431,7 +45450,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -45562,7 +45581,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -46234,7 +46253,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -46812,7 +46831,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -47517,7 +47536,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -48002,7 +48021,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -48814,7 +48833,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -49438,7 +49457,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -50156,7 +50175,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -50227,7 +50246,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -50654,7 +50673,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -50806,7 +50825,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -51228,7 +51247,11 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 71
+              "line": 74
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
+              "line": 91
             }
           ]
         },
@@ -51344,7 +51367,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 62
+              "line": 113
             }
           ]
         },
@@ -51353,7 +51376,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -51362,7 +51385,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 21
+              "line": 32
             }
           ]
         },
@@ -51371,7 +51394,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 27
+              "line": 46
             }
           ]
         },
@@ -51441,7 +51464,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -51611,7 +51634,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 23
+              "line": 40
             }
           ]
         },
@@ -51642,7 +51665,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 22
+              "line": 35
             }
           ]
         },
@@ -51669,7 +51692,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 79
+              "line": 77
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
+              "line": 92
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
+              "line": 122
             }
           ]
         },
@@ -51833,7 +51864,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -52161,7 +52192,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/row.swift",
-              "line": 62
+              "line": 23
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/row.swift",
+              "line": 38
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/row.swift",
+              "line": 72
             }
           ]
         },
@@ -52294,7 +52333,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -52369,19 +52408,28 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
               "line": 161
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/row.swift",
+              "line": 26
             }
           ]
         },
         "intrinsic_height": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/row.swift",
+              "line": 45
+            }
+          ]
         },
         "key": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -52482,7 +52530,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/row.swift",
-              "line": 48
+              "line": 58
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/scroll_notification_control.swift",
@@ -52568,8 +52616,13 @@
           ]
         },
         "run_alignment": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/row.swift",
+              "line": 24
+            }
+          ]
         },
         "run_spacing": {
           "classification": "consumed",
@@ -52634,7 +52687,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/row.swift",
-              "line": 35
+              "line": 40
             }
           ]
         },
@@ -52661,11 +52714,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/row.swift",
-              "line": 34
+              "line": 25
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/row.swift",
-              "line": 53
+              "line": 39
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/row.swift",
+              "line": 63
             }
           ]
         },
@@ -52700,7 +52757,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/row.swift",
-              "line": 42
+              "line": 52
             }
           ]
         }
@@ -52854,7 +52911,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -53295,7 +53352,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -53710,7 +53767,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -54359,7 +54416,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -54693,7 +54750,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -54802,7 +54859,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -55486,7 +55543,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -55931,7 +55988,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -56737,7 +56794,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -57196,7 +57253,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -57704,7 +57761,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -58329,7 +58386,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -58756,7 +58813,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -58848,7 +58905,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -59233,7 +59290,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -59336,7 +59393,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -59938,7 +59995,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -60595,7 +60652,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -60739,7 +60796,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -61282,7 +61339,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -61373,7 +61430,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -61761,7 +61818,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -62574,7 +62631,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -63081,8 +63138,13 @@
       "service_implementations": [],
       "properties": {
         "adaptive": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/adaptive_texfield.swift",
+              "line": 20
+            }
+          ]
         },
         "align": {
           "classification": "consumed",
@@ -63098,15 +63160,20 @@
           ]
         },
         "align_label_with_hint": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 574
+            }
+          ]
         },
         "always_call_on_tap": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 264
+              "line": 324
             }
           ]
         },
@@ -63120,8 +63187,13 @@
           ]
         },
         "animate_cursor_opacity": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 580
+            }
+          ]
         },
         "animate_margin": {
           "classification": "consumed",
@@ -63204,7 +63276,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 239
+              "line": 288
             }
           ]
         },
@@ -63213,7 +63285,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 260
+              "line": 320
             }
           ]
         },
@@ -63222,7 +63294,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 230
+              "line": 279
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 216
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 420
             }
           ]
         },
@@ -63248,11 +63328,11 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 309
+              "line": 374
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 310
+              "line": 375
             }
           ]
         },
@@ -63261,7 +63341,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 289
+              "line": 354
             }
           ]
         },
@@ -63270,11 +63350,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 303
+              "line": 368
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 304
+              "line": 369
             }
           ]
         },
@@ -63283,7 +63363,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 293
+              "line": 358
             }
           ]
         },
@@ -63292,11 +63372,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 298
+              "line": 363
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 299
+              "line": 364
             }
           ]
         },
@@ -63314,7 +63394,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 232
+              "line": 281
             }
           ]
         },
@@ -63323,7 +63403,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 72
+              "line": 83
             }
           ]
         },
@@ -63332,58 +63412,73 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 237
+              "line": 286
             }
           ]
         },
         "clip_behavior": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 581
+            }
+          ]
         },
         "col": {
           "classification": "parent_consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
         "collapsed": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 582
+            }
+          ]
         },
         "color": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 315
+              "line": 386
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 316
+              "line": 387
             }
           ]
         },
         "content_padding": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 590
+            }
+          ]
         },
         "counter": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 120
+              "line": 149
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 122
+              "line": 151
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 321
+              "line": 392
             }
           ]
         },
@@ -63392,11 +63487,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 121
+              "line": 150
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 124
+              "line": 153
             }
           ]
         },
@@ -63405,25 +63500,49 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 251
+              "line": 301
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 302
             }
           ]
         },
         "cursor_error_color": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 301
+            }
+          ]
         },
         "cursor_height": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 592
+            }
+          ]
         },
         "cursor_radius": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 594
+            }
+          ]
         },
         "cursor_width": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 593
+            }
+          ]
         },
         "data": {
           "classification": "parent_consumed",
@@ -63435,19 +63554,40 @@
           ]
         },
         "dense": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 584
+            }
+          ]
         },
         "disabled": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 93
+              "line": 105
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 229
+              "line": 278
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 211
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 212
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 414
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 415
             }
           ]
         },
@@ -63464,20 +63604,25 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 233
+              "line": 282
             }
           ]
         },
         "enable_stylus_handwriting": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 596
+            }
+          ]
         },
         "enable_suggestions": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 240
+              "line": 289
             }
           ]
         },
@@ -63486,20 +63631,29 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 110
+              "line": 137
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 643
             }
           ]
         },
         "error_max_lines": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 597
+            }
+          ]
         },
         "error_style": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 114
+              "line": 141
             }
           ]
         },
@@ -63526,37 +63680,55 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 309
+              "line": 374
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 310
+              "line": 375
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletVideo/Sources/Video.swift",
+              "line": 381
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletVideo/Sources/Video.swift",
+              "line": 391
             }
           ]
         },
         "filled": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 598
+            }
+          ]
         },
         "fit_parent_size": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 273
+              "line": 333
             }
           ]
         },
         "focus_color": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 599
+            }
+          ]
         },
         "focused_bgcolor": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 309
+              "line": 374
             }
           ]
         },
@@ -63565,7 +63737,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 303
+              "line": 368
             }
           ]
         },
@@ -63574,7 +63746,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 298
+              "line": 363
             }
           ]
         },
@@ -63583,7 +63755,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 315
+              "line": 386
             }
           ]
         },
@@ -63605,54 +63777,79 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 111
+              "line": 138
             }
           ]
         },
         "helper_max_lines": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 600
+            }
+          ]
         },
         "helper_style": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 117
+              "line": 145
             }
           ]
         },
         "hint_fade_duration": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 601
+            }
+          ]
         },
         "hint_max_lines": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 602
+            }
+          ]
         },
         "hint_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 609
+            }
+          ]
         },
         "hint_text": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 282
+              "line": 348
             }
           ]
         },
         "hover_color": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 603
+            }
+          ]
         },
         "icon": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 62
+              "line": 71
             }
           ]
         },
@@ -63661,7 +63858,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 46
+              "line": 51
             }
           ]
         },
@@ -63670,7 +63867,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 262
+              "line": 322
             }
           ]
         },
@@ -63679,16 +63876,16 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 244
+              "line": 293
             }
           ]
         },
         "key": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "consumer": "Ruflet::Control wire construction",
-              "reason": "Ruflet control identity used while constructing and reconciling the wire tree"
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
+              "line": 37
             }
           ]
         },
@@ -63697,7 +63894,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 263
+              "line": 323
             }
           ]
         },
@@ -63706,7 +63903,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 234
+              "line": 283
             }
           ]
         },
@@ -63719,11 +63916,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 55
+              "line": 61
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 280
+              "line": 339
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 346
             }
           ]
         },
@@ -63732,7 +63933,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 57
+              "line": 63
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 607
             }
           ]
         },
@@ -63763,11 +63968,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 243
+              "line": 292
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 322
+              "line": 393
             }
           ]
         },
@@ -63776,7 +63981,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 225
+              "line": 274
             }
           ]
         },
@@ -63785,24 +63990,29 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 224
+              "line": 273
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 276
+              "line": 342
             }
           ]
         },
         "mouse_cursor": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 604
+            }
+          ]
         },
         "multiline": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 271
+              "line": 331
             }
           ]
         },
@@ -63811,7 +64021,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 255
+              "line": 315
             }
           ]
         },
@@ -63890,15 +64100,23 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 199
+              "line": 248
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 200
+              "line": 249
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 201
+              "line": 250
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 224
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 428
             }
           ]
         },
@@ -63907,15 +64125,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 193
+              "line": 242
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 194
+              "line": 243
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 195
+              "line": 244
             }
           ]
         },
@@ -63924,14 +64142,38 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 114
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 115
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 116
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletAds/Sources/Banner.swift",
+              "line": 92
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletAds/Sources/Banner.swift",
+              "line": 93
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletAds/Sources/Banner.swift",
+              "line": 94
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletAds/Sources/Native.swift",
               "line": 102
             },
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletAds/Sources/Native.swift",
               "line": 103
             },
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletAds/Sources/Native.swift",
               "line": 104
             }
           ]
@@ -63941,15 +64183,39 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 199
+              "line": 248
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 200
+              "line": 249
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 201
+              "line": 250
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 221
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 222
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 223
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 425
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 426
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 427
             }
           ]
         },
@@ -63958,27 +64224,27 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 205
+              "line": 254
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 206
+              "line": 255
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 207
+              "line": 256
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 210
+              "line": 259
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 211
+              "line": 260
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 212
+              "line": 261
             }
           ]
         },
@@ -64008,15 +64274,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 99
+              "line": 111
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 100
+              "line": 112
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 101
+              "line": 113
             }
           ]
         },
@@ -64025,11 +64291,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 105
+              "line": 117
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 265
+              "line": 325
             }
           ]
         },
@@ -64055,7 +64321,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 274
+              "line": 334
             }
           ]
         },
@@ -64064,7 +64330,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 65
+              "line": 76
             }
           ]
         },
@@ -64073,20 +64339,25 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 63
+              "line": 72
             }
           ]
         },
         "prefix_icon_size_constraints": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 613
+            }
+          ]
         },
         "prefix_style": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 66
+              "line": 77
             }
           ]
         },
@@ -64095,7 +64366,15 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 227
+              "line": 276
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 211
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/CodeEditor.swift",
+              "line": 414
             }
           ]
         },
@@ -64144,19 +64423,24 @@
           ]
         },
         "scroll_padding": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 619
+            }
+          ]
         },
         "selection": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 38
+              "line": 39
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 173
+              "line": 222
             }
           ]
         },
@@ -64165,7 +64449,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 252
+              "line": 307
             }
           ]
         },
@@ -64174,11 +64458,11 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 261
+              "line": 321
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 271
+              "line": 331
             }
           ]
         },
@@ -64187,7 +64471,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 231
+              "line": 280
             }
           ]
         },
@@ -64201,15 +64485,20 @@
           ]
         },
         "size_constraints": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 627
+            }
+          ]
         },
         "smart_dashes_type": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 241
+              "line": 290
             }
           ]
         },
@@ -64218,20 +64507,25 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 242
+              "line": 291
             }
           ]
         },
         "strut_style": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 628
+            }
+          ]
         },
         "suffix": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 82
+              "line": 93
             }
           ]
         },
@@ -64240,20 +64534,25 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 78
+              "line": 89
             }
           ]
         },
         "suffix_icon_size_constraints": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 631
+            }
+          ]
         },
         "suffix_style": {
           "classification": "consumed",
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 83
+              "line": 94
             }
           ]
         },
@@ -64262,7 +64561,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 245
+              "line": 294
             }
           ]
         },
@@ -64271,7 +64570,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 246
+              "line": 295
             }
           ]
         },
@@ -64280,17 +64579,26 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 219
+              "line": 268
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 317
+              "line": 388
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletCodeEditor/Sources/Utils/CodeEditorUtils.swift",
+              "line": 49
             }
           ]
         },
         "text_vertical_align": {
-          "classification": "unclassified",
-          "evidence": []
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 637
+            }
+          ]
         },
         "tooltip": {
           "classification": "consumed",
@@ -64315,20 +64623,20 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 37
+              "line": 38
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 171
+              "line": 220
             }
           ]
         },
         "visible": {
-          "classification": "parent_consumed",
+          "classification": "consumed",
           "evidence": [
             {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Models/control.swift",
-              "line": 179
+              "path": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletVideo/Sources/Video.swift",
+              "line": 413
             }
           ]
         },
@@ -64345,7 +64653,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 44
+              "line": 45
             }
           ]
         }
@@ -64411,7 +64719,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -64512,7 +64820,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -64795,7 +65103,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -65206,7 +65514,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },
@@ -65924,11 +66232,11 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 309
+              "line": 374
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 310
+              "line": 375
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/view.swift",
@@ -65988,7 +66296,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -66065,7 +66373,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 27
+              "line": 46
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/row.swift",
@@ -66664,11 +66972,11 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 93
+              "line": 105
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 229
+              "line": 278
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Models/control.swift",
@@ -66705,19 +67013,19 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/view.swift",
-              "line": 166
+              "line": 167
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/view.swift",
-              "line": 216
+              "line": 217
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/view.swift",
-              "line": 223
+              "line": 224
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/view.swift",
-              "line": 225
+              "line": 226
             }
           ]
         },
@@ -66734,19 +67042,19 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/view.swift",
-              "line": 174
+              "line": 175
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/view.swift",
-              "line": 217
+              "line": 218
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/view.swift",
-              "line": 227
+              "line": 228
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/view.swift",
-              "line": 229
+              "line": 230
             }
           ]
         },
@@ -66860,12 +67168,16 @@
               "line": 19
             },
             {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/row.swift",
+              "line": 26
+            },
+            {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/tabs.swift",
               "line": 190
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
-              "line": 331
+              "line": 333
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
@@ -66878,19 +67190,23 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/column.swift",
-              "line": 34
+              "line": 26
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/column.swift",
-              "line": 53
+              "line": 40
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/column.swift",
+              "line": 64
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/view.swift",
-              "line": 118
+              "line": 119
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/view.swift",
-              "line": 273
+              "line": 274
             }
           ]
         },
@@ -66899,7 +67215,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
@@ -67085,15 +67401,15 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/view.swift",
-              "line": 455
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/view.swift",
               "line": 456
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/view.swift",
               "line": 457
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/view.swift",
+              "line": 458
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Widgets/page_navigator.swift",
@@ -67106,7 +67422,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/column.swift",
-              "line": 48
+              "line": 59
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
@@ -67138,7 +67454,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/row.swift",
-              "line": 48
+              "line": 58
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/scroll_notification_control.swift",
@@ -67154,7 +67470,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/view.swift",
-              "line": 137
+              "line": 138
             }
           ]
         },
@@ -67284,6 +67600,10 @@
               "line": 259
             },
             {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 588
+            },
+            {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/view.swift",
               "line": 67
             },
@@ -67332,7 +67652,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
-              "line": 321
+              "line": 323
             }
           ]
         },
@@ -67438,7 +67758,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 22
+              "line": 35
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/row.swift",
@@ -67509,19 +67829,35 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 79
+              "line": 77
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
+              "line": 92
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
+              "line": 122
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/row.swift",
-              "line": 34
+              "line": 25
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/row.swift",
-              "line": 53
+              "line": 39
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/row.swift",
+              "line": 63
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/view.swift",
-              "line": 282
+              "line": 118
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/view.swift",
+              "line": 283
             }
           ]
         },
@@ -67570,6 +67906,10 @@
               "line": 642
             },
             {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/column.swift",
+              "line": 27
+            },
+            {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
               "line": 27
             },
@@ -67583,7 +67923,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 44
+              "line": 45
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/vertical_divider.swift",
@@ -67591,7 +67931,7 @@
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
-              "line": 330
+              "line": 332
             },
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
@@ -68100,7 +68440,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 28
+              "line": 50
             }
           ]
         },
@@ -68179,7 +68519,7 @@
           "evidence": [
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 31
+              "line": 37
             }
           ]
         },

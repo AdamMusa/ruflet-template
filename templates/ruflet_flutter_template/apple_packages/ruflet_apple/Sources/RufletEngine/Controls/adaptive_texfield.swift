@@ -10,6 +10,12 @@ public struct AdaptiveTextFieldControl: View {
   }
 
   public var body: some View {
-    CupertinoTextFieldControl(control: control)
+    if usesCupertinoStyle {
+      CupertinoTextFieldControl(control: control)
+    } else {
+      TextFieldControl(control: control)
+    }
   }
+
+  var usesCupertinoStyle: Bool { control.adaptive == true }
 }

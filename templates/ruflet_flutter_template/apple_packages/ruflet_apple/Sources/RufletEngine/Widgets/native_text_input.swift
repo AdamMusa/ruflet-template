@@ -54,9 +54,18 @@ struct RufletNativeTextInputConfiguration {
   let italic: Bool
   let textColor: Color?
   let cursorColor: Color?
+  var cursorHeight: CGFloat? = nil
+  var cursorWidth: CGFloat = 2
+  var cursorRadius: CGFloat? = nil
+  var animateCursorOpacity = false
   let selectionColor: Color?
   let placeholder: String?
   let placeholderColor: Color?
+  var scrollPadding = EdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 20)
+  var textVerticalAlignment = RufletTextFieldVerticalAlignment.center
+  var strutStyle: RufletTextFieldStrutStyle? = nil
+  var enableStylusHandwriting = true
+  var clearButtonSemanticsLabel: String? = nil
   let obscuringCharacter: Character
   let clearButtonMode: RufletOverlayVisibilityMode
   let autofillHints: [String]
@@ -92,10 +101,39 @@ struct RufletNativeTextInput: UIViewRepresentable {
   }
 }
 
+private final class RufletConfigurableTextField: UITextField {
+  var rufletCursorHeight: CGFloat?
+  var rufletCursorWidth: CGFloat = 2
+  var rufletCursorRadius: CGFloat?
+
+  override func caretRect(for position: UITextPosition) -> CGRect {
+    var rect = super.caretRect(for: position)
+    rect.size.width = max(rufletCursorWidth, 0)
+    if let height = rufletCursorHeight {
+      rect.origin.y += (rect.height - height) / 2
+      rect.size.height = max(height, 0)
+    }
+    return rect
+  }
+}
+
 private final class RufletSubmitTextView: UITextView {
   var submitUnshiftedReturn: (() -> Void)?
   var ignoreUpDownKeys = false
+  var rufletCursorHeight: CGFloat?
+  var rufletCursorWidth: CGFloat = 2
+  var rufletCursorRadius: CGFloat?
   fileprivate var insertingShiftReturn = false
+
+  override func caretRect(for position: UITextPosition) -> CGRect {
+    var rect = super.caretRect(for: position)
+    rect.size.width = max(rufletCursorWidth, 0)
+    if let height = rufletCursorHeight {
+      rect.origin.y += (rect.height - height) / 2
+      rect.size.height = max(height, 0)
+    }
+    return rect
+  }
 
   override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
     guard let key = presses.first?.key else {
@@ -122,8 +160,10 @@ private final class RufletSubmitTextView: UITextView {
   }
 }
 
-final class RufletTextInputUIView: UIView, UITextFieldDelegate, UITextViewDelegate, UIGestureRecognizerDelegate {
-  private let textField = UITextField()
+final class RufletTextInputUIView: UIView, UITextFieldDelegate, UITextViewDelegate,
+  UIGestureRecognizerDelegate, UIScribbleInteractionDelegate
+{
+  private let textField = RufletConfigurableTextField()
   private let textView = RufletSubmitTextView()
   private var activeView: UIView?
   private var configuration: RufletNativeTextInputConfiguration?
@@ -135,6 +175,7 @@ final class RufletTextInputUIView: UIView, UITextFieldDelegate, UITextViewDelega
   private lazy var outsideTapRecognizer = UITapGestureRecognizer(target: self, action: #selector(windowTapped(_:)))
   private lazy var textFieldTapRecognizer = UITapGestureRecognizer(target: self, action: #selector(inputTapped(_:)))
   private lazy var textViewTapRecognizer = UITapGestureRecognizer(target: self, action: #selector(inputTapped(_:)))
+  private lazy var scribbleInteraction = UIScribbleInteraction(delegate: self)
 
   override init(frame: CGRect) {
     super.init(frame: frame)
@@ -154,6 +195,7 @@ final class RufletTextInputUIView: UIView, UITextFieldDelegate, UITextViewDelega
     textView.addGestureRecognizer(textViewTapRecognizer)
     outsideTapRecognizer.cancelsTouchesInView = false
     outsideTapRecognizer.delegate = self
+    addInteraction(scribbleInteraction)
   }
 
   required init?(coder: NSCoder) { nil }
@@ -178,7 +220,17 @@ final class RufletTextInputUIView: UIView, UITextFieldDelegate, UITextViewDelega
 
   override func layoutSubviews() {
     super.layoutSubviews()
-    activeView?.frame = bounds
+    guard let activeView, let configuration else { return }
+    let intrinsic = activeView.intrinsicContentSize.height
+    let naturalHeight = intrinsic > 0 ? min(intrinsic, bounds.height) : bounds.height
+    let height = configuration.multiline ? bounds.height : naturalHeight
+    let y: CGFloat
+    switch configuration.textVerticalAlignment {
+    case .top: y = 0
+    case .center: y = (bounds.height - height) / 2
+    case .bottom: y = bounds.height - height
+    }
+    activeView.frame = CGRect(x: 0, y: y, width: bounds.width, height: height)
   }
 
   func update(
@@ -219,6 +271,12 @@ final class RufletTextInputUIView: UIView, UITextFieldDelegate, UITextViewDelega
       ? .clear : configuration.cursorColor.map(UIColor.init)
     textView.tintColor = configuration.showCursor == false
       ? .clear : configuration.cursorColor.map(UIColor.init)
+    textField.rufletCursorHeight = configuration.cursorHeight
+    textField.rufletCursorWidth = configuration.cursorWidth
+    textField.rufletCursorRadius = configuration.cursorRadius
+    textView.rufletCursorHeight = configuration.cursorHeight
+    textView.rufletCursorWidth = configuration.cursorWidth
+    textView.rufletCursorRadius = configuration.cursorRadius
     textField.font = configuration.uiFont
     textView.font = configuration.uiFont
     textField.keyboardType = configuration.keyboardType.uiKeyboardType
@@ -237,6 +295,7 @@ final class RufletTextInputUIView: UIView, UITextFieldDelegate, UITextViewDelega
     textView.textContentType = configuration.autofillHints.first?.uiTextContentType
     textField.keyboardAppearance = configuration.keyboardBrightness.uiKeyboardAppearance
     textView.keyboardAppearance = configuration.keyboardBrightness.uiKeyboardAppearance
+    textView.scrollIndicatorInsets = configuration.scrollPadding.uiEdgeInsets
     textView.isSelectable = configuration.enableInteractiveSelection ?? true
     textField.isUserInteractionEnabled = configuration.enabled
       && (configuration.canRequestFocus || textField.isFirstResponder)
@@ -246,6 +305,8 @@ final class RufletTextInputUIView: UIView, UITextFieldDelegate, UITextViewDelega
     textView.submitUnshiftedReturn = configuration.shiftEnter
       ? { [weak self] in self?.callbacks?.onSubmit(self?.textView.text ?? "") }
       : nil
+    applyStrutStyle(configuration.strutStyle)
+    updateClearButtonSemantics(configuration.clearButtonSemanticsLabel)
     applySelection(configuration.selection)
     applying = false
 
@@ -261,6 +322,32 @@ final class RufletTextInputUIView: UIView, UITextFieldDelegate, UITextViewDelega
       DispatchQueue.main.async { nextView.resignFirstResponder() }
     }
     invalidateIntrinsicContentSize()
+    setNeedsLayout()
+  }
+
+  func scribbleInteraction(
+    _ interaction: UIScribbleInteraction,
+    shouldBeginAt location: CGPoint
+  ) -> Bool {
+    configuration?.enableStylusHandwriting ?? true
+  }
+
+  private func updateClearButtonSemantics(_ label: String?) {
+    guard let label else { return }
+    for button in textField.subviews.compactMap({ $0 as? UIButton }) {
+      button.accessibilityLabel = label
+    }
+  }
+
+  private func applyStrutStyle(_ style: RufletTextFieldStrutStyle?) {
+    guard let height = style?.lineHeight else {
+      textView.typingAttributes[.paragraphStyle] = nil
+      return
+    }
+    let paragraph = NSMutableParagraphStyle()
+    paragraph.minimumLineHeight = height
+    if style?.forceHeight == true { paragraph.maximumLineHeight = height }
+    textView.typingAttributes[.paragraphStyle] = paragraph
   }
 
   @objc private func textFieldChanged() { changed(textField.text ?? "") }
@@ -543,6 +630,12 @@ private extension Optional where Wrapped == Font.Weight {
     return .regular
   }
 }
+
+private extension EdgeInsets {
+  var uiEdgeInsets: UIEdgeInsets {
+    UIEdgeInsets(top: top, left: leading, bottom: bottom, right: trailing)
+  }
+}
 #elseif os(macOS)
 struct RufletNativeTextInput: NSViewRepresentable {
   let configuration: RufletNativeTextInputConfiguration
@@ -554,10 +647,39 @@ struct RufletNativeTextInput: NSViewRepresentable {
   }
 }
 
+private final class RufletTextInputNSTextView: NSTextView {
+  var rufletCursorHeight: CGFloat?
+  var rufletCursorWidth: CGFloat = 2
+  var rufletCursorRadius: CGFloat?
+  var rufletAnimateCursorOpacity = false
+
+  override func drawInsertionPoint(
+    in rect: NSRect,
+    color: NSColor,
+    turnedOn flag: Bool
+  ) {
+    var cursor = rect
+    cursor.size.width = max(rufletCursorWidth, 0)
+    if let height = rufletCursorHeight {
+      cursor.origin.y += (cursor.height - height) / 2
+      cursor.size.height = max(height, 0)
+    }
+    guard flag || !rufletAnimateCursorOpacity else {
+      super.drawInsertionPoint(in: cursor, color: color, turnedOn: false)
+      return
+    }
+    color.setFill()
+    NSBezierPath(
+      roundedRect: cursor,
+      xRadius: rufletCursorRadius ?? 0,
+      yRadius: rufletCursorRadius ?? 0).fill()
+  }
+}
+
 final class RufletTextInputNSView: NSView, NSTextFieldDelegate, NSTextViewDelegate {
   private let textField = NSTextField()
   private let secureField = NSSecureTextField()
-  private let textView = NSTextView()
+  private let textView = RufletTextInputNSTextView()
   private let scrollView = NSScrollView()
   private var activeView: NSView?
   private var activeField: NSTextField { configuration?.password == true ? secureField : textField }
@@ -615,7 +737,17 @@ final class RufletTextInputNSView: NSView, NSTextFieldDelegate, NSTextViewDelega
 
   override func layout() {
     super.layout()
-    activeView?.frame = bounds
+    guard let activeView, let configuration else { return }
+    let naturalHeight = activeView.intrinsicContentSize.height
+    let height = configuration.multiline || naturalHeight <= 0
+      ? bounds.height : min(naturalHeight, bounds.height)
+    let y: CGFloat
+    switch configuration.textVerticalAlignment {
+    case .top: y = bounds.height - height
+    case .center: y = (bounds.height - height) / 2
+    case .bottom: y = 0
+    }
+    activeView.frame = NSRect(x: 0, y: y, width: bounds.width, height: height)
   }
 
   func update(configuration: RufletNativeTextInputConfiguration, callbacks: RufletNativeTextInputCallbacks) {
@@ -641,10 +773,16 @@ final class RufletTextInputNSView: NSView, NSTextFieldDelegate, NSTextViewDelega
     textView.textColor = configuration.textColor.map(NSColor.init)
     textView.insertionPointColor = configuration.showCursor == false
       ? .clear : configuration.cursorColor.map(NSColor.init) ?? .controlAccentColor
+    textView.rufletCursorHeight = configuration.cursorHeight
+    textView.rufletCursorWidth = configuration.cursorWidth
+    textView.rufletCursorRadius = configuration.cursorRadius
+    textView.rufletAnimateCursorOpacity = configuration.animateCursorOpacity
     textView.isEditable = configuration.enabled && !configuration.readOnly
     textView.isSelectable = configuration.enableInteractiveSelection ?? true
     activeField.font = configuration.nsFont
     textView.font = configuration.nsFont
+    scrollView.contentInsets = configuration.scrollPadding.nsEdgeInsets
+    applyStrutStyle(configuration.strutStyle)
     if let selectionColor = configuration.selectionColor.map(NSColor.init) {
       textView.selectedTextAttributes = [.backgroundColor: selectionColor]
       if let editor = window?.fieldEditor(false, for: activeField) as? NSTextView {
@@ -665,6 +803,19 @@ final class RufletTextInputNSView: NSView, NSTextFieldDelegate, NSTextViewDelega
       DispatchQueue.main.async { self.window?.makeFirstResponder(nil) }
     }
     invalidateIntrinsicContentSize()
+    needsLayout = true
+  }
+
+  private func applyStrutStyle(_ style: RufletTextFieldStrutStyle?) {
+    guard let height = style?.lineHeight else {
+      textView.defaultParagraphStyle = nil
+      return
+    }
+    let paragraph = NSMutableParagraphStyle()
+    paragraph.minimumLineHeight = height
+    if style?.forceHeight == true { paragraph.maximumLineHeight = height }
+    textView.defaultParagraphStyle = paragraph
+    textView.typingAttributes[.paragraphStyle] = paragraph
   }
 
   func controlTextDidBeginEditing(_ obj: Notification) {
@@ -846,6 +997,12 @@ private extension Optional where Wrapped == Font.Weight {
     if value == .ultraLight { return .ultraLight }
     if value == .thin { return .thin }
     return .regular
+  }
+}
+
+private extension EdgeInsets {
+  var nsEdgeInsets: NSEdgeInsets {
+    NSEdgeInsets(top: top, left: leading, bottom: bottom, right: trailing)
   }
 }
 #endif
