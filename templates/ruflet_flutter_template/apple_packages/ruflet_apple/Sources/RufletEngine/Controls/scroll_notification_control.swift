@@ -5,7 +5,7 @@ import SwiftUI
 struct ScrollNotificationControl<Content: View>: View {
     @ObservedObject var control: RufletControl
     let child: Content
-    @State private var lastDispatch = ContinuousClock.now
+    @State private var lastDispatch = ProcessInfo.processInfo.systemUptime
     @State private var lastOffset = CGPoint.zero
     @State private var started = false
     @State private var endTask: Task<Void, Never>?
@@ -38,14 +38,14 @@ struct ScrollNotificationControl<Content: View>: View {
             dispatch(type: "start", offset: offset, delta: nil)
         }
         let delta = CGPoint(x: offset.x - lastOffset.x, y: offset.y - lastOffset.y)
-        let interval = Duration.milliseconds(control.integer("scroll_interval", default: 10) ?? 10)
-        if lastDispatch.duration(to: .now) >= interval {
+        let interval = Double(control.integer("scroll_interval", default: 10) ?? 10) / 1_000
+        if ProcessInfo.processInfo.systemUptime - lastDispatch >= interval {
             dispatch(type: "update", offset: offset, delta: delta)
         }
         lastOffset = offset
         endTask?.cancel()
         endTask = Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(120))
+            try? await Task.sleep(nanoseconds: 120_000_000)
             guard !Task.isCancelled else { return }
             dispatch(type: "end", offset: offset, delta: nil)
             started = false
@@ -53,7 +53,7 @@ struct ScrollNotificationControl<Content: View>: View {
     }
 
     private func dispatch(type: String, offset: CGPoint, delta: CGPoint?) {
-        lastDispatch = .now
+        lastDispatch = ProcessInfo.processInfo.systemUptime
         var data: [String: RufletValue] = [
             "event_type": .string(type),
             "pixels": .double(abs(offset.x) > abs(offset.y) ? offset.x : offset.y),

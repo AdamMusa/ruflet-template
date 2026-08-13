@@ -197,7 +197,7 @@ private struct RufletSizeChangeModifier: ViewModifier {
     @ObservedObject var control: RufletControl
     @State private var lastSize: CGSize?
     @State private var pendingTask: Task<Void, Never>?
-    @State private var lastDispatch = ContinuousClock.now
+    @State private var lastDispatch = ProcessInfo.processInfo.systemUptime
 
     func body(content: Content) -> some View {
         content
@@ -214,12 +214,12 @@ private struct RufletSizeChangeModifier: ViewModifier {
 
     private func sizeChanged(_ size: CGSize) {
         guard control.boolean("on_size_change", default: false), lastSize != size else { return }
-        let interval = Duration.milliseconds(control.integer("size_change_interval", default: 10) ?? 10)
-        let elapsed = lastDispatch.duration(to: .now)
+        let interval = Double(control.integer("size_change_interval", default: 10) ?? 10) / 1_000
+        let elapsed = ProcessInfo.processInfo.systemUptime - lastDispatch
         pendingTask?.cancel()
         if lastSize != nil, elapsed < interval {
             pendingTask = Task { @MainActor in
-                try? await Task.sleep(for: interval - elapsed)
+                try? await Task.sleep(nanoseconds: rufletSleepNanoseconds(interval - elapsed))
                 guard !Task.isCancelled else { return }
                 dispatch(size)
             }
@@ -230,7 +230,7 @@ private struct RufletSizeChangeModifier: ViewModifier {
 
     private func dispatch(_ size: CGSize) {
         lastSize = size
-        lastDispatch = .now
+        lastDispatch = ProcessInfo.processInfo.systemUptime
         control.triggerEvent("size_change", data: ["w": .double(size.width), "h": .double(size.height)])
     }
 }
@@ -261,7 +261,7 @@ private struct RufletOpacityCompletionModifier: ViewModifier {
               let animation = parseAnimation(control.dynamicValue(property)) else { return }
         task?.cancel()
         task = Task { @MainActor in
-            try? await Task.sleep(for: .seconds(animation.duration))
+            try? await Task.sleep(nanoseconds: rufletSleepNanoseconds(animation.duration))
             guard !Task.isCancelled else { return }
             control.triggerEvent("animation_end", data: .string(name))
         }
@@ -291,7 +291,7 @@ private struct RufletLayoutAnimationCompletionModifier: ViewModifier {
               let animation = parseAnimation(control.dynamicValue(property)) else { return }
         tasks[name]?.cancel()
         tasks[name] = Task { @MainActor in
-            try? await Task.sleep(for: .seconds(animation.duration))
+            try? await Task.sleep(nanoseconds: rufletSleepNanoseconds(animation.duration))
             guard !Task.isCancelled else { return }
             control.triggerEvent("animation_end", data: .string(name))
         }

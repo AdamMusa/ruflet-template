@@ -109,7 +109,7 @@ public struct DismissibleControl: View {
             control.triggerEvent("confirm_dismiss", data: ["direction": .string(direction.rawValue)])
             confirmationTimeout?.cancel()
             confirmationTimeout = Task { @MainActor in
-                try? await Task.sleep(for: .seconds(300))
+                try? await Task.sleep(nanoseconds: rufletSleepNanoseconds(300))
                 guard !Task.isCancelled else { return }
                 pendingDirection = nil
                 resetPosition()
@@ -128,13 +128,13 @@ public struct DismissibleControl: View {
         }
         dismissalTask?.cancel()
         dismissalTask = Task { @MainActor in
-            try? await Task.sleep(for: .seconds(movementDuration))
+            try? await Task.sleep(nanoseconds: rufletSleepNanoseconds(movementDuration))
             guard !Task.isCancelled else { return }
             if control.boolean("on_resize", default: false) {
                 control.triggerEvent("resize")
             }
             collapsed = true
-            try? await Task.sleep(for: .seconds(resizeDuration))
+            try? await Task.sleep(nanoseconds: rufletSleepNanoseconds(resizeDuration))
             guard !Task.isCancelled else { return }
             dismissed = true
             if control.boolean("on_dismiss", default: false) {

@@ -15,7 +15,7 @@ public struct InteractiveViewerControl: View {
     @State private var gestureStartScale = 1.0
     @State private var gestureStartOffset = CGSize.zero
     @State private var previousFocalPoint = CGPoint.zero
-    @State private var lastUpdate = ContinuousClock.now
+    @State private var lastUpdate = ProcessInfo.processInfo.systemUptime
     @State private var invokeToken: UUID?
 
     public init(control: RufletControl) {
@@ -129,8 +129,8 @@ public struct InteractiveViewerControl: View {
     }
 
     private func triggerUpdate(global: CGPoint, magnification: Double) {
-        let interval = Duration.milliseconds(control.integer("interaction_update_interval", default: 200) ?? 200)
-        guard lastUpdate.duration(to: .now) > interval else { return }
+        let interval = Double(control.integer("interaction_update_interval", default: 200) ?? 200) / 1_000
+        guard ProcessInfo.processInfo.systemUptime - lastUpdate > interval else { return }
         let delta = CGPoint(x: global.x - previousFocalPoint.x, y: global.y - previousFocalPoint.y)
         control.triggerEvent("interaction_update", data: [
             "gfp": pointValue(x: global.x, y: global.y),
@@ -143,7 +143,7 @@ public struct InteractiveViewerControl: View {
             "rot": .double(0),
             "ts": .int(timestamp),
         ])
-        lastUpdate = .now
+        lastUpdate = ProcessInfo.processInfo.systemUptime
     }
 
     private func clampedScale(_ proposed: Double) -> Double {

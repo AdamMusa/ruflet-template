@@ -130,7 +130,7 @@ private struct RufletContainerAnimationCompletion: ViewModifier {
                 guard control.hasEventHandler("animation_end"), let animation else { return }
                 task?.cancel()
                 task = Task { @MainActor in
-                    try? await Task.sleep(for: .seconds(animation.duration))
+                    try? await Task.sleep(nanoseconds: rufletSleepNanoseconds(animation.duration))
                     guard !Task.isCancelled else { return }
                     control.triggerEvent("animation_end", data: .string("container"))
                 }

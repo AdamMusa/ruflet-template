@@ -1,5 +1,9 @@
 import Foundation
 
+func rufletSleepNanoseconds(_ seconds: TimeInterval) -> UInt64 {
+    UInt64(max(seconds, 0) * 1_000_000_000)
+}
+
 enum DurationUnit: String, CaseIterable, RufletStringEnum {
     case microseconds, milliseconds, seconds, minutes, hours, days
 }

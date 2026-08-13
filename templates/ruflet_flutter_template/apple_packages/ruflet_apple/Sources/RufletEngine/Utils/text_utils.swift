@@ -64,12 +64,29 @@ public func parseTextStyle(_ value: Any?, _ defaultValue: RufletTextStyle? = nil
 struct RufletTextStyleModifier: ViewModifier {
     let style: RufletTextStyle?
 
+    @ViewBuilder
     func body(content: Content) -> some View {
+        #if os(iOS)
+        if #available(iOS 16.0, *) {
+            styled(content)
+        } else {
+            base(content)
+        }
+        #elseif os(macOS)
+        styled(content)
+        #endif
+    }
+
+    private func base(_ content: Content) -> some View {
         content
             .font(resolvedFont)
-            .fontWeight(style?.weight)
-            .italic(style?.italic == true)
             .foregroundStyle(style?.color ?? .primary)
+            .background(style?.backgroundColor ?? .clear)
+    }
+
+    @available(iOS 16.0, *)
+    private func styled(_ content: Content) -> some View {
+        base(content)
             .tracking(style?.letterSpacing ?? 0)
             .underline(
                 style.map { $0.decoration & 0x1 > 0 } ?? false,
@@ -79,15 +96,19 @@ struct RufletTextStyleModifier: ViewModifier {
                 style.map { $0.decoration & 0x4 > 0 } ?? false,
                 color: style?.decorationColor
             )
-            .background(style?.backgroundColor ?? .clear)
     }
 
     private var resolvedFont: Font? {
         guard let style else { return nil }
         let size = style.size ?? 14
+        var font: Font
         if let family = style.fontFamily {
-            return .custom(family, size: size)
+            font = .custom(family, size: size)
+        } else {
+            font = .system(size: size)
         }
-        return .system(size: size)
+        if let weight = style.weight { font = font.weight(weight) }
+        if style.italic { font = font.italic() }
+        return font
     }
 }

@@ -11,7 +11,7 @@ public struct CupertinoDialogActionControl: View {
         return AnyView(BaseControl(control: control) {
             Button(action: { control.triggerEvent("click") }) { content }
                 .buttonStyle(.borderless)
-                .fontWeight(control.boolean("default", default: false) ? .bold : .regular)
+                .font(.body.weight(control.boolean("default", default: false) ? .bold : .regular))
                 .foregroundStyle(control.boolean("destructive", default: false) ? .red : .accentColor)
                 .disabled(control.disabled)
         })

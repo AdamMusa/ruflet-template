@@ -27,10 +27,11 @@ func parseLocale(_ value: Any?, _ defaultValue: Locale? = nil) -> Locale? {
 
 extension Locale {
     var rufletMap: [String: String?] {
-        [
-            "language_code": language.languageCode?.identifier,
-            "country_code": region?.identifier,
-            "script_code": language.script?.identifier,
+        let components = Locale.components(fromIdentifier: identifier)
+        return [
+            "language_code": components[NSLocale.Key.languageCode.rawValue],
+            "country_code": components[NSLocale.Key.countryCode.rawValue],
+            "script_code": components[NSLocale.Key.scriptCode.rawValue],
         ]
     }
 }
