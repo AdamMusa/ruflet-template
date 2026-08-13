@@ -1,12 +1,17 @@
 import RufletProtocol
 import SwiftUI
 
+#if os(iOS)
+import UIKit
+#endif
+
 /// Apple-native port of pinned `date_picker.dart`.
 @MainActor
 public struct DatePickerControl: View {
   @ObservedObject public var control: RufletControl
   @State private var presented = false
   @State private var draft = Date()
+  @State private var inputText = ""
   @State private var entryMode = RufletDateEntryMode.calendar
   @State private var closedByAction = false
 
@@ -21,76 +26,123 @@ public struct DatePickerControl: View {
       .onChange(of: control.properties) { _ in synchronizePresentation() }
       .sheet(isPresented: $presented, onDismiss: sheetDismissed) {
         pickerSheet
-          .interactiveDismissDisabled(control.boolean("modal", default: false))
+          .interactiveDismissDisabled(presentation.modal)
       }
   }
 
   private var pickerSheet: some View {
-    NavigationView {
+    let presentation = presentation
+    return NavigationView {
       VStack(spacing: 12) {
-        if let helpText = control.string("help_text") {
+        if let helpText = presentation.helpText {
           Text(helpText).font(.headline).frame(maxWidth: .infinity, alignment: .leading)
         }
-        RufletNativeDatePicker(
-          date: draft,
-          minimumDate: minimumDate,
-          maximumDate: maximumDate,
-          mode: .date,
-          style: entryMode.usesCalendar ? .inline : .compact,
-          minuteInterval: 1,
-          locale: parseLocale(control.dynamicValue("locale")),
-          countdownDuration: nil
-        ) { date, _ in
-          draft = date
+        if entryMode.usesCalendar {
+          RufletNativeDatePicker(
+            date: draft,
+            minimumDate: presentation.minimumDate,
+            maximumDate: presentation.maximumDate,
+            mode: .date,
+            style: pickerStyle,
+            minuteInterval: 1,
+            locale: presentation.locale,
+            countdownDuration: nil
+          ) { date, _ in
+            draft = date
+          }
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
+        } else {
+          TextField(
+            presentation.fieldHintText ?? presentation.fieldLabelText ?? "Date",
+            text: $inputText
+          )
+          .textFieldStyle(.roundedBorder)
+          .modifier(RufletPickerKeyboardModifier(type: presentation.keyboardType))
+          .onChange(of: inputText) { text in
+            if let parsed = rufletParsePickerDate(text, locale: presentation.locale) {
+              draft = parsed
+            }
+          }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
       }
-      .padding(parsePadding(control.dynamicValue("inset_padding"))
-        ?? EdgeInsets(top: 24, leading: 16, bottom: 24, trailing: 16))
-      .navigationTitle(control.string("field_label_text", default: "")!)
+      .padding(presentation.insetPadding)
+      .navigationTitle(presentation.fieldLabelText ?? "")
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
-          Button(control.string("cancel_text", default: "Cancel")!) { close(nil) }
+          Button(presentation.cancelText) { close(nil) }
         }
         ToolbarItem(placement: .principal) {
           if entryMode.allowsToggle {
             Button { toggleEntryMode() } label: {
-              Image(systemName: entryMode.usesCalendar ? "keyboard" : "calendar")
+              entryModeIcon
             }
             .accessibilityLabel(entryMode.usesCalendar ? "Use date input" : "Use calendar")
           }
         }
         ToolbarItem(placement: .confirmationAction) {
-          Button(control.string("confirm_text", default: "OK")!) { close(draft) }
+          Button(presentation.confirmText) {
+            close(
+              entryMode.usesCalendar
+                ? draft
+                : rufletParsePickerDate(inputText, locale: presentation.locale))
+          }
+          .disabled(validationMessage(presentation: presentation) != nil)
+        }
+      }
+      .overlay(alignment: .top) {
+        if let validationMessage = validationMessage(presentation: presentation) {
+          Text(validationMessage)
+            .font(.caption)
+            .foregroundStyle(.red)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(.regularMaterial, in: Capsule())
+            .padding(.top, 8)
         }
       }
     }
   }
 
-  private func synchronizePresentation() {
+  @ViewBuilder
+  private var entryModeIcon: some View {
+    let presentation = presentation
+    let configured = entryMode.usesCalendar
+      ? presentation.switchToInputIcon
+      : presentation.switchToCalendarIcon
+    if let configured {
+      RufletAppleIconView.registered(icon: configured, size: 18)
+    } else {
+      Image(systemName: entryMode.usesCalendar ? "keyboard" : "calendar")
+    }
+  }
+
+  private var pickerStyle: RufletNativeDatePickerStyle {
+    guard entryMode.usesCalendar else { return .compact }
+    return presentation.datePickerMode == .year ? .compact : .inline
+  }
+
+  func synchronizePresentation() {
     guard control.boolean("open", default: false),
-          !control.boolean("_open", default: false),
-          !presented
+      !control.boolean("_open", default: false),
+      !presented
     else { return }
-    draft = parseRufletDate(control.value("value"))
-      ?? parseRufletDate(control.value("current_date"))
-      ?? Date()
-    entryMode = parseEnum(
-      RufletDateEntryMode.self,
-      control.string("entry_mode"),
-      .calendar)!
+    let presentation = presentation
+    draft = presentation.value ?? presentation.currentDate ?? Date()
+    inputText = rufletPickerDateText(draft, locale: presentation.locale)
+    entryMode = presentation.entryMode
     control.updateProperties(["_open": .bool(true)], server: false)
     closedByAction = false
     presented = true
   }
 
-  private func toggleEntryMode() {
+  func toggleEntryMode() {
     entryMode = entryMode.usesCalendar ? .input : .calendar
+    inputText = rufletPickerDateText(draft, locale: presentation.locale)
     control.updateProperties(["entry_mode": .string(entryMode.rawValue)])
     control.triggerEvent("entry_mode_change", data: ["entry_mode": .string(entryMode.rawValue)])
   }
 
-  private func close(_ date: Date?) {
+  func close(_ date: Date?) {
     closedByAction = true
     control.updateProperties(["_open": .bool(false)], server: false)
     control.updateProperties([
@@ -110,13 +162,19 @@ public struct DatePickerControl: View {
     }
   }
 
-  private var minimumDate: Date {
-    parseRufletDate(control.value("first_date"))
-      ?? Calendar.current.date(from: DateComponents(year: 1900, month: 1, day: 1))!
+  private func validationMessage(presentation: RufletDatePickerPresentation) -> String? {
+    guard entryMode == .input else { return nil }
+    guard let parsed = rufletParsePickerDate(inputText, locale: presentation.locale) else {
+      return presentation.errorFormatText
+    }
+    if parsed < presentation.minimumDate || parsed > presentation.maximumDate {
+      return presentation.errorInvalidText
+    }
+    return nil
   }
-  private var maximumDate: Date {
-    parseRufletDate(control.value("last_date"))
-      ?? Calendar.current.date(from: DateComponents(year: 2050, month: 1, day: 1))!
+
+  var presentation: RufletDatePickerPresentation {
+    RufletDatePickerPresentation(control: control)
   }
 }
 
@@ -125,4 +183,113 @@ enum RufletDateEntryMode: String, CaseIterable, RufletStringEnum {
 
   var usesCalendar: Bool { self == .calendar || self == .calendarOnly }
   var allowsToggle: Bool { self == .calendar || self == .input }
+}
+
+enum RufletDatePickerMode: String, CaseIterable, RufletStringEnum {
+  case day, year
+}
+
+@MainActor
+struct RufletDatePickerPresentation {
+  let value: Date?
+  let currentDate: Date?
+  let minimumDate: Date
+  let maximumDate: Date
+  let helpText: String?
+  let cancelText: String
+  let confirmText: String
+  let errorFormatText: String?
+  let errorInvalidText: String?
+  let keyboardType: String
+  let datePickerMode: RufletDatePickerMode
+  let entryMode: RufletDateEntryMode
+  let fieldHintText: String?
+  let fieldLabelText: String?
+  let insetPadding: EdgeInsets
+  let locale: Locale?
+  let modal: Bool
+  let switchToCalendarIcon: RufletAppleIcon?
+  let switchToInputIcon: RufletAppleIcon?
+
+  init(control: RufletControl) {
+    value = parseRufletDate(control.value("value"))
+    currentDate = parseRufletDate(control.value("current_date"))
+    minimumDate = parseRufletDate(control.value("first_date"))
+      ?? Calendar.current.date(from: DateComponents(year: 1900, month: 1, day: 1))!
+    maximumDate = parseRufletDate(control.value("last_date"))
+      ?? Calendar.current.date(from: DateComponents(year: 2050, month: 1, day: 1))!
+    helpText = control.string("help_text")
+    cancelText = control.string("cancel_text", default: "Cancel") ?? "Cancel"
+    confirmText = control.string("confirm_text", default: "OK") ?? "OK"
+    errorFormatText = control.string("error_format_text")
+    errorInvalidText = control.string("error_invalid_text")
+    keyboardType = control.string("keyboard_type", default: "text") ?? "text"
+    datePickerMode = parseEnum(
+      RufletDatePickerMode.self, control.string("date_picker_mode"), .day) ?? .day
+    entryMode = parseEnum(
+      RufletDateEntryMode.self, control.string("entry_mode"), .calendar) ?? .calendar
+    fieldHintText = control.string("field_hint_text")
+    fieldLabelText = control.string("field_label_text")
+    insetPadding = parsePadding(control.dynamicValue("inset_padding"))
+      ?? EdgeInsets(top: 24, leading: 16, bottom: 24, trailing: 16)
+    locale = parseLocale(control.dynamicValue("locale"))
+    modal = control.boolean("modal", default: false)
+    switchToCalendarIcon = Self.icon(control, property: "switch_to_calendar_icon")
+    switchToInputIcon = Self.icon(control, property: "switch_to_input_icon")
+  }
+
+  private static func icon(_ control: RufletControl, property: String) -> RufletAppleIcon? {
+    guard let code = control.integer(property) else { return nil }
+    return control.backend.extensionRegistry.appleIcon(for: code)
+  }
+}
+
+func rufletPickerDateText(_ date: Date, locale: Locale?) -> String {
+  let formatter = DateFormatter()
+  formatter.locale = locale
+  formatter.dateStyle = .short
+  formatter.timeStyle = .none
+  return formatter.string(from: date)
+}
+
+func rufletParsePickerDate(_ text: String, locale: Locale?) -> Date? {
+  let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+  guard !trimmed.isEmpty else { return nil }
+  let formatter = DateFormatter()
+  formatter.locale = locale
+  formatter.dateStyle = .short
+  formatter.timeStyle = .none
+  formatter.isLenient = false
+  if let date = formatter.date(from: trimmed) { return date }
+  return parseRufletDate(.string(trimmed))
+}
+
+struct RufletPickerKeyboardModifier: ViewModifier {
+  let type: String
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    #if os(iOS)
+    content.keyboardType(keyboardType)
+    #else
+    content
+    #endif
+  }
+
+  #if os(iOS)
+  private var keyboardType: UIKeyboardType {
+    switch type.lowercased() {
+    case "datetime": return .numbersAndPunctuation
+    case "email": return .emailAddress
+    case "name": return .namePhonePad
+    case "number": return .decimalPad
+    case "phone": return .phonePad
+    case "url": return .URL
+    case "visiblepassword": return .asciiCapable
+    case "websearch": return .webSearch
+    case "twitter": return .twitter
+    default: return .default
+    }
+  }
+  #endif
 }

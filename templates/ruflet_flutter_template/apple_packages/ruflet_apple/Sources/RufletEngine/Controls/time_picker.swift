@@ -21,72 +21,101 @@ public struct TimePickerControl: View {
       .onChange(of: control.properties) { _ in synchronizePresentation() }
       .sheet(isPresented: $presented, onDismiss: sheetDismissed) {
         pickerSheet
-          .interactiveDismissDisabled(control.boolean("modal", default: false))
+          .interactiveDismissDisabled(presentation.modal)
       }
   }
 
   private var pickerSheet: some View {
-    NavigationView {
-      VStack(spacing: 12) {
-        if let helpText = control.string("help_text") {
-          Text(helpText).font(.headline).frame(maxWidth: .infinity, alignment: .leading)
-        }
-        RufletNativeDatePicker(
-          date: draft,
-          minimumDate: nil,
-          maximumDate: nil,
-          mode: .time,
-          style: entryMode.usesDial ? .wheels : .compact,
-          minuteInterval: 1,
-          locale: effectiveLocale,
-          countdownDuration: nil
-        ) { value, _ in draft = value }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-      }
-      .padding()
-      .toolbar {
-        ToolbarItem(placement: .cancellationAction) {
-          Button(control.string("cancel_text", default: "Cancel")!) { close(nil) }
-        }
-        ToolbarItem(placement: .principal) {
-          if entryMode.allowsToggle {
-            Button { toggleEntryMode() } label: {
-              Image(systemName: entryMode.usesDial ? "keyboard" : "clock")
+    let presentation = presentation
+    return NavigationView {
+      pickerContent(presentation: presentation)
+        .padding()
+        .toolbar {
+          ToolbarItem(placement: .cancellationAction) {
+            Button(presentation.cancelText) { close(nil) }
+          }
+          ToolbarItem(placement: .principal) {
+            if entryMode.allowsToggle {
+              Button { toggleEntryMode() } label: { entryModeIcon }
             }
           }
+          ToolbarItem(placement: .confirmationAction) {
+            Button(presentation.confirmText) { close(timeOfDay(from: draft)) }
+          }
         }
-        ToolbarItem(placement: .confirmationAction) {
-          Button(control.string("confirm_text", default: "OK")!) { close(timeOfDay(from: draft)) }
-        }
-      }
     }
   }
 
-  private func synchronizePresentation() {
+  @ViewBuilder
+  private func pickerContent(presentation: RufletTimePickerPresentation) -> some View {
+    let content = Group {
+      if let helpText = presentation.helpText {
+        Text(helpText).font(.headline).frame(maxWidth: .infinity, alignment: .leading)
+      }
+      HStack(spacing: 8) {
+        Text(presentation.hourLabelText ?? "Hour").font(.caption).foregroundStyle(.secondary)
+        Text(presentation.minuteLabelText ?? "Minute").font(.caption).foregroundStyle(.secondary)
+      }
+      RufletNativeDatePicker(
+        date: draft,
+        minimumDate: nil,
+        maximumDate: nil,
+        mode: .time,
+        style: entryMode.usesDial ? .wheels : .compact,
+        minuteInterval: 1,
+        locale: presentation.effectiveLocale,
+        countdownDuration: nil
+      ) { value, _ in draft = value }
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      if entryMode == .input, let error = presentation.errorInvalidText {
+        Text(error).font(.caption).foregroundStyle(.clear).accessibilityHidden(true)
+      }
+    }
+    if presentation.orientation == .landscape {
+      HStack(alignment: .center, spacing: 12) { content }
+    } else {
+      VStack(spacing: 12) { content }
+    }
+  }
+
+  @ViewBuilder
+  private var entryModeIcon: some View {
+    let presentation = presentation
+    let configured = entryMode.usesDial
+      ? presentation.switchToInputIcon
+      : presentation.switchToTimerIcon
+    if let configured {
+      RufletAppleIconView.registered(icon: configured, size: 18)
+    } else {
+      Image(systemName: entryMode.usesDial ? "keyboard" : "clock")
+    }
+  }
+
+  func synchronizePresentation() {
     guard control.boolean("open", default: false),
-          !control.boolean("_open", default: false),
-          !presented
+      !control.boolean("_open", default: false),
+      !presented
     else { return }
-    let now = timeOfDay(from: Date())
-    let value = parseRufletTime(control.value("value"), now)!
+    let presentation = presentation
+    let value = presentation.value ?? timeOfDay(from: Date())
     draft = Calendar.current.date(
       bySettingHour: value.hour,
       minute: value.minute,
       second: 0,
       of: Date()) ?? Date()
-    entryMode = parseEnum(RufletTimeEntryMode.self, control.string("entry_mode"), .dial)!
+    entryMode = presentation.entryMode
     control.updateProperties(["_open": .bool(true)], server: false)
     closedByAction = false
     presented = true
   }
 
-  private func toggleEntryMode() {
+  func toggleEntryMode() {
     entryMode = entryMode.usesDial ? .input : .dial
     control.updateProperties(["entry_mode": .string(entryMode.rawValue)])
     control.triggerEvent("entry_mode_change", data: ["entry_mode": .string(entryMode.rawValue)])
   }
 
-  private func close(_ value: RufletTimeOfDay?) {
+  func close(_ value: RufletTimeOfDay?) {
     closedByAction = true
     control.updateProperties(["_open": .bool(false)], server: false)
     let wire = value.map(rufletTimeValue) ?? .null
@@ -105,18 +134,65 @@ public struct TimePickerControl: View {
     return RufletTimeOfDay(hour: components.hour ?? 0, minute: components.minute ?? 0)
   }
 
-  private var effectiveLocale: Locale? {
-    let configured = parseLocale(control.dynamicValue("locale"))
-    return switch control.string("hour_format")?.lowercased() {
-    case "h12": Locale(identifier: "en_US")
-    case "h24": Locale(identifier: "en_GB")
-    default: configured
-    }
+  var presentation: RufletTimePickerPresentation {
+    RufletTimePickerPresentation(control: control)
   }
 }
 
-private enum RufletTimeEntryMode: String, CaseIterable, RufletStringEnum {
+enum RufletTimeEntryMode: String, CaseIterable, RufletStringEnum {
   case dial, input, dialOnly, inputOnly
   var usesDial: Bool { self == .dial || self == .dialOnly }
   var allowsToggle: Bool { self == .dial || self == .input }
+}
+
+enum RufletPickerOrientation: String, CaseIterable, RufletStringEnum {
+  case portrait, landscape
+}
+
+@MainActor
+struct RufletTimePickerPresentation {
+  let value: RufletTimeOfDay?
+  let helpText: String?
+  let cancelText: String
+  let confirmText: String
+  let hourLabelText: String?
+  let minuteLabelText: String?
+  let errorInvalidText: String?
+  let entryMode: RufletTimeEntryMode
+  let orientation: RufletPickerOrientation?
+  let locale: Locale?
+  let hourFormat: String?
+  let effectiveLocale: Locale?
+  let modal: Bool
+  let switchToTimerIcon: RufletAppleIcon?
+  let switchToInputIcon: RufletAppleIcon?
+
+  init(control: RufletControl) {
+    value = parseRufletTime(control.value("value"))
+    helpText = control.string("help_text")
+    cancelText = control.string("cancel_text", default: "Cancel") ?? "Cancel"
+    confirmText = control.string("confirm_text", default: "OK") ?? "OK"
+    hourLabelText = control.string("hour_label_text")
+    minuteLabelText = control.string("minute_label_text")
+    errorInvalidText = control.string("error_invalid_text")
+    entryMode = parseEnum(
+      RufletTimeEntryMode.self, control.string("entry_mode"), .dial) ?? .dial
+    orientation = parseEnum(
+      RufletPickerOrientation.self, control.string("orientation"), nil)
+    locale = parseLocale(control.dynamicValue("locale"))
+    hourFormat = control.string("hour_format")?.lowercased()
+    switch hourFormat {
+    case "h12": effectiveLocale = Locale(identifier: "en_US")
+    case "h24": effectiveLocale = Locale(identifier: "en_GB")
+    default: effectiveLocale = locale
+    }
+    modal = control.boolean("modal", default: false)
+    switchToTimerIcon = Self.icon(control, property: "switch_to_timer_icon")
+    switchToInputIcon = Self.icon(control, property: "switch_to_input_icon")
+  }
+
+  private static func icon(_ control: RufletControl, property: String) -> RufletAppleIcon? {
+    guard let code = control.integer(property) else { return nil }
+    return control.backend.extensionRegistry.appleIcon(for: code)
+  }
 }
