@@ -53655,32 +53655,32 @@
     "source": "reviewed_override"
   },
   "TAB_UNSELECTED": {
-    "kind": "cupertino_glyph",
-    "value": "RECTANGLE_STACK",
+    "kind": "system_symbol",
+    "value": "rectangle.dashed",
     "concept": "TAB_UNSELECTED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TAB_UNSELECTED_OUTLINED": {
-    "kind": "cupertino_glyph",
-    "value": "RECTANGLE_STACK",
+    "kind": "system_symbol",
+    "value": "rectangle.dashed",
     "concept": "TAB_UNSELECTED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TAB_UNSELECTED_ROUNDED": {
-    "kind": "cupertino_glyph",
-    "value": "RECTANGLE_STACK",
+    "kind": "system_symbol",
+    "value": "rectangle.dashed",
     "concept": "TAB_UNSELECTED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TAB_UNSELECTED_SHARP": {
-    "kind": "cupertino_glyph",
-    "value": "RECTANGLE_STACK",
+    "kind": "system_symbol",
+    "value": "rectangle.dashed",
     "concept": "TAB_UNSELECTED",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "TABLE_BAR": {
     "kind": "cupertino_glyph",

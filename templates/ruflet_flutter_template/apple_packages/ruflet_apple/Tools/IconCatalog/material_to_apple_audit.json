@@ -35,7 +35,7 @@
     "device_status_overrides.json": "ef232da7d3db4a5e5ec42a7269496b16faf8875724e34f5cfec35807bddf702e",
     "communication_access_overrides.json": "06b33f539d218d6fe8ef82ca392e97fbb6538a3ad330811282fb8a4a480b2bd6",
     "health_accessibility_overrides.json": "9ad20e71cccecc9cd17758a3464e294f60422d31c5e27885b63b677456eb5199",
-    "interface_state_manipulation_overrides.json": "f4edf739bb36d749598204f7ec718835d79589d30ac9d91eea90e4dca5388fa3",
+    "interface_state_manipulation_overrides.json": "78ba7c599244167ab6c2333052dc7cf519cd6c3a8e9b65967ce2924c1be1954f",
     "apple_platform_device_overrides.json": "3a5e1cd7026487c0dcf13d60fec1d3ff573572de5339aa7f43ee8d678d9db884",
     "privacy_access_state_overrides.json": "8be61702ea92ff6405b8d8057e30848425db0649a9355e08d0a8532ff4a06547",
     "legacy_interface_alias_overrides.json": "ac3259eac1915026e5427da2c0f045c8650d35d097dbcee7aa84aa996acefc96",
@@ -52,8 +52,8 @@
   "sources": {
     "exact_apple_name": 48,
     "manual_review_required": 75,
-    "reviewed_override": 1023,
-    "semantic_rank": 1089
+    "reviewed_override": 1024,
+    "semantic_rank": 1088
   },
   "reviewed_families": {
     "action": 76,
@@ -74,7 +74,7 @@
     "home_household": 17,
     "image_media": 57,
     "interface_action": 21,
-    "interface_state_manipulation": 9,
+    "interface_state_manipulation": 10,
     "layout_manipulation": 5,
     "legacy_interface_alias": 6,
     "legacy_named_symbol": 4,
@@ -91,11 +91,11 @@
   "confidence_grades": {
     "exact": 48,
     "high": 665,
-    "low": 420,
+    "low": 419,
     "medium": 79,
-    "reviewed": 1023
+    "reviewed": 1024
   },
-  "unique_apple_targets": 902,
+  "unique_apple_targets": 903,
   "most_reused_targets": [
     {
       "kind": "system_symbol",
@@ -348,7 +348,7 @@
       "concept_count": 6
     }
   ],
-  "low_confidence_count": 499,
+  "low_confidence_count": 498,
   "low_confidence_concepts": [
     {
       "concept": "SIXTY_FPS_SELECT",
@@ -2624,58 +2624,6 @@
         "sunglasses",
         "view",
         "vision"
-      ]
-    },
-    {
-      "concept": "TAB_UNSELECTED",
-      "target": {
-        "kind": "cupertino_glyph",
-        "value": "RECTANGLE_STACK"
-      },
-      "confidence": 0.1808,
-      "grade": "low",
-      "reason": "name=[] semantic=['rectangle', 'stack'] extra=[]",
-      "tags": [
-        "application",
-        "background",
-        "blank",
-        "border",
-        "browser",
-        "computer",
-        "content",
-        "dash",
-        "dashed",
-        "document",
-        "documents",
-        "empty",
-        "folder",
-        "inactive",
-        "inactive tab",
-        "internet",
-        "layer",
-        "multiple",
-        "navigation",
-        "organization",
-        "outline",
-        "overlapping",
-        "page",
-        "placeholder",
-        "rectangle",
-        "section",
-        "shape",
-        "stack",
-        "stacking",
-        "switch",
-        "tab",
-        "tabs",
-        "toggle",
-        "unselected",
-        "unselected tab",
-        "view",
-        "web",
-        "website",
-        "window",
-        "windows"
       ]
     },
     {

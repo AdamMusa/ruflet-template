@@ -61,8 +61,8 @@ generic messenger aliases, and contact-card aliases live in
 Reviewed accessibility, science, medication, vaccination, personal injury,
 engineering, refreshments, and physical-distance safety concepts live in
 `health_accessibility_overrides.json`.
-Reviewed selection state, layer ordering, prohibition, neutral trend, cutting,
-and pinch manipulation concepts live in
+Reviewed selection and inactive-tab states, layer ordering, prohibition,
+neutral trend, cutting, and pinch manipulation concepts live in
 `interface_state_manipulation_overrides.json`.
 Reviewed Apple platform branding, wearable and tablet adaptation, mobile
 compatibility, disabled phone links, and application updates live in

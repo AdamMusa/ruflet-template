@@ -854,6 +854,7 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             "PINCH",
             "RADIO_BUTTON_OFF",
             "RADIO_BUTTON_ON",
+            "TAB_UNSELECTED",
             "TRENDING_NEUTRAL",
         }
         self.assertEqual(set(family), expected_concepts)
@@ -871,7 +872,7 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             for name in material
             if MODULE.concept_for(name) in expected_concepts
         }
-        self.assertEqual(len(family_wire_identities), 36)
+        self.assertEqual(len(family_wire_identities), 40)
         for name in family_wire_identities:
             self.assertEqual(self.entries[name]["confidence"], "reviewed")
             self.assertEqual(self.entries[name]["source"], "reviewed_override")
@@ -895,11 +896,18 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
             ),
             "RADIO_BUTTON_OFF": ("system_symbol", "circle"),
             "RADIO_BUTTON_ON": ("system_symbol", "circle.inset.filled"),
+            "TAB_UNSELECTED": ("system_symbol", "rectangle.dashed"),
             "TRENDING_NEUTRAL": ("system_symbol", "arrow.right"),
         }
         for material_name, (kind, value) in expected.items():
             self.assertEqual(self.entries[material_name]["kind"], kind)
             self.assertEqual(self.entries[material_name]["value"], value)
+
+        # Similar interface geometry is not equivalence: the Apple pointing
+        # hand changes Material CTA artwork, while a filter glyph changes the
+        # image-adjustment meaning of dehaze.
+        for material_name in ("CALL_TO_ACTION", "DEHAZE"):
+            self.assertNotEqual(self.entries[material_name]["confidence"], "reviewed")
 
     def test_apple_platform_device_family_is_reviewed_native_artwork(self):
         family = MODULE.load_json(MODULE.APPLE_PLATFORM_DEVICE_OVERRIDES_PATH)

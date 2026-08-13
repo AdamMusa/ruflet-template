@@ -39,6 +39,11 @@
     "value": "circle.inset.filled",
     "rationale": "public Apple inset-dot circular selection identity for a selected radio button"
   },
+  "TAB_UNSELECTED": {
+    "kind": "system_symbol",
+    "value": "rectangle.dashed",
+    "rationale": "public Apple dashed rectangle exactly preserves Material inactive unselected-tab state"
+  },
   "TRENDING_NEUTRAL": {
     "kind": "system_symbol",
     "value": "arrow.right",
