@@ -31,7 +31,8 @@ public struct RufletCoreExtension: RufletExtension {
     "NavigationDrawer", "NavigationRail", "OutlinedButton", "OutlinedIconButton", "Page",
     "PageView", "Pagelet", "PopupMenuButton",
     "Placeholder", "ProgressBar", "ProgressRing", "Radio", "RadioGroup", "RangeSlider",
-    "ReorderableDragHandle", "ReorderableListView", "ResponsiveRow", "Row", "SafeArea",
+    "ReorderableDragHandle", "ReorderableListView", "ResponsiveRow", "RotatedBox", "Row",
+    "SafeArea",
     "Screenshot", "SearchBar", "SegmentedButton", "SelectionArea", "Semantics", "ShaderMask",
     "Shimmer", "Slider", "SnackBar", "Stack", "SubmenuButton", "Switch", "Tab", "TabBar",
     "TabBarView", "Tabs", "Text", "TextButton", "TextField", "TimePicker", "View",
@@ -142,6 +143,7 @@ public struct RufletCoreExtension: RufletExtension {
     case "ReorderableDragHandle": return AnyView(ReorderableDragHandleControl(control: control))
     case "ReorderableListView": return AnyView(ReorderableListViewControl(control: control))
     case "ResponsiveRow": return AnyView(ResponsiveRowControl(control: control))
+    case "RotatedBox": return AnyView(RotatedBoxControl(control: control))
     case "Screenshot": return AnyView(ScreenshotControl(control: control))
     case "SearchBar": return AnyView(SearchBarControl(control: control))
     case "SegmentedButton": return AnyView(SegmentedButtonControl(control: control))
