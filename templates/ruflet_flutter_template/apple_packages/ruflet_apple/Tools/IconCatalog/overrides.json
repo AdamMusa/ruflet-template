@@ -912,12 +912,6 @@
     "rationale": "native Apple camera identity for a megapixel label",
     "status": "review_required"
   },
-  "FOUR_K": {
-    "kind": "system_symbol",
-    "value": "4.circle",
-    "rationale": "native Apple numbered badge for Material resolution label",
-    "status": "review_required"
-  },
   "FOUR_K_PLUS": {
     "kind": "system_symbol",
     "value": "4.circle",

@@ -77,6 +77,8 @@ Reviewed institutional banking, account wallets, membership-card aliases, and
 travel-card aliases live in `financial_wallet_overrides.json`.
 Reviewed source-code, grid, and label disabled states plus generic wireless
 sensor enabled/disabled states live in `disabled_interface_overrides.json`.
+Reviewed opaque legacy names for 4K display, night light, query-builder clock,
+and three-dimensional rotation live in `legacy_named_symbol_overrides.json`.
 
 The 8,825 identities contain 2,235 concepts because Flet carries Outlined,
 Rounded, and Sharp Material variants. The generator records the collapsed
