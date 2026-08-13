@@ -1,14 +1,20 @@
 import RufletProtocol
 import SwiftUI
 
+#if os(iOS)
+  import UIKit
+#elseif os(macOS)
+  import AppKit
+#endif
+
 let rufletDefaultTabAnimationDuration: TimeInterval = 0.1
 
 private struct RufletTabsStateKey: EnvironmentKey {
   static let defaultValue: RufletTabsState? = nil
 }
 
-private extension EnvironmentValues {
-  var rufletTabsState: RufletTabsState? {
+extension EnvironmentValues {
+  fileprivate var rufletTabsState: RufletTabsState? {
     get { self[RufletTabsStateKey.self] }
     set { self[RufletTabsStateKey.self] = newValue }
   }
@@ -26,8 +32,9 @@ final class RufletTabsState: ObservableObject {
   init(control: RufletControl) {
     self.control = control
     length = max(control.integer("length", default: 0) ?? 0, 0)
-    selectedIndex = resolveRufletSelectionIndex(
-      control.integer("selected_index", default: 0), count: length) ?? 0
+    selectedIndex =
+      resolveRufletSelectionIndex(
+        control.integer("selected_index", default: 0), count: length) ?? 0
   }
 
   func mount() {
@@ -66,12 +73,12 @@ final class RufletTabsState: ObservableObject {
 
   func select(_ requested: Int, emitChange: Bool = true) {
     guard let control,
-          let resolved = resolveRufletSelectionIndex(requested, count: length),
-          resolved != selectedIndex
+      let resolved = resolveRufletSelectionIndex(requested, count: length),
+      resolved != selectedIndex
     else { return }
     selectedIndex = resolved
     if emitChange {
-      rufletCommitSelection(control: control, index: resolved, notify: false)
+      commitSelection(control: control, index: resolved)
     }
   }
 
@@ -79,9 +86,9 @@ final class RufletTabsState: ObservableObject {
     guard name == "move_to" else { throw RufletTabsError.unknownMethod(name) }
     let values = arguments.map ?? [:]
     guard let requested = values["index"]?.integer,
-          let resolved = resolveRufletSelectionIndex(requested, count: length),
-          let control,
-          resolved != selectedIndex
+      let resolved = resolveRufletSelectionIndex(requested, count: length),
+      let control,
+      resolved != selectedIndex
     else { return .null }
 
     let duration = parseDuration(
@@ -94,9 +101,16 @@ final class RufletTabsState: ObservableObject {
     pendingMove = Task { @MainActor [weak self, weak control] in
       try? await Task.sleep(nanoseconds: rufletSleepNanoseconds(duration))
       guard !Task.isCancelled, self?.selectedIndex == resolved, let control else { return }
-      rufletCommitSelection(control: control, index: resolved, notify: false)
+      self?.commitSelection(control: control, index: resolved)
     }
     return .null
+  }
+
+  private func commitSelection(control: RufletControl, index: Int) {
+    control.updateProperties(
+      ["selected_index": .int(Int64(index))],
+      notify: false)
+    control.triggerEvent("change", data: .int(Int64(index)))
   }
 }
 
@@ -142,14 +156,18 @@ public struct TabBarViewControl: View {
         RufletTabsObserver(state: tabsState) { state in
           LayoutControl(control: control) {
             GeometryReader { proxy in
-              TabView(selection: Binding(
-                get: { state.selectedIndex },
-                set: { state.select($0) })) {
-                ForEach(Array(control.children("controls").enumerated()), id: \.element.id) { index, child in
+              TabView(
+                selection: Binding(
+                  get: { state.selectedIndex },
+                  set: { state.select($0) })
+              ) {
+                ForEach(Array(control.children("controls").enumerated()), id: \.element.id) {
+                  index, child in
                   ControlWidget(control: child)
                     .frame(
                       width: proxy.size.width * viewportFraction,
-                      height: proxy.size.height)
+                      height: proxy.size.height
+                    )
                     .tag(index)
                 }
               }
@@ -213,6 +231,7 @@ private struct RufletTabLabel: View {
 public struct TabBarControl: View {
   @ObservedObject public var control: RufletControl
   @Environment(\.rufletTabsState) private var tabsState
+  @State private var hoveredIndex: Int?
 
   public init(control: RufletControl) {
     self.control = control
@@ -261,8 +280,15 @@ public struct TabBarControl: View {
 
   private func tabButton(_ tab: RufletControl, index: Int, state: RufletTabsState) -> some View {
     let selected = state.selectedIndex == index
+    let presentation = RufletTabBarPresentation(control: control)
+    let states = presentation.states(
+      selected: selected,
+      hovered: hoveredIndex == index,
+      pressed: false,
+      disabled: control.disabled || tab.disabled)
     return Button {
       guard !control.disabled, !tab.disabled else { return }
+      if presentation.enableFeedback { performTabBarFeedback() }
       state.select(index)
       control.triggerEvent("click", data: .int(Int64(index)))
     } label: {
@@ -276,37 +302,54 @@ public struct TabBarControl: View {
       .modifier(RufletTextStyleModifier(style: selected ? selectedTextStyle : unselectedTextStyle))
       .foregroundStyle(selected ? labelColor : unselectedLabelColor)
       .padding(labelPadding)
-      .frame(minHeight: 44)
+      .frame(minHeight: presentation.minimumHeight)
       .contentShape(Rectangle())
+      .background(presentation.overlay(states))
+      .clipShape(RufletCornerShape(radius: presentation.splashBorderRadius))
       .overlay(alignment: .bottom) {
         if selected { indicator }
       }
     }
-    .buttonStyle(.plain)
+    .buttonStyle(
+      RufletTabBarButtonStyle(
+        presentation: presentation,
+        selected: selected,
+        disabled: control.disabled || tab.disabled)
+    )
     .disabled(control.disabled || tab.disabled)
+    .modifier(RufletMouseCursorModifier(cursor: presentation.mouseCursor))
     .onHover { hovering in
-      control.triggerEvent("hover", data: [
-        "hovering": .bool(hovering),
-        "index": .int(Int64(index)),
-      ])
+      hoveredIndex = hovering ? index : (hoveredIndex == index ? nil : hoveredIndex)
+      control.triggerEvent(
+        "hover",
+        data: [
+          "hovering": .bool(hovering),
+          "index": .int(Int64(index)),
+        ])
     }
     .animation(tabIndicatorAnimation, value: state.selectedIndex)
     .accessibilityAddTraits(selected ? .isSelected : [])
   }
 
   private var indicator: some View {
+    let presentation = RufletTabBarPresentation(control: control)
     let custom = control.underlineTabIndicator("indicator")
-    let color = custom?.borderSide.color
+    let color =
+      custom?.borderSide.color
       ?? parseColor(control.string("indicator_color"))
       ?? .accentColor
-    let thickness = CGFloat(custom?.borderSide.width
-      ?? control.number("indicator_thickness", default: 2) ?? 2)
+    let thickness = CGFloat(
+      custom?.borderSide.width
+        ?? control.number("indicator_thickness", default: 2) ?? 2)
     let radius = custom?.borderRadius?.uniform ?? thickness / 2
     return Rectangle()
       .fill(color)
       .frame(height: thickness)
       .clipShape(RoundedRectangle(cornerRadius: radius))
-      .padding(custom?.insets ?? parsePadding(control.dynamicValue("indicator_padding")) ?? EdgeInsets())
+      .padding(
+        custom?.insets ?? parsePadding(control.dynamicValue("indicator_padding")) ?? EdgeInsets()
+      )
+      .padding(.horizontal, presentation.indicatorHorizontalInset(labelPadding: labelPadding))
   }
 
   private var tabControls: [RufletControl] {
@@ -354,6 +397,89 @@ public struct TabBarControl: View {
   }
 }
 
+struct RufletTabBarPresentation {
+  let enableFeedback: Bool
+  let indicatorSize: RufletTabBarIndicatorSize
+  let mouseCursor: String?
+  let overlayColor: RufletWidgetStateProperty<Color>
+  let secondary: Bool
+  let splashBorderRadius: RufletBorderRadius
+
+  @MainActor
+  init(control: RufletControl) {
+    enableFeedback = control.boolean("enable_feedback") ?? true
+    indicatorSize = control.tabBarIndicatorSize("indicator_size", default: .tab)!
+    mouseCursor = control.string("mouse_cursor")
+    overlayColor = RufletWidgetStateProperty(
+      control.dynamicValue("overlay_color"),
+      converter: rufletTabBarColor)
+    secondary = control.boolean("secondary", default: false)
+    splashBorderRadius = parseBorderRadius(
+      control.dynamicValue("splash_border_radius"),
+      .zero)!
+  }
+
+  var minimumHeight: CGFloat { secondary ? 40 : 44 }
+
+  func indicatorHorizontalInset(labelPadding: EdgeInsets) -> CGFloat {
+    indicatorSize == .label ? min(labelPadding.leading, labelPadding.trailing) : 0
+  }
+
+  func states(
+    selected: Bool,
+    hovered: Bool,
+    pressed: Bool,
+    disabled: Bool
+  ) -> Set<RufletWidgetState> {
+    var result = Set<RufletWidgetState>()
+    if selected { result.insert(.selected) }
+    if hovered { result.insert(.hovered) }
+    if pressed { result.insert(.pressed) }
+    if disabled { result.insert(.disabled) }
+    return result
+  }
+
+  func overlay(_ states: Set<RufletWidgetState>) -> Color {
+    if let explicit = overlayColor.resolve(states) { return explicit }
+    if states.contains(.pressed) { return Color.accentColor.opacity(0.16) }
+    if states.contains(.hovered) { return Color.accentColor.opacity(0.08) }
+    return .clear
+  }
+}
+
+private struct RufletTabBarButtonStyle: ButtonStyle {
+  let presentation: RufletTabBarPresentation
+  let selected: Bool
+  let disabled: Bool
+
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label
+      .background(
+        presentation.overlay(
+          presentation.states(
+            selected: selected,
+            hovered: false,
+            pressed: configuration.isPressed,
+            disabled: disabled))
+      )
+      .clipShape(RufletCornerShape(radius: presentation.splashBorderRadius))
+  }
+}
+
+private func rufletTabBarColor(_ raw: Any?) -> Color? {
+  if let string = raw as? String { return parseColor(string) }
+  if let value = raw as? RufletValue { return parseColor(value.text) }
+  return nil
+}
+
+private func performTabBarFeedback() {
+  #if os(iOS)
+    UIImpactFeedbackGenerator(style: .light).impactOccurred()
+  #elseif os(macOS)
+    NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now)
+  #endif
+}
+
 private enum RufletTabsError: Error {
   case unknownMethod(String)
 }
@@ -375,9 +501,9 @@ private struct RufletApplePagingTabStyle: ViewModifier {
   @ViewBuilder
   func body(content: Content) -> some View {
     #if os(iOS)
-    content.tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+      content.tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
     #elseif os(macOS)
-    content.tabViewStyle(DefaultTabViewStyle())
+      content.tabViewStyle(DefaultTabViewStyle())
     #endif
   }
 }
