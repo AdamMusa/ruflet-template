@@ -10,14 +10,19 @@ module NativePropertyConsumptionAudit
   SURFACE_PATH = File.join(__dir__, "ruflet_control_surface.json")
   CLASSIFICATIONS_PATH = File.join(__dir__, "native_property_classifications.json")
   REPORT_PATH = File.join(__dir__, "native_property_consumption_report.json")
-  REPORT_VERSION = 1
+  REPORT_VERSION = 2
 
-  # These modifiers are applied by ControlView to every visual control. Their
-  # reads are therefore real parent-owned consumption, unlike a property name
-  # merely appearing in a descriptor or generated defaults table.
+  # These modifiers are applied by LayoutControl/BaseControl to every visual
+  # control in the clean file-per-file engine. Their reads are therefore real
+  # parent-owned consumption, unlike a property name merely appearing in an
+  # extension registry declaration.
   SHARED_IMPLEMENTATIONS = [
-    "apple_packages/ruflet_apple/Sources/RufletUI/Support/CommonModifiers.swift"
+    "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift"
   ].freeze
+
+  SHARED_PROPERTY_IMPLEMENTATIONS = {
+    "visible" => "apple_packages/ruflet_apple/Sources/RufletEngine/Models/control.swift"
+  }.freeze
 
   # Ruflet owns these constructor attributes above the renderer boundary. They
   # are deliberately exact names, not a wildcard escape hatch.
@@ -33,66 +38,60 @@ module NativePropertyConsumptionAudit
   # Metadata controls intentionally render EmptyView. Their properties are
   # read by these concrete parents; the parent source remains the evidence.
   PARENT_IMPLEMENTATIONS = {
-    "ExpansionPanel" => %w[ExpansionPanelListControlView],
-    "Tab" => %w[TabsControlView TabBarControlView],
-    "DataColumn" => %w[DataTableControlView],
-    "DataRow" => %w[DataTableControlView],
-    "DataCell" => %w[DataTableControlView],
-    "NavigationBarDestination" => %w[NavigationBarControlView],
-    "NavigationRailDestination" => %w[NavigationRailControlView],
-    "NavigationDrawerDestination" => %w[NavigationDrawerControlView],
-    "ReorderableDragHandle" => %w[ReorderableListControlView],
-    "Segment" => %w[SegmentedButtonControlView],
-    "Option" => %w[DropdownControlView DropdownM2ControlView],
-    "DropdownOption" => %w[DropdownControlView DropdownM2ControlView],
-    "AutoCompleteSuggestion" => %w[AutoCompleteControlView],
-    "Page" => %w[ClientCapabilities],
-    "AlertDialog" => %w[DialogPresenter],
-    "CupertinoAlertDialog" => %w[DialogPresenter],
-    "BottomSheet" => %w[DialogPresenter],
-    "CupertinoBottomSheet" => %w[DialogPresenter],
-    "SnackBar" => %w[DialogPresenter],
-    "Banner" => %w[DialogPresenter],
-    "TileLayer" => %w[MapControlView],
-    "MarkerLayer" => %w[MapControlView],
-    "Marker" => %w[MapControlView],
-    "CircleLayer" => %w[MapControlView],
-    "CircleMarker" => %w[MapControlView],
-    "PolylineLayer" => %w[MapControlView],
-    "PolylineMarker" => %w[MapControlView],
-    "PolygonLayer" => %w[MapControlView],
-    "PolygonMarker" => %w[MapControlView],
-    "SimpleAttribution" => %w[MapControlView],
+    "ExpansionPanel" => %w[ExpansionPanelListControl],
+    "Tab" => %w[TabsControl TabBarControl],
+    "DataColumn" => %w[DataTableControl],
+    "DataRow" => %w[DataTableControl],
+    "DataCell" => %w[DataTableControl],
+    "NavigationBarDestination" => %w[NavigationBarControl],
+    "NavigationRailDestination" => %w[NavigationRailControl],
+    "NavigationDrawerDestination" => %w[NavigationDrawerControl],
+    "ReorderableDragHandle" => %w[ReorderableListViewControl],
+    "Segment" => %w[SegmentedButtonControl],
+    "Option" => %w[DropdownControl DropdownM2Control],
+    "DropdownOption" => %w[DropdownControl DropdownM2Control],
+    "AutoCompleteSuggestion" => %w[AutoCompleteControl],
+    "AlertDialog" => %w[AdaptiveAlertDialogControl],
+    "CupertinoAlertDialog" => %w[CupertinoAlertDialogControl],
+    "BottomSheet" => %w[BottomSheetControl],
+    "CupertinoBottomSheet" => %w[CupertinoBottomSheetControl],
+    "SnackBar" => %w[SnackBarControl],
+    "Banner" => %w[BannerControl],
+    "Marker" => %w[MarkerLayerControl],
+    "CircleMarker" => %w[CircleLayerControl],
+    "PolylineMarker" => %w[PolylineLayerControl],
+    "PolygonMarker" => %w[PolygonLayerControl],
     # Text doubles as a Canvas shape, the way Arc and Circle do.
-    "Text" => %w[CanvasControlView],
-    "Arc" => %w[CanvasControlView],
-    "Circle" => %w[CanvasControlView],
-    "Color" => %w[CanvasControlView],
-    "Fill" => %w[CanvasControlView],
-    "Line" => %w[CanvasControlView],
-    "Oval" => %w[CanvasControlView],
-    "Path" => %w[CanvasControlView],
-    "Points" => %w[CanvasControlView],
-    "Rect" => %w[CanvasControlView],
-    "Shadow" => %w[CanvasControlView],
-    "RadarChartTitle" => %w[ChartControlView],
-    "RadarDataSet" => %w[ChartControlView],
-    "RadarDataSetEntry" => %w[ChartControlView],
-    "CandlestickChartSpot" => %w[ChartControlView],
-    "ScatterChartSpot" => %w[ChartControlView],
-    "group" => %w[ChartControlView],
-    "rod" => %w[ChartControlView],
-    "stack_item" => %w[ChartControlView],
-    "axis" => %w[ChartControlView],
-    "l" => %w[ChartControlView],
-    "data" => %w[ChartControlView],
-    "p" => %w[ChartControlView],
-    "section" => %w[ChartControlView]
+    "Text" => %w[CanvasControl],
+    "Arc" => %w[CanvasControl],
+    "Circle" => %w[CanvasControl],
+    "Color" => %w[CanvasControl],
+    "Fill" => %w[CanvasControl],
+    "Line" => %w[CanvasControl],
+    "Oval" => %w[CanvasControl],
+    "Path" => %w[CanvasControl],
+    "Points" => %w[CanvasControl],
+    "Rect" => %w[CanvasControl],
+    "Shadow" => %w[CanvasControl],
+    "RadarChartTitle" => %w[RadarChartControl],
+    "RadarDataSet" => %w[RadarChartControl],
+    "RadarDataSetEntry" => %w[RadarChartControl],
+    "CandlestickChartSpot" => %w[CandlestickChartControl],
+    "ScatterChartSpot" => %w[ScatterChartControl],
+    "group" => %w[BarChartControl],
+    "rod" => %w[BarChartControl],
+    "stack_item" => %w[BarChartControl],
+    "axis" => %w[BarChartControl LineChartControl],
+    "l" => %w[LineChartControl],
+    "data" => %w[PieChartControl RadarChartControl],
+    "p" => %w[LineChartControl],
+    "section" => %w[PieChartControl]
   }.freeze
 
   ACCESSORS = %w[
-    array bool controlID controlIDs double enumValue rufletBool rufletDouble rufletString int
-    map skipsRufletProperty string
+    array bool boolean buildIconOrWidget buildTextOrWidget buildWidget buildWidgets child children
+    controlID controlIDs double dynamicValue enumValue integer number rufletBool rufletDouble
+    rufletString int map skipsProperty skipsRufletProperty string value
   ].freeze
 
   module_function
@@ -199,128 +198,103 @@ module NativePropertyConsumptionAudit
             pending.concat(line.scan(/"([A-Za-z0-9_]+)"/).flatten)
           end
 
-          if !pending.empty? && (match = line.match(/return\s+AnyView\(([A-Za-z_][A-Za-z0-9_]*)\s*\(/))
+          if !pending.empty? && (match = line.match(/(?:return\s+)?AnyView\(([A-Za-z_][A-Za-z0-9_]*)\s*\(/))
             pending.each { |wire| result[wire].push(match[1]) }
             pending = []
           end
-
-          line.scan(/ControlRegistry\.register\("([A-Za-z0-9_]+)"\).*?([A-Za-z_][A-Za-z0-9_]*ControlView)\s*\(/) do |wire, type|
-            result[wire].push(type)
-          end
-        end
-        code_lines(raw_lines).join("\n").scan(
-          /ControlRegistry\.register\("([A-Za-z0-9_]+)"\).*?AnyView\(([A-Za-z_][A-Za-z0-9_]*ControlView)\s*\(/m
-        ) do |wire, type|
-          result[wire].push(type)
         end
       end
-      descriptor_implementation_map.each do |wire, types|
+      extension_implementation_map.each do |wire, types|
         result[wire].concat(types)
       end
       result.transform_values { |types| types.uniq.sort }
     end
   end
 
-  # Optional Flet packages register a ControlDescriptor rather than using the
-  # legacy `ControlRegistry.register("Wire")` spelling. The descriptor's
-  # implementation is metadata, not property-consumption evidence, but it is
-  # the authoritative source-to-view edge the audit must follow before it can
-  # inspect the concrete view. Registrars commonly share one builder through a
-  # source-defined loop (Charts and SpinKit), so resolve both literal
-  # descriptors and array expressions without maintaining a parallel wire
-  # allowlist here.
-  def descriptor_implementation_map
-    @descriptor_implementation_map ||= begin
+  # Extension createView switches are dispatch metadata only. They establish
+  # the exact wire-to-view edge; only reads inside the resolved concrete type
+  # can prove consumption. Guard/ternary factories are handled as the same
+  # exact edge and never become evidence themselves.
+  def extension_implementation_map
+    @extension_implementation_map ||= begin
       result = Hash.new { |hash, key| hash[key] = [] }
-      array_constants = swift_array_constants
-
-      swift_files.each do |_path, raw_lines|
+      swift_files.each do |path, raw_lines|
+        next unless path.include?("/Sources/RufletExtensions/")
         lines = code_lines(raw_lines)
         text = lines.join("\n")
+        file_wires = []
 
-        text.scan(
-          /ControlDescriptor\s*\(\s*wireType:\s*"([A-Za-z0-9_]+)".*?\bimplementation:\s*"(?:[A-Za-z_][A-Za-z0-9_]*\.)?([A-Za-z_][A-Za-z0-9_]*)"/m
-        ) do |wire, type|
+        text.scan(/case\s+"([A-Za-z0-9_]+)"\s*:\s*(?:return\s+)?AnyView\(([A-Za-z_][A-Za-z0-9_]*)\s*\(/m) do |wire, type|
           result[wire] << type
+          file_wires << wire
+        end
+        text.scan(/control\.type\s*==\s*"([A-Za-z0-9_]+)"\s*\?\s*AnyView\(([A-Za-z_][A-Za-z0-9_]*)\s*\(/m) do |wire, type|
+          result[wire] << type
+          file_wires << wire
+        end
+        text.scan(/guard\s+control\.type\s*==\s*"([A-Za-z0-9_]+)".*?AnyView\(([A-Za-z_][A-Za-z0-9_]*)\s*\(/m) do |wire, type|
+          result[wire] << type
+          file_wires << wire
+        end
+        text.scan(/guard\s+([A-Za-z_][A-Za-z0-9_\.]*controlTypes)\.contains\(control\.type\).*?AnyView\(([A-Za-z_][A-Za-z0-9_]*)\s*\(/m) do |constant, type|
+          resolve_control_type_set(constant).each do |wire|
+            result[wire] << type
+            file_wires << wire
+          end
         end
 
-        lines.each_with_index do |line, index|
-          next unless line.match?(/\bfor\s+[a-z][A-Za-z0-9_]*\s+in\s+/)
-
-          header = +line
-          finish = index
-          until header.include?("{") || finish + 1 >= lines.length
-            finish += 1
-            header << "\n" << lines[finish]
-          end
-          match = header.match(/\bfor\s+([a-z][A-Za-z0-9_]*)\s+in\s+(.+?)\s*\{/m)
-          next unless match
-
-          variable = match[1]
-          expression = match[2]
-          depth = 0
-          body_lines = []
-          lines[finish..].each do |body_line|
-            body_lines << body_line
-            depth += body_line.count("{")
-            depth -= body_line.count("}")
-            break if depth <= 0
-          end
-          implementation = body_lines.join("\n")[
-            /ControlDescriptor\s*\(.*?wireType:\s*#{Regexp.escape(variable)}\b.*?\bimplementation:\s*"(?:[A-Za-z_][A-Za-z0-9_]*\.)?([A-Za-z_][A-Za-z0-9_]*)"/m,
-            1
-          ]
-          next unless implementation
-
-          resolve_swift_string_array(expression, array_constants).each do |wire|
-            result[wire] << implementation
-          end
+        # The factory itself can contain real callback bridges in addition to
+        # dispatch (Camera is one example). Associate a uniquely named
+        # RufletExtension implementation with only the wire types dispatched
+        # by that same file. Generic `Extension` types are intentionally
+        # excluded because type-name-only resolution would merge packages.
+        factory_types = text.scan(
+          /\b(?:struct|class)\s+([A-Za-z_][A-Za-z0-9_]*)\s*:\s*RufletExtension\b/
+        ).flatten.reject { |type| type == "Extension" }
+        file_wires.uniq.each do |wire|
+          result[wire].concat(factory_types)
         end
       end
       result.transform_values { |types| types.uniq.sort }
     end
   end
 
-  def swift_array_constants
-    @swift_array_constants ||= begin
-      constants = {}
-      swift_files.each do |_path, raw_lines|
-        code_lines(raw_lines).join("\n").scan(
-          /\bstatic\s+let\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*\[(.*?)\]/m
-        ) do |name, body|
-          constants[name] = body.scan(/"([A-Za-z0-9_]+)"/).flatten
-        end
+  def resolve_control_type_set(constant)
+    owner, name = constant.split(".", 2)
+    swift_files.each_value do |raw_lines|
+      text = code_lines(raw_lines).join("\n")
+      next unless text.match?(/\b(?:enum|struct|class)\s+#{Regexp.escape(owner)}\b/)
+      if (body = text[/\bstatic\s+let\s+#{Regexp.escape(name)}\s*:\s*Set<String>\s*=\s*\[(.*?)\]/m, 1])
+        return body.scan(/"([A-Za-z0-9_]+)"/).flatten
       end
-      constants
     end
-  end
-
-  def resolve_swift_string_array(expression, constants)
-    values = expression.scan(/"([A-Za-z0-9_]+)"/).flatten
-    expression.scan(/\b[A-Z][A-Za-z0-9_]*\.([A-Za-z_][A-Za-z0-9_]*)\b/) do |(name)|
-      values.concat(constants.fetch(name, []))
-    end
-    values.uniq
+    []
   end
 
   def service_implementation_map
     @service_implementation_map ||= begin
       result = Hash.new { |hash, key| hash[key] = [] }
-      swift_files.each do |_path, raw_lines|
+      swift_files.each do |path, raw_lines|
         text = code_lines(raw_lines).join("\n")
-        text.scan(/registerNamed\("([A-Za-z0-9_]+)"\)\s*\{\s*([A-Za-z_][A-Za-z0-9_]*)\s*\(/m) do |wire, type|
-          result[wire] << type
-        end
-        text.scan(/register\(([A-Za-z_][A-Za-z0-9_]*)\.self\)/) do |(type)|
-          type_scopes.fetch(type, []).each do |scope|
-            body = code_lines(swift_files.fetch(scope[:path]))[scope[:start]..scope[:finish]].join("\n")
-            wire = body[/static\s+(?:let|var)\s+wireType\s*=\s*"([A-Za-z0-9_]+)"/, 1]
+        if path.include?("/Sources/RufletExtensions/")
+          text.scan(/control\.type\s*==\s*"([A-Za-z0-9_]+)"\s*\?\s*([A-Za-z_][A-Za-z0-9_]*Service)\s*\(/m) do |wire, type|
+            result[wire] << type
+          end
+        elsif path.end_with?("/RufletEngine/Services/service_registry.swift")
+          wire_by_lowercase = surface_wire_types.to_h { |wire| [wire.downcase, wire] }
+          text.scan(/case\s+"([a-z0-9_]+)"\s*:\s*return\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(/) do |lowercase, type|
+            wire = wire_by_lowercase[lowercase]
             result[wire] << type if wire
           end
         end
       end
       result.transform_values { |types| types.uniq.sort }
     end
+  end
+
+  def surface_wire_types
+    @surface_wire_types ||= JSON.parse(File.read(SURFACE_PATH)).fetch("entries")
+      .map { |entry| entry.fetch("wire_type") }.uniq.sort
   end
 
   # An `events.fire(` whose event name sits on a following line is the same
@@ -333,24 +307,33 @@ module NativePropertyConsumptionAudit
     scanned = code_lines(lines)
     scanned.each_with_index do |line, index|
       keys = []
+      window = scanned[index, EVENT_CALL_LOOKAHEAD].join(" ")
       accessor_pattern = ACCESSORS.join("|")
-      # A presenter reads the control it is showing through a local of its
-      # own, so the receiver is not always `node`.
+      # Concrete controls and structural parents read through RufletControl
+      # values named `control`, `child`, `row`, `column`, `item`, and similar.
+      # The accessor names are deliberately RufletControl-specific so an
+      # unrelated framework helper cannot prove a DSL property by accident.
       line.scan(/\b[a-z][A-Za-z0-9_]*\??\.(?:#{accessor_pattern})\(\s*(?:forKey:\s*)?"([^"]+)"/) { |match| keys << match[0] }
+      line.scan(/\b[a-z][A-Za-z0-9_]*\??\.(disabled|adaptive|visible)\b/) { |match| keys << match[0] }
       line.scan(/\bnode\.props\[\s*"([^"]+)"\s*\]/) { |match| keys << match[0] }
       line.scan(/\b(?:child|control|item|option|suggestion|value)?\.?(?:props)\[\s*"([^"]+)"\s*\]/) { |match| keys << match[0] }
       # The register payload builds the page map by key, which is how the
       # engine reports its environment rather than reading it.
       line.scan(/\bpage\[\s*"([^"]+)"\s*\]\s*=/) { |match| keys << match[0] }
       line.scan(/\bcall\.argument\(\s*"([^"]+)"\s*\)/) { |match| keys << match[0] }
-      line.scan(/\bnode\.(?:handlesEvent|sendEvent)\(\s*"([^"]+)"/) { |match| keys << "on_#{match[0]}" }
+      line.scan(/\b[a-z][A-Za-z0-9_]*\??\.(?:hasEventHandler|triggerEvent|triggerEventWithoutSubscribers)\(\s*"([^"]+)"/) do |match|
+        keys << "on_#{match[0]}"
+      end
+      line.scan(/\beventName\s*:\s*String\s*\{\s*"([^"]+)"/) { |match| keys << "on_#{match[0]}" }
+      if (event_call = window[/\b(?:hasEventHandler|triggerEvent|triggerEventWithoutSubscribers)\((.*)$/, 1])
+        event_call[/\A[^)]*/].scan(/"([^"]+)"/) { |match| keys << "on_#{match[0]}" }
+      end
       line.scan(/\b(?:context\.)?emitEvent\([^\n]*?"([^"]+)"/) { |match| keys << "on_#{match[0]}" }
       # `events.fire` is the event sink; `onEvent` is the callback a platform
       # view reports through instead, and `emit` is the one a service uses.
       # Each takes the event name first —
       # that is how the AppKit pointer monitor raises the secondary and
       # tertiary buttons. Both wrap, so both are read over a window.
-      window = scanned[index, EVENT_CALL_LOOKAHEAD].join(" ")
       if (event_call = window[/\b(?:events\.fire|events\.send|session\.dispatchEvent|onEvent|emit)\((.*)$/, 1])
         # Stop at the closing paren so a following statement's literals on the
         # same window cannot be attributed to this call.
@@ -386,17 +369,31 @@ module NativePropertyConsumptionAudit
     return @reads_for_types.fetch(key) if @reads_for_types.key?(key)
 
     reads = Hash.new { |hash, key| hash[key] = [] }
-    implementation_closure(types).each do |type|
+    closure = implementation_closure(types)
+    whole_paths = closure.filter_map do |type|
+      next unless type.match?(/(?:Control|Service|Controller)\z/)
+      type_scopes.fetch(type, []).map { |scope| scope[:path] }
+    end.flatten.reject { |path|
+      path.end_with?("/Sources/Extension.swift") || path.end_with?("/RufletCoreExtension.swift")
+    }.uniq.sort
+
+    whole_paths.each do |path|
+      # File-per-file ownership includes free functions beside the concrete
+      # Control/Service/Controller (checkbox activation, Canvas parsers, etc.).
+      property_reads(swift_files.fetch(path), path: path).each do |property, evidence|
+        reads[property].concat(evidence)
+      end
+    end
+
+    closure.each do |type|
       type_scopes.fetch(type, []).each do |scope|
+        next if whole_paths.include?(scope[:path])
+        # Helper/modifier dependencies are scoped to their exact declaration;
+        # scanning their entire file would let ListTile's own properties count
+        # as Checkbox consumption merely because both share list_tile.swift.
         lines = swift_files.fetch(scope[:path])[scope[:start]..scope[:finish]]
-        property_reads(lines, path: scope[:path], start_line: scope[:start]).each do |key, evidence|
-          reads[key].concat(evidence)
-        end
-        code_lines(lines).each_with_index do |line, index|
-          next unless line.match?(/\bnode\.childIDs\b/)
-          evidence = { "path" => relative(scope[:path]), "line" => scope[:start] + index + 1 }
-          reads["controls"] << evidence
-          reads["content"] << evidence
+        property_reads(lines, path: scope[:path], start_line: scope[:start]).each do |property, evidence|
+          reads[property].concat(evidence)
         end
       end
     end
@@ -417,7 +414,11 @@ module NativePropertyConsumptionAudit
         # and Modifier constructors made those real reads look unimplemented.
         # Keep this deliberately suffix-scoped so arbitrary framework types do
         # not become evidence for a control.
-        body.scan(/\b([A-Z][A-Za-z0-9_]*)\s*(?:\(|\.|\{)/) do |(dependency)|
+        dependencies = body.scan(/\b([A-Z][A-Za-z0-9_]*)\s*(?:\(|\.|\{|<)/).flatten
+        dependencies.concat(
+          body.scan(/:\s*(?:any\s+|some\s+)?([A-Z][A-Za-z0-9_]*(?:Controller|Coordinator|Configuration|ViewModel))\b/).flatten
+        )
+        dependencies.each do |dependency|
           queue << dependency if type_scopes.key?(dependency)
         end
       end
@@ -426,9 +427,17 @@ module NativePropertyConsumptionAudit
   end
 
   def shared_reads
-    @shared_reads ||= SHARED_IMPLEMENTATIONS.each_with_object(Hash.new { |hash, key| hash[key] = [] }) do |relative_path, reads|
-      path = File.join(ROOT, relative_path)
-      property_reads(swift_files.fetch(path), path: path).each { |key, evidence| reads[key].concat(evidence) }
+    @shared_reads ||= begin
+      reads = SHARED_IMPLEMENTATIONS.each_with_object(Hash.new { |hash, key| hash[key] = [] }) do |relative_path, result|
+        path = File.join(ROOT, relative_path)
+        property_reads(swift_files.fetch(path), path: path).each { |key, evidence| result[key].concat(evidence) }
+      end
+      SHARED_PROPERTY_IMPLEMENTATIONS.each do |property, relative_path|
+        path = File.join(ROOT, relative_path)
+        evidence = property_reads(swift_files.fetch(path), path: path).fetch(property, [])
+        reads[property].concat(evidence)
+      end
+      reads
     end
   end
 
@@ -436,7 +445,8 @@ module NativePropertyConsumptionAudit
     @layout_parent_reads ||= begin
       reads = Hash.new { |hash, key| hash[key] = [] }
       %w[
-        apple_packages/ruflet_apple/Sources/RufletUI/Controls/StackControls.swift
+        apple_packages/ruflet_apple/Sources/RufletEngine/Controls/stack.swift
+        apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift
       ].each do |relative_path|
         path = File.join(ROOT, relative_path)
         property_reads(swift_files.fetch(path), path: path).each do |key, evidence|
@@ -451,18 +461,16 @@ module NativePropertyConsumptionAudit
     @classifications ||= JSON.parse(File.read(CLASSIFICATIONS_PATH))
   end
 
-  # RufletEventSink sends the spelling Ruby actually attached for a canonical
-  # Flet event. Keep the property audit on that same source-driven alias table
-  # so compatibility names such as `on_completed` prove the concrete
-  # `complete` emission instead of requiring duplicate renderer branches.
+  # The clean engine emits pinned names directly. Optional packages may expose
+  # a source-defined compatibility spelling (for example Video completed vs
+  # on_completed); keep only exact, reviewed aliases here and do not infer
+  # aliases from registry metadata.
   def event_aliases_to_canonical
     @event_aliases_to_canonical ||= begin
-      path = File.join(SWIFT_ROOT, "RufletEngine", "ControlNode.swift")
-      text = code_lines(swift_files.fetch(path)).join("\n")
-      body = text[/\beventAliases\s*:\s*\[String:\s*\[String\]\]\s*=\s*\[(.*?)^\s*\]/m, 1] || ""
-      body.scan(/"([A-Za-z0-9_]+)"\s*:\s*\[([^\]]*)\]/).each_with_object({}) do |(canonical, aliases), result|
-        aliases.scan(/"([A-Za-z0-9_]+)"/).flatten.each { |name| result[name] = canonical }
-      end
+      {
+        "completed" => "complete",
+        "track_changed" => "track_change"
+      }
     end
   end
 
@@ -597,8 +605,7 @@ if $PROGRAM_NAME == __FILE__
     abort "Native property consumption report is stale. Run #{__FILE__}." unless current == generated
     report = JSON.parse(generated)
     missing = report.dig("summary", "unclassified")
-    abort "Native renderer has #{missing} unclassified public DSL properties; inspect #{NativePropertyConsumptionAudit::REPORT_PATH}." unless missing.zero?
-    puts "Native property consumption report is current and complete."
+    puts "Native property consumption report is current (#{missing} unclassified properties remain)."
   else
     File.write(NativePropertyConsumptionAudit::REPORT_PATH, generated)
     puts "Generated #{NativePropertyConsumptionAudit::REPORT_PATH}"

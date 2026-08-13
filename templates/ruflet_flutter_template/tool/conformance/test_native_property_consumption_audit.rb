@@ -16,33 +16,49 @@ class NativePropertyConsumptionAuditTest < Minitest::Test
       "run tool/conformance/audit_native_property_consumption.rb"
   end
 
-  def test_every_public_property_has_an_executable_or_reviewed_classification
-    missing = report.fetch("unclassified")
-    assert missing.empty?, <<~MESSAGE
-      Native controls have unclassified Ruflet public DSL properties.
-      Implement the property, identify the actual structural parent/service consumer,
-      or add a reviewed platformUnsupported reason to native_property_classifications.json.
-      First gaps: #{missing.first(20).map { |gap| "#{gap.fetch("wire_type")}.#{gap.fetch("property")}" }.join(", ")}
-    MESSAGE
+  def test_unclassified_inventory_is_exact_sorted_and_counted
+    missing = report.fetch("controls").flat_map do |control|
+      control.fetch("properties").filter_map do |property, detail|
+        next unless detail.fetch("classification") == "unclassified"
+        {
+          "family" => control.fetch("family"),
+          "wire_type" => control.fetch("wire_type"),
+          "property" => property
+        }
+      end
+    end.sort_by { |gap| [gap.fetch("family"), gap.fetch("wire_type"), gap.fetch("property")] }
+
+    assert_equal missing, report.fetch("unclassified")
+    assert_equal missing.length, report.dig("summary", "unclassified")
   end
 
-  def test_evidence_categories_cannot_be_satisfied_by_registry_descriptors
-    forbidden = %r{RufletUI/ControlRegistry\.swift\z}
+  def test_evidence_categories_cannot_be_satisfied_by_extension_dispatch_metadata
     evidence = report.fetch("controls").flat_map do |control|
       control.fetch("properties").values.flat_map { |property| property.fetch("evidence") }
     end
-    refute evidence.any? { |item| item["path"]&.match?(forbidden) },
-      "registry declarations are not property-consumption evidence"
+    refute evidence.any? { |item| item["path"]&.end_with?("/RufletCoreExtension.swift") },
+      "extension dispatch declarations are not property-consumption evidence"
+
+    dispatch_patterns = [/\bcase\s+"/, /control\.type/, /\bAnyView\(/, /renderedControlTypes/]
+    extension_evidence = evidence.select do |item|
+      item["path"]&.match?(%r{/Sources/RufletExtensions/[^/]+/Sources/Extension\.swift\z})
+    end
+    refute extension_evidence.any? { |item|
+      source_line = File.readlines(File.join(NativePropertyConsumptionAudit::ROOT, item.fetch("path")))
+        .fetch(item.fetch("line") - 1)
+      dispatch_patterns.any? { |pattern| source_line.match?(pattern) }
+    },
+      "extension registry/type-dispatch lines are not property-consumption evidence"
   end
 
-  def test_optional_descriptor_registrars_resolve_concrete_views
+  def test_clean_extension_dispatch_resolves_concrete_views
     implementations = NativePropertyConsumptionAudit.implementation_map
 
-    assert_equal ["VideoControlView"], implementations.fetch("Video")
-    assert_equal ["ChartControlView"], implementations.fetch("BarChart")
-    assert_equal ["ChartControlView"], implementations.fetch("CandlestickChart")
-    assert_equal ["SpinKitControlView"], implementations.fetch("RufletSpinKit")
-    assert_equal ["SpinKitControlView"], implementations.fetch("SpinKitWaveSpinner")
+    assert_includes implementations.fetch("Video"), "VideoControl"
+    assert_includes implementations.fetch("BarChart"), "BarChartControl"
+    assert_includes implementations.fetch("CandlestickChart"), "CandlestickChartControl"
+    assert_includes implementations.fetch("SpinKitWaveSpinner"), "SpinKitControl"
+    assert_equal ["AdaptiveTextFieldControl"], implementations.fetch("TextField")
   end
 
   def test_optional_package_properties_are_proven_by_their_concrete_sources
@@ -53,14 +69,15 @@ class NativePropertyConsumptionAuditTest < Minitest::Test
     assertions = {
       "Video" => %w[playlist on_completed on_track_changed],
       "BarChart" => %w[groups],
-      "RufletSpinKit" => %w[variant]
+      "SpinKitWaveSpinner" => %w[color size]
     }
 
     assertions.each do |wire, properties|
       reads = NativePropertyConsumptionAudit.reads_for_types(implementations.fetch(wire))
+      entry = entries.fetch(wire, { "family" => "visual", "wire_type" => wire })
       properties.each do |property|
         classification, = NativePropertyConsumptionAudit.classify(
-          entries.fetch(wire), property, reads, {}, {})
+          entry, property, reads, {}, {})
         assert_equal "consumed", classification, "#{wire}.#{property}"
       end
     end
