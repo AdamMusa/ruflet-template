@@ -41,6 +41,7 @@ Generation uses pinned/auditable inputs:
 * privacy_access_state_overrides.json -- reviewed privacy and account access states.
 * legacy_interface_alias_overrides.json -- reviewed legacy interface aliases.
 * media_library_overrides.json -- reviewed legacy media-library states.
+* financial_wallet_overrides.json -- reviewed bank, wallet, and travel-card identities.
 
 The installed public Apple symbol metadata is used only to choose and validate
 native symbols available at both deployment floors. Private and restricted
@@ -112,6 +113,7 @@ LEGACY_INTERFACE_ALIAS_OVERRIDES_PATH = (
     TOOL_DIR / "legacy_interface_alias_overrides.json"
 )
 MEDIA_LIBRARY_OVERRIDES_PATH = TOOL_DIR / "media_library_overrides.json"
+FINANCIAL_WALLET_OVERRIDES_PATH = TOOL_DIR / "financial_wallet_overrides.json"
 AUDIT_PATH = TOOL_DIR / "material_to_apple_audit.json"
 
 CORE_GLYPHS = Path(
@@ -407,6 +409,7 @@ def load_reviewed_overrides() -> tuple[
         "privacy_access_state": PRIVACY_ACCESS_STATE_OVERRIDES_PATH,
         "legacy_interface_alias": LEGACY_INTERFACE_ALIAS_OVERRIDES_PATH,
         "media_library": MEDIA_LIBRARY_OVERRIDES_PATH,
+        "financial_wallet": FINANCIAL_WALLET_OVERRIDES_PATH,
     }
     merged: dict[str, dict[str, str]] = {}
     families: dict[str, str] = {}

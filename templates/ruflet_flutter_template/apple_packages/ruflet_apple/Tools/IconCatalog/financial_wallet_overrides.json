@@ -1,0 +1,27 @@
+{
+  "ACCOUNT_BALANCE": {
+    "kind": "system_symbol",
+    "value": "building.columns.fill",
+    "rationale": "public Apple institutional-bank symbol exactly preserves Material account balance"
+  },
+  "ACCOUNT_BALANCE_WALLET": {
+    "kind": "system_symbol",
+    "value": "wallet.pass.fill",
+    "rationale": "public Apple Wallet pass symbol exactly preserves Material account balance wallet"
+  },
+  "CARD_TRAVEL": {
+    "kind": "system_symbol",
+    "value": "suitcase.fill",
+    "rationale": "public Apple suitcase symbol exactly preserves the Material travel-card artwork and meaning"
+  },
+  "WALLET_MEMBERSHIP": {
+    "kind": "system_symbol",
+    "value": "creditcard.fill",
+    "rationale": "public Apple membership-card symbol preserves Flet's wallet alias of Material card membership"
+  },
+  "WALLET_TRAVEL": {
+    "kind": "system_symbol",
+    "value": "suitcase.fill",
+    "rationale": "public Apple suitcase symbol preserves Flet's wallet alias of Material card travel"
+  }
+}

@@ -14,18 +14,6 @@
     "value": "clock",
     "rationale": "curated Material-to-SF vocabulary"
   },
-  "ACCOUNT_BALANCE": {
-    "kind": "system_symbol",
-    "value": "building.columns",
-    "rationale": "native Apple bank/institution",
-    "status": "review_required"
-  },
-  "ACCOUNT_BALANCE_WALLET": {
-    "kind": "system_symbol",
-    "value": "creditcard",
-    "rationale": "native Apple account wallet/payment",
-    "status": "review_required"
-  },
   "ACCOUNT_BOX": {
     "kind": "system_symbol",
     "value": "person.crop.square",

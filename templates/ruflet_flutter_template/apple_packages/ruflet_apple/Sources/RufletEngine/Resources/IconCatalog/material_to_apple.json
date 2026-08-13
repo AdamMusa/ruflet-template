@@ -281,59 +281,59 @@
   },
   "ACCOUNT_BALANCE": {
     "kind": "system_symbol",
-    "value": "building.columns",
+    "value": "building.columns.fill",
     "concept": "ACCOUNT_BALANCE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ACCOUNT_BALANCE_OUTLINED": {
     "kind": "system_symbol",
-    "value": "building.columns",
+    "value": "building.columns.fill",
     "concept": "ACCOUNT_BALANCE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ACCOUNT_BALANCE_ROUNDED": {
     "kind": "system_symbol",
-    "value": "building.columns",
+    "value": "building.columns.fill",
     "concept": "ACCOUNT_BALANCE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ACCOUNT_BALANCE_SHARP": {
     "kind": "system_symbol",
-    "value": "building.columns",
+    "value": "building.columns.fill",
     "concept": "ACCOUNT_BALANCE",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ACCOUNT_BALANCE_WALLET": {
     "kind": "system_symbol",
-    "value": "creditcard",
+    "value": "wallet.pass.fill",
     "concept": "ACCOUNT_BALANCE_WALLET",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ACCOUNT_BALANCE_WALLET_OUTLINED": {
     "kind": "system_symbol",
-    "value": "creditcard",
+    "value": "wallet.pass.fill",
     "concept": "ACCOUNT_BALANCE_WALLET",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ACCOUNT_BALANCE_WALLET_ROUNDED": {
     "kind": "system_symbol",
-    "value": "creditcard",
+    "value": "wallet.pass.fill",
     "concept": "ACCOUNT_BALANCE_WALLET",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ACCOUNT_BALANCE_WALLET_SHARP": {
     "kind": "system_symbol",
-    "value": "creditcard",
+    "value": "wallet.pass.fill",
     "concept": "ACCOUNT_BALANCE_WALLET",
-    "confidence": "low",
-    "source": "manual_review_required"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "ACCOUNT_BOX": {
     "kind": "system_symbol",
@@ -8604,31 +8604,31 @@
   },
   "CARD_TRAVEL": {
     "kind": "system_symbol",
-    "value": "suitcase",
+    "value": "suitcase.fill",
     "concept": "CARD_TRAVEL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CARD_TRAVEL_OUTLINED": {
     "kind": "system_symbol",
-    "value": "suitcase",
+    "value": "suitcase.fill",
     "concept": "CARD_TRAVEL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CARD_TRAVEL_ROUNDED": {
     "kind": "system_symbol",
-    "value": "suitcase",
+    "value": "suitcase.fill",
     "concept": "CARD_TRAVEL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CARD_TRAVEL_SHARP": {
     "kind": "system_symbol",
-    "value": "suitcase",
+    "value": "suitcase.fill",
     "concept": "CARD_TRAVEL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "CARPENTER": {
     "kind": "system_symbol",
@@ -59613,31 +59613,31 @@
   },
   "WALLET_MEMBERSHIP": {
     "kind": "system_symbol",
-    "value": "wallet.pass",
+    "value": "creditcard.fill",
     "concept": "WALLET_MEMBERSHIP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WALLET_MEMBERSHIP_OUTLINED": {
     "kind": "system_symbol",
-    "value": "wallet.pass",
+    "value": "creditcard.fill",
     "concept": "WALLET_MEMBERSHIP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WALLET_MEMBERSHIP_ROUNDED": {
     "kind": "system_symbol",
-    "value": "wallet.pass",
+    "value": "creditcard.fill",
     "concept": "WALLET_MEMBERSHIP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WALLET_MEMBERSHIP_SHARP": {
     "kind": "system_symbol",
-    "value": "wallet.pass",
+    "value": "creditcard.fill",
     "concept": "WALLET_MEMBERSHIP",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WALLET_OUTLINED": {
     "kind": "system_symbol",
@@ -59662,31 +59662,31 @@
   },
   "WALLET_TRAVEL": {
     "kind": "system_symbol",
-    "value": "wallet.pass",
+    "value": "suitcase.fill",
     "concept": "WALLET_TRAVEL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WALLET_TRAVEL_OUTLINED": {
     "kind": "system_symbol",
-    "value": "wallet.pass",
+    "value": "suitcase.fill",
     "concept": "WALLET_TRAVEL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WALLET_TRAVEL_ROUNDED": {
     "kind": "system_symbol",
-    "value": "wallet.pass",
+    "value": "suitcase.fill",
     "concept": "WALLET_TRAVEL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WALLET_TRAVEL_SHARP": {
     "kind": "system_symbol",
-    "value": "wallet.pass",
+    "value": "suitcase.fill",
     "concept": "WALLET_TRAVEL",
-    "confidence": "low",
-    "source": "semantic_rank"
+    "confidence": "reviewed",
+    "source": "reviewed_override"
   },
   "WALLPAPER": {
     "kind": "system_symbol",

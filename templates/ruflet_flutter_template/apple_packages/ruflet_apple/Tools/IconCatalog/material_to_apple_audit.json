@@ -14,7 +14,7 @@
     "material_icons.json": "be2d1dee6c40a5dfeaacd8fe415301db3d7c976e6eabc7fca9da734cc5abfb85",
     "cupertino_glyphs.json": "dad0be1db615640c1a0dd86365f71d0dfa2ec01ed3e2773188895006d21ad012",
     "material_semantics.json": "b3a0e564b3661355757107b929add9bc22b8fd86e2038d12aaf3b7dac380d2dd",
-    "overrides.json": "276bf272077f232f2cee9defd7d8492faa3d8dd6404fd7e62d296d0b408eacd1",
+    "overrides.json": "b9811658bf734be9611b5f86624c60806b4757b21ff38c90c50edf3b116f94a0",
     "navigation_travel_overrides.json": "63fcf29579be8fab701bdf81b1b345a710ed66f91cf9e764fd91f008ac3b796c",
     "action_overrides.json": "1d0cb0f7ee23bba2caa6204baf5671e602124149451c28c778ba57bf00f1fad5",
     "maps_places_overrides.json": "0cc97806c2536763422e12967a7cdc7cbba78c39451f8b92534b8bf48cef9ba7",
@@ -40,15 +40,16 @@
     "privacy_access_state_overrides.json": "8be61702ea92ff6405b8d8057e30848425db0649a9355e08d0a8532ff4a06547",
     "legacy_interface_alias_overrides.json": "ac3259eac1915026e5427da2c0f045c8650d35d097dbcee7aa84aa996acefc96",
     "media_library_overrides.json": "fe489f269e57f6ebf01ea459742215931dab8c48ece8ec889a94bdc99b276bea",
+    "financial_wallet_overrides.json": "9c096ac6448e2ce8726960a1570050e441ebd6ffa0556ce2d5189b9a1458036f",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/name_availability.plist": "a277cf5b63017ed497d5b6b3ea96bbee4f407b76776af41bcb52943007335b5c",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_search.plist": "29a767651ce53d8861e28d3eaa20b50d3e02a85fe5a79d557ce1fbff7fa4ebad",
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/CoreGlyphs.bundle/Contents/Resources/symbol_restrictions.strings": "2e1b1c3d629d26ac1e75861f33cb1cbbb3348e142a2b6c1aaf9bba546273f13b"
   },
   "sources": {
     "exact_apple_name": 48,
-    "manual_review_required": 78,
-    "reviewed_override": 1000,
-    "semantic_rank": 1109
+    "manual_review_required": 76,
+    "reviewed_override": 1005,
+    "semantic_rank": 1106
   },
   "reviewed_families": {
     "action": 76,
@@ -61,6 +62,7 @@
     "device_hardware": 72,
     "device_status": 13,
     "file_content": 11,
+    "financial_wallet": 5,
     "general": 339,
     "health_accessibility": 10,
     "home_household": 17,
@@ -81,11 +83,11 @@
   "confidence_grades": {
     "exact": 48,
     "high": 665,
-    "low": 437,
+    "low": 432,
     "medium": 85,
-    "reviewed": 1000
+    "reviewed": 1005
   },
-  "unique_apple_targets": 897,
+  "unique_apple_targets": 895,
   "most_reused_targets": [
     {
       "kind": "system_symbol",
@@ -338,7 +340,7 @@
       "concept_count": 6
     }
   ],
-  "low_confidence_count": 522,
+  "low_confidence_count": 517,
   "low_confidence_concepts": [
     {
       "concept": "SIXTY_FPS_SELECT",
@@ -4841,32 +4843,6 @@
         "traditional",
         "travel",
         "worship"
-      ]
-    },
-    {
-      "concept": "WALLET_MEMBERSHIP",
-      "target": {
-        "kind": "system_symbol",
-        "value": "wallet.pass"
-      },
-      "confidence": 0.2612,
-      "grade": "low",
-      "reason": "name=['wallet'] semantic=['wallet'] extra=['pass']",
-      "tags": [
-        "wallet membership"
-      ]
-    },
-    {
-      "concept": "WALLET_TRAVEL",
-      "target": {
-        "kind": "system_symbol",
-        "value": "wallet.pass"
-      },
-      "confidence": 0.2612,
-      "grade": "low",
-      "reason": "name=['wallet'] semantic=['wallet'] extra=['pass']",
-      "tags": [
-        "wallet travel"
       ]
     },
     {
@@ -10396,54 +10372,6 @@
       ]
     },
     {
-      "concept": "CARD_TRAVEL",
-      "target": {
-        "kind": "system_symbol",
-        "value": "suitcase"
-      },
-      "confidence": 0.3153,
-      "grade": "low",
-      "reason": "name=[] semantic=['luggage', 'suitcase'] extra=[]",
-      "tags": [
-        "accessory",
-        "bag",
-        "baggage",
-        "bill",
-        "briefcase",
-        "business",
-        "card",
-        "carry",
-        "case",
-        "cash",
-        "coin",
-        "commerce",
-        "cost",
-        "credit",
-        "currency",
-        "dollars",
-        "finance",
-        "handle",
-        "item",
-        "journey",
-        "luggage",
-        "membership",
-        "miles",
-        "money",
-        "online",
-        "packing",
-        "pay",
-        "payment",
-        "personal",
-        "rectangle",
-        "square",
-        "suitcase",
-        "transportation",
-        "travel",
-        "trip",
-        "voyage"
-      ]
-    },
-    {
       "concept": "MALE",
       "target": {
         "kind": "cupertino_glyph",
@@ -14416,105 +14344,6 @@
         "user",
         "very",
         "very happy"
-      ]
-    },
-    {
-      "concept": "ACCOUNT_BALANCE",
-      "target": {
-        "kind": "system_symbol",
-        "value": "building.columns"
-      },
-      "confidence": 0.5,
-      "grade": "low",
-      "reason": "native Apple bank/institution",
-      "tags": [
-        "account",
-        "accounting",
-        "balance",
-        "bank",
-        "banking",
-        "bill",
-        "building",
-        "business",
-        "card",
-        "cash",
-        "coin",
-        "columns",
-        "commerce",
-        "courthouse",
-        "credit",
-        "currency",
-        "dollars",
-        "economic",
-        "federal",
-        "finance",
-        "financial",
-        "financial institution",
-        "government",
-        "institution",
-        "investment",
-        "loan",
-        "money",
-        "mortgage",
-        "online",
-        "pay",
-        "payment",
-        "pillars",
-        "prosperity",
-        "savings",
-        "structure",
-        "transaction",
-        "treasury",
-        "wealth"
-      ]
-    },
-    {
-      "concept": "ACCOUNT_BALANCE_WALLET",
-      "target": {
-        "kind": "system_symbol",
-        "value": "creditcard"
-      },
-      "confidence": 0.5,
-      "grade": "low",
-      "reason": "native Apple account wallet/payment",
-      "tags": [
-        "account",
-        "assets",
-        "balance",
-        "bank",
-        "banking",
-        "bill",
-        "budget",
-        "card",
-        "cash",
-        "coin",
-        "commerce",
-        "credit",
-        "credit card",
-        "currency",
-        "dollar",
-        "dollars",
-        "economics",
-        "economy",
-        "expense",
-        "finance",
-        "finances",
-        "financial",
-        "funds",
-        "income",
-        "investment",
-        "money",
-        "online",
-        "pay",
-        "payment",
-        "purse",
-        "rectangle",
-        "revenue",
-        "savings",
-        "square",
-        "transaction",
-        "wallet",
-        "wealth"
       ]
     },
     {
