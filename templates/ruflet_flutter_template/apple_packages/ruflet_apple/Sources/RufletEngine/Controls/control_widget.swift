@@ -13,8 +13,7 @@ public struct ControlWidget: View {
     }
 
     public var body: some View {
-        resolvedView
-            .id(controlKey)
+        keyedView
     }
 
     private var resolvedView: AnyView {
@@ -25,7 +24,22 @@ public struct ControlWidget: View {
     }
 
     private var controlKey: AnyHashable {
-        parseKey(control.value("key")).map(AnyHashable.init) ?? AnyHashable(control.id)
+        parsedControlKey.map(AnyHashable.init) ?? AnyHashable(control.id)
+    }
+
+    private var parsedControlKey: ControlKey? {
+        parseKey(control.value("key"))
+    }
+
+    @ViewBuilder
+    private var keyedView: some View {
+        if case .scroll(let value) = parsedControlKey {
+            resolvedView
+                .id(controlKey)
+                .background(RufletScrollTargetMarker(key: value, backend: control.backend))
+        } else {
+            resolvedView.id(controlKey)
+        }
     }
 }
 

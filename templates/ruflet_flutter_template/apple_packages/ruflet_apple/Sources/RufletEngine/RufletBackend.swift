@@ -42,6 +42,7 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
   private let reconnectTimeoutMilliseconds: Int?
   private let channelFactory: RufletBackendChannelFactoryClosure
   private var controlsIndex: [Int: WeakControl] = [:]
+  private var scrollTargets: [String: RufletScrollTarget] = [:]
   private var pageServiceBindings: PageServiceBindings?
   private var backendChannel: RufletBackendChannel?
   private var sendQueue: [RufletMessage] = []
@@ -160,6 +161,7 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
     pageListener = nil
     pageServiceBindings?.dispose()
     pageServiceBindings = nil
+    scrollTargets.removeAll()
     backendChannel?.disconnect()
     backendChannel = nil
   }
@@ -171,6 +173,19 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
   public func control(id: Int) -> RufletControl? {
     if controlsIndex[id]?.value == nil { controlsIndex.removeValue(forKey: id) }
     return controlsIndex[id]?.value
+  }
+
+  public func registerScrollTarget(_ target: RufletScrollTarget, for key: String) {
+    scrollTargets[key] = target
+  }
+
+  public func unregisterScrollTarget(_ target: RufletScrollTarget, for key: String) {
+    guard scrollTargets[key] === target else { return }
+    scrollTargets.removeValue(forKey: key)
+  }
+
+  public func scrollTarget(for key: String) -> RufletScrollTarget? {
+    scrollTargets[key]
   }
 
   public func triggerControlEvent(_ control: RufletControl, name: String, data: RufletValue) {

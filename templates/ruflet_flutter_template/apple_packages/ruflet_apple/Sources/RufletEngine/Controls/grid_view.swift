@@ -11,7 +11,10 @@ public struct GridViewControl: View {
 
     public var body: some View {
         LayoutControl(control: control) {
-            notified(grid)
+            notified(AnyView(ScrollableControl(
+                control: control,
+                scrollDirection: horizontal ? .horizontal : .vertical
+            ) { grid }))
         }
     }
 
@@ -19,6 +22,7 @@ public struct GridViewControl: View {
         let scroll = ScrollView(horizontal ? .horizontal : .vertical, showsIndicators: showsIndicators) {
             gridContent
                 .padding(padding)
+                .overlay(alignment: .topLeading) { RufletScrollViewportAttachment() }
         }
 
         if clipBehavior == "none" {

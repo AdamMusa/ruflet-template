@@ -12,7 +12,10 @@ public struct ListViewControl: View {
 
     public var body: some View {
         LayoutControl(control: control) {
-            notified(list)
+            notified(AnyView(ScrollableControl(
+                control: control,
+                scrollDirection: horizontal ? .horizontal : .vertical
+            ) { list }))
         }
     }
 
@@ -22,6 +25,7 @@ public struct ListViewControl: View {
             listContent
                 .padding(padding)
                 .background(alignment: .topLeading) { prototypeMeasurement }
+                .overlay(alignment: .topLeading) { RufletScrollViewportAttachment() }
         }
 
         if clipBehavior == "none" {

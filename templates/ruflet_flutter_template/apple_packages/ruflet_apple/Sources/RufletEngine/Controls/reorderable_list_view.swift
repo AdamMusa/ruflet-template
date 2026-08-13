@@ -17,7 +17,10 @@ public struct ReorderableListViewControl: View {
 
     public var body: some View {
         LayoutControl(control: control) {
-            notified(list)
+            notified(AnyView(ScrollableControl(
+                control: control,
+                scrollDirection: horizontal ? .horizontal : .vertical
+            ) { list }))
         }
         .onChange(of: control.children("controls").map(\.id)) { orderedIDs = $0 }
     }
@@ -27,6 +30,7 @@ public struct ReorderableListViewControl: View {
             listContent
                 .padding(padding)
                 .background(alignment: .topLeading) { prototypeMeasurement }
+                .overlay(alignment: .topLeading) { RufletScrollViewportAttachment() }
         }
         if clipBehavior == "none" {
             return AnyView(scroll)

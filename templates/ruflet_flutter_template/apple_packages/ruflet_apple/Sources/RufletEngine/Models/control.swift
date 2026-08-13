@@ -27,6 +27,15 @@ public protocol RufletBackendProtocol: AnyObject {
     notify: Bool)
   func resolveAssetSource(_ source: RufletValue) -> RufletAssetSource?
   func onWindowEvent(_ name: String, state: RufletWindowState)
+  func registerScrollTarget(_ target: RufletScrollTarget, for key: String)
+  func unregisterScrollTarget(_ target: RufletScrollTarget, for key: String)
+  func scrollTarget(for key: String) -> RufletScrollTarget?
+}
+
+public extension RufletBackendProtocol {
+  func registerScrollTarget(_ target: RufletScrollTarget, for key: String) {}
+  func unregisterScrollTarget(_ target: RufletScrollTarget, for key: String) {}
+  func scrollTarget(for key: String) -> RufletScrollTarget? { nil }
 }
 
 private indirect enum RufletMaterializedValue {
