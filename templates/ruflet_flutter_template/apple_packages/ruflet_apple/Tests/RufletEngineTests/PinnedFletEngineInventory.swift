@@ -195,7 +195,7 @@ enum PinnedFletEngineInventory {
     .init(source: "utils.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils.swift"),
     .init(source: "utils/alignment.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/alignment.swift"),
     .init(source: "utils/animations.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/animations.swift"),
-    .init(source: "utils/auto_complete.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/auto_complete.swift"),
+    .init(source: "utils/auto_complete.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/auto_complete_utils.swift"),
     .init(source: "utils/autofill.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/autofill.swift"),
     .init(source: "utils/badge.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/badge.swift"),
     .init(source: "utils/borders.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/borders.swift"),
