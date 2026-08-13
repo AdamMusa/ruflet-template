@@ -25,6 +25,30 @@ class MaterialToAppleCorpusTests(unittest.TestCase):
         self.assertEqual(self.audit["unresolved"], 0)
         self.assertEqual(self.audit["placeholder_targets"], 0)
 
+    def test_every_sf_symbol_is_public_unrestricted_and_available_at_both_floors(self):
+        availability, _search, releases, restrictions, _hashes = MODULE.apple_metadata()
+        allowed = MODULE.deployment_symbols(availability, releases) - set(restrictions)
+        selected = {
+            entry["value"]
+            for entry in self.entries.values()
+            if entry["kind"] == "system_symbol"
+        }
+        self.assertTrue(selected <= allowed)
+        self.assertFalse(selected & set(restrictions))
+        for symbol in selected:
+            release = releases[str(availability[symbol])]
+            for platform, floor in MODULE.DEPLOYMENT_FLOORS.items():
+                self.assertLessEqual(
+                    MODULE.version_tuple(release[platform]),
+                    MODULE.version_tuple(floor),
+                    f"{symbol} requires {platform} {release[platform]} above {floor}",
+                )
+
+    def test_minor_sf_symbol_releases_are_not_collapsed_to_their_year(self):
+        availability, _search, releases, _restrictions, _hashes = MODULE.apple_metadata()
+        allowed = MODULE.deployment_symbols(availability, releases)
+        self.assertNotIn("camera.macro", allowed)  # iOS 15.4, package floor iOS 15.0
+
     def test_style_variants_collapse_only_to_their_named_concept(self):
         for name, entry in self.entries.items():
             self.assertEqual(entry["concept"], MODULE.concept_for(name))

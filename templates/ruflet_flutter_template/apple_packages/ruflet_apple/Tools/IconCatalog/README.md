@@ -6,8 +6,11 @@ not permission to render Google's Material icon font on iOS or macOS.
 `generate_material_to_apple.py` expands all 8,825 pinned Flet identities into
 `Sources/RufletEngine/Resources/IconCatalog/material_to_apple.json`. Every
 entry names either a bundled Flutter Cupertino glyph or an SF Symbol available
-at the package's iOS 15 deployment floor. There is no Material-font target,
-placeholder target, or runtime fuzzy fallback in the generated resource.
+at both package deployment floors (iOS 15.0 and macOS 13.1). SF Symbols are
+selected only from Apple's public CoreGlyphs catalog. Private names and symbols
+with Apple product-usage restrictions are excluded from automatic matching.
+There is no Material-font target, placeholder target, or runtime fuzzy fallback
+in the generated resource.
 
 The 8,825 identities contain 2,235 concepts because Flet carries Outlined,
 Rounded, and Sharp Material variants. The generator records the collapsed

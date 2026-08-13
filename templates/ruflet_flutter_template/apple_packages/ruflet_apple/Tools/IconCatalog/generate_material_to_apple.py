@@ -4,9 +4,9 @@
 The Flet wire protocol identifies Material icons by integer/codepoint.  Those
 identities are accepted on Apple for protocol compatibility, but their artwork
 must be a bundled Cupertino glyph or an SF Symbol available at the iOS 15
-deployment floor.  This tool expands every pinned wire identity into an
-explicit, auditable mapping.  It never emits a Material-font glyph, a generic
-placeholder, or an unresolved entry.
+and macOS 13.1 deployment floors. This tool expands every pinned wire identity
+into an explicit, auditable mapping. It never emits a Material-font glyph, a
+generic placeholder, or an unresolved entry.
 
 Generation uses four pinned/auditable inputs:
 
@@ -17,9 +17,10 @@ Generation uses four pinned/auditable inputs:
 * overrides.json -- reviewed vocabulary differences between Material and
   Apple.
 
-The installed Apple symbol metadata is used only to choose and validate native
-symbols available no later than SF Symbols 3 / iOS 15.  The generated resource
-is checked in, so package builds never depend on private framework metadata.
+The installed public Apple symbol metadata is used only to choose and validate
+native symbols available at both deployment floors. Private and restricted
+symbols are excluded. The generated resource is checked in, so package builds
+never depend on framework metadata.
 """
 
 from __future__ import annotations
@@ -51,10 +52,7 @@ CORE_GLYPHS = Path(
     "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/"
     "CoreGlyphs.bundle/Contents/Resources"
 )
-PRIVATE_CORE_GLYPHS = Path(
-    "/System/Library/PrivateFrameworks/SFSymbols.framework/Versions/A/Resources/"
-    "CoreGlyphsPrivate.bundle/Contents/Resources"
-)
+DEPLOYMENT_FLOORS = {"iOS": "15.0", "macOS": "13.1"}
 
 STYLE_SUFFIXES = ("_OUTLINED", "_ROUNDED", "_SHARP")
 PLACEHOLDERS = {"questionmark.square.dashed"}
@@ -183,29 +181,41 @@ def plist(path: Path) -> dict[str, Any]:
         return plistlib.load(handle)
 
 
-def availability_year(version: str) -> int:
+def version_tuple(version: str) -> tuple[int, ...]:
     try:
-        return int(str(version).split(".", 1)[0])
+        return tuple(int(part) for part in str(version).split("."))
     except ValueError:
-        return 9999
+        return (9999,)
 
 
-def apple_metadata() -> tuple[dict[str, str], dict[str, list[str]], dict[str, str]]:
-    availability: dict[str, str] = {}
-    search: dict[str, list[str]] = {}
+def apple_metadata() -> tuple[
+    dict[str, str],
+    dict[str, list[str]],
+    dict[str, dict[str, str]],
+    dict[str, str],
+    dict[str, str],
+]:
+    """Load Apple's public symbol metadata and usage restrictions.
+
+    `CoreGlyphsPrivate.bundle` deliberately is not an input: its names are not
+    part of the public `Image(systemName:)` contract and render as empty images
+    on supported Apple releases.
+    """
+    availability_path = CORE_GLYPHS / "name_availability.plist"
+    search_path = CORE_GLYPHS / "symbol_search.plist"
+    restrictions_path = CORE_GLYPHS / "symbol_restrictions.strings"
+    if not availability_path.exists() or not search_path.exists() or not restrictions_path.exists():
+        raise RuntimeError("Apple public SF Symbols metadata was not found")
+
+    availability_metadata = plist(availability_path)
+    availability = availability_metadata.get("symbols", {})
+    releases = availability_metadata.get("year_to_release", {})
+    search = plist(search_path)
+    restrictions = plist(restrictions_path)
     hashes: dict[str, str] = {}
-    for root in (CORE_GLYPHS, PRIVATE_CORE_GLYPHS):
-        availability_path = root / "name_availability.plist"
-        search_path = root / "symbol_search.plist"
-        if not availability_path.exists() or not search_path.exists():
-            continue
-        hashes[str(availability_path)] = sha256(availability_path)
-        hashes[str(search_path)] = sha256(search_path)
-        availability.update(plist(availability_path).get("symbols", {}))
-        search.update(plist(search_path))
-    if not availability:
-        raise RuntimeError("Apple SF Symbols metadata was not found")
-    return availability, search, hashes
+    for path in (availability_path, search_path, restrictions_path):
+        hashes[str(path)] = sha256(path)
+    return availability, search, releases, restrictions, hashes
 
 
 def sha256(path: Path) -> str:
@@ -216,10 +226,18 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def ios15_symbols(availability: dict[str, str]) -> set[str]:
+def deployment_symbols(
+    availability: dict[str, str],
+    releases: dict[str, dict[str, str]],
+) -> set[str]:
     result: set[str] = set()
-    for name, version in availability.items():
-        if availability_year(version) > 2021:
+    for name, release_key in availability.items():
+        platform_releases = releases.get(str(release_key), {})
+        if any(
+            platform not in platform_releases
+            or version_tuple(platform_releases[platform]) > version_tuple(floor)
+            for platform, floor in DEPLOYMENT_FLOORS.items()
+        ):
             continue
         if name.rsplit(".", 1)[-1] in LOCALE_SUFFIXES:
             continue
@@ -398,8 +416,9 @@ def generate() -> tuple[dict[str, Any], dict[str, Any]]:
     cupertino: dict[str, int] = load_json(CUPERTINO_PATH)
     semantics: dict[str, dict[str, Any]] = load_json(SEMANTICS_PATH)
     overrides: dict[str, dict[str, str]] = load_json(OVERRIDES_PATH)
-    availability, search, metadata_hashes = apple_metadata()
-    symbols = ios15_symbols(availability)
+    availability, search, releases, restrictions, metadata_hashes = apple_metadata()
+    deployment_available_symbols = deployment_symbols(availability, releases)
+    symbols = deployment_available_symbols - set(restrictions)
     candidates = candidate_catalog(cupertino, symbols, search)
     weights = idf_weights(candidates)
     candidates_by_canonical: dict[str, list[Candidate]] = defaultdict(list)
@@ -472,7 +491,9 @@ def generate() -> tuple[dict[str, Any], dict[str, Any]]:
         "semantic_concepts": len(concepts),
         "unresolved": 0,
         "placeholder_targets": 0,
-        "deployment_floor": "iOS 15 / SF Symbols 3 (metadata year <= 2021)",
+        "deployment_floor": dict(DEPLOYMENT_FLOORS),
+        "public_sf_symbols_at_floor": len(deployment_available_symbols),
+        "restricted_sf_symbols_excluded": len(set(restrictions) & deployment_available_symbols),
         "input_sha256": {
             "material_icons.json": sha256(MATERIAL_PATH),
             "cupertino_glyphs.json": sha256(CUPERTINO_PATH),
@@ -500,8 +521,8 @@ def render(value: Any) -> str:
 def validate(entries: dict[str, Any], audit: dict[str, Any]) -> None:
     material: dict[str, int] = load_json(MATERIAL_PATH)
     cupertino: dict[str, int] = load_json(CUPERTINO_PATH)
-    availability, _search, _hashes = apple_metadata()
-    symbols = ios15_symbols(availability)
+    availability, _search, releases, restrictions, _hashes = apple_metadata()
+    symbols = deployment_symbols(availability, releases) - set(restrictions)
     if set(entries) != set(material):
         raise AssertionError("Generated keys do not exactly match the 8,825-name Flet corpus")
     if len(entries) != 8_825:
@@ -512,7 +533,10 @@ def validate(entries: dict[str, Any], audit: dict[str, Any]) -> None:
                 raise AssertionError(f"{name}: invalid Cupertino glyph {entry['value']}")
         elif entry["kind"] == "system_symbol":
             if entry["value"] not in symbols:
-                raise AssertionError(f"{name}: SF Symbol is unavailable on iOS 15: {entry['value']}")
+                raise AssertionError(
+                    f"{name}: SF Symbol is private, restricted, or unavailable at "
+                    f"{DEPLOYMENT_FLOORS}: {entry['value']}"
+                )
             if entry["value"] in PLACEHOLDERS:
                 raise AssertionError(f"{name}: placeholder artwork is forbidden")
         else:

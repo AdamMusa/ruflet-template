@@ -1919,9 +1919,9 @@
     "status": "review_required"
   },
   "SIXTY_FPS": {
-    "kind": "system_symbol",
-    "value": "video",
-    "rationale": "native Apple video identity for a frame-rate label",
+    "kind": "cupertino_glyph",
+    "value": "FILM",
+    "rationale": "bundled Apple film glyph avoids the FaceTime-restricted video symbol",
     "status": "review_required"
   },
   "SIXTY_FPS_SELECT": {
@@ -2096,9 +2096,9 @@
     "status": "review_required"
   },
   "THIRTY_FPS": {
-    "kind": "system_symbol",
-    "value": "video",
-    "rationale": "native Apple video identity for a frame-rate label",
+    "kind": "cupertino_glyph",
+    "value": "FILM",
+    "rationale": "bundled Apple film glyph avoids the FaceTime-restricted video symbol",
     "status": "review_required"
   },
   "THIRTY_FPS_SELECT": {

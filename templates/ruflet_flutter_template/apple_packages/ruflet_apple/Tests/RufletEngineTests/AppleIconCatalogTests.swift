@@ -1,5 +1,12 @@
 import XCTest
+
 @testable import RufletEngine
+
+#if canImport(UIKit)
+  import UIKit
+#elseif canImport(AppKit)
+  import AppKit
+#endif
 
 final class AppleIconCatalogTests: XCTestCase {
   func testPinnedIconCorpusCountsAndWireBoundaries() {
@@ -63,7 +70,28 @@ final class AppleIconCatalogTests: XCTestCase {
     }
     XCTAssertTrue(
       unresolved.isEmpty,
-      "Unresolved Material icons: \(unresolved.count); first: \(unresolved.prefix(20).joined(separator: ", "))")
+      "Unresolved Material icons: \(unresolved.count); first: \(unresolved.prefix(20).joined(separator: ", "))"
+    )
+  }
+
+  func testEveryMappedSystemSymbolCanBeInstantiatedNatively() {
+    var checked: Set<String> = []
+    var invalid: [String] = []
+    for code in 65_536...74_360 {
+      guard case .systemSymbol(let name) = RufletAppleIconCatalog.icon(for: code),
+        checked.insert(name).inserted
+      else { continue }
+      #if canImport(UIKit)
+        if UIImage(systemName: name) == nil { invalid.append(name) }
+      #elseif canImport(AppKit)
+        if NSImage(systemSymbolName: name, accessibilityDescription: nil) == nil {
+          invalid.append(name)
+        }
+      #endif
+    }
+    XCTAssertTrue(
+      invalid.isEmpty,
+      "Invalid native system symbols: \(invalid.sorted().joined(separator: ", "))")
   }
 
   func testUnknownWireCodesDoNotRenderAnUnrelatedFallback() {
