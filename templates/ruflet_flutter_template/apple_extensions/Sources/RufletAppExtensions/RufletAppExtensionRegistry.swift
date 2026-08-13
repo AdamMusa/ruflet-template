@@ -7,7 +7,7 @@ import RufletApple
 /// copied from the Ruby project on every build, while the generated Runner and
 /// Ruflet Apple engine remain replaceable build artifacts.
 public enum RufletAppExtensionRegistry {
-  public static let extensions: [any RufletExtension.Type] = [
-    // RatingExtension.self,
+  public static let extensions: [any RufletExtension] = [
+    // RatingExtension(),
   ]
 }

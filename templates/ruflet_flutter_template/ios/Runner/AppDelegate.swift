@@ -20,10 +20,10 @@ import UIKit
 
   @MainActor private static var sharedNativeApplication: RufletMultiViewApplication?
 
-  @MainActor static func nativeApplication(serverURL: URL) -> RufletMultiViewApplication {
+  @MainActor static func nativeApplication(pageURL: URL) -> RufletMultiViewApplication {
     if let sharedNativeApplication { return sharedNativeApplication }
     let application = RufletMultiViewApplication(
-      serverURL: serverURL, extensions: RufletEngineChoice.extensions)
+      pageURL: pageURL, extensions: RufletEngineChoice.extensions)
     sharedNativeApplication = application
     return application
   }
@@ -55,7 +55,7 @@ import UIKit
       }
       let arguments = call.arguments as? [String: Any]
       let rawURL = arguments?["pageUrl"] as? String ?? ""
-      guard let serverURL = RufletEngineChoice.websocketURL(from: rawURL) else {
+      guard let pageURL = RufletEngineChoice.pageURL(from: rawURL) else {
         result(
           FlutterError(
             code: "invalid_page_url", message: "Native renderer requires a valid Ruflet page URL.",
@@ -66,7 +66,7 @@ import UIKit
         let shown = UIApplication.shared.connectedScenes.compactMap {
           $0.delegate as? RufletSceneDelegate
         }.reduce(false) { shown, delegate in
-          delegate.showNativeRenderer(serverURL: serverURL) || shown
+          delegate.showNativeRenderer(pageURL: pageURL) || shown
         }
         result(shown)
       }
@@ -99,7 +99,7 @@ import UIKit
   }
 
   @MainActor @discardableResult
-  func showNativeRenderer(serverURL: URL) -> Bool {
+  func showNativeRenderer(pageURL: URL) -> Bool {
     guard let window else { return false }
     if retainedFlutterController != nil { return true }
     guard let flutterController = window.rootViewController else { return false }
@@ -110,7 +110,7 @@ import UIKit
       let sessionIdentifier = window.windowScene?.session.persistentIdentifier
     {
       nativeSessionIdentifier = sessionIdentifier
-      let application = AppDelegate.nativeApplication(serverURL: serverURL)
+      let application = AppDelegate.nativeApplication(pageURL: pageURL)
       let nativeScene = application.connect(
         sessionIdentifier: sessionIdentifier, initialData: initialData)
       nativeController = UIHostingController(
@@ -118,7 +118,7 @@ import UIKit
     } else {
       nativeController = UIHostingController(
         rootView: RufletAppView(
-          serverURL: serverURL, extensions: RufletEngineChoice.extensions))
+          pageURL: pageURL, extensions: RufletEngineChoice.extensions))
     }
     window.rootViewController = nativeController
     nativeController.addChild(flutterController)

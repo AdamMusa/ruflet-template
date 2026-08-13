@@ -10,7 +10,6 @@
 		B00402366001780E8B8AC8B5 /* RufletEngineChoice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 946ABA4325A78178AA867C6D /* RufletEngineChoice.swift */; };
 		C30000000000000000000001 /* RufletAppExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = C40000000000000000000001 /* RufletAppExtensions */; };
 		44F4DB6B0712855D937231EA /* RufletApple in Frameworks */ = {isa = PBXBuildFile; productRef = 4F8D99F90856715AE34B1507 /* RufletApple */; };
-		50C03F09D0309821643DCCFB /* RufletMotion in Frameworks */ = {isa = PBXBuildFile; productRef = B7FD70EA8A684276048E134D /* RufletMotion */; };
 		A10000000000000000000001 /* RufletGeolocator in Frameworks */ = {isa = PBXBuildFile; productRef = B10000000000000000000001 /* RufletGeolocator */; };
 		A10000000000000000000002 /* RufletAudio in Frameworks */ = {isa = PBXBuildFile; productRef = B10000000000000000000002 /* RufletAudio */; };
 		A10000000000000000000003 /* RufletAudioRecorder in Frameworks */ = {isa = PBXBuildFile; productRef = B10000000000000000000003 /* RufletAudioRecorder */; };
@@ -18,7 +17,6 @@
 		A10000000000000000000005 /* RufletFlashlight in Frameworks */ = {isa = PBXBuildFile; productRef = B10000000000000000000005 /* RufletFlashlight */; };
 		A10000000000000000000006 /* RufletPermissionHandler in Frameworks */ = {isa = PBXBuildFile; productRef = B10000000000000000000006 /* RufletPermissionHandler */; };
 		A10000000000000000000007 /* RufletSecureStorage in Frameworks */ = {isa = PBXBuildFile; productRef = B10000000000000000000007 /* RufletSecureStorage */; };
-		A10000000000000000000008 /* RufletQRScanner in Frameworks */ = {isa = PBXBuildFile; productRef = B10000000000000000000008 /* RufletQRScanner */; };
 		A10000000000000000000009 /* RufletRive in Frameworks */ = {isa = PBXBuildFile; productRef = B10000000000000000000009 /* RufletRive */; };
 		A10000000000000000000010 /* RufletLottie in Frameworks */ = {isa = PBXBuildFile; productRef = B10000000000000000000010 /* RufletLottie */; };
 		A10000000000000000000011 /* RufletCharts in Frameworks */ = {isa = PBXBuildFile; productRef = B10000000000000000000011 /* RufletCharts */; };
@@ -106,7 +104,6 @@
 			files = (
 				C30000000000000000000001 /* RufletAppExtensions in Frameworks */,
 				44F4DB6B0712855D937231EA /* RufletApple in Frameworks */,
-				50C03F09D0309821643DCCFB /* RufletMotion in Frameworks */,
 				A10000000000000000000001 /* RufletGeolocator in Frameworks */,
 				A10000000000000000000002 /* RufletAudio in Frameworks */,
 				A10000000000000000000003 /* RufletAudioRecorder in Frameworks */,
@@ -114,7 +111,6 @@
 				A10000000000000000000005 /* RufletFlashlight in Frameworks */,
 				A10000000000000000000006 /* RufletPermissionHandler in Frameworks */,
 				A10000000000000000000007 /* RufletSecureStorage in Frameworks */,
-				A10000000000000000000008 /* RufletQRScanner in Frameworks */,
 				A10000000000000000000009 /* RufletRive in Frameworks */,
 				A10000000000000000000010 /* RufletLottie in Frameworks */,
 				A10000000000000000000011 /* RufletCharts in Frameworks */,
@@ -255,7 +251,6 @@
 			packageProductDependencies = (
 				C40000000000000000000001 /* RufletAppExtensions */,
 				4F8D99F90856715AE34B1507 /* RufletApple */,
-				B7FD70EA8A684276048E134D /* RufletMotion */,
 				B10000000000000000000001 /* RufletGeolocator */,
 				B10000000000000000000002 /* RufletAudio */,
 				B10000000000000000000003 /* RufletAudioRecorder */,
@@ -263,7 +258,6 @@
 				B10000000000000000000005 /* RufletFlashlight */,
 				B10000000000000000000006 /* RufletPermissionHandler */,
 				B10000000000000000000007 /* RufletSecureStorage */,
-				B10000000000000000000008 /* RufletQRScanner */,
 				B10000000000000000000009 /* RufletRive */,
 				B10000000000000000000010 /* RufletLottie */,
 				B10000000000000000000011 /* RufletCharts */,
@@ -829,7 +823,6 @@
 /* Begin XCSwiftPackageProductDependency section */
 		C40000000000000000000001 /* RufletAppExtensions */ = {isa = XCSwiftPackageProductDependency; package = C50000000000000000000001 /* XCLocalSwiftPackageReference "../apple_extensions" */; productName = RufletAppExtensions; };
 		4F8D99F90856715AE34B1507 /* RufletApple */ = {isa = XCSwiftPackageProductDependency; productName = RufletApple; };
-		B7FD70EA8A684276048E134D /* RufletMotion */ = {isa = XCSwiftPackageProductDependency; productName = RufletMotion; };
 		B10000000000000000000001 /* RufletGeolocator */ = {isa = XCSwiftPackageProductDependency; productName = RufletGeolocator; };
 		B10000000000000000000002 /* RufletAudio */ = {isa = XCSwiftPackageProductDependency; productName = RufletAudio; };
 		B10000000000000000000003 /* RufletAudioRecorder */ = {isa = XCSwiftPackageProductDependency; productName = RufletAudioRecorder; };
@@ -837,7 +830,6 @@
 		B10000000000000000000005 /* RufletFlashlight */ = {isa = XCSwiftPackageProductDependency; productName = RufletFlashlight; };
 		B10000000000000000000006 /* RufletPermissionHandler */ = {isa = XCSwiftPackageProductDependency; productName = RufletPermissionHandler; };
 		B10000000000000000000007 /* RufletSecureStorage */ = {isa = XCSwiftPackageProductDependency; productName = RufletSecureStorage; };
-		B10000000000000000000008 /* RufletQRScanner */ = {isa = XCSwiftPackageProductDependency; productName = RufletQRScanner; };
 		B10000000000000000000009 /* RufletRive */ = {isa = XCSwiftPackageProductDependency; productName = RufletRive; };
 		B10000000000000000000010 /* RufletLottie */ = {isa = XCSwiftPackageProductDependency; productName = RufletLottie; };
 		B10000000000000000000011 /* RufletCharts */ = {isa = XCSwiftPackageProductDependency; productName = RufletCharts; };

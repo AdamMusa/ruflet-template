@@ -32,7 +32,7 @@ class MainFlutterWindow: NSWindow {
       }
       let arguments = call.arguments as? [String: Any]
       let rawURL = arguments?["pageUrl"] as? String ?? ""
-      guard let serverURL = RufletEngineChoice.websocketURL(from: rawURL) else {
+      guard let pageURL = RufletEngineChoice.pageURL(from: rawURL) else {
         result(
           FlutterError(
             code: "invalid_page_url", message: "Native renderer requires a valid Ruflet page URL.",
@@ -46,7 +46,7 @@ class MainFlutterWindow: NSWindow {
         }
         let native = NSHostingController(
           rootView: RufletAppView(
-            serverURL: serverURL, extensions: RufletEngineChoice.extensions))
+            pageURL: pageURL, extensions: RufletEngineChoice.extensions))
         self.contentViewController = native
         result(true)
       }

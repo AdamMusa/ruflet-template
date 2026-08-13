@@ -174,15 +174,17 @@ enum RufletCameraMapping {
 
   static func lensType(for type: AVCaptureDevice.DeviceType) -> RufletCameraLensType {
     #if os(iOS)
+    if #available(iOS 17.0, *), type == .external {
+      return .external
+    }
     switch type {
-    case .builtInWideAngleCamera: .wide
-    case .builtInTelephotoCamera: .telephoto
-    case .builtInUltraWideCamera: .ultraWide
-    case .builtInDualCamera, .builtInDualWideCamera: .dual
-    case .builtInTripleCamera: .triple
-    case .builtInTrueDepthCamera: .trueDepth
-    case .external: .external
-    default: .unknown
+    case .builtInWideAngleCamera: return .wide
+    case .builtInTelephotoCamera: return .telephoto
+    case .builtInUltraWideCamera: return .ultraWide
+    case .builtInDualCamera, .builtInDualWideCamera: return .dual
+    case .builtInTripleCamera: return .triple
+    case .builtInTrueDepthCamera: return .trueDepth
+    default: return .unknown
     }
     #elseif os(macOS)
     return type == .builtInWideAngleCamera ? .wide : .external
