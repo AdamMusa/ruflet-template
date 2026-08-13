@@ -5,13 +5,121 @@ enum RufletScrollMode: String, CaseIterable, RufletStringEnum {
   case none, auto, adaptive, always, hidden
 }
 
+/// Pinned Flet `scroll_to` arguments after applying the wire parsers used by
+/// `ScrollableControl._invokeMethod`.
+struct RufletScrollToArguments: Equatable {
+  let offset: Double?
+  let delta: Double?
+  let scrollKey: ControlKey?
+  let duration: TimeInterval
+  let curve: RufletCurve
+
+  init(_ arguments: RufletValue) throws {
+    let values = arguments.map ?? [:]
+    offset = parseDouble(values["offset"])
+    delta = parseDouble(values["delta"])
+    scrollKey = parseKey(values["scroll_key"])
+    if let rawKey = values["scroll_key"], !rawKey.isNull, scrollKey == nil {
+      throw RufletScrollableError.invalidScrollKey
+    }
+    duration = parseRufletWireDuration(values["duration"], 0) ?? 0
+    curve = parseCurve(values["curve"]?.text, .ease)!
+  }
+}
+
+@MainActor
+protocol RufletScrollViewportDriving: AnyObject {
+  func scroll(
+    offset: Double?,
+    delta: Double?,
+    duration: TimeInterval,
+    curve: RufletCurve)
+  func scrollToEnd(duration: TimeInterval, curve: RufletCurve)
+}
+
+extension RufletScrollViewport: RufletScrollViewportDriving {}
+
+/// Owns the imperative lifecycle of pinned Flet's stateful
+/// `ScrollableControl`. Keeping the listener tokens outside transient View
+/// state guarantees one registration per native mount and exact removal on
+/// unmount.
+@MainActor
+final class RufletScrollableCoordinator: ObservableObject {
+  private weak var control: RufletControl?
+  private weak var viewport: (any RufletScrollViewportDriving)?
+  private var invokeListener: UUID?
+  private var updateListener: UUID?
+
+  func mount(control: RufletControl, viewport: any RufletScrollViewportDriving) {
+    if self.control !== control { unmount() }
+    self.control = control
+    self.viewport = viewport
+    guard invokeListener == nil else { return }
+
+    invokeListener = control.addInvokeMethodListener { [weak self] name, arguments in
+      guard let self else { return .null }
+      // Pinned Flet returns null for every method name and only performs work
+      // for `scroll_to`.
+      guard name == "scroll_to" else { return .null }
+      perform(try RufletScrollToArguments(arguments))
+      return .null
+    }
+    updateListener = control.addListener { [weak self] in
+      self?.scheduleAutoScrollIfNeeded()
+    }
+    scheduleAutoScrollIfNeeded()
+  }
+
+  func unmount() {
+    if let control, let invokeListener {
+      control.removeInvokeMethodListener(invokeListener)
+    }
+    if let control, let updateListener {
+      control.removeListener(updateListener)
+    }
+    invokeListener = nil
+    updateListener = nil
+    control = nil
+    viewport = nil
+  }
+
+  private func perform(_ arguments: RufletScrollToArguments) {
+    guard let viewport else { return }
+    if let scrollKey = arguments.scrollKey,
+      let target = control?.backend.scrollTarget(for: scrollKey.description)
+    {
+      target.reveal(duration: arguments.duration, curve: arguments.curve)
+    } else {
+      viewport.scroll(
+        offset: arguments.offset,
+        delta: arguments.delta,
+        duration: arguments.duration,
+        curve: arguments.curve)
+    }
+  }
+
+  private func scheduleAutoScrollIfNeeded() {
+    guard control?.boolean("auto_scroll", default: false) == true else { return }
+    Task { @MainActor [weak self] in
+      // Dart uses addPostFrameCallback. Yielding lets SwiftUI commit the new
+      // native content metrics before resolving maxScrollExtent.
+      await Task.yield()
+      guard let self, self.control != nil else { return }
+      viewport?.scrollToEnd(duration: 1, curve: .ease)
+    }
+  }
+}
+
+private enum RufletScrollableError: Error {
+  case invalidScrollKey
+}
+
 /// Apple-native port of pinned Flet's shared `ScrollableControl`.
 @MainActor
 struct ScrollableControl<Content: View>: View {
   @ObservedObject var control: RufletControl
   @StateObject private var viewport = RufletScrollViewport()
-  @State private var invokeListener: UUID?
-  @State private var updateListener: UUID?
+  @StateObject private var coordinator = RufletScrollableCoordinator()
 
   let child: Content
   let scrollDirection: Axis.Set
@@ -34,11 +142,9 @@ struct ScrollableControl<Content: View>: View {
       .environment(\.rufletScrollViewport, viewport)
       .onAppear {
         viewport.configure(horizontal: scrollDirection == .horizontal)
-        installListeners()
-        scheduleAutoScrollIfNeeded()
+        coordinator.mount(control: control, viewport: viewport)
       }
-      .onChange(of: autoScrollSignature) { _ in scheduleAutoScrollIfNeeded() }
-      .onDisappear(perform: removeListeners)
+      .onDisappear { coordinator.unmount() }
   }
 
   @ViewBuilder
@@ -54,61 +160,5 @@ struct ScrollableControl<Content: View>: View {
 
   private var mode: RufletScrollMode {
     parseEnum(RufletScrollMode.self, control.string("scroll"), RufletScrollMode.none)!
-  }
-
-  private var autoScrollSignature: String {
-    guard control.boolean("auto_scroll", default: false) else { return "off" }
-    return control.children("controls", visibleOnly: false).map(\.id)
-      .map(String.init)
-      .joined(separator: ",")
-  }
-
-  private func installListeners() {
-    guard invokeListener == nil else { return }
-    invokeListener = control.addInvokeMethodListener {
-      [weak viewport, weak backend = control.backend] name, args in
-      guard name == "scroll_to", let viewport else { return .null }
-      let values = args.map ?? [:]
-      let duration = parseRufletWireDuration(values["duration"], 0) ?? 0
-      let curve = parseCurve(values["curve"]?.text, .ease)!
-      if let scrollKey = parseKey(values["scroll_key"]),
-        let target = backend?.scrollTarget(for: scrollKey.description)
-      {
-        target.reveal(duration: duration, curve: curve)
-      } else {
-        viewport.scroll(
-          offset: values["offset"]?.number,
-          delta: values["delta"]?.number,
-          duration: duration,
-          curve: curve)
-      }
-      return .null
-    }
-    updateListener = control.addListener { [weak viewport] in
-      guard control.boolean("auto_scroll", default: false) else { return }
-      Task { @MainActor in
-        await Task.yield()
-        viewport?.scrollToEnd(duration: 1, curve: .ease)
-      }
-    }
-  }
-
-  private func removeListeners() {
-    if let invokeListener {
-      control.removeInvokeMethodListener(invokeListener)
-      self.invokeListener = nil
-    }
-    if let updateListener {
-      control.removeListener(updateListener)
-      self.updateListener = nil
-    }
-  }
-
-  private func scheduleAutoScrollIfNeeded() {
-    guard control.boolean("auto_scroll", default: false) else { return }
-    Task { @MainActor in
-      await Task.yield()
-      viewport.scrollToEnd(duration: 1, curve: .ease)
-    }
   }
 }
