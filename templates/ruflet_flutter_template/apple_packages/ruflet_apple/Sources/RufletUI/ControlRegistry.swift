@@ -290,7 +290,8 @@ public enum ControlRegistry {
     add(["Markdown"], .visible, "MarkdownControlView", .nativeView,
         events: ["selection_change", "tap_link", "tap_text"])
 
-    // Material buttons and value controls.
+    // Cross-platform button and value-control wire contracts rendered by
+    // Apple-native controls on iOS and macOS.
     let buttonEvents: Set<String> = ["blur", "click", "focus", "hover", "long_press"]
     add(["Button", "ElevatedButton", "TextButton", "FilledButton", "FilledTonalButton",
          "OutlinedButton", "IconButton", "FilledIconButton", "FilledTonalIconButton",
@@ -313,11 +314,11 @@ public enum ControlRegistry {
     // Flet gives each of these a FocusNode and reports focus/blur from it, so
     // the native marks must advertise the pair or FocusReporter never mounts.
     add(["Switch", "Checkbox"], .visible,
-        "Drawn Material selection control", .nativeView,
+        "Native Apple selection control", .nativeView,
         events: ["blur", "change", "focus"])
     // Radio delegates value changes to RadioGroup; the radio itself owns only
     // its FocusNode events in Flet 0.80.5.
-    add(["Radio"], .visible, "Drawn Material radio control", .nativeView,
+    add(["Radio"], .visible, "Native Apple radio control", .nativeView,
         events: ["blur", "focus"])
     add(["RadioGroup"], .visible, "RadioGroupControlView", .nativeView, events: ["change"])
     add(["Slider"], .visible, "SliderControlView", .nativeView,

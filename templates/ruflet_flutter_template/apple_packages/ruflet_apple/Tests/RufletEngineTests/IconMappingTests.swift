@@ -3,6 +3,13 @@ import XCTest
 import RufletProtocol
 
 final class IconMappingTests: XCTestCase {
+  private var applePackageRoot: URL {
+    URL(fileURLWithPath: #filePath)
+      .deletingLastPathComponent() // RufletEngineTests
+      .deletingLastPathComponent() // Tests
+      .deletingLastPathComponent() // package root
+  }
+
   /// Static and thumbnail icons exercised across Ruflet Explorer's 65 gallery
   /// scenarios. Dynamic icon-search entries are covered separately by the
   /// generated Cupertino-catalog test below.
@@ -41,6 +48,26 @@ final class IconMappingTests: XCTestCase {
         XCTAssertTrue(IconMapping.nativeSymbolExists(symbol), "Unavailable SF Symbol \(symbol) for \(name)")
       }
     }
+  }
+
+  func testApplePackageContainsNoMaterialIconRendererOrFontPipeline() throws {
+    let manager = FileManager.default
+    let forbiddenFileNames: Set<String> = [
+      "MaterialIcons-Regular.otf",
+      "MaterialIconGlyphs.generated.swift",
+      "generate_material_icon_glyphs.rb",
+    ]
+    let enumerator = try XCTUnwrap(
+      manager.enumerator(
+        at: applePackageRoot,
+        includingPropertiesForKeys: [.isRegularFileKey],
+        options: [.skipsHiddenFiles]))
+
+    var found: [String] = []
+    for case let url as URL in enumerator where forbiddenFileNames.contains(url.lastPathComponent) {
+      found.append(url.path)
+    }
+    XCTAssertEqual(found, [], "Apple must never ship the Android Material icon renderer: \(found)")
   }
 
   func testMaterialAndCupertinoWireIconsResolveToNativeAppleSymbols() throws {
@@ -136,13 +163,8 @@ final class IconMappingTests: XCTestCase {
   }
 
   func testAppleIconSearchExposesOnlyTheCupertinoCatalog() {
-    XCTAssertEqual(IconMapping.preferredFamily(forPlatform: "ios"), .cupertino)
-    XCTAssertEqual(IconMapping.preferredFamily(forPlatform: "macos"), .cupertino)
-    XCTAssertEqual(IconMapping.preferredFamily(forPlatform: "android"), .material)
-
-    let iosNames = IconMapping.searchableNames(forPlatform: "ios")
-    XCTAssertEqual(iosNames, MaterialIconNames.cupertino)
-    XCTAssertFalse(iosNames.contains("ACCESSIBILITY_NEW"))
+    XCTAssertEqual(IconMapping.searchableNames, MaterialIconNames.cupertino)
+    XCTAssertFalse(IconMapping.searchableNames.contains("ACCESSIBILITY_NEW"))
   }
 
   func testCupertinoCatalogHasBroadNativeCoverage() {

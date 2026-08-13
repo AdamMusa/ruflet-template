@@ -26,24 +26,10 @@ public enum IconMapping {
     case systemSymbol(String)
   }
 
-  /// The same platform-family policy used by Ruflet's icon search. Keeping it
-  /// next to resolution prevents an Apple host from accidentally presenting
-  /// Material names and then resolving them as Cupertino (or vice versa).
-  public static func preferredFamily(forPlatform rawPlatform: String) -> Family {
-    switch rawPlatform.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
-    case "ios", "macos": return .cupertino
-    default: return .material
-    }
-  }
-
-  /// Names suitable for a platform icon browser. The generated wire catalogs
-  /// remain the source of truth; this is not a hand-maintained screen list.
-  public static func searchableNames(forPlatform platform: String) -> [String] {
-    switch preferredFamily(forPlatform: platform) {
-    case .material: return MaterialIconNames.material
-    case .cupertino: return MaterialIconNames.cupertino
-    }
-  }
+  /// Names suitable for an icon browser hosted by this Apple renderer.
+  /// Incoming Material names remain a wire-compatibility concern only; an
+  /// iOS/macOS UI never advertises Android's icon catalog.
+  public static var searchableNames: [String] { MaterialIconNames.cupertino }
 
   public static func symbol(forName name: String, family: Family) -> String {
     switch family {

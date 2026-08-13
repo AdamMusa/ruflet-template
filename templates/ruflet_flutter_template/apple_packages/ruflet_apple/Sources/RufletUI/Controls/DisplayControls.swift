@@ -196,7 +196,7 @@ private struct SelectableText: ViewModifier {
   }
 }
 
-/// `Icon` — an SF Symbol resolved from the Material index Ruby sends.
+/// `Icon` — an SF Symbol resolved from the cross-platform index Ruby sends.
 ///
 /// Flutter draws Material Symbols, a variable font, so `fill`, `weight`,
 /// `grade` and `optical_size` move its FILL, wght, GRAD and opsz axes. SF
@@ -211,17 +211,16 @@ struct IconControlView: View {
     let glyph = RufletIconGlyph(node: node)
 
     symbol(glyph)
-      // SwiftUI exposes optical sizing through the glyph's point size; the
-      // exact Material font still owns the named icon's outline.
+      // SwiftUI exposes optical sizing through the native symbol point size.
       .modifier(IconOpticalSize(value: node.double("optical_size")))
       .modifier(IconShadows(value: node.props["shadows"]))
       .modifier(IconBlendMode(name: node.string("blend_mode")))
       .modifier(IconSemanticLabel(value: glyph.semanticsLabel))
   }
 
-  /// Material values retain the bundled Flutter font. Cupertino values retain
-  /// native SF Symbols, where the expressible weight/grade axes are folded
-  /// into the native symbol font.
+  /// Every Flet icon value resolves to native SF Symbols on Apple. The wire
+  /// family only identifies the incoming catalog entry; it never selects a
+  /// Flutter or Material font renderer.
   @ViewBuilder
   private func symbol(_ glyph: RufletIconGlyph) -> some View {
     let value = node.props["name"] ?? node.props["icon"]
@@ -246,9 +245,8 @@ private struct IconSemanticLabel: ViewModifier {
   }
 }
 
-/// The icon axes Flet carries. Flutter's static MaterialIcons-Regular font
-/// ignores unsupported variation axes; native Cupertino symbols can express
-/// the discrete weight ladder below.
+/// The icon axes Flet carries, translated onto the discrete weight and fill
+/// variants exposed by native SF Symbols.
 struct RufletIconGlyph: Equatable {
   let size: CGFloat
   let appliesTextScaling: Bool
