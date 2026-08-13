@@ -37,12 +37,18 @@ let package = Package(
       exact: "13.7.0"),
     .package(url: "https://github.com/airbnb/lottie-ios.git", exact: "4.6.1"),
     .package(url: "https://github.com/rive-app/rive-ios.git", exact: "6.9.5"),
+    .package(url: "https://github.com/swiftlang/swift-markdown.git", exact: "0.7.3"),
+    .package(url: "https://github.com/mgriebling/SwiftMath.git", exact: "1.7.3"),
   ],
   targets: [
     .target(name: "RufletProtocol"),
     .target(
       name: "RufletEngine",
-      dependencies: ["RufletProtocol"],
+      dependencies: [
+        "RufletProtocol",
+        .product(name: "Markdown", package: "swift-markdown"),
+        .product(name: "SwiftMath", package: "SwiftMath"),
+      ],
       resources: [.process("Resources")]),
     .target(name: "RufletApple", dependencies: ["RufletEngine", "RufletProtocol"]),
     .target(

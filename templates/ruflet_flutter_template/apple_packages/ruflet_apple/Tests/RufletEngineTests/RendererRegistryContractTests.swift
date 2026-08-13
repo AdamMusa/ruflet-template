@@ -17,28 +17,24 @@ final class RendererRegistryContractTests: XCTestCase {
       "Every control type claimed by the extension registry must create a native view")
   }
 
-  func testPinnedFletCoreWidgetRegistrationDebtIsExplicit() {
+  func testEveryPinnedFletCoreWidgetTypeIsRegistered() {
     let backend = RendererRegistryTestBackend()
     let missing = PinnedFletCoreWidgetTypes.all
       .subtracting(backend.extensionRegistry.renderedControlTypes)
       .sorted()
 
     print(
-      "Pinned Flet core widget registry accounting: " +
-      "\(PinnedFletCoreWidgetTypes.all.count - missing.count)/" +
-      "\(PinnedFletCoreWidgetTypes.all.count) wire types declared; " +
-      "\(missing.count) remain unregistered.")
+      "Pinned Flet core widget registry accounting: "
+        + "\(PinnedFletCoreWidgetTypes.all.count - missing.count)/"
+        + "\(PinnedFletCoreWidgetTypes.all.count) wire types declared; "
+        + "\(missing.count) remain unregistered.")
     if !missing.isEmpty {
       print("Unregistered pinned Flet widget types:\n  " + missing.joined(separator: "\n  "))
     }
 
-    XCTExpectFailure(
-      "The file-by-file Swift rewrite is incomplete until all 124 pinned Flet widget wire types are declared"
-    ) {
-      XCTAssertEqual(
-        missing, [],
-        "Pinned Flet widget registrations still missing from the native extension registry")
-    }
+    XCTAssertEqual(
+      missing, [],
+      "Every pinned Flet widget wire type must be registered in the native extension registry")
   }
 }
 

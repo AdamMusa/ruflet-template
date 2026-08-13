@@ -10,11 +10,11 @@ public struct RufletCoreExtension: RufletExtension {
 
   public let renderedControlTypes: Set<String> = [
     "AdaptiveAlertDialog", "AdaptiveButton", "AdaptiveCheckbox", "AdaptiveRadio", "AdaptiveSlider", "AdaptiveSwitch", "AdaptiveTextField",
-    "AlertDialog", "AnimatedSwitcher", "AppBar", "AutoComplete", "AutofillGroup", "Banner", "BottomAppBar", "BottomSheet", "Button", "Card", "Checkbox", "Chip", "CircleAvatar", "Column", "Container", "ContextMenu",
+    "AlertDialog", "AnimatedSwitcher", "AppBar", "AutoComplete", "AutofillGroup", "Banner", "BottomAppBar", "BottomSheet", "Button", "Canvas", "Card", "Checkbox", "Chip", "CircleAvatar", "Column", "Container", "ContextMenu",
     "CupertinoButton", "CupertinoCheckbox", "CupertinoDialogAction", "CupertinoFilledButton",
     "CupertinoActionSheet", "CupertinoActionSheetAction", "CupertinoActivityIndicator", "CupertinoAlertDialog", "CupertinoAppBar", "CupertinoBottomSheet", "CupertinoContextMenu", "CupertinoContextMenuAction", "CupertinoDatePicker", "CupertinoListTile", "CupertinoPicker", "CupertinoRadio", "CupertinoSegmentedButton", "CupertinoSlider", "CupertinoSlidingSegmentedButton", "CupertinoSwitch", "CupertinoTextField", "CupertinoTimerPicker", "CupertinoTintedButton", "Dismissible",
     "DataTable", "DatePicker", "DateRangePicker", "Divider", "Draggable", "DragTarget", "Dropdown", "DropdownM2", "ExpansionPanelList", "ExpansionTile", "FilledButton", "FilledIconButton", "FilledTonalButton", "FilledTonalIconButton", "FloatingActionButton", "GestureDetector", "GridView", "Hero",
-    "CupertinoNavigationBar", "FletApp", "Icon", "IconButton", "Image", "InteractiveViewer", "KeyboardListener", "ListTile", "ListView", "MenuBar", "MenuItemButton", "MergeSemantics", "NavigationBar", "NavigationBarDestination", "NavigationDrawer", "NavigationRail", "OutlinedButton", "OutlinedIconButton", "Page", "PageView", "Pagelet", "PopupMenuButton",
+    "CupertinoNavigationBar", "FletApp", "Icon", "IconButton", "Image", "InteractiveViewer", "KeyboardListener", "ListTile", "ListView", "Markdown", "MenuBar", "MenuItemButton", "MergeSemantics", "NavigationBar", "NavigationBarDestination", "NavigationDrawer", "NavigationRail", "OutlinedButton", "OutlinedIconButton", "Page", "PageView", "Pagelet", "PopupMenuButton",
     "Placeholder", "ProgressBar", "ProgressRing", "Radio", "RadioGroup", "RangeSlider",
     "ReorderableDragHandle", "ReorderableListView", "ResponsiveRow", "Row", "SafeArea",
     "Screenshot", "SearchBar", "SegmentedButton", "SelectionArea", "Semantics", "ShaderMask", "Shimmer", "Slider", "SnackBar", "Stack", "SubmenuButton", "Switch", "Tab", "TabBar", "TabBarView", "Tabs", "Text", "TextButton", "TextField", "TimePicker", "View",
@@ -46,6 +46,7 @@ public struct RufletCoreExtension: RufletExtension {
     case "Banner": return AnyView(BannerControl(control: control))
     case "BottomAppBar": return AnyView(BottomAppBarControl(control: control))
     case "BottomSheet": return AnyView(BottomSheetControl(control: control))
+    case "Canvas": return AnyView(CanvasControl(control: control))
     case "Card": return AnyView(CardControl(control: control))
     case "Chip": return AnyView(ChipControl(control: control))
     case "CircleAvatar": return AnyView(CircleAvatarControl(control: control))
@@ -99,6 +100,7 @@ public struct RufletCoreExtension: RufletExtension {
     case "GridView": return AnyView(GridViewControl(control: control))
     case "ListView": return AnyView(ListViewControl(control: control))
     case "ListTile": return AnyView(ListTileControl(control: control))
+    case "Markdown": return AnyView(MarkdownControl(control: control))
     case "KeyboardListener": return AnyView(KeyboardListenerControl(control: control))
     case "MenuBar": return AnyView(MenuBarControl(control: control))
     case "MenuItemButton": return AnyView(MenuItemButtonControl(control: control))

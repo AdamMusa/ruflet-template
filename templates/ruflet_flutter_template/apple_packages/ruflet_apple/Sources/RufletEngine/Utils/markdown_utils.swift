@@ -1,9 +1,14 @@
 import SwiftUI
 
 public enum RufletMarkdownExtensionSet: String, Sendable {
+  case none
   case commonMark = "commonmark"
   case gitHubWeb = "githubweb"
   case gitHubFlavored = "githubflavored"
+
+  var includesGitHubExtensions: Bool {
+    self == .gitHubWeb || self == .gitHubFlavored
+  }
 }
 
 public enum RufletMarkdownCodeTheme {
@@ -61,18 +66,18 @@ public func parseMarkdownStyleSheet(
 }
 
 @MainActor
-public extension RufletControl {
-  func markdownExtensionSet(
+extension RufletControl {
+  public func markdownExtensionSet(
     _ propertyName: String, default defaultValue: RufletMarkdownExtensionSet? = nil
   ) -> RufletMarkdownExtensionSet? {
     parseMarkdownExtensionSet(string(propertyName), defaultValue)
   }
 
-  func markdownCodeTheme(_ propertyName: String) -> RufletMarkdownCodeTheme? {
+  public func markdownCodeTheme(_ propertyName: String) -> RufletMarkdownCodeTheme? {
     parseMarkdownCodeTheme(dynamicValue(propertyName))
   }
 
-  func markdownStyleSheet(
+  public func markdownStyleSheet(
     _ propertyName: String, default defaultValue: RufletMarkdownStyleSheet? = nil
   ) -> RufletMarkdownStyleSheet? {
     parseMarkdownStyleSheet(dynamicValue(propertyName), defaultValue)
