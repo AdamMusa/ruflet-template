@@ -185,6 +185,14 @@ private func unwrapRufletValue(_ value: Any?) -> Any? {
   case .binary(let value): return value
   case .array(let values): return values.map { unwrapRufletValue($0) as Any }
   case .map(let values): return values.mapValues { unwrapRufletValue($0) as Any }
+  case .keyedMap(let values):
+    return Dictionary<AnyHashable, Any>(uniqueKeysWithValues: values.map { key, value in
+      let unwrappedKey: AnyHashable = switch key {
+      case .string(let text): AnyHashable(text)
+      case .int(let integer): AnyHashable(integer)
+      }
+      return (unwrappedKey, unwrapRufletValue(value) as Any)
+    })
   case .extensionValue: return nil
   }
 }
