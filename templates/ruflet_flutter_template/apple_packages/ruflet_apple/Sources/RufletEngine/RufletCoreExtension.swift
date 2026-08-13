@@ -10,14 +10,14 @@ public struct RufletCoreExtension: RufletExtension {
 
   public let renderedControlTypes: Set<String> = [
     "AdaptiveAlertDialog", "AdaptiveButton", "AdaptiveCheckbox", "AdaptiveRadio", "AdaptiveSlider", "AdaptiveSwitch", "AdaptiveTextField",
-    "AlertDialog", "AnimatedSwitcher", "AppBar", "BottomAppBar", "BottomSheet", "Button", "Card", "Checkbox", "CircleAvatar", "Column", "Container",
+    "AlertDialog", "AnimatedSwitcher", "AppBar", "Banner", "BottomAppBar", "BottomSheet", "Button", "Card", "Checkbox", "CircleAvatar", "Column", "Container",
     "CupertinoButton", "CupertinoCheckbox", "CupertinoDialogAction", "CupertinoFilledButton",
-    "CupertinoActionSheet", "CupertinoActionSheetAction", "CupertinoAlertDialog", "CupertinoAppBar", "CupertinoBottomSheet", "CupertinoDatePicker", "CupertinoPicker", "CupertinoRadio", "CupertinoSlider", "CupertinoSwitch", "CupertinoTextField", "CupertinoTimerPicker", "CupertinoTintedButton", "Dismissible",
+    "CupertinoActionSheet", "CupertinoActionSheetAction", "CupertinoActivityIndicator", "CupertinoAlertDialog", "CupertinoAppBar", "CupertinoBottomSheet", "CupertinoDatePicker", "CupertinoPicker", "CupertinoRadio", "CupertinoSlider", "CupertinoSwitch", "CupertinoTextField", "CupertinoTimerPicker", "CupertinoTintedButton", "Dismissible",
     "DatePicker", "DateRangePicker", "Divider", "Draggable", "DragTarget", "Dropdown", "DropdownM2", "FilledButton", "FilledIconButton", "FilledTonalButton", "FilledTonalIconButton", "FloatingActionButton", "GridView", "Hero",
     "CupertinoNavigationBar", "Icon", "IconButton", "Image", "InteractiveViewer", "KeyboardListener", "ListView", "MergeSemantics", "NavigationBar", "NavigationBarDestination", "NavigationDrawer", "NavigationRail", "OutlinedButton", "OutlinedIconButton", "Page", "PageView",
     "Placeholder", "ProgressBar", "ProgressRing", "Radio", "RadioGroup", "RangeSlider",
     "ReorderableDragHandle", "ReorderableListView", "ResponsiveRow", "Row", "SafeArea",
-    "SelectionArea", "Semantics", "Slider", "Stack", "Switch", "Tab", "TabBar", "TabBarView", "Tabs", "Text", "TextButton", "TextField", "TimePicker", "View",
+    "SelectionArea", "Semantics", "ShaderMask", "Shimmer", "Slider", "Stack", "Switch", "Tab", "TabBar", "TabBarView", "Tabs", "Text", "TextButton", "TextField", "TimePicker", "View",
     "TransparentPointer", "VerticalDivider",
   ]
 
@@ -41,6 +41,7 @@ public struct RufletCoreExtension: RufletExtension {
       return AnyView(AdaptiveTextFieldControl(control: control))
     case "AnimatedSwitcher": return AnyView(AnimatedSwitcherControl(control: control))
     case "AppBar": return AnyView(AppBarControl(control: control))
+    case "Banner": return AnyView(BannerControl(control: control))
     case "BottomAppBar": return AnyView(BottomAppBarControl(control: control))
     case "BottomSheet": return AnyView(BottomSheetControl(control: control))
     case "Card": return AnyView(CardControl(control: control))
@@ -50,6 +51,7 @@ public struct RufletCoreExtension: RufletExtension {
       return AnyView(CupertinoButtonControl(control: control))
     case "CupertinoActionSheet": return AnyView(CupertinoActionSheetControl(control: control))
     case "CupertinoActionSheetAction": return AnyView(CupertinoActionSheetActionControl(control: control))
+    case "CupertinoActivityIndicator": return AnyView(CupertinoActivityIndicatorControl(control: control))
     case "CupertinoAlertDialog": return AnyView(CupertinoAlertDialogControl(control: control))
     case "CupertinoCheckbox": return AnyView(CupertinoCheckboxControl(control: control))
     case "CupertinoDialogAction": return AnyView(CupertinoDialogActionControl(control: control))
@@ -109,6 +111,8 @@ public struct RufletCoreExtension: RufletExtension {
     case "MergeSemantics": return AnyView(MergeSemanticsControl(control: control))
     case "SelectionArea": return AnyView(SelectionAreaControl(control: control))
     case "Semantics": return AnyView(SemanticsControl(control: control))
+    case "ShaderMask": return AnyView(ShaderMaskControl(control: control))
+    case "Shimmer": return AnyView(ShimmerControl(control: control))
     case "Placeholder": return AnyView(PlaceholderControl(control: control))
     case "Page": return AnyView(PageControl(control: control))
     default: return nil
