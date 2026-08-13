@@ -87,6 +87,19 @@ struct RufletNativeTextInputCallbacks {
   let onTapOutside: () -> Void
 }
 
+/// Platform-neutral policy shared by the native input bridges. Flet only gives
+/// the native field an outside-tap callback when `on_tap_outside` is enabled;
+/// a disabled field must therefore install no window-level observer at all.
+struct RufletOutsideTapMonitoringContract {
+  static func shouldAttach(reportsTapOutside: Bool, hasWindow: Bool) -> Bool {
+    reportsTapOutside && hasWindow
+  }
+
+  static func shouldReceiveTouch(reportsTapOutside: Bool, isInsideInput: Bool) -> Bool {
+    reportsTapOutside && !isInsideInput
+  }
+}
+
 #if os(iOS)
 struct RufletNativeTextInput: UIViewRepresentable {
   let configuration: RufletNativeTextInputConfiguration
@@ -172,7 +185,7 @@ final class RufletTextInputUIView: UIView, UITextFieldDelegate, UITextViewDelega
   private var lastBlurRequest = 0
   private var applying = false
   private weak var monitoredWindow: UIWindow?
-  private lazy var outsideTapRecognizer = UITapGestureRecognizer(target: self, action: #selector(windowTapped(_:)))
+  private var outsideTapRecognizer: UITapGestureRecognizer?
   private lazy var textFieldTapRecognizer = UITapGestureRecognizer(target: self, action: #selector(inputTapped(_:)))
   private lazy var textViewTapRecognizer = UITapGestureRecognizer(target: self, action: #selector(inputTapped(_:)))
   private lazy var scribbleInteraction = UIScribbleInteraction(delegate: self)
@@ -193,22 +206,16 @@ final class RufletTextInputUIView: UIView, UITextFieldDelegate, UITextViewDelega
     textViewTapRecognizer.cancelsTouchesInView = false
     textViewTapRecognizer.delegate = self
     textView.addGestureRecognizer(textViewTapRecognizer)
-    outsideTapRecognizer.cancelsTouchesInView = false
-    outsideTapRecognizer.delegate = self
     addInteraction(scribbleInteraction)
   }
 
   required init?(coder: NSCoder) { nil }
 
-  deinit { monitoredWindow?.removeGestureRecognizer(outsideTapRecognizer) }
+  deinit { removeOutsideTapRecognizer() }
 
   override func didMoveToWindow() {
     super.didMoveToWindow()
-    if monitoredWindow !== window {
-      monitoredWindow?.removeGestureRecognizer(outsideTapRecognizer)
-      monitoredWindow = window
-      window?.addGestureRecognizer(outsideTapRecognizer)
-    }
+    synchronizeOutsideTapRecognizer()
   }
 
   override var intrinsicContentSize: CGSize {
@@ -239,6 +246,7 @@ final class RufletTextInputUIView: UIView, UITextFieldDelegate, UITextViewDelega
   ) {
     self.configuration = configuration
     self.callbacks = callbacks
+    synchronizeOutsideTapRecognizer()
     let nextView: UIView = configuration.multiline ? textView : textField
     if activeView !== nextView {
       activeView?.removeFromSuperview()
@@ -363,6 +371,54 @@ final class RufletTextInputUIView: UIView, UITextFieldDelegate, UITextViewDelega
     guard configuration?.reportsTapOutside == true, recognizer.state == .ended else { return }
     let point = recognizer.location(in: self)
     if !bounds.contains(point) { callbacks?.onTapOutside() }
+  }
+
+  func gestureRecognizer(
+    _ gestureRecognizer: UIGestureRecognizer,
+    shouldReceive touch: UITouch
+  ) -> Bool {
+    guard gestureRecognizer === outsideTapRecognizer else { return true }
+    let isInsideInput = touch.view.map { $0 === self || $0.isDescendant(of: self) } ?? false
+    return RufletOutsideTapMonitoringContract.shouldReceiveTouch(
+      reportsTapOutside: configuration?.reportsTapOutside == true,
+      isInsideInput: isInsideInput)
+  }
+
+  func gestureRecognizer(
+    _ gestureRecognizer: UIGestureRecognizer,
+    shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
+  ) -> Bool {
+    gestureRecognizer === outsideTapRecognizer || otherGestureRecognizer === outsideTapRecognizer
+  }
+
+  private func synchronizeOutsideTapRecognizer() {
+    let shouldAttach = RufletOutsideTapMonitoringContract.shouldAttach(
+      reportsTapOutside: configuration?.reportsTapOutside == true,
+      hasWindow: window != nil)
+    let targetWindow = shouldAttach ? window : nil
+    if let targetWindow,
+       monitoredWindow === targetWindow,
+       outsideTapRecognizer != nil {
+      return
+    }
+    removeOutsideTapRecognizer()
+    guard let targetWindow else { return }
+    let recognizer = UITapGestureRecognizer(target: self, action: #selector(windowTapped(_:)))
+    recognizer.cancelsTouchesInView = false
+    recognizer.delaysTouchesBegan = false
+    recognizer.delaysTouchesEnded = false
+    recognizer.delegate = self
+    targetWindow.addGestureRecognizer(recognizer)
+    outsideTapRecognizer = recognizer
+    monitoredWindow = targetWindow
+  }
+
+  private func removeOutsideTapRecognizer() {
+    if let outsideTapRecognizer {
+      monitoredWindow?.removeGestureRecognizer(outsideTapRecognizer)
+    }
+    outsideTapRecognizer = nil
+    monitoredWindow = nil
   }
 
   func textViewDidChange(_ textView: UITextView) { changed(textView.text) }
@@ -712,21 +768,15 @@ final class RufletTextInputNSView: NSView, NSTextFieldDelegate, NSTextViewDelega
     scrollView.drawsBackground = false
     scrollView.hasVerticalScroller = true
     scrollView.borderType = .noBorder
-    outsideEventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown]) { [weak self] event in
-      guard let self,
-            self.configuration?.reportsTapOutside == true,
-            event.window === self.window,
-            !self.bounds.contains(self.convert(event.locationInWindow, from: nil))
-      else { return event }
-      self.callbacks?.onTapOutside()
-      return event
-    }
   }
 
   required init?(coder: NSCoder) { nil }
 
-  deinit {
-    if let outsideEventMonitor { NSEvent.removeMonitor(outsideEventMonitor) }
+  deinit { removeOutsideEventMonitor() }
+
+  override func viewDidMoveToWindow() {
+    super.viewDidMoveToWindow()
+    synchronizeOutsideEventMonitor()
   }
 
   override var intrinsicContentSize: NSSize {
@@ -753,6 +803,7 @@ final class RufletTextInputNSView: NSView, NSTextFieldDelegate, NSTextViewDelega
   func update(configuration: RufletNativeTextInputConfiguration, callbacks: RufletNativeTextInputCallbacks) {
     self.configuration = configuration
     self.callbacks = callbacks
+    synchronizeOutsideEventMonitor()
     let nextView: NSView = configuration.multiline ? scrollView : activeField
     if activeView !== nextView {
       activeView?.removeFromSuperview()
@@ -804,6 +855,32 @@ final class RufletTextInputNSView: NSView, NSTextFieldDelegate, NSTextViewDelega
     }
     invalidateIntrinsicContentSize()
     needsLayout = true
+  }
+
+  private func synchronizeOutsideEventMonitor() {
+    let shouldAttach = RufletOutsideTapMonitoringContract.shouldAttach(
+      reportsTapOutside: configuration?.reportsTapOutside == true,
+      hasWindow: window != nil)
+    guard shouldAttach else {
+      removeOutsideEventMonitor()
+      return
+    }
+    guard outsideEventMonitor == nil else { return }
+    outsideEventMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown]) { [weak self] event in
+      guard let self,
+            self.configuration?.reportsTapOutside == true,
+            event.window === self.window,
+            !self.bounds.contains(self.convert(event.locationInWindow, from: nil))
+      else { return event }
+      self.callbacks?.onTapOutside()
+      return event
+    }
+  }
+
+  private func removeOutsideEventMonitor() {
+    guard let outsideEventMonitor else { return }
+    NSEvent.removeMonitor(outsideEventMonitor)
+    self.outsideEventMonitor = nil
   }
 
   private func applyStrutStyle(_ style: RufletTextFieldStrutStyle?) {
