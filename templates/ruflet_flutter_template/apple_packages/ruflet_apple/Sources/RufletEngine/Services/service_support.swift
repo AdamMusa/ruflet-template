@@ -1,5 +1,10 @@
 import Foundation
 import RufletProtocol
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 
 public enum RufletServiceError: Error, Equatable, Sendable {
   case unknownMethod(service: String, method: String)
@@ -62,3 +67,17 @@ func serviceTimestamp(_ date: Date) -> RufletValue {
   return .extensionValue(type: 1, payload: payload)
 }
 
+#if os(iOS)
+@MainActor
+func servicePresentationController() throws -> UIViewController {
+  let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+  guard let root = scenes.flatMap(\.windows).first(where: { $0.isKeyWindow })?.rootViewController
+    ?? scenes.flatMap(\.windows).first?.rootViewController
+  else { throw RufletServiceError.unavailable("No presentation controller") }
+  var controller = root
+  while let presented = controller.presentedViewController { controller = presented }
+  if let navigation = controller as? UINavigationController { return navigation.visibleViewController ?? navigation }
+  if let tabs = controller as? UITabBarController { return tabs.selectedViewController ?? tabs }
+  return controller
+}
+#endif
