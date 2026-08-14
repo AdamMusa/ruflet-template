@@ -44,11 +44,3 @@ struct LineChartPoint: Identifiable {
       showBelowLine: control.boolean("show_below_line", default: true))
   }
 }
-
-struct LineChartEventData: Equatable {
-  let eventType: String
-  let barIndex: Int?
-  let spotIndex: Int?
-  let spotX: Double?
-  let spotY: Double?
-}

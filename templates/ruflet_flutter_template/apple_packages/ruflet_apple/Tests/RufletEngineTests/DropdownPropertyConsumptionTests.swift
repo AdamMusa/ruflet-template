@@ -99,8 +99,10 @@ final class DropdownPropertyConsumptionTests: XCTestCase {
 
     let dense = RufletDropdownM2Presentation(
       control: control(type: "DropdownM2", properties: ["dense": true]))
-    XCTAssertEqual(dense.contentPadding.top, 4)
-    XCTAssertEqual(dense.contentPadding.leading, 7)
+    XCTAssertEqual(dense.contentPadding.top, 16)
+    XCTAssertEqual(dense.contentPadding.leading, 12)
+    XCTAssertEqual(dense.contentPadding.bottom, 8)
+    XCTAssertEqual(dense.contentPadding.trailing, 12)
     XCTAssertTrue(dense.enableFeedback)
   }
 

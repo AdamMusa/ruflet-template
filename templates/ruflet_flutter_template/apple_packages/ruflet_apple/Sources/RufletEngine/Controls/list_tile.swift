@@ -163,6 +163,7 @@ public struct ListTileControl: View {
 
   private var tileSurface: some View {
     tileContent
+      .padding(.vertical, minimumVerticalPadding)
       .padding(contentPadding)
       .frame(minHeight: minimumHeight)
       .background(backgroundColor)
@@ -221,11 +222,7 @@ public struct ListTileControl: View {
 
   private var contentPadding: EdgeInsets {
     parsePadding(control.dynamicValue("content_padding"))
-      ?? EdgeInsets(
-        top: minimumVerticalPadding,
-        leading: 16,
-        bottom: minimumVerticalPadding,
-        trailing: 16)
+      ?? RufletLayoutDefaults.listTile
   }
 
   private var isThreeLine: Bool {

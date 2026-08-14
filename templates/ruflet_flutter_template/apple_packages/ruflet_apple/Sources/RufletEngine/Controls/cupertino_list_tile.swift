@@ -82,11 +82,9 @@ public struct CupertinoListTileControl: View {
 
   private var contentPadding: EdgeInsets {
     parsePadding(control.dynamicValue("content_padding"))
-      ?? EdgeInsets(
-        top: notched ? 8 : 10,
-        leading: notched ? 20 : 16,
-        bottom: notched ? 8 : 10,
-        trailing: 16)
+      ?? RufletLayoutDefaults.cupertinoListTile(
+        notched: notched,
+        hasLeading: control.child("leading") != nil)
   }
 
   private var backgroundColor: Color {

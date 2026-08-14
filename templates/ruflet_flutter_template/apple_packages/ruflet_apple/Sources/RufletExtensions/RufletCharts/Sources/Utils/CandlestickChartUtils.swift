@@ -21,13 +21,3 @@ struct CandlestickSpot: Identifiable {
       selected: control.boolean("selected", default: false))
   }
 }
-
-struct CandlestickChartEventData: Equatable {
-  let eventType: String
-  let spotIndex: Int?
-  let spotX: Double?
-  let spotOpen: Double?
-  let spotHigh: Double?
-  let spotLow: Double?
-  let spotClose: Double?
-}

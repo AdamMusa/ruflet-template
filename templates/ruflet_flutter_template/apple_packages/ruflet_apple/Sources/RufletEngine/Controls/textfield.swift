@@ -579,15 +579,16 @@ struct RufletTextFieldPresentation {
     #endif
     animateCursorOpacity = control.boolean("animate_cursor_opacity", default: cursorAnimationDefault)
     clipBehavior = control.string("clip_behavior", default: "hardEdge") ?? "hardEdge"
-    let defaultPadding = control.boolean("collapsed", default: false)
-      ? EdgeInsets()
-      : (control.boolean("dense", default: false)
-        ? EdgeInsets(top: 4, leading: 7, bottom: 4, trailing: 7)
-        : EdgeInsets(top: 7, leading: 7, bottom: 7, trailing: 7))
     if style == .cupertino {
-      contentPadding = parsePadding(control.dynamicValue("padding")) ?? defaultPadding
+      contentPadding = parsePadding(control.dynamicValue("padding"))
+        ?? EdgeInsets(top: 7, leading: 7, bottom: 7, trailing: 7)
     } else {
-      contentPadding = parsePadding(control.dynamicValue("content_padding")) ?? defaultPadding
+      contentPadding = parsePadding(control.dynamicValue("content_padding"))
+        ?? RufletLayoutDefaults.formField(
+          outline: control.string("border", default: "outline")?.lowercased() == "outline",
+          filled: control.boolean("filled", default: false),
+          dense: control.boolean("dense", default: false),
+          collapsed: control.boolean("collapsed", default: false))
     }
     cursorHeight = control.number("cursor_height").map { CGFloat($0) }
     cursorWidth = CGFloat(control.number("cursor_width", default: 2) ?? 2)

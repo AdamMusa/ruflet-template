@@ -35,6 +35,9 @@ public struct PopupMenuButtonControl: View {
     LayoutControl(control: control) {
       Button(action: open) {
         triggerLabel
+          .padding(
+            parsePadding(control.dynamicValue("padding"))
+              ?? RufletLayoutDefaults.popupMenuButton)
       }
       .buttonStyle(
         RufletAppleMenuButtonStyle(
@@ -139,7 +142,7 @@ public struct PopupMenuButtonControl: View {
         }
       }
       .frame(maxWidth: .infinity, minHeight: CGFloat(height), alignment: .leading)
-      .padding(padding ?? EdgeInsets(top: 0, leading: 12, bottom: 0, trailing: 12))
+      .padding(padding ?? RufletLayoutDefaults.popupMenuItem)
       .contentShape(Rectangle())
     }
     .buttonStyle(.plain)
@@ -185,7 +188,7 @@ public struct PopupMenuButtonControl: View {
   var enableFeedback: Bool { control.boolean("enable_feedback") ?? true }
   private var menuPadding: EdgeInsets {
     parsePadding(control.dynamicValue("menu_padding"))
-      ?? EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4)
+      ?? RufletLayoutDefaults.popupMenu
   }
   private var backgroundColor: Color {
     parseColor(control.string("bgcolor")) ?? Color.rufletSystemBackground

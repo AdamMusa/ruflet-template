@@ -239,7 +239,8 @@ struct RufletAppleNavigationBar: View {
   }
   private var labelPadding: EdgeInsets {
     kind == .navigationBar
-      ? parsePadding(control.dynamicValue("label_padding")) ?? EdgeInsets()
+      ? parsePadding(control.dynamicValue("label_padding"))
+        ?? RufletLayoutDefaults.navigationBarLabel
       : EdgeInsets()
   }
   private var elevation: CGFloat {

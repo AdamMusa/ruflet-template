@@ -64,6 +64,37 @@ class FletControlContractTest < Minitest::Test
     assert_equal "start", column.dig("primitive_defaults", "horizontal_alignment", "value")
   end
 
+  def test_literal_compound_defaults_are_extracted_from_flet_renderers
+    assert_equal(
+      {
+        "type" => "edge_insets",
+        "top" => 10.0,
+        "left" => 10.0,
+        "bottom" => 10.0,
+        "right" => 10.0
+      },
+      @controls.fetch("View").dig("compound_defaults", "padding")
+    )
+    assert_equal(
+      {
+        "type" => "edge_insets",
+        "top" => 24.0,
+        "left" => 16.0,
+        "bottom" => 24.0,
+        "right" => 16.0
+      },
+      @controls.fetch("DatePicker").dig("compound_defaults", "inset_padding")
+    )
+    assert_equal(
+      { "type" => "duration", "seconds" => 1.0 },
+      @controls.fetch("AnimatedSwitcher").dig("compound_defaults", "duration")
+    )
+    assert_equal(
+      { "type" => "border_radius", "radius" => 8.0 },
+      @controls.fetch("CupertinoButton").dig("compound_defaults", "border_radius")
+    )
+  end
+
   def test_sibling_controls_do_not_inherit_each_others_events_and_methods
     assert_equal ["change"], @controls.fetch("Tabs").fetch("events")
     assert_equal ["move_to"], @controls.fetch("Tabs").fetch("methods")

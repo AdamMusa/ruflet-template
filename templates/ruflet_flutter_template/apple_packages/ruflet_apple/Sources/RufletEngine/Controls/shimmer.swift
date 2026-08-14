@@ -39,7 +39,8 @@ public struct ShimmerControl: View {
     return .linear(
       Gradient(colors: [base, highlight, base]),
       start: .leading,
-      end: .trailing)
+      end: .trailing,
+      tileMode: .clamp)
   }
 
   private var direction: RufletShimmerDirection {

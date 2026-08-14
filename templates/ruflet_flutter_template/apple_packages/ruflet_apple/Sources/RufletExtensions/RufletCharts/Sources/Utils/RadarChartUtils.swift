@@ -175,13 +175,6 @@ struct RadarChartLayout {
   }
 }
 
-struct RadarChartEventData: Equatable {
-  let eventType: String
-  let dataSetIndex: Int?
-  let entryIndex: Int?
-  let entryValue: Double?
-}
-
 struct RadarChartTitleConfiguration: Identifiable, Equatable {
   let id: Int
   let text: String

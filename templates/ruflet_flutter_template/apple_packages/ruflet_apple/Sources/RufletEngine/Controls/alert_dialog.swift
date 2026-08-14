@@ -94,7 +94,11 @@ struct RufletAppleDialogPresenter: View {
   private var dialogBody: some View {
     let body = VStack(spacing: 10) {
       if let icon = control.buildIconOrWidget("icon", color: iconColor) {
-        icon.padding(parsePadding(control.dynamicValue("icon_padding")) ?? EdgeInsets())
+        icon.padding(
+          parsePadding(control.dynamicValue("icon_padding"))
+            ?? RufletLayoutDefaults.alertDialogIcon(
+              hasTitle: control.value("title") != nil,
+              hasContent: control.value("content") != nil))
       }
       if let title = control.buildTextOrWidget("title") {
         title
@@ -105,7 +109,10 @@ struct RufletAppleDialogPresenter: View {
           .padding(
             style == .cupertino
               ? EdgeInsets(top: 20, leading: 20, bottom: 6, trailing: 20)
-              : parsePadding(control.dynamicValue("title_padding")) ?? EdgeInsets()
+              : parsePadding(control.dynamicValue("title_padding"))
+                ?? RufletLayoutDefaults.alertDialogTitle(
+                  hasIcon: control.value("icon") != nil,
+                  hasContent: control.value("content") != nil)
           )
           .accessibilityAddTraits(.isHeader)
       }
@@ -145,11 +152,13 @@ struct RufletAppleDialogPresenter: View {
       HStack(spacing: control.number("actions_overflow_button_spacing") ?? 8) {
         ForEach(control.children("actions")) { action in
           ControlWidget(control: action)
-            .padding(presentation.actionButtonPadding ?? EdgeInsets())
+            .padding(presentation.actionButtonPadding ?? RufletLayoutDefaults.alertDialogActionButton)
         }
       }
       .frame(maxWidth: .infinity, alignment: actionsAlignment)
-      .padding(parsePadding(control.dynamicValue("actions_padding")) ?? EdgeInsets())
+      .padding(
+        parsePadding(control.dynamicValue("actions_padding"))
+          ?? RufletLayoutDefaults.alertDialogActions)
     }
   }
 

@@ -35,7 +35,10 @@ public struct SnackBarControl: View {
       contentLayout
       .padding(
         parsePadding(control.dynamicValue("padding"))
-          ?? EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16)
+          ?? RufletLayoutDefaults.snackBarContent(
+            floating: behavior == .floating,
+            hasActionOrClose: RufletSnackBarAction(control: control) != .none
+              || control.boolean("show_close_icon", default: false))
       )
       .frame(width: effectiveWidth)
       .frame(maxWidth: behavior == .floating ? nil : .infinity, alignment: .leading)
@@ -160,7 +163,7 @@ public struct SnackBarControl: View {
   private var effectiveMargin: EdgeInsets {
     guard behavior == .floating, effectiveWidth == nil else { return EdgeInsets() }
     return parseMargin(control.dynamicValue("margin"))
-      ?? EdgeInsets(top: 0, leading: 16, bottom: 16, trailing: 16)
+      ?? RufletLayoutDefaults.floatingSnackBarMargin
   }
 
   private var backgroundColor: Color {

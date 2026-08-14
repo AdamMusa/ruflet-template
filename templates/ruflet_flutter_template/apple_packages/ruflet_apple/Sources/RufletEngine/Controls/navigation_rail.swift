@@ -82,7 +82,7 @@ public struct NavigationRailControl: View {
         }
       }
       .padding(parsePadding(destination.dynamicValue("padding"))
-        ?? EdgeInsets(top: 8, leading: 10, bottom: 8, trailing: 10))
+        ?? RufletLayoutDefaults.navigationRailDestination)
       .frame(minWidth: railWidth, alignment: extended ? .leading : .center)
       .background {
         if selected && useIndicator {

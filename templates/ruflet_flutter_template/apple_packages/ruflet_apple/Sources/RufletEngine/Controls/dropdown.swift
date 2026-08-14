@@ -398,9 +398,13 @@ private struct RufletDropdownChrome: ViewModifier {
   func body(content: Content) -> some View {
     let dense = control.boolean("dense", default: false)
     content
-      .padding(parsePadding(control.dynamicValue("content_padding")) ?? EdgeInsets(
-        top: dense ? 4 : 8, leading: dense ? 7 : 10,
-        bottom: dense ? 4 : 8, trailing: dense ? 7 : 10))
+      .padding(
+        parsePadding(control.dynamicValue("content_padding"))
+          ?? RufletLayoutDefaults.formField(
+            outline: control.string("border", default: "outline")?.lowercased() == "outline",
+            filled: control.boolean("filled", default: false),
+            dense: dense,
+            collapsed: control.boolean("collapsed", default: false)))
       .background(backgroundColor)
       .clipShape(RufletCornerShape(radius: radius))
       .overlay { border }

@@ -69,7 +69,9 @@ public struct CardControl: View {
         color: presentation.variant == .elevated ? shadowColor : .clear,
         radius: presentation.elevation
       )
-      .padding(parseMargin(control.dynamicValue("margin")) ?? EdgeInsets())
+      .padding(
+        parseMargin(control.dynamicValue("margin"))
+          ?? RufletLayoutDefaults.cardMargin)
       .accessibilityElement(children: presentation.semanticContainer ? .contain : .ignore)
     }
   }

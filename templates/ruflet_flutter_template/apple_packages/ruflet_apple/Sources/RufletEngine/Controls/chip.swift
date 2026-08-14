@@ -56,7 +56,9 @@ public struct ChipControl: View {
               RufletTextStyleModifier(
                 style: parseTextStyle(control.dynamicValue("label_text_style")))
             )
-            .padding(parsePadding(control.dynamicValue("label_padding")) ?? EdgeInsets())
+            .padding(
+              parsePadding(control.dynamicValue("label_padding"))
+                ?? RufletLayoutDefaults.chipLabel)
         }
         .contentShape(Rectangle())
       }
@@ -170,7 +172,7 @@ struct RufletChipPresentation {
     pressElevation = control.number("elevation_on_click") ?? 0
     padding =
       parsePadding(control.dynamicValue("padding"))
-      ?? EdgeInsets(top: 6, leading: 10, bottom: 6, trailing: 8)
+      ?? RufletLayoutDefaults.chip
     switch parseVisualDensity(control.string("visual_density")) {
     case .compact:
       densityPadding = EdgeInsets(top: -4, leading: -4, bottom: -4, trailing: -4)

@@ -35,7 +35,9 @@ public struct CupertinoSegmentedButtonControl: View {
               action: { coordinator.select(index) })
           }
         }
-        .padding(parsePadding(control.dynamicValue("padding")) ?? EdgeInsets())
+        .padding(
+          parsePadding(control.dynamicValue("padding"))
+            ?? RufletLayoutDefaults.cupertinoSegmentedButton)
       }
     }
     .onAppear { coordinator.synchronizeFromControl() }

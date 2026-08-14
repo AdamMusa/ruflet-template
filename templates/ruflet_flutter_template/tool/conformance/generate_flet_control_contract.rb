@@ -5,7 +5,7 @@ require "digest"
 require "json"
 
 module FletControlContract
-  CONTRACT_VERSION = 1
+  CONTRACT_VERSION = 2
   GLOBAL_DEFAULTS = {
     "disabled" => { "type" => "bool", "value" => false },
     "expand_loose" => { "type" => "bool", "value" => false },
@@ -250,6 +250,139 @@ module FletControlContract
     defaults.sort.to_h
   end
 
+  def invocation_arguments(source, opening)
+    arguments = []
+    depth = 0
+    quote = nil
+    escaped = false
+    start = opening + 1
+    index = start
+    while index < source.length
+      character = source[index]
+      if quote
+        if escaped
+          escaped = false
+        elsif character == "\\"
+          escaped = true
+        elsif character == quote
+          quote = nil
+        end
+      elsif character == '"' || character == "'"
+        quote = character
+      elsif "([{".include?(character)
+        depth += 1
+      elsif ")]}".include?(character)
+        if character == ")" && depth.zero?
+          arguments << source[start...index].strip
+          return arguments
+        end
+        depth -= 1
+      elsif character == "," && depth.zero?
+        arguments << source[start...index].strip
+        start = index + 1
+      end
+      index += 1
+    end
+    []
+  end
+
+  def numeric_literal(value)
+    text = value.strip
+    return unless text.match?(/\A-?\d+(?:\.\d+)?\z/)
+
+    text.to_f
+  end
+
+  def named_numeric_arguments(expression)
+    expression.scan(/(\w+)\s*:\s*(-?\d+(?:\.\d+)?)/).to_h.transform_values(&:to_f)
+  end
+
+  def compound_default(expression)
+    value = expression.strip.sub(/\Aconst\s+/, "")
+    if value.match?(/\AEdgeInsets(?:Directional)?\.zero\z/)
+      return { "type" => "edge_insets", "top" => 0.0, "left" => 0.0,
+               "bottom" => 0.0, "right" => 0.0 }
+    end
+    if (match = value.match(/\AEdgeInsets(?:Directional)?\.all\(\s*([^\)]+)\s*\)\z/))
+      amount = numeric_literal(match[1])
+      return unless amount
+
+      return { "type" => "edge_insets", "top" => amount, "left" => amount,
+               "bottom" => amount, "right" => amount }
+    end
+    if value.match?(/\AEdgeInsets(?:Directional)?\.symmetric\(/)
+      named = named_numeric_arguments(value)
+      horizontal = named.fetch("horizontal", 0.0)
+      vertical = named.fetch("vertical", 0.0)
+      return { "type" => "edge_insets", "top" => vertical, "left" => horizontal,
+               "bottom" => vertical, "right" => horizontal }
+    end
+    if value.match?(/\AEdgeInsets(?:Directional)?\.only\(/)
+      named = named_numeric_arguments(value)
+      return {
+        "type" => "edge_insets",
+        "top" => named.fetch("top", 0.0),
+        "left" => named.fetch("left", named.fetch("start", 0.0)),
+        "bottom" => named.fetch("bottom", 0.0),
+        "right" => named.fetch("right", named.fetch("end", 0.0))
+      }
+    end
+    if (match = value.match(/\AEdgeInsets(?:Directional)?\.from(?:LTRB|STEB)\(\s*([^\)]+)\s*\)\z/))
+      values = match[1].split(",").map { |item| numeric_literal(item) }
+      return unless values.length == 4 && values.all?
+
+      return { "type" => "edge_insets", "left" => values[0], "top" => values[1],
+               "right" => values[2], "bottom" => values[3] }
+    end
+    if (match = value.match(/\ADuration\(\s*(milliseconds|microseconds|seconds)\s*:\s*([^\)]+)\s*\)\z/))
+      amount = numeric_literal(match[2])
+      return unless amount
+
+      seconds = amount * { "microseconds" => 0.000001, "milliseconds" => 0.001,
+                           "seconds" => 1.0 }.fetch(match[1])
+      return { "type" => "duration", "seconds" => seconds }
+    end
+    if (match = value.match(/\ADateTime\(\s*([^\)]+)\s*\)\z/))
+      values = match[1].split(",").map { |item| numeric_literal(item) }
+      return unless values.length.between?(1, 3) && values.all?
+
+      return { "type" => "date_time", "year" => values[0].to_i,
+               "month" => (values[1] || 1).to_i, "day" => (values[2] || 1).to_i }
+    end
+    if (match = value.match(/\ABorderRadius\.all\(\s*Radius\.circular\(\s*([^\)]+)\s*\)\s*\)\z/))
+      radius = numeric_literal(match[1])
+      return { "type" => "border_radius", "radius" => radius } if radius
+    end
+    if (match = value.match(/\AAlignment\(\s*([^,]+),\s*([^\)]+)\s*\)\z/))
+      x = numeric_literal(match[1])
+      y = numeric_literal(match[2])
+      return { "type" => "alignment", "x" => x, "y" => y } if x && y
+    end
+    if (match = value.match(/\ASize\(\s*([^,]+),\s*([^\)]+)\s*\)\z/))
+      width = numeric_literal(match[1])
+      height = numeric_literal(match[2])
+      return { "type" => "size", "width" => width, "height" => height } if width && height
+    end
+    nil
+  end
+
+  def compound_defaults(source)
+    defaults = {}
+    pattern = /(?:control|widget\.control)\.(get[A-Z]\w*)\s*\(/
+    source.to_enum(:scan, pattern).each do
+      match = Regexp.last_match
+      arguments = invocation_arguments(source, match.end(0) - 1)
+      next if arguments.length < 2
+
+      property = arguments[0][/\A["']([^"']+)["']\z/, 1]
+      next unless property
+
+      parsed = compound_default(arguments[1])
+      defaults[property] = parsed if parsed
+    end
+    defaults.sort.to_h
+  end
+
   def events(source)
     triggered = source.scan(/\.triggerEvent\(\s*["']([^"']+)["']/).flatten
     # `on_*` flags read from a child/sibling control describe that child's
@@ -307,6 +440,7 @@ module FletControlContract
         "classification" => mapping[:classification],
         "design_family" => design_family(mapping[:wire_type], mapping[:renderer_class]),
         "primitive_defaults" => primitive_defaults(scope),
+        "compound_defaults" => compound_defaults(scope),
         "events" => events(scope),
         "methods" => methods(scope)
       }

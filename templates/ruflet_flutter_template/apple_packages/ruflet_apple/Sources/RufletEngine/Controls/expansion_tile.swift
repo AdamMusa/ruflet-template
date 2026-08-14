@@ -256,7 +256,7 @@ struct RufletExpansionTilePresentation {
     explicitMinimumTileHeight = control.number("min_tile_height").map { CGFloat($0) }
     tilePadding =
       parseEdgeInsets(control.dynamicValue("tile_padding"))
-      ?? EdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16)
+      ?? RufletLayoutDefaults.listTile
   }
 
   var horizontalTitleGap: CGFloat {

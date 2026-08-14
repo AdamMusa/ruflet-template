@@ -63,7 +63,7 @@ public struct SearchBarControl: View {
     }
     .padding(
       widgetStatePadding(control.dynamicValue("bar_padding"))
-        ?? EdgeInsets(top: 7, leading: 12, bottom: 7, trailing: 12)
+        ?? RufletLayoutDefaults.searchBar
     )
     .frame(minHeight: anchorHeight)
     .modifier(RufletSearchConstraintsModifier(constraints: barConstraints))
@@ -285,7 +285,7 @@ public struct SearchBarControl: View {
   }
   private var viewBarPadding: EdgeInsets {
     parsePadding(control.dynamicValue("view_bar_padding"))
-      ?? EdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12)
+      ?? RufletLayoutDefaults.searchViewBar
   }
   private var viewHeaderHeight: CGFloat {
     CGFloat(control.number("view_header_height", default: 56) ?? 56)

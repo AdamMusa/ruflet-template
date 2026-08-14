@@ -126,8 +126,3 @@ struct PieChartLayout {
     return result >= 0 ? result : result + 2 * .pi
   }
 }
-
-struct PieChartEventData: Equatable {
-  let eventType: String
-  let sectionIndex: Int?
-}

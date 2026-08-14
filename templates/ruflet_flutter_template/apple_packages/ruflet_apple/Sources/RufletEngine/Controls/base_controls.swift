@@ -417,7 +417,7 @@ private struct RufletBadgeModifier: ViewModifier {
               .foregroundStyle(parseColor(badge.string("text_color")) ?? .white)
               .padding(
                 parsePadding(badge.dynamicValue("padding"))
-                  ?? EdgeInsets(top: 2, leading: 4, bottom: 2, trailing: 4)
+                  ?? RufletLayoutDefaults.badge
               )
               .background(parseColor(badge.string("bgcolor")) ?? .red, in: Capsule())
               .offset(
@@ -432,8 +432,7 @@ private struct RufletBadgeModifier: ViewModifier {
         Text(badge)
           .font(.caption2)
           .foregroundStyle(.white)
-          .padding(.horizontal, 4)
-          .padding(.vertical, 2)
+          .padding(RufletLayoutDefaults.badge)
           .background(.red, in: Capsule())
       }
     } else {

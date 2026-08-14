@@ -83,8 +83,10 @@ final class TextFieldPropertyConsumptionTests: XCTestCase {
 
     let dense = RufletTextFieldPresentation(
       control: control(type: "TextField", properties: ["dense": true]), style: .form)
-    XCTAssertEqual(dense.contentPadding.top, 4)
-    XCTAssertEqual(dense.contentPadding.leading, 7)
+    XCTAssertEqual(dense.contentPadding.top, 16)
+    XCTAssertEqual(dense.contentPadding.leading, 12)
+    XCTAssertEqual(dense.contentPadding.bottom, 8)
+    XCTAssertEqual(dense.contentPadding.trailing, 12)
   }
 
   func testAdaptiveTextFieldSelectsCupertinoOnlyWhenPinnedFlagIsTrue() {

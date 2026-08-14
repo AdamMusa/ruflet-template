@@ -331,9 +331,11 @@ struct RufletDropdownM2Presentation {
   }
 
   var contentPadding: EdgeInsets {
-    if collapsed { return EdgeInsets() }
-    if dense { return EdgeInsets(top: 4, leading: 7, bottom: 4, trailing: 7) }
-    return EdgeInsets(top: 8, leading: 10, bottom: 8, trailing: 10)
+    RufletLayoutDefaults.formField(
+      outline: border == .outline,
+      filled: filled,
+      dense: dense,
+      collapsed: collapsed)
   }
 }
 

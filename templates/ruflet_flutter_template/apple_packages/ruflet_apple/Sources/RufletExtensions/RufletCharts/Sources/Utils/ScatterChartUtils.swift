@@ -22,8 +22,3 @@ struct ScatterChartSpot: Identifiable {
       label: control.string("label_text"))
   }
 }
-
-struct ScatterChartEventData: Equatable {
-  let eventType: String
-  let spotIndex: Int?
-}

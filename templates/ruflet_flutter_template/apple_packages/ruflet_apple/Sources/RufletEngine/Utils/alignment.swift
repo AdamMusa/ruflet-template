@@ -41,10 +41,6 @@ enum RufletCrossAxisAlignment: String, CaseIterable, RufletStringEnum {
   case start, end, center, stretch, baseline
 }
 
-enum RufletWrapAlignment: String, CaseIterable, RufletStringEnum {
-  case start, end, center, spaceBetween, spaceAround, spaceEvenly
-}
-
 enum RufletWrapCrossAlignment: String, CaseIterable, RufletStringEnum {
   case start, end, center
 }

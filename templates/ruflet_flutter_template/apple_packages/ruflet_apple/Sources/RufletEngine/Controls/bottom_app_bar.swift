@@ -21,7 +21,9 @@ public struct BottomAppBarControl: View {
             radius: elevation,
             y: -elevation / 3)
         control.buildWidget("content")
-          .padding(parsePadding(control.dynamicValue("padding")) ?? EdgeInsets())
+          .padding(
+            parsePadding(control.dynamicValue("padding"))
+              ?? RufletLayoutDefaults.bottomAppBar)
       }
       .frame(height: control.number("height").map { CGFloat($0) })
       .modifier(

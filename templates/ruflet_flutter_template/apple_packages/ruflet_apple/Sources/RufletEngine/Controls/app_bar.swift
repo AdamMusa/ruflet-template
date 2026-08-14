@@ -32,6 +32,7 @@ struct RufletAppleAppBar: View {
     BaseControl(control: control) {
       VStack(spacing: 0) {
         barContent
+          .padding(kind == .cupertino ? cupertinoPadding : EdgeInsets())
           .frame(height: toolbarHeight)
         if isLarge, let title {
           title
@@ -98,7 +99,7 @@ struct RufletAppleAppBar: View {
   @ViewBuilder
   private var leading: some View {
     if let leading = control.buildWidget("leading") {
-      leading.frame(width: control.number("leading_width").map { CGFloat($0) })
+      leading.frame(width: leadingWidth)
     } else if control.boolean("automatically_imply_leading", default: true), canNavigateBack {
       Button(action: requestPop) {
         HStack(spacing: 4) {
@@ -111,7 +112,7 @@ struct RufletAppleAppBar: View {
         }
       }
       .buttonStyle(.plain)
-      .frame(width: control.number("leading_width").map { CGFloat($0) })
+      .frame(width: leadingWidth)
       .accessibilityLabel(Text("Back"))
     }
   }
@@ -183,12 +184,22 @@ struct RufletAppleAppBar: View {
   }
 
   private var titleSpacing: CGFloat {
-    CGFloat(control.number("title_spacing") ?? 12)
+    CGFloat(
+      control.number("title_spacing")
+        ?? (kind == .appBar ? RufletLayoutDefaults.appBarTitleSpacing : 12))
+  }
+  private var leadingWidth: CGFloat? {
+    control.number("leading_width").map { CGFloat($0) }
+      ?? (kind == .appBar ? CGFloat(RufletLayoutDefaults.appBarLeadingWidth) : nil)
   }
 
   private var actionsPadding: EdgeInsets {
     parsePadding(control.dynamicValue("actions_padding"))
-      ?? EdgeInsets(top: 0, leading: 8, bottom: 0, trailing: 8)
+      ?? RufletLayoutDefaults.appBarActions
+  }
+  private var cupertinoPadding: EdgeInsets {
+    parsePadding(control.dynamicValue("padding"))
+      ?? RufletLayoutDefaults.cupertinoNavigationBar
   }
 
   private var foregroundColor: Color? { parseColor(control.string("color")) }

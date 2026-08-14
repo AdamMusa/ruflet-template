@@ -26,7 +26,7 @@ final class CupertinoButtonPropertyConsumptionTests: XCTestCase {
     XCTAssertEqual(presentation.minimumSize, CGSize(width: 28, height: 28))
     XCTAssertEqual(presentation.padding.top, 6)
     XCTAssertEqual(presentation.padding.leading, 12)
-    XCTAssertEqual(presentation.borderRadius.uniform, 40)
+    XCTAssertEqual(presentation.borderRadius.uniform, 8)
   }
 
   func testFilledAndTintedVariantsPreservePinnedVariantColorsAndSizeDefaults() {
@@ -39,7 +39,7 @@ final class CupertinoButtonPropertyConsumptionTests: XCTestCase {
     XCTAssertEqual(filled.minimumSize, CGSize(width: 44, height: 44))
     XCTAssertEqual(filled.padding.top, 16)
     XCTAssertEqual(filled.padding.leading, 20)
-    XCTAssertEqual(filled.borderRadius.uniform, 12)
+    XCTAssertEqual(filled.borderRadius.uniform, 8)
 
     let tintedFixture = makeControl(
       type: "CupertinoTintedButton",
@@ -50,7 +50,7 @@ final class CupertinoButtonPropertyConsumptionTests: XCTestCase {
     XCTAssertEqual(tinted.minimumSize, CGSize(width: 32, height: 32))
     XCTAssertEqual(tinted.padding.top, 10)
     XCTAssertEqual(tinted.padding.leading, 15)
-    XCTAssertEqual(tinted.borderRadius.uniform, 40)
+    XCTAssertEqual(tinted.borderRadius.uniform, 8)
   }
 
   func testExplicitMinimumSizePaddingAndRadiusOverrideSizeStyleDefaults() {

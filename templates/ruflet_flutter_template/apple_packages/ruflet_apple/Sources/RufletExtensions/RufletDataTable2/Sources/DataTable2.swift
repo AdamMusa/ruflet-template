@@ -1,3 +1,4 @@
+import Foundation
 import RufletEngine
 import RufletProtocol
 import SwiftUI
@@ -86,12 +87,17 @@ private struct RufletDataTableHeading: View {
 
   private func headingCell(_ column: RufletControl, index: Int, width: Double) -> some View {
     let label = column.buildTextOrWidget("label", required: true) ?? AnyView(Text(""))
+    let sortAscending = table.boolean("sort_ascending", default: false)
     return HStack(spacing: 5) {
       label
       if table.integer("sort_column_index") == index {
         sortArrow
           .foregroundStyle(parseColor(table.string("sort_arrow_icon_color"), .secondary) ?? .secondary)
-          .rotationEffect(table.boolean("sort_ascending", default: false) ? .zero : .degrees(180))
+          .rotationEffect(sortAscending ? .zero : .degrees(180))
+          .animation(
+            .easeInOut(duration: rufletDataTable2Duration(
+              table.value("sort_arrow_animation_duration"))),
+            value: sortAscending)
       }
     }
     .padding(.horizontal, controlSpacing / 2)
@@ -147,6 +153,27 @@ private struct RufletDataTableHeading: View {
       },
       set: { table.triggerEvent("select_all", data: .bool($0)) })
   }
+}
+
+func rufletDataTable2Duration(_ value: RufletValue?) -> TimeInterval {
+  guard let value else { return 0.000_150 }
+  if case .extensionValue(let type, let payload) = value,
+     type == 3,
+     let text = String(data: payload, encoding: .utf8),
+     let microseconds = Double(text)
+  {
+    return max(microseconds / 1_000_000, 0)
+  }
+  if let milliseconds = value.number { return max(milliseconds / 1_000, 0) }
+  guard let map = value.map else { return 0.000_150 }
+  return max(
+    (map["days"]?.number ?? 0) * 86_400
+      + (map["hours"]?.number ?? 0) * 3_600
+      + (map["minutes"]?.number ?? 0) * 60
+      + (map["seconds"]?.number ?? 0)
+      + (map["milliseconds"]?.number ?? 0) / 1_000
+      + (map["microseconds"]?.number ?? 0) / 1_000_000,
+    0)
 }
 
 @MainActor

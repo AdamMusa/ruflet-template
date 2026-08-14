@@ -1,5 +1,5 @@
 {
-  "contract_version": 1,
+  "contract_version": 2,
   "source": {
     "flet_version": "0.80.5",
     "flet_ref": "67a9763da3bd2611bbb7626c3a1ec5e9d30fc965",
@@ -41,6 +41,7 @@
       "classification": "service",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -57,6 +58,7 @@
       "classification": "widget",
       "design_family": "adaptive",
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -73,6 +75,7 @@
       "classification": "widget",
       "design_family": "adaptive",
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -89,6 +92,7 @@
       "classification": "widget",
       "design_family": "adaptive",
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -105,6 +109,7 @@
       "classification": "widget",
       "design_family": "adaptive",
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -121,6 +126,7 @@
       "classification": "widget",
       "design_family": "adaptive",
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -137,6 +143,7 @@
       "classification": "widget",
       "design_family": "adaptive",
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -153,6 +160,7 @@
       "classification": "widget",
       "design_family": "adaptive",
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -169,6 +177,7 @@
       "classification": "widget",
       "design_family": "adaptive",
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -185,6 +194,16 @@
       "classification": "widget",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {
+        "duration": {
+          "type": "duration",
+          "seconds": 1.0
+        },
+        "reverse_duration": {
+          "type": "duration",
+          "seconds": 1.0
+        }
+      },
       "events": [],
       "methods": []
     },
@@ -222,6 +241,7 @@
           "value": 1.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -255,6 +275,7 @@
           "value": 1.0
         }
       },
+      "compound_defaults": {},
       "events": [
         "duration_change",
         "loaded",
@@ -285,6 +306,7 @@
       "classification": "service",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [
         "state_change"
       ],
@@ -323,6 +345,7 @@
           "value": ""
         }
       },
+      "compound_defaults": {},
       "events": [
         "change",
         "select"
@@ -342,6 +365,7 @@
       "classification": "widget",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -379,6 +403,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "dismiss",
         "visible"
@@ -398,6 +423,7 @@
       "classification": "widget",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [
         "click",
         "close",
@@ -432,6 +458,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "event"
       ],
@@ -450,6 +477,7 @@
       "classification": "service",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -466,6 +494,7 @@
       "classification": "service",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [
         "state_change"
       ],
@@ -488,6 +517,7 @@
       "classification": "widget",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [
         "color_change"
       ],
@@ -511,6 +541,7 @@
           "value": 4.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -564,6 +595,7 @@
           "value": true
         }
       },
+      "compound_defaults": {},
       "events": [
         "dismiss"
       ],
@@ -582,6 +614,7 @@
       "classification": "service",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": [
         "disable_menu",
@@ -601,6 +634,7 @@
       "classification": "widget",
       "design_family": "adaptive",
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -626,6 +660,7 @@
           "value": true
         }
       },
+      "compound_defaults": {},
       "events": [
         "state_change",
         "stream_image"
@@ -691,6 +726,7 @@
           "value": 4.0
         }
       },
+      "compound_defaults": {},
       "events": [
         "event"
       ],
@@ -714,6 +750,7 @@
           "value": 10
         }
       },
+      "compound_defaults": {},
       "events": [
         "resize"
       ],
@@ -745,6 +782,7 @@
           "value": true
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -761,6 +799,7 @@
       "classification": "widget",
       "design_family": "adaptive",
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -806,6 +845,7 @@
           "value": true
         }
       },
+      "compound_defaults": {},
       "events": [
         "click",
         "delete",
@@ -826,6 +866,7 @@
       "classification": "widget",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [
         "image_error"
       ],
@@ -844,6 +885,7 @@
       "classification": "widget",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -860,6 +902,7 @@
       "classification": "service",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": [
         "get",
@@ -900,6 +943,15 @@
           "value": false
         }
       },
+      "compound_defaults": {
+        "padding": {
+          "type": "edge_insets",
+          "top": 0.0,
+          "left": 0.0,
+          "bottom": 0.0,
+          "right": 0.0
+        }
+      },
       "events": [
         "change",
         "selection_change"
@@ -937,6 +989,7 @@
           "value": true
         }
       },
+      "compound_defaults": {},
       "events": [
         "color_change",
         "history_change",
@@ -994,6 +1047,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "scroll"
       ],
@@ -1012,6 +1066,7 @@
       "classification": "service",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [
         "change"
       ],
@@ -1061,6 +1116,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "animation_end",
         "click",
@@ -1096,6 +1152,7 @@
           "value": "down"
         }
       },
+      "compound_defaults": {},
       "events": [
         "dismiss",
         "select"
@@ -1117,6 +1174,7 @@
       "classification": "widget",
       "design_family": "cupertino",
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -1142,6 +1200,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "click"
       ],
@@ -1169,6 +1228,7 @@
           "value": 10.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -1198,6 +1258,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "dismiss"
       ],
@@ -1241,6 +1302,7 @@
           "value": true
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -1274,6 +1336,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "dismiss"
       ],
@@ -1303,6 +1366,12 @@
         "opacity_on_click": {
           "type": "double",
           "value": 0.4
+        }
+      },
+      "compound_defaults": {
+        "border_radius": {
+          "type": "border_radius",
+          "radius": 8.0
         }
       },
       "events": [
@@ -1339,6 +1408,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "change"
       ],
@@ -1362,6 +1432,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -1387,6 +1458,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "click"
       ],
@@ -1426,6 +1498,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "change"
       ],
@@ -1453,6 +1526,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "click"
       ],
@@ -1482,6 +1556,12 @@
         "opacity_on_click": {
           "type": "double",
           "value": 0.4
+        }
+      },
+      "compound_defaults": {
+        "border_radius": {
+          "type": "border_radius",
+          "radius": 8.0
         }
       },
       "events": [
@@ -1518,6 +1598,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "click"
       ],
@@ -1545,6 +1626,7 @@
           "value": 0
         }
       },
+      "compound_defaults": {},
       "events": [
         "change"
       ],
@@ -1596,6 +1678,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "change"
       ],
@@ -1635,6 +1718,7 @@
           "value": ""
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -1651,6 +1735,7 @@
       "classification": "widget",
       "design_family": "cupertino",
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [
         "change"
       ],
@@ -1678,6 +1763,7 @@
           "value": 0.0
         }
       },
+      "compound_defaults": {},
       "events": [
         "change",
         "change_end",
@@ -1705,6 +1791,15 @@
         "selected_index": {
           "type": "int",
           "value": 0
+        }
+      },
+      "compound_defaults": {
+        "padding": {
+          "type": "edge_insets",
+          "top": 2.0,
+          "left": 3.0,
+          "bottom": 2.0,
+          "right": 3.0
         }
       },
       "events": [
@@ -1738,6 +1833,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "change",
         "image_error"
@@ -1858,6 +1954,15 @@
           "value": ""
         }
       },
+      "compound_defaults": {
+        "padding": {
+          "type": "edge_insets",
+          "top": 7.0,
+          "left": 7.0,
+          "bottom": 7.0,
+          "right": 7.0
+        }
+      },
       "events": [
         "change",
         "click",
@@ -1899,6 +2004,7 @@
           "value": 1
         }
       },
+      "compound_defaults": {},
       "events": [
         "change"
       ],
@@ -1928,6 +2034,12 @@
         "opacity_on_click": {
           "type": "double",
           "value": 0.4
+        }
+      },
+      "compound_defaults": {
+        "border_radius": {
+          "type": "border_radius",
+          "radius": 8.0
         }
       },
       "events": [
@@ -1972,6 +2084,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "double_tap",
         "long_press",
@@ -2042,6 +2155,12 @@
           "value": false
         }
       },
+      "compound_defaults": {
+        "sort_arrow_animation_duration": {
+          "type": "duration",
+          "seconds": 0.00015
+        }
+      },
       "events": [
         "double_tap",
         "long_press",
@@ -2086,6 +2205,27 @@
           "value": false
         }
       },
+      "compound_defaults": {
+        "first_date": {
+          "type": "date_time",
+          "year": 1900,
+          "month": 1,
+          "day": 1
+        },
+        "inset_padding": {
+          "type": "edge_insets",
+          "top": 24.0,
+          "left": 16.0,
+          "bottom": 24.0,
+          "right": 16.0
+        },
+        "last_date": {
+          "type": "date_time",
+          "year": 2050,
+          "month": 1,
+          "day": 1
+        }
+      },
       "events": [
         "change",
         "dismiss",
@@ -2121,6 +2261,20 @@
         "open": {
           "type": "bool",
           "value": false
+        }
+      },
+      "compound_defaults": {
+        "first_date": {
+          "type": "date_time",
+          "year": 1900,
+          "month": 1,
+          "day": 1
+        },
+        "last_date": {
+          "type": "date_time",
+          "year": 2050,
+          "month": 1,
+          "day": 1
         }
       },
       "events": [
@@ -2163,6 +2317,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "confirm_dismiss",
         "dismiss",
@@ -2186,6 +2341,7 @@
       "classification": "widget",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -2207,6 +2363,7 @@
           "value": "default"
         }
       },
+      "compound_defaults": {},
       "events": [
         "accept",
         "leave",
@@ -2233,6 +2390,7 @@
           "value": "default"
         }
       },
+      "compound_defaults": {},
       "events": [
         "drag_complete",
         "drag_start"
@@ -2277,6 +2435,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "select",
         "text_change"
@@ -2315,6 +2474,7 @@
           "value": 24.0
         }
       },
+      "compound_defaults": {},
       "events": [
         "change",
         "click"
@@ -2343,6 +2503,15 @@
         "spacing": {
           "type": "double",
           "value": 16.0
+        }
+      },
+      "compound_defaults": {
+        "expanded_header_padding": {
+          "type": "edge_insets",
+          "top": 16.0,
+          "left": 0.0,
+          "bottom": 16.0,
+          "right": 0.0
         }
       },
       "events": [
@@ -2380,6 +2549,7 @@
           "value": true
         }
       },
+      "compound_defaults": {},
       "events": [
         "change"
       ],
@@ -2398,6 +2568,7 @@
       "classification": "service",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [
         "upload"
       ],
@@ -2421,6 +2592,7 @@
       "classification": "widget",
       "design_family": "adaptive",
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -2446,6 +2618,7 @@
           "value": true
         }
       },
+      "compound_defaults": {},
       "events": [
         "click",
         "long_press"
@@ -2467,6 +2640,7 @@
       "classification": "widget",
       "design_family": "adaptive",
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -2492,6 +2666,7 @@
           "value": true
         }
       },
+      "compound_defaults": {},
       "events": [
         "click",
         "long_press"
@@ -2513,6 +2688,7 @@
       "classification": "service",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": [
         "is_available",
@@ -2538,6 +2714,7 @@
           "value": ""
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -2567,6 +2744,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "click"
       ],
@@ -2585,6 +2763,7 @@
       "classification": "service",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [
         "error",
         "position_change"
@@ -2902,6 +3081,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "double_tap",
         "double_tap_cancel",
@@ -3023,6 +3203,7 @@
           "value": 10.0
         }
       },
+      "compound_defaults": {},
       "events": [
         "scroll"
       ],
@@ -3041,6 +3222,7 @@
       "classification": "service",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -3057,6 +3239,7 @@
       "classification": "service",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": [
         "heavy_impact",
@@ -3084,6 +3267,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -3109,6 +3293,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "color_change"
       ],
@@ -3127,6 +3312,7 @@
       "classification": "widget",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -3152,6 +3338,7 @@
           "value": true
         }
       },
+      "compound_defaults": {},
       "events": [
         "click",
         "long_press"
@@ -3182,6 +3369,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -3235,6 +3423,15 @@
           "value": false
         }
       },
+      "compound_defaults": {
+        "boundary_margin": {
+          "type": "edge_insets",
+          "top": 0.0,
+          "left": 0.0,
+          "bottom": 0.0,
+          "right": 0.0
+        }
+      },
       "events": [
         "interaction_end",
         "interaction_start",
@@ -3261,6 +3458,7 @@
       "classification": "service",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [
         "click",
         "close",
@@ -3295,6 +3493,7 @@
           "value": true
         }
       },
+      "compound_defaults": {},
       "events": [
         "key_down",
         "key_repeat",
@@ -3326,6 +3525,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "event"
       ],
@@ -3365,6 +3565,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "click",
         "long_press"
@@ -3417,6 +3618,7 @@
           "value": 0.0
         }
       },
+      "compound_defaults": {},
       "events": [
         "scroll"
       ],
@@ -3464,6 +3666,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "error",
         "load"
@@ -3483,6 +3686,7 @@
       "classification": "service",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -3499,6 +3703,7 @@
       "classification": "widget",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": [
         "center_on",
@@ -3548,6 +3753,7 @@
           "value": ""
         }
       },
+      "compound_defaults": {},
       "events": [
         "selection_change",
         "tap_link",
@@ -3577,6 +3783,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -3602,6 +3809,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "color_change",
         "primary_change"
@@ -3626,6 +3834,7 @@
           "value": "none"
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -3667,6 +3876,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "click",
         "hover"
@@ -3686,6 +3896,7 @@
       "classification": "widget",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -3702,6 +3913,7 @@
       "classification": "widget",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [
         "colors_change"
       ],
@@ -3725,6 +3937,7 @@
           "value": 0
         }
       },
+      "compound_defaults": {},
       "events": [
         "change"
       ],
@@ -3748,6 +3961,7 @@
           "value": ""
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -3769,6 +3983,7 @@
           "value": 0
         }
       },
+      "compound_defaults": {},
       "events": [
         "change"
       ],
@@ -3796,6 +4011,7 @@
           "value": "all"
         }
       },
+      "compound_defaults": {},
       "events": [
         "change"
       ],
@@ -3814,6 +4030,7 @@
       "classification": "widget",
       "design_family": "adaptive",
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -3839,6 +4056,7 @@
           "value": true
         }
       },
+      "compound_defaults": {},
       "events": [
         "click",
         "long_press"
@@ -3877,6 +4095,7 @@
           "value": ""
         }
       },
+      "compound_defaults": {},
       "events": [
         "keyboard_event",
         "locale_change"
@@ -3938,6 +4157,7 @@
           "value": 1.0
         }
       },
+      "compound_defaults": {},
       "events": [
         "change"
       ],
@@ -3962,6 +4182,7 @@
       "classification": "widget",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": [
         "close_drawer",
@@ -3983,6 +4204,7 @@
       "classification": "service",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": [
         "get_status",
@@ -4008,6 +4230,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "event"
       ],
@@ -4039,6 +4262,7 @@
           "value": 2.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -4076,6 +4300,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -4105,6 +4330,7 @@
           "value": 0.3
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -4124,6 +4350,15 @@
         "clip_behavior": {
           "type": "enum",
           "value": "none"
+        }
+      },
+      "compound_defaults": {
+        "padding": {
+          "type": "edge_insets",
+          "top": 8.0,
+          "left": 8.0,
+          "bottom": 8.0,
+          "right": 8.0
         }
       },
       "events": [
@@ -4146,6 +4381,7 @@
       "classification": "widget",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -4162,6 +4398,7 @@
       "classification": "widget",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -4187,6 +4424,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "detect",
         "error"
@@ -4230,6 +4468,7 @@
           "value": 0.2
         }
       },
+      "compound_defaults": {},
       "events": [
         "event"
       ],
@@ -4248,6 +4487,7 @@
       "classification": "widget",
       "design_family": "adaptive",
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -4264,6 +4504,7 @@
       "classification": "widget",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [
         "change"
       ],
@@ -4307,6 +4548,7 @@
           "value": 0.0
         }
       },
+      "compound_defaults": {},
       "events": [
         "change",
         "change_end",
@@ -4327,6 +4569,7 @@
       "classification": "widget",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -4376,6 +4619,7 @@
           "value": true
         }
       },
+      "compound_defaults": {},
       "events": [
         "reorder",
         "reorder_end",
@@ -4406,6 +4650,7 @@
           "value": "start"
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -4435,6 +4680,7 @@
           "value": true
         }
       },
+      "compound_defaults": {},
       "events": [
         "click"
       ],
@@ -4462,6 +4708,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -4515,6 +4762,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "scroll"
       ],
@@ -4542,6 +4790,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -4579,6 +4828,15 @@
           "value": false
         }
       },
+      "compound_defaults": {
+        "minimum_padding": {
+          "type": "edge_insets",
+          "top": 0.0,
+          "left": 0.0,
+          "bottom": 0.0,
+          "right": 0.0
+        }
+      },
       "events": [],
       "methods": []
     },
@@ -4608,6 +4866,7 @@
           "value": 0
         }
       },
+      "compound_defaults": {},
       "events": [
         "event"
       ],
@@ -4626,6 +4885,7 @@
       "classification": "service",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [
         "application_screen_brightness_change",
         "system_screen_brightness_change"
@@ -4656,6 +4916,7 @@
       "classification": "widget",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": [
         "capture"
@@ -4703,6 +4964,7 @@
           "value": ""
         }
       },
+      "compound_defaults": {},
       "events": [
         "change",
         "submit",
@@ -4728,6 +4990,7 @@
       "classification": "service",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [
         "change"
       ],
@@ -4767,6 +5030,7 @@
           "value": true
         }
       },
+      "compound_defaults": {},
       "events": [
         "change"
       ],
@@ -4785,6 +5049,7 @@
       "classification": "widget",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [
         "change"
       ],
@@ -4876,6 +5141,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "click",
         "copy",
@@ -4909,6 +5175,7 @@
       "classification": "service",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": [
         "announce_message",
@@ -4929,6 +5196,7 @@
       "classification": "widget",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -4962,6 +5230,7 @@
           "value": 2.7
         }
       },
+      "compound_defaults": {},
       "events": [
         "shake"
       ],
@@ -4980,6 +5249,7 @@
       "classification": "service",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": [
         "share_files",
@@ -5000,6 +5270,7 @@
       "classification": "service",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": [
         "clear",
@@ -5028,6 +5299,12 @@
           "value": 0
         }
       },
+      "compound_defaults": {
+        "period": {
+          "type": "duration",
+          "seconds": 1.5
+        }
+      },
       "events": [],
       "methods": []
     },
@@ -5049,6 +5326,7 @@
           "value": "bottomRight"
         }
       },
+      "compound_defaults": {},
       "events": [
         "click"
       ],
@@ -5092,6 +5370,23 @@
           "value": true
         }
       },
+      "compound_defaults": {
+        "indicator_alignment_begin": {
+          "type": "alignment",
+          "x": -1.0,
+          "y": -3.0
+        },
+        "indicator_size": {
+          "type": "size",
+          "width": 280.0,
+          "height": 50.0
+        },
+        "slider_size": {
+          "type": "size",
+          "width": 260.0,
+          "height": 40.0
+        }
+      },
       "events": [
         "color_change"
       ],
@@ -5110,6 +5405,7 @@
       "classification": "widget",
       "design_family": "adaptive",
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5147,6 +5443,12 @@
           "value": false
         }
       },
+      "compound_defaults": {
+        "duration": {
+          "type": "duration",
+          "seconds": 4.0
+        }
+      },
       "events": [
         "action",
         "click",
@@ -5176,6 +5478,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5201,6 +5504,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5226,6 +5530,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5251,6 +5556,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5276,6 +5582,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5301,6 +5608,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5326,6 +5634,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5351,6 +5660,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5376,6 +5686,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5401,6 +5712,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5426,6 +5738,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5451,6 +5764,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5476,6 +5790,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5501,6 +5816,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5526,6 +5842,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5551,6 +5868,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5576,6 +5894,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5601,6 +5920,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5626,6 +5946,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5651,6 +5972,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5676,6 +5998,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5701,6 +6024,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5726,6 +6050,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5751,6 +6076,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5776,6 +6102,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5801,6 +6128,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5826,6 +6154,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5851,6 +6180,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5876,6 +6206,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5901,6 +6232,7 @@
           "value": 50.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5922,6 +6254,7 @@
           "value": "hardEdge"
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -5938,6 +6271,7 @@
       "classification": "service",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": [
         "get_application_cache_directory",
@@ -5982,6 +6316,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "close",
         "hover",
@@ -6002,6 +6337,7 @@
       "classification": "widget",
       "design_family": "adaptive",
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -6018,6 +6354,7 @@
       "classification": "widget",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -6045,6 +6382,15 @@
         "secondary": {
           "type": "bool",
           "value": false
+        }
+      },
+      "compound_defaults": {
+        "indicator_padding": {
+          "type": "edge_insets",
+          "top": 0.0,
+          "left": 0.0,
+          "bottom": 0.0,
+          "right": 0.0
         }
       },
       "events": [
@@ -6075,6 +6421,7 @@
           "value": 1.0
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -6100,6 +6447,7 @@
           "value": 0
         }
       },
+      "compound_defaults": {},
       "events": [
         "change"
       ],
@@ -6120,6 +6468,7 @@
       "classification": "service",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": [
         "enter_text",
@@ -6188,6 +6537,7 @@
           "value": ""
         }
       },
+      "compound_defaults": {},
       "events": [
         "selection_change",
         "tap"
@@ -6207,6 +6557,7 @@
       "classification": "widget",
       "design_family": "adaptive",
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -6223,6 +6574,7 @@
       "classification": "widget",
       "design_family": "adaptive",
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -6284,6 +6636,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "image_error"
       ],
@@ -6315,6 +6668,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "change",
         "dismiss",
@@ -6335,6 +6689,7 @@
       "classification": "widget",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -6351,6 +6706,7 @@
       "classification": "service",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": [
         "can_launch_url",
@@ -6374,6 +6730,7 @@
       "classification": "service",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -6390,6 +6747,7 @@
       "classification": "widget",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -6459,6 +6817,7 @@
           "value": true
         }
       },
+      "compound_defaults": {},
       "events": [
         "complete",
         "enter_fullscreen",
@@ -6522,6 +6881,15 @@
           "value": "start"
         }
       },
+      "compound_defaults": {
+        "padding": {
+          "type": "edge_insets",
+          "top": 10.0,
+          "left": 10.0,
+          "bottom": 10.0,
+          "right": 10.0
+        }
+      },
       "events": [
         "confirm_pop",
         "scroll"
@@ -6547,6 +6915,7 @@
       "classification": "service",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": [
         "disable",
@@ -6567,6 +6936,7 @@
       "classification": "widget",
       "design_family": null,
       "primitive_defaults": {},
+      "compound_defaults": {},
       "events": [],
       "methods": []
     },
@@ -6588,6 +6958,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [],
       "methods": [
         "center",
@@ -6617,6 +6988,7 @@
           "value": true
         }
       },
+      "compound_defaults": {},
       "events": [
         "double_tap",
         "drag_end",
@@ -6646,6 +7018,7 @@
           "value": false
         }
       },
+      "compound_defaults": {},
       "events": [
         "detect",
         "error"

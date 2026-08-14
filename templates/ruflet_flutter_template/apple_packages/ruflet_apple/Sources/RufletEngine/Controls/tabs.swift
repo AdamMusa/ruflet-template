@@ -215,9 +215,11 @@ private struct RufletTabLabel: View {
   @ObservedObject var control: RufletControl
 
   var body: some View {
-    VStack(spacing: 2) {
+    VStack(spacing: 0) {
       if let icon = control.buildIconOrWidget("icon") {
-        icon.padding(parseMargin(control.dynamicValue("icon_margin")) ?? EdgeInsets())
+        icon.padding(
+          parseMargin(control.dynamicValue("icon_margin"))
+            ?? RufletLayoutDefaults.primaryTabIcon)
       }
       if let label = control.buildTextOrWidget("label") {
         label
@@ -362,7 +364,7 @@ public struct TabBarControl: View {
   private var scrollable: Bool { control.boolean("scrollable", default: true) }
   private var labelPadding: EdgeInsets {
     parsePadding(control.dynamicValue("label_padding"))
-      ?? EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16)
+      ?? RufletLayoutDefaults.tabLabel
   }
   private var labelColor: Color {
     parseColor(control.string("label_color")) ?? .accentColor

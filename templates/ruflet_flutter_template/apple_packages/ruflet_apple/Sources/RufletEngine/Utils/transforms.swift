@@ -64,8 +64,3 @@ func parseOffset(_ value: Any?, _ defaultValue: CGSize? = nil) -> CGSize? {
     }
     return CGSize(width: details.x, height: details.y)
 }
-
-func parseOffsetList(_ value: Any?, _ defaultValue: [CGSize]? = nil) -> [CGSize]? {
-    guard let values = value as? [Any] else { return defaultValue }
-    return values.compactMap { parseOffset($0) }
-}

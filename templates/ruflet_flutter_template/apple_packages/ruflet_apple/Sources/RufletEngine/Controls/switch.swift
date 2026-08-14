@@ -17,7 +17,9 @@ public struct SwitchControl: View {
           RufletStandardSwitchArtwork(control: control, focused: focused, hovered: hovered)
           if labelPosition == .right { label }
         }
-        .padding(parsePadding(control.dynamicValue("padding")) ?? EdgeInsets())
+        .padding(
+          parsePadding(control.dynamicValue("padding"))
+            ?? RufletLayoutDefaults.materialSwitch)
         .contentShape(Rectangle())
       }
       .buttonStyle(RufletSwitchPressStyle())

@@ -31,21 +31,22 @@ public struct BannerControl: View {
     VStack(alignment: .leading, spacing: 10) {
       HStack(alignment: .top, spacing: 12) {
         if let leading = control.buildIconOrWidget("leading") {
-          leading.padding(parsePadding(control.dynamicValue("leading_padding")) ?? EdgeInsets())
+          leading.padding(
+            parsePadding(control.dynamicValue("leading_padding"))
+              ?? RufletLayoutDefaults.bannerLeading)
         }
         control.buildTextOrWidget("content")!
           .modifier(RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("content_text_style"))))
-          .padding(parsePadding(control.dynamicValue("content_padding")) ?? EdgeInsets())
           .frame(maxWidth: .infinity, alignment: .leading)
-        if !control.boolean("force_actions_below", default: false) {
+        if singleRow {
           actions
         }
       }
-      if control.boolean("force_actions_below", default: false) {
+      .padding(contentPadding)
+      if !singleRow {
         actions.frame(maxWidth: .infinity, alignment: .trailing)
       }
     }
-    .padding(12)
     .frame(minHeight: CGFloat(control.number("min_action_bar_height") ?? 52))
     .background(parseColor(control.string("bgcolor")) ?? Color.rufletSystemBackground)
     .overlay(alignment: .bottom) {
@@ -56,7 +57,9 @@ public struct BannerControl: View {
     .shadow(
       color: parseColor(control.string("shadow_color")) ?? .black.opacity(0.16),
       radius: CGFloat(max(control.number("elevation") ?? 0, 0)))
-    .padding(parseMargin(control.dynamicValue("margin")) ?? EdgeInsets())
+    .padding(
+      parseMargin(control.dynamicValue("margin"))
+        ?? RufletLayoutDefaults.bannerMargin(elevation: elevation))
     .transition(.move(edge: .top).combined(with: .opacity))
   }
 
@@ -66,6 +69,21 @@ public struct BannerControl: View {
         ControlWidget(control: action)
       }
     }
+    .padding(.horizontal, 8)
+  }
+
+  private var singleRow: Bool {
+    control.children("actions").count == 1
+      && !control.boolean("force_actions_below", default: false)
+  }
+
+  private var contentPadding: EdgeInsets {
+    parsePadding(control.dynamicValue("content_padding"))
+      ?? RufletLayoutDefaults.bannerContent(singleRow: singleRow)
+  }
+
+  private var elevation: Double {
+    max(control.number("elevation") ?? 0, 0)
   }
 
   private func synchronizeLifecycle() {

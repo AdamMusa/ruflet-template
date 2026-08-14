@@ -75,13 +75,6 @@ enum RufletCupertinoButtonSize: String, CaseIterable, RufletStringEnum {
     }
   }
 
-  var radius: CGFloat {
-    switch self {
-    case .small, .medium: return 40
-    case .large: return 12
-    }
-  }
-
   var font: Font {
     switch self {
     case .small: return .subheadline
@@ -146,10 +139,10 @@ struct RufletCupertinoButtonPresentation {
     alignment = parseAlignment(control.dynamicValue("alignment"), .center) ?? .center
     borderRadius = parseBorderRadius(control.dynamicValue("border_radius"))
       ?? RufletBorderRadius(
-        topLeft: size.radius,
-        topRight: size.radius,
-        bottomLeft: size.radius,
-        bottomRight: size.radius)
+        topLeft: 8,
+        topRight: 8,
+        bottomLeft: 8,
+        bottomRight: 8)
     pressedOpacity = control.number("opacity_on_click") ?? 0.4
   }
 
