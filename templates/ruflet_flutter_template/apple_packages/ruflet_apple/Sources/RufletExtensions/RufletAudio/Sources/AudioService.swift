@@ -14,6 +14,9 @@ public final class RufletAudioPlayer: NSObject, @preconcurrency AVAudioPlayerDel
   private var player: AVAudioPlayer?
   private var positionTimer: Timer?
   private var releaseMode: RufletAudioReleaseMode = .release
+  private var configuredVolume: Float = 1
+  private var configuredBalance: Float = 0
+  private var configuredPlaybackRate: Float = 1
   private var lastPosition = -1
   private var state: RufletAudioPlayerState = .stopped
 
@@ -40,13 +43,19 @@ public final class RufletAudioPlayer: NSObject, @preconcurrency AVAudioPlayerDel
       data = downloaded
     }
 
+    try Task.checkCancellation()
+
     let nextPlayer = try AVAudioPlayer(data: data)
     nextPlayer.delegate = self
     nextPlayer.enableRate = true
     nextPlayer.numberOfLoops = releaseMode == .loop ? -1 : 0
+    nextPlayer.volume = configuredVolume
+    nextPlayer.pan = configuredBalance
+    nextPlayer.rate = configuredPlaybackRate
     guard nextPlayer.prepareToPlay() else {
       throw RufletAudioError.couldNotPrepare
     }
+    try Task.checkCancellation()
 
     player?.stop()
     player = nextPlayer
@@ -68,15 +77,18 @@ public final class RufletAudioPlayer: NSObject, @preconcurrency AVAudioPlayerDel
   ) throws {
     if let volume {
       guard (0 ... 1).contains(volume) else { throw RufletAudioError.invalidVolume(volume) }
-      player?.volume = Float(volume)
+      configuredVolume = Float(volume)
+      player?.volume = configuredVolume
     }
     if let balance {
       guard (-1 ... 1).contains(balance) else { throw RufletAudioError.invalidBalance(balance) }
-      player?.pan = Float(balance)
+      configuredBalance = Float(balance)
+      player?.pan = configuredBalance
     }
     if let playbackRate {
       guard playbackRate > 0 else { throw RufletAudioError.invalidPlaybackRate(playbackRate) }
-      player?.rate = Float(playbackRate)
+      configuredPlaybackRate = Float(playbackRate)
+      player?.rate = configuredPlaybackRate
     }
     if let releaseMode {
       self.releaseMode = releaseMode
@@ -209,8 +221,9 @@ public enum RufletAudioError: Error, Equatable, Sendable {
 public final class AudioService: RufletService {
   private let player = RufletAudioPlayer()
   private var invokeToken: UUID?
-  private var updateTask: Task<Void, Never>?
+  private var sourceTask: Task<Void, Never>?
   private var loadedSource: RufletValue?
+  private var loadingSource: RufletValue?
 
   public required init(control: RufletControl) {
     super.init(control: control)
@@ -227,29 +240,40 @@ public final class AudioService: RufletService {
 
   public override func update() {
     let sourceValue = control.value("src")
-    let sourceChanged = sourceValue != loadedSource
     let autoplay = control.boolean("autoplay", default: false)
     let volume = control.number("volume", default: 1) ?? 1
     let balance = control.number("balance", default: 0) ?? 0
     let playbackRate = control.number("playback_rate", default: 1) ?? 1
     let releaseMode = RufletAudioReleaseMode.parse(control.string("release_mode"))
 
-    updateTask?.cancel()
-    updateTask = Task { @MainActor [weak self] in
+    do {
+      try player.configure(
+        volume: volume,
+        balance: balance,
+        playbackRate: playbackRate,
+        releaseMode: releaseMode)
+    } catch {
+      control.triggerEvent("error", data: .string(String(describing: error)))
+      return
+    }
+
+    guard sourceValue != loadedSource, sourceValue != loadingSource else { return }
+    sourceTask?.cancel()
+    loadingSource = sourceValue
+    sourceTask = Task { @MainActor [weak self] in
       guard let self, !Task.isCancelled else { return }
+      defer {
+        if loadingSource == sourceValue { loadingSource = nil }
+      }
       do {
-        try player.configure(
-          volume: volume,
-          balance: balance,
-          playbackRate: playbackRate,
-          releaseMode: releaseMode)
-        if sourceChanged {
-          guard let sourceValue, let source = resolve(sourceValue) else {
-            throw RufletAudioError.invalidSource
-          }
-          try await player.load(source, autoplay: autoplay)
-          loadedSource = sourceValue
+        guard let sourceValue, let source = resolve(sourceValue) else {
+          throw RufletAudioError.invalidSource
         }
+        try await player.load(source, autoplay: autoplay)
+        try Task.checkCancellation()
+        loadedSource = sourceValue
+      } catch is CancellationError {
+        return
       } catch {
         control.triggerEvent("error", data: .string(String(describing: error)))
       }
@@ -257,7 +281,9 @@ public final class AudioService: RufletService {
   }
 
   public override func dispose() {
-    updateTask?.cancel()
+    sourceTask?.cancel()
+    sourceTask = nil
+    loadingSource = nil
     if let invokeToken { control.removeInvokeMethodListener(invokeToken) }
     invokeToken = nil
     player.release()
@@ -265,6 +291,7 @@ public final class AudioService: RufletService {
 
   private func invoke(_ name: String, arguments: RufletValue) async throws -> RufletValue {
     let position = Self.durationMilliseconds(arguments["position"])
+    if name != "release", let sourceTask { await sourceTask.value }
     switch name {
     case "play":
       try player.play(positionMilliseconds: position)
@@ -276,6 +303,9 @@ public final class AudioService: RufletService {
       try player.pause()
       return .null
     case "release":
+      sourceTask?.cancel()
+      sourceTask = nil
+      loadingSource = nil
       player.release()
       loadedSource = nil
       return .null
