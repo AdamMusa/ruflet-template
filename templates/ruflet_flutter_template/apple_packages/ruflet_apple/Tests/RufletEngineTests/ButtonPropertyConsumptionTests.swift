@@ -72,6 +72,22 @@ final class ButtonPropertyConsumptionTests: XCTestCase {
     XCTAssertEqual(buttonStyle.fixedSize.resolve([]), CGSize(width: 120, height: 44))
   }
 
+  func testLongPressRecognizerExistsOnlyForAnEnabledSubscription() {
+    let backend = ButtonPropertyTestBackend()
+    let ordinary = RufletControl(
+      id: 1, type: "Button", properties: ["on_click": true], backend: backend)
+    let subscribed = RufletControl(
+      id: 2, type: "Button",
+      properties: ["on_click": true, "on_long_press": true], backend: backend)
+    let disabled = RufletControl(
+      id: 3, type: "Button",
+      properties: ["disabled": true, "on_long_press": true], backend: backend)
+
+    XCTAssertFalse(rufletButtonLongPressEnabled(ordinary))
+    XCTAssertTrue(rufletButtonLongPressEnabled(subscribed))
+    XCTAssertFalse(rufletButtonLongPressEnabled(disabled))
+  }
+
   private func style(
     for type: String,
     properties: [String: RufletValue]

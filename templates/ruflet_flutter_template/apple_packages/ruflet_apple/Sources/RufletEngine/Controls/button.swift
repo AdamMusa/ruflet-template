@@ -36,10 +36,11 @@ public struct ButtonControl: View {
         hovered = $0
         if !control.disabled { control.triggerEvent("hover", data: .bool($0)) }
       }
-      .simultaneousGesture(
-        LongPressGesture().onEnded { _ in
-          if !control.disabled { control.triggerEvent("long_press") }
-        }
+      .modifier(
+        RufletButtonLongPressModifier(
+          enabled: rufletButtonLongPressEnabled(control),
+          highPriority: false,
+          action: { control.triggerEvent("long_press") })
       )
       .onChange(of: focused) { control.triggerEvent($0 ? "focus" : "blur") }
       .onChange(of: focusCoordinator.focusRequest) { _ in focused = true }

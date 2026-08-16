@@ -67,7 +67,11 @@ struct RufletAppleButtonStyle: ButtonStyle {
         radius: variant == .elevated && isEnabled ? elevation : 0,
         y: variant == .elevated && isEnabled ? elevation / 2 : 0
       )
-      .contentShape(shape)
+      // Flutter's Material button paints/clips with its configured shape, but
+      // GestureDetector hit-tests the complete RenderBox. Keeping the rounded
+      // corners as the SwiftUI content shape creates dead pixels in the
+      // visible button bounds, which is especially noticeable on a phone.
+      .contentShape(Rectangle())
   }
 
   private func states(configuration: Configuration) -> Set<RufletWidgetState> {
@@ -77,6 +81,34 @@ struct RufletAppleButtonStyle: ButtonStyle {
     if hovered { result.insert(.hovered) }
     if !isEnabled { result.insert(.disabled) }
     return result
+  }
+}
+
+/// Flet only attaches its long-press callback when Ruby subscribed to it.
+/// Installing a recognizer unconditionally makes an ordinary iOS tap wait for
+/// the long-press recognizer to fail, and a high-priority recognizer can steal
+/// the tap altogether.
+@MainActor
+func rufletButtonLongPressEnabled(_ control: RufletControl) -> Bool {
+  !control.disabled && control.hasEventHandler("long_press")
+}
+
+struct RufletButtonLongPressModifier: ViewModifier {
+  let enabled: Bool
+  let highPriority: Bool
+  let action: () -> Void
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if enabled, highPriority {
+      content.highPriorityGesture(
+        LongPressGesture().onEnded { _ in action() })
+    } else if enabled {
+      content.simultaneousGesture(
+        LongPressGesture().onEnded { _ in action() })
+    } else {
+      content
+    }
   }
 }
 

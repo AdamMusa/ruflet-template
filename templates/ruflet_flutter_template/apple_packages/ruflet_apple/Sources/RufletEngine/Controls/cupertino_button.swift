@@ -25,6 +25,7 @@ public struct CupertinoButtonControl: View {
           alignment: presentation.alignment.swiftUI)
         .background(presentation.backgroundColor(disabled: control.disabled))
         .clipShape(RufletCornerShape(radius: presentation.borderRadius))
+        .contentShape(Rectangle())
         .overlay {
           if focused {
             RufletCornerShape(radius: presentation.borderRadius)
@@ -35,9 +36,12 @@ public struct CupertinoButtonControl: View {
       .buttonStyle(RufletPressedOpacityStyle(opacity: presentation.pressedOpacity))
       .disabled(control.disabled)
       .focused($focused)
-      .simultaneousGesture(LongPressGesture().onEnded { _ in
-        if !control.disabled { control.triggerEvent("long_press") }
-      })
+      .modifier(
+        RufletButtonLongPressModifier(
+          enabled: rufletButtonLongPressEnabled(control),
+          highPriority: false,
+          action: { control.triggerEvent("long_press") })
+      )
       .onChange(of: focused) { control.triggerEvent($0 ? "focus" : "blur") }
       .onChange(of: focusCoordinator.focusRequest) { _ in focused = true }
       .onAppear {

@@ -170,7 +170,7 @@ public struct ListTileControl: View {
       .background(backgroundColor)
       .clipShape(RufletCornerShape(radius: radius))
       .overlay { shapeBorder }
-      .contentShape(RufletCornerShape(radius: radius))
+      .contentShape(Rectangle())
       .opacity(control.disabled ? 0.5 : 1)
       .overlay {
         RufletNativeFocusTarget(

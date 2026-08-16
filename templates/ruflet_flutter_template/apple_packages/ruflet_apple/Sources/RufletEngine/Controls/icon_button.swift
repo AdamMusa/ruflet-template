@@ -51,11 +51,12 @@ public struct IconButtonControl: View {
         RufletMouseCursorModifier(
           cursor: presentation.mouseCursor
             ?? presentation.styleMouseCursor(focused: focused, hovered: hovered, disabled: control.disabled)))
-      .highPriorityGesture(
-        LongPressGesture().onEnded { _ in
-          guard !control.disabled else { return }
-          control.triggerEvent("long_press")
-        })
+      .modifier(
+        RufletButtonLongPressModifier(
+          enabled: rufletButtonLongPressEnabled(control),
+          highPriority: true,
+          action: { control.triggerEvent("long_press") })
+      )
       .onHover(perform: hoverChanged)
       .onChange(of: focused) { control.triggerEvent($0 ? "focus" : "blur") }
       .onChange(of: focusCoordinator.focusRequest) { _ in focused = true }
@@ -187,6 +188,7 @@ struct RufletIconButtonPresentation {
   let styleMinimumSize: RufletWidgetStateProperty<CGSize>
   let styleAlignment: Alignment?
   let styleVisualDensity: RufletVisualDensity?
+  let appBarLeadingMinimumSize: CGSize?
 
   @MainActor
   init(control: RufletControl) {
@@ -206,6 +208,7 @@ struct RufletIconButtonPresentation {
     alignment = parseAlignment(control.dynamicValue("alignment"))?.swiftUI
     mouseCursor = control.string("mouse_cursor")
     sizeConstraints = RufletIconButtonConstraints(control.dynamicValue("size_constraints"))
+    appBarLeadingMinimumSize = Self.leadingMinimumSize(control)
 
     let details = rufletDictionary(
       control.internals?["style"].map(rufletAny) ?? control.dynamicValue("style")) ?? [:]
@@ -305,6 +308,17 @@ struct RufletIconButtonPresentation {
     case .adaptivePlatformDensity, .standard, nil: return 44
     }
   }
+
+  @MainActor
+  private static func leadingMinimumSize(_ control: RufletControl) -> CGSize? {
+    guard let parent = control.parentControl,
+      parent.child("leading", visibleOnly: false)?.id == control.id
+    else { return nil }
+    let cupertino = parent.type.lowercased().contains("cupertino")
+    let width = parent.number("leading_width") ?? (cupertino ? 44 : 56)
+    let height = parent.number("toolbar_height") ?? (cupertino ? 44 : 56)
+    return CGSize(width: width, height: height)
+  }
 }
 
 private struct RufletAppleIconButtonStyle: ButtonStyle {
@@ -361,7 +375,13 @@ private struct RufletAppleIconButtonStyle: ButtonStyle {
       .shadow(color: shadow, radius: elevation, y: elevation / 2)
       .scaleEffect(configuration.isPressed ? 0.94 : 1)
       .opacity(configuration.isPressed && presentation.adaptive ? 0.4 : (disabled ? 0.45 : 1))
-      .contentShape(RufletIconButtonShape(description: shape))
+      // The background/splash keeps the requested circle or rounded shape,
+      // while the tap target remains the full rectangular control bounds like
+      // Flutter's RenderBox and UIKit controls.
+      .frame(
+        minWidth: presentation.appBarLeadingMinimumSize?.width,
+        minHeight: presentation.appBarLeadingMinimumSize?.height)
+      .contentShape(Rectangle())
       .animation(.easeOut(duration: presentation.animationDuration), value: configuration.isPressed)
   }
 }

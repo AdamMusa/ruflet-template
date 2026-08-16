@@ -430,6 +430,7 @@ private struct RufletContainerInkButtonStyle: ButtonStyle {
           .allowsHitTesting(false)
       }
     }
+    .contentShape(Rectangle())
   }
 }
 

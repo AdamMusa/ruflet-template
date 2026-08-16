@@ -126,9 +126,11 @@ struct RufletAppleAppBar: View {
             Text(previous)
           }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .contentShape(Rectangle())
       }
       .buttonStyle(.plain)
-      .frame(width: leadingWidth)
+      .frame(width: leadingWidth, height: toolbarHeight)
       .accessibilityLabel(Text("Back"))
     }
   }

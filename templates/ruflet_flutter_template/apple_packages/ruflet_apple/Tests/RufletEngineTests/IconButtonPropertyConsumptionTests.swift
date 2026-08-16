@@ -125,6 +125,30 @@ final class IconButtonPropertyConsumptionTests: XCTestCase {
     XCTAssertEqual(backend.events.first?.controlID, enabled.id)
     XCTAssertEqual(backend.events.first?.name, "click")
   }
+
+  func testAppBarLeadingIconButtonClaimsTheCompleteNavigationHitSlot() throws {
+    let backend = IconButtonBackend()
+    let appBar = RufletControl(
+      id: 10,
+      type: "AppBar",
+      properties: [
+        "leading_width": .double(60),
+        "toolbar_height": .double(52),
+        "leading": .map([
+          "_i": .int(11),
+          "_c": .string("IconButton"),
+          "icon": .int(65_898),
+          "on_click": .bool(true),
+        ]),
+      ],
+      backend: backend)
+    let leading = try XCTUnwrap(appBar.child("leading"))
+
+    XCTAssertEqual(
+      RufletIconButtonPresentation(control: leading).appBarLeadingMinimumSize,
+      CGSize(width: 60, height: 52))
+    XCTAssertFalse(rufletButtonLongPressEnabled(leading))
+  }
 }
 
 @MainActor
