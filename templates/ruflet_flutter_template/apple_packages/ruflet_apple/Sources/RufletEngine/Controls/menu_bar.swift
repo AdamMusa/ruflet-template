@@ -40,7 +40,9 @@ public struct MenuBarControl: View {
     }
   }
 
-  private var children: [RufletControl] { rufletMenuChildren(control) }
+  private var children: [RufletControl] {
+    rufletMenuChildren(control, property: "controls")
+  }
   private var clipBehavior: String {
     control.string("clip_behavior", default: "none")!.lowercased()
   }

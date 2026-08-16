@@ -107,7 +107,9 @@ public struct SubmenuButtonControl: View {
   private var presentationBinding: Binding<Bool> {
     Binding(get: { presented }, set: { setPresented($0) })
   }
-  private var children: [RufletControl] { rufletMenuChildren(control) }
+  private var children: [RufletControl] {
+    rufletMenuChildren(control, property: "controls")
+  }
   private var alignmentOffset: CGSize {
     parseOffset(control.dynamicValue("alignment_offset")) ?? .zero
   }
