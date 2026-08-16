@@ -384,7 +384,16 @@ module FletControlContract
   end
 
   def events(source)
-    triggered = source.scan(/\.triggerEvent\(\s*["']([^"']+)["']/).flatten
+    # Only events emitted by the registered renderer's own control belong to
+    # its contract. Files such as SnackBar and DataTable also fire events on
+    # nested action/row/cell controls; attributing those to the parent creates
+    # a false gap and can hide a real child-control omission.
+    triggered = source.scan(
+      /(?:\bcontrol|\bwidget\.control)\s*\.\s*triggerEvent\(\s*["']([^"']+)["']/
+    ).flatten
+    triggered.concat(source.scan(
+      /\.triggerControlEvent\(\s*(?:control|widget\.control)\s*,\s*["']([^"']+)["']/
+    ).flatten)
     # `on_*` flags read from a child/sibling control describe that child's
     # event contract, not the renderer currently being inventoried. Page, for
     # example, inspects its top View's `on_confirm_pop`. Only the registered

@@ -2086,14 +2086,7 @@
       },
       "compound_defaults": {},
       "events": [
-        "double_tap",
-        "long_press",
-        "select_all",
-        "select_change",
-        "sort",
-        "tap",
-        "tap_cancel",
-        "tap_down"
+        "select_all"
       ],
       "methods": []
     },
@@ -2162,16 +2155,7 @@
         }
       },
       "events": [
-        "double_tap",
-        "long_press",
-        "secondary_tap",
-        "secondary_tap_down",
-        "select_all",
-        "select_change",
-        "sort",
-        "tap",
-        "tap_cancel",
-        "tap_down"
+        "select_all"
       ],
       "methods": []
     },
@@ -2621,6 +2605,7 @@
       "compound_defaults": {},
       "events": [
         "click",
+        "hover",
         "long_press"
       ],
       "methods": [
@@ -2669,6 +2654,7 @@
       "compound_defaults": {},
       "events": [
         "click",
+        "hover",
         "long_press"
       ],
       "methods": [
@@ -3341,6 +3327,7 @@
       "compound_defaults": {},
       "events": [
         "click",
+        "hover",
         "long_press"
       ],
       "methods": [
@@ -4059,6 +4046,7 @@
       "compound_defaults": {},
       "events": [
         "click",
+        "hover",
         "long_press"
       ],
       "methods": [
@@ -4681,9 +4669,7 @@
         }
       },
       "compound_defaults": {},
-      "events": [
-        "click"
-      ],
+      "events": [],
       "methods": []
     },
     {
@@ -5451,8 +5437,8 @@
       },
       "events": [
         "action",
-        "click",
-        "dismiss"
+        "dismiss",
+        "visible"
       ],
       "methods": []
     },

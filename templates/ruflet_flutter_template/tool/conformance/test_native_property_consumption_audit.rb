@@ -117,7 +117,9 @@ class NativePropertyConsumptionAuditTest < Minitest::Test
 
   def test_manual_classifications_are_specific_and_reviewed
     declarations = JSON.parse(File.read(NativePropertyConsumptionAudit::CLASSIFICATIONS_PATH))
-    assert_equal %w[parent_consumed service unsupported], declarations.keys.sort
+    assert_equal %w[parent_consumed platform_inapplicable service unsupported], declarations.keys.sort
+    assert_empty declarations.fetch("unsupported"),
+      "strict Flet parity does not permit reviewed native behavior gaps"
     declarations.each do |category, controls|
       controls.each do |wire, properties|
         refute properties.key?("*"), "#{category} #{wire} uses a forbidden wildcard"

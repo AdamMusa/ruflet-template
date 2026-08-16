@@ -106,6 +106,10 @@ class FletControlContractTest < Minitest::Test
     assert_empty @controls.fetch("Tab").fetch("methods")
     refute_includes @controls.fetch("Page").fetch("events"), "confirm_pop"
     assert_includes @controls.fetch("View").fetch("events"), "confirm_pop"
+
+    assert_equal %w[action dismiss visible], @controls.fetch("SnackBar").fetch("events")
+    refute_includes @controls.fetch("SnackBar").fetch("events"), "click",
+      "SnackBarAction.click belongs to the nested action control"
   end
 
   def test_every_vendored_flet_extension_has_an_available_swift_product

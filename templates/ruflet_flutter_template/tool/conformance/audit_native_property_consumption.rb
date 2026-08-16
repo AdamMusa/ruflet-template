@@ -633,6 +633,9 @@ module NativePropertyConsumptionAudit
     if (detail = declared("service", wire, keyword))
       return ["service", [detail]]
     end
+    if (detail = declared("platform_inapplicable", wire, keyword))
+      return ["platform_inapplicable", [detail]]
+    end
     if (detail = declared("unsupported", wire, keyword))
       return ["unsupported", [detail]]
     end
@@ -684,9 +687,10 @@ module NativePropertyConsumptionAudit
         "consumed" => "read by the concrete native control implementation",
         "parent_consumed" => "read by the shared visual pipeline or an explicitly named structural parent",
         "service" => "read by the native service implementation",
-        "unsupported" => "explicitly reviewed as platformUnsupported with a reason",
+        "platform_inapplicable" => "not read on Apple because the pinned Flet renderer applies it only to another platform",
+        "unsupported" => "an actual native behavior gap; completion requires this count to be zero",
         "upstream_unused" => "present in the Ruflet DSL but not read by the pinned Flet renderer",
-        "unclassified" => "no executable consumption or reviewed unsupported contract was found"
+        "unclassified" => "no executable consumption or exact pinned-renderer classification was found"
       },
       "summary" => {
         "controls" => controls.length,

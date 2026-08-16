@@ -1,15 +1,6 @@
 {
   "allowlist_version": 1,
-  "aliases": {
-    "AdaptiveAlertDialog": "AlertDialog",
-    "AdaptiveButton": "Button",
-    "AdaptiveCheckbox": "Checkbox",
-    "AdaptiveRadio": "Radio",
-    "AdaptiveSlider": "Slider",
-    "AdaptiveSwitch": "Switch",
-    "AdaptiveTextField": "TextField",
-    "FletApp": "RufletApp"
-  },
+  "aliases": {},
   "ignored_packages": {},
   "declared_baseline": {
     "classification": "audited_public_contract",
@@ -17,11 +8,6 @@
     "reason": "The live Flet registry has no unresolved native type, event, or method gaps. Any change to this empty set requires conformance review."
   },
   "type_gaps": {},
-  "event_gaps": {
-    "SnackBar": {
-      "names": ["click"],
-      "reason": "The source extractor sees SnackBarAction.triggerEvent in snack_bar.dart; click belongs to the nested SnackBarAction, not the SnackBar parent."
-    }
-  },
+  "event_gaps": {},
   "method_gaps": {}
 }

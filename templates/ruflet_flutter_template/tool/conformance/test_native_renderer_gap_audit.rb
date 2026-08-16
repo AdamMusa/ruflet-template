@@ -20,6 +20,16 @@ class NativeRendererGapAuditTest < Minitest::Test
     assert_equal first, File.read(NativeRendererGapAudit.output_path)
     assert_equal true, @report.dig("summary", "declared_baseline_matches")
     assert_equal 0, @report.dig("summary", "undeclared_gaps")
+    assert_empty @report.fetch("missing_types")
+    assert_empty @report.fetch("missing_events")
+    assert_empty @report.fetch("missing_methods")
+
+    allowlist = NativeRendererGapAudit.load_allowlist
+    assert_empty allowlist.fetch("aliases")
+    assert_empty allowlist.fetch("ignored_packages")
+    assert_empty allowlist.fetch("type_gaps")
+    assert_empty allowlist.fetch("event_gaps")
+    assert_empty allowlist.fetch("method_gaps")
 
     _stdout, stderr, status = Open3.capture3(
       RbConfig.ruby,
@@ -102,7 +112,7 @@ class NativeRendererGapAuditTest < Minitest::Test
     assert_includes @surface.fetch("Video").fetch("events"), "track_change"
   end
 
-  def test_name_allowlist_does_not_accept_unknown_gaps
+  def test_empty_gap_allowlist_does_not_accept_unknown_gaps
     allowlist = NativeRendererGapAudit.load_allowlist
     refute NativeRendererGapAudit.gap_allowed?(allowlist, "event_gaps", "Video", "invented_event")
     refute NativeRendererGapAudit.gap_allowed?(allowlist, "method_gaps", "Video", "invented_method")

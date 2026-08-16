@@ -1,0 +1,1354 @@
+{
+  "manifest_version": 1,
+  "flet_version": "0.80.5",
+  "flet_ref": "67a9763da3bd2611bbb7626c3a1ec5e9d30fc965",
+  "contract": "Every vendored Flet Dart engine and test file is hash-pinned to the exact upstream ref; every byte-level deviation is explicitly enumerated.",
+  "summary": {
+    "source_files": 262,
+    "test_files": 4,
+    "exact_upstream": 264,
+    "reviewed_ruflet_patches": 2
+  },
+  "patches": {
+    "flet/lib/src/controls/banner.dart": {
+      "reason": "Ruflet reusable-overlay lifecycle fix: discard stale close completions and reset the closing guard for the next open generation.",
+      "ruflet_commit": "767f1a2"
+    },
+    "flet/lib/src/controls/snack_bar.dart": {
+      "reason": "Ruflet reusable-overlay lifecycle fix: discard stale close completions and reset the closing guard for the next open generation.",
+      "ruflet_commit": "767f1a2"
+    }
+  },
+  "files": {
+    "flet/lib/src/controls/adaptive_alert_dialog.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "7852e7d1daeeea84e9c0b94831e7380d37a68f5929b99028367f125a40afb46f",
+      "vendored_sha256": "7852e7d1daeeea84e9c0b94831e7380d37a68f5929b99028367f125a40afb46f"
+    },
+    "flet/lib/src/controls/adaptive_app_bar.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "6369d7dacafaf031426edb489afbf8d9019ecdddedb00b59d45d68666861003e",
+      "vendored_sha256": "6369d7dacafaf031426edb489afbf8d9019ecdddedb00b59d45d68666861003e"
+    },
+    "flet/lib/src/controls/adaptive_button.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "b4e8c5fe1077ce4e59b825ea7e0b8a1b3a708b8c14242aefe1badd059ccfb4bf",
+      "vendored_sha256": "b4e8c5fe1077ce4e59b825ea7e0b8a1b3a708b8c14242aefe1badd059ccfb4bf"
+    },
+    "flet/lib/src/controls/adaptive_checkbox.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "d6c9c8d75cbe7492899d1c24c15fcc5840ed953392c80098d51392ef2b601318",
+      "vendored_sha256": "d6c9c8d75cbe7492899d1c24c15fcc5840ed953392c80098d51392ef2b601318"
+    },
+    "flet/lib/src/controls/adaptive_radio.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "1ffa7afcbd76cf98a6117d02443d1555cc0539662b4bcbc62a99489da9fc81fe",
+      "vendored_sha256": "1ffa7afcbd76cf98a6117d02443d1555cc0539662b4bcbc62a99489da9fc81fe"
+    },
+    "flet/lib/src/controls/adaptive_slider.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "c0dd69efe6b5ae189d1f6ac4d927f1516c38317b5284933e71263874a759fd1b",
+      "vendored_sha256": "c0dd69efe6b5ae189d1f6ac4d927f1516c38317b5284933e71263874a759fd1b"
+    },
+    "flet/lib/src/controls/adaptive_switch.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "037250d1316b76db4027315f1ee7d5066cb5a7364b2ed65b2a2ca29edd3f2c3d",
+      "vendored_sha256": "037250d1316b76db4027315f1ee7d5066cb5a7364b2ed65b2a2ca29edd3f2c3d"
+    },
+    "flet/lib/src/controls/adaptive_texfield.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "d777efe209989a2696a78cd994a0cf7f09c07277d7d2ca7084812452b6ec44be",
+      "vendored_sha256": "d777efe209989a2696a78cd994a0cf7f09c07277d7d2ca7084812452b6ec44be"
+    },
+    "flet/lib/src/controls/alert_dialog.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "4f92cf2214ebdbb12a31226aacb95701b0f0b8227a10a6b05218812c9071032f",
+      "vendored_sha256": "4f92cf2214ebdbb12a31226aacb95701b0f0b8227a10a6b05218812c9071032f"
+    },
+    "flet/lib/src/controls/animated_switcher.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "bc0f91d2e7ed91c5515b9c6f54ff52f5be4944550dfa96126b094dd599043ffc",
+      "vendored_sha256": "bc0f91d2e7ed91c5515b9c6f54ff52f5be4944550dfa96126b094dd599043ffc"
+    },
+    "flet/lib/src/controls/app_bar.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "b32c9795966d7fea9aac1541a605ca50cbcf2cbecec5c36fc77af31687c4b81d",
+      "vendored_sha256": "b32c9795966d7fea9aac1541a605ca50cbcf2cbecec5c36fc77af31687c4b81d"
+    },
+    "flet/lib/src/controls/auto_complete.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "fa025655b5d60353bfe72cab96e03849c71efbcb78154e7128c24ba58348d592",
+      "vendored_sha256": "fa025655b5d60353bfe72cab96e03849c71efbcb78154e7128c24ba58348d592"
+    },
+    "flet/lib/src/controls/autofill_group.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "77524dc89c5af49e162bb977c48e5c3f9bd1717b40a54d8a488a41675d042a7d",
+      "vendored_sha256": "77524dc89c5af49e162bb977c48e5c3f9bd1717b40a54d8a488a41675d042a7d"
+    },
+    "flet/lib/src/controls/banner.dart": {
+      "classification": "reviewed_ruflet_patch",
+      "upstream_sha256": "da3caf114b86782ed7f96deff43a657e540330857322dedf3664e74f0e843b9a",
+      "vendored_sha256": "703d6f5941c6bd13aaff4b13fb5bf2e994cef0d3ffadf80d023cede70d3e6976"
+    },
+    "flet/lib/src/controls/base_controls.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "c086f5f16fdf976126feb6da2d66ffbf2b5e476b770eb2de8948cd9f3a2664db",
+      "vendored_sha256": "c086f5f16fdf976126feb6da2d66ffbf2b5e476b770eb2de8948cd9f3a2664db"
+    },
+    "flet/lib/src/controls/bottom_app_bar.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "c5703ad66d22aa1d239b4a803fd9f991c6d512550f3b0643129f49027fb5dfe3",
+      "vendored_sha256": "c5703ad66d22aa1d239b4a803fd9f991c6d512550f3b0643129f49027fb5dfe3"
+    },
+    "flet/lib/src/controls/bottom_sheet.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "4c399846041018163ccd4c2f5ca8c897e59fd2d44521521d24d81e30ef3f4406",
+      "vendored_sha256": "4c399846041018163ccd4c2f5ca8c897e59fd2d44521521d24d81e30ef3f4406"
+    },
+    "flet/lib/src/controls/button.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "ac18d15a60bc757f910db12cf5b7c29c15d157663625f87a41fadc1cf0e5ff8f",
+      "vendored_sha256": "ac18d15a60bc757f910db12cf5b7c29c15d157663625f87a41fadc1cf0e5ff8f"
+    },
+    "flet/lib/src/controls/canvas.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "b4e51853c1749cae823af9c835ccc377663b06ae330ce2b661aa52915c6eb72a",
+      "vendored_sha256": "b4e51853c1749cae823af9c835ccc377663b06ae330ce2b661aa52915c6eb72a"
+    },
+    "flet/lib/src/controls/card.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "ed00afcf9712be5a6568193fe2365df39cedaa72b03da1c9a689ad2c9f0843ee",
+      "vendored_sha256": "ed00afcf9712be5a6568193fe2365df39cedaa72b03da1c9a689ad2c9f0843ee"
+    },
+    "flet/lib/src/controls/checkbox.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "d40bc9a193830b5046e522a5c15d411f15afd13263e3661bd2e67648155625fc",
+      "vendored_sha256": "d40bc9a193830b5046e522a5c15d411f15afd13263e3661bd2e67648155625fc"
+    },
+    "flet/lib/src/controls/chip.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "d396ab8b9b85b28f31411afe119daa4a20893205ccded0d54db957a7e5db5da6",
+      "vendored_sha256": "d396ab8b9b85b28f31411afe119daa4a20893205ccded0d54db957a7e5db5da6"
+    },
+    "flet/lib/src/controls/circle_avatar.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "906d7a5707bcf770385f2134faa1f13b819380b76a00c75cb84a16e2262eafc5",
+      "vendored_sha256": "906d7a5707bcf770385f2134faa1f13b819380b76a00c75cb84a16e2262eafc5"
+    },
+    "flet/lib/src/controls/column.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "c18d3c814348fa6b6fa7b1ff00166aac2083d2eb0c655c8f0cf47ee11c48f7a8",
+      "vendored_sha256": "c18d3c814348fa6b6fa7b1ff00166aac2083d2eb0c655c8f0cf47ee11c48f7a8"
+    },
+    "flet/lib/src/controls/container.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "0d240c7f31eb79a7e5b53bcb48b3ea73807895b736e69249252f1ac5accd603d",
+      "vendored_sha256": "0d240c7f31eb79a7e5b53bcb48b3ea73807895b736e69249252f1ac5accd603d"
+    },
+    "flet/lib/src/controls/context_menu.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "1c4276c3fb8f81e4f2dbdba70fe31f5b9e8b0852c64f7088e9adf16924bc7e4f",
+      "vendored_sha256": "1c4276c3fb8f81e4f2dbdba70fe31f5b9e8b0852c64f7088e9adf16924bc7e4f"
+    },
+    "flet/lib/src/controls/control_widget.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "e28c217eb6b2788194fa12ed05076b9ce533bcfc9356e25b479ca2a477d8bc38",
+      "vendored_sha256": "e28c217eb6b2788194fa12ed05076b9ce533bcfc9356e25b479ca2a477d8bc38"
+    },
+    "flet/lib/src/controls/cupertino_action_sheet.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "0e84978810e22912f0b0820d18e1ccc4319c8027586694a26020ea863301e7a0",
+      "vendored_sha256": "0e84978810e22912f0b0820d18e1ccc4319c8027586694a26020ea863301e7a0"
+    },
+    "flet/lib/src/controls/cupertino_action_sheet_action.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "3394faf9a2b5c689ebf37fd19ced1a0df5fa95c0c47722cb0dd93f185a8c47a8",
+      "vendored_sha256": "3394faf9a2b5c689ebf37fd19ced1a0df5fa95c0c47722cb0dd93f185a8c47a8"
+    },
+    "flet/lib/src/controls/cupertino_activity_indicator.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "a8de5f2e6070220bd5baeec0d687b85a04eaf5c7d12668eb0b7f3abe3934fde6",
+      "vendored_sha256": "a8de5f2e6070220bd5baeec0d687b85a04eaf5c7d12668eb0b7f3abe3934fde6"
+    },
+    "flet/lib/src/controls/cupertino_alert_dialog.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "40d88d65fe6a4f8ef5d2591ef8f0bb69c09bdd8930704b09a52c4c9d627b7eb7",
+      "vendored_sha256": "40d88d65fe6a4f8ef5d2591ef8f0bb69c09bdd8930704b09a52c4c9d627b7eb7"
+    },
+    "flet/lib/src/controls/cupertino_app_bar.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "cb1b1bcc4daf6c1b69093bfe36a7d06c5582168a210c14bb2f1a05cdb8d5574a",
+      "vendored_sha256": "cb1b1bcc4daf6c1b69093bfe36a7d06c5582168a210c14bb2f1a05cdb8d5574a"
+    },
+    "flet/lib/src/controls/cupertino_bottom_sheet.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "17abec409e15631d258a2b24a0bc9de9252731050890ede3a5294a751befc7da",
+      "vendored_sha256": "17abec409e15631d258a2b24a0bc9de9252731050890ede3a5294a751befc7da"
+    },
+    "flet/lib/src/controls/cupertino_button.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "61435b3abc28c457bdf431c90fb9ffd859fae6d227b1c52b7050f1788e78daf8",
+      "vendored_sha256": "61435b3abc28c457bdf431c90fb9ffd859fae6d227b1c52b7050f1788e78daf8"
+    },
+    "flet/lib/src/controls/cupertino_checkbox.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "a999ac1cd4a470083b947c12e7c6d815447ca58e97b00a4c41669f4e72fa9c39",
+      "vendored_sha256": "a999ac1cd4a470083b947c12e7c6d815447ca58e97b00a4c41669f4e72fa9c39"
+    },
+    "flet/lib/src/controls/cupertino_context_menu.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "1d25e8110e7c80e14cd5edc1a6573476eb5682133d4c9c04f67520b400babdbb",
+      "vendored_sha256": "1d25e8110e7c80e14cd5edc1a6573476eb5682133d4c9c04f67520b400babdbb"
+    },
+    "flet/lib/src/controls/cupertino_context_menu_action.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "dcf824a4ab65a7469b2cc91458613b97594916fa7b01fdd69157188c02e51fc2",
+      "vendored_sha256": "dcf824a4ab65a7469b2cc91458613b97594916fa7b01fdd69157188c02e51fc2"
+    },
+    "flet/lib/src/controls/cupertino_date_picker.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "6a529822144a28883adcd1c235283a0ecea6c78ab5beb544dd6c496ee2034f93",
+      "vendored_sha256": "6a529822144a28883adcd1c235283a0ecea6c78ab5beb544dd6c496ee2034f93"
+    },
+    "flet/lib/src/controls/cupertino_dialog_action.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "63da6540c3698ddb35c57af3591c8fb0b723cb4d5a3eb3f6635bc2312fdec49b",
+      "vendored_sha256": "63da6540c3698ddb35c57af3591c8fb0b723cb4d5a3eb3f6635bc2312fdec49b"
+    },
+    "flet/lib/src/controls/cupertino_list_tile.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "31c57e86559ec08a13cbe2f0c63d39bf8cf7f233b003669319a37d2cad66d8fd",
+      "vendored_sha256": "31c57e86559ec08a13cbe2f0c63d39bf8cf7f233b003669319a37d2cad66d8fd"
+    },
+    "flet/lib/src/controls/cupertino_navigation_bar.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "5b8b3aed6ccaca2a59e59abccd852d194dcbd311d7d94f61f3405a01f842d3f9",
+      "vendored_sha256": "5b8b3aed6ccaca2a59e59abccd852d194dcbd311d7d94f61f3405a01f842d3f9"
+    },
+    "flet/lib/src/controls/cupertino_picker.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "505e80e5c8f64c34bf5f1df7dcfdae3bd453c5b8e95eb5e624e755a469fc83ab",
+      "vendored_sha256": "505e80e5c8f64c34bf5f1df7dcfdae3bd453c5b8e95eb5e624e755a469fc83ab"
+    },
+    "flet/lib/src/controls/cupertino_radio.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "a1f9eb1c1ae892333f75bcb036fc8faec3e11b99519bf46a8773bf81317e9317",
+      "vendored_sha256": "a1f9eb1c1ae892333f75bcb036fc8faec3e11b99519bf46a8773bf81317e9317"
+    },
+    "flet/lib/src/controls/cupertino_segmented_button.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "440a6643555f1780810670264a45dd8d88c6c2775d33282d6969113130f9bf4d",
+      "vendored_sha256": "440a6643555f1780810670264a45dd8d88c6c2775d33282d6969113130f9bf4d"
+    },
+    "flet/lib/src/controls/cupertino_slider.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "7c1feb20617e708d32ebc79a74e648cfdb76e0bbcd83d8755c7287b4f57f2bf6",
+      "vendored_sha256": "7c1feb20617e708d32ebc79a74e648cfdb76e0bbcd83d8755c7287b4f57f2bf6"
+    },
+    "flet/lib/src/controls/cupertino_sliding_segmented_button.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "404eb0d0b7dafbd19e5fcc6eb247d7a8161ef0cd83fc4b1f00d8dba414df640a",
+      "vendored_sha256": "404eb0d0b7dafbd19e5fcc6eb247d7a8161ef0cd83fc4b1f00d8dba414df640a"
+    },
+    "flet/lib/src/controls/cupertino_switch.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "df0a9cb701552a87acbb81b824744129effaddaaa91f79295292e2068b4253c6",
+      "vendored_sha256": "df0a9cb701552a87acbb81b824744129effaddaaa91f79295292e2068b4253c6"
+    },
+    "flet/lib/src/controls/cupertino_textfield.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "58e03c6af694fdffec98b13e5c35ce17781d09ebac7be244ff1331f73fe7510f",
+      "vendored_sha256": "58e03c6af694fdffec98b13e5c35ce17781d09ebac7be244ff1331f73fe7510f"
+    },
+    "flet/lib/src/controls/cupertino_timer_picker.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "95675cbfed39ffb34be5688de0c3f2c6a862793166276f0bba35a917661f7d70",
+      "vendored_sha256": "95675cbfed39ffb34be5688de0c3f2c6a862793166276f0bba35a917661f7d70"
+    },
+    "flet/lib/src/controls/datatable.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "77f4a5c542981705bd74f03a2558a670da3501d433c600839c7f5e03f8f54d0f",
+      "vendored_sha256": "77f4a5c542981705bd74f03a2558a670da3501d433c600839c7f5e03f8f54d0f"
+    },
+    "flet/lib/src/controls/date_picker.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "ba29da3bb29c63a66d14b240900f54252d284b6fcc78ce445013c545100e1a7a",
+      "vendored_sha256": "ba29da3bb29c63a66d14b240900f54252d284b6fcc78ce445013c545100e1a7a"
+    },
+    "flet/lib/src/controls/date_range_picker.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "e4782e431663ecacebc7bd19c14a0ec614f43e83be99f289a0faf3d8af7b4ece",
+      "vendored_sha256": "e4782e431663ecacebc7bd19c14a0ec614f43e83be99f289a0faf3d8af7b4ece"
+    },
+    "flet/lib/src/controls/dismissible.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "d0c6994910ef478ec7214b9da2d157b65f3b5677f03232898e95916d00dfb9dc",
+      "vendored_sha256": "d0c6994910ef478ec7214b9da2d157b65f3b5677f03232898e95916d00dfb9dc"
+    },
+    "flet/lib/src/controls/divider.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "f1811616e15c8f641576eb3a6f820470dde4ef246475ec7b6d6c8ecff8814b7f",
+      "vendored_sha256": "f1811616e15c8f641576eb3a6f820470dde4ef246475ec7b6d6c8ecff8814b7f"
+    },
+    "flet/lib/src/controls/drag_target.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "01254b21e166781e1588642c1fdd352af5d50381f644d45f36ff366a8d698767",
+      "vendored_sha256": "01254b21e166781e1588642c1fdd352af5d50381f644d45f36ff366a8d698767"
+    },
+    "flet/lib/src/controls/draggable.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "ac9d5fb763022fec6bec526ea6572ef916e3bf65d8d0bcc47e8048c636d04edd",
+      "vendored_sha256": "ac9d5fb763022fec6bec526ea6572ef916e3bf65d8d0bcc47e8048c636d04edd"
+    },
+    "flet/lib/src/controls/dropdown.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "25a1517249ed511f07e351c9754d094851ab6f9d3b916a4b3e6d1901e15cec9b",
+      "vendored_sha256": "25a1517249ed511f07e351c9754d094851ab6f9d3b916a4b3e6d1901e15cec9b"
+    },
+    "flet/lib/src/controls/dropdownm2.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "c886df5bae505ff752bd8832dbba0207ee50f4470410cfda419f69e6c545c780",
+      "vendored_sha256": "c886df5bae505ff752bd8832dbba0207ee50f4470410cfda419f69e6c545c780"
+    },
+    "flet/lib/src/controls/expansion_panel.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "2a2c275f87e3dfd011008dd4658189ae109150e29bdfc0132785f05ac8243cd6",
+      "vendored_sha256": "2a2c275f87e3dfd011008dd4658189ae109150e29bdfc0132785f05ac8243cd6"
+    },
+    "flet/lib/src/controls/expansion_tile.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "c3b8941c0db0b410d473b72eec5579e5fba19e90c910a56240182d2da78186e0",
+      "vendored_sha256": "c3b8941c0db0b410d473b72eec5579e5fba19e90c910a56240182d2da78186e0"
+    },
+    "flet/lib/src/controls/flet_app_control.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "049610fda3e320c6fb888a54eaa926fbf74f3905daa9bad1fe7adb0f29f4c695",
+      "vendored_sha256": "049610fda3e320c6fb888a54eaa926fbf74f3905daa9bad1fe7adb0f29f4c695"
+    },
+    "flet/lib/src/controls/floating_action_button.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "ca1f77029a8666c29ee7d386293469f6118e2466c7a5828dbcc635049af45674",
+      "vendored_sha256": "ca1f77029a8666c29ee7d386293469f6118e2466c7a5828dbcc635049af45674"
+    },
+    "flet/lib/src/controls/gesture_detector.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "9b1bfca078b0ff8560bc07fc10d4167b45576c6fc171045b06fbb6008cf2e33e",
+      "vendored_sha256": "9b1bfca078b0ff8560bc07fc10d4167b45576c6fc171045b06fbb6008cf2e33e"
+    },
+    "flet/lib/src/controls/grid_view.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "eaa6847942d782e3070414759c8e925d4fec03c5698bdf01c61d06d5c559561d",
+      "vendored_sha256": "eaa6847942d782e3070414759c8e925d4fec03c5698bdf01c61d06d5c559561d"
+    },
+    "flet/lib/src/controls/hero.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "c76fc00c1c63ce4fe7d3ef3dee3f043ef491c7b9aaa41165db7c30dc713e4291",
+      "vendored_sha256": "c76fc00c1c63ce4fe7d3ef3dee3f043ef491c7b9aaa41165db7c30dc713e4291"
+    },
+    "flet/lib/src/controls/highlight_view.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "18853016a12756d7d823599c4259b67fab1977984421048f654a6ebbb7ec86af",
+      "vendored_sha256": "18853016a12756d7d823599c4259b67fab1977984421048f654a6ebbb7ec86af"
+    },
+    "flet/lib/src/controls/icon.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "da41e20fdc9a046677a71124f2c8237d0428e8cd01538f7f7240ac6333f1c24d",
+      "vendored_sha256": "da41e20fdc9a046677a71124f2c8237d0428e8cd01538f7f7240ac6333f1c24d"
+    },
+    "flet/lib/src/controls/icon_button.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "befe7d3e576ee7febc270e3732c641c181388ae4ae02f12fb9d2e83f58514de5",
+      "vendored_sha256": "befe7d3e576ee7febc270e3732c641c181388ae4ae02f12fb9d2e83f58514de5"
+    },
+    "flet/lib/src/controls/image.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "96620762b52df0fe94babe3542e519670f7526fa3c4008fd366ceb21fe462d43",
+      "vendored_sha256": "96620762b52df0fe94babe3542e519670f7526fa3c4008fd366ceb21fe462d43"
+    },
+    "flet/lib/src/controls/interactive_viewer.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "3b8b9ca5a423fa95c89888e4ab663540e51b042a323742d1165f1103d9e53ac5",
+      "vendored_sha256": "3b8b9ca5a423fa95c89888e4ab663540e51b042a323742d1165f1103d9e53ac5"
+    },
+    "flet/lib/src/controls/keyboard_listener.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "4ec8550ba30cb282a6b1d2c7615a700e40c83cb44cf7af3a5d9f1c37adf647ec",
+      "vendored_sha256": "4ec8550ba30cb282a6b1d2c7615a700e40c83cb44cf7af3a5d9f1c37adf647ec"
+    },
+    "flet/lib/src/controls/list_tile.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "785873ff7d0dc956facd1e85bcb8e601be91f15db9b5b44a441bcda21e124c38",
+      "vendored_sha256": "785873ff7d0dc956facd1e85bcb8e601be91f15db9b5b44a441bcda21e124c38"
+    },
+    "flet/lib/src/controls/list_view.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "3dfa5109a1022a3392ec5c15f6c4f075220386b428ecf09da7373910e60afd6c",
+      "vendored_sha256": "3dfa5109a1022a3392ec5c15f6c4f075220386b428ecf09da7373910e60afd6c"
+    },
+    "flet/lib/src/controls/markdown.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "4a0670aa5886d52aa7e87ca07b06cf86ec66e45c1b130c9396e956de4949ec8a",
+      "vendored_sha256": "4a0670aa5886d52aa7e87ca07b06cf86ec66e45c1b130c9396e956de4949ec8a"
+    },
+    "flet/lib/src/controls/menu_bar.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "63d1e3671f07d0a0e649bc66683d6e975833c0f00a2324cbe82f3c09bf461da0",
+      "vendored_sha256": "63d1e3671f07d0a0e649bc66683d6e975833c0f00a2324cbe82f3c09bf461da0"
+    },
+    "flet/lib/src/controls/menu_item_button.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "6370df41498476c2a8c472809d0376e34a9acf4666ce8b9201a207bab80f0022",
+      "vendored_sha256": "6370df41498476c2a8c472809d0376e34a9acf4666ce8b9201a207bab80f0022"
+    },
+    "flet/lib/src/controls/merge_semantics.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "a277cab5092bac9b727778800f0b2ac9059024a09647fe218aa0b5c9154bff5f",
+      "vendored_sha256": "a277cab5092bac9b727778800f0b2ac9059024a09647fe218aa0b5c9154bff5f"
+    },
+    "flet/lib/src/controls/navigation_bar.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "0583a4f8097d065fbd843175c0039d7eb186a9cfab135c09eecda0afabd5fc0e",
+      "vendored_sha256": "0583a4f8097d065fbd843175c0039d7eb186a9cfab135c09eecda0afabd5fc0e"
+    },
+    "flet/lib/src/controls/navigation_bar_destination.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "f1e5b17245da3c7cde80a5db15fe547051630bb8a07a8c7f35d23f66c6299c44",
+      "vendored_sha256": "f1e5b17245da3c7cde80a5db15fe547051630bb8a07a8c7f35d23f66c6299c44"
+    },
+    "flet/lib/src/controls/navigation_drawer.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "9403bbed1452cd85b67b6e8f9b051be5bf156a1aaeb82db6eda6edf9920babd6",
+      "vendored_sha256": "9403bbed1452cd85b67b6e8f9b051be5bf156a1aaeb82db6eda6edf9920babd6"
+    },
+    "flet/lib/src/controls/navigation_rail.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "9cef8a85b28fdc82538718158fa8efaa5a024ab23b8724f8701ec84b5b7d71bb",
+      "vendored_sha256": "9cef8a85b28fdc82538718158fa8efaa5a024ab23b8724f8701ec84b5b7d71bb"
+    },
+    "flet/lib/src/controls/page.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "dd69b4d3d062045d5fa3d51c075a8b5f1bd89fa697f00c2bf8da3e090f7a0d54",
+      "vendored_sha256": "dd69b4d3d062045d5fa3d51c075a8b5f1bd89fa697f00c2bf8da3e090f7a0d54"
+    },
+    "flet/lib/src/controls/page_view.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "f21837d2d67a2beaa1c6d355253f0a59d093fead971943c91f0e3d23c64e91ba",
+      "vendored_sha256": "f21837d2d67a2beaa1c6d355253f0a59d093fead971943c91f0e3d23c64e91ba"
+    },
+    "flet/lib/src/controls/pagelet.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "772dbc6dee4f14f1d8bd3e73fe401b9a2ace7f84376133dae250fe159db30289",
+      "vendored_sha256": "772dbc6dee4f14f1d8bd3e73fe401b9a2ace7f84376133dae250fe159db30289"
+    },
+    "flet/lib/src/controls/placeholder.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "a9c6068a631dba2aa098baed0c0c5fe64fad97e0411cd6633069c47f6a6e6070",
+      "vendored_sha256": "a9c6068a631dba2aa098baed0c0c5fe64fad97e0411cd6633069c47f6a6e6070"
+    },
+    "flet/lib/src/controls/popup_menu_button.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "7d7c011edace4bd116c02a6b19e063e2a5152b1e01aba26f4d432ecedfeb5451",
+      "vendored_sha256": "7d7c011edace4bd116c02a6b19e063e2a5152b1e01aba26f4d432ecedfeb5451"
+    },
+    "flet/lib/src/controls/progress_bar.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "03a01687012f5b9706d02149192a073630cb5b905fbd0f766dd329fd1bb39884",
+      "vendored_sha256": "03a01687012f5b9706d02149192a073630cb5b905fbd0f766dd329fd1bb39884"
+    },
+    "flet/lib/src/controls/progress_ring.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "9768d3f4d2460874c385e798e300ca6c96dd0411d13e7f17d65c54e851b98311",
+      "vendored_sha256": "9768d3f4d2460874c385e798e300ca6c96dd0411d13e7f17d65c54e851b98311"
+    },
+    "flet/lib/src/controls/radio.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "b759dbec37262e716d6051797fe59639d07d268d117b31baf92bee44c1f5d1a6",
+      "vendored_sha256": "b759dbec37262e716d6051797fe59639d07d268d117b31baf92bee44c1f5d1a6"
+    },
+    "flet/lib/src/controls/radio_group.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "4b8486b9976ab08a0dbd09dea5e6c3efa632c7fcdca537d4dd9b46620febc107",
+      "vendored_sha256": "4b8486b9976ab08a0dbd09dea5e6c3efa632c7fcdca537d4dd9b46620febc107"
+    },
+    "flet/lib/src/controls/range_slider.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "68842db766b768fc03c44330f7eaf07981dad0ffc085d6a193e76aa7015107af",
+      "vendored_sha256": "68842db766b768fc03c44330f7eaf07981dad0ffc085d6a193e76aa7015107af"
+    },
+    "flet/lib/src/controls/reorderable_drag_handle.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "c992c9b4d629a8e98bf32aac1a2989652206cc2fc8a25e7b9e8df47f713ca6dd",
+      "vendored_sha256": "c992c9b4d629a8e98bf32aac1a2989652206cc2fc8a25e7b9e8df47f713ca6dd"
+    },
+    "flet/lib/src/controls/reorderable_list_view.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "aa69229b1e4c22e13bca513a6d4056e44d079019d9c8d17863279cd26b738d13",
+      "vendored_sha256": "aa69229b1e4c22e13bca513a6d4056e44d079019d9c8d17863279cd26b738d13"
+    },
+    "flet/lib/src/controls/responsive_row.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "1e8f23a0e9810e131526df11a0bcb6bac24fb14929d8635245c19a7450451279",
+      "vendored_sha256": "1e8f23a0e9810e131526df11a0bcb6bac24fb14929d8635245c19a7450451279"
+    },
+    "flet/lib/src/controls/row.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "3496a53e83c89a8954516254efd7aa75eae3f55e6856e0879751835f6138e8fb",
+      "vendored_sha256": "3496a53e83c89a8954516254efd7aa75eae3f55e6856e0879751835f6138e8fb"
+    },
+    "flet/lib/src/controls/safe_area.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "cc6bc6961131bc1a959d516a8e5051144ee18c299f68ac96951a9d4700de5c38",
+      "vendored_sha256": "cc6bc6961131bc1a959d516a8e5051144ee18c299f68ac96951a9d4700de5c38"
+    },
+    "flet/lib/src/controls/screenshot.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "7693f9ef2c665e76a436db5e69d3b550cbf5e9543e366d78a6496298f3995358",
+      "vendored_sha256": "7693f9ef2c665e76a436db5e69d3b550cbf5e9543e366d78a6496298f3995358"
+    },
+    "flet/lib/src/controls/scroll_notification_control.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "60d58054de9fcb5e54a2c1c4e694d848b64d3f81f365582ca4f3eceadc6524ea",
+      "vendored_sha256": "60d58054de9fcb5e54a2c1c4e694d848b64d3f81f365582ca4f3eceadc6524ea"
+    },
+    "flet/lib/src/controls/scrollable_control.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "b5b0789d5dbb20160350b63167f2c0d8466f7f88bfe879e2b50fde5d298766e1",
+      "vendored_sha256": "b5b0789d5dbb20160350b63167f2c0d8466f7f88bfe879e2b50fde5d298766e1"
+    },
+    "flet/lib/src/controls/search_bar.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "54019ec713c2f688510d380c52bcb9d740b961fcc8603df5b64e255921ba408c",
+      "vendored_sha256": "54019ec713c2f688510d380c52bcb9d740b961fcc8603df5b64e255921ba408c"
+    },
+    "flet/lib/src/controls/segmented_button.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "17da7333a3690ba1c1d8d891a7c35661cb6e956a9194febbdbf43981192cdb8c",
+      "vendored_sha256": "17da7333a3690ba1c1d8d891a7c35661cb6e956a9194febbdbf43981192cdb8c"
+    },
+    "flet/lib/src/controls/selection_area.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "16c37859ad05db5d21b293a9fe1fea30bad6ca385f3e402b503a5f9e1ef3fb24",
+      "vendored_sha256": "16c37859ad05db5d21b293a9fe1fea30bad6ca385f3e402b503a5f9e1ef3fb24"
+    },
+    "flet/lib/src/controls/semantics.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "d2cfef48bdb273ce5b072adf346d7fa8ff7bd10fca35a48b344e05ab42792777",
+      "vendored_sha256": "d2cfef48bdb273ce5b072adf346d7fa8ff7bd10fca35a48b344e05ab42792777"
+    },
+    "flet/lib/src/controls/shader_mask.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "2430f98a9b48a4d60ff3ee92e27d571fd2b82a283c3455f0ab61f81daa3b953f",
+      "vendored_sha256": "2430f98a9b48a4d60ff3ee92e27d571fd2b82a283c3455f0ab61f81daa3b953f"
+    },
+    "flet/lib/src/controls/shimmer.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "4a895bf134929826402119d496a395540141d04e1f76a67562531d44295946f2",
+      "vendored_sha256": "4a895bf134929826402119d496a395540141d04e1f76a67562531d44295946f2"
+    },
+    "flet/lib/src/controls/slider.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "1dde0d65ef71e65dcec20829783f72b0ca4f289714e732cd4ba43f1219405a28",
+      "vendored_sha256": "1dde0d65ef71e65dcec20829783f72b0ca4f289714e732cd4ba43f1219405a28"
+    },
+    "flet/lib/src/controls/snack_bar.dart": {
+      "classification": "reviewed_ruflet_patch",
+      "upstream_sha256": "bc1b31525e78178dba602879b68ff2127fb713dcb0faf183e248a57819e2a73b",
+      "vendored_sha256": "1ddd8d70a8aea9cdc1a443689b69c03e0beab4120b90a6615abe222551021979"
+    },
+    "flet/lib/src/controls/stack.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "57941c2146fd382f3024139c76ff0f0d1a06b1572b328cd00855bae53ead511c",
+      "vendored_sha256": "57941c2146fd382f3024139c76ff0f0d1a06b1572b328cd00855bae53ead511c"
+    },
+    "flet/lib/src/controls/submenu_button.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "e2b3b5dd22a883c2b30e9aca299ccc840376c4898b0837501a2b0e0d3fd010ed",
+      "vendored_sha256": "e2b3b5dd22a883c2b30e9aca299ccc840376c4898b0837501a2b0e0d3fd010ed"
+    },
+    "flet/lib/src/controls/switch.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "97b288185b1e09ce84c9aee90fcf6d47a280e0fabfd3ec0e96cecfda503561b5",
+      "vendored_sha256": "97b288185b1e09ce84c9aee90fcf6d47a280e0fabfd3ec0e96cecfda503561b5"
+    },
+    "flet/lib/src/controls/tabs.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "a39fdb8f3de894f1a793a2f4f03d3da5e7f9d01c94939fc02e2dd082ce14bb69",
+      "vendored_sha256": "a39fdb8f3de894f1a793a2f4f03d3da5e7f9d01c94939fc02e2dd082ce14bb69"
+    },
+    "flet/lib/src/controls/text.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "660f3c65372f9765eb762f9e43e12d0521a23e980b62384ad4e53fb4a2b66916",
+      "vendored_sha256": "660f3c65372f9765eb762f9e43e12d0521a23e980b62384ad4e53fb4a2b66916"
+    },
+    "flet/lib/src/controls/textfield.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "62bc453cbc191d9dfd8c5616b852bc3c28aee4b9bb80acd355d9f97c78e47875",
+      "vendored_sha256": "62bc453cbc191d9dfd8c5616b852bc3c28aee4b9bb80acd355d9f97c78e47875"
+    },
+    "flet/lib/src/controls/time_picker.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "df39559ecd5953bddb73f19a2c235ce538b94a20c80ef5d52bfc77cac7a8bcc0",
+      "vendored_sha256": "df39559ecd5953bddb73f19a2c235ce538b94a20c80ef5d52bfc77cac7a8bcc0"
+    },
+    "flet/lib/src/controls/transparent_pointer.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "671c7a53961665e6e3d3bbe83d698572807a49d052d0ba64b209000823868923",
+      "vendored_sha256": "671c7a53961665e6e3d3bbe83d698572807a49d052d0ba64b209000823868923"
+    },
+    "flet/lib/src/controls/vertical_divider.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "6d837a5924c01101a191424934ff3596afb3bfdc86f210ae57c7d024b082a3a4",
+      "vendored_sha256": "6d837a5924c01101a191424934ff3596afb3bfdc86f210ae57c7d024b082a3a4"
+    },
+    "flet/lib/src/controls/view.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "4cb1ec4a5de2c6f1d9fb1d19e7621301c115f4c1df4f5cfa198fc1e3221031e2",
+      "vendored_sha256": "4cb1ec4a5de2c6f1d9fb1d19e7621301c115f4c1df4f5cfa198fc1e3221031e2"
+    },
+    "flet/lib/src/controls/window_drag_area.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "8902f3b7cbf7065338a05e2529ff53b35ffe9e99004ad1456a14de3fc5ccd135",
+      "vendored_sha256": "8902f3b7cbf7065338a05e2529ff53b35ffe9e99004ad1456a14de3fc5ccd135"
+    },
+    "flet/lib/src/extensions/control.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "44bcf5d5ae04d2329fbd5b0b6be5775b4483abee2dbfcf6840a341e52977a816",
+      "vendored_sha256": "44bcf5d5ae04d2329fbd5b0b6be5775b4483abee2dbfcf6840a341e52977a816"
+    },
+    "flet/lib/src/flet_app.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "e3df3d0df0d64bfb5a1829a24cca9dc5095f71849f90ba8a3215609583012265",
+      "vendored_sha256": "e3df3d0df0d64bfb5a1829a24cca9dc5095f71849f90ba8a3215609583012265"
+    },
+    "flet/lib/src/flet_app_errors_handler.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "746f6aa0a0480ede33677a000b1e9306ecf0e29b001782a5556862d597f035cd",
+      "vendored_sha256": "746f6aa0a0480ede33677a000b1e9306ecf0e29b001782a5556862d597f035cd"
+    },
+    "flet/lib/src/flet_backend.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "500ae7d4e06bf58c265bf596524cf0cf8c4aaba0b198b278ba24b1e637feb351",
+      "vendored_sha256": "500ae7d4e06bf58c265bf596524cf0cf8c4aaba0b198b278ba24b1e637feb351"
+    },
+    "flet/lib/src/flet_core_extension.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "5a94b6bd2c61f9e1acbe569b69cb9a22be58201e3dcf508593458bd4231c59bf",
+      "vendored_sha256": "5a94b6bd2c61f9e1acbe569b69cb9a22be58201e3dcf508593458bd4231c59bf"
+    },
+    "flet/lib/src/flet_extension.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "956a68255a977497756bc35b8588cc664710106f21e331dbf46dc86b802fe157",
+      "vendored_sha256": "956a68255a977497756bc35b8588cc664710106f21e331dbf46dc86b802fe157"
+    },
+    "flet/lib/src/flet_service.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "bcaed68d794e716973fc5be1a8e1e220b77353a14c6618f8fbbdcfbf959eb5ee",
+      "vendored_sha256": "bcaed68d794e716973fc5be1a8e1e220b77353a14c6618f8fbbdcfbf959eb5ee"
+    },
+    "flet/lib/src/models/asset_source.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "3b4458e6a57c659bcb588c8584c9f9d5f8edb343741858f2c2671a0e8db0a4e3",
+      "vendored_sha256": "3b4458e6a57c659bcb588c8584c9f9d5f8edb343741858f2c2671a0e8db0a4e3"
+    },
+    "flet/lib/src/models/control.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "ee5acfaa3f83120a19c8c469d75ea1c92291c765ae6d3c5cf4dc688566a577ae",
+      "vendored_sha256": "ee5acfaa3f83120a19c8c469d75ea1c92291c765ae6d3c5cf4dc688566a577ae"
+    },
+    "flet/lib/src/models/keyboard_event.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "41bf9ef9421b3e479b81904f725e4806e5c818397808c197c22b419a07632ff9",
+      "vendored_sha256": "41bf9ef9421b3e479b81904f725e4806e5c818397808c197c22b419a07632ff9"
+    },
+    "flet/lib/src/models/multi_view.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "9bb6c9105c4097432b05573e7c077f1ca41c88e01376d620ca9672c6df4aa14f",
+      "vendored_sha256": "9bb6c9105c4097432b05573e7c077f1ca41c88e01376d620ca9672c6df4aa14f"
+    },
+    "flet/lib/src/models/page_design.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "087182b21ae399d652e27c66061d8643adfe9183590df302a7703ebd5126dfb9",
+      "vendored_sha256": "087182b21ae399d652e27c66061d8643adfe9183590df302a7703ebd5126dfb9"
+    },
+    "flet/lib/src/models/page_size_view_model.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "b78f0496f1d8d484ee0bd9a1258de2ae1828cdb3cf0d6664726d16efd4f19a4b",
+      "vendored_sha256": "b78f0496f1d8d484ee0bd9a1258de2ae1828cdb3cf0d6664726d16efd4f19a4b"
+    },
+    "flet/lib/src/models/window_state.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "29cf01c1ef2d83e59a070e38dc45888d1a7289cf6a234fd03add06fdcacf8d12",
+      "vendored_sha256": "29cf01c1ef2d83e59a070e38dc45888d1a7289cf6a234fd03add06fdcacf8d12"
+    },
+    "flet/lib/src/protocol/control_event_body.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "49d7a079dcd8ea924c1054094e28788e5b094bf5412f81e146e9b803345992e1",
+      "vendored_sha256": "49d7a079dcd8ea924c1054094e28788e5b094bf5412f81e146e9b803345992e1"
+    },
+    "flet/lib/src/protocol/invoke_method_request_body.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "51f477a0c4a51fd07e7de57d6e5c4e8e43375dc1f8c96f177fc44ca3edacb7c8",
+      "vendored_sha256": "51f477a0c4a51fd07e7de57d6e5c4e8e43375dc1f8c96f177fc44ca3edacb7c8"
+    },
+    "flet/lib/src/protocol/invoke_method_response_body.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "dd2a0af3147f9684aa07b1f1208baa56337a783b9c685fddc43fdf0fa6453cbd",
+      "vendored_sha256": "dd2a0af3147f9684aa07b1f1208baa56337a783b9c685fddc43fdf0fa6453cbd"
+    },
+    "flet/lib/src/protocol/message.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "b09f1e8ee3a0bd937510ad5e062fa5969dd4d8ad74364766e1edaaa2bace10ff",
+      "vendored_sha256": "b09f1e8ee3a0bd937510ad5e062fa5969dd4d8ad74364766e1edaaa2bace10ff"
+    },
+    "flet/lib/src/protocol/page_media_data.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "7986d5bb4853a67f4da9ff8622d560ca580f08a646c7a9afdd83f09058d96611",
+      "vendored_sha256": "7986d5bb4853a67f4da9ff8622d560ca580f08a646c7a9afdd83f09058d96611"
+    },
+    "flet/lib/src/protocol/patch_control_request_body.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "5bfd4183bbff9d35139aa6fb2b8a76375a72f44fae37da9dab833a6b3c5fb5f3",
+      "vendored_sha256": "5bfd4183bbff9d35139aa6fb2b8a76375a72f44fae37da9dab833a6b3c5fb5f3"
+    },
+    "flet/lib/src/protocol/register_client_request_body.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "17e9a95efa5a6522c2d0d2774cf32ef70f31260338ce9e50aae4db394b8e0428",
+      "vendored_sha256": "17e9a95efa5a6522c2d0d2774cf32ef70f31260338ce9e50aae4db394b8e0428"
+    },
+    "flet/lib/src/protocol/register_client_response_body.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "7fbe5ffa20b157111fd506bae4eb40c736fb4eb03a69f017c988290219402484",
+      "vendored_sha256": "7fbe5ffa20b157111fd506bae4eb40c736fb4eb03a69f017c988290219402484"
+    },
+    "flet/lib/src/protocol/session_crashed_body.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "785fc2376ccae224154c4c66515a01c70a57a8c38d137da2950f1cf4f1365262",
+      "vendored_sha256": "785fc2376ccae224154c4c66515a01c70a57a8c38d137da2950f1cf4f1365262"
+    },
+    "flet/lib/src/protocol/session_payload.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "5b08fc84aa774c149d9ff869fc59fbc226bd4694b2ed649444f29242c0349d64",
+      "vendored_sha256": "5b08fc84aa774c149d9ff869fc59fbc226bd4694b2ed649444f29242c0349d64"
+    },
+    "flet/lib/src/protocol/update_control_body.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "4f36db2a0492583f926e890d021ed9793896ec0bea68573c399258c650b09eef",
+      "vendored_sha256": "4f36db2a0492583f926e890d021ed9793896ec0bea68573c399258c650b09eef"
+    },
+    "flet/lib/src/routing/deep_linking_bootstrap.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "c6b36112ed41061bc963d8215cd7bf2bfa42e2b59061b4b48f502ad8506cdab9",
+      "vendored_sha256": "c6b36112ed41061bc963d8215cd7bf2bfa42e2b59061b4b48f502ad8506cdab9"
+    },
+    "flet/lib/src/routing/route_information_provider.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "5dd3c2f95a38d6b4c90c161bd0e56f82489cd29b29c03dcdcef7839b726478d4",
+      "vendored_sha256": "5dd3c2f95a38d6b4c90c161bd0e56f82489cd29b29c03dcdcef7839b726478d4"
+    },
+    "flet/lib/src/routing/route_parser.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "bb722488a11ffec2ba8719188ad4486498ed4e957eb0fd2a3ef462f8f8d0559b",
+      "vendored_sha256": "bb722488a11ffec2ba8719188ad4486498ed4e957eb0fd2a3ef462f8f8d0559b"
+    },
+    "flet/lib/src/routing/route_state.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "5847c96424f8cf6cd58c410cb86f66c94b7c830372b279bd300ec092332ea9d2",
+      "vendored_sha256": "5847c96424f8cf6cd58c410cb86f66c94b7c830372b279bd300ec092332ea9d2"
+    },
+    "flet/lib/src/routing/router_delegate.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "2169057a0548c6516fe5e9460e6394b9c8cc9a4a9135f981850a42efefdcf693",
+      "vendored_sha256": "2169057a0548c6516fe5e9460e6394b9c8cc9a4a9135f981850a42efefdcf693"
+    },
+    "flet/lib/src/services/accelerometer.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "ee86a6379ddc94fce8c4f1480db9f269465f34c1aee42247c231cc2b12b8d8b4",
+      "vendored_sha256": "ee86a6379ddc94fce8c4f1480db9f269465f34c1aee42247c231cc2b12b8d8b4"
+    },
+    "flet/lib/src/services/barometer.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "766f4ff200abd60c2f5e7b0063c00b9570972f24dd0835c14f4920d45a818d1c",
+      "vendored_sha256": "766f4ff200abd60c2f5e7b0063c00b9570972f24dd0835c14f4920d45a818d1c"
+    },
+    "flet/lib/src/services/base_sensor.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "f37a199bef3ddce2e1db840d38ed6a3bb5b0158170d2cb3ffcf66242a038d3b5",
+      "vendored_sha256": "f37a199bef3ddce2e1db840d38ed6a3bb5b0158170d2cb3ffcf66242a038d3b5"
+    },
+    "flet/lib/src/services/battery.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "06fa2aaf10d8596c2721b20dac7f41f552811f6a8990234af496acf8a7e876b1",
+      "vendored_sha256": "06fa2aaf10d8596c2721b20dac7f41f552811f6a8990234af496acf8a7e876b1"
+    },
+    "flet/lib/src/services/browser_context_menu.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "38920ebfef85363de56fca419b2d4f0e45815b265060f031418de40dc19af4c0",
+      "vendored_sha256": "38920ebfef85363de56fca419b2d4f0e45815b265060f031418de40dc19af4c0"
+    },
+    "flet/lib/src/services/clipboard.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "af738c53a5568a04dbe317b9209baf37ca64d5239d3dacddd9d85d0ea57b051c",
+      "vendored_sha256": "af738c53a5568a04dbe317b9209baf37ca64d5239d3dacddd9d85d0ea57b051c"
+    },
+    "flet/lib/src/services/connectivity.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "ac0c038b61c893042685d2a1eff528e7d24d529c10526639cae1a07cdbabed9a",
+      "vendored_sha256": "ac0c038b61c893042685d2a1eff528e7d24d529c10526639cae1a07cdbabed9a"
+    },
+    "flet/lib/src/services/file_picker.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "a046d39a665711708ea226a941af6c8ca4d3636465a25b2f502ef16303adde95",
+      "vendored_sha256": "a046d39a665711708ea226a941af6c8ca4d3636465a25b2f502ef16303adde95"
+    },
+    "flet/lib/src/services/gyroscope.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "f939c39564e777c39156ab833ca9558b120e591f42a80b781df8cca2fefc80b8",
+      "vendored_sha256": "f939c39564e777c39156ab833ca9558b120e591f42a80b781df8cca2fefc80b8"
+    },
+    "flet/lib/src/services/haptic_feedback.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "9901aded5c82db654a9ca06215b7e8243ec571c15857afc6335dc709c7e0ee52",
+      "vendored_sha256": "9901aded5c82db654a9ca06215b7e8243ec571c15857afc6335dc709c7e0ee52"
+    },
+    "flet/lib/src/services/magnetometer.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "ad7d7cf24da18192627d280dcda584a136f6be11c55ae0ecc527e30e09993cd7",
+      "vendored_sha256": "ad7d7cf24da18192627d280dcda584a136f6be11c55ae0ecc527e30e09993cd7"
+    },
+    "flet/lib/src/services/screen_brightness.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "3c6b7ffdb55443cc62eeef402c8d461e73c6da4a8d27308c8f4c9d2cb4a3fe00",
+      "vendored_sha256": "3c6b7ffdb55443cc62eeef402c8d461e73c6da4a8d27308c8f4c9d2cb4a3fe00"
+    },
+    "flet/lib/src/services/semantics_service.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "3de638a79942583fb64bb269bf9f2ce5408038b1bb6fdedf53ee52bdf175c476",
+      "vendored_sha256": "3de638a79942583fb64bb269bf9f2ce5408038b1bb6fdedf53ee52bdf175c476"
+    },
+    "flet/lib/src/services/service_binding.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "f5b5204ba9e9a758300804d0ef340c66a324ee628725e79ad84b196ca0b6562b",
+      "vendored_sha256": "f5b5204ba9e9a758300804d0ef340c66a324ee628725e79ad84b196ca0b6562b"
+    },
+    "flet/lib/src/services/service_registry.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "3ce0dfab223b23146950bd7aecce3823cb6b8cd25ae9a85c366851394d8d49f0",
+      "vendored_sha256": "3ce0dfab223b23146950bd7aecce3823cb6b8cd25ae9a85c366851394d8d49f0"
+    },
+    "flet/lib/src/services/shake_detector.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "dff0bfb0c3aefcfc4b44022dc490b7dbe49e627a09915988c73da7bd22a36a6c",
+      "vendored_sha256": "dff0bfb0c3aefcfc4b44022dc490b7dbe49e627a09915988c73da7bd22a36a6c"
+    },
+    "flet/lib/src/services/share.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "74a269213db4d49855b72acd92d286efa631fa0295dfacaf8450283fe3cb15b6",
+      "vendored_sha256": "74a269213db4d49855b72acd92d286efa631fa0295dfacaf8450283fe3cb15b6"
+    },
+    "flet/lib/src/services/shared_preferences.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "d01ed43d661f6b23adab5d3d09aae4834feb5e5461408b96fb485a1288f05793",
+      "vendored_sha256": "d01ed43d661f6b23adab5d3d09aae4834feb5e5461408b96fb485a1288f05793"
+    },
+    "flet/lib/src/services/storage_paths.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "222c29b9f0c45ee078045bca0c711e5a0e0e70d32699b2346bf9c6987f4fc42b",
+      "vendored_sha256": "222c29b9f0c45ee078045bca0c711e5a0e0e70d32699b2346bf9c6987f4fc42b"
+    },
+    "flet/lib/src/services/tester.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "8eb7ae6ddb6b4b93b9e02561c0cd0e0d6a8eb0dd73b93aa6deca4a5c1799d7fd",
+      "vendored_sha256": "8eb7ae6ddb6b4b93b9e02561c0cd0e0d6a8eb0dd73b93aa6deca4a5c1799d7fd"
+    },
+    "flet/lib/src/services/url_launcher.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "ceaaa0a9f663410a2e92a6de975fe6f8af1132b9918be7f5f2ce8ff030719c66",
+      "vendored_sha256": "ceaaa0a9f663410a2e92a6de975fe6f8af1132b9918be7f5f2ce8ff030719c66"
+    },
+    "flet/lib/src/services/user_accelerometer.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "79a2d99fe352dc8e3d170974c9623ebe48b24c73ebcc22ffebd417e85339fb40",
+      "vendored_sha256": "79a2d99fe352dc8e3d170974c9623ebe48b24c73ebcc22ffebd417e85339fb40"
+    },
+    "flet/lib/src/services/wakelock.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "e851f7837d62fe5a82e3b085ee134f9139d108270eab6b05ab69c2f452685f26",
+      "vendored_sha256": "e851f7837d62fe5a82e3b085ee134f9139d108270eab6b05ab69c2f452685f26"
+    },
+    "flet/lib/src/services/window.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "c92d4451b05080775861135d23b68ca4484c468ca0e51925c66139f09274b149",
+      "vendored_sha256": "c92d4451b05080775861135d23b68ca4484c468ca0e51925c66139f09274b149"
+    },
+    "flet/lib/src/testing/test_finder.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "2018bbb7d903c290a215ca695b3a933260c7caa4cc65437510e2aacb8200a9d2",
+      "vendored_sha256": "2018bbb7d903c290a215ca695b3a933260c7caa4cc65437510e2aacb8200a9d2"
+    },
+    "flet/lib/src/testing/tester.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "8beb62b0060f8ce674f411859a300f05a6cb7c2ed9084d2018a39f07cea04267",
+      "vendored_sha256": "8beb62b0060f8ce674f411859a300f05a6cb7c2ed9084d2018a39f07cea04267"
+    },
+    "flet/lib/src/transport/flet_backend_channel.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "733dd944eafca98c6e4cdf11a535898ad6552a3a1138eb4c5db732bae12e5bc4",
+      "vendored_sha256": "733dd944eafca98c6e4cdf11a535898ad6552a3a1138eb4c5db732bae12e5bc4"
+    },
+    "flet/lib/src/transport/flet_backend_channel_javascript_io.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "0e1d58006ac9244c230bc6124849f0e981f8a54466cd6c71cc7c75807842e2a9",
+      "vendored_sha256": "0e1d58006ac9244c230bc6124849f0e981f8a54466cd6c71cc7c75807842e2a9"
+    },
+    "flet/lib/src/transport/flet_backend_channel_javascript_web.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "a506075afc9e97af8be8d339b9dcde331f9cfd28d295b4dee475860fc410b713",
+      "vendored_sha256": "a506075afc9e97af8be8d339b9dcde331f9cfd28d295b4dee475860fc410b713"
+    },
+    "flet/lib/src/transport/flet_backend_channel_mock.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "ab7931d5d02d934c63798a63e98f701b3f2779ea66b745f8b3e30a8522a2da65",
+      "vendored_sha256": "ab7931d5d02d934c63798a63e98f701b3f2779ea66b745f8b3e30a8522a2da65"
+    },
+    "flet/lib/src/transport/flet_backend_channel_socket.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "da897d31f3c4e99c3e6ef948ca049c7e79546e3c0012c341bdfd9c8cb6594e60",
+      "vendored_sha256": "da897d31f3c4e99c3e6ef948ca049c7e79546e3c0012c341bdfd9c8cb6594e60"
+    },
+    "flet/lib/src/transport/flet_backend_channel_web_socket.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "c9150b82ea79dd9f98a37d4dd7600dfae578cf3bfc2bd643761253c6b881db3c",
+      "vendored_sha256": "c9150b82ea79dd9f98a37d4dd7600dfae578cf3bfc2bd643761253c6b881db3c"
+    },
+    "flet/lib/src/transport/flet_msgpack_decoder.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "9c07bd814790207f6e889e891015702209887b4076c3f86141306be434655327",
+      "vendored_sha256": "9c07bd814790207f6e889e891015702209887b4076c3f86141306be434655327"
+    },
+    "flet/lib/src/transport/flet_msgpack_encoder.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "9b6aad3d24827004674f51f9ac001642adaa7e23736e79c701948e61321e21e9",
+      "vendored_sha256": "9b6aad3d24827004674f51f9ac001642adaa7e23736e79c701948e61321e21e9"
+    },
+    "flet/lib/src/transport/js_interop.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "e405044d983fcdee32c1f6641b521259ebdefbd3b365075ffbf3d057be9e4b40",
+      "vendored_sha256": "e405044d983fcdee32c1f6641b521259ebdefbd3b365075ffbf3d057be9e4b40"
+    },
+    "flet/lib/src/transport/js_interop_stub.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "4cd7ff3509628291e4097848fb001974427c7b5e1aa4e106fc397312fe626df0",
+      "vendored_sha256": "4cd7ff3509628291e4097848fb001974427c7b5e1aa4e106fc397312fe626df0"
+    },
+    "flet/lib/src/transport/streaming_msgpack_deserializer.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "d051e99478e30017fbf681031f4e880bc243706d5c3e20bad94ce20e42c917e9",
+      "vendored_sha256": "d051e99478e30017fbf681031f4e880bc243706d5c3e20bad94ce20e42c917e9"
+    },
+    "flet/lib/src/utils.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "a480cc850b0e86a8040e906bbf7f52684139777c9436448fb7806429437cb155",
+      "vendored_sha256": "a480cc850b0e86a8040e906bbf7f52684139777c9436448fb7806429437cb155"
+    },
+    "flet/lib/src/utils/alignment.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "c563d6962767fa081c3d6404be4ab1bb63d665f2bceb4665b01f66e9f50aba45",
+      "vendored_sha256": "c563d6962767fa081c3d6404be4ab1bb63d665f2bceb4665b01f66e9f50aba45"
+    },
+    "flet/lib/src/utils/animations.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "1ee92a594f3301f168bb432d6d21a72bdb9e3fafe5e619bf7e6fa7a827ea8eda",
+      "vendored_sha256": "1ee92a594f3301f168bb432d6d21a72bdb9e3fafe5e619bf7e6fa7a827ea8eda"
+    },
+    "flet/lib/src/utils/auto_complete.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "30e9fda6eb2fc51dfd923650caea26a7004d2fd55f6dd4b55bc084b159097a84",
+      "vendored_sha256": "30e9fda6eb2fc51dfd923650caea26a7004d2fd55f6dd4b55bc084b159097a84"
+    },
+    "flet/lib/src/utils/autofill.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "24017491a88e03998bde9694b2969501bb73937827d674c0174efe63f159a6d2",
+      "vendored_sha256": "24017491a88e03998bde9694b2969501bb73937827d674c0174efe63f159a6d2"
+    },
+    "flet/lib/src/utils/badge.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "3fb82bbd61d8de9396a4ba361ac50eb51bcfe58acb60285bb02ea69e3960f3d1",
+      "vendored_sha256": "3fb82bbd61d8de9396a4ba361ac50eb51bcfe58acb60285bb02ea69e3960f3d1"
+    },
+    "flet/lib/src/utils/borders.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "4e06704d9e19da4de80005c7e01a8093a48c7938e003acbdb3d0b1f54834eb65",
+      "vendored_sha256": "4e06704d9e19da4de80005c7e01a8093a48c7938e003acbdb3d0b1f54834eb65"
+    },
+    "flet/lib/src/utils/box.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "e2826f4c7cba3ac66e32cc3328ca668e8f062807ca5ccda6c221931e7e756d06",
+      "vendored_sha256": "e2826f4c7cba3ac66e32cc3328ca668e8f062807ca5ccda6c221931e7e756d06"
+    },
+    "flet/lib/src/utils/buttons.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "499a1d40f01e21934778d17d3df62becb77906ae94c17804232a8297a1fd1811",
+      "vendored_sha256": "499a1d40f01e21934778d17d3df62becb77906ae94c17804232a8297a1fd1811"
+    },
+    "flet/lib/src/utils/collections.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "964a26688f88ec517b4d92ed391849827dcab7a0d01dc3e1de4cfb195a2c1304",
+      "vendored_sha256": "964a26688f88ec517b4d92ed391849827dcab7a0d01dc3e1de4cfb195a2c1304"
+    },
+    "flet/lib/src/utils/colors.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "ab8fe1554410d8ec686bdc897b4174d1e3cf4d0c5eb8d566792d79e434b79fe3",
+      "vendored_sha256": "ab8fe1554410d8ec686bdc897b4174d1e3cf4d0c5eb8d566792d79e434b79fe3"
+    },
+    "flet/lib/src/utils/cupertino_colors.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "5e55b3083029d3192cd9d52c204b54552aa4c29a85828d1e490c3bec9a8ab9a6",
+      "vendored_sha256": "5e55b3083029d3192cd9d52c204b54552aa4c29a85828d1e490c3bec9a8ab9a6"
+    },
+    "flet/lib/src/utils/cupertino_icons.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "4de952e6a819e81d5f8c80da174597004de33decb97d9a82791c6434f3339bd8",
+      "vendored_sha256": "4de952e6a819e81d5f8c80da174597004de33decb97d9a82791c6434f3339bd8"
+    },
+    "flet/lib/src/utils/dash_path.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "28cb1cd97bd4471d1dac33d7001a96f59b68228404e87109edcaf0122ec96230",
+      "vendored_sha256": "28cb1cd97bd4471d1dac33d7001a96f59b68228404e87109edcaf0122ec96230"
+    },
+    "flet/lib/src/utils/debouncer.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "b63b9d95ff75d5cd801ff5e844bea50ca1849ae9bd194542cf2c11e5b0cd3195",
+      "vendored_sha256": "b63b9d95ff75d5cd801ff5e844bea50ca1849ae9bd194542cf2c11e5b0cd3195"
+    },
+    "flet/lib/src/utils/desktop.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "27a20354130cc2766b5cab6118cc862d0d561f39ace13990cda2d9338b94a8cd",
+      "vendored_sha256": "27a20354130cc2766b5cab6118cc862d0d561f39ace13990cda2d9338b94a8cd"
+    },
+    "flet/lib/src/utils/device_info.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "78b141e40efe3795021a91e53278a078da9135b112aab5d0531e2a9cfb310031",
+      "vendored_sha256": "78b141e40efe3795021a91e53278a078da9135b112aab5d0531e2a9cfb310031"
+    },
+    "flet/lib/src/utils/dismissible.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "07d24b370649323e8fc8b42326e1ab857fdd058fb5a27216a02c5c22b1d7f428",
+      "vendored_sha256": "07d24b370649323e8fc8b42326e1ab857fdd058fb5a27216a02c5c22b1d7f428"
+    },
+    "flet/lib/src/utils/drawing.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "346001fe8f802ba3ccd89275328deb29b7dbdd16cb1734f50fddf4ec1094a35c",
+      "vendored_sha256": "346001fe8f802ba3ccd89275328deb29b7dbdd16cb1734f50fddf4ec1094a35c"
+    },
+    "flet/lib/src/utils/edge_insets.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "312d447aec5196f6573520a9e8de27744f5993c0f38f151b9790d912fd44f30e",
+      "vendored_sha256": "312d447aec5196f6573520a9e8de27744f5993c0f38f151b9790d912fd44f30e"
+    },
+    "flet/lib/src/utils/enums.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "46ddc9ae4ee95f0ca66236a90aa74de27ff4cdabb84b1f5ddb51fe455f1bffdd",
+      "vendored_sha256": "46ddc9ae4ee95f0ca66236a90aa74de27ff4cdabb84b1f5ddb51fe455f1bffdd"
+    },
+    "flet/lib/src/utils/events.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "762c97b7df3ce7e3d22f48bee5a6dc706cae566ee3a6465a99ef3ad1cf6c3fd5",
+      "vendored_sha256": "762c97b7df3ce7e3d22f48bee5a6dc706cae566ee3a6465a99ef3ad1cf6c3fd5"
+    },
+    "flet/lib/src/utils/file_picker.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "d1cc01b80ba2ee1773798fa3482eff381ecd15ec3d54ee24580888acbf05ab7b",
+      "vendored_sha256": "d1cc01b80ba2ee1773798fa3482eff381ecd15ec3d54ee24580888acbf05ab7b"
+    },
+    "flet/lib/src/utils/form_field.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "dc3c2b27a11c4aec661acf0feb6be7d7dee2bfacb220f808c925e5613ef3792d",
+      "vendored_sha256": "dc3c2b27a11c4aec661acf0feb6be7d7dee2bfacb220f808c925e5613ef3792d"
+    },
+    "flet/lib/src/utils/geometry.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "31869ee411be406a58f0a3d8b4d8fcd72bd6af3348a9bfafee13b0f33319ec50",
+      "vendored_sha256": "31869ee411be406a58f0a3d8b4d8fcd72bd6af3348a9bfafee13b0f33319ec50"
+    },
+    "flet/lib/src/utils/gesture_detector.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "7941a1da7e494222dbba00bd3342027c0e38fa144dbabbcea1cf565f1a8ccbfe",
+      "vendored_sha256": "7941a1da7e494222dbba00bd3342027c0e38fa144dbabbcea1cf565f1a8ccbfe"
+    },
+    "flet/lib/src/utils/gradient.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "1c6d8d91ab6288c5efb6289e6f2e22932f7cfa77179643db62d91ecdad548b6b",
+      "vendored_sha256": "1c6d8d91ab6288c5efb6289e6f2e22932f7cfa77179643db62d91ecdad548b6b"
+    },
+    "flet/lib/src/utils/hashing.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "22ea895c9a4a097f62f7dd1ba896a7f58463ed137264467d463d203828323edd",
+      "vendored_sha256": "22ea895c9a4a097f62f7dd1ba896a7f58463ed137264467d463d203828323edd"
+    },
+    "flet/lib/src/utils/icons.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "d86ae3e4ac7c5c85ad9aae33af81b3fac03058d186b413c54a980d10cb1308e7",
+      "vendored_sha256": "d86ae3e4ac7c5c85ad9aae33af81b3fac03058d186b413c54a980d10cb1308e7"
+    },
+    "flet/lib/src/utils/images.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "66d2fd6545bf3d47dc2c5223e05921aac56f9c92984277e92b6ed25e66a4bbd9",
+      "vendored_sha256": "66d2fd6545bf3d47dc2c5223e05921aac56f9c92984277e92b6ed25e66a4bbd9"
+    },
+    "flet/lib/src/utils/images_io.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "5f192742827d4c2d3e80b8b53a86e1607a35f008f5b653ff16dd93ed371f9420",
+      "vendored_sha256": "5f192742827d4c2d3e80b8b53a86e1607a35f008f5b653ff16dd93ed371f9420"
+    },
+    "flet/lib/src/utils/images_web.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "79f7b1f9acb762ab21a7bef101efbe0381885406c0eae1c68a4e787f94c79fb4",
+      "vendored_sha256": "79f7b1f9acb762ab21a7bef101efbe0381885406c0eae1c68a4e787f94c79fb4"
+    },
+    "flet/lib/src/utils/keys.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "8d2e8d2ef143107e3f74270adae2b9096bacce870df1d64dc784656fb787ea0f",
+      "vendored_sha256": "8d2e8d2ef143107e3f74270adae2b9096bacce870df1d64dc784656fb787ea0f"
+    },
+    "flet/lib/src/utils/launch_url.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "9e409c061b6f5530fd41aeffbc3751286b367b89b2ab85f1c9f8710de60ef887",
+      "vendored_sha256": "9e409c061b6f5530fd41aeffbc3751286b367b89b2ab85f1c9f8710de60ef887"
+    },
+    "flet/lib/src/utils/layout.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "70db0cab9a3bad903fd58fd4ab526ad9b12d9978b757befacd8c0674f20a6134",
+      "vendored_sha256": "70db0cab9a3bad903fd58fd4ab526ad9b12d9978b757befacd8c0674f20a6134"
+    },
+    "flet/lib/src/utils/locale.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "efbd3bdce4140454781d8e28b625535c7ee044d6fd8d7237b0f4c52a4874844f",
+      "vendored_sha256": "efbd3bdce4140454781d8e28b625535c7ee044d6fd8d7237b0f4c52a4874844f"
+    },
+    "flet/lib/src/utils/lock.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "94d62e228c1a6b4277f49c5ad5807a1717661130c785cb661f379879f9a1c0a2",
+      "vendored_sha256": "94d62e228c1a6b4277f49c5ad5807a1717661130c785cb661f379879f9a1c0a2"
+    },
+    "flet/lib/src/utils/lru_cache.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "491525e2de1de10dc607e8ae7b9071265394b55982972ab0683908ad4803dfb9",
+      "vendored_sha256": "491525e2de1de10dc607e8ae7b9071265394b55982972ab0683908ad4803dfb9"
+    },
+    "flet/lib/src/utils/markdown.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "95e79606a0228122a7c14f96b6265e2de38c6593d6c81d571d2c6466240471f0",
+      "vendored_sha256": "95e79606a0228122a7c14f96b6265e2de38c6593d6c81d571d2c6466240471f0"
+    },
+    "flet/lib/src/utils/material_icons.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "070dfc28d7267834665d949f8d12ea394ce4810a2b69e4d0104dd911afbf774c",
+      "vendored_sha256": "070dfc28d7267834665d949f8d12ea394ce4810a2b69e4d0104dd911afbf774c"
+    },
+    "flet/lib/src/utils/menu.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "20d0869c72976661614705c38c0a2e2cb3c03566fe77d164f9cc83dac7809f21",
+      "vendored_sha256": "20d0869c72976661614705c38c0a2e2cb3c03566fe77d164f9cc83dac7809f21"
+    },
+    "flet/lib/src/utils/misc.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "75491bc24684e5782f93a3e391ff046fa0938d6d1b8c220b5abc7d54581da76b",
+      "vendored_sha256": "75491bc24684e5782f93a3e391ff046fa0938d6d1b8c220b5abc7d54581da76b"
+    },
+    "flet/lib/src/utils/mouse.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "bdf630d17258b1f41b2ee12c264a8785e92ac865939bce0461e0845c0e4903ef",
+      "vendored_sha256": "bdf630d17258b1f41b2ee12c264a8785e92ac865939bce0461e0845c0e4903ef"
+    },
+    "flet/lib/src/utils/networking.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "a04497087e7ae9be0acbd864a072dbc577fa05a3e65785f8ba131b5d5a0218b3",
+      "vendored_sha256": "a04497087e7ae9be0acbd864a072dbc577fa05a3e65785f8ba131b5d5a0218b3"
+    },
+    "flet/lib/src/utils/numbers.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "554b71d49f368c9d830e7eb933465e063488ed37b8d7960228cd1211af6c2307",
+      "vendored_sha256": "554b71d49f368c9d830e7eb933465e063488ed37b8d7960228cd1211af6c2307"
+    },
+    "flet/lib/src/utils/overlay_style.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "4c6f0d124a5ae8dd5a0922eb78488d247a8c88aadb2a4efb1ca3387c98c2d768",
+      "vendored_sha256": "4c6f0d124a5ae8dd5a0922eb78488d247a8c88aadb2a4efb1ca3387c98c2d768"
+    },
+    "flet/lib/src/utils/platform.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "6a1e0c87bb9bc557e3753340fc243fe46d984acc8ab460c72d9c42be50d0232a",
+      "vendored_sha256": "6a1e0c87bb9bc557e3753340fc243fe46d984acc8ab460c72d9c42be50d0232a"
+    },
+    "flet/lib/src/utils/platform_utils_non_web.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "6c797cbc6ed0d220923c29308e398e1e03315f95052b2e8a83f39060af16b3d9",
+      "vendored_sha256": "6c797cbc6ed0d220923c29308e398e1e03315f95052b2e8a83f39060af16b3d9"
+    },
+    "flet/lib/src/utils/platform_utils_web.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "6caf05daaff9a190364908084879214c7fa28fcea98598ca13eb5c02acf34629",
+      "vendored_sha256": "6caf05daaff9a190364908084879214c7fa28fcea98598ca13eb5c02acf34629"
+    },
+    "flet/lib/src/utils/popup_menu.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "972b84a4d5795c56b2f0492323d9a55455e0f1476ec939c29dc757f3b1875cea",
+      "vendored_sha256": "972b84a4d5795c56b2f0492323d9a55455e0f1476ec939c29dc757f3b1875cea"
+    },
+    "flet/lib/src/utils/responsive.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "026d3658b3ec04011ec684309d72ad0fef84148157f02534b5a4ccd2009b12ac",
+      "vendored_sha256": "026d3658b3ec04011ec684309d72ad0fef84148157f02534b5a4ccd2009b12ac"
+    },
+    "flet/lib/src/utils/session_store_non_web.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "c1b4f299c5086d1768c4dec585e7e92e28ddf2790b1cebce54c8f95f1a0c8deb",
+      "vendored_sha256": "c1b4f299c5086d1768c4dec585e7e92e28ddf2790b1cebce54c8f95f1a0c8deb"
+    },
+    "flet/lib/src/utils/session_store_web.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "f2af6bee3ee88b4d0b0730190ce9149e81b9e6785352d0eb9971cccf70e37729",
+      "vendored_sha256": "f2af6bee3ee88b4d0b0730190ce9149e81b9e6785352d0eb9971cccf70e37729"
+    },
+    "flet/lib/src/utils/strings.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "b2b85ce5f9cae4a25b63ad1ea70d43a2b8d49d866d8dad9f43a5c60d5f8299bb",
+      "vendored_sha256": "b2b85ce5f9cae4a25b63ad1ea70d43a2b8d49d866d8dad9f43a5c60d5f8299bb"
+    },
+    "flet/lib/src/utils/tabs.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "645d23f1c6f38a059eeaef62fec8c09ce41e1071995655923cc88b6761fe6be9",
+      "vendored_sha256": "645d23f1c6f38a059eeaef62fec8c09ce41e1071995655923cc88b6761fe6be9"
+    },
+    "flet/lib/src/utils/text.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "658dcee1b75af32206cb645988c1322c671cd12b7de1664503bb469ee1ffba79",
+      "vendored_sha256": "658dcee1b75af32206cb645988c1322c671cd12b7de1664503bb469ee1ffba79"
+    },
+    "flet/lib/src/utils/textfield.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "4b0af105712d5489a6fb835a099261642c930aeae044ee1bad9fe03e9b1d2719",
+      "vendored_sha256": "4b0af105712d5489a6fb835a099261642c930aeae044ee1bad9fe03e9b1d2719"
+    },
+    "flet/lib/src/utils/theme.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "f89419b8c59f0c2625799e6d38ad688ff393ec8f0378d85a2cd4933c6a468d09",
+      "vendored_sha256": "f89419b8c59f0c2625799e6d38ad688ff393ec8f0378d85a2cd4933c6a468d09"
+    },
+    "flet/lib/src/utils/time.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "3ed95faed75d2f11f7360b52b0bb9af5f97732ad85e583c3b49b65ba6bddf791",
+      "vendored_sha256": "3ed95faed75d2f11f7360b52b0bb9af5f97732ad85e583c3b49b65ba6bddf791"
+    },
+    "flet/lib/src/utils/tooltip.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "3c52d765ee7511dbc2e329d882bd6a943e65c7184a1bdedfde7092515a25ff8a",
+      "vendored_sha256": "3c52d765ee7511dbc2e329d882bd6a943e65c7184a1bdedfde7092515a25ff8a"
+    },
+    "flet/lib/src/utils/transforms.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "3ce56440f40cfa22bc01b591680c90f0a0a4d93f88b80f498afc51c8ea7acac1",
+      "vendored_sha256": "3ce56440f40cfa22bc01b591680c90f0a0a4d93f88b80f498afc51c8ea7acac1"
+    },
+    "flet/lib/src/utils/uri.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "113d327f1a52a93f4521b879a1df27c97e0514dbba582a858d927bc152ec99ea",
+      "vendored_sha256": "113d327f1a52a93f4521b879a1df27c97e0514dbba582a858d927bc152ec99ea"
+    },
+    "flet/lib/src/utils/user_fonts.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "4bc3f596cc5ce4f6fb06722f9a76a1c98c81730101f276ea8bdbb73d21bf632a",
+      "vendored_sha256": "4bc3f596cc5ce4f6fb06722f9a76a1c98c81730101f276ea8bdbb73d21bf632a"
+    },
+    "flet/lib/src/utils/user_fonts_io.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "9bddea2d38e98a511350af0dff10177561b4117d03ec40404abe557a6c9cf2d7",
+      "vendored_sha256": "9bddea2d38e98a511350af0dff10177561b4117d03ec40404abe557a6c9cf2d7"
+    },
+    "flet/lib/src/utils/user_fonts_web.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "7fde0acc6de5dd24b0824a9a2ba66753e0542b21e8be6882b1cb235aa0aa40bd",
+      "vendored_sha256": "7fde0acc6de5dd24b0824a9a2ba66753e0542b21e8be6882b1cb235aa0aa40bd"
+    },
+    "flet/lib/src/utils/weak_value_map.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "b7fb182db05c2783e09f04554efcf0bc50689b3fde92ce2785d179b476e2fcaf",
+      "vendored_sha256": "b7fb182db05c2783e09f04554efcf0bc50689b3fde92ce2785d179b476e2fcaf"
+    },
+    "flet/lib/src/utils/widget_state.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "baf561b8aae9134513885b7e5f03fdcdac15d0f7c08976e79da87afd67a229df",
+      "vendored_sha256": "baf561b8aae9134513885b7e5f03fdcdac15d0f7c08976e79da87afd67a229df"
+    },
+    "flet/lib/src/utils/window.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "5bdfc03fb5d7153bd8f2bc93c4c55f621c394c9ae36bb47cd000dcdfd0d1fd1e",
+      "vendored_sha256": "5bdfc03fb5d7153bd8f2bc93c4c55f621c394c9ae36bb47cd000dcdfd0d1fd1e"
+    },
+    "flet/lib/src/widgets/animated_transition_page.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "4aa33791a82559be709fa231daacba9113e0fb77ec6d0a3bca5dacf8af34113a",
+      "vendored_sha256": "4aa33791a82559be709fa231daacba9113e0fb77ec6d0a3bca5dacf8af34113a"
+    },
+    "flet/lib/src/widgets/control_inherited_notifier.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "ef1e943e371f59558f8e291bcc8187a449940dc22af60be7eab8f7fe52c80fa6",
+      "vendored_sha256": "ef1e943e371f59558f8e291bcc8187a449940dc22af60be7eab8f7fe52c80fa6"
+    },
+    "flet/lib/src/widgets/error.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "1aff96717cacef5ef6dc2c1c6d83a92288b3c028ce04b1806751ee681718e1bc",
+      "vendored_sha256": "1aff96717cacef5ef6dc2c1c6d83a92288b3c028ce04b1806751ee681718e1bc"
+    },
+    "flet/lib/src/widgets/flet_store_mixin.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "10e059d88ed85762effcbb779b32ee6f80db50216a1b8d41c533b07be77f8c6c",
+      "vendored_sha256": "10e059d88ed85762effcbb779b32ee6f80db50216a1b8d41c533b07be77f8c6c"
+    },
+    "flet/lib/src/widgets/loading_page.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "e81d9a614a827aba5e5006a32aa7707f58ebd7f78c1dd50712b6ef360adce8e1",
+      "vendored_sha256": "e81d9a614a827aba5e5006a32aa7707f58ebd7f78c1dd50712b6ef360adce8e1"
+    },
+    "flet/lib/src/widgets/page_context.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "a103fe095d2a464ca884255149604fd1f672bd8a64fb0c8520b0ede87c5b4cdb",
+      "vendored_sha256": "a103fe095d2a464ca884255149604fd1f672bd8a64fb0c8520b0ede87c5b4cdb"
+    },
+    "flet/lib/src/widgets/page_media.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "b10968ad68a1db4771e13cd82caa2850cf0f7ac9e96dceb7fc8fb2775e5c6ac4",
+      "vendored_sha256": "b10968ad68a1db4771e13cd82caa2850cf0f7ac9e96dceb7fc8fb2775e5c6ac4"
+    },
+    "flet/lib/src/widgets/reorderable_item_scope.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "ecc54354f8f4ac609c2fb5a3f94817f8f328da8bc1cda23441412cc9fb9021fd",
+      "vendored_sha256": "ecc54354f8f4ac609c2fb5a3f94817f8f328da8bc1cda23441412cc9fb9021fd"
+    },
+    "flet/lib/src/widgets/skip_inherited_notifier.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "1a93671319c07ac3f724f43c637c4e74602086409ad018b2f76fdca7dc6bd87e",
+      "vendored_sha256": "1a93671319c07ac3f724f43c637c4e74602086409ad018b2f76fdca7dc6bd87e"
+    },
+    "flet/test/utils/control_test.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "24732c23c74d3b48e8b4ed5d00f99ff6db59109f7175b6bb762211739aa1cbd3",
+      "vendored_sha256": "24732c23c74d3b48e8b4ed5d00f99ff6db59109f7175b6bb762211739aa1cbd3"
+    },
+    "flet/test/utils/networking_test.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "ff2cd1bff8401cc0b40b59194f1808a3abb6e1d5f26baa2143fecced447e8f3a",
+      "vendored_sha256": "ff2cd1bff8401cc0b40b59194f1808a3abb6e1d5f26baa2143fecced447e8f3a"
+    },
+    "flet/test/utils/uri_test.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "15403930cf955dd9a0eeb945b8e9dc5282ee06603da2dfbbc28be0154b2f4ef7",
+      "vendored_sha256": "15403930cf955dd9a0eeb945b8e9dc5282ee06603da2dfbbc28be0154b2f4ef7"
+    },
+    "flet/test/utils/user_fonts_test.dart": {
+      "classification": "exact_upstream",
+      "upstream_sha256": "2116ac97a2bec40587411e373ae1f610f23983ba74290930ceaf8d1dfb3546e1",
+      "vendored_sha256": "2116ac97a2bec40587411e373ae1f610f23983ba74290930ceaf8d1dfb3546e1"
+    }
+  }
+}
