@@ -120,7 +120,7 @@ public struct DateRangePickerControl: View {
           minimumDate: minimum,
           maximumDate: maximum,
           mode: .date,
-          style: .inline,
+          style: rufletDateRangePickerStyle(isIOS: rufletIsIOS),
           minuteInterval: 1,
           locale: presentation.locale,
           countdownDuration: nil
@@ -225,6 +225,13 @@ public struct DateRangePickerControl: View {
   var presentation: RufletDateRangePickerPresentation {
     RufletDateRangePickerPresentation(control: control)
   }
+}
+
+func rufletDateRangePickerStyle(isIOS: Bool) -> RufletNativeDatePickerStyle {
+  // iPhone cannot fit two inline calendars side by side. Compact UIDatePicker
+  // fields expand into Apple's calendar surface and keep both range endpoints
+  // readable without inventing a non-native range widget.
+  isIOS ? .compact : .inline
 }
 
 @MainActor

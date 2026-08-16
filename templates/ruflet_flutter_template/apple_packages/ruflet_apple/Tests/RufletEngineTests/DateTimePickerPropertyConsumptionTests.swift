@@ -84,6 +84,15 @@ final class DateTimePickerPropertyConsumptionTests: XCTestCase {
     XCTAssertNotNil(presentation.switchToInputIcon)
   }
 
+  func testDateRangeUsesReadableNativePickerStylesPerApplePlatform() {
+    guard case .compact = rufletDateRangePickerStyle(isIOS: true) else {
+      return XCTFail("iPhone range endpoints must use compact UIDatePicker surfaces")
+    }
+    guard case .inline = rufletDateRangePickerStyle(isIOS: false) else {
+      return XCTFail("desktop range endpoints retain inline calendars")
+    }
+  }
+
   func testTimePickerConsumesPinnedLabelsOrientationHourFormatAndIcons() {
     let fixture = makeControl(
       type: "TimePicker",
