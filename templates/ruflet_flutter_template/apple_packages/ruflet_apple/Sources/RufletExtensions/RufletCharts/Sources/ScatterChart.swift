@@ -4,6 +4,7 @@ import SwiftUI
 
 struct ScatterChartControl: View {
   @ObservedObject var control: RufletControl
+  @State private var touchedSpotIndex: Int?
 
   private var spots: [ScatterChartSpot] {
     control.children("spots").enumerated().map { ScatterChartSpot.parse($0.element, index: $0.offset) }
@@ -22,14 +23,14 @@ struct ScatterChartControl: View {
             drawCartesianDecoration(
               context: &context, layout: layout, domain: domain,
               configuration: configuration)
-            for spot in spots {
+            for (index, spot) in spots.enumerated() {
               let location = layout.location(ChartPoint(x: spot.x, y: spot.y), domain: domain)
-              let radius = CGFloat(spot.selected ? spot.radius * 1.5 : spot.radius)
+              let radius = CGFloat(spot.radius)
               context.fill(
                 Path(ellipseIn: CGRect(x: location.x - radius, y: location.y - radius, width: radius * 2, height: radius * 2)),
                 with: .color(spot.color))
               if let label = spot.label { context.draw(Text(label), at: CGPoint(x: location.x, y: location.y - radius - 8)) }
-              if spot.selected {
+              if spot.selected || touchedSpotIndex == index {
                 context.draw(Text("\(chartNumber(spot.x)), \(chartNumber(spot.y))"),
                   at: CGPoint(x: location.x, y: location.y - radius - 10))
               }
@@ -45,9 +46,20 @@ struct ScatterChartControl: View {
           chartAnimation(control.dynamicValue("animation")),
           value: control.revision)
         .contentShape(Rectangle())
-        .gesture(DragGesture(minimumDistance: 0).onEnded { value in
-          emitTap(at: value.location, layout: layout, domain: domain)
-        })
+        .gesture(DragGesture(minimumDistance: 0)
+          .onChanged { value in
+            guard control.boolean("interactive", default: true), !control.disabled,
+              !control.boolean("show_tooltips_for_selected_spots_only", default: false)
+            else {
+              touchedSpotIndex = nil
+              return
+            }
+            touchedSpotIndex = hitTest(value.location, layout: layout, domain: domain)
+          }
+          .onEnded { value in
+            emitTap(at: value.location, layout: layout, domain: domain)
+            touchedSpotIndex = nil
+          })
         .simultaneousGesture(
           LongPressGesture(minimumDuration: chartLongPressDuration(
             control.dynamicValue("long_press_duration")))
@@ -70,14 +82,25 @@ struct ScatterChartControl: View {
   ) {
     guard control.hasEventHandler("event"), control.boolean("interactive", default: true),
       !control.disabled else { return }
-    let index = spots.indices.min { lhs, rhs in
-      let a = layout.location(points[lhs], domain: domain)
-      let b = layout.location(points[rhs], domain: domain)
-      return hypot(a.x - location.x, a.y - location.y) < hypot(b.x - location.x, b.y - location.y)
-    }
+    let index = hitTest(location, layout: layout, domain: domain)
     control.triggerEvent("event", data: .map([
       "type": .string(type),
       "spot_index": index.map { .int(Int64($0)) } ?? .null,
     ]))
+  }
+
+  private func hitTest(
+    _ location: CGPoint,
+    layout: ChartCartesianLayout,
+    domain: ChartDomain
+  ) -> Int? {
+    // fl_chart walks spots from topmost to bottommost and returns the first
+    // painter whose hit region contains the pointer. Its default scatter
+    // threshold is zero, so the rendered dot radius is the hit region.
+    spots.indices.reversed().first { index in
+      let center = layout.location(points[index], domain: domain)
+      return hypot(center.x - location.x, center.y - location.y)
+        <= CGFloat(max(0, spots[index].radius))
+    }
   }
 }

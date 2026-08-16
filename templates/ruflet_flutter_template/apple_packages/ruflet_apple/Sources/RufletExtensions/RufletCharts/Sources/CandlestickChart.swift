@@ -4,6 +4,7 @@ import SwiftUI
 
 struct CandlestickChartControl: View {
   @ObservedObject var control: RufletControl
+  @State private var touchedSpotIndex: Int?
 
   private var spots: [CandlestickSpot] { control.children("spots").map(CandlestickSpot.parse) }
   private var points: [ChartPoint] {
@@ -33,9 +34,20 @@ struct CandlestickChartControl: View {
             chartAnimation(control.dynamicValue("animation")),
             value: control.revision)
           .contentShape(Rectangle())
-          .gesture(DragGesture(minimumDistance: 0).onEnded { value in
-            emitTap(at: value.location, layout: layout, domain: domain)
-          })
+          .gesture(DragGesture(minimumDistance: 0)
+            .onChanged { value in
+              guard control.boolean("interactive", default: true), !control.disabled,
+                !control.boolean("show_tooltips_for_selected_spots_only", default: false)
+              else {
+                touchedSpotIndex = nil
+                return
+              }
+              touchedSpotIndex = hitTest(value.location, layout: layout, domain: domain)
+            }
+            .onEnded { value in
+              emitTap(at: value.location, layout: layout, domain: domain)
+              touchedSpotIndex = nil
+            })
           .simultaneousGesture(
             LongPressGesture(minimumDuration: chartLongPressDuration(
               control.dynamicValue("long_press_duration")))
@@ -55,20 +67,20 @@ struct CandlestickChartControl: View {
     layout: ChartCartesianLayout,
     domain: ChartDomain
   ) {
-    let bodyWidth = max(3, layout.plotRect.width / CGFloat(max(1, spots.count)) * 0.55)
-    for spot in spots {
+    let bodyWidth: CGFloat = 4
+    for (index, spot) in spots.enumerated() {
       let high = layout.location(ChartPoint(x: spot.x, y: spot.high), domain: domain)
       let low = layout.location(ChartPoint(x: spot.x, y: spot.low), domain: domain)
       let open = layout.location(ChartPoint(x: spot.x, y: spot.open), domain: domain)
       let close = layout.location(ChartPoint(x: spot.x, y: spot.close), domain: domain)
-      let color: Color = spot.close >= spot.open ? .green : .red
+      let color: Color = spot.close > spot.open ? .green : .red
       var wick = Path()
       wick.move(to: high)
       wick.addLine(to: low)
-      context.stroke(wick, with: .color(color), lineWidth: spot.selected ? 3 : 1.5)
+      context.stroke(wick, with: .color(color), lineWidth: 1.5)
       let rect = CGRect(x: open.x - bodyWidth / 2, y: min(open.y, close.y), width: bodyWidth, height: max(1, abs(close.y - open.y)))
       context.fill(Path(rect), with: .color(color))
-      if spot.selected {
+      if spot.selected || touchedSpotIndex == index {
         context.draw(Text(chartNumber(spot.close)),
           at: CGPoint(x: close.x, y: min(open.y, close.y) - 10))
       }
@@ -83,14 +95,28 @@ struct CandlestickChartControl: View {
   ) {
     guard control.hasEventHandler("event"), control.boolean("interactive", default: true),
       !control.disabled, !spots.isEmpty else { return }
-    let index = spots.indices.min {
-      abs(layout.location(ChartPoint(x: spots[$0].x, y: spots[$0].close), domain: domain).x - location.x)
-        < abs(layout.location(ChartPoint(x: spots[$1].x, y: spots[$1].close), domain: domain).x - location.x)
-    }
-    guard let index else { return }
+    let index = hitTest(location, layout: layout, domain: domain)
     control.triggerEvent("event", data: .map([
       "type": .string(type),
-      "spot_index": .int(Int64(index)),
+      "spot_index": index.map { .int(Int64($0)) } ?? .null,
     ]))
+  }
+
+  private func hitTest(
+    _ location: CGPoint,
+    layout: ChartCartesianLayout,
+    domain: ChartDomain
+  ) -> Int? {
+    let threshold = CGFloat(control.number("touch_spot_threshold", default: 4) ?? 4)
+    return spots.indices.reversed().filter {
+      abs(layout.location(
+        ChartPoint(x: spots[$0].x, y: spots[$0].close), domain: domain).x - location.x)
+        <= threshold
+    }.min {
+      abs(layout.location(
+        ChartPoint(x: spots[$0].x, y: spots[$0].close), domain: domain).x - location.x)
+        < abs(layout.location(
+          ChartPoint(x: spots[$1].x, y: spots[$1].close), domain: domain).x - location.x)
+    }
   }
 }
