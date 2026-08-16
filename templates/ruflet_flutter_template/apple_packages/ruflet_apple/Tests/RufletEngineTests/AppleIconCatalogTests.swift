@@ -44,7 +44,7 @@ final class AppleIconCatalogTests: XCTestCase {
       "flashlight_on": "flashlight.on.fill",
       "folder_open": "folder",
       "home": "house",
-      "hub": "network",
+      "hub": "point.3.connected.trianglepath.dotted",
       "image": "photo",
       "info": "info.circle",
       "insert_drive_file": "doc",

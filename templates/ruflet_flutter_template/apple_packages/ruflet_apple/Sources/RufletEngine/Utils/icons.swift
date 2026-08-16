@@ -113,7 +113,7 @@ public enum RufletAppleIconCatalog {
     "FOLDER_OPEN": "folder",
     "GRID_VIEW": "square.grid.2x2",
     "HOME": "house",
-    "HUB": "network",
+    "HUB": "point.3.connected.trianglepath.dotted",
     "IMAGE": "photo",
     "INFO": "info.circle",
     "INSERT_DRIVE_FILE": "doc",
