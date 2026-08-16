@@ -92,6 +92,7 @@ public struct PageControl: View {
 
   private func mount() {
     guard invokeToken == nil else { return }
+    synchronizeThemeCache()
     invokeToken = control.addInvokeMethodListener { name, arguments in
       try await invoke(name, arguments: arguments)
     }
@@ -111,6 +112,7 @@ public struct PageControl: View {
   }
 
   private func controlUpdated() {
+    synchronizeThemeCache()
     let publishedRoutes = Set(control.children("views").map(route(of:)))
     pendingPoppedRoutes.formIntersection(publishedRoutes)
     sentPoppedRoutes.formIntersection(publishedRoutes)
@@ -255,6 +257,21 @@ public struct PageControl: View {
     parsePageThemes(
       theme: control.dynamicValue("theme"),
       darkTheme: control.dynamicValue("dark_theme"))
+  }
+
+  /// Flet caches its parsed light and dark ThemeData objects in private
+  /// control properties. Swift's parsed themes are value types, but retaining
+  /// the corresponding source values preserves the same change-detection
+  /// contract without sending either private key to the server.
+  private func synchronizeThemeCache() {
+    let lightTheme = control.value("theme") ?? .null
+    let darkTheme = control.value("dark_theme") ?? lightTheme
+    var updates: [String: RufletValue] = [:]
+    if control.value("_lightTheme") != lightTheme { updates["_lightTheme"] = lightTheme }
+    if control.value("_darkTheme") != darkTheme { updates["_darkTheme"] = darkTheme }
+    if !updates.isEmpty {
+      control.updateProperties(updates, client: true, server: false, notify: false)
+    }
   }
 
   private var activePageTheme: RufletTheme {
