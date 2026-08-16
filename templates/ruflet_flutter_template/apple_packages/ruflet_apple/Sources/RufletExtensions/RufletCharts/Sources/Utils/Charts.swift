@@ -384,9 +384,9 @@ struct ChartAxesOverlay: View {
     if let axis {
       if let title = axis.title {
         ControlWidget(control: title)
+          .rotationEffect(side == .left ? .degrees(-90) : side == .right ? .degrees(90) : .zero)
           .frame(width: side.isVertical ? axis.titleSize : layout.plotRect.width,
             height: side.isVertical ? layout.plotRect.height : axis.titleSize)
-          .rotationEffect(side == .left ? .degrees(-90) : side == .right ? .degrees(90) : .zero)
           .position(titlePosition(side: side, axis: axis))
       }
       if axis.showLabels {
@@ -599,7 +599,6 @@ struct ChartFrame<Content: View>: View {
         // what applies the Ruby width/height before this fallback is needed.
         .frame(maxWidth: .infinity, idealHeight: 300, maxHeight: 300)
         .background(control.chartColor("bgcolor", default: .clear))
-        .clipped()
     }
   }
 }
