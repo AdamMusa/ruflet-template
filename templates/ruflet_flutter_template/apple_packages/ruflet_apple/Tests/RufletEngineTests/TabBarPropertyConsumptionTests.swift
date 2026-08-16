@@ -51,6 +51,7 @@ final class TabBarPropertyConsumptionTests: XCTestCase {
     XCTAssertEqual(presentation.labelPadding.leading, 16)
     XCTAssertTrue(presentation.scrollable)
     XCTAssertEqual(presentation.tabAlignment, .start)
+    XCTAssertEqual(presentation.defaultSelectionSurface, .scrollable)
     XCTAssertFalse(presentation.secondary)
     XCTAssertEqual(presentation.minimumHeight, 44)
     XCTAssertEqual(
@@ -90,6 +91,7 @@ final class TabBarPropertyConsumptionTests: XCTestCase {
     XCTAssertTrue(control.hasEventHandler("hover"))
     XCTAssertFalse(presentation.scrollable)
     XCTAssertEqual(presentation.tabAlignment, .fill)
+    XCTAssertEqual(presentation.defaultSelectionSurface, .segmented)
   }
 
   func testDirectTabBarPropertiesOverrideComponentTheme() {

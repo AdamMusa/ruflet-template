@@ -407,8 +407,6 @@ public struct TabBarControl: View {
             .background {
               if selected {
                 appleSelectionIndicator(presentation)
-              } else {
-                Capsule(style: .continuous).fill(appleSegmentTrackColor)
               }
             }
             .background(
@@ -456,7 +454,7 @@ public struct TabBarControl: View {
       .padding(presentation.indicatorPadding)
     } else {
       RoundedRectangle(cornerRadius: 7, style: .continuous)
-        .fill(presentation.indicatorColor ?? appleSelectedSegmentColor)
+        .fill(presentation.indicatorColor ?? defaultSelectionColor(presentation))
         .overlay {
           if presentation.hasExplicitIndicatorThickness {
             RoundedRectangle(cornerRadius: 7, style: .continuous)
@@ -470,6 +468,18 @@ public struct TabBarControl: View {
           presentation.indicatorHorizontalInset(labelPadding: presentation.labelPadding))
         .padding(presentation.indicatorPadding)
         .shadow(color: .black.opacity(0.14), radius: 1, y: 1)
+    }
+  }
+
+  private func defaultSelectionColor(_ presentation: RufletTabBarPresentation) -> Color {
+    switch presentation.defaultSelectionSurface {
+    case .segmented:
+      appleSelectedSegmentColor
+    case .scrollable:
+      // A scrollable iOS tab bar is a row of independent choices, not one
+      // filled segmented-control track. Tint only the active choice so the
+      // selected state cannot appear visually inverted in dark appearance.
+      presentation.labelColor.opacity(0.16)
     }
   }
 
@@ -492,9 +502,9 @@ public struct TabBarControl: View {
 
   private var appleSelectedSegmentColor: Color {
     #if os(iOS)
-      Color(uiColor: .secondarySystemBackground)
+      Color(uiColor: .secondarySystemFill)
     #else
-      Color.rufletSystemBackground
+      Color.secondary.opacity(0.24)
     #endif
   }
 
@@ -505,6 +515,11 @@ public struct TabBarControl: View {
     }
   }
 
+}
+
+enum RufletAppleTabSelectionSurface: Equatable {
+  case segmented
+  case scrollable
 }
 
 private struct RufletTabBarButtonStyle: ButtonStyle {
@@ -638,6 +653,10 @@ struct RufletTabBarPresentation {
   }
 
   var minimumHeight: CGFloat { secondary ? 40 : 44 }
+
+  var defaultSelectionSurface: RufletAppleTabSelectionSurface {
+    scrollable ? .scrollable : .segmented
+  }
 
   func indicatorHorizontalInset(labelPadding: EdgeInsets) -> CGFloat {
     indicatorSize == .label ? min(labelPadding.leading, labelPadding.trailing) : 0
