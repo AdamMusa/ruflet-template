@@ -105,6 +105,7 @@ public final class RufletAudioPlayer: NSObject, @preconcurrency AVAudioPlayerDel
 
   public func resume() throws {
     let player = try requirePlayer()
+    try prepareRufletAppleMediaPlayback()
     guard player.play() else { throw RufletAudioError.couldNotPlay }
     transition(to: .playing)
     startPositionTimer()
@@ -213,6 +214,7 @@ public enum RufletAudioError: Error, Equatable, Sendable {
   case invalidBalance(Double)
   case invalidPlaybackRate(Double)
   case invalidSource
+  case sourceLoadFailed(String)
   case unknownMethod(String)
 }
 
@@ -224,6 +226,7 @@ public final class AudioService: RufletService {
   private var sourceTask: Task<Void, Never>?
   private var loadedSource: RufletValue?
   private var loadingSource: RufletValue?
+  private var sourceLoadFailure: String?
 
   public required init(control: RufletControl) {
     super.init(control: control)
@@ -258,8 +261,13 @@ public final class AudioService: RufletService {
     }
 
     guard sourceValue != loadedSource, sourceValue != loadingSource else { return }
+    beginLoading(sourceValue, autoplay: autoplay)
+  }
+
+  private func beginLoading(_ sourceValue: RufletValue?, autoplay: Bool) {
     sourceTask?.cancel()
     loadingSource = sourceValue
+    sourceLoadFailure = nil
     sourceTask = Task { @MainActor [weak self] in
       guard let self, !Task.isCancelled else { return }
       defer {
@@ -272,10 +280,13 @@ public final class AudioService: RufletService {
         try await player.load(source, autoplay: autoplay)
         try Task.checkCancellation()
         loadedSource = sourceValue
+        sourceLoadFailure = nil
       } catch is CancellationError {
         return
       } catch {
-        control.triggerEvent("error", data: .string(String(describing: error)))
+        let message = String(describing: error)
+        sourceLoadFailure = message
+        control.triggerEvent("error", data: .string(message))
       }
     }
   }
@@ -284,6 +295,8 @@ public final class AudioService: RufletService {
     sourceTask?.cancel()
     sourceTask = nil
     loadingSource = nil
+    sourceLoadFailure = nil
+    loadedSource = nil
     if let invokeToken { control.removeInvokeMethodListener(invokeToken) }
     invokeToken = nil
     player.release()
@@ -291,7 +304,7 @@ public final class AudioService: RufletService {
 
   private func invoke(_ name: String, arguments: RufletValue) async throws -> RufletValue {
     let position = Self.durationMilliseconds(arguments["position"])
-    if name != "release", let sourceTask { await sourceTask.value }
+    if name != "release" { try await ensureSourceLoaded() }
     switch name {
     case "play":
       try player.play(positionMilliseconds: position)
@@ -306,6 +319,7 @@ public final class AudioService: RufletService {
       sourceTask?.cancel()
       sourceTask = nil
       loadingSource = nil
+      sourceLoadFailure = nil
       player.release()
       loadedSource = nil
       return .null
@@ -318,6 +332,21 @@ public final class AudioService: RufletService {
       return player.currentPositionMilliseconds.map { .int(Int64($0)) } ?? .null
     default:
       throw RufletAudioError.unknownMethod(name)
+    }
+  }
+
+  private func ensureSourceLoaded() async throws {
+    let sourceValue = control.value("src")
+    if loadedSource != sourceValue, loadingSource != sourceValue {
+      // `release` and a failed asynchronous load both leave the declarative
+      // source on the control. A later command must retry that source instead
+      // of operating on a disposed player.
+      beginLoading(sourceValue, autoplay: false)
+    }
+    if let sourceTask { await sourceTask.value }
+    guard loadedSource == sourceValue else {
+      throw RufletAudioError.sourceLoadFailed(
+        sourceLoadFailure ?? String(describing: RufletAudioError.invalidSource))
     }
   }
 

@@ -147,6 +147,7 @@ final class RufletVideoController: ObservableObject {
   }
 
   private func configurePlayer() {
+    player.automaticallyWaitsToMinimizeStalling = true
     synchronizeProperties()
     endObserver = NotificationCenter.default.addObserver(
       forName: .AVPlayerItemDidPlayToEndTime,
@@ -212,8 +213,13 @@ final class RufletVideoController: ObservableObject {
             self.wasPlayingBeforeBackground,
             self.control.boolean("resume_upon_entering_foreground_mode", default: false)
           else { return }
-          self.player.playImmediately(
-            atRate: Float(self.control.number("playback_rate", default: 1) ?? 1))
+          do {
+            try prepareRufletAppleMediaPlayback()
+            self.player.playImmediately(
+              atRate: Float(self.control.number("playback_rate", default: 1) ?? 1))
+          } catch {
+            self.control.triggerEvent("error", data: .string(error.localizedDescription))
+          }
         }
       })
   }
@@ -225,9 +231,7 @@ final class RufletVideoController: ObservableObject {
       applyConfiguration(to: item)
       currentIndex = index
       itemStatusObservation?.invalidate()
-      player.replaceCurrentItem(with: item)
-      synchronizeProperties()
-      itemStatusObservation = item.observe(\.status, options: [.new]) { [weak self] item, _ in
+      itemStatusObservation = item.observe(\.status, options: [.initial, .new]) { [weak self] item, _ in
         Task { @MainActor [weak self] in
           guard let self else { return }
           if item.status == .readyToPlay {
@@ -238,8 +242,11 @@ final class RufletVideoController: ObservableObject {
           }
         }
       }
+      player.replaceCurrentItem(with: item)
+      synchronizeProperties()
       control.triggerEvent("track_change", data: .int(Int64(index)))
       if autoplay {
+        try prepareRufletAppleMediaPlayback()
         player.playImmediately(atRate: Float(control.number("playback_rate", default: 1) ?? 1))
       }
     } catch {
@@ -278,6 +285,7 @@ final class RufletVideoController: ObservableObject {
   {
     switch name {
     case "play":
+      try prepareRufletAppleMediaPlayback()
       player.playImmediately(atRate: Float(control.number("playback_rate", default: 1) ?? 1))
       return .null
     case "pause":
@@ -287,6 +295,7 @@ final class RufletVideoController: ObservableObject {
       if player.timeControlStatus == .playing {
         player.pause()
       } else {
+        try prepareRufletAppleMediaPlayback()
         player.playImmediately(atRate: Float(control.number("playback_rate", default: 1) ?? 1))
       }
       return .null
@@ -394,6 +403,7 @@ final class RufletVideoController: ObservableObject {
       controller.showsPlaybackControls = showControls
       controller.videoGravity = gravity
       controller.view.accessibilityLabel = title
+      controller.view.backgroundColor = .black
       applyVideoFilterQuality(filterQuality, to: controller.view.layer)
       return controller
     }
@@ -403,6 +413,7 @@ final class RufletVideoController: ObservableObject {
       controller.showsPlaybackControls = showControls
       controller.videoGravity = gravity
       controller.view.accessibilityLabel = title
+      controller.view.backgroundColor = .black
       applyVideoFilterQuality(filterQuality, to: controller.view.layer)
     }
 
@@ -488,6 +499,7 @@ struct VideoControl: View {
     #if os(iOS)
       LayoutControl(control: control) {
         playerContent
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
           .background(parseColor(control.string("fill_color"), .black) ?? .black)
       }
       .onAppear {
@@ -500,6 +512,7 @@ struct VideoControl: View {
     #elseif os(macOS)
       LayoutControl(control: control) {
         playerContent
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
           .background(parseColor(control.string("fill_color"), .black) ?? .black)
       }
       .onAppear {

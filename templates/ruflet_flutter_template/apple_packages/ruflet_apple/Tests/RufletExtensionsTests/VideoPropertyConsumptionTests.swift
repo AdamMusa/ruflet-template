@@ -78,6 +78,23 @@ final class VideoPropertyConsumptionTests: XCTestCase {
     XCTAssertEqual(child.minificationFilter, .nearest)
   }
 
+  func testRemotePlaylistMediaUsesTheBackendResolvedURL() throws {
+    let url = "https://media.example.test/video.mp4"
+    let backend = VideoTestBackend(
+      resolvedSource: RufletAssetSource(path: url, isFile: false))
+    let control = RufletControl(
+      id: 1,
+      type: "Video",
+      properties: [:],
+      backend: backend)
+    let media = RufletVideoMedia(
+      resource: .string("clip.mp4"), extras: [:], httpHeaders: [:])
+
+    let item = try makeVideoItem(media, control: control)
+
+    XCTAssertEqual((item.asset as? AVURLAsset)?.url.absoluteString, url)
+  }
+
   private func control(properties: [String: RufletValue]) -> RufletControl {
     RufletControl(
       id: 1,
@@ -89,8 +106,13 @@ final class VideoPropertyConsumptionTests: XCTestCase {
 
 @MainActor
 private final class VideoTestBackend: RufletBackendProtocol {
+  let resolvedSource: RufletAssetSource?
   let pageURI: URL? = nil
   let extensionRegistry = RufletExtensionRegistry([])
+
+  init(resolvedSource: RufletAssetSource? = nil) {
+    self.resolvedSource = resolvedSource
+  }
 
   func index(_ control: RufletControl) {}
   func triggerControlEvent(_ control: RufletControl, name: String, data: RufletValue) {}
@@ -102,6 +124,6 @@ private final class VideoTestBackend: RufletBackendProtocol {
     server: Bool,
     notify: Bool
   ) {}
-  func resolveAssetSource(_ source: RufletValue) -> RufletAssetSource? { nil }
+  func resolveAssetSource(_ source: RufletValue) -> RufletAssetSource? { resolvedSource }
   func onWindowEvent(_ name: String, state: RufletWindowState) {}
 }

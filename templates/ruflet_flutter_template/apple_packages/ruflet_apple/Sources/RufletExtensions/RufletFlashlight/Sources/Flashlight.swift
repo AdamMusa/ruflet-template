@@ -43,11 +43,11 @@ public final class FlashlightService: RufletService {
     }
     try device.lockForConfiguration()
     defer { device.unlockForConfiguration() }
-    if enabled {
-      try device.setTorchModeOn(level: AVCaptureDevice.maxAvailableTorchLevel)
-    } else {
-      device.torchMode = .off
-    }
+    // Match the pinned torch_light iOS implementation. Its contract toggles
+    // AVCaptureDevice.torchMode directly; selecting a custom intensity can be
+    // rejected while the camera stack is transitioning even though the torch
+    // itself is available.
+    device.torchMode = enabled ? .on : .off
   }
 
   private static var torchDevice: AVCaptureDevice? {
