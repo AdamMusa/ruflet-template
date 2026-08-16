@@ -70,6 +70,11 @@ final class RufletVideoController: ObservableObject {
   func detach() {
     guard attached else { return }
     attached = false
+    // A cached native route can retain this controller after navigation.
+    // Playback belongs to the visible Flet control, so leaving the route must
+    // silence it immediately instead of leaking audio into another screen.
+    player.pause()
+    wasPlayingBeforeBackground = false
     if let invokeToken {
       control.removeInvokeMethodListener(invokeToken)
       self.invokeToken = nil
@@ -481,24 +486,28 @@ struct VideoControl: View {
 
   var body: some View {
     #if os(iOS)
-      playerContent
-        .background(parseColor(control.string("fill_color"), .black) ?? .black)
-        .onAppear {
-          controller.attach()
-          controller.synchronizeProperties()
-        }
-        .onDisappear { controller.detach() }
-        .onChange(of: propertyIdentity) { _ in controller.synchronizeProperties() }
-        .fullScreenCover(isPresented: fullscreenBinding) { playerContent.background(Color.black) }
+      LayoutControl(control: control) {
+        playerContent
+          .background(parseColor(control.string("fill_color"), .black) ?? .black)
+      }
+      .onAppear {
+        controller.attach()
+        controller.synchronizeProperties()
+      }
+      .onDisappear { controller.detach() }
+      .onChange(of: propertyIdentity) { _ in controller.synchronizeProperties() }
+      .fullScreenCover(isPresented: fullscreenBinding) { playerContent.background(Color.black) }
     #elseif os(macOS)
-      playerContent
-        .background(parseColor(control.string("fill_color"), .black) ?? .black)
-        .onAppear {
-          controller.attach()
-          controller.synchronizeProperties()
-        }
-        .onDisappear { controller.detach() }
-        .onChange(of: propertyIdentity) { _ in controller.synchronizeProperties() }
+      LayoutControl(control: control) {
+        playerContent
+          .background(parseColor(control.string("fill_color"), .black) ?? .black)
+      }
+      .onAppear {
+        controller.attach()
+        controller.synchronizeProperties()
+      }
+      .onDisappear { controller.detach() }
+      .onChange(of: propertyIdentity) { _ in controller.synchronizeProperties() }
     #endif
   }
 

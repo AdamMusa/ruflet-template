@@ -11,8 +11,10 @@ struct WebViewControl: View {
   }
 
   var body: some View {
-    WebViewMobileAndMac(controller: controller)
-      .onAppear { controller.attach() }
-      .onDisappear { controller.detach() }
+    LayoutControl(control: control) {
+      WebViewMobileAndMac(controller: controller)
+    }
+    .onAppear { controller.attach() }
+    .onDisappear { controller.detach() }
   }
 }
