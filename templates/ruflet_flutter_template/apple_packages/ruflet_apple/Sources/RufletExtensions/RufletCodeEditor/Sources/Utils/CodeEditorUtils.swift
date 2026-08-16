@@ -71,12 +71,18 @@ struct RufletCodeEditorStyle {
 
     let gutterMap = control.value("gutter_style")?.map ?? [:]
     let gutterText = gutterMap["text_style"]?.map ?? [:]
+    // `flutter_code_editor` paints one root background behind both the gutter
+    // and the editing field. Its optional GutterStyle.background is not a
+    // separate strip in the pinned renderer. Keep that behavior here so a
+    // dark code theme cannot expose the page's light system background.
     #if os(iOS)
-    let gutterForeground = UIColor(parseColor(gutterText["color"]?.text, .secondary) ?? .secondary)
-    let gutterBackground = UIColor(parseColor(gutterMap["background_color"]?.text, Color.secondary.opacity(0.08)) ?? Color.secondary.opacity(0.08))
+    let gutterForeground = parseColor(gutterText["color"]?.text).map(UIColor.init)
+      ?? foreground.withAlphaComponent(0.5)
+    let gutterBackground = background
     #elseif os(macOS)
-    let gutterForeground = NSColor(parseColor(gutterText["color"]?.text, .secondary) ?? .secondary)
-    let gutterBackground = NSColor(parseColor(gutterMap["background_color"]?.text, Color.secondary.opacity(0.08)) ?? Color.secondary.opacity(0.08))
+    let gutterForeground = parseColor(gutterText["color"]?.text).map(NSColor.init)
+      ?? foreground.withAlphaComponent(0.5)
+    let gutterBackground = background
     #endif
     let marginValue = gutterMap["margin"]
     let margin = marginValue?.number

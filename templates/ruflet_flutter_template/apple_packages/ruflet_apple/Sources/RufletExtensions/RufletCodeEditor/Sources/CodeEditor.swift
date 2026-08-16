@@ -158,16 +158,20 @@ private final class RufletIOSCodeEditorView: UIView {
     gutter.textColor = style.gutter.foreground
     gutter.backgroundColor = style.gutter.background
     gutter.font = style.font
-    gutter.textContainerInset = UIEdgeInsets(top: 16, left: 8, bottom: 16, right: style.gutter.margin)
+    gutter.textContainerInset = UIEdgeInsets(
+      top: style.padding.top,
+      left: 8 + style.padding.left,
+      bottom: style.padding.bottom,
+      right: style.gutter.margin)
     gutter.textContainer.lineFragmentPadding = 0
     editor.backgroundColor = style.background
     editor.font = style.font
     editor.textColor = style.foreground
     editor.textContainerInset = UIEdgeInsets(
-      top: 16,
-      left: 8,
-      bottom: 16,
-      right: 0)
+      top: style.padding.top,
+      left: style.gutter.showLineNumbers ? 0 : 8 + style.padding.left,
+      bottom: style.padding.bottom,
+      right: style.padding.right)
   }
 }
 
@@ -372,10 +376,14 @@ private final class RufletMacCodeEditorView: NSView {
     editor.backgroundColor = style.background
     editor.font = style.font
     editor.textColor = style.foreground
-    editor.textContainerInset = NSSize(width: 8, height: 16)
+    editor.textContainerInset = NSSize(
+      width: style.gutter.showLineNumbers ? 0 : 8 + style.padding.left,
+      height: style.padding.top)
     editorScroll.contentInsets = NSEdgeInsets(
       top: 0, left: 0, bottom: 16, right: 0)
-    gutter.textContainerInset = NSSize(width: style.gutter.margin, height: 16)
+    gutter.textContainerInset = NSSize(
+      width: 8 + style.padding.left + style.gutter.margin,
+      height: style.padding.top)
   }
 }
 

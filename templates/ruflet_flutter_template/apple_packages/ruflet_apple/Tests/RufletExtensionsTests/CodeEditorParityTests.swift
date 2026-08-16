@@ -13,6 +13,9 @@ final class CodeEditorParityTests: XCTestCase {
 
     XCTAssertEqual(style.font.pointSize, 16, accuracy: 0.01)
     XCTAssertEqual(style.lineHeight, 24, accuracy: 0.01)
+    XCTAssertEqual(style.gutter.background, style.background)
+    XCTAssertEqual(style.padding.top, 0, accuracy: 0.01)
+    XCTAssertEqual(style.padding.left, 0, accuracy: 0.01)
   }
 
   func testTrailingNewlineKeepsTheFinalFlutterGutterRow() {
