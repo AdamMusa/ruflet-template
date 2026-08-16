@@ -1,10 +1,7 @@
 import Foundation
 
-/// Apple-native port of Flet's pinned `utils/material_icons.dart` catalog.
-///
-/// Material values remain wire identities only. Every lookup is translated by
-/// `RufletAppleIconCatalog` to Cupertino artwork or an SF Symbol; Material's
-/// font is never loaded or rendered on Apple platforms.
+/// Exact native port of Flet's pinned `utils/material_icons.dart` catalog.
+/// Wire identities resolve to the same MaterialIcons glyphs Flutter paints.
 public enum RufletMaterialIcons {
   public static let firstCode = RufletAppleIconCatalog.materialFirstCode
   public static let count = RufletAppleIconCatalog.materialCount

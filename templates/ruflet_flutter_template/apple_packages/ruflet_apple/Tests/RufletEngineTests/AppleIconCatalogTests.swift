@@ -25,26 +25,12 @@ final class AppleIconCatalogTests: XCTestCase {
     XCTAssertNil(RufletCupertinoIcons.icon(at: RufletCupertinoIcons.count))
   }
 
-  func testExplorerMaterialWireNamesResolveToAppleArtwork() {
-    XCTAssertEqual(RufletAppleIconCatalog.icon(for: 71_894), .cupertinoGlyph(0xf903))
-    XCTAssertEqual(
-      RufletAppleIconCatalog.icon(for: 69_314),
-      RufletAppleIconCatalog.icon(forCupertinoName: "circle_grid_hex_fill"))
-    XCTAssertEqual(
-      RufletAppleIconCatalog.icon(for: 69_217),
-      RufletAppleIconCatalog.icon(forCupertinoName: "home"))
-    XCTAssertEqual(
-      RufletAppleIconCatalog.icon(for: 69_330),
-      RufletAppleIconCatalog.icon(forCupertinoName: "photo_fill"))
-    XCTAssertEqual(
-      RufletAppleIconCatalog.icon(for: 68_985),
-      RufletAppleIconCatalog.icon(forCupertinoName: "square_grid_2x2"))
-    XCTAssertEqual(
-      RufletAppleIconCatalog.icon(for: 72_414),
-      RufletAppleIconCatalog.icon(forCupertinoName: "graph_square"))
-    XCTAssertEqual(
-      RufletAppleIconCatalog.icon(for: 74_196),
-      RufletAppleIconCatalog.icon(forCupertinoName: "square_grid_2x2_fill"))
+  func testExplorerMaterialWireNamesResolveToFlutterGlyphs() {
+    XCTAssertEqual(RufletAppleIconCatalog.icon(for: 69_314), .materialGlyph(0xf051d))
+    XCTAssertEqual(RufletAppleIconCatalog.icon(for: 69_749), .materialGlyph(0xe380))
+    XCTAssertEqual(RufletAppleIconCatalog.icon(for: 69_969), .materialGlyph(0xe3b2))
+    XCTAssertEqual(RufletAppleIconCatalog.icon(for: 71_571), .materialGlyph(0xe4f7))
+    XCTAssertEqual(RufletAppleIconCatalog.icon(for: 67_006), .materialGlyph(0xe176))
   }
 
   func testEveryCupertinoWireIconUsesItsExactBundledGlyph() {
@@ -55,16 +41,19 @@ final class AppleIconCatalogTests: XCTestCase {
     }
   }
 
-  func testEveryMaterialWireIconHasAnExplicitAppleEquivalent() {
+  func testEveryMaterialWireIconUsesItsExactBundledGlyph() {
     var unresolved: [String] = []
     for code in 65_536...74_360 {
       guard let name = RufletAppleIconCatalog.materialName(for: code) else {
         return XCTFail("Missing canonical Material wire name for \(code)")
       }
-      if RufletAppleIconCatalog.icon(for: code) == nil { unresolved.append(name) }
+      guard case .materialGlyph = RufletAppleIconCatalog.icon(for: code) else {
+        unresolved.append(name)
+        continue
+      }
     }
     if !unresolved.isEmpty {
-      XCTContext.runActivity(named: "Unresolved Material → Apple icon debt") { activity in
+      XCTContext.runActivity(named: "Unresolved Material icon glyph debt") { activity in
         activity.add(XCTAttachment(string: unresolved.joined(separator: "\n")))
       }
     }
@@ -72,26 +61,6 @@ final class AppleIconCatalogTests: XCTestCase {
       unresolved.isEmpty,
       "Unresolved Material icons: \(unresolved.count); first: \(unresolved.prefix(20).joined(separator: ", "))"
     )
-  }
-
-  func testEveryMappedSystemSymbolCanBeInstantiatedNatively() {
-    var checked: Set<String> = []
-    var invalid: [String] = []
-    for code in 65_536...74_360 {
-      guard case .systemSymbol(let name) = RufletAppleIconCatalog.icon(for: code),
-        checked.insert(name).inserted
-      else { continue }
-      #if canImport(UIKit)
-        if UIImage(systemName: name) == nil { invalid.append(name) }
-      #elseif canImport(AppKit)
-        if NSImage(systemSymbolName: name, accessibilityDescription: nil) == nil {
-          invalid.append(name)
-        }
-      #endif
-    }
-    XCTAssertTrue(
-      invalid.isEmpty,
-      "Invalid native system symbols: \(invalid.sorted().joined(separator: ", "))")
   }
 
   func testUnknownWireCodesDoNotRenderAnUnrelatedFallback() {

@@ -8,14 +8,11 @@ import SwiftUI
   import AppKit
 #endif
 
-/// Native Apple artwork resolved from a Flet icon wire value.
-///
-/// Material integer values are protocol identities only. They are never
-/// rendered with the Material font on Apple: each value is translated to an
-/// SF Symbol or to the corresponding glyph in Apple's Cupertino icon family.
+/// Exact native artwork resolved from a Flet icon wire value.
 public enum RufletAppleIcon: Equatable, Sendable {
   case systemSymbol(String)
   case cupertinoGlyph(UInt32)
+  case materialGlyph(UInt32)
 }
 
 /// Canonical Flet Material/Cupertino wire catalogs and their Apple artwork.
@@ -33,23 +30,15 @@ public enum RufletAppleIconCatalog {
       return .cupertinoGlyph(glyph)
     }
 
-    guard let materialName = catalogs.materialNamesByCode[code] else { return nil }
-    return icon(forMaterialName: materialName)
+    guard let materialName = catalogs.materialNamesByCode[code],
+      let glyph = catalogs.materialGlyphs[materialName]
+    else { return nil }
+    return .materialGlyph(glyph)
   }
 
   public static func icon(forMaterialName rawName: String) -> RufletAppleIcon? {
-    guard let translation = catalogs.materialToApple[canonical(rawName).uppercased()] else {
-      return nil
-    }
-    switch translation.kind {
-    case "cupertino_glyph":
-      return catalogs.cupertinoGlyphs[translation.value.uppercased()]
-        .map(RufletAppleIcon.cupertinoGlyph)
-    case "system_symbol":
-      return .systemSymbol(translation.value)
-    default:
-      preconditionFailure("Invalid Apple icon translation kind: \(translation.kind)")
-    }
+    catalogs.materialGlyphs[canonical(rawName).uppercased()]
+      .map(RufletAppleIcon.materialGlyph)
   }
 
   public static func icon(forCupertinoName rawName: String) -> RufletAppleIcon? {
@@ -81,13 +70,13 @@ public enum RufletAppleIconCatalog {
     let materialNamesByCode: [Int: String]
     let cupertinoNamesByCode: [Int: String]
     let cupertinoGlyphs: [String: UInt32]
-    let materialToApple: [String: AppleTranslation]
+    let materialGlyphs: [String: UInt32]
 
     init() {
       materialNamesByCode = Self.names(resource: "material_icons")
       cupertinoNamesByCode = Self.names(resource: "cupertino_icons")
       cupertinoGlyphs = Self.glyphs(resource: "cupertino_glyphs")
-      materialToApple = Self.translations(resource: "material_to_apple")
+      materialGlyphs = Self.glyphs(resource: "material_glyphs")
     }
 
     private static func names(resource: String) -> [Int: String] {
@@ -118,20 +107,6 @@ public enum RufletAppleIconCatalog {
       return object.mapValues { UInt32(truncating: $0) }
     }
 
-    private static func translations(resource: String) -> [String: AppleTranslation] {
-      guard
-        let url = resourceURL(
-          name: resource,
-          extension: "json",
-          subdirectory: "IconCatalog"),
-        let data = try? Data(contentsOf: url),
-        let object = try? JSONDecoder().decode([String: AppleTranslation].self, from: data)
-      else {
-        preconditionFailure("Missing Ruflet Apple translation resource: \(resource).json")
-      }
-      return object
-    }
-
     private static func resourceURL(
       name: String,
       extension fileExtension: String,
@@ -146,14 +121,6 @@ public enum RufletAppleIconCatalog {
   }
 
   private static let catalogs = Catalogs()
-
-  private struct AppleTranslation: Decodable {
-    let kind: String
-    let value: String
-    let concept: String
-    let confidence: String
-    let source: String
-  }
 }
 
 @MainActor
@@ -175,6 +142,9 @@ public struct RufletAppleIconView: View {
     case .cupertinoGlyph(let scalar):
       Text(String(UnicodeScalar(scalar)!))
         .font(.custom(RufletCupertinoIconFont.postScriptName, size: size))
+    case .materialGlyph(let scalar):
+      Text(String(UnicodeScalar(scalar)!))
+        .font(.custom(RufletMaterialIconFont.postScriptName, size: size))
     }
   }
 
@@ -188,6 +158,27 @@ public struct RufletAppleIconView: View {
     #endif
     return name
   }
+}
+
+private enum RufletMaterialIconFont {
+  static let postScriptName = "MaterialIcons-Regular"
+
+  static func register() {
+    _ = registration
+  }
+
+  private static let registration: Void = {
+    guard
+      let url = Bundle.module.url(
+        forResource: "MaterialIcons-Regular",
+        withExtension: "otf",
+        subdirectory: "MaterialIcons")
+        ?? Bundle.module.url(forResource: "MaterialIcons-Regular", withExtension: "otf")
+    else {
+      preconditionFailure("Missing bundled MaterialIcons-Regular.otf")
+    }
+    registerIconFont(url: url, name: "MaterialIcons-Regular.otf")
+  }()
 }
 
 private enum RufletCupertinoIconFont {
@@ -207,15 +198,19 @@ private enum RufletCupertinoIconFont {
     else {
       preconditionFailure("Missing bundled CupertinoIcons.ttf")
     }
-    var error: Unmanaged<CFError>?
-    let registered = CTFontManagerRegisterFontsForURL(url as CFURL, .process, &error)
-    if !registered,
-      let description = error?.takeRetainedValue().localizedDescription,
-      !description.localizedCaseInsensitiveContains("already")
-    {
-      preconditionFailure("Unable to register CupertinoIcons.ttf: \(description)")
-    }
+    registerIconFont(url: url, name: "CupertinoIcons.ttf")
   }()
+}
+
+private func registerIconFont(url: URL, name: String) {
+  var error: Unmanaged<CFError>?
+  let registered = CTFontManagerRegisterFontsForURL(url as CFURL, .process, &error)
+  if !registered,
+    let description = error?.takeRetainedValue().localizedDescription,
+    !description.localizedCaseInsensitiveContains("already")
+  {
+    preconditionFailure("Unable to register \(name): \(description)")
+  }
 }
 
 extension RufletAppleIconView {
@@ -224,7 +219,11 @@ extension RufletAppleIconView {
     size: CGFloat = 24,
     weight: Font.Weight = .regular
   ) -> RufletAppleIconView {
-    RufletCupertinoIconFont.register()
+    switch icon {
+    case .cupertinoGlyph: RufletCupertinoIconFont.register()
+    case .materialGlyph: RufletMaterialIconFont.register()
+    case .systemSymbol: break
+    }
     return RufletAppleIconView(icon: icon, size: size, weight: weight)
   }
 }
