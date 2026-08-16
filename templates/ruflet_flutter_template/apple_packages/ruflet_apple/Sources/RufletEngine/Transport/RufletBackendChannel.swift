@@ -35,7 +35,7 @@ public enum RufletBackendChannelFactory {
         onMessage: onMessage)
     }
     switch address.scheme?.lowercased() {
-    case "http", "https", "ws", "wss":
+    case "http", "https":
       return try RufletWebSocketBackendChannel(
         address: address,
         onDisconnect: onDisconnect,
@@ -45,13 +45,18 @@ public enum RufletBackendChannelFactory {
         address: address,
         onDisconnect: onDisconnect,
         onMessage: onMessage)
-    case nil:
-      return try RufletSocketBackendChannel(
-        unixDomainSocketPath: address.path,
+    case nil where address.absoluteString == "mock":
+      return RufletMockBackendChannel(
         onDisconnect: onDisconnect,
         onMessage: onMessage)
     default:
-      throw RufletTransportError.unsupportedAddress(address.absoluteString)
+      // Pinned Flet treats every remaining address as a Unix-domain socket
+      // path. Preserve the original text; schemes such as `ws://` and
+      // `ftp://` are not special cases in its non-web factory.
+      return try RufletSocketBackendChannel(
+        unixDomainSocketPath: address.absoluteString,
+        onDisconnect: onDisconnect,
+        onMessage: onMessage)
     }
   }
 }
@@ -80,6 +85,77 @@ public final class RufletJavaScriptBackendChannel: RufletBackendChannel {
   public func connect() async throws {}
   public func send(_: RufletMessage) throws {}
   public func disconnect() {}
+}
+
+/// Apple/non-web counterpart of pinned Flet's deterministic mock channel.
+/// Its deliberately legacy-shaped payloads are copied from the upstream mock;
+/// this channel exists for transport parity and is not used by release hosts.
+@MainActor
+public final class RufletMockBackendChannel: RufletBackendChannel {
+  public let isLocalConnection = true
+  public let defaultReconnectIntervalMilliseconds = 500
+
+  private let onDisconnect: () -> Void
+  private let onMessage: (RufletMessage) -> Void
+  private var scenarioTask: Task<Void, Never>?
+
+  public init(
+    onDisconnect: @escaping () -> Void,
+    onMessage: @escaping (RufletMessage) -> Void
+  ) {
+    self.onDisconnect = onDisconnect
+    self.onMessage = onMessage
+  }
+
+  public func connect() async throws {
+    try await Task<Never, Never>.sleep(nanoseconds: 1_000_000_000)
+    onMessage(RufletMessage(action: .registerClient, payload: Self.registrationPayload))
+    scenarioTask = Task { [weak self] in
+      try? await Task<Never, Never>.sleep(nanoseconds: 3_000_000_000)
+      guard !Task.isCancelled, let self else { return }
+      self.onMessage(RufletMessage(
+        action: .patchControl,
+        payload: ["id": 2, "patch": ["width": 300, "height": 300]]))
+    }
+  }
+
+  public func send(_: RufletMessage) throws {}
+
+  public func disconnect() {
+    scenarioTask?.cancel()
+    scenarioTask = nil
+  }
+
+  private static let registrationPayload: RufletValue = [
+    "id": 1,
+    "patch": [
+      "show_semantics_debugger": false,
+      "theme_mode": "system",
+      "fonts": [
+        "Kanit": "https://raw.githubusercontent.com/google/fonts/master/ofl/kanit/Kanit-Bold.ttf",
+        "Open Sans": "/fonts/OpenSans-Regular.ttf",
+      ],
+      "offstage": [
+        "_c": "Offstage", "_i": 8,
+        "controls": [["_c": "Text", "_i": 20, "text": "OFF1"]],
+      ],
+      "_services": ["_c": "ServiceRegistry", "_i": 10, "services": []],
+      "views": [[
+        "_c": "View", "_i": 20, "route": "/",
+        "controls": [
+          ["_c": "Text", "_i": 3, "text": "Hello, world"],
+          ["_c": "Text", "_i": 4, "text": "Second line"],
+          [
+            "_c": "Row", "_i": 5,
+            "controls": [
+              ["_c": "Text", "_i": 6, "text": "1st in Row"],
+              ["_c": "Text", "_i": 7, "text": "2nd in Row"],
+            ],
+          ],
+        ],
+      ]],
+    ],
+  ]
 }
 
 public enum RufletTransportError: Error, Equatable {

@@ -409,18 +409,12 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
     let failure: String?
     if let control = control(id: request.controlID) {
       do {
-        result = try await withThrowingTaskGroup(of: RufletValue.self) { group in
-          group.addTask {
-            try await control.invokeMethod(request.name, arguments: request.arguments)
-          }
-          group.addTask {
-            try await Task<Never, Never>.sleep(nanoseconds: request.timeoutNanoseconds)
-            throw RufletBackendError.methodTimedOut(request.name)
-          }
-          let value = try await group.next()!
-          group.cancelAll()
-          return value
-        }
+        // Pinned Flet parses and carries the request timeout but its
+        // Control.invokeMethod implementation waits for listeners and invokes
+        // them without applying that Duration. Preserve that observable
+        // behavior, including a zero or negative timeout.
+        result = try await control.invokeMethod(
+          request.name, arguments: request.arguments)
         failure = nil
       } catch {
         result = .null
@@ -496,10 +490,6 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
 private final class WeakControl {
   weak var value: RufletControl?
   init(_ value: RufletControl) { self.value = value }
-}
-
-public enum RufletBackendError: Error, Equatable {
-  case methodTimedOut(String)
 }
 
 private var rufletApplePlatformName: String {

@@ -25,7 +25,7 @@ final class MessagePackTests: XCTestCase {
       .binary(Data([0, 1, 2, 255])),
       [1, "two", false],
       ["nested": ["value": 7]],
-      .extensionValue(type: 7, payload: Data([1, 2, 3, 4])),
+      .extensionValue(type: 1, payload: Data("2026-08-15T12:00:00+00:00".utf8)),
     ]
 
     for value in values {
@@ -111,6 +111,12 @@ final class MessagePackTests: XCTestCase {
     let text = String(decoding: payload, as: UTF8.self)
     XCTAssertTrue(text.hasSuffix("+00:00"))
     XCTAssertFalse(text.hasSuffix("Z"))
+  }
+
+  func testUnknownExtensionDecodesAsNullLikePinnedFletDecoder() throws {
+    let encoded = RufletMessagePack.encode(
+      .extensionValue(type: 7, payload: Data([1, 2, 3, 4])))
+    XCTAssertEqual(try RufletMessagePack.decode(encoded), .null)
   }
 
   func testStreamingDecoderRetainsIncompleteTrailingValue() throws {

@@ -1,0 +1,783 @@
+{
+  "report_version": 1,
+  "contract_version": 1,
+  "source": {
+    "flet_version": "0.80.5",
+    "git_ref": "67a9763da3bd2611bbb7626c3a1ec5e9d30fc965",
+    "vendored_root": "flet_packages/flet/lib/src",
+    "sha256": "bc6525b6213442c9cdcaaaf2ee41b066021e5e21f69c1bc08bdd2a36864dc71c"
+  },
+  "summary": {
+    "message_actions": 6,
+    "body_fields": 34,
+    "patch_operations": 4,
+    "message_pack_markers": 31,
+    "transports": 5,
+    "rows": 95,
+    "matched_rows": 95,
+    "unmatched_rows": 0
+  },
+  "unmatched": [],
+  "rows": [
+    {
+      "category": "message_action",
+      "name": "registerClient",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/Message.swift: case registerClient = 1"
+      ]
+    },
+    {
+      "category": "message_action",
+      "name": "patchControl",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/Message.swift: case patchControl = 2"
+      ]
+    },
+    {
+      "category": "message_action",
+      "name": "controlEvent",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/Message.swift: case controlEvent = 3"
+      ]
+    },
+    {
+      "category": "message_action",
+      "name": "updateControl",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/Message.swift: case updateControl = 4"
+      ]
+    },
+    {
+      "category": "message_action",
+      "name": "invokeControlMethod",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/Message.swift: case invokeControlMethod = 5"
+      ]
+    },
+    {
+      "category": "message_action",
+      "name": "sessionCrashed",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/Message.swift: case sessionCrashed = 6"
+      ]
+    },
+    {
+      "category": "message_shape",
+      "name": "minimum_list_items",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/Message.swift: list.count >= 2"
+      ]
+    },
+    {
+      "category": "message_shape",
+      "name": "action_index",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/Message.swift: list[0]"
+      ]
+    },
+    {
+      "category": "message_shape",
+      "name": "payload_index",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/Message.swift: list[1]"
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "ControlEventBody.target",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/ControlEventBody.swift: \"target\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "ControlEventBody.name",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/ControlEventBody.swift: \"name\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "ControlEventBody.data",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/ControlEventBody.swift: \"data\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "InvokeMethodRequestBody.controlId",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/InvokeMethodRequestBody.swift: \"control_id\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "InvokeMethodRequestBody.callId",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/InvokeMethodRequestBody.swift: \"call_id\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "InvokeMethodRequestBody.name",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/InvokeMethodRequestBody.swift: \"name\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "InvokeMethodRequestBody.args",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/InvokeMethodRequestBody.swift: \"args\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "InvokeMethodRequestBody.timeout",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/InvokeMethodRequestBody.swift: \"timeout\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "InvokeMethodResponseBody.controlId",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/InvokeMethodResponseBody.swift: \"control_id\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "InvokeMethodResponseBody.callId",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/InvokeMethodResponseBody.swift: \"call_id\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "InvokeMethodResponseBody.result",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/InvokeMethodResponseBody.swift: \"result\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "InvokeMethodResponseBody.error",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/InvokeMethodResponseBody.swift: \"error\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "PaddingData.top",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/PageMediaData.swift: \"top\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "PaddingData.right",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/PageMediaData.swift: \"right\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "PaddingData.bottom",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/PageMediaData.swift: \"bottom\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "PaddingData.left",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/PageMediaData.swift: \"left\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "PageMediaData.padding",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/PageMediaData.swift: \"padding\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "PageMediaData.viewPadding",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/PageMediaData.swift: \"view_padding\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "PageMediaData.viewInsets",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/PageMediaData.swift: \"view_insets\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "PageMediaData.devicePixelRatio",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/PageMediaData.swift: \"device_pixel_ratio\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "PageMediaData.orientation",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/PageMediaData.swift: \"orientation\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "PageMediaData.alwaysUse24HourFormat",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/PageMediaData.swift: \"always_use_24_hour_format\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "PatchControlRequestBody.id",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/PatchControlRequestBody.swift: \"id\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "PatchControlRequestBody.patch",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/PatchControlRequestBody.swift: \"patch\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "RegisterClientRequestBody.sessionId",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/RegisterClientBody.swift: \"session_id\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "RegisterClientRequestBody.pageName",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/RegisterClientBody.swift: \"page_name\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "RegisterClientRequestBody.page",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/RegisterClientBody.swift: \"page\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "RegisterClientResponseBody.sessionId",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/RegisterClientBody.swift: \"session_id\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "RegisterClientResponseBody.patch",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/RegisterClientBody.swift: \"page_patch\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "RegisterClientResponseBody.error",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/RegisterClientBody.swift: \"error\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "SessionCrashedBody.message",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/SessionBodies.swift: \"message\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "SessionPayload.id",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/SessionBodies.swift: public let id: String"
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "UpdateControlBody.id",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/UpdateControlBody.swift: \"id\""
+      ]
+    },
+    {
+      "category": "body_field",
+      "name": "UpdateControlBody.props",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/UpdateControlBody.swift: \"props\""
+      ]
+    },
+    {
+      "category": "body_default",
+      "name": "InvokeMethodRequestBody.timeout",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/InvokeMethodRequestBody.swift: timeoutSeconds = 10"
+      ]
+    },
+    {
+      "category": "invoke_semantics",
+      "name": "timeout_parsed_not_enforced",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletEngine/RufletBackend.swift: direct control.invokeMethod without timeout race"
+      ]
+    },
+    {
+      "category": "patch_operation",
+      "name": "replace",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletEngine/Models/control.swift: case replace = 0"
+      ]
+    },
+    {
+      "category": "patch_operation",
+      "name": "add",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletEngine/Models/control.swift: case add = 1"
+      ]
+    },
+    {
+      "category": "patch_operation",
+      "name": "remove",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletEngine/Models/control.swift: case remove = 2"
+      ]
+    },
+    {
+      "category": "patch_operation",
+      "name": "move",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletEngine/Models/control.swift: case move = 3"
+      ]
+    },
+    {
+      "category": "patch_semantics",
+      "name": "minimum_items",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletEngine/Models/control.swift: patch.count >= 2"
+      ]
+    },
+    {
+      "category": "patch_semantics",
+      "name": "tree_path_index",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletEngine/Models/control.swift: buildPatchPaths(patch[0]"
+      ]
+    },
+    {
+      "category": "patch_semantics",
+      "name": "replace_visible_parent_notification",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletEngine/Models/control.swift: operation[2].text == \"visible\""
+      ]
+    },
+    {
+      "category": "patch_semantics",
+      "name": "move_distinct_owner_notification",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletEngine/Models/control.swift: sourceOwner !== destinationOwner"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xc0",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xc0"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xc2",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xc2"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xc3",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xc3"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xc4",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xc4"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xc5",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xc5"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xc6",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xc6"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xc7",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xc7"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xc8",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xc8"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xc9",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xc9"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xca",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xca"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xcb",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xcb"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xcc",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xcc"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xcd",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xcd"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xce",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xce"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xcf",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xcf"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xd0",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xd0"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xd1",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xd1"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xd2",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xd2"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xd3",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xd3"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xd4",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xd4"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xd5",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xd5"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xd6",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xd6"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xd7",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xd7"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xd8",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xd8"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xd9",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xd9"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xda",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xda"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xdb",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xdb"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xdc",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xdc"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xdd",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xdd"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xde",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xde"
+      ]
+    },
+    {
+      "category": "message_pack_marker",
+      "name": "0xdf",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: case 0xdf"
+      ]
+    },
+    {
+      "category": "message_pack_semantics",
+      "name": "streaming_tail",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: reader.offset = start"
+      ]
+    },
+    {
+      "category": "message_pack_semantics",
+      "name": "integer_map_keys",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: hasIntegerKey"
+      ]
+    },
+    {
+      "category": "message_pack_semantics",
+      "name": "date_extension",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: temporalDate"
+      ]
+    },
+    {
+      "category": "message_pack_semantics",
+      "name": "time_extension",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: temporalTime"
+      ]
+    },
+    {
+      "category": "message_pack_semantics",
+      "name": "duration_extension",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: temporalDuration"
+      ]
+    },
+    {
+      "category": "message_pack_semantics",
+      "name": "unknown_extension_decode",
+      "status": "matched",
+      "evidence": [
+        "Sources/RufletProtocol/Protocol/MessagePack.swift: guard (1...3).contains(type) else { return .null }"
+      ]
+    },
+    {
+      "category": "transport",
+      "name": "javascript_io",
+      "status": "matched",
+      "evidence": [
+        "RufletJavaScriptBackendChannel"
+      ]
+    },
+    {
+      "category": "transport",
+      "name": "web_socket",
+      "status": "matched",
+      "evidence": [
+        "RufletWebSocketBackendChannel"
+      ]
+    },
+    {
+      "category": "transport",
+      "name": "mock",
+      "status": "matched",
+      "evidence": [
+        "RufletMockBackendChannel"
+      ]
+    },
+    {
+      "category": "transport",
+      "name": "socket_tcp",
+      "status": "matched",
+      "evidence": [
+        "NWConnection(host:"
+      ]
+    },
+    {
+      "category": "transport",
+      "name": "socket_unix",
+      "status": "matched",
+      "evidence": [
+        ".unix(path:"
+      ]
+    }
+  ]
+}

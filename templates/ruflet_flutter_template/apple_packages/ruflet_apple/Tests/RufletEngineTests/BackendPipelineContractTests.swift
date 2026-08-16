@@ -125,6 +125,44 @@ final class BackendPipelineContractTests: XCTestCase {
     XCTAssertEqual(fixture.channels[1].connectCount, 1)
     XCTAssertEqual(fixture.channels[1].sentMessages.first?.action, .registerClient)
   }
+
+  func testInvokeTimeoutIsParsedButNotEnforcedLikePinnedFlet() async throws {
+    let fixture = BackendPipelineFixture()
+    let backend = fixture.makeBackend()
+    backend.updatePageSize(CGSize(width: 390, height: 844))
+    backend.onRouteUpdated("/")
+    try await waitUntil { fixture.channel?.sentMessages.first?.action == .registerClient }
+    fixture.channel?.deliver(RufletMessage(
+      action: .registerClient,
+      payload: ["page_patch": [:], "error": nil]))
+    fixture.channel?.sentMessages.removeAll()
+
+    let token = backend.page.addInvokeMethodListener { name, arguments in
+      XCTAssertEqual(name, "pinned_timeout")
+      XCTAssertEqual(arguments, ["value": 7])
+      await Task.yield()
+      return "completed"
+    }
+    defer { backend.page.removeInvokeMethodListener(token) }
+
+    fixture.channel?.deliver(RufletMessage(
+      action: .invokeControlMethod,
+      payload: [
+        "control_id": 1,
+        "call_id": "call-zero-timeout",
+        "name": "pinned_timeout",
+        "args": ["value": 7],
+        "timeout": 0,
+      ]))
+
+    try await waitUntil {
+      fixture.channel?.sentMessages.contains { $0.action == .invokeControlMethod } == true
+    }
+    let response = try XCTUnwrap(fixture.channel?.sentMessages.last)
+    XCTAssertEqual(response.payload["call_id"], "call-zero-timeout")
+    XCTAssertEqual(response.payload["result"], "completed")
+    XCTAssertEqual(response.payload["error"], .null)
+  }
 }
 
 @MainActor

@@ -222,7 +222,12 @@ public enum RufletMessagePack {
     }
 
     mutating func extensionValue(_ count: Int) throws -> RufletValue {
-      .extensionValue(type: Int8(bitPattern: try byte()), payload: try bytes(count))
+      let type = Int8(bitPattern: try byte())
+      let payload = try bytes(count)
+      // FletMsgpackDecoder recognizes temporal extensions 1...3 and returns
+      // null for every other extension type on non-web clients.
+      guard (1...3).contains(type) else { return .null }
+      return .extensionValue(type: type, payload: payload)
     }
   }
 }

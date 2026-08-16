@@ -99,15 +99,26 @@ final class TransportContractTests: XCTestCase {
     channel.disconnect()
   }
 
-  func testFactoryRejectsNonAppleRendererTransportSchemes() {
-    XCTAssertThrowsError(try RufletBackendChannelFactory.make(
+  func testFactoryMatchesPinnedFallbackToUnixSocketForEveryOtherAddress() throws {
+    let channel = try RufletBackendChannelFactory.make(
       address: URL(string: "ftp://example.com/app")!,
       onDisconnect: {},
-      onMessage: { _ in })) {
-      XCTAssertEqual(
-        $0 as? RufletTransportError,
-        .unsupportedAddress("ftp://example.com/app"))
-    }
+      onMessage: { _ in })
+    XCTAssertTrue(channel is RufletSocketBackendChannel)
+    XCTAssertTrue(channel.isLocalConnection)
+    XCTAssertEqual(channel.defaultReconnectIntervalMilliseconds, 200)
+    channel.disconnect()
+  }
+
+  func testFactorySelectsPinnedMockChannel() throws {
+    let channel = try RufletBackendChannelFactory.make(
+      address: URL(string: "mock")!,
+      onDisconnect: {},
+      onMessage: { _ in })
+    XCTAssertTrue(channel is RufletMockBackendChannel)
+    XCTAssertTrue(channel.isLocalConnection)
+    XCTAssertEqual(channel.defaultReconnectIntervalMilliseconds, 500)
+    channel.disconnect()
   }
 
   func testTransportFrameIsThePinnedActionPayloadPair() throws {
