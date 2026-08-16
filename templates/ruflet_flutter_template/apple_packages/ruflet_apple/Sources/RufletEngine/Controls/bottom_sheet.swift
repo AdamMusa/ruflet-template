@@ -22,28 +22,30 @@ struct RufletAppleSheetPresenter: View {
   @ObservedObject var control: RufletControl
   let kind: Kind
   @State private var presented = false
-  @State private var closedByControl = false
+  @State private var dragOffset: CGFloat = 0
 
   var body: some View {
-    #if os(iOS)
-    Group {
-      if fullscreen && kind == .standard {
-        anchor.fullScreenCover(isPresented: $presented, onDismiss: dismissed) { sheetContent }
-      } else {
-        anchor.sheet(isPresented: $presented, onDismiss: dismissed) { sheetContent }
+    ZStack(alignment: .bottom) {
+      Color.clear
+      if presented {
+        barrierColor
+          .ignoresSafeArea()
+          .contentShape(Rectangle())
+          .onTapGesture {
+            if dismissible { dismissFromUser() }
+          }
+          .transition(.opacity)
+        sheetContent
+          .offset(y: dragOffset)
+          .gesture(dragGesture)
+          .transition(.move(edge: .bottom))
+          .zIndex(1)
       }
     }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
     .onAppear(perform: synchronizePresentation)
     .onChange(of: control.properties) { _ in synchronizePresentation() }
-    #elseif os(macOS)
-    anchor
-      .sheet(isPresented: $presented, onDismiss: dismissed) { sheetContent }
-      .onAppear(perform: synchronizePresentation)
-      .onChange(of: control.properties) { _ in synchronizePresentation() }
-    #endif
   }
-
-  private var anchor: some View { Color.clear.frame(width: 0, height: 0) }
 
   @ViewBuilder
   private var sheetContent: some View {
@@ -60,8 +62,12 @@ struct RufletAppleSheetPresenter: View {
     .frame(height: cupertinoPickerHeight)
     .frame(maxWidth: fullscreen ? .infinity : nil, maxHeight: fullscreen ? .infinity : nil)
     .padding(kind == .cupertino ? parsePadding(control.dynamicValue("padding")) ?? EdgeInsets() : EdgeInsets())
-    .background(parseColor(control.string("bgcolor")) ?? Color.rufletSystemBackground)
-    .clipShape(sheetShape)
+    .background(parseColor(control.string("bgcolor")) ?? Color.rufletSystemBackground, in: sheetShape)
+    .modifier(RufletSheetClip(behavior: control.string("clip_behavior", default: "none")!, shape: sheetShape))
+    .shadow(
+      color: .black.opacity(elevation > 0 ? 0.24 : 0),
+      radius: elevation,
+      y: -elevation / 3)
     .modifier(RufletSheetKeyboardInsets(
       maintains: kind == .cupertino || control.boolean("maintain_bottom_view_insets_padding", default: true)))
     .modifier(RufletSheetSafeArea(
@@ -83,19 +89,19 @@ struct RufletAppleSheetPresenter: View {
     let lastOpen = control.boolean("_open", default: false)
     if open, !lastOpen, !presented, control.child("content") != nil {
       control.updateProperties(["_open": .bool(true)], server: false)
-      closedByControl = false
-      presented = true
+      withAnimation(presentationAnimation) { presented = true }
     } else if !open, lastOpen, presented {
-      closedByControl = true
-      presented = false
+      dismissFromUser()
     }
   }
 
-  private func dismissed() {
+  private func dismissFromUser() {
+    guard presented else { return }
+    withAnimation(presentationAnimation) { presented = false }
+    dragOffset = 0
     control.updateProperties(["_open": .bool(false)], server: false)
     control.updateProperties(["open": .bool(false)])
     control.triggerEvent("dismiss")
-    closedByControl = false
   }
 
   private var fullscreen: Bool { control.boolean("fullscreen", default: false) }
@@ -106,6 +112,36 @@ struct RufletAppleSheetPresenter: View {
     kind == .cupertino
       ? !control.boolean("modal", default: false)
       : control.boolean("dismissible", default: true)
+  }
+  private var draggable: Bool {
+    kind == .standard && control.boolean("draggable", default: false)
+  }
+  private var barrierColor: Color {
+    kind == .standard
+      ? parseColor(control.string("barrier_color"), .black.opacity(0.54))!
+      : .black.opacity(0.54)
+  }
+  private var elevation: CGFloat {
+    CGFloat(max(kind == .standard ? control.number("elevation", default: 0) ?? 0 : 0, 0))
+  }
+  private var presentationAnimation: Animation {
+    parseAnimation(control.dynamicValue("animation_style"))?.animation
+      ?? .easeOut(duration: 0.25)
+  }
+  private var dragGesture: some Gesture {
+    DragGesture(minimumDistance: draggable ? 4 : .greatestFiniteMagnitude)
+      .onChanged { value in
+        guard draggable else { return }
+        dragOffset = max(value.translation.height, 0)
+      }
+      .onEnded { value in
+        guard draggable else { return }
+        if value.translation.height > 80 || value.predictedEndTranslation.height > 140 {
+          dismissFromUser()
+        } else {
+          withAnimation(presentationAnimation) { dragOffset = 0 }
+        }
+      }
   }
   private var sheetShape: RufletCornerShape {
     let details = rufletDictionary(control.dynamicValue("shape"))
@@ -126,6 +162,20 @@ struct RufletAppleSheetPresenter: View {
           ["CupertinoPicker", "CupertinoTimerPicker", "CupertinoDatePicker"].contains(content.type)
     else { return nil }
     return CGFloat(control.number("height", default: 220) ?? 220)
+  }
+}
+
+private struct RufletSheetClip: ViewModifier {
+  let behavior: String
+  let shape: RufletCornerShape
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if behavior.lowercased() == "none" {
+      content
+    } else {
+      content.clipShape(shape)
+    }
   }
 }
 
