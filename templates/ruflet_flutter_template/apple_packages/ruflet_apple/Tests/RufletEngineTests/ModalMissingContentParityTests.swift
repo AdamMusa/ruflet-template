@@ -91,4 +91,16 @@ final class ModalMissingContentParityTests: XCTestCase {
           hasContent: true))
     }
   }
+
+  func testAlreadyOpenModalRehydratesAfterNativeViewRecreation() {
+    for kind in RufletModalKind.allCases {
+      XCTAssertTrue(
+        rufletModalShouldPresent(
+          kind: kind,
+          open: true,
+          lastOpen: true,
+          presented: false,
+          hasContent: true))
+    }
+  }
 }

@@ -23,6 +23,29 @@ final class NativePresentationPrimitiveTests: XCTestCase {
     XCTAssertEqual(RufletShimmerDirection.allCases.map(\.rawValue), ["ltr", "rtl", "ttb", "btt"])
   }
 
+  func testEveryInitiallyHiddenModalHasANonInteractiveLifecycleAnchor() throws {
+    let packageRoot = URL(fileURLWithPath: #filePath)
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+    for file in [
+      "alert_dialog.swift",
+      "bottom_sheet.swift",
+      "date_picker.swift",
+      "time_picker.swift",
+      "date_range_picker.swift",
+    ] {
+      let source = try String(
+        contentsOf: packageRoot
+          .appendingPathComponent("Sources/RufletEngine/Controls")
+          .appendingPathComponent(file),
+        encoding: .utf8)
+      XCTAssertTrue(
+        source.contains("RufletPresentationLifecycleAnchor()"),
+        "\(file) can miss its opening edge when its initial body is empty")
+    }
+  }
+
   private func properties(for type: String) -> [String: RufletValue] {
     switch type {
     case "CupertinoActivityIndicator": return [:]

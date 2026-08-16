@@ -10,6 +10,9 @@ public struct PageControl: View {
   @Environment(\.rufletThemeMode) private var inheritedThemeMode
   @State private var invokeToken: UUID?
   @State private var controlListener: UUID?
+  @State private var overlayListener: UUID?
+  @State private var dialogsListener: UUID?
+  @State private var topLayersRevision = 0
   @State private var pendingPoppedRoutes: Set<String> = []
   @State private var sentPoppedRoutes: Set<String> = []
   @State private var previousLocales: [String] = []
@@ -66,23 +69,34 @@ public struct PageControl: View {
   @ViewBuilder
   private var pageStack: some View {
     let views = effectiveViews
-    if views.isEmpty {
-      ZStack {
+    ZStack {
+      if views.isEmpty {
         Color.clear
+      } else {
+        RufletPageNavigator(
+          page: control,
+          views: views,
+          locale: localeConfiguration.locale ?? environmentLocale,
+          layoutDirection: control.boolean("rtl", default: false) ? .rightToLeft : .leftToRight,
+          themeMode: themeMode,
+          theme: activePageTheme,
+          design: pageDesign,
+          tint: pageTint,
+          onRequestPop: markPoppedView,
+          onDidRemove: markPoppedView)
+      }
+
+      if let overlay = control.child("_overlay", visibleOnly: false),
+        let dialogs = control.child("_dialogs", visibleOnly: false)
+      {
+        RufletPageTopLayers(
+          page: control,
+          overlay: overlay,
+          dialogs: dialogs,
+          revision: topLayersRevision)
+      } else {
         RufletPageMedia(control: control)
       }
-    } else {
-      RufletPageNavigator(
-        page: control,
-        views: views,
-        locale: localeConfiguration.locale ?? environmentLocale,
-        layoutDirection: control.boolean("rtl", default: false) ? .rightToLeft : .leftToRight,
-        themeMode: themeMode,
-        theme: activePageTheme,
-        design: pageDesign,
-        tint: pageTint,
-        onRequestPop: markPoppedView,
-        onDidRemove: markPoppedView)
     }
   }
 
@@ -97,6 +111,12 @@ public struct PageControl: View {
       try await invoke(name, arguments: arguments)
     }
     controlListener = control.addListener { controlUpdated() }
+    if let overlay = control.child("_overlay", visibleOnly: false) {
+      overlayListener = overlay.addListener { topLayersRevision &+= 1 }
+    }
+    if let dialogs = control.child("_dialogs", visibleOnly: false) {
+      dialogsListener = dialogs.addListener { topLayersRevision &+= 1 }
+    }
     RufletPagePopRegistry.register(page: control) { view in requestPop(view) }
     localeChanged()
     Task { await loadFontsIfNeeded() }
@@ -105,8 +125,20 @@ public struct PageControl: View {
   private func unmount() {
     if let invokeToken { control.removeInvokeMethodListener(invokeToken) }
     if let controlListener { control.removeListener(controlListener) }
+    if let overlayListener,
+      let overlay = control.child("_overlay", visibleOnly: false)
+    {
+      overlay.removeListener(overlayListener)
+    }
+    if let dialogsListener,
+      let dialogs = control.child("_dialogs", visibleOnly: false)
+    {
+      dialogs.removeListener(dialogsListener)
+    }
     invokeToken = nil
     controlListener = nil
+    overlayListener = nil
+    dialogsListener = nil
     RufletPageCaptureRegistry.unregister(backend: control.backend)
     RufletPagePopRegistry.unregister(page: control)
   }
@@ -287,6 +319,32 @@ public struct PageControl: View {
       adaptive: control.boolean("adaptive", default: false),
       platform: control.string("platform"),
       defaultPlatform: rufletDefaultTargetPlatform)
+  }
+}
+
+/// Page overlay and modal ownership sits above the native route navigator,
+/// matching Flet's single Overlay stack. Cached hidden route controllers must
+/// never mount or consume page dialogs.
+@MainActor
+private struct RufletPageTopLayers: View {
+  @ObservedObject var page: RufletControl
+  @ObservedObject var overlay: RufletControl
+  @ObservedObject var dialogs: RufletControl
+  let revision: Int
+
+  var body: some View {
+    let _ = revision
+    ZStack {
+      ForEach(overlay.children("controls")) { control in
+        ControlWidget(control: control)
+      }
+      ForEach(dialogs.children("controls")) { control in
+        ControlWidget(control: control)
+      }
+      RufletPageMedia(control: page)
+    }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .zIndex(100)
   }
 }
 

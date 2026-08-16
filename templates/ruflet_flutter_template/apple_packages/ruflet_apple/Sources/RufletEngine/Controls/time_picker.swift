@@ -14,7 +14,8 @@ public struct TimePickerControl: View {
   }
 
   public var body: some View {
-    Group {
+    ZStack {
+      RufletPresentationLifecycleAnchor()
       if presented {
         RufletPickerDialogLayer(
           barrierColor: presentation.barrierColor,
@@ -25,8 +26,8 @@ public struct TimePickerControl: View {
         }
       }
     }
-      .onAppear(perform: synchronizePresentation)
-      .onChange(of: control.properties) { _ in synchronizePresentation() }
+    .onAppear(perform: synchronizePresentation)
+    .onChange(of: control.properties) { _ in synchronizePresentation() }
   }
 
   private var pickerSheet: some View {

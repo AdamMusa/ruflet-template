@@ -28,7 +28,8 @@ struct RufletAppleDialogPresenter: View {
   }
 
   var body: some View {
-    Group {
+    ZStack {
+      RufletPresentationLifecycleAnchor()
       if let validationError {
         ErrorControl(validationError)
       } else if presented {

@@ -7,15 +7,11 @@ public struct ViewControl: View {
   @ObservedObject public var control: RufletControl
   @StateObject private var popState = RufletViewPopState()
   @State private var invokeToken: UUID?
-  @State private var overlayToken: UUID?
-  @State private var dialogsToken: UUID?
-  @State private var slotRevision = 0
   @State private var drawerPresented = false
   @State private var endDrawerPresented = false
   @State private var scrolledUnderAppBar = false
   @State private var bottomBarHeight = 0.0
   @State private var topBarHeight = 0.0
-  @Environment(\.rufletTopViewID) private var topViewID
   @Environment(\.rufletPageBackgroundColor) private var pageBackgroundColor
   @Environment(\.rufletPageDesign) private var pageDesign
 
@@ -80,10 +76,6 @@ public struct ViewControl: View {
               }
             }
         }
-      }
-
-      if isTopView {
-        topViewLayers
       }
 
       if let floating = control.child("floating_action_button") {
@@ -164,24 +156,6 @@ public struct ViewControl: View {
     }
   }
 
-  private var topViewLayers: some View {
-    // Reading the revision invalidates this builder when Page overlay/dialog
-    // membership changes. Do not use it as a SwiftUI identity: resetting the
-    // subtree after a dialog records `_open` discards its presented state and
-    // immediately removes the modal again.
-    let _ = slotRevision
-    return ZStack {
-      ForEach(page.child("_overlay", visibleOnly: false)?.children("controls") ?? []) { overlay in
-        ControlWidget(control: overlay)
-      }
-      ForEach(page.child("_dialogs", visibleOnly: false)?.children("controls") ?? []) { dialog in
-        ControlWidget(control: dialog)
-      }
-      RufletPageMedia(control: page)
-    }
-    .zIndex(20)
-  }
-
   @ViewBuilder
   private var drawerLayers: some View {
     if let drawer = control.child("drawer"), drawerPresented {
@@ -207,12 +181,6 @@ public struct ViewControl: View {
     invokeToken = control.addInvokeMethodListener { name, arguments in
       try await invoke(name, arguments: arguments)
     }
-    if let overlay = page.child("_overlay", visibleOnly: false) {
-      overlayToken = overlay.addListener { slotRevision &+= 1 }
-    }
-    if let dialogs = page.child("_dialogs", visibleOnly: false) {
-      dialogsToken = dialogs.addListener { slotRevision &+= 1 }
-    }
     RufletViewPopRegistry.register(control: control) {
       await popState.request(control: control)
     }
@@ -220,15 +188,7 @@ public struct ViewControl: View {
 
   private func unmount() {
     if let invokeToken { control.removeInvokeMethodListener(invokeToken) }
-    if let overlayToken, let overlay = page.child("_overlay", visibleOnly: false) {
-      overlay.removeListener(overlayToken)
-    }
-    if let dialogsToken, let dialogs = page.child("_dialogs", visibleOnly: false) {
-      dialogs.removeListener(dialogsToken)
-    }
     invokeToken = nil
-    overlayToken = nil
-    dialogsToken = nil
     popState.cancel()
     RufletViewPopRegistry.unregister(control: control)
   }
@@ -280,10 +240,6 @@ public struct ViewControl: View {
       preconditionFailure("ViewControl requires RufletBackend")
     }
     return backend
-  }
-
-  private var isTopView: Bool {
-    topViewID.map { $0 == control.id } ?? (page.children("views").last === control)
   }
 
   private var shouldShowLoading: Bool {

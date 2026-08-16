@@ -194,6 +194,56 @@ final class PatchProtocolParityTests: XCTestCase {
     XCTAssertEqual(rootNotifications, 0)
   }
 
+  func testDialogsControlsReplacementMaterializesTheLiveAlertDialogPatch() throws {
+    let backend = PatchProtocolBackend()
+    let dialogs = RufletControl(
+      id: 119,
+      type: "Dialogs",
+      properties: ["controls": .array([])],
+      backend: backend)
+
+    try dialogs.applyPatch([
+      .array([0]),
+      .array([
+        0, 0, "controls",
+        .array([
+          control(
+            id: 654,
+            type: "AlertDialog",
+            properties: [
+              "open": true,
+              "modal": true,
+              "title": control(id: 655, type: "Text", properties: ["value": "Hello"]),
+              "content": control(
+                id: 656,
+                type: "Text",
+                properties: ["value": "Hello from Ruflet"]),
+              "actions": .array([
+                control(
+                  id: 657,
+                  type: "TextButton",
+                  properties: [
+                    "content": control(
+                      id: 658,
+                      type: "Text",
+                      properties: ["value": "OK"]),
+                    "on_click": true,
+                  ])
+              ]),
+            ])
+        ]),
+      ]),
+    ])
+
+    let dialog = try XCTUnwrap(dialogs.children("controls").first)
+    XCTAssertEqual(dialog.type, "AlertDialog")
+    XCTAssertTrue(dialog.boolean("open", default: false))
+    XCTAssertTrue(dialog.boolean("modal", default: false))
+    XCTAssertEqual(dialog.child("title")?.string("value"), "Hello")
+    XCTAssertEqual(dialog.child("content")?.string("value"), "Hello from Ruflet")
+    XCTAssertEqual(dialog.children("actions").first?.child("content")?.string("value"), "OK")
+  }
+
   private func control(
     id: Int,
     type: String,

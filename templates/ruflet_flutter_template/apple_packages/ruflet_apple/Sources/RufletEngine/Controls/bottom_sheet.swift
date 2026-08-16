@@ -26,7 +26,7 @@ struct RufletAppleSheetPresenter: View {
 
   var body: some View {
     ZStack(alignment: .bottom) {
-      Color.clear
+      RufletPresentationLifecycleAnchor()
       if let validationError {
         ErrorControl(validationError)
       } else if presented {
@@ -230,7 +230,13 @@ func rufletModalShouldPresent(
   presented: Bool,
   hasContent: Bool
 ) -> Bool {
-  guard open, !lastOpen, !presented else { return false }
+  // `_open` records that the server-driven opening edge was consumed; it is
+  // not presentation state. SwiftUI may legitimately recreate the native
+  // presenter while Ruby still owns `open=true`, in which case the modal must
+  // rehydrate instead of disappearing. A native dismissal writes `open=false`
+  // synchronously, so this cannot reopen a dismissed modal.
+  _ = lastOpen
+  guard open, !presented else { return false }
   return hasContent || !kind.validatesBeforePresentation
 }
 

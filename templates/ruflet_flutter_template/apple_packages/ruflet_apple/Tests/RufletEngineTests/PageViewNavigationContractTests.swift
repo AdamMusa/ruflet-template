@@ -49,7 +49,7 @@ struct PageViewNavigationContractTests {
     #expect(decoded.customOffset == CGSize(width: 12, height: 34))
   }
 
-  @Test("Page uses the native navigator and View uses top-view environment ownership")
+  @Test("Page owns overlays once above the native navigator")
   func sourceOwnsNavigationAndOverlaySemantics() throws {
     let root = URL(fileURLWithPath: #filePath)
       .deletingLastPathComponent()
@@ -66,9 +66,13 @@ struct PageViewNavigationContractTests {
       encoding: .utf8)
 
     #expect(page.contains("RufletPageNavigator("))
+    #expect(page.contains("private struct RufletPageTopLayers"))
+    #expect(page.contains("@ObservedObject var dialogs: RufletControl"))
+    #expect(page.contains("dialogs.addListener { topLayersRevision &+= 1 }"))
+    #expect(page.contains("revision: topLayersRevision"))
     #expect(!page.contains(".transition(.opacity)"))
-    #expect(view.contains("@Environment(\\.rufletTopViewID)"))
-    #expect(view.contains("let _ = slotRevision"))
+    #expect(!view.contains("RufletPageMedia(control: page)"))
+    #expect(!view.contains("page.child(\"_dialogs\""))
     #expect(!view.contains(".id(slotRevision)"))
     #expect(navigator.contains("UINavigationController"))
     #expect(navigator.contains("fullscreen_dialog"))
