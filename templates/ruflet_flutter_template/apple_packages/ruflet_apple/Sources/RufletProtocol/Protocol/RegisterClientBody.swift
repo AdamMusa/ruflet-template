@@ -25,11 +25,25 @@ public struct RufletRegisterClientResponseBody: Equatable, Sendable {
 
   public init(value: RufletValue) throws {
     guard let map = value.map else { throw RufletProtocolError.invalidMessage }
-    self.sessionID = map["session_id"]?.text
+    if let sessionID = map["session_id"], !sessionID.isNull {
+      guard let text = sessionID.text else {
+        throw RufletProtocolError.invalidField("session_id")
+      }
+      self.sessionID = text
+    } else {
+      self.sessionID = nil
+    }
     guard let pagePatch = map["page_patch"]?.map else {
       throw RufletProtocolError.missingField("page_patch")
     }
     self.pagePatch = pagePatch
-    self.error = map["error"]?.text
+    if let error = map["error"], !error.isNull {
+      guard let text = error.text else {
+        throw RufletProtocolError.invalidField("error")
+      }
+      self.error = text
+    } else {
+      self.error = nil
+    }
   }
 }

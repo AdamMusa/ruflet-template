@@ -20,6 +20,9 @@ final class ProtocolBodyTests: XCTestCase {
       original.list,
       [.int(3), ["target": 42, "name": "click", "data": "payload"]])
     XCTAssertEqual(try RufletMessage(list: original.list), original)
+    XCTAssertEqual(
+      try RufletMessage(list: original.list + ["ignored-by-pinned-flet"]),
+      original)
     XCTAssertThrowsError(try RufletMessage(list: [.int(3)]))
     XCTAssertThrowsError(try RufletMessage(list: [.int(99), .null]))
   }
@@ -72,6 +75,14 @@ final class ProtocolBodyTests: XCTestCase {
     XCTAssertEqual(body.sessionID, "session-2")
     XCTAssertEqual(body.pagePatch, ["id": 1, "type": "Page"])
     XCTAssertNil(body.error)
+    XCTAssertThrowsError(try RufletRegisterClientResponseBody(
+      value: ["session_id": 7, "page_patch": [:], "error": nil])) {
+      XCTAssertEqual($0 as? RufletProtocolError, .invalidField("session_id"))
+    }
+    XCTAssertThrowsError(try RufletRegisterClientResponseBody(
+      value: ["session_id": nil, "page_patch": [:], "error": false])) {
+      XCTAssertEqual($0 as? RufletProtocolError, .invalidField("error"))
+    }
   }
 
   func testPatchControlRequestRequiresIDAndPatch() throws {
@@ -102,6 +113,16 @@ final class ProtocolBodyTests: XCTestCase {
     let timeout: TimeInterval = body.timeoutSeconds
     XCTAssertEqual(timeout, 10)
     XCTAssertEqual(body.timeoutNanoseconds, 10_000_000_000)
+    XCTAssertThrowsError(try RufletInvokeMethodRequestBody(
+      value: [
+        "control_id": 3,
+        "call_id": "call-1",
+        "name": "focus",
+        "args": nil,
+        "timeout": nil,
+      ])) {
+      XCTAssertEqual($0 as? RufletProtocolError, .invalidField("timeout"))
+    }
   }
 
   func testInvokeMethodResponseUsesPinnedKeysAndNullError() {

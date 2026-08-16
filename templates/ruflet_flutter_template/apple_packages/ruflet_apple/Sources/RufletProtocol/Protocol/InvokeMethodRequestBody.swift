@@ -29,7 +29,15 @@ public struct RufletInvokeMethodRequestBody: Equatable, Sendable {
     guard let name = map["name"]?.text else {
       throw RufletProtocolError.missingField("name")
     }
-    let timeoutSeconds = map["timeout"]?.integer ?? 10
+    let timeoutSeconds: Int
+    if let timeout = map["timeout"] {
+      guard let integer = timeout.integer else {
+        throw RufletProtocolError.invalidField("timeout")
+      }
+      timeoutSeconds = integer
+    } else {
+      timeoutSeconds = 10
+    }
     self.controlID = controlID
     self.callID = callID
     self.name = name

@@ -20,7 +20,9 @@ public struct RufletMessage: Equatable, Sendable {
   }
 
   public init(list: [RufletValue]) throws {
-    guard list.count == 2,
+    // Pinned Flet reads indexes 0 and 1 and ignores trailing list elements.
+    // Require the same minimum shape rather than a stricter Swift-only frame.
+    guard list.count >= 2,
           let rawAction = list[0].integer,
           let action = RufletMessageAction(rawValue: rawAction)
     else { throw RufletProtocolError.invalidMessage }
