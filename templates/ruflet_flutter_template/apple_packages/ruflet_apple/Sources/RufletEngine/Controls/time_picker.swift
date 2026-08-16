@@ -14,17 +14,13 @@ public struct TimePickerControl: View {
   }
 
   public var body: some View {
-    ZStack {
-      RufletPresentationLifecycleAnchor()
-      if presented {
-        RufletPickerDialogLayer(
-          barrierColor: presentation.barrierColor,
-          barrierDismissible: !presentation.modal,
-          onDismiss: { close(nil) }
-        ) {
-          pickerSheet
-        }
-      }
+    RufletPickerPresenter(
+      presented: $presented,
+      barrierColor: presentation.barrierColor,
+      modal: presentation.modal,
+      onDismiss: presentationDismissed
+    ) {
+      pickerSheet
     }
     .onAppear(perform: synchronizePresentation)
     .onChange(of: control.properties) { _ in synchronizePresentation() }
@@ -132,6 +128,11 @@ public struct TimePickerControl: View {
     if value != nil { control.triggerEvent("change", data: wire) }
     control.triggerEvent("dismiss", data: .bool(value == nil))
     presented = false
+  }
+
+  private func presentationDismissed() {
+    guard control.boolean("_open", default: false) else { return }
+    close(nil)
   }
 
   private func timeOfDay(from date: Date) -> RufletTimeOfDay {

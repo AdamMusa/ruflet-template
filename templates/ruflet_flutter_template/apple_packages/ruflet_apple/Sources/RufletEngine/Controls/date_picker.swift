@@ -19,17 +19,13 @@ public struct DatePickerControl: View {
   }
 
   public var body: some View {
-    ZStack {
-      RufletPresentationLifecycleAnchor()
-      if presented {
-        RufletPickerDialogLayer(
-          barrierColor: presentation.barrierColor,
-          barrierDismissible: !presentation.modal,
-          onDismiss: { close(nil) }
-        ) {
-          pickerSheet
-        }
-      }
+    RufletPickerPresenter(
+      presented: $presented,
+      barrierColor: presentation.barrierColor,
+      modal: presentation.modal,
+      onDismiss: presentationDismissed
+    ) {
+      pickerSheet
     }
     .onAppear(perform: synchronizePresentation)
     .onChange(of: control.properties) { _ in synchronizePresentation() }
@@ -160,6 +156,11 @@ public struct DatePickerControl: View {
     presented = false
   }
 
+  private func presentationDismissed() {
+    guard control.boolean("_open", default: false) else { return }
+    close(nil)
+  }
+
   private func validationMessage(presentation: RufletDatePickerPresentation) -> String? {
     guard entryMode == .input else { return nil }
     guard let parsed = rufletParsePickerDate(inputText, locale: presentation.locale) else {
@@ -249,10 +250,79 @@ struct RufletDatePickerPresentation {
   }
 }
 
-/// Shared Material-dialog presentation used by Flet's date, date-range and
-/// time pickers. Unlike SwiftUI's system sheet, this owns the complete modal
-/// barrier, matching `showDialog`'s `barrierColor` and `barrierDismissible`
-/// contract on every Apple deployment target.
+/// Presents picker content with the platform modal primitive. iOS uses a real
+/// UIKit-backed SwiftUI sheet; macOS retains Flet's centered dialog geometry.
+@MainActor
+struct RufletPickerPresenter<Content: View>: View {
+  @Binding var presented: Bool
+  let barrierColor: Color?
+  let modal: Bool
+  let onDismiss: () -> Void
+  let content: Content
+
+  init(
+    presented: Binding<Bool>,
+    barrierColor: Color?,
+    modal: Bool,
+    onDismiss: @escaping () -> Void,
+    @ViewBuilder content: () -> Content
+  ) {
+    _presented = presented
+    self.barrierColor = barrierColor
+    self.modal = modal
+    self.onDismiss = onDismiss
+    self.content = content()
+  }
+
+  var body: some View {
+    #if os(iOS)
+      RufletPresentationLifecycleAnchor()
+        .sheet(isPresented: $presented, onDismiss: onDismiss) {
+          RufletNativePickerSheet(modal: modal) { content }
+        }
+    #else
+      ZStack {
+        RufletPresentationLifecycleAnchor()
+        if presented {
+          RufletPickerDialogLayer(
+            barrierColor: barrierColor,
+            barrierDismissible: !modal,
+            onDismiss: onDismiss
+          ) {
+            content
+          }
+        }
+      }
+    #endif
+  }
+}
+
+#if os(iOS)
+  @MainActor
+  private struct RufletNativePickerSheet<Content: View>: View {
+    let modal: Bool
+    let content: Content
+
+    init(modal: Bool, @ViewBuilder content: () -> Content) {
+      self.modal = modal
+      self.content = content()
+    }
+
+    @ViewBuilder
+    var body: some View {
+      if #available(iOS 16.0, *) {
+        content
+          .presentationDetents([.medium, .large])
+          .presentationDragIndicator(.visible)
+          .interactiveDismissDisabled(modal)
+      } else {
+        content.interactiveDismissDisabled(modal)
+      }
+    }
+  }
+#endif
+
+/// Centered desktop dialog used for picker controls on macOS.
 @MainActor
 struct RufletPickerDialogLayer<Content: View>: View {
   let barrierColor: Color?

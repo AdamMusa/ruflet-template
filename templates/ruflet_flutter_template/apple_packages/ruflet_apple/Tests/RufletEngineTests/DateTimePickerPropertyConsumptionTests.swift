@@ -93,6 +93,11 @@ final class DateTimePickerPropertyConsumptionTests: XCTestCase {
     }
   }
 
+  func testStandardDialogsUseCupertinoPresentationOnIOS() {
+    XCTAssertEqual(rufletAlertDialogStyle(isIOS: true), .cupertino)
+    XCTAssertEqual(rufletAlertDialogStyle(isIOS: false), .standard)
+  }
+
   func testTimePickerConsumesPinnedLabelsOrientationHourFormatAndIcons() {
     let fixture = makeControl(
       type: "TimePicker",

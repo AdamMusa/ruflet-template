@@ -17,17 +17,13 @@ public struct DateRangePickerControl: View {
   }
 
   public var body: some View {
-    ZStack {
-      RufletPresentationLifecycleAnchor()
-      if presented {
-        RufletPickerDialogLayer(
-          barrierColor: presentation.barrierColor,
-          barrierDismissible: !presentation.modal,
-          onDismiss: { close(nil) }
-        ) {
-          pickerSheet
-        }
-      }
+    RufletPickerPresenter(
+      presented: $presented,
+      barrierColor: presentation.barrierColor,
+      modal: presentation.modal,
+      onDismiss: presentationDismissed
+    ) {
+      pickerSheet
     }
     .onAppear(perform: synchronizePresentation)
     .onChange(of: control.properties) { _ in synchronizePresentation() }
@@ -40,24 +36,7 @@ public struct DateRangePickerControl: View {
         if let helpText = presentation.helpText {
           Text(helpText).font(.headline).frame(maxWidth: .infinity, alignment: .leading)
         }
-        HStack(alignment: .top, spacing: 12) {
-          pickerColumn(
-            isStart: true,
-            title: presentation.fieldStartLabelText ?? "Start date",
-            hint: presentation.fieldStartHintText,
-            date: draftStart,
-            minimum: presentation.minimumDate,
-            maximum: min(draftEnd, presentation.maximumDate),
-            changed: startChanged)
-          pickerColumn(
-            isStart: false,
-            title: presentation.fieldEndLabelText ?? "End date",
-            hint: presentation.fieldEndHintText,
-            date: draftEnd,
-            minimum: max(draftStart, presentation.minimumDate),
-            maximum: presentation.maximumDate,
-            changed: endChanged)
-        }
+        pickerColumns(presentation: presentation)
         if let validationMessage = validationMessage(presentation: presentation) {
           Text(validationMessage).font(.caption).foregroundStyle(.red)
         }
@@ -82,6 +61,38 @@ public struct DateRangePickerControl: View {
           }
           .disabled(validationMessage(presentation: presentation) != nil)
         }
+      }
+    }
+  }
+
+  @ViewBuilder
+  private func pickerColumns(presentation: RufletDateRangePickerPresentation) -> some View {
+    let start = pickerColumn(
+      isStart: true,
+      title: presentation.fieldStartLabelText ?? "Start date",
+      hint: presentation.fieldStartHintText,
+      date: draftStart,
+      minimum: presentation.minimumDate,
+      maximum: min(draftEnd, presentation.maximumDate),
+      changed: startChanged)
+    let end = pickerColumn(
+      isStart: false,
+      title: presentation.fieldEndLabelText ?? "End date",
+      hint: presentation.fieldEndHintText,
+      date: draftEnd,
+      minimum: max(draftStart, presentation.minimumDate),
+      maximum: presentation.maximumDate,
+      changed: endChanged)
+    if rufletIsIOS {
+      VStack(alignment: .leading, spacing: 16) {
+        start
+        Divider()
+        end
+      }
+    } else {
+      HStack(alignment: .top, spacing: 12) {
+        start
+        end
       }
     }
   }
@@ -181,6 +192,11 @@ public struct DateRangePickerControl: View {
     }
     control.triggerEvent("dismiss", data: .bool(range == nil))
     presented = false
+  }
+
+  private func presentationDismissed() {
+    guard control.boolean("_open", default: false) else { return }
+    close(nil)
   }
 
   private func confirmLabel(presentation: RufletDateRangePickerPresentation) -> String {

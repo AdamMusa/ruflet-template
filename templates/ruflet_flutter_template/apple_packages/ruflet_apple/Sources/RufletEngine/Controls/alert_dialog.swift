@@ -11,13 +11,19 @@ public struct AlertDialogControl: View {
   }
 
   public var body: some View {
-    RufletAppleDialogPresenter(control: control, style: .standard)
+    RufletAppleDialogPresenter(
+      control: control,
+      style: rufletAlertDialogStyle(isIOS: rufletIsIOS))
   }
+}
+
+func rufletAlertDialogStyle(isIOS: Bool) -> RufletAppleDialogPresenter.Style {
+  isIOS ? .cupertino : .standard
 }
 
 @MainActor
 struct RufletAppleDialogPresenter: View {
-  enum Style { case standard, cupertino }
+  enum Style: Equatable { case standard, cupertino }
 
   @ObservedObject var control: RufletControl
   let style: Style
@@ -67,8 +73,8 @@ struct RufletAppleDialogPresenter: View {
       actionArea
     }
     .padding(style == .cupertino ? EdgeInsets() : dialogPadding)
-    .frame(maxWidth: style == .cupertino ? 320 : 560)
-    .background(parseColor(control.string("bgcolor")) ?? Color.rufletSystemBackground)
+    .frame(maxWidth: style == .cupertino ? 270 : 560)
+    .background(dialogBackground)
     .modifier(
       RufletDialogClipModifier(
         shape: RufletCornerShape(radius: radius),
@@ -119,6 +125,8 @@ struct RufletAppleDialogPresenter: View {
                   hasIcon: control.value("icon") != nil,
                   hasContent: control.value("content") != nil)
           )
+          .frame(maxWidth: .infinity, alignment: style == .cupertino ? .center : .leading)
+          .multilineTextAlignment(style == .cupertino ? .center : .leading)
           .accessibilityAddTraits(.isHeader)
       }
       if let content = control.buildWidget("content") {
@@ -132,6 +140,8 @@ struct RufletAppleDialogPresenter: View {
               ? EdgeInsets(top: 0, leading: 20, bottom: 20, trailing: 20)
               : parsePadding(control.dynamicValue("content_padding"))
                 ?? EdgeInsets(top: 20, leading: 24, bottom: 24, trailing: 24))
+          .frame(maxWidth: .infinity, alignment: style == .cupertino ? .center : .leading)
+          .multilineTextAlignment(style == .cupertino ? .center : .leading)
       }
     }
 
@@ -216,6 +226,13 @@ struct RufletAppleDialogPresenter: View {
   }
   private var dialogPadding: EdgeInsets { EdgeInsets() }
   private var iconColor: Color? { parseColor(control.string("icon_color")) }
+  private var dialogBackground: Color {
+    if let configured = parseColor(control.string("bgcolor")) { return configured }
+    #if os(iOS)
+      if style == .cupertino { return Color(uiColor: .secondarySystemBackground) }
+    #endif
+    return Color.rufletSystemBackground
+  }
   private var elevation: Double { max(control.number("elevation", default: 8) ?? 8, 0) }
   private var shapeDetails: [String: Any]? { rufletDictionary(control.dynamicValue("shape")) }
   private var radius: RufletBorderRadius {
