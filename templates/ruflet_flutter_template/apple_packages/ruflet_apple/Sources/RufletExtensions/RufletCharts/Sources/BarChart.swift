@@ -32,7 +32,8 @@ struct BarChartControl: View {
           }
           ChartAxesOverlay(
             axes: configuration.axes, domain: domain, layout: layout,
-            baselineX: configuration.baselineX, baselineY: configuration.baselineY)
+            baselineX: configuration.baselineX, baselineY: configuration.baselineY,
+            horizontalPositions: barAxisPositions(in: layout.plotRect))
         }
           .animation(
             chartAnimation(control.dynamicValue("animation")),
@@ -100,6 +101,12 @@ struct BarChartControl: View {
       widths: groups.map(groupWidth),
       alignment: control.string("group_alignment"),
       spacing: CGFloat(control.number("spacing", default: 16) ?? 16))
+  }
+
+  private func barAxisPositions(in rect: CGRect) -> [Double: CGFloat] {
+    zip(groups, barGroupCenters(in: rect)).reduce(into: [:]) { result, item in
+      result[Double(item.0.x)] = item.1
+    }
   }
 
   private func groupWidth(_ group: BarChartGroup) -> CGFloat {

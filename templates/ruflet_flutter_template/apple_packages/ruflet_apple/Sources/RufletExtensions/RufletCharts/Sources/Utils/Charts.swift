@@ -368,6 +368,7 @@ struct ChartAxesOverlay: View {
   let layout: ChartCartesianLayout
   var baselineX = 0.0
   var baselineY = 0.0
+  var horizontalPositions: [Double: CGFloat] = [:]
 
   var body: some View {
     ZStack {
@@ -384,6 +385,12 @@ struct ChartAxesOverlay: View {
     if let axis {
       if let title = axis.title {
         ControlWidget(control: title)
+          // A vertical fl_chart axis lays its name out horizontally first,
+          // then rotates that finished strip. Giving Text the narrow reserved
+          // width before rotation makes SwiftUI wrap it one letter per line.
+          .frame(
+            width: side.isVertical ? layout.plotRect.height : layout.plotRect.width,
+            height: axis.titleSize)
           .rotationEffect(side == .left ? .degrees(-90) : side == .right ? .degrees(90) : .zero)
           .frame(width: side.isVertical ? axis.titleSize : layout.plotRect.width,
             height: side.isVertical ? layout.plotRect.height : axis.titleSize)
@@ -422,18 +429,10 @@ struct ChartAxesOverlay: View {
       guard value >= minimum, value <= maximum else { return nil }
       if !axis.showMinimum, abs(value - minimum) < 0.000_001 { return nil }
       if !axis.showMaximum, abs(value - maximum) < 0.000_001 { return nil }
-      let plotPoint = layout.location(ChartPoint(x: value, y: value), domain: domain)
-      let position: CGPoint
-      switch side {
-      case .left:
-        position = CGPoint(x: layout.plotRect.minX - axis.labelSize / 2, y: plotPoint.y)
-      case .right:
-        position = CGPoint(x: layout.plotRect.maxX + axis.labelSize / 2, y: plotPoint.y)
-      case .top:
-        position = CGPoint(x: plotPoint.x, y: layout.plotRect.minY - axis.labelSize / 2)
-      case .bottom:
-        position = CGPoint(x: plotPoint.x, y: layout.plotRect.maxY + axis.labelSize / 2)
-      }
+      let position = chartAxisLabelPosition(
+        value: value, side: side, labelSize: axis.labelSize,
+        domain: domain, layout: layout,
+        horizontalPositions: horizontalPositions)
       return ChartPositionedLabel(id: source.id, position: position, view: source.view)
     }
   }
@@ -445,6 +444,31 @@ struct ChartAxesOverlay: View {
     case .top: CGPoint(x: layout.plotRect.midX, y: axis.titleSize / 2)
     case .bottom: CGPoint(x: layout.plotRect.midX, y: layout.size.height - axis.titleSize / 2)
     }
+  }
+}
+
+func chartAxisLabelPosition(
+  value: Double,
+  side: ChartSide,
+  labelSize: CGFloat,
+  domain: ChartDomain,
+  layout: ChartCartesianLayout,
+  horizontalPositions: [Double: CGFloat] = [:]
+) -> CGPoint {
+  let plotPoint = layout.location(ChartPoint(x: value, y: value), domain: domain)
+  switch side {
+  case .left:
+    return CGPoint(x: layout.plotRect.minX - labelSize / 2, y: plotPoint.y)
+  case .right:
+    return CGPoint(x: layout.plotRect.maxX + labelSize / 2, y: plotPoint.y)
+  case .top:
+    return CGPoint(
+      x: horizontalPositions[value] ?? plotPoint.x,
+      y: layout.plotRect.minY - labelSize / 2)
+  case .bottom:
+    return CGPoint(
+      x: horizontalPositions[value] ?? plotPoint.x,
+      y: layout.plotRect.maxY + labelSize / 2)
   }
 }
 
@@ -489,7 +513,7 @@ extension View {
   }
 }
 
-private enum ChartSide { case left, top, right, bottom
+enum ChartSide { case left, top, right, bottom
   var isVertical: Bool { self == .left || self == .right }
 }
 

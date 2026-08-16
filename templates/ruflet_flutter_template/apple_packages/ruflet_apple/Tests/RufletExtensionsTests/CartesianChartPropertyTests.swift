@@ -125,6 +125,29 @@ final class CartesianChartPropertyTests: XCTestCase {
         widths: widths, alignment: "space_evenly", spacing: 7))
   }
 
+  func testBarAxisLabelsUsePinnedGroupCentersInsteadOfDomainEdges() {
+    let chart = makeControl(id: 1, type: "BarChart", properties: [:])
+    let domain = ChartDomain(
+      points: [ChartPoint(x: 0, y: 0), ChartPoint(x: 3, y: 100)],
+      control: chart)
+    let layout = ChartCartesianLayout(
+      size: CGSize(width: 320, height: 180),
+      axes: ChartAxes(control: chart))
+    let centers: [Double: CGFloat] = [0: 52, 1: 124, 2: 196, 3: 268]
+
+    let first = chartAxisLabelPosition(
+      value: 0, side: .bottom, labelSize: 40,
+      domain: domain, layout: layout, horizontalPositions: centers)
+    let last = chartAxisLabelPosition(
+      value: 3, side: .bottom, labelSize: 40,
+      domain: domain, layout: layout, horizontalPositions: centers)
+
+    XCTAssertEqual(first.x, 52)
+    XCTAssertEqual(last.x, 268)
+    XCTAssertGreaterThan(first.x, layout.plotRect.minX)
+    XCTAssertLessThan(last.x, layout.plotRect.maxX)
+  }
+
   func testLineIndicatorUsesDataDomainAndPinnedDefaults() {
     let chart = makeControl(id: 1, type: "LineChart", properties: [
       "min_y": .double(-5),
