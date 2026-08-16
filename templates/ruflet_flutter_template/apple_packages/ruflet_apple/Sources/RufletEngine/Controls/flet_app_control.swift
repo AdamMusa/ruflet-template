@@ -21,6 +21,7 @@ public struct FletAppControl: View {
         appStartupScreenMessage: control.string("app_startup_screen_message"),
         appErrorMessage: control.string("app_error_message"),
         controlID: control.id,
+        forcePyodide: control.boolean("force_pyodide"),
         errorsHandler: errorsHandler,
         reconnectIntervalMilliseconds: control.integer("reconnect_interval_ms"),
         reconnectTimeoutMilliseconds: control.integer("reconnect_timeout_ms"),

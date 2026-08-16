@@ -36,7 +36,7 @@ public struct PageletControl: View {
       parseColor(control.string("bgcolor")) ?? Color.rufletSystemBackground
       VStack(spacing: 0) {
         if let appBar = control.child("appbar") {
-          ControlWidget(control: appBar)
+          pageletAppBar(appBar)
         }
         control.buildWidget("content")!
           .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -55,6 +55,22 @@ public struct PageletControl: View {
       drawerLayers
     }
     .clipped()
+  }
+
+  @ViewBuilder
+  private func pageletAppBar(_ appBar: RufletControl) -> some View {
+    if pageletDesign == .cupertino || appBar.type == "CupertinoAppBar" {
+      RufletAppleAppBar(control: appBar, kind: .cupertino)
+    } else {
+      AppBarControl(control: appBar)
+    }
+  }
+
+  private var pageletDesign: RufletPageDesign {
+    rufletPageDesign(
+      adaptive: control.boolean("adaptive", default: false),
+      platform: nil,
+      defaultPlatform: rufletDefaultTargetPlatform)
   }
 
   @ViewBuilder

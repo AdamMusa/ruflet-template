@@ -17,6 +17,7 @@ public struct ViewControl: View {
   @State private var topBarHeight = 0.0
   @Environment(\.rufletTopViewID) private var topViewID
   @Environment(\.rufletPageBackgroundColor) private var pageBackgroundColor
+  @Environment(\.rufletPageDesign) private var pageDesign
 
   public init(control: RufletControl) {
     self.control = control
@@ -156,7 +157,11 @@ public struct ViewControl: View {
   @ViewBuilder
   private func appBarView(_ appBar: RufletControl) -> some View {
     let _ = markAppBarAsParentNotifying(appBar)
-    ControlWidget(control: appBar)
+    if pageDesign == .cupertino || appBar.type == "CupertinoAppBar" {
+      RufletAppleAppBar(control: appBar, kind: .cupertino)
+    } else {
+      AppBarControl(control: appBar)
+    }
   }
 
   private var topViewLayers: some View {

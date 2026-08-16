@@ -57,7 +57,7 @@ final class RendererRegistryContractTests: XCTestCase {
 
 private enum PinnedFletCoreWidgetTypes {
   // Exact createWidget switch cases from pinned Flet 0.80.5, commit
-  // 53b579f2d84cc6e3041c73b3ef249b370056a37c.
+  // 67a9763da3bd2611bbb7626c3a1ec5e9d30fc965.
   static let all: Set<String> = [
     "AdaptiveAlertDialog",
     "AdaptiveButton",

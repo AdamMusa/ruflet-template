@@ -1,5 +1,5 @@
-// Pinned Flet 0.80.5 inventory from vendor commit
-// 53b579f2d84cc6e3041c73b3ef249b370056a37c.
+// Pinned Flet 0.80.5 inventory from upstream commit
+// 67a9763da3bd2611bbb7626c3a1ec5e9d30fc965.
 struct PinnedFletEngineSource {
   let source: String
   let disposition: String
@@ -182,7 +182,7 @@ enum PinnedFletEngineInventory {
     .init(source: "testing/test_finder.dart", disposition: "combined", destination: "Sources/RufletEngine/Services/Testing/tester_protocol.swift"),
     .init(source: "testing/tester.dart", disposition: "combined", destination: "Sources/RufletEngine/Services/Testing/tester_protocol.swift"),
     .init(source: "transport/flet_backend_channel.dart", disposition: "direct", destination: "Sources/RufletEngine/Transport/RufletBackendChannel.swift"),
-    .init(source: "transport/flet_backend_channel_javascript_io.dart", disposition: "apple-skip", destination: "-"),
+    .init(source: "transport/flet_backend_channel_javascript_io.dart", disposition: "combined", destination: "Sources/RufletEngine/Transport/RufletBackendChannel.swift"),
     .init(source: "transport/flet_backend_channel_javascript_web.dart", disposition: "apple-skip", destination: "-"),
     .init(source: "transport/flet_backend_channel_mock.dart", disposition: "apple-skip", destination: "-"),
     .init(source: "transport/flet_backend_channel_socket.dart", disposition: "direct", destination: "Sources/RufletEngine/Transport/RufletSocketBackendChannel.swift"),
@@ -201,11 +201,11 @@ enum PinnedFletEngineInventory {
     .init(source: "utils/borders.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/borders.swift"),
     .init(source: "utils/box.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/box.swift"),
     .init(source: "utils/buttons.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/buttons.swift"),
-    .init(source: "utils/collections.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/collections.swift"),
+    .init(source: "utils/collections.dart", disposition: "combined", destination: "Sources/RufletEngine/Utils/image_utils.swift"),
     .init(source: "utils/colors.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/colors.swift"),
     .init(source: "utils/cupertino_colors.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/cupertino_colors.swift"),
     .init(source: "utils/cupertino_icons.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/cupertino_icons.swift"),
-    .init(source: "utils/dash_path.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/dash_path.swift"),
+    .init(source: "utils/dash_path.dart", disposition: "combined", destination: "Sources/RufletEngine/Controls/canvas.swift"),
     .init(source: "utils/debouncer.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/debouncer.swift"),
     .init(source: "utils/desktop.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/desktop.swift"),
     .init(source: "utils/device_info.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/device_info.swift"),
@@ -260,7 +260,7 @@ enum PinnedFletEngineInventory {
     .init(source: "utils/weak_value_map.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/weak_value_map.swift"),
     .init(source: "utils/widget_state.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/widget_state.swift"),
     .init(source: "utils/window.dart", disposition: "direct", destination: "Sources/RufletEngine/Utils/window_utils.swift"),
-    .init(source: "widgets/animated_transition_page.dart", disposition: "direct", destination: "Sources/RufletEngine/Widgets/animated_transition_page.swift"),
+    .init(source: "widgets/animated_transition_page.dart", disposition: "combined", destination: "Sources/RufletEngine/Widgets/page_navigator.swift"),
     .init(source: "widgets/control_inherited_notifier.dart", disposition: "direct", destination: "Sources/RufletEngine/Widgets/control_inherited_notifier.swift"),
     .init(source: "widgets/error.dart", disposition: "direct", destination: "Sources/RufletEngine/Widgets/error.swift"),
     .init(source: "widgets/flet_store_mixin.dart", disposition: "direct", destination: "Sources/RufletEngine/Widgets/flet_store_mixin.swift"),
@@ -268,6 +268,6 @@ enum PinnedFletEngineInventory {
     .init(source: "widgets/page_context.dart", disposition: "direct", destination: "Sources/RufletEngine/Widgets/page_context.swift"),
     .init(source: "widgets/page_media.dart", disposition: "direct", destination: "Sources/RufletEngine/Widgets/page_media.swift"),
     .init(source: "widgets/reorderable_item_scope.dart", disposition: "direct", destination: "Sources/RufletEngine/Widgets/reorderable_item_scope.swift"),
-    .init(source: "widgets/skip_inherited_notifier.dart", disposition: "direct", destination: "Sources/RufletEngine/Widgets/skip_inherited_notifier.swift"),
+    .init(source: "widgets/skip_inherited_notifier.dart", disposition: "combined", destination: "Sources/RufletEngine/Models/control.swift"),
   ]
 }

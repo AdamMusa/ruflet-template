@@ -19,6 +19,7 @@ struct RufletPageNavigator: View {
   let layoutDirection: LayoutDirection
   let themeMode: RufletThemeMode
   let theme: RufletTheme
+  let design: RufletPageDesign
   let tint: Color?
   let onRequestPop: (RufletControl) -> Void
   let onDidRemove: (RufletControl) -> Void
@@ -33,6 +34,7 @@ struct RufletPageNavigator: View {
       layoutDirection: layoutDirection,
       themeMode: themeMode,
       theme: theme,
+      design: design,
       tint: tint,
       heroNamespace: heroNamespace,
       heroTransitionState: heroTransitionState,
@@ -50,12 +52,13 @@ private struct RufletHostedPage: View {
   let layoutDirection: LayoutDirection
   let themeMode: RufletThemeMode
   let theme: RufletTheme
+  let design: RufletPageDesign
   let tint: Color?
   let heroNamespace: Namespace.ID?
   let heroTransitionState: RufletHeroTransitionState
 
   var body: some View {
-    PageContext(themeMode: themeMode, theme: theme) {
+    PageContext(themeMode: themeMode, theme: theme, design: design) {
       ControlWidget(control: control)
         .environment(\.rufletTopViewID, topViewID)
     }
@@ -87,6 +90,7 @@ private struct RufletHostedPageTint: ViewModifier {
     let layoutDirection: LayoutDirection
     let themeMode: RufletThemeMode
     let theme: RufletTheme
+    let design: RufletPageDesign
     let tint: Color?
     let heroNamespace: Namespace.ID?
     let heroTransitionState: RufletHeroTransitionState
@@ -143,6 +147,7 @@ private struct RufletHostedPageTint: ViewModifier {
               layoutDirection: parent.layoutDirection,
               themeMode: parent.themeMode,
               theme: parent.theme,
+              design: parent.design,
               tint: parent.tint,
               heroNamespace: parent.heroNamespace,
               heroTransitionState: parent.heroTransitionState))
@@ -283,6 +288,7 @@ private struct RufletHostedPageTint: ViewModifier {
     let layoutDirection: LayoutDirection
     let themeMode: RufletThemeMode
     let theme: RufletTheme
+    let design: RufletPageDesign
     let tint: Color?
     let heroNamespace: Namespace.ID?
     let heroTransitionState: RufletHeroTransitionState
@@ -311,6 +317,7 @@ private struct RufletHostedPageTint: ViewModifier {
             layoutDirection: layoutDirection,
             themeMode: themeMode,
             theme: theme,
+            design: design,
             tint: tint,
             heroNamespace: heroNamespace,
             heroTransitionState: heroTransitionState))

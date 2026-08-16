@@ -73,4 +73,49 @@ final class CoreUtilityParityTests: XCTestCase {
     XCTAssertEqual(parseWindowResizeEdge("BOTTOMRIGHT"), .bottomRight)
     XCTAssertNil(parseWindowResizeEdge("middle"))
   }
+
+  func testPinnedNonWebPlatformUtilitiesAreExecutableOnApple() {
+    XCTAssertTrue(rufletIsApplePlatform)
+    XCTAssertFalse(rufletIsWebPlatform)
+    XCTAssertFalse(rufletIsWindowsDesktop)
+    XCTAssertFalse(rufletIsLinuxDesktop)
+    XCTAssertFalse(rufletIsProgressiveWebApp)
+    XCTAssertFalse(rufletIsPyodideMode)
+    XCTAssertFalse(rufletIsMultiViewEnvironment)
+    XCTAssertEqual(rufletRouteURLStrategy, "")
+    XCTAssertEqual(rufletWebSocketEndpointPath("/"), "ws")
+    XCTAssertEqual(rufletWebSocketEndpointPath("/p/demo/"), "p/demo/ws")
+    XCTAssertEqual(parseTargetPlatform("macos"), .macOS)
+    XCTAssertEqual(parseTargetPlatform("invalid", .iOS), .iOS)
+    XCTAssertEqual(rufletViewInitialData(7), [:])
+
+    #if os(macOS)
+      XCTAssertTrue(rufletIsDesktopPlatform)
+      XCTAssertTrue(rufletIsMacOSDesktop)
+      XCTAssertFalse(rufletIsMobilePlatform)
+    #else
+      XCTAssertFalse(rufletIsDesktopPlatform)
+      XCTAssertFalse(rufletIsMacOSDesktop)
+      XCTAssertTrue(rufletIsMobilePlatform)
+      XCTAssertTrue(rufletIsIOSMobile)
+    #endif
+  }
+
+  func testPageDesignMatchesPinnedAdaptivePlatformSelection() {
+    XCTAssertEqual(
+      rufletPageDesign(adaptive: false, platform: "ios", defaultPlatform: .iOS),
+      .material)
+    XCTAssertEqual(
+      rufletPageDesign(adaptive: true, platform: "ios", defaultPlatform: .macOS),
+      .cupertino)
+    XCTAssertEqual(
+      rufletPageDesign(adaptive: true, platform: "macos", defaultPlatform: .iOS),
+      .cupertino)
+    XCTAssertEqual(
+      rufletPageDesign(adaptive: true, platform: "android", defaultPlatform: .macOS),
+      .material)
+    XCTAssertEqual(
+      rufletPageDesign(adaptive: true, platform: nil, defaultPlatform: .macOS),
+      .cupertino)
+  }
 }

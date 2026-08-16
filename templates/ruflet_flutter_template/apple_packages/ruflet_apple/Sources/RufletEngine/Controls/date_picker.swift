@@ -13,21 +13,25 @@ public struct DatePickerControl: View {
   @State private var draft = Date()
   @State private var inputText = ""
   @State private var entryMode = RufletDateEntryMode.calendar
-  @State private var closedByAction = false
 
   public init(control: RufletControl) {
     self.control = control
   }
 
   public var body: some View {
-    Color.clear
-      .frame(width: 0, height: 0)
+    Group {
+      if presented {
+        RufletPickerDialogLayer(
+          barrierColor: presentation.barrierColor,
+          barrierDismissible: !presentation.modal,
+          onDismiss: { close(nil) }
+        ) {
+          pickerSheet
+        }
+      }
+    }
       .onAppear(perform: synchronizePresentation)
       .onChange(of: control.properties) { _ in synchronizePresentation() }
-      .sheet(isPresented: $presented, onDismiss: sheetDismissed) {
-        pickerSheet
-          .interactiveDismissDisabled(presentation.modal)
-      }
   }
 
   private var pickerSheet: some View {
@@ -134,7 +138,6 @@ public struct DatePickerControl: View {
     inputText = rufletPickerDateText(draft, locale: presentation.locale)
     entryMode = presentation.entryMode
     control.updateProperties(["_open": .bool(true)], server: false)
-    closedByAction = false
     presented = true
   }
 
@@ -146,7 +149,6 @@ public struct DatePickerControl: View {
   }
 
   func close(_ date: Date?) {
-    closedByAction = true
     control.updateProperties(["_open": .bool(false)], server: false)
     control.updateProperties([
       "value": date.map(rufletDateValue) ?? control.value("value") ?? .null,
@@ -155,14 +157,6 @@ public struct DatePickerControl: View {
     if let date { control.triggerEvent("change", data: rufletDateValue(date)) }
     control.triggerEvent("dismiss", data: .bool(date == nil))
     presented = false
-  }
-
-  private func sheetDismissed() {
-    if closedByAction {
-      closedByAction = false
-    } else {
-      close(nil)
-    }
   }
 
   private func validationMessage(presentation: RufletDatePickerPresentation) -> String? {
@@ -211,6 +205,7 @@ struct RufletDatePickerPresentation {
   let insetPadding: EdgeInsets
   let locale: Locale?
   let modal: Bool
+  let barrierColor: Color?
   let switchToCalendarIcon: RufletAppleIcon?
   let switchToInputIcon: RufletAppleIcon?
 
@@ -242,6 +237,7 @@ struct RufletDatePickerPresentation {
       ?? EdgeInsets(top: 24, leading: 16, bottom: 24, trailing: 16)
     locale = parseLocale(control.dynamicValue("locale"))
     modal = control.boolean("modal", default: false)
+    barrierColor = parseColor(control.string("barrier_color"))
     switchToCalendarIcon = Self.icon(control, property: "switch_to_calendar_icon")
     switchToInputIcon = Self.icon(control, property: "switch_to_input_icon")
   }
@@ -249,6 +245,61 @@ struct RufletDatePickerPresentation {
   private static func icon(_ control: RufletControl, property: String) -> RufletAppleIcon? {
     guard let code = control.integer(property) else { return nil }
     return control.backend.extensionRegistry.appleIcon(for: code)
+  }
+}
+
+/// Shared Material-dialog presentation used by Flet's date, date-range and
+/// time pickers. Unlike SwiftUI's system sheet, this owns the complete modal
+/// barrier, matching `showDialog`'s `barrierColor` and `barrierDismissible`
+/// contract on every Apple deployment target.
+@MainActor
+struct RufletPickerDialogLayer<Content: View>: View {
+  let barrierColor: Color?
+  let barrierDismissible: Bool
+  let onDismiss: () -> Void
+  let content: Content
+
+  init(
+    barrierColor: Color?,
+    barrierDismissible: Bool,
+    onDismiss: @escaping () -> Void,
+    @ViewBuilder content: () -> Content
+  ) {
+    self.barrierColor = barrierColor
+    self.barrierDismissible = barrierDismissible
+    self.onDismiss = onDismiss
+    self.content = content()
+  }
+
+  var body: some View {
+    ZStack {
+      (barrierColor ?? Color.black.opacity(0.54))
+        .contentShape(Rectangle())
+        .onTapGesture {
+          if barrierDismissible { onDismiss() }
+        }
+      dialog
+    }
+    .frame(maxWidth: .infinity, maxHeight: .infinity)
+    .ignoresSafeArea()
+    .zIndex(100)
+    .accessibilityElement(children: .contain)
+    .accessibilityAddTraits(.isModal)
+  }
+
+  private var dialog: some View {
+    content
+      #if os(macOS)
+      .frame(
+        minWidth: 420, idealWidth: 520, maxWidth: 720,
+        minHeight: 420, idealHeight: 520, maxHeight: 720)
+      #else
+      .frame(maxWidth: 720, minHeight: 360, maxHeight: 720)
+      #endif
+      .background(Color.rufletSystemBackground)
+      .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+      .shadow(color: .black.opacity(0.3), radius: 12, y: 6)
+      .padding(24)
   }
 }
 

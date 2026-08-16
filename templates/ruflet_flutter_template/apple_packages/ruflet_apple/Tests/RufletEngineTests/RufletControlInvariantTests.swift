@@ -90,6 +90,25 @@ final class RufletControlInvariantTests: XCTestCase {
     XCTAssertEqual(childNotifications, 1)
   }
 
+  func testNestedVisibleMergeDoesNotInvalidateParentLikePinnedFlet() throws {
+    let backend = ControlInvariantBackend()
+    let root = RufletControl(
+      id: 1,
+      type: "Page",
+      properties: ["content": control(2, "Text", ["visible": true])],
+      backend: backend)
+    var rootNotifications = 0
+    let token = root.addListener { rootNotifications += 1 }
+    defer { root.removeListener(token) }
+
+    XCTAssertTrue(root.update([
+      "content": control(2, "Text", ["visible": false])
+    ]))
+
+    XCTAssertEqual(rootNotifications, 0)
+    XCTAssertFalse(try XCTUnwrap(backend.controls[2]).visible)
+  }
+
   func testInvokeListenersWaitForMountAndRunInRegistrationOrder() async throws {
     let backend = ControlInvariantBackend()
     let control = RufletControl(id: 1, type: "Page", properties: [:], backend: backend)
@@ -186,6 +205,39 @@ final class RufletControlInvariantTests: XCTestCase {
 
     XCTAssertTrue(root.update(["style": ["weight": "bold"]]))
     XCTAssertEqual(root.value("style"), ["color": "blue", "weight": "bold"])
+  }
+
+  func testPatchIgnoresExtraOperationAndTreeFieldsLikePinnedFlet() throws {
+    let backend = ControlInvariantBackend()
+    let root = RufletControl(
+      id: 1,
+      type: "Page",
+      properties: ["title": "before"],
+      backend: backend)
+
+    try root.applyPatch([
+      .array([0, 999, "ignored tree metadata"]),
+      .array([0, 0, "title", "after", "ignored operation metadata"]),
+    ])
+
+    XCTAssertEqual(root.string("title"), "after")
+  }
+
+  func testMoveOfMissingMapKeyAssignsNullLikeDartMapRemove() throws {
+    let backend = ControlInvariantBackend()
+    let root = RufletControl(
+      id: 1,
+      type: "Page",
+      properties: ["title": "unchanged"],
+      backend: backend)
+
+    try root.applyPatch([
+      .array([0]),
+      .array([3, 0, "missing", 0, "moved"]),
+    ])
+
+    XCTAssertEqual(root.value("moved"), .null)
+    XCTAssertEqual(root.string("title"), "unchanged")
   }
 
   func testPropertyMapStripsControlMetadataRecursively() {

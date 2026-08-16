@@ -19,6 +19,7 @@ public struct RufletApp: View {
     appStartupScreenMessage: String? = nil,
     appErrorMessage: String? = nil,
     controlID: Int? = nil,
+    forcePyodide: Bool? = nil,
     title: String? = nil,
     errorsHandler: RufletAppErrorsHandler? = nil,
     reconnectIntervalMilliseconds: Int? = nil,
@@ -43,6 +44,7 @@ public struct RufletApp: View {
       appStartupScreenMessage: appStartupScreenMessage,
       appErrorMessage: appErrorMessage,
       controlID: controlID,
+      forcePyodide: forcePyodide,
       arguments: arguments,
       extensions: extensions,
       parentBackend: parentBackend))

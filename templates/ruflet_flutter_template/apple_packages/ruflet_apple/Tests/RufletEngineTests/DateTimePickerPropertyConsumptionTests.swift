@@ -43,6 +43,7 @@ final class DateTimePickerPropertyConsumptionTests: XCTestCase {
     XCTAssertEqual(presentation.insetPadding.bottom, 14)
     XCTAssertEqual(presentation.locale?.identifier, "en_US")
     XCTAssertTrue(presentation.modal)
+    XCTAssertNotNil(presentation.barrierColor)
     XCTAssertNotNil(presentation.switchToCalendarIcon)
     XCTAssertNotNil(presentation.switchToInputIcon)
     XCTAssertEqual(Calendar.current.component(.year, from: try XCTUnwrap(presentation.value)), 2028)
@@ -78,6 +79,7 @@ final class DateTimePickerPropertyConsumptionTests: XCTestCase {
     XCTAssertEqual(presentation.fieldEndLabelText, "To")
     XCTAssertEqual(presentation.keyboardType, "datetime")
     XCTAssertEqual(presentation.saveText, "Save")
+    XCTAssertNotNil(presentation.barrierColor)
     XCTAssertNotNil(presentation.switchToCalendarIcon)
     XCTAssertNotNil(presentation.switchToInputIcon)
   }
@@ -107,6 +109,7 @@ final class DateTimePickerPropertyConsumptionTests: XCTestCase {
     XCTAssertEqual(presentation.hourFormat, "h24")
     XCTAssertEqual(presentation.effectiveLocale?.identifier, "en_GB")
     XCTAssertEqual(presentation.orientation, .landscape)
+    XCTAssertNotNil(presentation.barrierColor)
     XCTAssertNotNil(presentation.switchToTimerIcon)
     XCTAssertNotNil(presentation.switchToInputIcon)
   }

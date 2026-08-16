@@ -13,7 +13,7 @@ private struct RufletPageThemeKey: EnvironmentKey {
 }
 
 private struct RufletPageDesignKey: EnvironmentKey {
-  static let defaultValue = RufletPageDesign.cupertino
+  static let defaultValue = RufletPageDesign.material
 }
 
 private struct RufletPageBackgroundColorKey: EnvironmentKey {
@@ -51,19 +51,22 @@ extension EnvironmentValues {
   }
 }
 
-/// Apple-native Page theme boundary matching Flet's CupertinoApp contract.
+/// Page theme boundary matching Flet's MaterialApp/CupertinoApp design choice.
 struct PageContext<Content: View>: View {
   let themeMode: RufletThemeMode
   let theme: RufletTheme?
+  let design: RufletPageDesign
   @ViewBuilder let content: () -> Content
 
   init(
     themeMode: RufletThemeMode,
     theme: RufletTheme? = nil,
+    design: RufletPageDesign,
     @ViewBuilder content: @escaping () -> Content
   ) {
     self.themeMode = themeMode
     self.theme = theme
+    self.design = design
     self.content = content
   }
 
@@ -71,7 +74,7 @@ struct PageContext<Content: View>: View {
     content()
       .environment(\.rufletThemeMode, themeMode)
       .environment(\.rufletPageTheme, theme)
-      .environment(\.rufletPageDesign, .cupertino)
+      .environment(\.rufletPageDesign, design)
       .environment(\.rufletPageBackgroundColor, theme?.applePageBackgroundColor)
       .environment(\.rufletBarBackgroundColor, theme?.appleBarBackgroundColor)
       .preferredColorScheme(themeMode.colorScheme)

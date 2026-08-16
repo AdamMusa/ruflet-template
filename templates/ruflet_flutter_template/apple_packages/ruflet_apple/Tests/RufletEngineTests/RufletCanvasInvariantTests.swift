@@ -225,6 +225,58 @@ final class RufletCanvasInvariantTests: XCTestCase {
     XCTAssertEqual(image?.height, 60)
   }
 
+  func testPointsIgnoreStrokeDashPatternLikePinnedFlet() throws {
+    let backend = CanvasTestBackend()
+    let root = RufletControl(
+      id: 50,
+      type: "Canvas",
+      properties: [
+        "shapes": [
+          wireShape(51, "Fill", ["paint": paint(color: "#FFFFFFFF")]),
+          wireShape(
+            52,
+            "Points",
+            [
+              "points": [[1, 4], [18, 4]],
+              "point_mode": "lines",
+              "paint": [
+                "color": "#FF000000",
+                "style": "stroke",
+                "stroke_width": 2,
+                "anti_alias": false,
+                "stroke_dash_pattern": [2, 2],
+              ],
+            ]),
+        ]
+      ],
+      backend: backend)
+
+    let image = try XCTUnwrap(
+      RufletCanvasRenderer.makeImage(
+        size: CGSize(width: 20, height: 8),
+        pixelRatio: 1,
+        shapes: root.children("shapes"),
+        images: [:],
+        capturedImage: nil,
+        capturedSize: .zero))
+    let data = try XCTUnwrap(image.dataProvider?.data)
+    let bytes = try XCTUnwrap(CFDataGetBytePtr(data))
+    let darkColumns = (1...18).filter { x in
+      (0..<image.height).contains { y in
+        let offset = y * image.bytesPerRow + x * 4
+        return bytes[offset] < 64
+          && bytes[offset + 1] < 64
+          && bytes[offset + 2] < 64
+          && bytes[offset + 3] > 128
+      }
+    }
+
+    XCTAssertGreaterThanOrEqual(
+      darkColumns.count,
+      16,
+      "Flet Canvas.drawPoints ignores stroke_dash_pattern and renders a continuous line")
+  }
+
   func testCaptureGetAndClearMethodsPreservePinnedOrderingAndPNGBytes() async throws {
     let backend = CanvasTestBackend()
     let root = RufletControl(

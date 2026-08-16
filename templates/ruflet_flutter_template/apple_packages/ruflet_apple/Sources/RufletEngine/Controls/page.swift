@@ -21,7 +21,7 @@ public struct PageControl: View {
 
   public var body: some View {
     RufletPageLifecycleMonitor(onTransition: lifecycleTransition) {
-      PageContext(themeMode: themeMode, theme: activePageTheme) {
+      PageContext(themeMode: themeMode, theme: activePageTheme, design: pageDesign) {
         GeometryReader { proxy in
           pageStack
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -79,6 +79,7 @@ public struct PageControl: View {
         layoutDirection: control.boolean("rtl", default: false) ? .rightToLeft : .leftToRight,
         themeMode: themeMode,
         theme: activePageTheme,
+        design: pageDesign,
         tint: pageTint,
         onRequestPop: markPoppedView,
         onDidRemove: markPoppedView)
@@ -262,6 +263,13 @@ public struct PageControl: View {
 
   private var pageTint: Color? {
     activePageTheme.appleAccentColor
+  }
+
+  private var pageDesign: RufletPageDesign {
+    rufletPageDesign(
+      adaptive: control.boolean("adaptive", default: false),
+      platform: control.string("platform"),
+      defaultPlatform: rufletDefaultTargetPlatform)
   }
 }
 

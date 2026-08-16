@@ -11,7 +11,6 @@ final class PinnedFletEngineInventoryTests: XCTestCase {
     XCTAssertEqual(
       Set(skipped.map(\.source)),
       [
-        "transport/flet_backend_channel_javascript_io.dart",
         "transport/flet_backend_channel_javascript_web.dart",
         "transport/flet_backend_channel_mock.dart",
         "transport/js_interop.dart",
@@ -24,7 +23,7 @@ final class PinnedFletEngineInventoryTests: XCTestCase {
       "Only pinned browser, web, JavaScript, and mock transport files may be excluded from Apple")
 
     let eligible = entries.filter { $0.disposition != "apple-skip" }
-    XCTAssertEqual(eligible.count, 253)
+    XCTAssertEqual(eligible.count, 254)
     XCTAssertTrue(eligible.allSatisfy { !$0.destination.isEmpty && $0.destination != "-" })
     XCTAssertTrue(eligible.allSatisfy { $0.destination.hasSuffix(".swift") })
     XCTAssertTrue(entries.allSatisfy {
@@ -47,7 +46,7 @@ final class PinnedFletEngineInventoryTests: XCTestCase {
     print(
       "Pinned Flet 0.80.5 structural accounting: " +
       "\(present.count)/\(eligible.count) source entries have Swift destinations; " +
-      "\(missing.count) remain structurally pending; 9 web/JavaScript/mock files are Apple-excluded.")
+      "\(missing.count) remain structurally pending; 8 web/JavaScript/mock files are Apple-excluded.")
     if !missing.isEmpty {
       let groups = Dictionary(grouping: missing, by: structuralGroup)
       let groupSummary = ["Controls", "Widgets", "Utils", "Extensions", "Other"]
@@ -60,6 +59,36 @@ final class PinnedFletEngineInventoryTests: XCTestCase {
     }
 
     XCTAssertEqual(present.count + missing.count, eligible.count)
+    XCTAssertTrue(
+      missing.isEmpty,
+      "A complete Flet-to-Swift port cannot leave pinned engine sources structurally pending")
+  }
+
+  func testEverySwiftDestinationContainsExecutableDeclarations() throws {
+    let root = packageRoot()
+    let destinations = Set(
+      try loadInventory()
+        .filter { $0.disposition != "apple-skip" }
+        .map(\.destination))
+
+    for destination in destinations {
+      let source = try String(
+        contentsOf: root.appendingPathComponent(destination),
+        encoding: .utf8)
+      let withoutBlockComments = source.replacingOccurrences(
+        of: #"/\*[\s\S]*?\*/"#,
+        with: "",
+        options: .regularExpression)
+      let code = withoutBlockComments
+        .split(whereSeparator: \.isNewline)
+        .map { line in line.replacingOccurrences(of: #"//.*$"#, with: "", options: .regularExpression) }
+        .joined(separator: "\n")
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+
+      XCTAssertFalse(
+        code.isEmpty,
+        "Pinned source destination is only a comment placeholder: \(destination)")
+    }
   }
 
   private func loadInventory() throws -> [PinnedFletEngineSource] {

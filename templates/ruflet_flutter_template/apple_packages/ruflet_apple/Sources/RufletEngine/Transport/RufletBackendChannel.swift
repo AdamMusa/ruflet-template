@@ -21,9 +21,19 @@ public protocol RufletBackendChannel: AnyObject {
 public enum RufletBackendChannelFactory {
   public static func make(
     address: URL,
+    forcePyodide: Bool = false,
     onDisconnect: @escaping () -> Void,
     onMessage: @escaping (RufletMessage) -> Void
   ) throws -> RufletBackendChannel {
+    // Pinned Flet selects its JavaScript channel before inspecting the
+    // address. The Dart IO implementation is intentionally a no-op channel;
+    // preserving it matters for nested FletApp controls which explicitly set
+    // force_pyodide even when the Apple host itself cannot run Pyodide.
+    if forcePyodide {
+      return RufletJavaScriptBackendChannel(
+        onDisconnect: onDisconnect,
+        onMessage: onMessage)
+    }
     switch address.scheme?.lowercased() {
     case "http", "https", "ws", "wss":
       return try RufletWebSocketBackendChannel(
@@ -46,6 +56,32 @@ public enum RufletBackendChannelFactory {
   }
 }
 
+/// Exact Apple counterpart of pinned Flet's
+/// `flet_backend_channel_javascript_io.dart`.
+///
+/// The IO stub connects and sends successfully without delivering frames. It
+/// reports a local connection and Flet's 10 ms reconnect default.
+@MainActor
+public final class RufletJavaScriptBackendChannel: RufletBackendChannel {
+  public let isLocalConnection = true
+  public let defaultReconnectIntervalMilliseconds = 10
+
+  private let onDisconnect: () -> Void
+  private let onMessage: (RufletMessage) -> Void
+
+  public init(
+    onDisconnect: @escaping () -> Void,
+    onMessage: @escaping (RufletMessage) -> Void
+  ) {
+    self.onDisconnect = onDisconnect
+    self.onMessage = onMessage
+  }
+
+  public func connect() async throws {}
+  public func send(_: RufletMessage) throws {}
+  public func disconnect() {}
+}
+
 public enum RufletTransportError: Error, Equatable {
   case unsupportedAddress(String)
   case missingHost
@@ -60,8 +96,7 @@ func rufletWebSocketEndpoint(_ address: URL) throws -> URL {
   guard address.host != nil else { throw RufletTransportError.missingHost }
   var components = URLComponents(url: address, resolvingAgainstBaseURL: false)
   components?.scheme = address.scheme?.lowercased() == "https" || address.scheme?.lowercased() == "wss" ? "wss" : "ws"
-  let path = address.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-  components?.path = path.isEmpty ? "/ws" : "/\(path)/ws"
+  components?.path = "/\(rufletWebSocketEndpointPath(address.path))"
   components?.query = nil
   components?.fragment = nil
   guard let url = components?.url else { throw RufletTransportError.emptyWebSocketEndpoint }

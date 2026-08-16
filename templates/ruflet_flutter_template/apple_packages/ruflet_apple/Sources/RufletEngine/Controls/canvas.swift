@@ -12,6 +12,22 @@ import UniformTypeIdentifiers
   import AppKit
 #endif
 
+/// Stateful dash-interval cursor used by the pinned Flet Canvas algorithm.
+/// The actual Apple path dashing is performed by CoreGraphics below; keeping
+/// the cursor here preserves the source contract without a second renderer.
+public final class CircularIntervalList<Value> {
+  private let values: [Value]
+  private var index = 0
+
+  public init(_ values: [Value]) { self.values = values }
+
+  public var next: Value {
+    if index >= values.count { index = 0 }
+    defer { index += 1 }
+    return values[index]
+  }
+}
+
 @MainActor
 enum RufletCanvasRenderer {
   static func makeImage(
@@ -180,7 +196,15 @@ enum RufletCanvasRenderer {
             height: radius * 2))
       }
     }
-    draw(path: path, paint: paint, forceStroke: mode != "points", in: context)
+    // Pinned Flet calls Canvas.drawPoints directly and never routes this
+    // shape's paint dash array through dashPath. Preserve that distinction
+    // for both `lines` and `polygon` point modes.
+    draw(
+      path: path,
+      paint: paint,
+      forceStroke: mode != "points",
+      applyDashPattern: false,
+      in: context)
   }
 
   private static func drawRect(_ shape: RufletControl, _ context: CGContext) {
@@ -224,14 +248,20 @@ enum RufletCanvasRenderer {
     path sourcePath: CGPath,
     paint: RufletCanvasPaint,
     forceStroke: Bool = false,
+    applyDashPattern: Bool = true,
     in context: CGContext
   ) {
     guard paint.drawsSource else { return }
     context.saveGState()
     paint.prepare(context)
+    if !applyDashPattern { context.setLineDash(phase: 0, lengths: []) }
     let stroke = forceStroke || paint.style == .stroke
     if let gradient = paint.gradient {
-      let clipPath = gradientClipPath(sourcePath, paint: paint, stroke: stroke)
+      let clipPath = gradientClipPath(
+        sourcePath,
+        paint: paint,
+        stroke: stroke,
+        applyDashPattern: applyDashPattern)
       context.addPath(clipPath)
       context.clip()
       draw(gradient: gradient, bounds: clipPath.boundingBoxOfPath, in: context)
@@ -245,11 +275,12 @@ enum RufletCanvasRenderer {
   private static func gradientClipPath(
     _ path: CGPath,
     paint: RufletCanvasPaint,
-    stroke: Bool
+    stroke: Bool,
+    applyDashPattern: Bool
   ) -> CGPath {
     guard stroke else { return path }
     let dashed =
-      paint.dashPattern.isEmpty
+      !applyDashPattern || paint.dashPattern.isEmpty
       ? path
       : path.copy(dashingWithPhase: 0, lengths: paint.dashPattern)
     return dashed.copy(

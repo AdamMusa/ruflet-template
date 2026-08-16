@@ -37,6 +37,7 @@ final class NestedApplicationControlTests: XCTestCase {
     XCTAssertTrue(source.contains("control.boolean(\"show_app_startup_screen\")"))
     XCTAssertTrue(source.contains("control.string(\"app_startup_screen_message\")"))
     XCTAssertTrue(source.contains("control.string(\"app_error_message\")"))
+    XCTAssertTrue(source.contains("control.boolean(\"force_pyodide\")"))
   }
 
   private func sourceURL() -> URL {

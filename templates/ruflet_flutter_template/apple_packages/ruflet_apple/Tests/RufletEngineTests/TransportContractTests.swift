@@ -82,6 +82,23 @@ final class TransportContractTests: XCTestCase {
     socket.disconnect()
   }
 
+  func testForcePyodideSelectsPinnedIOJavaScriptStubBeforeAddressRouting() async throws {
+    let channel = try RufletBackendChannelFactory.make(
+      address: URL(string: "ftp://example.com/app")!,
+      forcePyodide: true,
+      onDisconnect: {},
+      onMessage: { _ in })
+
+    XCTAssertTrue(channel is RufletJavaScriptBackendChannel)
+    XCTAssertTrue(channel.isLocalConnection)
+    XCTAssertEqual(channel.defaultReconnectIntervalMilliseconds, 10)
+    try await channel.connect()
+    XCTAssertNoThrow(
+      try channel.send(RufletMessage(action: .registerClient, payload: .map([:])))
+    )
+    channel.disconnect()
+  }
+
   func testFactoryRejectsNonAppleRendererTransportSchemes() {
     XCTAssertThrowsError(try RufletBackendChannelFactory.make(
       address: URL(string: "ftp://example.com/app")!,

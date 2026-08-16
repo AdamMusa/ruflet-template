@@ -15,6 +15,7 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
   public let appStartupScreenMessage: String?
   public let appErrorMessage: String?
   public let controlID: Int?
+  public let forcePyodide: Bool?
   public let arguments: [String: RufletValue]
   public let extensionRegistry: RufletExtensionRegistry
   public let errorsHandler: RufletAppErrorsHandler?
@@ -73,6 +74,7 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
     appStartupScreenMessage: String? = nil,
     appErrorMessage: String? = nil,
     controlID: Int? = nil,
+    forcePyodide: Bool? = nil,
     arguments: [String: RufletValue] = [:],
     extensions: [any RufletExtension] = [],
     parentBackend: RufletBackend? = nil,
@@ -90,6 +92,7 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
     self.appStartupScreenMessage = appStartupScreenMessage
     self.appErrorMessage = appErrorMessage
     self.controlID = controlID
+    self.forcePyodide = forcePyodide
     self.arguments = arguments
     self.parentBackend = parentBackend
     self.channelFactory = channelFactory
@@ -143,10 +146,23 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
     connectionInProgress = true
     defer { connectionInProgress = false }
     do {
-      let channel = try channelFactory(
-        pageURI,
-        { [weak self] in self?.didDisconnect() },
-        { [weak self] message in self?.receive(message) })
+      let onDisconnect: () -> Void = { [weak self] in
+        guard let self else { return }
+        self.didDisconnect()
+      }
+      let onMessage: (RufletMessage) -> Void = { [weak self] message in
+        guard let self else { return }
+        self.receive(message)
+      }
+      let channel = if forcePyodide == true {
+        try RufletBackendChannelFactory.make(
+          address: pageURI,
+          forcePyodide: true,
+          onDisconnect: onDisconnect,
+          onMessage: onMessage)
+      } else {
+        try channelFactory(pageURI, onDisconnect, onMessage)
+      }
       backendChannel = channel
       try await channel.connect()
       registerClient()

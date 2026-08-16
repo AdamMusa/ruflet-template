@@ -11,21 +11,25 @@ public struct DateRangePickerControl: View {
   @State private var startInputText = ""
   @State private var endInputText = ""
   @State private var entryMode = RufletDateEntryMode.calendar
-  @State private var closedByAction = false
 
   public init(control: RufletControl) {
     self.control = control
   }
 
   public var body: some View {
-    Color.clear
-      .frame(width: 0, height: 0)
+    Group {
+      if presented {
+        RufletPickerDialogLayer(
+          barrierColor: presentation.barrierColor,
+          barrierDismissible: !presentation.modal,
+          onDismiss: { close(nil) }
+        ) {
+          pickerSheet
+        }
+      }
+    }
       .onAppear(perform: synchronizePresentation)
       .onChange(of: control.properties) { _ in synchronizePresentation() }
-      .sheet(isPresented: $presented, onDismiss: sheetDismissed) {
-        pickerSheet
-          .interactiveDismissDisabled(presentation.modal)
-      }
   }
 
   private var pickerSheet: some View {
@@ -142,7 +146,6 @@ public struct DateRangePickerControl: View {
     endInputText = rufletPickerDateText(draftEnd, locale: presentation.locale)
     entryMode = presentation.entryMode
     control.updateProperties(["_open": .bool(true)], server: false)
-    closedByAction = false
     presented = true
   }
 
@@ -162,7 +165,6 @@ public struct DateRangePickerControl: View {
   }
 
   func close(_ range: (Date, Date)?) {
-    closedByAction = true
     control.updateProperties(["_open": .bool(false)], server: false)
     let start = range.map { rufletDateValue($0.0) } ?? control.value("start_value") ?? .null
     let end = range.map { rufletDateValue($0.1) } ?? control.value("end_value") ?? .null
@@ -178,10 +180,6 @@ public struct DateRangePickerControl: View {
     }
     control.triggerEvent("dismiss", data: .bool(range == nil))
     presented = false
-  }
-
-  private func sheetDismissed() {
-    if closedByAction { closedByAction = false } else { close(nil) }
   }
 
   private func confirmLabel(presentation: RufletDateRangePickerPresentation) -> String {
@@ -250,6 +248,7 @@ struct RufletDateRangePickerPresentation {
   let entryMode: RufletDateEntryMode
   let locale: Locale?
   let modal: Bool
+  let barrierColor: Color?
   let switchToCalendarIcon: RufletAppleIcon?
   let switchToInputIcon: RufletAppleIcon?
 
@@ -280,6 +279,7 @@ struct RufletDateRangePickerPresentation {
         RufletDateEntryMode.self, control.string("entry_mode"), .calendar) ?? .calendar
     locale = parseLocale(control.dynamicValue("locale"))
     modal = control.boolean("modal", default: false)
+    barrierColor = parseColor(control.string("barrier_color"))
     switchToCalendarIcon = Self.icon(control, property: "switch_to_calendar_icon")
     switchToInputIcon = Self.icon(control, property: "switch_to_input_icon")
   }

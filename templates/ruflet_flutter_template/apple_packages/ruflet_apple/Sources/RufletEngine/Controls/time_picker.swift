@@ -8,21 +8,25 @@ public struct TimePickerControl: View {
   @State private var presented = false
   @State private var draft = Date()
   @State private var entryMode = RufletTimeEntryMode.dial
-  @State private var closedByAction = false
 
   public init(control: RufletControl) {
     self.control = control
   }
 
   public var body: some View {
-    Color.clear
-      .frame(width: 0, height: 0)
+    Group {
+      if presented {
+        RufletPickerDialogLayer(
+          barrierColor: presentation.barrierColor,
+          barrierDismissible: !presentation.modal,
+          onDismiss: { close(nil) }
+        ) {
+          pickerSheet
+        }
+      }
+    }
       .onAppear(perform: synchronizePresentation)
       .onChange(of: control.properties) { _ in synchronizePresentation() }
-      .sheet(isPresented: $presented, onDismiss: sheetDismissed) {
-        pickerSheet
-          .interactiveDismissDisabled(presentation.modal)
-      }
   }
 
   private var pickerSheet: some View {
@@ -111,7 +115,6 @@ public struct TimePickerControl: View {
         of: Date()) ?? Date()
     entryMode = presentation.entryMode
     control.updateProperties(["_open": .bool(true)], server: false)
-    closedByAction = false
     presented = true
   }
 
@@ -122,17 +125,12 @@ public struct TimePickerControl: View {
   }
 
   func close(_ value: RufletTimeOfDay?) {
-    closedByAction = true
     control.updateProperties(["_open": .bool(false)], server: false)
     let wire = value.map(rufletTimeValue) ?? .null
     control.updateProperties(["value": wire, "open": .bool(false)])
     if value != nil { control.triggerEvent("change", data: wire) }
     control.triggerEvent("dismiss", data: .bool(value == nil))
     presented = false
-  }
-
-  private func sheetDismissed() {
-    if closedByAction { closedByAction = false } else { close(nil) }
   }
 
   private func timeOfDay(from date: Date) -> RufletTimeOfDay {
@@ -170,6 +168,7 @@ struct RufletTimePickerPresentation {
   let hourFormat: String?
   let effectiveLocale: Locale?
   let modal: Bool
+  let barrierColor: Color?
   let switchToTimerIcon: RufletAppleIcon?
   let switchToInputIcon: RufletAppleIcon?
 
@@ -194,6 +193,7 @@ struct RufletTimePickerPresentation {
     default: effectiveLocale = locale
     }
     modal = control.boolean("modal", default: false)
+    barrierColor = parseColor(control.string("barrier_color"))
     switchToTimerIcon = Self.icon(control, property: "switch_to_timer_icon")
     switchToInputIcon = Self.icon(control, property: "switch_to_input_icon")
   }
