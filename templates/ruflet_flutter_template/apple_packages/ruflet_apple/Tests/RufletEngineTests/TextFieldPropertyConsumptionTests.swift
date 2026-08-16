@@ -89,6 +89,49 @@ final class TextFieldPropertyConsumptionTests: XCTestCase {
     XCTAssertEqual(dense.contentPadding.trailing, 12)
   }
 
+  func testMaterialLabelFloatsOnlyForFocusOrNonEmptyInput() {
+    XCTAssertFalse(
+      rufletTextFieldLabelFloats(hasLabel: true, focused: false, isEmpty: true))
+    XCTAssertTrue(
+      rufletTextFieldLabelFloats(hasLabel: true, focused: true, isEmpty: true))
+    XCTAssertTrue(
+      rufletTextFieldLabelFloats(hasLabel: true, focused: false, isEmpty: false))
+    XCTAssertFalse(
+      rufletTextFieldLabelFloats(hasLabel: false, focused: true, isEmpty: false))
+  }
+
+  func testDefaultWidthYieldsToExplicitExpandAndStretchConstraints() {
+    XCTAssertTrue(
+      rufletTextFieldUsesDefaultWidth(
+        hasExplicitWidth: false, expandFactor: 0, parentCrossAxisStretch: false))
+    XCTAssertFalse(
+      rufletTextFieldUsesDefaultWidth(
+        hasExplicitWidth: true, expandFactor: 0, parentCrossAxisStretch: false))
+    XCTAssertFalse(
+      rufletTextFieldUsesDefaultWidth(
+        hasExplicitWidth: false, expandFactor: 1, parentCrossAxisStretch: false))
+    XCTAssertFalse(
+      rufletTextFieldUsesDefaultWidth(
+        hasExplicitWidth: false, expandFactor: 0, parentCrossAxisStretch: true))
+  }
+
+  func testFormFieldDensityMatchesFlutterPlatformDefaults() {
+    XCTAssertEqual(rufletFormFieldDensityVerticalOffset(nil, desktop: true), -8)
+    XCTAssertEqual(rufletFormFieldDensityVerticalOffset(nil, desktop: false), 0)
+    XCTAssertEqual(
+      rufletFormFieldDensityVerticalOffset(.adaptivePlatformDensity, desktop: true), -8)
+    XCTAssertEqual(rufletFormFieldDensityVerticalOffset(.comfortable, desktop: true), -4)
+    XCTAssertEqual(rufletFormFieldDensityVerticalOffset(.standard, desktop: true), 0)
+
+    let compact = rufletFormFieldDensityAdjustedPadding(
+      EdgeInsets(top: 20, leading: 12, bottom: 12, trailing: 12),
+      verticalOffset: -8)
+    XCTAssertEqual(compact.top, 16)
+    XCTAssertEqual(compact.leading, 12)
+    XCTAssertEqual(compact.bottom, 8)
+    XCTAssertEqual(compact.trailing, 12)
+  }
+
   func testAdaptiveTextFieldSelectsCupertinoOnlyWhenPinnedFlagIsTrue() {
     let native = AdaptiveTextFieldControl(
       control: control(type: "TextField", properties: ["adaptive": true]))

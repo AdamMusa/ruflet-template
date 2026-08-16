@@ -20,6 +20,8 @@ struct RufletTextInputControl: View {
   enum Style { case form, cupertino }
 
   @ObservedObject var control: RufletControl
+  @Environment(\.rufletPageBackgroundColor) private var pageBackgroundColor
+  @Environment(\.rufletPageTheme) private var pageTheme
   let style: Style
   @State private var value: String
   @State private var focused = false
@@ -42,10 +44,8 @@ struct RufletTextInputControl: View {
   var body: some View {
     LayoutControl(control: control) {
       chrome
-        // Flutter's TextField has no intrinsic width: it fills the horizontal
-        // constraints handed down by Row/Column/Container. A fixed fallback
-        // width defeats `expand`, cross-axis stretch and Container sizing.
-        .frame(maxWidth: control.number("width") == nil ? .infinity : nil)
+        .frame(width: usesPinnedDefaultWidth ? 300 : nil)
+        .frame(maxWidth: fillsAvailableWidth ? .infinity : nil)
         .frame(maxHeight: fitParentSize ? .infinity : nil)
         .modifier(RufletTextFieldConstraintsModifier(presentation.sizeConstraints))
         .modifier(RufletTextFieldClipModifier(behavior: presentation.clipBehavior))
@@ -61,47 +61,41 @@ struct RufletTextInputControl: View {
 
   private var chrome: some View {
     VStack(alignment: .leading, spacing: 4) {
-      if style == .form, let label = control.buildTextOrWidget("label") {
-        label
-          .modifier(RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("label_style"))))
-          .foregroundStyle(activeTextColor)
-          .frame(
-            maxWidth: .infinity,
-            alignment: presentation.alignLabelWithHint && multiline ? .topLeading : .leading)
-      }
-
       HStack(spacing: 6) {
         if style == .form, let icon = control.buildIconOrWidget("icon") { icon }
-        if style == .form, let prefix = control.buildIconOrWidget("prefix_icon") {
-          prefix.modifier(RufletTextFieldConstraintsModifier(presentation.prefixIconConstraints))
-        }
-        if presentation.isVisible(presentation.prefixVisibilityMode, focused: focused),
-           let prefix = control.buildTextOrWidget("prefix") {
-          prefix.modifier(RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("prefix_style"))))
-        }
-
-        inputLayer
-          .frame(minHeight: minimumNativeHeight)
-
-        if password && control.boolean("can_reveal_password", default: false) {
-          Button { revealPassword.toggle() } label: {
-            Image(systemName: revealPassword ? "eye.slash" : "eye")
+        HStack(spacing: 6) {
+          if style == .form, let prefix = control.buildIconOrWidget("prefix_icon") {
+            prefix.modifier(RufletTextFieldConstraintsModifier(presentation.prefixIconConstraints))
           }
-          .buttonStyle(.plain)
-          .accessibilityLabel(Text(revealPassword ? "Hide password" : "Show password"))
-        } else if style == .form, let suffix = control.buildIconOrWidget("suffix_icon") {
-          suffix.modifier(RufletTextFieldConstraintsModifier(presentation.suffixIconConstraints))
+          if presentation.isVisible(presentation.prefixVisibilityMode, focused: focused),
+             let prefix = control.buildTextOrWidget("prefix") {
+            prefix.modifier(RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("prefix_style"))))
+          }
+
+          inputLayer
+            .frame(minHeight: minimumNativeHeight)
+
+          if password && control.boolean("can_reveal_password", default: false) {
+            Button { revealPassword.toggle() } label: {
+              Image(systemName: revealPassword ? "eye.slash" : "eye")
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text(revealPassword ? "Hide password" : "Show password"))
+          } else if style == .form, let suffix = control.buildIconOrWidget("suffix_icon") {
+            suffix.modifier(RufletTextFieldConstraintsModifier(presentation.suffixIconConstraints))
+          }
+          if presentation.isVisible(presentation.suffixVisibilityMode, focused: focused),
+             let suffix = control.buildTextOrWidget("suffix") {
+            suffix.modifier(RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("suffix_style"))))
+          }
         }
-        if presentation.isVisible(presentation.suffixVisibilityMode, focused: focused),
-           let suffix = control.buildTextOrWidget("suffix") {
-          suffix.modifier(RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("suffix_style"))))
-        }
+        .padding(inputPadding)
+        .background(inputBackground)
+        .overlay { inputBorder }
+        .clipShape(RufletCornerShape(radius: borderRadius))
+        .overlay(alignment: .topLeading) { floatingLabel }
+        .animation(.linear(duration: presentation.hintFadeDuration), value: focused)
       }
-      .padding(inputPadding)
-      .background(inputBackground)
-      .overlay { inputBorder }
-      .clipShape(RufletCornerShape(radius: borderRadius))
-      .animation(.linear(duration: presentation.hintFadeDuration), value: focused)
 
       if style == .form { supportingRow }
     }
@@ -127,6 +121,16 @@ struct RufletTextInputControl: View {
   private var inputLayer: some View {
     ZStack(alignment: presentation.textVerticalAlignment.swiftUI) {
       nativeInput
+      if style == .form, hasVisibleLabel, !labelFloats,
+         let label = control.buildTextOrWidget("label") {
+        label
+          .modifier(RufletTextStyleModifier(style: resolvedLabelStyle(floating: false)))
+          .foregroundStyle(inlineLabelColor)
+          .frame(
+            maxWidth: .infinity,
+            alignment: presentation.alignLabelWithHint && multiline ? .topLeading : .leading)
+          .allowsHitTesting(false)
+      }
       if value.isEmpty, let placeholder {
         Text(placeholder)
           .modifier(RufletTextStyleModifier(style: presentation.placeholderStyle))
@@ -136,6 +140,19 @@ struct RufletTextInputControl: View {
           .opacity(placeholderIsVisible ? 1 : 0)
           .allowsHitTesting(false)
       }
+    }
+  }
+
+  @ViewBuilder
+  private var floatingLabel: some View {
+    if style == .form, labelFloats, let label = control.buildTextOrWidget("label") {
+      label
+        .modifier(RufletTextStyleModifier(style: resolvedLabelStyle(floating: true)))
+        .foregroundStyle(floatingLabelColor)
+        .padding(.horizontal, 4)
+        .background(floatingLabelBackground)
+        .offset(x: 8, y: -7)
+        .allowsHitTesting(false)
     }
   }
 
@@ -308,7 +325,8 @@ struct RufletTextInputControl: View {
       maxLength: control.integer("max_length"),
       inputFilter: parseInputFilter(control.dynamicValue("input_filter")),
       textAlignment: parseEnum(RufletTextAlign.self, control.string("text_align"), .start)!.alignment,
-      fontSize: control.number("text_size") ?? styleDetails?.size,
+      fontSize: control.number("text_size") ?? styleDetails?.size
+        ?? (style == .form ? 16 : 17),
       fontFamily: styleDetails?.fontFamily,
       fontWeight: styleDetails?.weight,
       italic: styleDetails?.italic ?? false,
@@ -352,7 +370,7 @@ struct RufletTextInputControl: View {
     RufletTextFieldPresentation(control: control, style: style)
   }
   private var placeholderIsVisible: Bool {
-    style == .cupertino || control.value("label") == nil || focused
+    style == .cupertino || !hasVisibleLabel || labelFloats
   }
   private var minimumNativeHeight: CGFloat {
     fitParentSize ? 0 : CGFloat(max(control.integer("min_lines", default: 1) ?? 1, 1)) * 20 + 4
@@ -364,7 +382,9 @@ struct RufletTextInputControl: View {
     return control.string("hint_text")
   }
   private var inputPadding: EdgeInsets {
-    presentation.contentPadding
+    rufletFormFieldDensityAdjustedPadding(
+      presentation.contentPadding,
+      verticalOffset: style == .form ? effectiveDensityVerticalOffset : 0)
   }
   private var borderKind: RufletFormFieldBorder {
     parseEnum(RufletFormFieldBorder.self, control.string("border"), .outline)!
@@ -372,7 +392,7 @@ struct RufletTextInputControl: View {
   private var borderRadius: RufletBorderRadius {
     if borderKind == .underline { return .zero }
     return parseBorderRadius(control.dynamicValue("border_radius"),
-      RufletBorderRadius(topLeft: 5, topRight: 5, bottomLeft: 5, bottomRight: 5))!
+      RufletBorderRadius(topLeft: 4, topRight: 4, bottomLeft: 4, bottomRight: 4))!
   }
   private var activeBorderWidth: CGFloat {
     CGFloat(focused
@@ -383,7 +403,7 @@ struct RufletTextInputControl: View {
     parseColor(focused
       ? control.string("focused_border_color") ?? control.string("border_color")
       : control.string("border_color"))
-      ?? (focused ? .accentColor : .secondary.opacity(0.6))
+      ?? (focused ? .accentColor : .black)
   }
   private var activeBackgroundColor: Color {
     parseColor(focused
@@ -415,6 +435,69 @@ struct RufletTextInputControl: View {
     return text
   }
 
+  private var hasVisibleLabel: Bool {
+    control.child("label") != nil || control.string("label") != nil
+  }
+  private var labelFloats: Bool {
+    rufletTextFieldLabelFloats(
+      hasLabel: hasVisibleLabel,
+      focused: focused,
+      isEmpty: value.isEmpty)
+  }
+  private var inlineLabelColor: Color {
+    parseTextStyle(control.dynamicValue("label_style"))?.color ?? .secondary
+  }
+  private var floatingLabelColor: Color {
+    parseTextStyle(control.dynamicValue("label_style"))?.color
+      ?? (focused ? .accentColor : .secondary)
+  }
+  private var floatingLabelBackground: Color {
+    presentation.filled ? effectiveBackgroundColor
+      : pageBackgroundColor ?? Color.rufletSystemBackground
+  }
+  private func resolvedLabelStyle(floating: Bool) -> RufletTextStyle {
+    let explicit = parseTextStyle(control.dynamicValue("label_style"))
+    return RufletTextStyle(
+      size: explicit?.size ?? (floating ? 12 : 16),
+      weight: explicit?.weight,
+      italic: explicit?.italic ?? false,
+      fontFamily: explicit?.fontFamily,
+      height: explicit?.height,
+      decoration: explicit?.decoration ?? 0,
+      decorationColor: explicit?.decorationColor,
+      decorationThickness: explicit?.decorationThickness,
+      color: explicit?.color,
+      backgroundColor: explicit?.backgroundColor,
+      letterSpacing: explicit?.letterSpacing,
+      wordSpacing: explicit?.wordSpacing,
+      overflow: explicit?.overflow)
+  }
+  private var parentStretchesHorizontally: Bool {
+    guard let parent = control.parent else { return false }
+    return ["Column", "View"].contains(parent.type)
+      && parent.string("horizontal_alignment")?.lowercased() == "stretch"
+  }
+  private var expandFactor: Int {
+    parseExpand(control.dynamicValue("expand"), 0) ?? 0
+  }
+  private var usesPinnedDefaultWidth: Bool {
+    rufletTextFieldUsesDefaultWidth(
+      hasExplicitWidth: control.number("width") != nil,
+      expandFactor: expandFactor,
+      parentCrossAxisStretch: parentStretchesHorizontally)
+  }
+  private var fillsAvailableWidth: Bool {
+    expandFactor > 0 || parentStretchesHorizontally
+  }
+  private var effectiveDensityVerticalOffset: CGFloat {
+    #if os(macOS)
+      let desktop = true
+    #else
+      let desktop = false
+    #endif
+    return rufletFormFieldDensityVerticalOffset(pageTheme?.visualDensity, desktop: desktop)
+  }
+
   private static func parseSelection(_ value: RufletValue?, maximum: Int) -> RufletTextSelection? {
     guard let map = value?.map,
           let base = map["base_offset"]?.integer,
@@ -424,6 +507,47 @@ struct RufletTextInputControl: View {
       baseOffset: min(max(base, 0), maximum),
       extentOffset: min(max(extent, 0), maximum))
   }
+}
+
+func rufletTextFieldLabelFloats(
+  hasLabel: Bool,
+  focused: Bool,
+  isEmpty: Bool
+) -> Bool {
+  hasLabel && (focused || !isEmpty)
+}
+
+func rufletTextFieldUsesDefaultWidth(
+  hasExplicitWidth: Bool,
+  expandFactor: Int,
+  parentCrossAxisStretch: Bool
+) -> Bool {
+  !hasExplicitWidth && expandFactor <= 0 && !parentCrossAxisStretch
+}
+
+func rufletFormFieldDensityVerticalOffset(
+  _ density: RufletVisualDensity?,
+  desktop: Bool
+) -> CGFloat {
+  switch density {
+  case .compact: return -8
+  case .comfortable: return -4
+  case .adaptivePlatformDensity: return desktop ? -8 : 0
+  case .standard: return 0
+  case nil: return desktop ? -8 : 0
+  }
+}
+
+func rufletFormFieldDensityAdjustedPadding(
+  _ padding: EdgeInsets,
+  verticalOffset: CGFloat
+) -> EdgeInsets {
+  let half = verticalOffset / 2
+  return EdgeInsets(
+    top: max(padding.top + half, 0),
+    leading: padding.leading,
+    bottom: max(padding.bottom + half, 0),
+    trailing: padding.trailing)
 }
 
 private enum RufletFormFieldBorder: String, CaseIterable, RufletStringEnum {
