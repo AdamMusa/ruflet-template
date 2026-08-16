@@ -19,11 +19,19 @@ struct RufletAppleButtonStyle: ButtonStyle {
   let elevation: Double
   let clipBehavior: String
   let disabledColor: Color
+  let padding: RufletWidgetStateProperty<EdgeInsets>
+  let minimumSize: RufletWidgetStateProperty<CGSize>
+  let maximumSize: RufletWidgetStateProperty<CGSize>
+  let fixedSize: RufletWidgetStateProperty<CGSize>
+  let alignment: Alignment
+  let focused: Bool
+  let hovered: Bool
 
   var clipsContent: Bool { clipBehavior != "none" }
   var antialiasedClip: Bool { clipBehavior.contains("antialias") }
 
   func makeBody(configuration: Configuration) -> some View {
+    let states = states(configuration: configuration)
     let shape = RoundedRectangle(cornerRadius: radius)
     let disabledHasContainer: Bool = switch variant {
     case .elevated, .filled, .tonal: true
@@ -33,10 +41,20 @@ struct RufletAppleButtonStyle: ButtonStyle {
     let effectiveBackground = isEnabled
       ? background.opacity(configuration.isPressed ? 0.72 : 1)
       : (disabledHasContainer ? disabledColor.opacity(0.12) : .clear)
+    let resolvedPadding = padding.resolve(states) ?? EdgeInsets()
+    let fixed = fixedSize.resolve(states)
+    let minimum = minimumSize.resolve(states)
+    let maximum = maximumSize.resolve(states)
     configuration.label
       .foregroundStyle(effectiveForeground)
-      .padding(.horizontal, 12)
-      .padding(.vertical, 8)
+      .padding(resolvedPadding)
+      .frame(width: fixed?.width, height: fixed?.height)
+      .frame(
+        minWidth: minimum?.width,
+        maxWidth: maximum?.width,
+        minHeight: minimum?.height,
+        maxHeight: maximum?.height,
+        alignment: alignment)
       .background(effectiveBackground, in: shape)
       .modifier(RufletButtonClipModifier(shape: shape, style: self))
       .overlay {
@@ -50,6 +68,15 @@ struct RufletAppleButtonStyle: ButtonStyle {
         y: variant == .elevated && isEnabled ? elevation / 2 : 0
       )
       .contentShape(shape)
+  }
+
+  private func states(configuration: Configuration) -> Set<RufletWidgetState> {
+    var result = Set<RufletWidgetState>()
+    if configuration.isPressed { result.insert(.pressed) }
+    if focused { result.insert(.focused) }
+    if hovered { result.insert(.hovered) }
+    if !isEnabled { result.insert(.disabled) }
+    return result
   }
 }
 

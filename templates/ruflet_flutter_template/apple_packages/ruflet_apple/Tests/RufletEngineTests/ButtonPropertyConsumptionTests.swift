@@ -27,6 +27,51 @@ final class ButtonPropertyConsumptionTests: XCTestCase {
     XCTAssertTrue(antialias.antialiasedClip)
   }
 
+  func testMaterialButtonDefaultPaddingMatchesFlutterVariants() {
+    for type in ["Button", "FilledButton", "FilledTonalButton", "OutlinedButton"] {
+      let padding = style(for: type, properties: [:]).padding.resolve([])
+      XCTAssertEqual(padding?.leading, 24, type)
+      XCTAssertEqual(padding?.trailing, 24, type)
+      XCTAssertEqual(padding?.top, 8, type)
+      XCTAssertEqual(padding?.bottom, 8, type)
+    }
+
+    let textPadding = style(for: "TextButton", properties: [:]).padding.resolve([])
+    XCTAssertEqual(textPadding?.leading, 12)
+    XCTAssertEqual(textPadding?.trailing, 12)
+  }
+
+  func testMaterialButtonConsumesStatefulPaddingAndSizeConstraints() {
+    let buttonStyle = style(
+      for: "FilledButton",
+      properties: [
+        "style": .map([
+          "padding": .map([
+            "default": .double(10),
+            "hovered": .map([
+              "top": .double(2), "right": .double(4),
+              "bottom": .double(6), "left": .double(8),
+            ]),
+          ]),
+          "minimum_size": .map(["width": .double(64), "height": .double(40)]),
+          "maximum_size": .map(["width": .double(180), "height": .double(56)]),
+          "fixed_size": .map(["width": .double(120), "height": .double(44)]),
+        ]),
+      ])
+
+    let normal = buttonStyle.padding.resolve([])
+    XCTAssertEqual(normal?.leading, 10)
+    XCTAssertEqual(normal?.top, 10)
+    let hovered = buttonStyle.padding.resolve([.hovered])
+    XCTAssertEqual(hovered?.top, 2)
+    XCTAssertEqual(hovered?.trailing, 4)
+    XCTAssertEqual(hovered?.bottom, 6)
+    XCTAssertEqual(hovered?.leading, 8)
+    XCTAssertEqual(buttonStyle.minimumSize.resolve([]), CGSize(width: 64, height: 40))
+    XCTAssertEqual(buttonStyle.maximumSize.resolve([]), CGSize(width: 180, height: 56))
+    XCTAssertEqual(buttonStyle.fixedSize.resolve([]), CGSize(width: 120, height: 44))
+  }
+
   private func style(
     for type: String,
     properties: [String: RufletValue]

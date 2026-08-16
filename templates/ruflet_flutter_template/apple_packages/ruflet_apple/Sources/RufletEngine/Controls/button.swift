@@ -6,6 +6,7 @@ public struct ButtonControl: View {
   @Environment(\.rufletPageTheme) private var pageTheme
   @FocusState private var focused: Bool
   @StateObject private var focusCoordinator = RufletButtonFocusCoordinator()
+  @State private var hovered = false
 
   public init(control: RufletControl) { self.control = control }
 
@@ -32,6 +33,7 @@ public struct ButtonControl: View {
       .disabled(control.disabled)
       .focused($focused)
       .onHover {
+        hovered = $0
         if !control.disabled { control.triggerEvent("hover", data: .bool($0)) }
       }
       .simultaneousGesture(
@@ -93,6 +95,7 @@ public struct ButtonControl: View {
     let radius =
       parseBorderRadius(details?["shape"] ?? control.dynamicValue("shape"))?.uniform
       ?? ((pageTheme?.useMaterial3WireValue ?? true) ? 1_000 : 4)
+    let horizontalPadding: CGFloat = variant == .text ? 12 : 24
     return RufletAppleButtonStyle(
       variant: variant,
       foreground: foreground,
@@ -101,7 +104,17 @@ public struct ButtonControl: View {
       border: border,
       elevation: control.number("elevation") ?? 1,
       clipBehavior: control.string("clip_behavior", default: "none")!.lowercased(),
-      disabledColor: pageTheme?.colorScheme?["on_surface"] ?? .secondary
+      disabledColor: pageTheme?.colorScheme?["on_surface"] ?? .secondary,
+      padding: .init(
+        details?["padding"], converter: { parsePadding($0) },
+        defaultValue: EdgeInsets(
+          top: 8, leading: horizontalPadding, bottom: 8, trailing: horizontalPadding)),
+      minimumSize: .init(details?["minimum_size"], converter: { parseSize($0) }),
+      maximumSize: .init(details?["maximum_size"], converter: { parseSize($0) }),
+      fixedSize: .init(details?["fixed_size"], converter: { parseSize($0) }),
+      alignment: parseAlignment(details?["alignment"], .center)!.swiftUI,
+      focused: focused,
+      hovered: hovered
     )
   }
 
