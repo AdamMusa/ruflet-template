@@ -458,6 +458,37 @@ func chartLongPressDuration(_ value: Any?) -> TimeInterval {
   parseDuration(value, 0.5) ?? 0.5
 }
 
+func chartTouchIsTap(_ translation: CGSize, threshold: CGFloat = 8) -> Bool {
+  hypot(translation.width, translation.height) <= threshold
+}
+
+private struct ChartTapGestureModifier: ViewModifier {
+  let action: (CGPoint) -> Void
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if #available(iOS 16.0, macOS 13.0, *) {
+      content.simultaneousGesture(
+        SpatialTapGesture().onEnded { value in action(value.location) })
+    } else {
+      // SpatialTapGesture is unavailable on iOS 15. Keep the fallback
+      // simultaneous with the enclosing ScrollView and reject translated
+      // touches so a vertical swipe is never reported as a chart tap.
+      content.simultaneousGesture(
+        DragGesture(minimumDistance: 0).onEnded { value in
+          guard chartTouchIsTap(value.translation) else { return }
+          action(value.location)
+        })
+    }
+  }
+}
+
+extension View {
+  func chartTapGesture(perform action: @escaping (CGPoint) -> Void) -> some View {
+    modifier(ChartTapGestureModifier(action: action))
+  }
+}
+
 private enum ChartSide { case left, top, right, bottom
   var isVertical: Bool { self == .left || self == .right }
 }

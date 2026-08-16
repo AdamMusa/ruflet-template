@@ -40,13 +40,12 @@ struct RadarChartControl: View {
                 configuration: configuration, type: "longPressEnd")
             })
         .contentShape(Rectangle())
-        .gesture(
-          DragGesture(minimumDistance: 0).onEnded { value in
-            emitTap(
-              at: value.location,
-              layout: layout,
-              configuration: configuration)
-          })
+        .chartTapGesture { location in
+          emitTap(
+            at: location,
+            layout: layout,
+            configuration: configuration)
+        }
       }
     }
   }

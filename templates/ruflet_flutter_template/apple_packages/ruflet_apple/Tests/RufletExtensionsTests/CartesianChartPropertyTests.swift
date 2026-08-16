@@ -143,6 +143,13 @@ final class CartesianChartPropertyTests: XCTestCase {
       2...12)
   }
 
+  func testChartTapFallbackRejectsParentScrollTranslation() {
+    XCTAssertTrue(chartTouchIsTap(.zero))
+    XCTAssertTrue(chartTouchIsTap(CGSize(width: 3, height: 4)))
+    XCTAssertFalse(chartTouchIsTap(CGSize(width: 0, height: 9)))
+    XCTAssertFalse(chartTouchIsTap(CGSize(width: 12, height: 40)))
+  }
+
   func testBarEventPayloadIncludesPinnedStackItemField() {
     let value = BarChartEventData(
       eventType: "tapUp", groupIndex: 2, rodIndex: 1, stackItemIndex: 0).value

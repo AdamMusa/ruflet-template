@@ -38,9 +38,9 @@ struct BarChartControl: View {
             chartAnimation(control.dynamicValue("animation")),
             value: control.revision)
           .contentShape(Rectangle())
-          .gesture(DragGesture(minimumDistance: 0).onEnded { value in
-            emitTap(at: value.location, layout: layout, domain: domain)
-          })
+          .chartTapGesture { location in
+            emitTap(at: location, layout: layout, domain: domain)
+          }
       }
     }
   }

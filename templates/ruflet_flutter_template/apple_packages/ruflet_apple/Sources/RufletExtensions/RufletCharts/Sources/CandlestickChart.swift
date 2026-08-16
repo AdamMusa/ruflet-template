@@ -34,20 +34,10 @@ struct CandlestickChartControl: View {
             chartAnimation(control.dynamicValue("animation")),
             value: control.revision)
           .contentShape(Rectangle())
-          .gesture(DragGesture(minimumDistance: 0)
-            .onChanged { value in
-              guard control.boolean("interactive", default: true), !control.disabled,
-                !control.boolean("show_tooltips_for_selected_spots_only", default: false)
-              else {
-                touchedSpotIndex = nil
-                return
-              }
-              touchedSpotIndex = hitTest(value.location, layout: layout, domain: domain)
-            }
-            .onEnded { value in
-              emitTap(at: value.location, layout: layout, domain: domain)
-              touchedSpotIndex = nil
-            })
+          .chartTapGesture { location in
+            emitTap(at: location, layout: layout, domain: domain)
+            touchedSpotIndex = nil
+          }
           .simultaneousGesture(
             LongPressGesture(minimumDuration: chartLongPressDuration(
               control.dynamicValue("long_press_duration")))
