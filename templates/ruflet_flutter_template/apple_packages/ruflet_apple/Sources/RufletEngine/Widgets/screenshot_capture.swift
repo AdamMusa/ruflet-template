@@ -29,7 +29,12 @@ final class RufletScreenshotCaptureCoordinator: ObservableObject {
     let captureCoordinator: RufletScreenshotCaptureCoordinator
 
     func makeUIViewController(context: Context) -> RufletScreenshotViewController {
-      RufletScreenshotViewController(content: content)
+      let controller = RufletScreenshotViewController(content: content)
+      // SwiftUI may expose the control to Ruby before its first update pass.
+      // Register during creation so an immediate `capture()` invocation never
+      // observes an empty coordinator.
+      captureCoordinator.install(controller.capture(pixelRatio:))
+      return controller
     }
 
     func updateUIViewController(_ controller: RufletScreenshotViewController, context: Context) {
@@ -93,7 +98,9 @@ final class RufletScreenshotCaptureCoordinator: ObservableObject {
     let captureCoordinator: RufletScreenshotCaptureCoordinator
 
     func makeNSViewController(context: Context) -> RufletScreenshotViewController {
-      RufletScreenshotViewController(content: content)
+      let controller = RufletScreenshotViewController(content: content)
+      captureCoordinator.install(controller.capture(pixelRatio:))
+      return controller
     }
 
     func updateNSViewController(_ controller: RufletScreenshotViewController, context: Context) {
