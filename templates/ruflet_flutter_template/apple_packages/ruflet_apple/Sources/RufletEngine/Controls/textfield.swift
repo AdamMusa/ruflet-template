@@ -131,7 +131,7 @@ struct RufletTextInputControl: View {
             alignment: presentation.alignLabelWithHint && multiline ? .topLeading : .leading)
           .allowsHitTesting(false)
       }
-      if value.isEmpty, let placeholder {
+      if !usesNativePlaceholder, value.isEmpty, let placeholder {
         Text(placeholder)
           .modifier(RufletTextStyleModifier(style: presentation.placeholderStyle))
           .foregroundStyle(presentation.placeholderStyle?.color ?? .secondary)
@@ -339,7 +339,7 @@ struct RufletTextInputControl: View {
       cursorRadius: presentation.cursorRadius,
       animateCursorOpacity: presentation.animateCursorOpacity,
       selectionColor: parseColor(control.string("selection_color")),
-      placeholder: nil,
+      placeholder: usesNativePlaceholder ? placeholder : nil,
       placeholderColor: presentation.placeholderStyle?.color,
       scrollPadding: presentation.scrollPadding,
       textVerticalAlignment: presentation.textVerticalAlignment,
@@ -380,6 +380,11 @@ struct RufletTextInputControl: View {
       return control.string("placeholder_text") ?? control.string("label")
     }
     return control.string("hint_text")
+  }
+  private var usesNativePlaceholder: Bool {
+    rufletTextFieldUsesNativePlaceholder(
+      multiline: multiline,
+      hasVisibleLabel: hasVisibleLabel)
   }
   private var inputPadding: EdgeInsets {
     rufletFormFieldDensityAdjustedPadding(
@@ -523,6 +528,13 @@ func rufletTextFieldLabelFloats(
   isEmpty: Bool
 ) -> Bool {
   hasLabel && (focused || !isEmpty)
+}
+
+func rufletTextFieldUsesNativePlaceholder(
+  multiline: Bool,
+  hasVisibleLabel: Bool
+) -> Bool {
+  !multiline && !hasVisibleLabel
 }
 
 func rufletTextFieldUsesDefaultWidth(

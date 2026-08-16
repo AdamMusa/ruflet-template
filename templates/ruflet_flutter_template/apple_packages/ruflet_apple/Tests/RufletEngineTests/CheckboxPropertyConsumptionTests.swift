@@ -55,6 +55,7 @@ final class CheckboxPropertyConsumptionTests: XCTestCase {
     XCTAssertEqual(presentation.shape.side?.width, 4)
     XCTAssertEqual(presentation.splashRadius, 24)
     XCTAssertEqual(presentation.visualDensity, .compact)
+    XCTAssertEqual(presentation.tapTargetSize, 40)
     XCTAssertEqual(presentation.mouseCursor, "click")
     XCTAssertEqual(presentation.labelPosition, .left)
     XCTAssertEqual(presentation.labelStyle?.size, 17)
@@ -97,11 +98,25 @@ final class CheckboxPropertyConsumptionTests: XCTestCase {
     XCTAssertNotNil(presentation.focusColor)
     XCTAssertEqual(presentation.kind, .cupertino)
     XCTAssertEqual(presentation.spacing, 13)
+    XCTAssertEqual(presentation.tapTargetSize, 20)
     XCTAssertEqual(presentation.shape.kind, .stadium)
     XCTAssertEqual(presentation.mouseCursor, "click")
     XCTAssertEqual(presentation.semanticsLabel, "Cupertino selection")
     XCTAssertEqual(presentation.borderSide(selected).width, 2.5)
     XCTAssertNotNil(presentation.fill(selected))
+  }
+
+  func testStandardCheckboxKeepsFlutterMaterialTapTargetAroundItsLabel() {
+    let standard = RufletCheckboxPresentation(
+      control: makeControl(type: "Checkbox", properties: [:]),
+      kind: .standard)
+    let comfortable = RufletCheckboxPresentation(
+      control: makeControl(type: "Checkbox", properties: ["visual_density": "comfortable"]),
+      kind: .standard)
+
+    XCTAssertEqual(standard.controlSize, 18)
+    XCTAssertEqual(standard.tapTargetSize, 48)
+    XCTAssertEqual(comfortable.tapTargetSize, 44)
   }
 
   func testPinnedValueAndActivationContractsRemainExact() {

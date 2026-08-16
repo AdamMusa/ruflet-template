@@ -41,10 +41,12 @@ struct RufletCheckboxBody: View {
             value: value,
             focused: focused,
             hovered: hovered)
+            .frame(
+              width: presentation.tapTargetSize,
+              height: presentation.tapTargetSize)
           if presentation.labelPosition == .right { label(presentation) }
         }
         .contentShape(Rectangle())
-        .padding(presentation.densityPadding)
       }
       .buttonStyle(RufletCheckboxButtonStyle())
       .disabled(control.disabled)
@@ -210,15 +212,18 @@ struct RufletCheckboxPresentation {
   var controlSize: CGFloat { kind == .cupertino ? 20 : 18 }
   var markSize: CGFloat { kind == .cupertino ? 12 : 11 }
 
-  var densityPadding: EdgeInsets {
-    guard kind == .standard else { return EdgeInsets() }
+  var tapTargetSize: CGFloat {
+    guard kind == .standard else { return controlSize }
     switch visualDensity {
-    case .compact:
-      return EdgeInsets(top: 2, leading: 2, bottom: 2, trailing: 2)
-    case .comfortable:
-      return EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4)
-    case .adaptivePlatformDensity, .standard, nil:
-      return EdgeInsets(top: 6, leading: 6, bottom: 6, trailing: 6)
+    case .compact: return 40
+    case .comfortable: return 44
+    case .adaptivePlatformDensity:
+      #if os(macOS)
+        return 40
+      #else
+        return 48
+      #endif
+    case .standard, nil: return 48
     }
   }
 

@@ -104,6 +104,21 @@ final class TextFieldPropertyConsumptionTests: XCTestCase {
       rufletTextFieldLabelFloats(hasLabel: false, focused: true, isEmpty: false))
   }
 
+  func testSingleLineHintUsesNativePlaceholderAboveUIKitBoundary() {
+    XCTAssertTrue(
+      rufletTextFieldUsesNativePlaceholder(
+        multiline: false,
+        hasVisibleLabel: false))
+    XCTAssertFalse(
+      rufletTextFieldUsesNativePlaceholder(
+        multiline: true,
+        hasVisibleLabel: false))
+    XCTAssertFalse(
+      rufletTextFieldUsesNativePlaceholder(
+        multiline: false,
+        hasVisibleLabel: true))
+  }
+
   func testDefaultWidthYieldsToExplicitExpandAndStretchConstraints() {
     XCTAssertTrue(
       rufletTextFieldUsesDefaultWidth(
