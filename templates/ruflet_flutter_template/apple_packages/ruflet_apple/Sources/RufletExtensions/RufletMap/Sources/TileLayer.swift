@@ -22,6 +22,10 @@ struct RufletTileDescriptor {
   let bounds: RufletMapBounds?
   let additionalOptions: [String: String]
   let errorImageURL: URL?
+  let userAgentPackageName: String
+  let keepBuffer: Int
+  let panBuffer: Int
+  let evictErrorTileStrategy: String
 }
 
 @MainActor
@@ -59,15 +63,22 @@ func rufletTileDescriptor(_ control: RufletControl) -> RufletTileDescriptor {
     maximumZoom: control.number("max_zoom") ?? .infinity,
     bounds: rufletMapBounds(control.value("tile_bounds")),
     additionalOptions: options,
-    errorImageURL: errorImageURL)
+    errorImageURL: errorImageURL,
+    userAgentPackageName: control.string("user_agent_package_name", default: "unknown") ?? "unknown",
+    keepBuffer: max(control.integer("keep_buffer", default: 2) ?? 2, 0),
+    panBuffer: max(control.integer("pan_buffer", default: 1) ?? 1, 0),
+    evictErrorTileStrategy: control.string("evict_error_tile_strategy", default: "none") ?? "none")
 }
 
 final class RufletTileOverlay: MKTileOverlay {
   let descriptor: RufletTileDescriptor
+  private let cache = NSCache<NSString, NSData>()
 
   init(descriptor: RufletTileDescriptor) {
     self.descriptor = descriptor
     super.init(urlTemplate: nil)
+    let retainedDiameter = max(descriptor.keepBuffer, descriptor.panBuffer) * 2 + 1
+    cache.countLimit = max(retainedDiameter * retainedDiameter * 4, 64)
     tileSize = CGSize(width: descriptor.tileSize, height: descriptor.tileSize)
     minimumZ = descriptor.minimumNativeZoom
     maximumZ = descriptor.maximumNativeZoom
@@ -90,9 +101,20 @@ final class RufletTileOverlay: MKTileOverlay {
       result(nil, URLError(.badURL))
       return
     }
+    let cacheKey = primary.absoluteString as NSString
+    if let cached = cache.object(forKey: cacheKey) {
+      result(cached as Data, nil)
+      prefetch(around: path)
+      return
+    }
     load(primary) { [weak self] data, error in
       guard let self else { result(data, error); return }
-      if let data { result(data, nil); return }
+      if let data {
+        self.cache.setObject(data as NSData, forKey: cacheKey)
+        result(data, nil)
+        self.prefetch(around: path)
+        return
+      }
       if let fallback = self.descriptor.fallbackURL,
          let fallbackURL = self.resolvedURL(template: fallback, path: path) {
         self.load(fallbackURL) { data, fallbackError in
@@ -113,7 +135,9 @@ final class RufletTileOverlay: MKTileOverlay {
       }
       return
     }
-    URLSession.shared.dataTask(with: url) { data, response, error in
+    var request = URLRequest(url: url)
+    request.setValue(descriptor.userAgentPackageName, forHTTPHeaderField: "User-Agent")
+    URLSession.shared.dataTask(with: request) { data, response, error in
       if let response = response as? HTTPURLResponse, !(200..<300).contains(response.statusCode) {
         completion(nil, URLError(.badServerResponse))
       } else {
@@ -135,6 +159,32 @@ final class RufletTileOverlay: MKTileOverlay {
       return
     }
     load(errorImageURL) { data, _ in result(data, data == nil ? reportedError : nil) }
+  }
+
+  private func prefetch(around path: MKTileOverlayPath) {
+    let radius = descriptor.panBuffer
+    guard radius > 0 else { return }
+    let maximumIndex = path.z >= 0 && path.z < Int.bitWidth - 1
+      ? (1 << path.z) - 1
+      : Int.max
+    for dx in -radius ... radius {
+      for dy in -radius ... radius where dx != 0 || dy != 0 {
+        let neighborX = path.x + dx
+        let neighborY = path.y + dy
+        guard neighborX >= 0, neighborY >= 0,
+          neighborX <= maximumIndex, neighborY <= maximumIndex
+        else { continue }
+        let neighbor = MKTileOverlayPath(
+          x: neighborX, y: neighborY, z: path.z,
+          contentScaleFactor: path.contentScaleFactor)
+        guard let url = resolvedURL(template: descriptor.urlTemplate ?? "", path: neighbor),
+          cache.object(forKey: url.absoluteString as NSString) == nil
+        else { continue }
+        load(url) { [weak self] data, _ in
+          if let data { self?.cache.setObject(data as NSData, forKey: url.absoluteString as NSString) }
+        }
+      }
+    }
   }
 
   private func resolvedURL(template: String, path: MKTileOverlayPath) -> URL? {

@@ -82,6 +82,9 @@ final class RufletMapController: ObservableObject {
     let duration = (args["duration"]?.number
       ?? control.number("animation_duration", default: 500)
       ?? 500) / 1_000
+    let curve = args["curve"]?.text
+      ?? control.string("animation_curve", default: "fastOutSlowIn")
+      ?? "fastOutSlowIn"
     if args["cancel_ongoing_animations"]?.bool == true { cancelAnimations(mapView) }
 
     switch name {
@@ -91,20 +94,20 @@ final class RufletMapController: ObservableObject {
       }
       let camera = mapView.camera
       camera.heading += degree
-      setCamera(camera, on: mapView, duration: duration)
+      setCamera(camera, on: mapView, duration: duration, curve: curve)
     case "reset_rotation":
       let camera = mapView.camera
       camera.heading = 0
-      setCamera(camera, on: mapView, duration: duration)
+      setCamera(camera, on: mapView, duration: duration, curve: curve)
     case "zoom_in":
-      setZoom(rufletZoomLevel(for: mapView.region) + 1, on: mapView, duration: duration)
+      setZoom(rufletZoomLevel(for: mapView.region) + 1, on: mapView, duration: duration, curve: curve)
     case "zoom_out":
-      setZoom(rufletZoomLevel(for: mapView.region) - 1, on: mapView, duration: duration)
+      setZoom(rufletZoomLevel(for: mapView.region) - 1, on: mapView, duration: duration, curve: curve)
     case "zoom_to":
       guard let zoom = args["zoom"]?.number else {
         throw RufletMapInvocationError.missingArgument("zoom")
       }
-      setZoom(zoom, on: mapView, duration: duration)
+      setZoom(zoom, on: mapView, duration: duration, curve: curve)
     case "move_to":
       let destination = rufletMapCoordinate(args["destination"])
       let zoom = args["zoom"]?.number
@@ -115,25 +118,30 @@ final class RufletMapController: ObservableObject {
         zoom: zoom,
         rotation: rotation,
         offset: rufletOffset(args["offset"]),
-        duration: duration)
+        duration: duration,
+        curve: curve)
     case "center_on":
       guard let point = rufletMapCoordinate(args["point"]) else {
         throw RufletMapInvocationError.missingArgument("point")
       }
       move(
         mapView, center: point.mapKit, zoom: args["zoom"]?.number,
-        rotation: nil, offset: .zero, duration: duration)
+        rotation: nil, offset: .zero, duration: duration, curve: curve)
     default:
       throw RufletMapInvocationError.unknownMethod(name)
     }
     return .null
   }
 
-  private func setZoom(_ zoom: Double, on mapView: MKMapView, duration: TimeInterval) {
+  private func setZoom(
+    _ zoom: Double, on mapView: MKMapView, duration: TimeInterval, curve: String
+  ) {
     let minimum = control.number("min_zoom") ?? -.infinity
     let maximum = control.number("max_zoom") ?? .infinity
     let region = rufletRegion(center: mapView.centerCoordinate, zoom: min(max(zoom, minimum), maximum))
-    performAnimation(duration: duration) { mapView.setRegion(region, animated: duration > 0) }
+    performAnimation(duration: duration, curve: curve) {
+      mapView.setRegion(region, animated: duration > 0)
+    }
   }
 
   private func move(
@@ -142,7 +150,8 @@ final class RufletMapController: ObservableObject {
     zoom: Double?,
     rotation: Double?,
     offset: CGPoint,
-    duration: TimeInterval
+    duration: TimeInterval,
+    curve: String
   ) {
     var destination = center ?? mapView.centerCoordinate
     if offset != .zero, mapView.bounds.width > 0, mapView.bounds.height > 0 {
@@ -154,28 +163,47 @@ final class RufletMapController: ObservableObject {
       destination.longitude += destination.longitude - offsetCoordinate.longitude
     }
     if let zoom {
-      performAnimation(duration: duration) {
+      performAnimation(duration: duration, curve: curve) {
         mapView.setRegion(rufletRegion(center: destination, zoom: zoom), animated: duration > 0)
       }
     } else {
-      performAnimation(duration: duration) { mapView.setCenter(destination, animated: duration > 0) }
+      performAnimation(duration: duration, curve: curve) {
+        mapView.setCenter(destination, animated: duration > 0)
+      }
     }
     if let rotation {
       let camera = mapView.camera
       camera.heading = rotation
-      setCamera(camera, on: mapView, duration: duration)
+      setCamera(camera, on: mapView, duration: duration, curve: curve)
     }
   }
 
-  private func setCamera(_ camera: MKMapCamera, on mapView: MKMapView, duration: TimeInterval) {
-    performAnimation(duration: duration) { mapView.setCamera(camera, animated: duration > 0) }
+  private func setCamera(
+    _ camera: MKMapCamera, on mapView: MKMapView, duration: TimeInterval, curve: String
+  ) {
+    performAnimation(duration: duration, curve: curve) {
+      mapView.setCamera(camera, animated: duration > 0)
+    }
   }
 
-  private func performAnimation(duration: TimeInterval, changes: () -> Void) {
+  private func performAnimation(duration: TimeInterval, curve: String, changes: () -> Void) {
     CATransaction.begin()
     CATransaction.setAnimationDuration(max(duration, 0))
+    CATransaction.setAnimationTimingFunction(rufletMapTimingFunction(curve))
     changes()
     CATransaction.commit()
+  }
+
+  private func rufletMapTimingFunction(_ curve: String) -> CAMediaTimingFunction {
+    switch curve.lowercased().replacingOccurrences(of: "_", with: "") {
+    case "linear": return CAMediaTimingFunction(name: .linear)
+    case "easein": return CAMediaTimingFunction(name: .easeIn)
+    case "easeout", "decelerate": return CAMediaTimingFunction(name: .easeOut)
+    case "ease", "easeinout": return CAMediaTimingFunction(name: .easeInEaseOut)
+    case "fastoutslowin":
+      return CAMediaTimingFunction(controlPoints: 0.4, 0, 0.2, 1)
+    default: return CAMediaTimingFunction(name: .easeInEaseOut)
+    }
   }
 
   private func cancelAnimations(_ mapView: MKMapView) {
@@ -417,26 +445,45 @@ private final class RufletMapCoordinator: NSObject, MKMapViewDelegate {
   }
 
   private func addPolygons(_ layer: RufletControl, to mapView: MKMapView) {
+    var deferredLabels: [RufletLabelAnnotation] = []
     for item in rufletPolygonDescriptors(layer) {
-      var coordinates = item.coordinates.map(\.mapKit)
+      var coordinates = simplifiedCoordinates(
+        item.coordinates, tolerance: item.simplificationTolerance,
+        mapView: mapView, closed: true).map(\.mapKit)
+      guard coordinates.count >= 3 else { continue }
       let overlay = MKPolygon(coordinates: &coordinates, count: coordinates.count)
+      if item.polygonCulling, !overlay.boundingMapRect.intersects(mapView.visibleMapRect) {
+        continue
+      }
       overlayStyles[ObjectIdentifier(overlay)] = .polygon(
         fill: rufletPlatformColor(item.fillColor),
         stroke: rufletPlatformColor(item.borderColor),
         width: item.borderWidth, cap: item.lineCap, join: item.lineJoin)
       mapView.addOverlay(overlay, level: .aboveLabels)
-      if let label = item.label {
+      if item.polygonLabels, let label = item.label {
         let center = polygonCentroid(item.coordinates)
-        mapView.addAnnotation(RufletLabelAnnotation(
+        let annotation = RufletLabelAnnotation(
           coordinate: center.mapKit, text: label,
-          style: item.labelStyle, rotatesWithMap: item.rotatesLabel))
+          style: item.labelStyle, rotatesWithMap: item.rotatesLabel)
+        if item.drawLabelsLast { deferredLabels.append(annotation) }
+        else { mapView.addAnnotation(annotation) }
       }
     }
+    if !deferredLabels.isEmpty { mapView.addAnnotations(deferredLabels) }
   }
 
   private func addPolylines(_ layer: RufletControl, to mapView: MKMapView) {
     for item in rufletPolylineDescriptors(layer) {
-      var coordinates = item.coordinates.map(\.mapKit)
+      var coordinates = simplifiedCoordinates(
+        item.coordinates, tolerance: item.simplificationTolerance,
+        mapView: mapView, closed: false).map(\.mapKit)
+      guard coordinates.count >= 2 else { continue }
+      let probe = MKPolyline(coordinates: &coordinates, count: coordinates.count)
+      let mapPointsPerPoint = mapView.visibleMapRect.width / max(mapView.bounds.width, 1)
+      let margin = max(item.cullingMargin, item.minimumHittableRadius) * mapPointsPerPoint
+      if !probe.boundingMapRect.intersects(mapView.visibleMapRect.insetBy(dx: -margin, dy: -margin)) {
+        continue
+      }
       if item.borderWidth > 0 {
         let border = MKPolyline(coordinates: &coordinates, count: coordinates.count)
         overlayStyles[ObjectIdentifier(border)] = .polyline(
@@ -454,6 +501,46 @@ private final class RufletMapCoordinator: NSObject, MKMapViewDelegate {
         gradient: item.gradientColors.map(rufletPlatformColor), stops: item.gradientStops)
       mapView.addOverlay(line, level: .aboveLabels)
     }
+  }
+
+  private func simplifiedCoordinates(
+    _ coordinates: [RufletMapCoordinate],
+    tolerance: Double,
+    mapView: MKMapView,
+    closed: Bool
+  ) -> [RufletMapCoordinate] {
+    guard coordinates.count > (closed ? 3 : 2), tolerance > 0 else { return coordinates }
+    let points = coordinates.map { mapView.convert($0.mapKit, toPointTo: mapView) }
+    var keep: Set<Int> = [0, coordinates.count - 1]
+
+    func visit(_ start: Int, _ end: Int) {
+      guard end > start + 1 else { return }
+      let a = points[start]
+      let b = points[end]
+      let dx = b.x - a.x
+      let dy = b.y - a.y
+      let denominator = max(hypot(dx, dy), .leastNonzeroMagnitude)
+      var bestIndex: Int?
+      var bestDistance = 0.0
+      for index in (start + 1) ..< end {
+        let point = points[index]
+        let distance = abs(dy * point.x - dx * point.y + b.x * a.y - b.y * a.x)
+          / denominator
+        if distance > bestDistance {
+          bestDistance = distance
+          bestIndex = index
+        }
+      }
+      if let bestIndex, bestDistance > tolerance {
+        keep.insert(bestIndex)
+        visit(start, bestIndex)
+        visit(bestIndex, end)
+      }
+    }
+
+    visit(0, coordinates.count - 1)
+    let simplified = keep.sorted().map { coordinates[$0] }
+    return closed && simplified.count < 3 ? coordinates : simplified
   }
 
   func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {

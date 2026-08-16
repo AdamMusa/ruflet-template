@@ -14,11 +14,18 @@ struct RufletPolylineDescriptor {
   let usesMeters: Bool
   let gradientStops: [Double]
   let gradientColors: [Color]
+  let cullingMargin: Double
+  let minimumHittableRadius: Double
+  let simplificationTolerance: Double
 }
 
 @MainActor
 func rufletPolylineDescriptors(_ layer: RufletControl) -> [RufletPolylineDescriptor] {
-  layer.children("polylines", visibleOnly: false).compactMap { polyline in
+  let cullingMargin = layer.number("culling_margin", default: 10) ?? 10
+  let minimumHittableRadius = layer.number("min_hittable_radius", default: 10) ?? 10
+  let simplificationTolerance = layer.number("simplification_tolerance", default: 0.3) ?? 0.3
+  return layer.children("polylines", visibleOnly: false).compactMap {
+    polyline -> RufletPolylineDescriptor? in
     guard polyline.type == "PolylineMarker" else { return nil }
     let points = rufletMapCoordinates(polyline.value("coordinates"))
     guard points.count >= 2 else { return nil }
@@ -38,7 +45,10 @@ func rufletPolylineDescriptors(_ layer: RufletControl) -> [RufletPolylineDescrip
       gradientColors: polyline.value("gradient_colors")?.array?.compactMap {
         guard let value = $0.text else { return nil }
         return parseColor(value)
-      } ?? [])
+      } ?? [],
+      cullingMargin: cullingMargin,
+      minimumHittableRadius: minimumHittableRadius,
+      simplificationTolerance: simplificationTolerance)
   }
 }
 
