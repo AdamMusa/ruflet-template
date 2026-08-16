@@ -11,14 +11,14 @@ public struct RufletAlignment: Equatable, Sendable {
 
   static let center = RufletAlignment(x: 0, y: 0)
 
-  var swiftUI: Alignment {
+  public var swiftUI: Alignment {
     Alignment(
       horizontal: x < 0 ? .leading : (x > 0 ? .trailing : .center),
       vertical: y < 0 ? .top : (y > 0 ? .bottom : .center)
     )
   }
 
-  var unitPoint: UnitPoint {
+  public var unitPoint: UnitPoint {
     UnitPoint(x: (x + 1) / 2, y: (y + 1) / 2)
   }
 }

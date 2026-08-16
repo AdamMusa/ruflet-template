@@ -61,12 +61,16 @@ public func parseTextStyle(_ value: Any?, _ defaultValue: RufletTextStyle? = nil
     )
 }
 
-struct RufletTextStyleModifier: ViewModifier {
-    let style: RufletTextStyle?
+public struct RufletTextStyleModifier: ViewModifier {
+    public let style: RufletTextStyle?
     @Environment(\.rufletPageTheme) private var pageTheme
 
+    public init(style: RufletTextStyle?) {
+        self.style = style
+    }
+
     @ViewBuilder
-    func body(content: Content) -> some View {
+    public func body(content: Content) -> some View {
         #if os(iOS)
         if #available(iOS 16.0, *) {
             styled(content)

@@ -19,28 +19,41 @@ struct SlidePickerControl: View {
               .init(color: color.swiftUI, location: 0.5),
               .init(color: color.swiftUI, location: 1),
             ],
-            startPoint: indicatorAlignment("indicator_alignment_begin", x: -1, y: -3),
-            endPoint: indicatorAlignment("indicator_alignment_end", x: 1, y: 3)))
+            startPoint: rufletSlidePickerAlignment(
+              control.value("indicator_alignment_begin"), defaultX: -1, defaultY: -3),
+            endPoint: rufletSlidePickerAlignment(
+              control.value("indicator_alignment_end"), defaultX: 1, defaultY: 3)))
           .frame(width: indicatorWidth, height: indicatorHeight)
-          .overlay {
-            if control.boolean("show_slider_text", default: true) {
-              Text(color.hex).foregroundStyle(color.hsv.value > 0.6 ? .black : .white)
-            }
-          }
           .onTapGesture { color = originalColor }
+          .padding(.bottom, 15)
+      } else {
+        Color.clear.frame(height: 20)
       }
       switch model {
       case .rgb:
-        componentSlider("R", value: binding(\.red), range: 0 ... 1, tint: .red)
-        componentSlider("G", value: binding(\.green), range: 0 ... 1, tint: .green)
-        componentSlider("B", value: binding(\.blue), range: 0 ... 1, tint: .blue)
+        componentSlider("R", value: binding(\.red), range: 0 ... 1, tint: .red,
+          parameter: byteParameter)
+        componentSlider("G", value: binding(\.green), range: 0 ... 1, tint: .green,
+          parameter: byteParameter)
+        componentSlider("B", value: binding(\.blue), range: 0 ... 1, tint: .blue,
+          parameter: byteParameter)
       case .hsv:
         hsvSliders
       case .hsl:
         hslSliders
       }
       if control.boolean("enable_alpha", default: true) {
-        componentSlider("A", value: binding(\.alpha), range: 0 ... 1, tint: .secondary)
+        componentSlider("A", value: binding(\.alpha), range: 0 ... 1, tint: .secondary,
+          parameter: percentParameter)
+      }
+      if control.boolean("show_label", default: true), !labelTypes.isEmpty {
+        VStack(alignment: .leading, spacing: 3) {
+          ForEach(labelTypes, id: \.rawValue) { label in
+            Text(labelText(label))
+              .modifier(RufletTextStyleModifier(style: labelStyle))
+          }
+        }
+        .padding(.bottom, 20)
       }
     }
     .onAppear { synchronize() }
@@ -57,17 +70,20 @@ struct SlidePickerControl: View {
       get: { hsl.hue },
       set: { var value = RufletHSLColor(color); value.hue = $0; color = value.rgba }),
       range: 0 ... 360,
-      tint: Color(hue: hsl.hue / 360, saturation: 1, brightness: 1))
+      tint: Color(hue: hsl.hue / 360, saturation: 1, brightness: 1),
+      parameter: roundedParameter)
     componentSlider("S", value: Binding(
       get: { RufletHSLColor(color).saturation },
       set: { var value = RufletHSLColor(color); value.saturation = $0; color = value.rgba }),
       range: 0 ... 1,
-      tint: color.swiftUI)
+      tint: color.swiftUI,
+      parameter: percentParameter)
     componentSlider("L", value: Binding(
       get: { RufletHSLColor(color).lightness },
       set: { var value = RufletHSLColor(color); value.lightness = $0; color = value.rgba }),
       range: 0 ... 1,
-      tint: color.swiftUI)
+      tint: color.swiftUI,
+      parameter: percentParameter)
   }
 
   @ViewBuilder
@@ -77,29 +93,61 @@ struct SlidePickerControl: View {
       get: { hsv.hue },
       set: { color = RufletHSVColor(alpha: hsv.alpha, hue: $0, saturation: hsv.saturation, value: hsv.value).rgba }),
       range: 0 ... 360,
-      tint: Color(hue: hsv.hue / 360, saturation: 1, brightness: 1))
+      tint: Color(hue: hsv.hue / 360, saturation: 1, brightness: 1),
+      parameter: roundedParameter)
     componentSlider("S", value: Binding(
       get: { color.hsv.saturation },
       set: { var value = color.hsv; value.saturation = $0; color = value.rgba }),
       range: 0 ... 1,
-      tint: color.swiftUI)
+      tint: color.swiftUI,
+      parameter: percentParameter)
     componentSlider(model == .hsl ? "L" : "V", value: Binding(
       get: { color.hsv.value },
       set: { var value = color.hsv; value.value = $0; color = value.rgba }),
       range: 0 ... 1,
-      tint: color.swiftUI)
+      tint: color.swiftUI,
+      parameter: percentParameter)
   }
 
-  private func componentSlider(_ label: String, value: Binding<Double>, range: ClosedRange<Double>, tint: Color) -> some View {
+  private func componentSlider(
+    _ label: String,
+    value: Binding<Double>,
+    range: ClosedRange<Double>,
+    tint: Color,
+    parameter: @escaping (Double) -> String
+  ) -> some View {
     HStack {
-      if control.boolean("show_label", default: true) { Text(label).frame(width: 20) }
-      Slider(value: value, in: range).tint(tint)
-        .frame(width: sliderSize.width, height: sliderSize.height)
+      if control.boolean("show_slider_text", default: true) {
+        Text(label)
+          .modifier(RufletTextStyleModifier(
+            style: parseTextStyle(control.value("slider_text_style"))))
+          .frame(width: 20)
+      }
+      RufletPickerSlider(
+        value: value, range: range, tint: tint,
+        thumbColor: displayThumbColor ? color.swiftUI : nil)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
       if control.boolean("show_params", default: true) {
-        Text(String(format: range.upperBound > 1 ? "%.0f" : "%.2f", value.wrappedValue))
-          .font(.system(.caption, design: .monospaced)).frame(width: 45)
+        Text(parameter(value.wrappedValue))
+          .font(.system(.caption, design: .monospaced))
+          .modifier(RufletTextStyleModifier(
+            style: parseTextStyle(control.value("slider_text_style"))))
+          .frame(width: 45)
       }
     }
+    .frame(width: sliderSize.width, height: sliderSize.height)
+  }
+
+  private func roundedParameter(_ value: Double) -> String {
+    String(Int(value.rounded()))
+  }
+
+  private func byteParameter(_ value: Double) -> String {
+    roundedParameter(value * 255)
+  }
+
+  private func percentParameter(_ value: Double) -> String {
+    roundedParameter(value * 100)
   }
 
   private func binding(_ path: WritableKeyPath<RufletPickerColor, Double>) -> Binding<Double> {
@@ -122,8 +170,36 @@ struct SlidePickerControl: View {
       ?? 0
   }
 
-  private func indicatorAlignment(_ property: String, x: Double, y: Double) -> UnitPoint {
-    rufletSlidePickerAlignment(control.value(property), defaultX: x, defaultY: y)
+  private var displayThumbColor: Bool {
+    control.boolean("display_thumb_color", default: true)
+  }
+
+  private var labelStyle: RufletTextStyle? {
+    parseTextStyle(control.value("label_text_style"))
+  }
+
+  private var labelTypes: [RufletColorLabelType] {
+    control.value("label_types")?.array?.compactMap {
+      $0.text.flatMap { RufletColorLabelType(rawValue: $0.lowercased()) }
+    } ?? []
+  }
+
+  private func labelText(_ type: RufletColorLabelType) -> String {
+    let hsv = color.hsv
+    switch type {
+    case .rgb:
+      return String(format: "RGB  %d  %d  %d  A %.2f",
+        Int((color.red * 255).rounded()), Int((color.green * 255).rounded()),
+        Int((color.blue * 255).rounded()), color.alpha)
+    case .hsv:
+      return String(format: "HSV  %.0f°  %.0f%%  %.0f%%",
+        hsv.hue, hsv.saturation * 100, hsv.value * 100)
+    case .hsl:
+      let hsl = RufletHSLColor(color)
+      return String(format: "HSL  %.0f°  %.0f%%  %.0f%%",
+        hsl.hue, hsl.saturation * 100, hsl.lightness * 100)
+    case .hex: return "HEX  \(color.hex)"
+    }
   }
 
   private func synchronize() {

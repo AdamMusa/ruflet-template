@@ -13,7 +13,9 @@ struct ColorPickerControl: View {
     VStack(spacing: 12) {
       palette
       if control.boolean("enable_alpha", default: true) {
-        RufletAlphaSlider(alpha: $hsv.alpha, color: hsv.rgba)
+        RufletAlphaSlider(
+          alpha: $hsv.alpha, color: hsv.rgba,
+          displayThumbColor: displayThumbColor)
       }
       if control.boolean("hex_input_bar", default: true) {
         HStack {
@@ -48,17 +50,31 @@ struct ColorPickerControl: View {
   private var palette: some View {
     switch paletteType {
     case .hsv, .hsvWithHue:
-      RufletSaturationValueField(hsv: $hsv, cornerRadius: pickerRadius).frame(height: pickerAreaHeight)
-      RufletHueSlider(hue: $hsv.hue)
+      RufletSaturationValueField(
+        hsv: $hsv, cornerRadius: pickerRadius,
+        displayThumbColor: displayThumbColor).frame(height: pickerAreaHeight)
+      RufletHueSlider(hue: $hsv.hue, displayThumbColor: displayThumbColor)
     case .hsvWithValue:
-      RufletHueSaturationField(hsv: $hsv, cornerRadius: pickerRadius).frame(height: pickerAreaHeight)
-      Slider(value: $hsv.value, in: 0 ... 1).tint(hsv.rgba.swiftUI)
+      RufletHueSaturationField(
+        hsv: $hsv, cornerRadius: pickerRadius,
+        displayThumbColor: displayThumbColor).frame(height: pickerAreaHeight)
+      RufletPickerSlider(
+        value: $hsv.value, range: 0 ... 1, tint: hsv.rgba.swiftUI,
+        thumbColor: displayThumbColor ? hsv.rgba.swiftUI : nil)
     case .hsvWithSaturation:
-      RufletHueValueField(hsv: $hsv, cornerRadius: pickerRadius).frame(height: pickerAreaHeight)
-      Slider(value: $hsv.saturation, in: 0 ... 1).tint(hsv.rgba.swiftUI)
+      RufletHueValueField(
+        hsv: $hsv, cornerRadius: pickerRadius,
+        displayThumbColor: displayThumbColor).frame(height: pickerAreaHeight)
+      RufletPickerSlider(
+        value: $hsv.saturation, range: 0 ... 1, tint: hsv.rgba.swiftUI,
+        thumbColor: displayThumbColor ? hsv.rgba.swiftUI : nil)
     case .hsl:
-      RufletHueSaturationField(hsv: $hsv, cornerRadius: pickerRadius).frame(height: pickerAreaHeight)
-      Slider(value: $hsv.value, in: 0 ... 1).tint(hsv.rgba.swiftUI)
+      RufletHueSaturationField(
+        hsv: $hsv, cornerRadius: pickerRadius,
+        displayThumbColor: displayThumbColor).frame(height: pickerAreaHeight)
+      RufletPickerSlider(
+        value: $hsv.value, range: 0 ... 1, tint: hsv.rgba.swiftUI,
+        thumbColor: displayThumbColor ? hsv.rgba.swiftUI : nil)
     case .rgb:
       rgbSlider("R", value: Binding(get: { hsv.rgba.red }, set: { var c = hsv.rgba; c.red = $0; hsv = c.hsv }), tint: .red)
       rgbSlider("G", value: Binding(get: { hsv.rgba.green }, set: { var c = hsv.rgba; c.green = $0; hsv = c.hsv }), tint: .green)
@@ -69,7 +85,9 @@ struct ColorPickerControl: View {
   private func rgbSlider(_ name: String, value: Binding<Double>, tint: Color) -> some View {
     HStack {
       Text(name).frame(width: 20)
-      Slider(value: value, in: 0 ... 1).tint(tint)
+      RufletPickerSlider(
+        value: value, range: 0 ... 1, tint: tint,
+        thumbColor: displayThumbColor ? hsv.rgba.swiftUI : nil)
       Text(String(Int((value.wrappedValue * 255).rounded()))).font(.system(.caption, design: .monospaced)).frame(width: 32)
     }
   }
@@ -81,6 +99,8 @@ struct ColorPickerControl: View {
         ForEach(labelTypes, id: \.rawValue) { label in
           Text(labelText(label))
             .font(.system(.caption, design: .monospaced))
+            .modifier(RufletTextStyleModifier(
+              style: parseTextStyle(control.value("label_text_style"))))
             .frame(maxWidth: .infinity, alignment: .leading)
         }
       }
@@ -109,6 +129,9 @@ struct ColorPickerControl: View {
     control.value("picker_area_border_radius")?.number
       ?? control.value("picker_area_border_radius")?.map?["top_left"]?.number
       ?? 0
+  }
+  private var displayThumbColor: Bool {
+    control.boolean("display_thumb_color", default: true)
   }
 
   private var configurationIdentity: String {

@@ -166,6 +166,7 @@ func reportPickerColor(
 struct RufletSaturationValueField: View {
   @Binding var hsv: RufletHSVColor
   var cornerRadius: Double = 0
+  var displayThumbColor = true
 
   var body: some View {
     GeometryReader { proxy in
@@ -174,7 +175,8 @@ struct RufletSaturationValueField: View {
         LinearGradient(colors: [.white, .clear], startPoint: .leading, endPoint: .trailing)
         LinearGradient(colors: [.clear, .black], startPoint: .top, endPoint: .bottom)
         Circle()
-          .strokeBorder(Color.white, lineWidth: 2)
+          .fill(displayThumbColor ? hsv.rgba.swiftUI : .white)
+          .overlay(Circle().strokeBorder(Color.white, lineWidth: 2))
           .shadow(radius: 1)
           .frame(width: 18, height: 18)
           .position(x: hsv.saturation * proxy.size.width, y: (1 - hsv.value) * proxy.size.height)
@@ -192,6 +194,7 @@ struct RufletSaturationValueField: View {
 struct RufletHueSaturationField: View {
   @Binding var hsv: RufletHSVColor
   var cornerRadius: Double = 0
+  var displayThumbColor = true
 
   var body: some View {
     GeometryReader { proxy in
@@ -201,7 +204,8 @@ struct RufletHueSaturationField: View {
           startPoint: .leading,
           endPoint: .trailing)
         LinearGradient(colors: [.white, .clear], startPoint: .top, endPoint: .bottom)
-        Circle().strokeBorder(Color.white, lineWidth: 2).shadow(radius: 1)
+        Circle().fill(displayThumbColor ? hsv.rgba.swiftUI : .white)
+          .overlay(Circle().strokeBorder(Color.white, lineWidth: 2)).shadow(radius: 1)
           .frame(width: 18, height: 18)
           .position(x: hsv.hue / 360 * proxy.size.width, y: hsv.saturation * proxy.size.height)
       }
@@ -218,6 +222,7 @@ struct RufletHueSaturationField: View {
 struct RufletHueValueField: View {
   @Binding var hsv: RufletHSVColor
   var cornerRadius: Double = 0
+  var displayThumbColor = true
 
   var body: some View {
     GeometryReader { proxy in
@@ -227,7 +232,8 @@ struct RufletHueValueField: View {
           startPoint: .leading,
           endPoint: .trailing)
         LinearGradient(colors: [.clear, .black], startPoint: .top, endPoint: .bottom)
-        Circle().strokeBorder(Color.white, lineWidth: 2).shadow(radius: 1)
+        Circle().fill(displayThumbColor ? hsv.rgba.swiftUI : .white)
+          .overlay(Circle().strokeBorder(Color.white, lineWidth: 2)).shadow(radius: 1)
           .frame(width: 18, height: 18)
           .position(x: hsv.hue / 360 * proxy.size.width, y: (1 - hsv.value) * proxy.size.height)
       }
@@ -243,9 +249,15 @@ struct RufletHueValueField: View {
 
 struct RufletHueSlider: View {
   @Binding var hue: Double
+  var displayThumbColor = true
 
   var body: some View {
-    Slider(value: $hue, in: 0 ... 360)
+    RufletPickerSlider(
+      value: $hue,
+      range: 0 ... 360,
+      tint: Color(hue: hue / 360, saturation: 1, brightness: 1),
+      thumbColor: displayThumbColor
+        ? Color(hue: hue / 360, saturation: 1, brightness: 1) : nil)
       .background(LinearGradient(
         colors: stride(from: 0.0, through: 1.0, by: 1 / 12).map { Color(hue: $0, saturation: 1, brightness: 1) },
         startPoint: .leading,
@@ -256,13 +268,53 @@ struct RufletHueSlider: View {
 struct RufletAlphaSlider: View {
   @Binding var alpha: Double
   let color: RufletPickerColor
+  var displayThumbColor = true
 
   var body: some View {
-    Slider(value: $alpha, in: 0 ... 1)
+    RufletPickerSlider(
+      value: $alpha,
+      range: 0 ... 1,
+      tint: color.swiftUI,
+      thumbColor: displayThumbColor ? color.swiftUI.opacity(alpha) : nil)
       .background(LinearGradient(
         colors: [color.swiftUI.opacity(0), color.swiftUI.opacity(1)],
         startPoint: .leading,
         endPoint: .trailing).clipShape(Capsule()))
+  }
+}
+
+struct RufletPickerSlider: View {
+  @Binding var value: Double
+  let range: ClosedRange<Double>
+  let tint: Color
+  let thumbColor: Color?
+
+  var body: some View {
+    GeometryReader { proxy in
+      let diameter = min(max(proxy.size.height * 0.7, 14), 24)
+      let usableWidth = max(proxy.size.width - diameter, 1)
+      let fraction = (value - range.lowerBound)
+        / max(range.upperBound - range.lowerBound, .leastNonzeroMagnitude)
+      ZStack(alignment: .leading) {
+        Capsule().fill(tint.opacity(0.35)).frame(height: max(4, diameter * 0.28))
+        Capsule().fill(tint).frame(
+          width: max(diameter / 2, usableWidth * fraction),
+          height: max(4, diameter * 0.28))
+        Circle()
+          .fill(thumbColor ?? .white)
+          .overlay(Circle().stroke(.white, lineWidth: 2))
+          .shadow(color: .black.opacity(0.35), radius: 2, y: 1)
+          .frame(width: diameter, height: diameter)
+          .offset(x: usableWidth * fraction)
+      }
+      .frame(maxHeight: .infinity)
+      .contentShape(Rectangle())
+      .gesture(DragGesture(minimumDistance: 0).onChanged { gesture in
+        let fraction = min(max((gesture.location.x - diameter / 2) / usableWidth, 0), 1)
+        value = range.lowerBound + fraction * (range.upperBound - range.lowerBound)
+      })
+    }
+    .frame(minHeight: 24)
   }
 }
 
