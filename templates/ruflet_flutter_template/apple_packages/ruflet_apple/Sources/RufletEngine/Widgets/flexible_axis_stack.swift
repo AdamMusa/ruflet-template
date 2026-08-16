@@ -289,9 +289,13 @@ private struct RufletCrossAxisStretchModifier: ViewModifier {
   @ViewBuilder
   func body(content: Content) -> some View {
     if enabled, axis == .horizontal {
-      content.frame(maxHeight: .infinity)
+      // Flutter gives a stretched child a tight cross-axis constraint without
+      // changing where that child's contents paint inside the new box.
+      // SwiftUI's frame defaults to centered content, which made a stretched
+      // Column center Text and other intrinsic children unexpectedly.
+      content.frame(maxHeight: .infinity, alignment: .top)
     } else if enabled {
-      content.frame(maxWidth: .infinity)
+      content.frame(maxWidth: .infinity, alignment: .leading)
     } else {
       content
     }
