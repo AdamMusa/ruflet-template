@@ -228,12 +228,29 @@ private struct RufletTabLabel: View {
   }
 }
 
+@MainActor
+private struct RufletAppleSegmentLabel: View {
+  @ObservedObject var control: RufletControl
+
+  var body: some View {
+    HStack(spacing: 6) {
+      if let icon = control.buildIconOrWidget("icon") {
+        icon.padding(parseMargin(control.dynamicValue("icon_margin")) ?? EdgeInsets())
+      }
+      if let label = control.buildTextOrWidget("label") {
+        label
+      }
+    }
+  }
+}
+
 /// Apple-native port of pinned Flet `TabBarControl`.
 @MainActor
 public struct TabBarControl: View {
   @ObservedObject public var control: RufletControl
   @Environment(\.rufletTabsState) private var tabsState
   @State private var hoveredIndex: Int?
+  @Namespace private var appleSegmentSelection
 
   public init(control: RufletControl) {
     self.control = control
@@ -260,13 +277,11 @@ public struct TabBarControl: View {
 
   @ViewBuilder
   private func tabStrip(state: RufletTabsState) -> some View {
-    if rufletTabBarUsesNativeSegmentedPresentation(
+    if rufletTabBarUsesAppleSegmentedPresentation(
       tabCount: tabControls.count,
-      hasDisabledTab: tabControls.contains { $0.disabled },
-      hasCompositeTab: tabControls.contains(where: rufletTabHasCompositeLabel),
       isIOS: rufletIsIOS)
     {
-      nativeSegmentedTabs(state: state)
+      appleSegmentedTabs(state: state)
     } else if scrollable {
       ScrollView(.horizontal, showsIndicators: false) {
         tabs(state: state, fill: false)
@@ -277,28 +292,79 @@ public struct TabBarControl: View {
     }
   }
 
-  private func nativeSegmentedTabs(state: RufletTabsState) -> some View {
-    Picker(
-      "",
-      selection: Binding(
-        get: { state.selectedIndex },
-        set: { index in
-          guard index != state.selectedIndex else { return }
-          let presentation = RufletTabBarPresentation(control: control)
-          if presentation.enableFeedback { performTabBarFeedback() }
-          state.select(index)
-          control.triggerEvent("click", data: .int(Int64(index)))
-        })
-    ) {
+  private func appleSegmentedTabs(state: RufletTabsState) -> some View {
+    HStack(spacing: 0) {
       ForEach(Array(tabControls.enumerated()), id: \.element.id) { index, tab in
-        RufletTabLabel(control: tab)
-          .tag(index)
+        let selected = state.selectedIndex == index
+        Button {
+          selectTab(index, tab: tab, state: state)
+        } label: {
+          Group {
+            if tab.type == "Tab" {
+              RufletAppleSegmentLabel(control: tab)
+            } else {
+              ControlWidget(control: tab)
+            }
+          }
+          .modifier(
+            RufletTextStyleModifier(style: selected ? selectedTextStyle : unselectedTextStyle)
+          )
+          .foregroundStyle(selected ? labelColor : unselectedLabelColor)
+          .lineLimit(1)
+          .frame(maxWidth: .infinity, minHeight: 32)
+          .padding(.horizontal, 8)
+          .background {
+            if selected {
+              RoundedRectangle(cornerRadius: 7, style: .continuous)
+                .fill(appleSelectedSegmentColor)
+                .shadow(color: .black.opacity(0.14), radius: 1, y: 1)
+                .matchedGeometryEffect(id: "selected-tab", in: appleSegmentSelection)
+            }
+          }
+          .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(control.disabled || tab.disabled)
+        .opacity(control.disabled || tab.disabled ? 0.38 : 1)
+        .accessibilityAddTraits(selected ? .isSelected : [])
       }
     }
-    .pickerStyle(.segmented)
-    .padding(parsePadding(control.dynamicValue("padding")) ?? EdgeInsets())
+    .padding(2)
+    .background(
+      RoundedRectangle(cornerRadius: 9, style: .continuous)
+        .fill(appleSegmentTrackColor)
+    )
+    .padding(
+      parsePadding(control.dynamicValue("padding"))
+        ?? EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)
+    )
     .frame(minHeight: 44)
     .accessibilityLabel(control.string("semantics_label") ?? "Tabs")
+    .animation(.easeInOut(duration: 0.18), value: state.selectedIndex)
+  }
+
+  private func selectTab(_ index: Int, tab: RufletControl, state: RufletTabsState) {
+    guard !control.disabled, !tab.disabled, index != state.selectedIndex else { return }
+    let presentation = RufletTabBarPresentation(control: control)
+    if presentation.enableFeedback { performTabBarFeedback() }
+    state.select(index)
+    control.triggerEvent("click", data: .int(Int64(index)))
+  }
+
+  private var appleSegmentTrackColor: Color {
+    #if os(iOS)
+      Color(uiColor: .tertiarySystemFill)
+    #else
+      Color.secondary.opacity(0.16)
+    #endif
+  }
+
+  private var appleSelectedSegmentColor: Color {
+    #if os(iOS)
+      Color(uiColor: .secondarySystemBackground)
+    #else
+      Color.rufletSystemBackground
+    #endif
   }
 
   private func tabs(state: RufletTabsState, fill: Bool) -> some View {
@@ -513,25 +579,11 @@ private func performTabBarFeedback() {
   #endif
 }
 
-func rufletTabBarUsesNativeSegmentedPresentation(
+func rufletTabBarUsesAppleSegmentedPresentation(
   tabCount: Int,
-  hasDisabledTab: Bool,
-  hasCompositeTab: Bool,
   isIOS: Bool
 ) -> Bool {
-  // SwiftUI's segmented Picker flattens a label containing both an icon and
-  // text into two UISegmentedControl segments. Keep Flet's one-Tab/one-item
-  // contract by using the regular native SwiftUI tab strip for composite
-  // labels; the segmented presentation is safe for icon-only or text-only
-  // tabs.
-  isIOS && (1...5).contains(tabCount) && !hasDisabledTab && !hasCompositeTab
-}
-
-@MainActor
-private func rufletTabHasCompositeLabel(_ tab: RufletControl) -> Bool {
-  let icon = tab.value("icon")
-  let label = tab.value("label")
-  return icon != nil && icon != .null && label != nil && label != .null
+  isIOS && (1...5).contains(tabCount)
 }
 
 private enum RufletTabsError: Error {
