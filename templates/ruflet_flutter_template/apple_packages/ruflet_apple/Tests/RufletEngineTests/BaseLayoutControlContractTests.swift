@@ -67,6 +67,40 @@ final class BaseLayoutControlContractTests: XCTestCase {
     XCTAssertEqual(rufletSizeContract(for: control), RufletSizeContract(width: nil, height: nil))
   }
 
+  func testExplicitSizeClampsToBoundedParentButSurvivesUnboundedFlexAxis() {
+    XCTAssertEqual(
+      rufletConstrainedExtent(
+        requested: 560,
+        proposed: 353,
+        measured: 560,
+        fillsAvailableSpace: false),
+      353)
+    XCTAssertEqual(
+      rufletConstrainedExtent(
+        requested: 300,
+        proposed: nil,
+        measured: 300,
+        fillsAvailableSpace: false),
+      300)
+  }
+
+  func testAlignedContainerFillsOnlyFiniteAvailableExtent() {
+    XCTAssertEqual(
+      rufletConstrainedExtent(
+        requested: nil,
+        proposed: 393,
+        measured: 120,
+        fillsAvailableSpace: true),
+      393)
+    XCTAssertEqual(
+      rufletConstrainedExtent(
+        requested: nil,
+        proposed: nil,
+        measured: 120,
+        fillsAvailableSpace: true),
+      120)
+  }
+
   func testPositionRequiresStackHostAndAnimatedDefaultStartsAtOrigin() {
     let backend = BaseLayoutBackend()
     let hosted = parent(

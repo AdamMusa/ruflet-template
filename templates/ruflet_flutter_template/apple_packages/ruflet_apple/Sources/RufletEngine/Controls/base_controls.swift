@@ -135,22 +135,125 @@ struct RufletConstrainedSizeModifier: ViewModifier {
   /// the container shrink-wraps and the alignment is unobservable.
   var fillsAvailableSpace = false
 
+  @ViewBuilder
   func body(content: Content) -> some View {
-    // An explicit Flet width/height is a *tight* constraint: Flutter's
-    // SizedBox/Container hands the child exactly that extent and overflows if
-    // the parent is too small — it never shrinks to fit. Leaving `minWidth`
-    // nil makes the SwiftUI frame flexible instead, so an over-subscribed
-    // HStack/VStack silently compresses it. That is what collapses a
-    // `width: 300` sidebar to 136pt, squeezes ListTile titles to zero width
-    // and overlaps AppBar leading widgets.
-    content.frame(
-      minWidth: size.width,
-      idealWidth: size.width,
-      maxWidth: size.width ?? (fillsAvailableSpace ? .infinity : nil),
-      minHeight: size.height,
-      idealHeight: size.height,
-      maxHeight: size.height ?? (fillsAvailableSpace ? .infinity : nil),
-      alignment: alignment)
+    if #available(macOS 13.0, iOS 16.0, *) {
+      // Flutter tightens an explicit extent against the constraints supplied
+      // by its parent. A 560pt Container is therefore 560pt in an unbounded
+      // Row, but becomes the available 353pt inside an iPhone View. SwiftUI's
+      // ordinary fixed frame cannot express both cases: setting `minWidth`
+      // overflows the phone and omitting it lets an over-subscribed Row crush
+      // the child. Read the actual proposal just as RenderBox reads its
+      // BoxConstraints and resolve the requested extent against it.
+      RufletConstrainedSizeLayout(
+        size: size,
+        alignment: alignment,
+        fillsAvailableSpace: fillsAvailableSpace
+      ) {
+        content
+      }
+    } else {
+      // On the iOS 15 compatibility path, the legacy Row/Column wrapper uses
+      // fixedSize on non-flex children. A clamping frame can therefore honor
+      // bounded parents without losing unbounded main-axis extents.
+      content.frame(
+        idealWidth: size.width,
+        maxWidth: size.width ?? (fillsAvailableSpace ? .infinity : nil),
+        idealHeight: size.height,
+        maxHeight: size.height ?? (fillsAvailableSpace ? .infinity : nil),
+        alignment: alignment)
+    }
+  }
+}
+
+@available(macOS 13.0, iOS 16.0, *)
+private struct RufletConstrainedSizeLayout: Layout {
+  let size: RufletSizeContract
+  let alignment: Alignment
+  let fillsAvailableSpace: Bool
+
+  func sizeThatFits(
+    proposal: ProposedViewSize,
+    subviews: Subviews,
+    cache: inout ()
+  ) -> CGSize {
+    guard let subview = subviews.first else { return .zero }
+    let childProposal = ProposedViewSize(
+      width: rufletConstrainedProposal(requested: size.width, proposed: proposal.width),
+      height: rufletConstrainedProposal(requested: size.height, proposed: proposal.height))
+    let measured = subview.sizeThatFits(childProposal)
+    return CGSize(
+      width: rufletConstrainedExtent(
+        requested: size.width,
+        proposed: proposal.width,
+        measured: measured.width,
+        fillsAvailableSpace: fillsAvailableSpace),
+      height: rufletConstrainedExtent(
+        requested: size.height,
+        proposed: proposal.height,
+        measured: measured.height,
+        fillsAvailableSpace: fillsAvailableSpace))
+  }
+
+  func placeSubviews(
+    in bounds: CGRect,
+    proposal: ProposedViewSize,
+    subviews: Subviews,
+    cache: inout ()
+  ) {
+    guard let subview = subviews.first else { return }
+    let childProposal = ProposedViewSize(
+      width: size.width == nil ? proposal.width : bounds.width,
+      height: size.height == nil ? proposal.height : bounds.height)
+    let childSize = subview.sizeThatFits(childProposal)
+    let freeWidth = max(bounds.width - childSize.width, 0)
+    let freeHeight = max(bounds.height - childSize.height, 0)
+    let origin = CGPoint(
+      x: bounds.minX + freeWidth * alignment.horizontalFactor,
+      y: bounds.minY + freeHeight * alignment.verticalFactor)
+    subview.place(at: origin, anchor: .topLeading, proposal: childProposal)
+  }
+}
+
+/// Resolves a Flet explicit extent against the finite maximum supplied by its
+/// parent. A nil/infinite proposal represents Flutter's unbounded constraint.
+func rufletConstrainedExtent(
+  requested: CGFloat?,
+  proposed: CGFloat?,
+  measured: CGFloat,
+  fillsAvailableSpace: Bool
+) -> CGFloat {
+  if let requested {
+    guard let proposed, proposed.isFinite else { return requested }
+    return min(requested, max(proposed, 0))
+  }
+  if fillsAvailableSpace, let proposed, proposed.isFinite {
+    return max(proposed, 0)
+  }
+  return measured
+}
+
+private func rufletConstrainedProposal(requested: CGFloat?, proposed: CGFloat?) -> CGFloat? {
+  guard let requested else { return proposed }
+  guard let proposed, proposed.isFinite else { return requested }
+  return min(requested, max(proposed, 0))
+}
+
+private extension Alignment {
+  var horizontalFactor: CGFloat {
+    switch self {
+    case .leading, .topLeading, .bottomLeading: return 0
+    case .trailing, .topTrailing, .bottomTrailing: return 1
+    default: return 0.5
+    }
+  }
+
+  var verticalFactor: CGFloat {
+    switch self {
+    case .top, .topLeading, .topTrailing: return 0
+    case .bottom, .bottomLeading, .bottomTrailing: return 1
+    default: return 0.5
+    }
   }
 }
 
