@@ -72,6 +72,20 @@ final class ButtonPropertyConsumptionTests: XCTestCase {
     XCTAssertEqual(buttonStyle.fixedSize.resolve([]), CGSize(width: 120, height: 44))
   }
 
+  func testEveryMaterialButtonConsumesDirectBackgroundColor() {
+    for type in ["Button", "FilledButton", "FilledTonalButton", "OutlinedButton", "TextButton"] {
+      let buttonStyle = style(
+        for: type,
+        properties: ["bgcolor": .string("#2563eb")])
+
+      XCTAssertTrue(buttonStyle.hasExplicitBackground, type)
+    }
+  }
+
+  func testUnconfiguredMaterialButtonHasNoExplicitBackground() {
+    XCTAssertFalse(style(for: "Button", properties: [:]).hasExplicitBackground)
+  }
+
   func testLongPressRecognizerExistsOnlyForAnEnabledSubscription() {
     let backend = ButtonPropertyTestBackend()
     let ordinary = RufletControl(

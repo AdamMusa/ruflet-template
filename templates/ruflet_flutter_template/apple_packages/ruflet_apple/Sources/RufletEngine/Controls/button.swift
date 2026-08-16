@@ -71,22 +71,24 @@ public struct ButtonControl: View {
     let explicitForeground =
       parseColor(details?["color"] as? String)
       ?? parseColor(control.string("color"))
+    let explicitBackground =
+      parseColor(details?["bgcolor"] as? String)
+      ?? parseColor(control.string("bgcolor"))
     let foreground = explicitForeground ?? defaultForegroundColor
     let background: Color
     switch variant {
     case .filled:
       background =
-        parseColor(details?["bgcolor"] as? String) ?? parseColor(control.string("bgcolor"))
-        ?? pageTheme?.colorScheme?["primary"] ?? .accentColor
+        explicitBackground ?? pageTheme?.colorScheme?["primary"] ?? .accentColor
     case .tonal:
       background =
-        parseColor(details?["bgcolor"] as? String)
-        ?? pageTheme?.colorScheme?["secondary_container"] ?? .accentColor.opacity(0.18)
-    case .outlined, .text: background = parseColor(details?["bgcolor"] as? String) ?? .clear
+        explicitBackground ?? pageTheme?.colorScheme?["secondary_container"]
+        ?? .accentColor.opacity(0.18)
+    case .outlined, .text: background = explicitBackground ?? .clear
     case .elevated:
       background =
-        parseColor(details?["bgcolor"] as? String)
-        ?? pageTheme?.colorScheme?["surface_container_low"] ?? .rufletSystemBackground
+        explicitBackground ?? pageTheme?.colorScheme?["surface_container_low"]
+        ?? .rufletSystemBackground
     }
     let border =
       variant == .outlined
@@ -101,6 +103,7 @@ public struct ButtonControl: View {
       variant: variant,
       foreground: foreground,
       background: background,
+      hasExplicitBackground: explicitBackground != nil,
       radius: radius,
       border: border,
       elevation: control.number("elevation") ?? 1,

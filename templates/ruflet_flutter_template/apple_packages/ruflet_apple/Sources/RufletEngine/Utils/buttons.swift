@@ -14,6 +14,7 @@ struct RufletAppleButtonStyle: ButtonStyle {
   let variant: RufletButtonVariant
   let foreground: Color
   let background: Color
+  let hasExplicitBackground: Bool
   let radius: Double
   let border: RufletBorderSide?
   let elevation: Double
