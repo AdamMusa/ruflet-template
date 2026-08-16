@@ -32,6 +32,32 @@ final class CodeEditorParityTests: XCTestCase {
     XCTAssertEqual(controller.foldableLineNumbers(), [1, 3])
   }
 
+  func testEditorDoesNotStealFocusOnItsInitialReadOnlyRender() {
+    var state = RufletCodeEditorFocusState(focusRequest: 0)
+
+    XCTAssertFalse(state.shouldRequestFocus(
+      focusRequest: 0,
+      autofocus: false,
+      enabled: true))
+  }
+
+  func testPatchedAutofocusUnlocksEditorAndFocusesExactlyOnce() {
+    var state = RufletCodeEditorFocusState(focusRequest: 0)
+
+    XCTAssertTrue(state.shouldRequestFocus(
+      focusRequest: 0,
+      autofocus: true,
+      enabled: true))
+    XCTAssertFalse(state.shouldRequestFocus(
+      focusRequest: 0,
+      autofocus: true,
+      enabled: true))
+    XCTAssertTrue(state.shouldRequestFocus(
+      focusRequest: 1,
+      autofocus: true,
+      enabled: true))
+  }
+
   private func control(properties: [String: RufletValue]) -> RufletControl {
     RufletControl(
       id: 1,

@@ -123,6 +123,21 @@ final class GestureDetectorControlTests: XCTestCase {
     XCTAssertEqual(backend.events.map(\.name), ["double_tap"])
   }
 
+  func testIOSGestureMonitorCrossesNativePlatformViewBoundary() throws {
+    let root = URL(fileURLWithPath: #filePath)
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+    let source = try String(
+      contentsOf: root.appendingPathComponent(
+        "Sources/RufletEngine/Controls/gesture_detector.swift"),
+      encoding: .utf8)
+
+    XCTAssertTrue(source.contains("host.addGestureRecognizer(recognizer)"))
+    XCTAssertTrue(source.contains("shouldReceive touch: UITouch"))
+    XCTAssertTrue(source.contains("override func canBePrevented("))
+  }
+
   func testPanUpdatePreservesPinnedRelativeDeltaContract() {
     let backend = GestureDetectorTestBackend()
     let coordinator = coordinator(

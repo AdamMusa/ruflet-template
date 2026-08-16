@@ -108,6 +108,29 @@ final class RufletCodeEditorModel: ObservableObject {
   }
 }
 
+struct RufletCodeEditorFocusState {
+  private(set) var lastFocusRequest: Int
+  private(set) var didAutofocus = false
+
+  init(focusRequest: Int) {
+    lastFocusRequest = focusRequest
+  }
+
+  mutating func shouldRequestFocus(
+    focusRequest: Int,
+    autofocus: Bool,
+    enabled: Bool
+  ) -> Bool {
+    let invoked = focusRequest != lastFocusRequest
+    lastFocusRequest = focusRequest
+    guard enabled else { return false }
+    if invoked { return true }
+    guard autofocus, !didAutofocus else { return false }
+    didAutofocus = true
+    return true
+  }
+}
+
 #if os(iOS)
 private final class RufletIOSCodeEditorView: UIView {
   let gutter = UITextView()
@@ -198,9 +221,12 @@ private struct RufletPlatformCodeEditor: UIViewRepresentable {
     let model: RufletCodeEditorModel
     weak var host: RufletIOSCodeEditorView?
     private var updating = false
-    private var lastFocusRequest = -1
+    private var focusState: RufletCodeEditorFocusState
 
-    init(model: RufletCodeEditorModel) { self.model = model }
+    init(model: RufletCodeEditorModel) {
+      self.model = model
+      focusState = RufletCodeEditorFocusState(focusRequest: model.editor.focusRequest)
+    }
 
     func refresh(_ host: RufletIOSCodeEditorView, style: RufletCodeEditorStyle) {
       updating = true
@@ -212,13 +238,17 @@ private struct RufletPlatformCodeEditor: UIViewRepresentable {
       if NSMaxRange(range) <= (host.editor.text as NSString).length, host.editor.selectedRange != range {
         host.editor.selectedRange = range
       }
-      host.editor.isEditable = !model.control.boolean("read_only", default: false) && !model.control.disabled
-      host.editor.isSelectable = !model.control.disabled
+      let enabled = !model.control.disabled
+      host.editor.isEditable = !model.control.boolean("read_only", default: false) && enabled
+      host.editor.isSelectable = enabled
       updateGutter(host, style: style)
       RufletCodeHighlighter(style: style, language: model.editor.language).apply(to: host.editor.textStorage)
       updateCompletions(host.editor)
-      if model.editor.focusRequest != lastFocusRequest || (lastFocusRequest < 0 && model.control.boolean("autofocus", default: false)) {
-        lastFocusRequest = model.editor.focusRequest
+      if focusState.shouldRequestFocus(
+        focusRequest: model.editor.focusRequest,
+        autofocus: model.control.boolean("autofocus", default: false),
+        enabled: enabled)
+      {
         DispatchQueue.main.async { host.editor.becomeFirstResponder() }
       }
       updating = false
@@ -417,9 +447,12 @@ private struct RufletPlatformCodeEditor: NSViewRepresentable {
     let model: RufletCodeEditorModel
     weak var host: RufletMacCodeEditorView?
     private var updating = false
-    private var lastFocusRequest = -1
+    private var focusState: RufletCodeEditorFocusState
 
-    init(model: RufletCodeEditorModel) { self.model = model }
+    init(model: RufletCodeEditorModel) {
+      self.model = model
+      focusState = RufletCodeEditorFocusState(focusRequest: model.editor.focusRequest)
+    }
 
     func refresh(_ host: RufletMacCodeEditorView, style: RufletCodeEditorStyle) {
       updating = true
@@ -429,16 +462,20 @@ private struct RufletPlatformCodeEditor: NSViewRepresentable {
       if NSMaxRange(range) <= (host.editor.string as NSString).length, host.editor.selectedRange() != range {
         host.editor.setSelectedRange(range)
       }
-      host.editor.isEditable = !model.control.boolean("read_only", default: false) && !model.control.disabled
-      host.editor.isSelectable = !model.control.disabled
+      let enabled = !model.control.disabled
+      host.editor.isEditable = !model.control.boolean("read_only", default: false) && enabled
+      host.editor.isSelectable = enabled
       host.gutter.textStorage?.setAttributedString(NSAttributedString(
         string: gutterText(style: style),
         attributes: style.gutterAttributes))
       if let storage = host.editor.textStorage {
         RufletCodeHighlighter(style: style, language: model.editor.language).apply(to: storage)
       }
-      if model.editor.focusRequest != lastFocusRequest || (lastFocusRequest < 0 && model.control.boolean("autofocus", default: false)) {
-        lastFocusRequest = model.editor.focusRequest
+      if focusState.shouldRequestFocus(
+        focusRequest: model.editor.focusRequest,
+        autofocus: model.control.boolean("autofocus", default: false),
+        enabled: enabled)
+      {
         DispatchQueue.main.async { host.window?.makeFirstResponder(host.editor) }
       }
       updating = false

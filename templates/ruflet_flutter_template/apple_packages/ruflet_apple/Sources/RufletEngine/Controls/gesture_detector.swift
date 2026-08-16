@@ -812,7 +812,8 @@ private struct RufletPlatformGestureMonitor: UIViewRepresentable {
 
 private final class RufletGestureInstallerView: UIView, UIGestureRecognizerDelegate {
   weak var coordinator: RufletGestureEventCoordinator?
-  private weak var installedView: UIView?
+  private weak var installedSurface: UIView?
+  private weak var installedHost: UIView?
   private var recognizer: RufletTouchTrackingRecognizer?
 
   override func didMoveToSuperview() {
@@ -820,28 +821,48 @@ private final class RufletGestureInstallerView: UIView, UIGestureRecognizerDeleg
     DispatchQueue.main.async { [weak self] in self?.installIfNeeded() }
   }
 
+  override func didMoveToWindow() {
+    super.didMoveToWindow()
+    DispatchQueue.main.async { [weak self] in self?.installIfNeeded() }
+  }
+
   func installIfNeeded() {
-    guard recognizer == nil, let target = superview else { return }
+    guard recognizer == nil, let surface = superview, let host = window else { return }
     let recognizer = RufletTouchTrackingRecognizer()
     recognizer.cancelsTouchesInView = false
     recognizer.delaysTouchesBegan = false
     recognizer.delaysTouchesEnded = false
     recognizer.delegate = self
-    recognizer.callback = { [weak self, weak target] phase, changedTouches, activeTouches, event in
-      guard let self, let target else { return }
+    recognizer.callback = { [weak self, weak surface] phase, changedTouches, activeTouches, event in
+      guard let self, let surface else { return }
       self.handle(
         phase: phase, changedTouches: changedTouches, activeTouches: activeTouches,
-        event: event, in: target)
+        event: event, in: surface)
     }
-    target.addGestureRecognizer(recognizer)
-    installedView = target
+    // A UIViewRepresentable used as a SwiftUI background is frequently a
+    // sibling of another representable (UITextView, WKWebView, and friends),
+    // not its UIKit ancestor. Install at the window and filter to this
+    // GestureDetector's surface so native children cannot swallow the wire
+    // gesture before the ancestor sees it.
+    host.addGestureRecognizer(recognizer)
+    installedSurface = surface
+    installedHost = host
     self.recognizer = recognizer
   }
 
   func uninstall() {
-    if let recognizer { installedView?.removeGestureRecognizer(recognizer) }
+    if let recognizer { installedHost?.removeGestureRecognizer(recognizer) }
     recognizer = nil
-    installedView = nil
+    installedSurface = nil
+    installedHost = nil
+  }
+
+  func gestureRecognizer(
+    _ gestureRecognizer: UIGestureRecognizer,
+    shouldReceive touch: UITouch
+  ) -> Bool {
+    guard let surface = installedSurface else { return false }
+    return surface.bounds.contains(touch.location(in: surface))
   }
 
   func gestureRecognizer(
@@ -998,6 +1019,8 @@ private final class RufletTouchTrackingRecognizer: UIGestureRecognizer {
     state = activeTouches.isEmpty ? .cancelled : .changed
   }
   override func reset() { activeTouches.removeAll() }
+  override func canPrevent(_ preventedGestureRecognizer: UIGestureRecognizer) -> Bool { false }
+  override func canBePrevented(by preventingGestureRecognizer: UIGestureRecognizer) -> Bool { false }
 }
 
 #elseif os(macOS)
