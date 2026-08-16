@@ -17,32 +17,45 @@ private final class RufletTableScrollState: ObservableObject {
 private struct RufletSyncedHorizontalViewport<Content: View>: View {
   @ObservedObject var state: RufletTableScrollState
   let contentWidth: Double
+  let showsIndicator: Bool
   let content: Content
   @State private var dragStart = 0.0
 
   init(
     state: RufletTableScrollState,
     contentWidth: Double,
+    showsIndicator: Bool,
     @ViewBuilder content: () -> Content
   ) {
     self.state = state
     self.contentWidth = contentWidth
+    self.showsIndicator = showsIndicator
     self.content = content()
   }
 
   var body: some View {
     GeometryReader { proxy in
-      content
-        .frame(width: contentWidth, alignment: .leading)
-        .offset(x: -min(state.horizontalOffset, maximumOffset(proxy.size.width)))
-        .contentShape(Rectangle())
-        .gesture(DragGesture(minimumDistance: 6)
-          .onChanged { value in
-            guard abs(value.translation.width) >= abs(value.translation.height) else { return }
-            state.horizontalOffset = min(max(dragStart - value.translation.width, 0), maximumOffset(proxy.size.width))
-          }
-          .onEnded { _ in dragStart = state.horizontalOffset })
-        .onAppear { dragStart = state.horizontalOffset }
+      ZStack(alignment: .bottomLeading) {
+        content
+          .frame(width: contentWidth, alignment: .leading)
+          .offset(x: -min(state.horizontalOffset, maximumOffset(proxy.size.width)))
+          .contentShape(Rectangle())
+          .gesture(DragGesture(minimumDistance: 6)
+            .onChanged { value in
+              guard abs(value.translation.width) >= abs(value.translation.height) else { return }
+              state.horizontalOffset = min(max(
+                dragStart - value.translation.width, 0), maximumOffset(proxy.size.width))
+            }
+            .onEnded { _ in dragStart = state.horizontalOffset })
+          .onAppear { dragStart = state.horizontalOffset }
+        if showsIndicator, maximumOffset(proxy.size.width) > 0 {
+          let thumbWidth = max(24, proxy.size.width * proxy.size.width / contentWidth)
+          Capsule().fill(Color.secondary.opacity(0.25)).frame(height: 4)
+          Capsule().fill(Color.secondary).frame(width: thumbWidth, height: 4)
+            .offset(x: state.horizontalOffset / maximumOffset(proxy.size.width)
+              * max(proxy.size.width - thumbWidth, 0))
+        }
+      }
     }
     .clipped()
   }
@@ -60,11 +73,22 @@ private struct RufletDataTableHeading: View {
 
   var body: some View {
     HStack(spacing: 0) {
-      if table.boolean("show_checkbox_column", default: false), table.boolean("show_heading_checkbox", default: true) {
-        Toggle("", isOn: selectAllBinding).labelsHidden().frame(width: checkboxWidth)
+      if displaysCheckboxColumn, table.boolean("show_heading_checkbox", default: true) {
+        RufletDataTable2Checkbox(
+          state: headingCheckboxState,
+          enabled: true,
+          theme: table.value("heading_checkbox_theme"),
+          accessibilityLabel: "Select all rows",
+          action: selectAll)
+          .frame(width: checkboxWidth)
+          .frame(maxHeight: .infinity, alignment: checkboxAlignment)
       }
       fixedColumns
-      RufletSyncedHorizontalViewport(state: scrollState, contentWidth: scrollingWidth) {
+      RufletSyncedHorizontalViewport(
+        state: scrollState,
+        contentWidth: scrollingWidth,
+        showsIndicator: table.boolean("visible_horizontal_scroll_bar", default: false)
+      ) {
         HStack(spacing: 0) {
           ForEach(Array(columns.dropFirst(fixedCount).enumerated()), id: \.element.id) { offset, column in
             headingCell(column, index: offset + fixedCount, width: widths[offset + fixedCount])
@@ -73,7 +97,9 @@ private struct RufletDataTableHeading: View {
       }
     }
     .frame(height: table.number("heading_row_height", default: 56) ?? 56)
-    .background(rufletTableColor(table.value("heading_row_color"), default: .clear))
+    .background(RufletTableRowDecoration(
+      value: table.value("heading_row_decoration"),
+      fallback: rufletTableColor(table.value("heading_row_color"), default: .clear)))
   }
 
   private var fixedColumns: some View {
@@ -142,16 +168,39 @@ private struct RufletDataTableHeading: View {
     }
   }
 
-  private var checkboxWidth: Double { table.number("checkbox_horizontal_margin", default: 48) ?? 48 }
+  private var checkboxWidth: Double {
+    let margin = table.number("checkbox_horizontal_margin")
+      ?? table.number("horizontal_margin", default: 24)
+      ?? 24
+    return 18 + margin / 2
+  }
+  private var checkboxAlignment: Alignment {
+    parseAlignment(
+      table.value("checkbox_alignment"), RufletAlignment(x: 0, y: 0))!.swiftUI
+  }
   private var scrollingWidth: Double { zip(columns.dropFirst(fixedCount), widths.dropFirst(fixedCount)).reduce(0) { $0 + $1.1 } }
 
-  private var selectAllBinding: Binding<Bool> {
-    Binding(
-      get: {
-        let rows = table.children("rows", visibleOnly: false)
-        return !rows.isEmpty && rows.allSatisfy { $0.boolean("selected", default: false) }
-      },
-      set: { table.triggerEvent("select_all", data: .bool($0)) })
+  private var selectableRows: [RufletControl] {
+    table.children("rows", visibleOnly: false).filter { $0.hasEventHandler("select_change") }
+  }
+  private var displaysCheckboxColumn: Bool {
+    table.boolean("show_checkbox_column", default: false) && !selectableRows.isEmpty
+  }
+  private var headingCheckboxState: RufletDataTable2CheckboxState {
+    let selected = selectableRows.count { $0.boolean("selected", default: false) }
+    if selected == 0 { return .unchecked }
+    if selected == selectableRows.count { return .checked }
+    return .mixed
+  }
+  private func selectAll() {
+    let value = headingCheckboxState != .checked
+    if table.hasEventHandler("select_all") {
+      table.triggerEvent("select_all", data: .bool(value))
+    } else {
+      for row in selectableRows where row.boolean("selected", default: false) != value {
+        row.triggerEvent("select_change", data: .bool(value))
+      }
+    }
   }
 }
 
@@ -188,11 +237,22 @@ private struct RufletDataTableRow: View {
 
   var body: some View {
     HStack(spacing: 0) {
-      if table.boolean("show_checkbox_column", default: false) {
-        Toggle("", isOn: selectionBinding).labelsHidden().frame(width: checkboxWidth)
+      if displaysCheckboxColumn {
+        RufletDataTable2Checkbox(
+          state: row.boolean("selected", default: false) ? .checked : .unchecked,
+          enabled: row.hasEventHandler("select_change"),
+          theme: table.value("data_row_checkbox_theme"),
+          accessibilityLabel: "Select row",
+          action: selectRow)
+          .frame(width: checkboxWidth)
+          .frame(maxHeight: .infinity, alignment: checkboxAlignment)
       }
       fixedCells
-      RufletSyncedHorizontalViewport(state: scrollState, contentWidth: scrollingWidth) {
+      RufletSyncedHorizontalViewport(
+        state: scrollState,
+        contentWidth: scrollingWidth,
+        showsIndicator: table.boolean("visible_horizontal_scroll_bar", default: false)
+      ) {
         HStack(spacing: 0) {
           ForEach(Array(cells.dropFirst(fixedCount).enumerated()), id: \.element.id) { offset, cell in
             dataCell(cell, column: columns[safe: offset + fixedCount], width: widths[safe: offset + fixedCount] ?? 90)
@@ -252,19 +312,37 @@ private struct RufletDataTableRow: View {
   }
 
   private var rowBackground: Color {
-    let configured = rufletTableColor(row.value("color"), default: .clear)
+    let selected = row.boolean("selected", default: false)
+    let configured = rufletDataTable2StateColor(
+      row.value("color"), selected: selected, fallback: .clear)
     if configured != .clear { return configured }
-    return rowIndex.isMultiple(of: 2) ? Color.secondary.opacity(0.04) : .clear
+    return rufletDataTable2StateColor(table.value("data_row_color"), selected: selected,
+      fallback: rowIndex.isMultiple(of: 2) ? Color.secondary.opacity(0.04) : .clear)
   }
 
-  private var selectionBinding: Binding<Bool> {
-    Binding(
-      get: { row.boolean("selected", default: false) },
-      set: { row.triggerEvent("select_change", data: .bool($0)) })
+  private func selectRow() {
+    guard row.hasEventHandler("select_change") else { return }
+    row.triggerEvent(
+      "select_change", data: .bool(!row.boolean("selected", default: false)))
   }
 
-  private var checkboxWidth: Double { table.number("checkbox_horizontal_margin", default: 48) ?? 48 }
+  private var checkboxWidth: Double {
+    let margin = table.number("checkbox_horizontal_margin")
+      ?? table.number("horizontal_margin", default: 24)
+      ?? 24
+    return 18 + margin / 2
+  }
+  private var checkboxAlignment: Alignment {
+    parseAlignment(
+      table.value("checkbox_alignment"), RufletAlignment(x: 0, y: 0))!.swiftUI
+  }
   private var scrollingWidth: Double { zip(columns.dropFirst(fixedCount), widths.dropFirst(fixedCount)).reduce(0) { $0 + $1.1 } }
+  private var displaysCheckboxColumn: Bool {
+    table.boolean("show_checkbox_column", default: false)
+      && table.children("rows", visibleOnly: false).contains {
+        $0.hasEventHandler("select_change")
+      }
+  }
 
   private func reportSecondary(_ point: CGPoint) {
     if row.hasEventHandler("secondary_tap_down") { row.triggerEvent("secondary_tap_down", data: pointValue(point)) }
@@ -333,8 +411,11 @@ struct DataTable2Control: View {
         }
       }
       .frame(minWidth: control.number("min_width") ?? proxy.size.width)
+      .padding(.horizontal, control.number("horizontal_margin", default: 24) ?? 24)
       .background(RufletTableBackground(control: control))
-      .clipShape(RoundedRectangle(cornerRadius: borderRadius))
+      .modifier(RufletDataTableClipModifier(
+        behavior: control.string("clip_behavior", default: "none") ?? "none",
+        radius: borderRadius))
       .overlay(RoundedRectangle(cornerRadius: borderRadius).stroke(borderColor, lineWidth: borderWidth))
     }
   }
@@ -347,7 +428,9 @@ struct DataTable2Control: View {
           ForEach(Array(rows.enumerated()), id: \.element.id) { index, row in
             if fixedTopRows <= 1 || index >= fixedTopRows - 1 {
               rowView(row, index: index)
-              divider
+              if index < rows.count - 1 || control.boolean("show_bottom_border", default: false) {
+                divider
+              }
             }
           }
         } header: {
@@ -356,7 +439,9 @@ struct DataTable2Control: View {
               heading
               ForEach(Array(rows.prefix(max(fixedTopRows - 1, 0)).enumerated()), id: \.element.id) { index, row in
                 rowView(row, index: index)
-                divider
+                if index < rows.count - 1 || control.boolean("show_bottom_border", default: false) {
+                  divider
+                }
               }
             }
             .background(.regularMaterial)
@@ -419,6 +504,129 @@ struct DataTable2Control: View {
     return parseColor(map?["color"]?.text, .clear) ?? .clear
   }
   private var borderWidth: Double { control.value("border")?.map?["width"]?.number ?? 0 }
+}
+
+enum RufletDataTable2CheckboxState: Equatable {
+  case unchecked
+  case checked
+  case mixed
+}
+
+struct RufletDataTable2CheckboxStyle {
+  let fill: Color
+  let check: Color
+  let border: Color
+  let borderWidth: Double
+  let cornerRadius: Double
+
+  init(theme: RufletValue?, state: RufletDataTable2CheckboxState, enabled: Bool) {
+    let map = theme?.map
+    let selected = state != .unchecked
+    fill = rufletDataTable2StateColor(
+      map?["fill_color"], selected: selected,
+      disabled: !enabled, fallback: selected ? .accentColor : .clear)
+    check = rufletDataTable2StateColor(
+      map?["check_color"], selected: selected,
+      disabled: !enabled, fallback: .white)
+    let side = map?["border_side"]?.map
+    border = parseColor(side?["color"]?.text, .secondary) ?? .secondary
+    borderWidth = side?["width"]?.number ?? 1
+    let shape = map?["shape"]?.map
+    let type = shape?["_type"]?.text?.lowercased() ?? ""
+    cornerRadius = type.contains("circle")
+      ? 9
+      : shape?["radius"]?.number
+        ?? shape?["border_radius"]?.number
+        ?? 2
+  }
+}
+
+func rufletDataTable2StateColor(
+  _ value: RufletValue?,
+  selected: Bool,
+  disabled: Bool = false,
+  fallback: Color
+) -> Color {
+  if let text = value?.text { return parseColor(text, fallback) ?? fallback }
+  guard let map = value?.map else { return fallback }
+  let raw = (disabled ? map["disabled"]?.text : nil)
+    ?? (selected ? map["selected"]?.text : nil)
+    ?? map["default"]?.text
+    ?? map[""]?.text
+    ?? map["any"]?.text
+  return parseColor(raw, fallback) ?? fallback
+}
+
+private struct RufletDataTable2Checkbox: View {
+  let state: RufletDataTable2CheckboxState
+  let enabled: Bool
+  let theme: RufletValue?
+  let accessibilityLabel: String
+  let action: () -> Void
+
+  var body: some View {
+    let style = RufletDataTable2CheckboxStyle(
+      theme: theme, state: state, enabled: enabled)
+    Button(action: action) {
+      ZStack {
+        RoundedRectangle(cornerRadius: style.cornerRadius)
+          .fill(style.fill)
+        RoundedRectangle(cornerRadius: style.cornerRadius)
+          .stroke(style.border, lineWidth: style.borderWidth)
+        if state == .checked {
+          Image(systemName: "checkmark")
+            .font(.system(size: 11, weight: .bold))
+            .foregroundStyle(style.check)
+        } else if state == .mixed {
+          Image(systemName: "minus")
+            .font(.system(size: 11, weight: .bold))
+            .foregroundStyle(style.check)
+        }
+      }
+      .frame(width: 18, height: 18)
+      .opacity(enabled ? 1 : 0.45)
+    }
+    .buttonStyle(.plain)
+    .disabled(!enabled)
+    .accessibilityLabel(accessibilityLabel)
+    .accessibilityValue(
+      state == .checked ? "Selected" : state == .mixed ? "Partially selected" : "Not selected")
+  }
+}
+
+private struct RufletTableRowDecoration: View {
+  let value: RufletValue?
+  let fallback: Color
+
+  var body: some View {
+    let map = value?.map
+    if let gradient = map?["gradient"]?.map,
+      let colors = gradient["colors"]?.array?.compactMap({ parseColor($0.text) }),
+      !colors.isEmpty
+    {
+      LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing)
+    } else {
+      rufletTableColor(map?["color"] ?? value, default: fallback)
+    }
+  }
+}
+
+private struct RufletDataTableClipModifier: ViewModifier {
+  let behavior: String
+  let radius: Double
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if behavior.lowercased() == "none" {
+      content
+    } else {
+      content.clipShape(
+        RoundedRectangle(cornerRadius: radius),
+        style: FillStyle(
+          eoFill: false,
+          antialiased: behavior.lowercased().contains("antialias")))
+    }
+  }
 }
 
 private extension Array {
