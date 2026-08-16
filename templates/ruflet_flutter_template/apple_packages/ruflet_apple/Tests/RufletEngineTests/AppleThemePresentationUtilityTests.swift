@@ -87,6 +87,20 @@ final class AppleThemePresentationUtilityTests: XCTestCase {
     XCTAssertEqual(theme.colorScheme?.argb("surface"), 0xff141218)
   }
 
+  func testMaterial3TextThemeUsesFlutter2021GeometryAndCopiesOverrides() {
+    let theme = parseTheme([
+      "text_theme": ["body_medium": ["size": 15]],
+    ], brightness: .dark)
+
+    XCTAssertEqual(theme.textTheme?["title_large"]?.size, 22)
+    XCTAssertEqual(theme.textTheme?["title_large"]?.height, 1.27)
+    XCTAssertEqual(theme.textTheme?["label_large"]?.weight, .medium)
+    XCTAssertEqual(theme.textTheme?["label_large"]?.letterSpacing, 0.1)
+    XCTAssertEqual(theme.textTheme?["body_medium"]?.size, 15)
+    XCTAssertEqual(theme.textTheme?["body_medium"]?.height, 1.43)
+    XCTAssertEqual(theme.textTheme?["body_medium"]?.letterSpacing, 0.25)
+  }
+
   func testOverlayBrightnessUsesPinnedAppleContrastDefaults() {
     let style = parseSystemUIOverlayStyle([:], brightness: .light)
     XCTAssertEqual(style?.statusBarBrightness, .light)

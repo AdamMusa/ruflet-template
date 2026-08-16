@@ -11,6 +11,7 @@ import SwiftUI
 public struct TextControl: View {
   @ObservedObject public var control: RufletControl
   @Environment(\.rufletPageTheme) private var pageTheme
+  @Environment(\.rufletInheritedTextStyle) private var inheritedTextStyle
   @Environment(\.rufletSelectionAreaReporter) private var selectionAreaReporter
 
   public init(control: RufletControl) {
@@ -108,7 +109,8 @@ public struct TextControl: View {
     let style = parseTextStyle(control.dynamicValue("style"))
     let themeStyle = control.string("theme_style")
       .flatMap { pageTheme?.textTheme?[$0.lowercased()] }
-    let inherited = mergeTextStyles(themeStyle, style)
+    let inherited = mergeTextStyles(
+      mergeTextStyles(inheritedTextStyle, themeStyle), style)
     return RufletTextStyle(
       size: control.number("size") ?? inherited?.size,
       weight: parseFontWeight(control.string("weight")) ?? inherited?.weight,

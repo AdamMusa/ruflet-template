@@ -36,7 +36,11 @@ struct RufletAppleAppBar: View {
           .frame(height: toolbarHeight)
         if isLarge, let title {
           title
-            .modifier(RufletTextStyleModifier(style: titleStyle))
+            .modifier(
+              RufletAppBarTitleTextModifier(
+                style: resolvedTitleStyle, nestedControl: control.child("title") != nil))
+            .environment(\.rufletInheritedTextStyle, resolvedTitleStyle)
+            .environment(\.rufletInheritsTextColor, true)
             .font(.largeTitle.weight(.bold))
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, titleSpacing)
@@ -77,7 +81,11 @@ struct RufletAppleAppBar: View {
         leading
         if let title {
           title
-            .modifier(RufletTextStyleModifier(style: titleStyle))
+            .modifier(
+              RufletAppBarTitleTextModifier(
+                style: resolvedTitleStyle, nestedControl: control.child("title") != nil))
+            .environment(\.rufletInheritedTextStyle, resolvedTitleStyle)
+            .environment(\.rufletInheritsTextColor, true)
             .modifier(RufletHeaderSemantics(excluded: excludeHeaderSemantics))
             .padding(.horizontal, titleSpacing)
             .frame(maxWidth: .infinity)
@@ -91,7 +99,11 @@ struct RufletAppleAppBar: View {
         leading
         if !isLarge, let title {
           title
-            .modifier(RufletTextStyleModifier(style: titleStyle))
+            .modifier(
+              RufletAppBarTitleTextModifier(
+                style: resolvedTitleStyle, nestedControl: control.child("title") != nil))
+            .environment(\.rufletInheritedTextStyle, resolvedTitleStyle)
+            .environment(\.rufletInheritsTextColor, true)
             .modifier(RufletHeaderSemantics(excluded: excludeHeaderSemantics))
         }
         Spacer(minLength: 0)
@@ -221,6 +233,9 @@ struct RufletAppleAppBar: View {
   private var titleStyle: RufletTextStyle? {
     parseTextStyle(control.dynamicValue("title_text_style"))
   }
+  private var resolvedTitleStyle: RufletTextStyle? {
+    mergeTextStyles(pageTheme?.textTheme?["title_large"], titleStyle)
+  }
   private var toolbarStyle: RufletTextStyle? {
     parseTextStyle(control.dynamicValue("toolbar_text_style"))
   }
@@ -249,6 +264,20 @@ struct RufletAppleAppBar: View {
   private var shapeSide: RufletBorderSide? { parseBorderSide(shapeDetails?["side"]) }
   private var barShape: RufletAppBarShape {
     RufletAppBarShape(type: shapeDetails?["_type"] as? String, radius: shapeRadius)
+  }
+}
+
+private struct RufletAppBarTitleTextModifier: ViewModifier {
+  let style: RufletTextStyle?
+  let nestedControl: Bool
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if nestedControl {
+      content
+    } else {
+      content.modifier(RufletTextStyleModifier(style: style))
+    }
   }
 }
 

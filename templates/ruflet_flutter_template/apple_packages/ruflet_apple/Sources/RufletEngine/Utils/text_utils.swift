@@ -1,5 +1,31 @@
 import SwiftUI
 
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
+
+private struct RufletInheritedTextStyleKey: EnvironmentKey {
+    static let defaultValue: RufletTextStyle? = nil
+}
+
+private struct RufletInheritsTextColorKey: EnvironmentKey {
+    static let defaultValue = false
+}
+
+extension EnvironmentValues {
+    var rufletInheritedTextStyle: RufletTextStyle? {
+        get { self[RufletInheritedTextStyleKey.self] }
+        set { self[RufletInheritedTextStyleKey.self] = newValue }
+    }
+
+    var rufletInheritsTextColor: Bool {
+        get { self[RufletInheritsTextColorKey.self] }
+        set { self[RufletInheritsTextColorKey.self] = newValue }
+    }
+}
+
 public enum RufletTextAlign: String, CaseIterable, RufletStringEnum, Sendable {
     case left, right, center, justify, start, end
 
@@ -64,6 +90,7 @@ public func parseTextStyle(_ value: Any?, _ defaultValue: RufletTextStyle? = nil
 public struct RufletTextStyleModifier: ViewModifier {
     public let style: RufletTextStyle?
     @Environment(\.rufletPageTheme) private var pageTheme
+    @Environment(\.rufletInheritsTextColor) private var inheritsTextColor
 
     public init(style: RufletTextStyle?) {
         self.style = style
@@ -82,44 +109,78 @@ public struct RufletTextStyleModifier: ViewModifier {
         #endif
     }
 
+    @ViewBuilder
     private func base(_ content: Content) -> some View {
-        content
+        let styled = content
             .font(resolvedFont)
-            .foregroundStyle(resolvedColor)
-            .background(style?.backgroundColor ?? .clear)
+            .background(effectiveStyle?.backgroundColor ?? .clear)
+            .modifier(RufletTextLineHeightModifier(style: effectiveStyle))
+        if inheritsTextColor, effectiveStyle?.color == nil {
+            styled
+        } else {
+            styled.foregroundStyle(resolvedColor)
+        }
     }
 
     @available(iOS 16.0, *)
     private func styled(_ content: Content) -> some View {
         base(content)
-            .tracking(style?.letterSpacing ?? 0)
+            .tracking(effectiveStyle?.letterSpacing ?? 0)
             .underline(
-                style.map { $0.decoration & 0x1 > 0 } ?? false,
-                color: style?.decorationColor
+                effectiveStyle.map { $0.decoration & 0x1 > 0 } ?? false,
+                color: effectiveStyle?.decorationColor
             )
             .strikethrough(
-                style.map { $0.decoration & 0x4 > 0 } ?? false,
-                color: style?.decorationColor
+                effectiveStyle.map { $0.decoration & 0x4 > 0 } ?? false,
+                color: effectiveStyle?.decorationColor
             )
     }
 
     private var resolvedFont: Font? {
-        let pageStyle = pageTheme?.appleBodyTextStyle
-        guard style != nil || pageStyle != nil || pageTheme?.fontFamily != nil else { return nil }
-        let size = style?.size ?? pageStyle?.size ?? 14
+        guard effectiveStyle != nil || pageTheme?.fontFamily != nil else { return nil }
+        let size = effectiveStyle?.size ?? 14
         var font: Font
-        if let family = style?.fontFamily ?? pageStyle?.fontFamily ?? pageTheme?.fontFamily {
+        if let family = effectiveStyle?.fontFamily ?? pageTheme?.fontFamily {
             font = .custom(family, size: size)
         } else {
             font = .system(size: size)
         }
-        if let weight = style?.weight ?? pageStyle?.weight { font = font.weight(weight) }
-        if style?.italic == true || pageStyle?.italic == true { font = font.italic() }
+        if let weight = effectiveStyle?.weight { font = font.weight(weight) }
+        if effectiveStyle?.italic == true { font = font.italic() }
         return font
     }
 
     private var resolvedColor: Color {
-        style?.color ?? pageTheme?.appleBodyTextStyle?.color
+        effectiveStyle?.color
             ?? pageTheme?.appleContentColor ?? .primary
+    }
+
+    private var effectiveStyle: RufletTextStyle? {
+        mergeTextStyles(pageTheme?.appleBodyTextStyle, style)
+    }
+}
+
+private struct RufletTextLineHeightModifier: ViewModifier {
+    let style: RufletTextStyle?
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if let size = style?.size, let multiple = style?.height {
+            let target = CGFloat(size * multiple)
+            content
+                .lineSpacing(max(target - nativeLineHeight(size: CGFloat(size)), 0))
+                .frame(minHeight: target)
+        } else {
+            content
+        }
+    }
+
+    private func nativeLineHeight(size: CGFloat) -> CGFloat {
+        #if os(iOS)
+        return UIFont.systemFont(ofSize: size).lineHeight
+        #elseif os(macOS)
+        let font = NSFont.systemFont(ofSize: size)
+        return font.ascender - font.descender + font.leading
+        #endif
     }
 }

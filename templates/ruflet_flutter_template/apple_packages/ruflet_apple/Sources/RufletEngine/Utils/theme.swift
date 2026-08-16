@@ -256,10 +256,49 @@ public func parseTextTheme(
     "display_small", "headline_large", "headline_medium", "headline_small", "label_large",
     "label_medium", "label_small", "title_large", "title_medium", "title_small",
   ]
-  let styles = names.reduce(into: [String: RufletTextStyle]()) { result, name in
-    if let style = parseTextStyle(value[name]) { result[name] = style }
+  var styles = defaultValue?.styles ?? [:]
+  for name in names {
+    if let style = parseTextStyle(value[name]) {
+      styles[name] = mergeTextStyles(styles[name], style)
+    }
   }
   return RufletTextTheme(styles: styles)
+}
+
+func material3TextTheme() -> RufletTextTheme {
+  let specifications: [String: (Double, Font.Weight, Double, Double)] = [
+    "display_large": (57, .regular, -0.25, 1.12),
+    "display_medium": (45, .regular, 0, 1.16),
+    "display_small": (36, .regular, 0, 1.22),
+    "headline_large": (32, .regular, 0, 1.25),
+    "headline_medium": (28, .regular, 0, 1.29),
+    "headline_small": (24, .regular, 0, 1.33),
+    "title_large": (22, .regular, 0, 1.27),
+    "title_medium": (16, .medium, 0.15, 1.50),
+    "title_small": (14, .medium, 0.1, 1.43),
+    "label_large": (14, .medium, 0.1, 1.43),
+    "label_medium": (12, .medium, 0.5, 1.33),
+    "label_small": (11, .medium, 0.5, 1.45),
+    "body_large": (16, .regular, 0.5, 1.50),
+    "body_medium": (14, .regular, 0.25, 1.43),
+    "body_small": (12, .regular, 0.4, 1.33),
+  ]
+  return RufletTextTheme(styles: specifications.mapValues { specification in
+    RufletTextStyle(
+      size: specification.0,
+      weight: specification.1,
+      italic: false,
+      fontFamily: nil,
+      height: specification.3,
+      decoration: 0,
+      decorationColor: nil,
+      decorationThickness: nil,
+      color: nil,
+      backgroundColor: nil,
+      letterSpacing: specification.2,
+      wordSpacing: nil,
+      overflow: nil)
+  })
 }
 
 public func parseTheme(
@@ -274,6 +313,7 @@ public func parseTheme(
   let seedARGB = parseColorARGB(raw["color_scheme_seed"] as? String) ?? 0xff2196f3
   let generatedColorScheme = parentTheme?.colorScheme ?? materialColorScheme(
     seed: seedARGB, isDark: effectiveBrightness == .dark)
+  let generatedTextTheme = parentTheme?.textTheme ?? material3TextTheme()
   return RufletTheme(
     raw: raw,
     brightness: effectiveBrightness,
@@ -281,7 +321,7 @@ public func parseTheme(
     colorScheme: parseColorScheme(raw["color_scheme"], generatedColorScheme),
     fontFamily: raw["font_family"] as? String ?? parentTheme?.fontFamily,
     useMaterial3WireValue: parseBool(raw["use_material3"]),
-    textTheme: parseTextTheme(raw["text_theme"], parentTheme?.textTheme),
+    textTheme: parseTextTheme(raw["text_theme"], generatedTextTheme),
     primaryTextTheme: parseTextTheme(raw["primary_text_theme"], parentTheme?.primaryTextTheme),
     visualDensity: parseVisualDensity(
       raw["visual_density"] as? String, parentTheme?.visualDensity),
