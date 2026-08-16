@@ -26,3 +26,20 @@ Future<bool> showNativeAppleRenderer(String pageUrl) async {
       }) ??
       false;
 }
+
+/// Hands an Apple session to Swift or fails startup explicitly.
+///
+/// Apple builds intentionally have no Flutter renderer fallback. A failed
+/// handoff is an integration error that must remain visible instead of
+/// silently switching engines and hiding a missing native capability.
+Future<void> requireNativeAppleRenderer(String pageUrl) async {
+  if (!usesNativeAppleRenderer) {
+    throw StateError('The native Apple renderer was required off Apple.');
+  }
+  if (pageUrl.isEmpty) {
+    throw StateError('The native Apple renderer requires a Ruflet page URL.');
+  }
+  if (!await showNativeAppleRenderer(pageUrl)) {
+    throw StateError('The Apple host did not present the native renderer.');
+  }
+}

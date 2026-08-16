@@ -62,12 +62,9 @@ import RufletAppExtensions
 
 /// Apple renderer selection and its ordered native Flet extensions.
 enum RufletEngineChoice {
-  static var usesNativeRenderer: Bool {
-    let optOut = Bundle.main.object(forInfoDictionaryKey: "RufletUseFlutterEngine")
-    if let flag = optOut as? Bool { return !flag }
-    if let flag = optOut as? NSNumber { return !flag.boolValue }
-    return true
-  }
+  /// Apple has a single rendering engine. Flutter remains alive only to own
+  /// startup and plugin channels; visible Ruflet controls are always SwiftUI.
+  static let usesNativeRenderer = true
 
   /// Keeps the resolved page URI unchanged. The native backend creates its
   /// websocket endpoint from this page URI exactly once.

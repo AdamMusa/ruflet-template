@@ -50,6 +50,17 @@ void main() {
     expect(calls.single.arguments, {'pageUrl': pageUrl});
   });
 
+  test('Apple requires a successful native handoff', () async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(_channel, (call) async => false);
+
+    await expectLater(
+      requireNativeAppleRenderer('https://example.test/ruflet'),
+      throwsA(isA<StateError>()),
+    );
+  });
+
   test('non-Apple platforms keep Flet and never invoke the bridge', () async {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
 

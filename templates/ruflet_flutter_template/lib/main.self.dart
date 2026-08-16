@@ -133,14 +133,12 @@ Future<void> main() async {
     if (pageUrl.isEmpty) {
       try {
         pageUrl = (await RufletRuntime.serverUrl()).toString();
-      } catch (_) {
-        // Keep the Flutter error path below. It reports the runtime failure in
-        // the same way as a non-Apple self-contained build.
+      } catch (error) {
+        throw StateError('Failed to start embedded Ruflet: $error');
       }
     }
-    if (pageUrl.isNotEmpty && await showNativeAppleRenderer(pageUrl)) {
-      return;
-    }
+    await requireNativeAppleRenderer(pageUrl);
+    return;
   }
 
   // The embedded runtime is deliberately not awaited here. Platforms that can

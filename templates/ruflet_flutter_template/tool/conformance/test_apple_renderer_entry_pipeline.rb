@@ -37,7 +37,8 @@ class AppleRendererEntryPipelineTest < Minitest::Test
     assert_ordered(
       entrypoint,
       "final pageUrl = resolveBackendUrl(args);",
-      "showNativeAppleRenderer(pageUrl)",
+      "if (usesNativeAppleRenderer)",
+      "requireNativeAppleRenderer(pageUrl)",
       "waitForBackend(pageUrl)",
       "runApp(TemplateApp(pageUrl: pageUrl, extensions: extensions))"
     )
@@ -51,9 +52,26 @@ class AppleRendererEntryPipelineTest < Minitest::Test
     assert_ordered(
       entrypoint,
       "pageUrl = (await RufletRuntime.serverUrl()).toString();",
-      "showNativeAppleRenderer(pageUrl)",
+      "requireNativeAppleRenderer(pageUrl)",
       "runApp(TemplateApp(pageUrl: pageUrl, extensions: extensions))"
     )
+  end
+
+  def test_apple_has_no_flutter_renderer_opt_out_or_silent_handoff_fallback
+    bridge = source("lib/native_renderer.dart")
+    self_entry = source("lib/main.self.dart")
+    server_entry = source("lib/main.server.dart")
+    ios_choice = source("ios/Runner/RufletEngineChoice.swift")
+    macos_choice = source("macos/Runner/RufletEngineChoice.swift")
+
+    assert_includes bridge, "Future<void> requireNativeAppleRenderer"
+    assert_includes bridge, "if (!await showNativeAppleRenderer(pageUrl))"
+    assert_includes self_entry, "await requireNativeAppleRenderer(pageUrl);"
+    assert_includes server_entry, "await requireNativeAppleRenderer(pageUrl);"
+    [ios_choice, macos_choice].each do |choice|
+      assert_includes choice, "static let usesNativeRenderer = true"
+      refute_includes choice, "RufletUseFlutterEngine"
+    end
   end
 
   def test_self_mode_delegates_apple_runtime_startup_without_a_hardcoded_project

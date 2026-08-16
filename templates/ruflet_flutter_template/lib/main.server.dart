@@ -155,7 +155,8 @@ Future<void> main([List<String>? args]) async {
   }
 
   final pageUrl = resolveBackendUrl(args);
-  if (await showNativeAppleRenderer(pageUrl)) {
+  if (usesNativeAppleRenderer) {
+    await requireNativeAppleRenderer(pageUrl);
     return;
   }
 
