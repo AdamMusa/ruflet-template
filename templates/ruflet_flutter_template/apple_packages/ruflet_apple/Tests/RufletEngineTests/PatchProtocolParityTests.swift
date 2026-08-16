@@ -141,6 +141,59 @@ final class PatchProtocolParityTests: XCTestCase {
     XCTAssertEqual(root.value("meta"), ["a": 3])
   }
 
+  func testTargetedPropertyPatchPreservesTheEntireExistingControlGraph() throws {
+    let backend = PatchProtocolBackend()
+    let root = RufletControl(
+      id: 1, type: "Page",
+      properties: [
+        "views": .array([
+          control(
+            id: 2, type: "View",
+            properties: ["content": control(id: 3, type: "Text", properties: ["value": "0"])]),
+          control(id: 4, type: "View", properties: ["route": "/untouched"]),
+        ]),
+      ],
+      backend: backend)
+    let firstView = try XCTUnwrap(root.children("views").first)
+    let label = try XCTUnwrap(firstView.child("content"))
+    let secondView = try XCTUnwrap(root.children("views").last)
+    var rootNotifications = 0
+    var labelNotifications = 0
+    let rootToken = root.addListener { rootNotifications += 1 }
+    let labelToken = label.addListener { labelNotifications += 1 }
+    defer {
+      root.removeListener(rootToken)
+      label.removeListener(labelToken)
+    }
+
+    let tree: RufletValue = .array([
+      0,
+      .keyedMap([
+        .string("views"): .array([
+          1,
+          .keyedMap([
+            .int(0): .array([
+              2,
+              .keyedMap([.string("content"): .array([3])]),
+            ]),
+            .int(1): .array([4]),
+          ]),
+        ]),
+      ]),
+    ])
+    try root.applyPatch([
+      tree,
+      .array([0, 3, "value", "1"]),
+    ])
+
+    XCTAssertTrue(root.children("views")[0] === firstView)
+    XCTAssertTrue(firstView.child("content") === label)
+    XCTAssertTrue(root.children("views")[1] === secondView)
+    XCTAssertEqual(label.string("value"), "1")
+    XCTAssertEqual(labelNotifications, 1)
+    XCTAssertEqual(rootNotifications, 0)
+  }
+
   private func control(
     id: Int,
     type: String,
