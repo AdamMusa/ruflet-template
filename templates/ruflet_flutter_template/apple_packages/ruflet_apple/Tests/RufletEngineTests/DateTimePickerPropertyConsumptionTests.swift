@@ -49,6 +49,26 @@ final class DateTimePickerPropertyConsumptionTests: XCTestCase {
     XCTAssertEqual(Calendar.current.component(.year, from: try XCTUnwrap(presentation.value)), 2028)
   }
 
+  func testDatePickerAcceptsRubyDateOnlyWireValues() throws {
+    let fixture = makeControl(
+      type: "DatePicker",
+      properties: [
+        "value": "2026-05-21",
+        "first_date": "2026-01-01",
+        "last_date": "2026-12-31",
+      ])
+    let presentation = RufletDatePickerPresentation(control: fixture.control)
+
+    XCTAssertEqual(
+      Calendar.current.dateComponents(
+        [.year, .month, .day], from: try XCTUnwrap(presentation.value)),
+      DateComponents(year: 2026, month: 5, day: 21))
+    XCTAssertEqual(
+      Calendar.current.component(.year, from: presentation.minimumDate), 2026)
+    XCTAssertEqual(
+      Calendar.current.component(.year, from: presentation.maximumDate), 2026)
+  }
+
   func testDateRangePickerConsumesPinnedInputAndValidationProperties() {
     let fixture = makeControl(
       type: "DateRangePicker",

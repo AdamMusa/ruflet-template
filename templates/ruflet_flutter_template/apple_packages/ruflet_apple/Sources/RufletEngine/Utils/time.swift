@@ -27,7 +27,14 @@ func parseRufletDate(_ value: RufletValue?, _ defaultValue: Date? = nil) -> Date
     if let date = fractional.date(from: text) { return date }
     let standard = ISO8601DateFormatter()
     standard.formatOptions = [.withInternetDateTime]
-    return standard.date(from: text) ?? defaultValue
+    if let date = standard.date(from: text) { return date }
+    let dateOnly = DateFormatter()
+    dateOnly.calendar = Calendar(identifier: .gregorian)
+    dateOnly.locale = Locale(identifier: "en_US_POSIX")
+    dateOnly.timeZone = .current
+    dateOnly.dateFormat = "yyyy-MM-dd"
+    dateOnly.isLenient = false
+    return dateOnly.date(from: text) ?? defaultValue
 }
 
 func parseRufletTime(_ value: RufletValue?, _ defaultValue: RufletTimeOfDay? = nil) -> RufletTimeOfDay? {
