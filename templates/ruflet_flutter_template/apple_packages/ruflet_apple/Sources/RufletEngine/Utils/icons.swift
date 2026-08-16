@@ -35,10 +35,11 @@ public enum RufletAppleIconCatalog {
   public static var cupertinoCount: Int { catalogs.cupertinoNamesByCode.count }
 
   public static func icon(for code: Int) -> RufletAppleIcon? {
-    if let name = catalogs.cupertinoNamesByCode[code],
-      let glyph = catalogs.cupertinoGlyphs[name]
-    {
-      return .cupertinoGlyph(glyph)
+    if let name = catalogs.cupertinoNamesByCode[code] {
+      if let symbol = catalogs.cupertinoSystemSymbols[name] {
+        return .systemSymbol(symbol)
+      }
+      return catalogs.cupertinoGlyphs[name].map(RufletAppleIcon.cupertinoGlyph)
     }
 
     guard let materialName = catalogs.materialNamesByCode[code] else { return nil }
@@ -57,7 +58,11 @@ public enum RufletAppleIconCatalog {
   }
 
   public static func icon(forCupertinoName rawName: String) -> RufletAppleIcon? {
-    cupertinoGlyph(named: rawName).map(RufletAppleIcon.cupertinoGlyph)
+    let name = canonical(rawName).uppercased()
+    if let symbol = catalogs.cupertinoSystemSymbols[name] {
+      return .systemSymbol(symbol)
+    }
+    return catalogs.cupertinoGlyphs[name].map(RufletAppleIcon.cupertinoGlyph)
   }
 
   public static func materialName(for code: Int) -> String? {
@@ -66,10 +71,6 @@ public enum RufletAppleIconCatalog {
 
   public static func cupertinoName(for code: Int) -> String? {
     catalogs.cupertinoNamesByCode[code]
-  }
-
-  private static func cupertinoGlyph(named rawName: String) -> UInt32? {
-    catalogs.cupertinoGlyphs[canonical(rawName).uppercased()]
   }
 
   private static func canonical(_ rawName: String) -> String {
@@ -169,17 +170,66 @@ public enum RufletAppleIconCatalog {
     "WIFI": "wifi",
   ]
 
+  /// Cupertino's catalog mostly mirrors SF Symbol identifiers. This small
+  /// alias table covers the older Flutter names that are semantic rather than
+  /// direct underscore-to-dot spellings; the rest are discovered once when
+  /// the immutable catalog is loaded.
+  private static let cupertinoSystemSymbolAliases: [String: String] = [
+    "ADD": "plus",
+    "ADD_CIRCLED": "plus.circle",
+    "ADD_CIRCLED_SOLID": "plus.circle.fill",
+    "BACK": "chevron.backward",
+    "BACKWARD": "backward",
+    "CLEAR": "xmark.circle",
+    "CLEAR_CIRCLED": "xmark.circle",
+    "CLEAR_CIRCLED_SOLID": "xmark.circle.fill",
+    "DELETE": "trash",
+    "FORWARD": "forward",
+    "HOME": "house",
+    "LOCATION": "location",
+    "LOCATION_SOLID": "location.fill",
+    "OPTIONS": "slider.horizontal.3",
+    "PERSON": "person",
+    "PERSON_ADD": "person.badge.plus",
+    "PLAY_ARROW": "play",
+    "PLAY_ARROW_SOLID": "play.fill",
+    "REFRESH": "arrow.clockwise",
+    "SEARCH": "magnifyingglass",
+    "SHARE": "square.and.arrow.up",
+  ]
+
+  private static func nativeCupertinoSymbol(for name: String) -> String? {
+    let candidate =
+      cupertinoSystemSymbolAliases[name]
+      ?? name.lowercased().replacingOccurrences(of: "_", with: ".")
+    #if canImport(UIKit)
+      return UIImage(systemName: candidate) == nil ? nil : candidate
+    #elseif canImport(AppKit)
+      return NSImage(systemSymbolName: candidate, accessibilityDescription: nil) == nil
+        ? nil : candidate
+    #else
+      return nil
+    #endif
+  }
+
   private struct Catalogs {
     let materialNamesByCode: [Int: String]
     let cupertinoNamesByCode: [Int: String]
+    let cupertinoSystemSymbols: [String: String]
     let cupertinoGlyphs: [String: UInt32]
     let materialGlyphs: [String: UInt32]
 
     init() {
-      materialNamesByCode = Self.names(resource: "material_icons")
-      cupertinoNamesByCode = Self.names(resource: "cupertino_icons")
+      let materialNames = Self.names(resource: "material_icons")
+      let cupertinoNames = Self.names(resource: "cupertino_icons")
+      materialNamesByCode = materialNames
+      cupertinoNamesByCode = cupertinoNames
       cupertinoGlyphs = Self.glyphs(resource: "cupertino_glyphs")
       materialGlyphs = Self.glyphs(resource: "material_glyphs")
+      cupertinoSystemSymbols = Dictionary(
+        uniqueKeysWithValues: cupertinoNames.values.compactMap { name in
+          RufletAppleIconCatalog.nativeCupertinoSymbol(for: name).map { (name, $0) }
+        })
     }
 
     private static func names(resource: String) -> [Int: String] {

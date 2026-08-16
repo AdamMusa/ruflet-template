@@ -123,12 +123,23 @@ final class AppleIconCatalogTests: XCTestCase {
     }
   }
 
-  func testEveryCupertinoWireIconUsesItsExactBundledGlyph() {
+  func testCupertinoWireIconsPreferSystemSymbolsAndRetainExactFallbackArtwork() {
+    var nativeSymbolCount = 0
     for code in 131_072...132_393 {
-      guard case .cupertinoGlyph = RufletAppleIconCatalog.icon(for: code) else {
-        return XCTFail("Cupertino wire code \(code) did not resolve to its canonical glyph")
+      switch RufletAppleIconCatalog.icon(for: code) {
+      case .systemSymbol:
+        nativeSymbolCount += 1
+      case .cupertinoGlyph:
+        break
+      default:
+        return XCTFail("Cupertino wire code \(code) did not resolve to Apple artwork")
       }
     }
+    XCTAssertGreaterThanOrEqual(nativeSymbolCount, 1_000)
+    XCTAssertEqual(RufletAppleIconCatalog.icon(forCupertinoName: "home"), .systemSymbol("house"))
+    XCTAssertEqual(
+      RufletAppleIconCatalog.icon(forCupertinoName: "person_crop_circle_fill"),
+      .systemSymbol("person.crop.circle.fill"))
   }
 
   func testEveryMaterialWireIconHasNativeOrCanonicalArtwork() {
