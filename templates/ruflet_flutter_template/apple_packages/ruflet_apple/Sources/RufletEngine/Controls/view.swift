@@ -165,7 +165,12 @@ public struct ViewControl: View {
   }
 
   private var topViewLayers: some View {
-    ZStack {
+    // Reading the revision invalidates this builder when Page overlay/dialog
+    // membership changes. Do not use it as a SwiftUI identity: resetting the
+    // subtree after a dialog records `_open` discards its presented state and
+    // immediately removes the modal again.
+    let _ = slotRevision
+    return ZStack {
       ForEach(page.child("_overlay", visibleOnly: false)?.children("controls") ?? []) { overlay in
         ControlWidget(control: overlay)
       }
@@ -174,7 +179,6 @@ public struct ViewControl: View {
       }
       RufletPageMedia(control: page)
     }
-    .id(slotRevision)
     .zIndex(20)
   }
 

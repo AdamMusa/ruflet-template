@@ -68,6 +68,8 @@ struct PageViewNavigationContractTests {
     #expect(page.contains("RufletPageNavigator("))
     #expect(!page.contains(".transition(.opacity)"))
     #expect(view.contains("@Environment(\\.rufletTopViewID)"))
+    #expect(view.contains("let _ = slotRevision"))
+    #expect(!view.contains(".id(slotRevision)"))
     #expect(navigator.contains("UINavigationController"))
     #expect(navigator.contains("fullscreen_dialog"))
     #expect(navigator.contains("requestedControllers.last?.prepareForNavigation()"))
