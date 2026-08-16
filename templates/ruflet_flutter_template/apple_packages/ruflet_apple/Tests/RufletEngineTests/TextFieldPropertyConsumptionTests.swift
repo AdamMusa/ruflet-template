@@ -3,6 +3,10 @@ import SwiftUI
 import XCTest
 @testable import RufletEngine
 
+#if os(iOS)
+import UIKit
+#endif
+
 @MainActor
 final class TextFieldPropertyConsumptionTests: XCTestCase {
   private let backend = TextFieldTestBackend()
@@ -131,6 +135,16 @@ final class TextFieldPropertyConsumptionTests: XCTestCase {
     XCTAssertEqual(compact.bottom, 8)
     XCTAssertEqual(compact.trailing, 12)
   }
+
+  #if os(iOS)
+  func testDefaultOutlinedFormFieldHasFlutterMobileHeight() {
+    let host = UIHostingController(rootView: TextFieldControl(
+      control: control(type: "TextField", properties: ["label": "Server URL"])))
+    let measured = host.sizeThatFits(in: CGSize(width: 300, height: 1_000))
+
+    XCTAssertEqual(measured.height, 56, accuracy: 0.5)
+  }
+  #endif
 
   func testAdaptiveTextFieldSelectsCupertinoOnlyWhenPinnedFlagIsTrue() {
     let native = AdaptiveTextFieldControl(

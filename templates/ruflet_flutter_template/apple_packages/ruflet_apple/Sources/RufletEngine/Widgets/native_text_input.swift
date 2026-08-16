@@ -222,7 +222,10 @@ final class RufletTextInputUIView: UIView, UITextFieldDelegate, UITextViewDelega
     guard let configuration else { return CGSize(width: UIView.noIntrinsicMetric, height: 34) }
     if configuration.fitParentSize { return CGSize(width: UIView.noIntrinsicMetric, height: UIView.noIntrinsicMetric) }
     let lines = max(configuration.minLines, 1)
-    return CGSize(width: UIView.noIntrinsicMetric, height: CGFloat(lines) * 22 + 4)
+    let lineHeight = configuration.strutStyle?.lineHeight ?? configuration.uiFont.lineHeight
+    return CGSize(
+      width: UIView.noIntrinsicMetric,
+      height: ceil(CGFloat(lines) * lineHeight) + 4)
   }
 
   override func layoutSubviews() {
