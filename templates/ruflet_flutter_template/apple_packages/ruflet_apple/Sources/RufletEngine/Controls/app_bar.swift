@@ -95,7 +95,7 @@ struct RufletAppleAppBar: View {
         actions
       }
     } else {
-      HStack(spacing: titleSpacing) {
+      HStack(spacing: 0) {
         leading
         if !isLarge, let title {
           title
@@ -105,6 +105,10 @@ struct RufletAppleAppBar: View {
             .environment(\.rufletInheritedTextStyle, resolvedTitleStyle)
             .environment(\.rufletInheritsTextColor, true)
             .modifier(RufletHeaderSemantics(excluded: excludeHeaderSemantics))
+            // Flutter applies AppBar.titleSpacing around the title even when
+            // the leading or actions slot is absent. HStack spacing alone
+            // drops the edge inset when either adjacent view is EmptyView.
+            .padding(.horizontal, titleSpacing)
         }
         Spacer(minLength: 0)
         actions
@@ -217,9 +221,10 @@ struct RufletAppleAppBar: View {
   }
 
   private var titleSpacing: CGFloat {
-    CGFloat(
-      control.number("title_spacing")
-        ?? (kind == .appBar ? RufletLayoutDefaults.appBarTitleSpacing : 12))
+    rufletAppBarTitleSpacing(
+      explicit: control.number("title_spacing"),
+      themed: parseDouble(pageTheme?.componentTheme("appbar_theme")?["title_spacing"]),
+      defaultValue: kind == .appBar ? RufletLayoutDefaults.appBarTitleSpacing : 12)
   }
   private var leadingWidth: CGFloat? {
     control.number("leading_width").map { CGFloat($0) }
@@ -291,6 +296,12 @@ func rufletMaterialAppBarCenterTitle(
   actionCount: Int
 ) -> Bool {
   explicit ?? themed ?? (centersByPlatformDefault && actionCount < 2)
+}
+
+func rufletAppBarTitleSpacing(
+  explicit: Double?, themed: Double?, defaultValue: Double = RufletLayoutDefaults.appBarTitleSpacing
+) -> CGFloat {
+  CGFloat(explicit ?? themed ?? defaultValue)
 }
 
 private struct RufletAppBarTitleTextModifier: ViewModifier {

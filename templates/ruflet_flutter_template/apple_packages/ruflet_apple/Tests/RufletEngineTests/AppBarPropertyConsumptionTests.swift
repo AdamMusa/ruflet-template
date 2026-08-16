@@ -48,6 +48,12 @@ final class AppBarPropertyConsumptionTests: XCTestCase {
       explicit: nil, themed: nil, centersByPlatformDefault: false, actionCount: 0))
   }
 
+  func testTitleSpacingFollowsExplicitThemeAndPinnedDefaultPrecedence() {
+    XCTAssertEqual(rufletAppBarTitleSpacing(explicit: 8, themed: 12), 8)
+    XCTAssertEqual(rufletAppBarTitleSpacing(explicit: nil, themed: 12), 12)
+    XCTAssertEqual(rufletAppBarTitleSpacing(explicit: nil, themed: nil), 16)
+  }
+
   private func control(properties: [String: RufletValue]) -> RufletControl {
     RufletControl(
       id: 1,
