@@ -42,10 +42,14 @@ let package = Package(
     .package(url: "https://github.com/mgriebling/SwiftMath.git", exact: "1.7.3"),
   ],
   targets: [
+    .target(
+      name: "MaterialColorUtilities",
+      path: "Vendor/MaterialColorUtilities/Sources/MaterialColorUtilities"),
     .target(name: "RufletProtocol"),
     .target(
       name: "RufletEngine",
       dependencies: [
+        "MaterialColorUtilities",
         "RufletProtocol",
         .product(name: "Markdown", package: "swift-markdown"),
         .product(name: "SwiftMath", package: "SwiftMath"),

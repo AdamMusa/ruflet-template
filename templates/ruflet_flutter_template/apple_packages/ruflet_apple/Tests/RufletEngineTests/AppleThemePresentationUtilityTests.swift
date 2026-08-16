@@ -61,6 +61,32 @@ final class AppleThemePresentationUtilityTests: XCTestCase {
     XCTAssertEqual(theme.pageTransitions["macos"], .fadeForwards)
   }
 
+  func testColorSchemeSeedGeneratesThePinnedFlutterTonalSpotRoles() {
+    let light = parseTheme(["color_scheme_seed": "#6750A4"], brightness: .light)
+    XCTAssertEqual(light.colorScheme?.argb("primary"), 0xff65558f)
+    XCTAssertEqual(light.colorScheme?.argb("secondary"), 0xff625b71)
+    XCTAssertEqual(light.colorScheme?.argb("tertiary"), 0xff7e5260)
+    XCTAssertEqual(light.colorScheme?.argb("surface"), 0xfffdf7ff)
+    XCTAssertEqual(light.colorScheme?.argb("on_surface"), 0xff1d1b20)
+
+    let dark = parseTheme(["color_scheme_seed": "#6750A4"], brightness: .dark)
+    XCTAssertEqual(dark.colorScheme?.argb("primary"), 0xffcfbdfe)
+    XCTAssertEqual(dark.colorScheme?.argb("secondary"), 0xffcbc2db)
+    XCTAssertEqual(dark.colorScheme?.argb("tertiary"), 0xffefb8c8)
+    XCTAssertEqual(dark.colorScheme?.argb("surface"), 0xff141218)
+    XCTAssertEqual(dark.colorScheme?.argb("on_surface"), 0xffe6e0e9)
+  }
+
+  func testExplicitColorSchemeCopiesOverGeneratedSeedScheme() {
+    let theme = parseTheme([
+      "color_scheme_seed": "#6750A4",
+      "color_scheme": ["primary": "#112233"],
+    ], brightness: .dark)
+
+    XCTAssertEqual(theme.colorScheme?.argb("primary"), 0xff112233)
+    XCTAssertEqual(theme.colorScheme?.argb("surface"), 0xff141218)
+  }
+
   func testOverlayBrightnessUsesPinnedAppleContrastDefaults() {
     let style = parseSystemUIOverlayStyle([:], brightness: .light)
     XCTAssertEqual(style?.statusBarBrightness, .light)

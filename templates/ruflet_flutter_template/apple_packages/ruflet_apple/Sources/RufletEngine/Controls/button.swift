@@ -3,6 +3,7 @@ import SwiftUI
 @MainActor
 public struct ButtonControl: View {
   @ObservedObject public var control: RufletControl
+  @Environment(\.rufletPageTheme) private var pageTheme
   @FocusState private var focused: Bool
   @StateObject private var focusCoordinator = RufletButtonFocusCoordinator()
 
@@ -58,38 +59,57 @@ public struct ButtonControl: View {
   var buttonStyle: RufletAppleButtonStyle {
     let details = rufletDictionary(
       control.internals?["style"].map(rufletAny) ?? control.dynamicValue("style"))
-    let foreground =
+    let explicitForeground =
       parseColor(details?["color"] as? String)
       ?? parseColor(control.string("color"))
-      ?? .accentColor
+    let foreground = explicitForeground ?? defaultForegroundColor
     let background: Color
     switch variant {
     case .filled:
       background =
         parseColor(details?["bgcolor"] as? String) ?? parseColor(control.string("bgcolor"))
-        ?? .accentColor
+        ?? pageTheme?.colorScheme?["primary"] ?? .accentColor
     case .tonal:
-      background = parseColor(details?["bgcolor"] as? String) ?? .accentColor.opacity(0.18)
+      background =
+        parseColor(details?["bgcolor"] as? String)
+        ?? pageTheme?.colorScheme?["secondary_container"] ?? .accentColor.opacity(0.18)
     case .outlined, .text: background = parseColor(details?["bgcolor"] as? String) ?? .clear
     case .elevated:
-      background = parseColor(details?["bgcolor"] as? String) ?? .rufletSystemBackground
+      background =
+        parseColor(details?["bgcolor"] as? String)
+        ?? pageTheme?.colorScheme?["surface_container_low"] ?? .rufletSystemBackground
     }
     let border =
       variant == .outlined
-      ? (parseBorderSide(details?["side"], defaultColor: foreground)
-        ?? RufletBorderSide(width: 1, color: foreground))
+      ? (parseBorderSide(details?["side"], defaultColor: defaultBorderColor)
+        ?? RufletBorderSide(width: 1, color: defaultBorderColor))
       : parseBorderSide(details?["side"], defaultColor: foreground)
     let radius =
-      parseBorderRadius(details?["shape"] ?? control.dynamicValue("shape"))?.uniform ?? 20
+      parseBorderRadius(details?["shape"] ?? control.dynamicValue("shape"))?.uniform
+      ?? ((pageTheme?.useMaterial3WireValue ?? true) ? 1_000 : 4)
     return RufletAppleButtonStyle(
       variant: variant,
-      foreground: variant == .filled ? .white : foreground,
+      foreground: foreground,
       background: background,
       radius: radius,
       border: border,
       elevation: control.number("elevation") ?? 1,
       clipBehavior: control.string("clip_behavior", default: "none")!.lowercased()
     )
+  }
+
+  private var defaultForegroundColor: Color {
+    let role: String
+    switch variant {
+    case .filled: role = "on_primary"
+    case .tonal: role = "on_secondary_container"
+    case .elevated, .outlined, .text: role = "primary"
+    }
+    return pageTheme?.colorScheme?[role] ?? (variant == .filled ? .white : .accentColor)
+  }
+
+  private var defaultBorderColor: Color {
+    pageTheme?.colorScheme?["outline"] ?? defaultForegroundColor
   }
 
   private func pressed() {

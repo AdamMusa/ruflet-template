@@ -6,9 +6,9 @@ import UIKit
 import AppKit
 #endif
 
-// Flet's wire protocol accepts these named color tokens. They are decoded
-// immediately into SwiftUI.Color; no Material palette or theme object enters
-// the Apple renderer.
+// Flet's wire protocol accepts these named color tokens. Controls decode them
+// into SwiftUI.Color, while Theme.color_scheme_seed also keeps the exact ARGB
+// value so the renderer can reproduce Flutter's generated Material palette.
 private let rufletWireNamedColors: [String: UInt32] = [
     "red50": 0xffffebee, "red100": 0xffffcdd2, "red200": 0xffef9a9a,
     "red300": 0xffe57373, "red400": 0xffef5350, "red500": 0xfff44336,
@@ -125,6 +125,40 @@ private let rufletWireColorAliases: [String: String] = [
     "orangeaccent": "orangeaccent200", "deeporangeaccent": "deeporangeaccent200",
 ]
 
+func parseColorARGB(_ value: String?) -> UInt32? {
+    guard let value, !value.isEmpty else { return nil }
+    let components = value.split(separator: ",", maxSplits: 1).map(String.init)
+    let colorValue = components[0].trimmingCharacters(in: .whitespacesAndNewlines)
+    let normalized = colorValue.lowercased().replacingOccurrences(
+        of: #"[_\-\s]+"#, with: "", options: .regularExpression)
+
+    let argb: UInt32?
+    if colorValue.hasPrefix("#") {
+        argb = argbFromHex(String(colorValue.dropFirst()))
+    } else if normalized.hasPrefix("0x") {
+        argb = argbFromHex(String(normalized.dropFirst(2)))
+    } else if normalized == "transparent" {
+        argb = 0x00000000
+    } else if normalized == "white" {
+        argb = 0xffffffff
+    } else if normalized == "black" {
+        argb = 0xff000000
+    } else if let key = rufletWireColorAliases[normalized] {
+        argb = rufletWireNamedColors[key]
+    } else {
+        argb = rufletWireNamedColors[normalized]
+    }
+
+    guard var argb else { return nil }
+    if components.count > 1 {
+        let opacity = min(max(parseDouble(components[1], 1) ?? 1, 0), 1)
+        let sourceAlpha = Double((argb >> 24) & 0xff)
+        let alpha = UInt32((sourceAlpha * opacity).rounded())
+        argb = (argb & 0x00ffffff) | (alpha << 24)
+    }
+    return argb
+}
+
 public func parseColor(_ value: String?, _ defaultColor: Color? = nil) -> Color? {
     guard let value, !value.isEmpty else { return defaultColor }
     let components = value.split(separator: ",", maxSplits: 1).map(String.init)
@@ -160,12 +194,16 @@ public func parseColor(_ value: String?, _ defaultColor: Color? = nil) -> Color?
 }
 
 private func colorFromARGBHex(_ value: String) -> Color? {
-    let hex = value.count == 6 ? "ff" + value : value
-    guard hex.count == 8, let argb = UInt32(hex, radix: 16) else { return nil }
-    return colorFromARGB(argb)
+    argbFromHex(value).map(colorFromARGB)
 }
 
-private func colorFromARGB(_ value: UInt32) -> Color {
+private func argbFromHex(_ value: String) -> UInt32? {
+    let hex = value.count == 6 ? "ff" + value : value
+    guard hex.count == 8 else { return nil }
+    return UInt32(hex, radix: 16)
+}
+
+func colorFromARGB(_ value: UInt32) -> Color {
     Color(
         .sRGB,
         red: Double((value >> 16) & 0xff) / 255,

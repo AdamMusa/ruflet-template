@@ -9,6 +9,7 @@ import SwiftUI
 @MainActor
 public struct FloatingActionButtonControl: View {
   @ObservedObject public var control: RufletControl
+  @Environment(\.rufletPageTheme) private var pageTheme
   @FocusState private var focused: Bool
   @State private var hovered = false
 
@@ -21,7 +22,10 @@ public struct FloatingActionButtonControl: View {
           "FloatingActionButton has nothing to display. Provide at minimum one of these: icon, content"
         )
       } else {
-        let presentation = RufletFloatingActionButtonPresentation(control: control)
+        let presentation = RufletFloatingActionButtonPresentation(
+          control: control,
+          theme: pageTheme,
+          useMaterial3: pageTheme?.useMaterial3WireValue ?? true)
         Button(action: pressed) {
           HStack(spacing: content != nil && icon != nil ? 8 : 0) {
             icon
@@ -54,7 +58,10 @@ public struct FloatingActionButtonControl: View {
   private var buttonHeight: CGFloat { control.boolean("mini", default: false) ? 40 : 56 }
   private var buttonWidth: CGFloat? { extended ? nil : buttonHeight }
   private var cornerRadius: CGFloat {
-    parseBorderRadius(control.dynamicValue("shape"))?.uniform ?? buttonHeight / 2
+    parseBorderRadius(control.dynamicValue("shape"))?.uniform
+      ?? ((pageTheme?.useMaterial3WireValue ?? true)
+        ? (control.boolean("mini", default: false) ? 12 : 16)
+        : buttonHeight / 2)
   }
 
   private func pressed() {
@@ -122,9 +129,15 @@ struct RufletFloatingActionButtonPresentation {
   let hoverElevation: Double
   let highlightElevation: Double
 
-  init(control: RufletControl) {
-    backgroundColor = parseColor(control.string("bgcolor")) ?? .accentColor
-    foregroundColor = parseColor(control.string("foreground_color")) ?? .white
+  init(control: RufletControl, theme: RufletTheme? = nil, useMaterial3: Bool = true) {
+    let backgroundRole = useMaterial3 ? "primary_container" : "primary"
+    let foregroundRole = useMaterial3 ? "on_primary_container" : "on_primary"
+    backgroundColor =
+      parseColor(control.string("bgcolor"))
+      ?? theme?.colorScheme?[backgroundRole] ?? .accentColor
+    foregroundColor =
+      parseColor(control.string("foreground_color"))
+      ?? theme?.colorScheme?[foregroundRole] ?? .white
     splashColor = parseColor(control.string("splash_color"))
     hoverColor = parseColor(control.string("hover_color"))
     focusColor = parseColor(control.string("focus_color"))

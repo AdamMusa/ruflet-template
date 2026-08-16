@@ -1,3 +1,4 @@
+import MaterialColorUtilities
 import SwiftUI
 
 public enum RufletBrightness: String, CaseIterable, RufletStringEnum, Sendable {
@@ -26,7 +27,15 @@ public enum RufletPageTransition: String, Sendable {
 
 public struct RufletColorScheme {
   public let colors: [String: Color]
+  let argbValues: [String: UInt32]
+
+  init(colors: [String: Color], argbValues: [String: UInt32] = [:]) {
+    self.colors = colors
+    self.argbValues = argbValues
+  }
+
   public subscript(_ name: String) -> Color? { colors[name] }
+  func argb(_ name: String) -> UInt32? { argbValues[name] }
 }
 
 public struct RufletTextTheme {
@@ -169,10 +178,73 @@ public func parseColorScheme(
     "surface_container_high", "surface_container_highest", "surface_container_low",
     "surface_container_lowest", "surface_dim",
   ]
-  let colors = names.reduce(into: [String: Color]()) { result, name in
-    if let color = parseColor(value[name] as? String) { result[name] = color }
+  var colors = defaultValue?.colors ?? [:]
+  var argbValues = defaultValue?.argbValues ?? [:]
+  for name in names {
+    if let wireColor = value[name] as? String,
+      let color = parseColor(wireColor)
+    {
+      colors[name] = color
+      if let argb = parseColorARGB(wireColor) { argbValues[name] = argb }
+    }
   }
-  return RufletColorScheme(colors: colors)
+  return RufletColorScheme(colors: colors, argbValues: argbValues)
+}
+
+func materialColorScheme(seed: UInt32, isDark: Bool) -> RufletColorScheme {
+  let scheme = SchemeTonalSpot(
+    sourceColorHct: Hct(Int(seed)), isDark: isDark, contrastLevel: 0)
+  let values: [String: Int] = [
+    "primary": scheme.primary,
+    "on_primary": scheme.onPrimary,
+    "primary_container": scheme.primaryContainer,
+    "on_primary_container": scheme.onPrimaryContainer,
+    "secondary": scheme.secondary,
+    "on_secondary": scheme.onSecondary,
+    "secondary_container": scheme.secondaryContainer,
+    "on_secondary_container": scheme.onSecondaryContainer,
+    "tertiary": scheme.tertiary,
+    "on_tertiary": scheme.onTertiary,
+    "tertiary_container": scheme.tertiaryContainer,
+    "on_tertiary_container": scheme.onTertiaryContainer,
+    "error": scheme.error,
+    "on_error": scheme.onError,
+    "error_container": scheme.errorContainer,
+    "on_error_container": scheme.onErrorContainer,
+    "surface": scheme.surface,
+    "on_surface": scheme.onSurface,
+    "on_surface_variant": scheme.onSurfaceVariant,
+    "outline": scheme.outline,
+    "outline_variant": scheme.outlineVariant,
+    "shadow": scheme.shadow,
+    "scrim": scheme.scrim,
+    "inverse_surface": scheme.inverseSurface,
+    "on_inverse_surface": scheme.inverseOnSurface,
+    "inverse_primary": scheme.inversePrimary,
+    "surface_tint": scheme.surfaceTint,
+    "on_primary_fixed": scheme.onPrimaryFixed,
+    "on_secondary_fixed": scheme.onSecondaryFixed,
+    "on_tertiary_fixed": scheme.onTertiaryFixed,
+    "on_primary_fixed_variant": scheme.onPrimaryFixedVariant,
+    "on_secondary_fixed_variant": scheme.onSecondaryFixedVariant,
+    "on_tertiary_fixed_variant": scheme.onTertiaryFixedVariant,
+    "primary_fixed": scheme.primaryFixed,
+    "secondary_fixed": scheme.secondaryFixed,
+    "tertiary_fixed": scheme.tertiaryFixed,
+    "primary_fixed_dim": scheme.primaryFixedDim,
+    "secondary_fixed_dim": scheme.secondaryFixedDim,
+    "tertiary_fixed_dim": scheme.tertiaryFixedDim,
+    "surface_bright": scheme.surfaceBright,
+    "surface_container": scheme.surfaceContainer,
+    "surface_container_high": scheme.surfaceContainerHigh,
+    "surface_container_highest": scheme.surfaceContainerHighest,
+    "surface_container_low": scheme.surfaceContainerLow,
+    "surface_container_lowest": scheme.surfaceContainerLowest,
+    "surface_dim": scheme.surfaceDim,
+  ]
+  let argbValues = values.mapValues { UInt32(truncatingIfNeeded: $0) }
+  return RufletColorScheme(
+    colors: argbValues.mapValues(colorFromARGB), argbValues: argbValues)
 }
 
 public func parseTextTheme(
@@ -199,11 +271,14 @@ public func parseTheme(
     for (key, value) in updates { raw[key] = value }
   }
   let effectiveBrightness = brightness ?? parentTheme?.brightness
+  let seedARGB = parseColorARGB(raw["color_scheme_seed"] as? String) ?? 0xff2196f3
+  let generatedColorScheme = parentTheme?.colorScheme ?? materialColorScheme(
+    seed: seedARGB, isDark: effectiveBrightness == .dark)
   return RufletTheme(
     raw: raw,
     brightness: effectiveBrightness,
-    colorSchemeSeed: parseColor(raw["color_scheme_seed"] as? String, .blue)!,
-    colorScheme: parseColorScheme(raw["color_scheme"], parentTheme?.colorScheme),
+    colorSchemeSeed: parentTheme?.colorSchemeSeed ?? colorFromARGB(seedARGB),
+    colorScheme: parseColorScheme(raw["color_scheme"], generatedColorScheme),
     fontFamily: raw["font_family"] as? String ?? parentTheme?.fontFamily,
     useMaterial3WireValue: parseBool(raw["use_material3"]),
     textTheme: parseTextTheme(raw["text_theme"], parentTheme?.textTheme),

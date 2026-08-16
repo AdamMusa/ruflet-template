@@ -100,7 +100,9 @@ private struct RufletApplePageThemeModifier: ViewModifier {
     themedFont(
       themedForeground(
         themedBackground(
-          content.tint(theme?.appleAccentColor))))
+          content
+            .tint(theme?.appleAccentColor)
+            .accentColor(theme?.appleAccentColor))))
   }
 
   @ViewBuilder
