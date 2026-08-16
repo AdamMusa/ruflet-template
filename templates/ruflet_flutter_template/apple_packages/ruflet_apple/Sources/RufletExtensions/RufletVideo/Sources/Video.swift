@@ -82,16 +82,55 @@ final class RufletVideoController: ObservableObject {
   }
 
   func synchronizeProperties() {
-    if let volume = control.number("volume"), (0...100).contains(volume) {
+    let previousVolume = control.number("_volume")
+    if let volume = control.number("volume"), volume != previousVolume,
+      (0...100).contains(volume)
+    {
+      control.updateProperties(["_volume": .double(volume)], server: false)
       player.volume = Float(volume / 100)
     }
     player.isMuted = control.boolean("muted", default: false)
-    let rate = Float(control.number("playback_rate", default: 1) ?? 1)
-    if player.timeControlStatus == .playing, rate > 0 { player.rate = rate }
-    player.currentItem?.audioTimePitchAlgorithm = pitchAlgorithm(control.number("pitch"))
+    let previousPitch = control.number("_pitch")
+    if let pitch = control.number("pitch"), pitch != previousPitch {
+      control.updateProperties(["_pitch": .double(pitch)], server: false)
+      player.currentItem?.audioTimePitchAlgorithm = pitchAlgorithm(pitch)
+    }
+    let previousPlaybackRate = control.number("_playback_rate")
+    if let playbackRate = control.number("playback_rate"),
+      playbackRate != previousPlaybackRate
+    {
+      // Keep Flet 0.80.5's exact private cache spelling: it reads the snake
+      // case key above and writes this camel-case key.
+      control.updateProperties(["_playbackRate": .double(playbackRate)], server: false)
+      let rate = Float(playbackRate)
+      if player.timeControlStatus == .playing, rate > 0 { player.rate = rate }
+    }
+    if let shuffle = control.value("shuffle_playlist")?.bool,
+      shuffle != control.value("_shuffle_playlist")?.bool
+    {
+      control.updateProperties(["_shufflePlaylist": .bool(shuffle)], server: false)
+    }
+    if let playlistMode = control.value("playlist_mode"),
+      playlistMode != control.value("_playlist_mode")
+    {
+      control.updateProperties(["_playlistMode": playlistMode], server: false)
+    }
+    if let subtitleTrack = control.value("subtitle_track"),
+      subtitleTrack != control.value("_subtitleTrack")
+    {
+      control.updateProperties(["_subtitleTrack": subtitleTrack], server: false)
+      Task { await loadSubtitles() }
+    }
     if let item = player.currentItem { applyConfiguration(to: item) }
     let requestedFullscreen = control.boolean("fullscreen", default: false)
-    if requestedFullscreen != isFullscreen { setFullscreen(requestedFullscreen, report: false) }
+    let previousFullscreen = control.boolean("_fullscreen", default: false)
+    if requestedFullscreen != previousFullscreen {
+      if requestedFullscreen != isFullscreen {
+        setFullscreen(requestedFullscreen, report: false)
+      } else {
+        control.updateProperties(["_fullscreen": .bool(requestedFullscreen)], server: false)
+      }
+    }
   }
 
   func setFullscreen(_ value: Bool, report: Bool = true) {
