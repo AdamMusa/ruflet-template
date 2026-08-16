@@ -126,6 +126,7 @@ struct RufletListTileInputToggleModifier: ViewModifier {
 @MainActor
 public struct ListTileControl: View {
   @ObservedObject public var control: RufletControl
+  @Environment(\.rufletPageTheme) private var pageTheme
   @StateObject private var clickNotifier = RufletListTileClickNotifier()
   @State private var focused = false
   @State private var hovered = false
@@ -299,7 +300,17 @@ public struct ListTileControl: View {
   }
 
   private var titleStyle: RufletTextStyle? {
-    parseTextStyle(control.dynamicValue("title_text_style"))
+    if let explicit = parseTextStyle(control.dynamicValue("title_text_style")) {
+      return explicit
+    }
+    let material3 = pageTheme?.useMaterial3WireValue ?? true
+    let style = control.string("style", default: "list")?.lowercased()
+    if material3 || style == "drawer" {
+      return pageTheme?.textTheme?["body_large"]
+        ?? parseTextStyle(["size": 16.0, "weight": "w400"])
+    }
+    return pageTheme?.textTheme?["title_medium"]
+      ?? parseTextStyle(["size": 16.0, "weight": "w500"])
   }
 
   private var subtitleStyle: RufletTextStyle? {
