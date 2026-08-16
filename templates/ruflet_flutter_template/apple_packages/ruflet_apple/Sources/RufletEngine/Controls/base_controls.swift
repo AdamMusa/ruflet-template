@@ -177,7 +177,23 @@ private struct RufletConstrainedSizeLayout: Layout {
     subviews: Subviews,
     cache: inout ()
   ) -> CGSize {
-    guard let subview = subviews.first else { return .zero }
+    // A Flet Container does not need a child to have geometry: width/height
+    // still size its decoration. SwiftUI removes EmptyView from a custom
+    // Layout's subviews, so returning zero here made childless colored boxes
+    // disappear (and made their implicit size/position animations invisible).
+    guard let subview = subviews.first else {
+      return CGSize(
+        width: rufletConstrainedExtent(
+          requested: size.width,
+          proposed: proposal.width,
+          measured: 0,
+          fillsAvailableSpace: fillsAvailableSpace),
+        height: rufletConstrainedExtent(
+          requested: size.height,
+          proposed: proposal.height,
+          measured: 0,
+          fillsAvailableSpace: fillsAvailableSpace))
+    }
     let childProposal = ProposedViewSize(
       width: rufletConstrainedProposal(requested: size.width, proposed: proposal.width),
       height: rufletConstrainedProposal(requested: size.height, proposed: proposal.height))

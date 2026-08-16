@@ -1,5 +1,10 @@
 import RufletProtocol
+import SwiftUI
 import XCTest
+
+#if os(macOS)
+  import AppKit
+#endif
 
 @testable import RufletEngine
 
@@ -100,6 +105,21 @@ final class BaseLayoutControlContractTests: XCTestCase {
         fillsAvailableSpace: true),
       120)
   }
+
+  #if os(macOS)
+    func testChildlessControlKeepsExplicitSizeForDecorationAndAnimation() {
+      let view = EmptyView()
+        .modifier(
+          RufletConstrainedSizeModifier(
+            size: RufletSizeContract(width: 31, height: 17)))
+        .background(Color.red)
+        .fixedSize()
+      let hosting = NSHostingView(rootView: view)
+
+      XCTAssertEqual(hosting.fittingSize.width, 31, accuracy: 0.001)
+      XCTAssertEqual(hosting.fittingSize.height, 17, accuracy: 0.001)
+    }
+  #endif
 
   func testPositionRequiresStackHostAndAnimatedDefaultStartsAtOrigin() {
     let backend = BaseLayoutBackend()
