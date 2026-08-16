@@ -12,17 +12,27 @@ import UIKit
 private final class RufletLottieLoader: ObservableObject {
   @Published var animation: LottieAnimation?
   @Published var error: Error?
-  private var source: RufletValue?
+  private var loadKey: String?
 
   func load(control: RufletControl) async {
     let nextSource = control.value("src")
-    guard nextSource != source else { return }
-    source = nextSource
+    let enableMergePaths = control.boolean("enable_merge_paths", default: false)
+    let backgroundLoading = control.boolean("background_loading", default: false)
+    let nextLoadKey = "\(String(describing: nextSource))|\(enableMergePaths)|\(backgroundLoading)"
+    guard nextLoadKey != loadKey else { return }
+    loadKey = nextLoadKey
     animation = nil
     error = nil
     do {
-      let data = try await Self.data(for: nextSource, control: control)
-      animation = try LottieAnimation.from(data: data)
+      let sourceData = try await Self.data(for: nextSource, control: control)
+      let data = rufletLottieData(sourceData, enableMergePaths: enableMergePaths)
+      if backgroundLoading {
+        animation = try await Task.detached(priority: .utility) {
+          try LottieAnimation.from(data: data)
+        }.value
+      } else {
+        animation = try LottieAnimation.from(data: data)
+      }
       control.triggerEvent("load")
     } catch {
       self.error = error
@@ -66,13 +76,16 @@ struct LottieControl: View {
         ProgressView()
       }
     }
-    .task(id: control.value("src")) { await loader.load(control: control) }
+    .task(id: "\(String(describing: control.value("src")))|\(control.boolean("enable_merge_paths", default: false))|\(control.boolean("background_loading", default: false))") {
+      await loader.load(control: control)
+    }
   }
 
   private func configuredView(_ animation: LottieAnimation) -> AnyView {
     let repeatAnimation = control.boolean("repeat", default: true)
     let reverse = control.boolean("reverse", default: false)
     let animate = control.boolean("animate", default: true)
+    let enableLayersOpacity = control.boolean("enable_layers_opacity", default: false)
     let view = LottieView(animation: animation)
       .resizable()
       .configure { animationView in
@@ -81,6 +94,10 @@ struct LottieControl: View {
         #elseif os(macOS)
         animationView.contentMode = lottieContentMode
         #endif
+        animationView.layer?.allowsGroupOpacity = enableLayersOpacity
+        let filter = lottieContentsFilter
+        animationView.layer?.magnificationFilter = filter
+        animationView.layer?.minificationFilter = filter
       }
 
     if !animate { return AnyView(view.paused(at: .progress(reverse ? 1 : 0))) }
@@ -89,6 +106,14 @@ struct LottieControl: View {
       return AnyView(view.playing(.fromProgress(1, toProgress: 0, loopMode: loopMode)))
     }
     return AnyView(view.playing(.fromProgress(0, toProgress: 1, loopMode: loopMode)))
+  }
+
+  private var lottieContentsFilter: CALayerContentsFilter {
+    switch control.string("filter_quality")?.lowercased() {
+    case "none": .nearest
+    case "high": .trilinear
+    default: .linear
+    }
   }
 
   @ViewBuilder
@@ -124,6 +149,28 @@ struct LottieControl: View {
     }
   }
   #endif
+}
+
+func rufletLottieData(_ data: Data, enableMergePaths: Bool) -> Data {
+  guard !enableMergePaths,
+    let root = try? JSONSerialization.jsonObject(with: data),
+    JSONSerialization.isValidJSONObject(root)
+  else { return data }
+
+  func removeMergePaths(_ value: Any) -> Any {
+    if let array = value as? [Any] {
+      return array.compactMap { item -> Any? in
+        if let map = item as? [String: Any], map["ty"] as? String == "mm" { return nil }
+        return removeMergePaths(item)
+      }
+    }
+    if let map = value as? [String: Any] {
+      return map.mapValues(removeMergePaths)
+    }
+    return value
+  }
+
+  return (try? JSONSerialization.data(withJSONObject: removeMergePaths(root))) ?? data
 }
 
 public enum RufletLottieError: Error, Equatable, Sendable {
