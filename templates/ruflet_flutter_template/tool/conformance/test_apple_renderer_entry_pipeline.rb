@@ -109,6 +109,19 @@ class AppleRendererEntryPipelineTest < Minitest::Test
     refute_includes ios_choice, "websocketURL"
   end
 
+  def test_ios_deployment_target_matches_the_native_layout_protocol_floor
+    engine_package = source("apple_packages/ruflet_apple/Package.swift")
+    extension_package = source("apple_extensions/Package.swift")
+    podfile = source("ios/Podfile")
+    project = source("ios/Runner.xcodeproj/project.pbxproj")
+
+    assert_includes engine_package, ".iOS(.v16)"
+    assert_includes extension_package, ".iOS(.v16)"
+    assert_includes podfile, "platform :ios, '16.0'"
+    assert_equal 3, project.scan("IPHONEOS_DEPLOYMENT_TARGET = 16.0;").length
+    refute_includes project, "IPHONEOS_DEPLOYMENT_TARGET = 15.0;"
+  end
+
   def test_every_native_optional_extension_is_linked_and_registered_by_both_runners
     choice = source("macos/Runner/RufletEngineChoice.swift")
     macos_project = source("macos/Runner.xcodeproj/project.pbxproj")

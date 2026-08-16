@@ -9,7 +9,7 @@ public struct RufletInvokeMethodRequestBody: Equatable, Sendable {
   ///
   /// `Duration` and `Task.sleep(for:)` require iOS 16. Keeping the protocol
   /// value as `TimeInterval` preserves the exact integer-seconds wire contract
-  /// while allowing the Apple engine to remain deployable on iOS 15.
+  /// while allowing the Apple engine to remain deployable on iOS 16.
   public let timeoutSeconds: TimeInterval
 
   public var timeoutNanoseconds: UInt64 {

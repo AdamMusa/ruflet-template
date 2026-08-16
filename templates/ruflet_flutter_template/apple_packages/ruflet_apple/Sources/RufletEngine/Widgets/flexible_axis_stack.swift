@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// iOS 15/macOS 13-compatible counterpart of Flutter's Expanded/Flexible
+/// iOS 16/macOS 13-compatible counterpart of Flutter's Expanded/Flexible
 /// parent-data layout. SwiftUI's ordinary `layoutPriority` does not divide
 /// remaining space by flex factors, so the hosting Row/Column/View measures its
 /// fixed children and assigns the exact remainder proportionally.

@@ -153,7 +153,7 @@ struct RufletConstrainedSizeModifier: ViewModifier {
         content
       }
     } else {
-      // On the iOS 15 compatibility path, the legacy Row/Column wrapper uses
+      // On the legacy compatibility path, the Row/Column wrapper uses
       // fixedSize on non-flex children. A clamping frame can therefore honor
       // bounded parents without losing unbounded main-axis extents.
       content.frame(

@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// iOS 15/macOS 13-compatible counterpart of Flutter's `Wrap` render box.
+/// Apple-native counterpart of Flutter's `Wrap` render box.
 /// SwiftUI's `Layout` protocol is newer than Ruflet's deployment floor, so
 /// children are measured once and a deterministic, testable plan positions
 /// every run with the pinned spacing/alignment contract.

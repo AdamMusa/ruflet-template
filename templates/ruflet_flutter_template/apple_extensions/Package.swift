@@ -5,7 +5,7 @@ import PackageDescription
 let package = Package(
   name: "RufletAppExtensions",
   platforms: [
-    .iOS(.v15),
+    .iOS(.v16),
     .macOS("13.1"),
   ],
   products: [
