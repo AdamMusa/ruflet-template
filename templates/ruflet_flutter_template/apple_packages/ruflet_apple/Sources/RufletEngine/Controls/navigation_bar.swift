@@ -75,6 +75,7 @@ struct RufletAppleNavigationBar: View {
   @ObservedObject var control: RufletControl
   @State private var selectedIndex: Int
   @State private var hoveredIndex: Int?
+  @Environment(\.rufletPageTheme) private var pageTheme
   let kind: Kind
 
   init(control: RufletControl, kind: Kind) {
@@ -84,32 +85,37 @@ struct RufletAppleNavigationBar: View {
   }
 
   var body: some View {
+    let presentation = RufletNavigationBarPresentation(
+      control: control,
+      theme: pageTheme,
+      isCupertino: kind == .cupertino)
     LayoutControl(control: control) {
       HStack(spacing: 0) {
         ForEach(Array(destinations.enumerated()), id: \.element.id) { index, destination in
-          destinationButton(destination, index: index)
+          destinationButton(destination, index: index, presentation: presentation)
         }
       }
       .frame(maxWidth: .infinity)
-      .frame(height: barHeight)
-      .padding(labelPadding)
-      .background(background)
+      .frame(height: presentation.height)
+      .background(presentation.backgroundColor.background(.bar))
       .overlay(alignment: .top) { border }
       .shadow(
-        color: (parseColor(control.string("shadow_color")) ?? .black)
-          .opacity(elevation > 0 ? 0.18 : 0),
-        radius: elevation,
-        y: -elevation / 2
+        color: presentation.shadowColor.opacity(presentation.elevation > 0 ? 0.18 : 0),
+        radius: presentation.elevation,
+        y: -presentation.elevation / 2
       )
-      .animation(selectionAnimation, value: selectedIndex)
+      .animation(presentation.selectionAnimation, value: selectedIndex)
     }
     .onAppear(perform: synchronizeFromControl)
     .onChange(of: control.properties) { _ in synchronizeFromControl() }
   }
 
-  private func destinationButton(_ destination: RufletControl, index: Int) -> some View {
+  private func destinationButton(
+    _ destination: RufletControl,
+    index: Int,
+    presentation: RufletNavigationBarPresentation
+  ) -> some View {
     let selected = selectedIndex == index
-    let presentation = RufletNavigationBarPresentation(control: control)
     let states = presentation.states(
       selected: selected,
       hovered: hoveredIndex == index,
@@ -134,7 +140,7 @@ struct RufletAppleNavigationBar: View {
             EmptyView()
           }
         }
-        .frame(height: iconSize)
+        .frame(height: presentation.iconSize)
         .padding(.horizontal, 14)
         .padding(.vertical, 3)
         .background {
@@ -144,17 +150,21 @@ struct RufletAppleNavigationBar: View {
           }
         }
 
-        if labelBehavior.showsLabel(selected: selected),
+        if presentation.labelBehavior.showsLabel(selected: selected),
           let label = destination.string("label"), !label.isEmpty
         {
           Text(label)
+            .modifier(RufletTextStyleModifier(style: presentation.labelTextStyle.resolve(states)))
+            .environment(\.rufletInheritsTextColor, true)
             .font(.caption2)
             .lineLimit(1)
+            .padding(presentation.labelPadding)
         }
       }
       .frame(maxWidth: .infinity, maxHeight: .infinity)
       .contentShape(Rectangle())
-      .foregroundStyle(selected ? activeColor : inactiveColor)
+      .foregroundStyle(
+        selected ? presentation.selectedForegroundColor : presentation.unselectedForegroundColor)
       .background(presentation.overlay(states))
     }
     .buttonStyle(
@@ -196,26 +206,6 @@ struct RufletAppleNavigationBar: View {
     !control.disabled && (kind == .cupertino || !destination.disabled)
   }
 
-  private var labelBehavior: RufletNavigationLabelBehavior {
-    guard kind == .navigationBar else { return .alwaysShow }
-    return .wire(control.string("label_behavior"))
-  }
-
-  private var activeColor: Color {
-    parseColor(control.string("active_color"))
-      ?? parseColor(control.string("indicator_color"))
-      ?? .accentColor
-  }
-
-  private var inactiveColor: Color {
-    parseColor(control.string("inactive_color")) ?? .secondary
-  }
-
-  private var background: some View {
-    (parseColor(control.string("bgcolor")) ?? Color.rufletSystemBackground)
-      .background(.bar)
-  }
-
   @ViewBuilder
   private var border: some View {
     if kind == .cupertino, let value = control.dynamicValue("border"),
@@ -227,46 +217,100 @@ struct RufletAppleNavigationBar: View {
     }
   }
 
-  private var iconSize: CGFloat {
-    let value = CGFloat(control.number("icon_size", default: 30) ?? 30)
-    precondition(value >= 0, "\(control.type).icon_size must be non-negative")
-    return value
-  }
-  private var barHeight: CGFloat {
-    let value = CGFloat(control.number("height", default: 50) ?? 50)
-    precondition(value >= 0, "\(control.type).height must be non-negative")
-    return value
-  }
-  private var labelPadding: EdgeInsets {
-    kind == .navigationBar
-      ? parsePadding(control.dynamicValue("label_padding"))
-        ?? RufletLayoutDefaults.navigationBarLabel
-      : EdgeInsets()
-  }
-  private var elevation: CGFloat {
-    kind == .navigationBar ? CGFloat(max(control.number("elevation") ?? 0, 0)) : 0
-  }
-  private var selectionAnimation: Animation? {
-    let duration = parseDuration(control.dynamicValue("animation_duration"), 0.2)!
-    return duration > 0 ? .easeInOut(duration: duration) : nil
-  }
 }
 
 struct RufletNavigationBarPresentation {
+  let backgroundColor: Color
+  let shadowColor: Color
   let indicatorColor: Color
   let indicatorShape: RufletNavigationIndicatorShapeDescription
   let overlayColor: RufletWidgetStateProperty<Color>
+  let labelTextStyle: RufletWidgetStateProperty<RufletTextStyle>
+  let labelBehavior: RufletNavigationLabelBehavior
+  let labelPadding: EdgeInsets
+  let selectedForegroundColor: Color
+  let unselectedForegroundColor: Color
+  let elevation: CGFloat
+  let height: CGFloat
+  let iconSize: CGFloat
+  let selectionAnimation: Animation?
 
   @MainActor
-  init(control: RufletControl) {
+  init(
+    control: RufletControl,
+    theme: RufletTheme? = nil,
+    isCupertino: Bool = false,
+    nativeDefaultHeight: Double = 50
+  ) {
+    let componentTheme = theme?.componentTheme("navigation_bar_theme")
+    backgroundColor =
+      parseColor(control.string("bgcolor"))
+      ?? rufletNavigationBarColor(componentTheme?["bgcolor"])
+      ?? theme?.colorScheme?["surface_container"]
+      ?? Color.rufletSystemBackground
+    shadowColor =
+      parseColor(control.string("shadow_color"))
+      ?? rufletNavigationBarColor(componentTheme?["shadow_color"])
+      ?? theme?.colorScheme?["shadow"]
+      ?? .black
     indicatorColor =
       parseColor(control.string("indicator_color"))
+      ?? rufletNavigationBarColor(componentTheme?["indicator_color"])
+      ?? theme?.colorScheme?["secondary_container"]
       ?? Color.accentColor.opacity(0.16)
     indicatorShape = RufletNavigationIndicatorShapeDescription(
-      control.dynamicValue("indicator_shape"))
+      control.dynamicValue("indicator_shape") ?? componentTheme?["indicator_shape"])
     overlayColor = RufletWidgetStateProperty(
-      control.dynamicValue("overlay_color"),
+      control.dynamicValue("overlay_color") ?? componentTheme?["overlay_color"],
       converter: rufletNavigationBarColor)
+    labelTextStyle = RufletWidgetStateProperty(
+      componentTheme?["label_text_style"],
+      converter: { parseTextStyle($0) })
+    labelBehavior = isCupertino
+      ? .alwaysShow
+      : .wire(
+        control.string("label_behavior")
+          ?? rufletNavigationBarString(componentTheme?["label_behavior"]))
+    labelPadding = isCupertino
+      ? EdgeInsets()
+      : parsePadding(control.dynamicValue("label_padding"))
+        ?? parsePadding(componentTheme?["label_padding"])
+        ?? RufletLayoutDefaults.navigationBarLabel
+    if isCupertino {
+      selectedForegroundColor =
+        parseColor(control.string("active_color"))
+        ?? parseColor(control.string("indicator_color"))
+        ?? theme?.appleAccentColor
+        ?? .accentColor
+      unselectedForegroundColor =
+        parseColor(control.string("inactive_color"))
+        ?? .secondary
+      elevation = 0
+    } else {
+      selectedForegroundColor =
+        theme?.colorScheme?["on_secondary_container"]
+        ?? theme?.appleContentColor
+        ?? .primary
+      unselectedForegroundColor =
+        theme?.colorScheme?["on_surface_variant"]
+        ?? theme?.appleContentColor
+        ?? .secondary
+      elevation = CGFloat(max(
+        control.number("elevation")
+          ?? parseDouble(componentTheme?["elevation"])
+          ?? 0,
+        0))
+    }
+    height = CGFloat(max(
+      control.number("height")
+        ?? parseDouble(componentTheme?["height"])
+        ?? nativeDefaultHeight,
+      0))
+    iconSize = CGFloat(max(
+      isCupertino ? control.number("icon_size", default: 30) ?? 30 : 24,
+      0))
+    let duration = parseDuration(control.dynamicValue("animation_duration"), 0.2)!
+    selectionAnimation = duration > 0 ? .easeInOut(duration: duration) : nil
   }
 
   func states(
@@ -368,6 +412,12 @@ private struct RufletNavigationBarButtonStyle: ButtonStyle {
 private func rufletNavigationBarColor(_ raw: Any?) -> Color? {
   if let string = raw as? String { return parseColor(string) }
   if let value = raw as? RufletValue { return parseColor(value.text) }
+  return nil
+}
+
+private func rufletNavigationBarString(_ raw: Any?) -> String? {
+  if let string = raw as? String { return string }
+  if let value = raw as? RufletValue { return value.text }
   return nil
 }
 

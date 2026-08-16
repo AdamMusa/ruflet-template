@@ -48,6 +48,43 @@ final class NavigationBarPropertyConsumptionTests: XCTestCase {
       .continuousRectangle)
   }
 
+  func testPresentationResolvesMaterialComponentThemeAndDirectOverrides() {
+    let theme = parseTheme([
+      "navigation_bar_theme": [
+        "height": 62.0,
+        "label_behavior": "onlyShowSelected",
+        "label_padding": 7.0,
+        "label_text_style": ["selected": ["size": 15.0]],
+      ]
+    ])
+    let themed = RufletNavigationBarPresentation(control: makeControl(properties: [:]), theme: theme)
+
+    XCTAssertEqual(themed.height, 62)
+    XCTAssertEqual(themed.labelBehavior, .onlyShowSelected)
+    XCTAssertEqual(themed.labelPadding.top, 7)
+    XCTAssertEqual(themed.labelTextStyle.resolve([.selected])?.size, 15)
+
+    let direct = RufletNavigationBarPresentation(
+      control: makeControl(properties: [
+        "height": .double(70),
+        "label_behavior": .string("alwaysHide"),
+      ]),
+      theme: theme)
+    XCTAssertEqual(direct.height, 70)
+    XCTAssertEqual(direct.labelBehavior, .alwaysHide)
+  }
+
+  func testCupertinoContractUsesItsOwnIconAndLabelDefaults() {
+    let presentation = RufletNavigationBarPresentation(
+      control: makeControl(properties: ["icon_size": .double(34)]),
+      isCupertino: true)
+
+    XCTAssertEqual(presentation.iconSize, 34)
+    XCTAssertEqual(presentation.labelBehavior, .alwaysShow)
+    XCTAssertEqual(presentation.labelPadding.top, 0)
+    XCTAssertEqual(presentation.elevation, 0)
+  }
+
   func testAdaptiveNavigationUsesCupertinoBranchAndDestinationPropertyIsDirect() throws {
     let source = try String(contentsOf: sourceURL(), encoding: .utf8)
 
