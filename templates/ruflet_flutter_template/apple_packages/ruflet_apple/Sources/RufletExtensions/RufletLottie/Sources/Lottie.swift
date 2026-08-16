@@ -91,21 +91,30 @@ struct LottieControl: View {
       .configure { animationView in
         #if os(iOS)
         animationView.contentMode = contentMode
+        animationView.layer.allowsGroupOpacity = enableLayersOpacity
+        let filter = lottieContentsFilter
+        animationView.layer.magnificationFilter = filter
+        animationView.layer.minificationFilter = filter
         #elseif os(macOS)
         animationView.contentMode = lottieContentMode
-        #endif
         animationView.layer?.allowsGroupOpacity = enableLayersOpacity
         let filter = lottieContentsFilter
         animationView.layer?.magnificationFilter = filter
         animationView.layer?.minificationFilter = filter
+        #endif
       }
 
-    if !animate { return AnyView(view.paused(at: .progress(reverse ? 1 : 0))) }
+    if !animate {
+      return AnyView(view.paused(
+        at: LottiePlaybackMode.PausedState.progress(reverse ? 1 : 0)))
+    }
     let loopMode: LottieLoopMode = repeatAnimation ? .loop : .playOnce
     if reverse {
-      return AnyView(view.playing(.fromProgress(1, toProgress: 0, loopMode: loopMode)))
+      return AnyView(view.playing(
+        LottiePlaybackMode.PlaybackMode.fromProgress(1, toProgress: 0, loopMode: loopMode)))
     }
-    return AnyView(view.playing(.fromProgress(0, toProgress: 1, loopMode: loopMode)))
+    return AnyView(view.playing(
+      LottiePlaybackMode.PlaybackMode.fromProgress(0, toProgress: 1, loopMode: loopMode)))
   }
 
   private var lottieContentsFilter: CALayerContentsFilter {
