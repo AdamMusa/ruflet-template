@@ -55333,2400 +55333,6 @@
     },
     {
       "family": "visual",
-      "wire_type": "FletApp",
-      "dsl_names": [
-        "ruflet_app",
-        "rufletapp"
-      ],
-      "implementations": [
-        "FletAppControl"
-      ],
-      "parent_implementations": [],
-      "service_implementations": [],
-      "properties": {
-        "align": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 87
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 88
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 89
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 576
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 577
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 578
-            }
-          ]
-        },
-        "animate_align": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 115
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 116
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 117
-            }
-          ]
-        },
-        "animate_margin": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 118
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 119
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 120
-            }
-          ]
-        },
-        "animate_offset": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 111
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 112
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 113
-            }
-          ]
-        },
-        "animate_opacity": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 65
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 66
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 67
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 531
-            }
-          ]
-        },
-        "animate_position": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 293
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 294
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 295
-            }
-          ]
-        },
-        "animate_rotation": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 100
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 101
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 102
-            }
-          ]
-        },
-        "animate_scale": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 90
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 91
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 92
-            }
-          ]
-        },
-        "animate_size": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 94
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 95
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 96
-            }
-          ]
-        },
-        "app_error_message": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
-              "line": 20
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
-              "line": 21
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
-              "line": 22
-            }
-          ]
-        },
-        "app_startup_screen_message": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
-              "line": 19
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
-              "line": 20
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
-              "line": 21
-            }
-          ]
-        },
-        "args": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
-              "line": 33
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
-              "line": 34
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
-              "line": 35
-            }
-          ]
-        },
-        "aspect_ratio": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 113
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 114
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 115
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
-              "line": 144
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
-              "line": 145
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
-              "line": 146
-            }
-          ]
-        },
-        "badge": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 432
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 433
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 434
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 453
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 454
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 455
-            }
-          ]
-        },
-        "bottom": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 292
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 293
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 294
-            }
-          ]
-        },
-        "col": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 70
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 71
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
-              "line": 72
-            }
-          ]
-        },
-        "data": {
-          "classification": "parent_consumed",
-          "evidence": [
-            {
-              "consumer": "Ruflet::Control wire construction",
-              "reason": "Ruflet application metadata; it is preserved on the Ruby control and has no visual native behavior"
-            }
-          ]
-        },
-        "disabled": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/auto_complete.swift",
-              "line": 43
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/auto_complete.swift",
-              "line": 91
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/button.swift",
-              "line": 27
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/button.swift",
-              "line": 32
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/button.swift",
-              "line": 96
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/checkbox.swift",
-              "line": 50
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/checkbox.swift",
-              "line": 70
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/checkbox.swift",
-              "line": 87
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/checkbox.swift",
-              "line": 111
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/checkbox.swift",
-              "line": 131
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/chip.swift",
-              "line": 70
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/chip.swift",
-              "line": 85
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/chip.swift",
-              "line": 106
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/chip.swift",
-              "line": 108
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/chip.swift",
-              "line": 144
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/chip.swift",
-              "line": 154
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/chip.swift",
-              "line": 254
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/chip.swift",
-              "line": 265
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 390
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/context_menu.swift",
-              "line": 98
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_action_sheet_action.swift",
-              "line": 15
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_action_sheet_action.swift",
-              "line": 26
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_button.swift",
-              "line": 26
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_button.swift",
-              "line": 36
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_button.swift",
-              "line": 39
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_button.swift",
-              "line": 53
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_context_menu_action.swift",
-              "line": 15
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_context_menu_action.swift",
-              "line": 25
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_dialog_action.swift",
-              "line": 20
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_list_tile.swift",
-              "line": 68
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_picker.swift",
-              "line": 45
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_picker.swift",
-              "line": 53
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_radio.swift",
-              "line": 32
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_radio.swift",
-              "line": 51
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_radio.swift",
-              "line": 56
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_radio.swift",
-              "line": 86
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_radio.swift",
-              "line": 99
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_segmented_button.swift",
-              "line": 26
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_segmented_button.swift",
-              "line": 76
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_slider.swift",
-              "line": 33
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_slider.swift",
-              "line": 121
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_slider.swift",
-              "line": 122
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_slider.swift",
-              "line": 126
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_slider.swift",
-              "line": 162
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_sliding_segmented_button.swift",
-              "line": 40
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_switch.swift",
-              "line": 23
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_switch.swift",
-              "line": 44
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_switch.swift",
-              "line": 108
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dismissible.swift",
-              "line": 79
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/draggable.swift",
-              "line": 50
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 11
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 41
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 59
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 79
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 95
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 148
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 159
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 176
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 331
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 42
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 49
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 59
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 74
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 121
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 143
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 255
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/expansion_panel.swift",
-              "line": 121
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/expansion_panel.swift",
-              "line": 134
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/expansion_panel.swift",
-              "line": 168
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/expansion_tile.swift",
-              "line": 68
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/expansion_tile.swift",
-              "line": 183
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/floating_action_button.swift",
-              "line": 38
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/floating_action_button.swift",
-              "line": 42
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/floating_action_button.swift",
-              "line": 61
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/floating_action_button.swift",
-              "line": 139
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/floating_action_button.swift",
-              "line": 147
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 38
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 119
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 241
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 264
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 270
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 279
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 288
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 296
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 305
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 313
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 326
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 350
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 373
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 384
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 395
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
-              "line": 664
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/icon_button.swift",
-              "line": 11
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/icon_button.swift",
-              "line": 47
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/icon_button.swift",
-              "line": 48
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/icon_button.swift",
-              "line": 53
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/icon_button.swift",
-              "line": 56
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/icon_button.swift",
-              "line": 86
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/icon_button.swift",
-              "line": 97
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/image.swift",
-              "line": 59
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/interactive_viewer.swift",
-              "line": 96
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/interactive_viewer.swift",
-              "line": 109
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/interactive_viewer.swift",
-              "line": 123
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/interactive_viewer.swift",
-              "line": 177
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/list_tile.swift",
-              "line": 46
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/list_tile.swift",
-              "line": 174
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/list_tile.swift",
-              "line": 177
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/list_tile.swift",
-              "line": 329
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/menu_item_button.swift",
-              "line": 28
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/menu_item_button.swift",
-              "line": 56
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/menu_item_button.swift",
-              "line": 58
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/menu_item_button.swift",
-              "line": 92
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_bar.swift",
-              "line": 171
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_bar.swift",
-              "line": 196
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_bar_destination.swift",
-              "line": 22
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_bar_destination.swift",
-              "line": 25
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_drawer.swift",
-              "line": 63
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_drawer.swift",
-              "line": 90
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_drawer.swift",
-              "line": 91
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_rail.swift",
-              "line": 64
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_rail.swift",
-              "line": 96
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_rail.swift",
-              "line": 97
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/page_view.swift",
-              "line": 88
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/popup_menu_button.swift",
-              "line": 8
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/popup_menu_button.swift",
-              "line": 13
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/popup_menu_button.swift",
-              "line": 47
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/popup_menu_button.swift",
-              "line": 50
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/popup_menu_button.swift",
-              "line": 64
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/popup_menu_button.swift",
-              "line": 149
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/popup_menu_button.swift",
-              "line": 150
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/popup_menu_button.swift",
-              "line": 154
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/popup_menu_button.swift",
-              "line": 162
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/popup_menu_button.swift",
-              "line": 221
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/radio.swift",
-              "line": 35
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/radio.swift",
-              "line": 58
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/radio.swift",
-              "line": 63
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/radio.swift",
-              "line": 74
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/radio.swift",
-              "line": 96
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/radio.swift",
-              "line": 120
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/radio_group.swift",
-              "line": 36
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/range_slider.swift",
-              "line": 86
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/range_slider.swift",
-              "line": 177
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/range_slider.swift",
-              "line": 178
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/range_slider.swift",
-              "line": 246
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/reorderable_drag_handle.swift",
-              "line": 16
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/reorderable_list_view.swift",
-              "line": 170
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/reorderable_list_view.swift",
-              "line": 420
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/search_bar.swift",
-              "line": 84
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/search_bar.swift",
-              "line": 175
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/search_bar.swift",
-              "line": 214
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/segmented_button.swift",
-              "line": 50
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/segmented_button.swift",
-              "line": 60
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/segmented_button.swift",
-              "line": 113
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/semantics.swift",
-              "line": 52
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/semantics.swift",
-              "line": 53
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/semantics.swift",
-              "line": 54
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/semantics.swift",
-              "line": 194
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/shimmer.swift",
-              "line": 27
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/slider.swift",
-              "line": 31
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/slider.swift",
-              "line": 134
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/slider.swift",
-              "line": 254
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/slider.swift",
-              "line": 255
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/slider.swift",
-              "line": 261
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/slider.swift",
-              "line": 343
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/submenu_button.swift",
-              "line": 38
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/submenu_button.swift",
-              "line": 40
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/submenu_button.swift",
-              "line": 75
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/submenu_button.swift",
-              "line": 86
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/submenu_button.swift",
-              "line": 97
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/switch.swift",
-              "line": 26
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/switch.swift",
-              "line": 51
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/switch.swift",
-              "line": 102
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/tabs.swift",
-              "line": 290
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/tabs.swift",
-              "line": 292
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/tabs.swift",
-              "line": 319
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/tabs.swift",
-              "line": 321
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 108
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 294
-            }
-          ]
-        },
-        "expand": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 219
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 220
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 221
-            }
-          ]
-        },
-        "expand_loose": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 230
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 231
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 232
-            }
-          ]
-        },
-        "force_pyodide": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
-              "line": 22
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
-              "line": 23
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
-              "line": 24
-            }
-          ]
-        },
-        "height": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 162
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 163
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 164
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 167
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 168
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 169
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/bottom_app_bar.swift",
-              "line": 26
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/bottom_app_bar.swift",
-              "line": 27
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/bottom_app_bar.swift",
-              "line": 28
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/bottom_sheet.swift",
-              "line": 162
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/bottom_sheet.swift",
-              "line": 163
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/bottom_sheet.swift",
-              "line": 164
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/button.swift",
-              "line": 43
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/button.swift",
-              "line": 44
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/button.swift",
-              "line": 45
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
-              "line": 242
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
-              "line": 243
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
-              "line": 244
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
-              "line": 672
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
-              "line": 673
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
-              "line": 674
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/divider.swift",
-              "line": 14
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/divider.swift",
-              "line": 15
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/divider.swift",
-              "line": 16
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/image.swift",
-              "line": 32
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/image.swift",
-              "line": 33
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/image.swift",
-              "line": 34
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_bar.swift",
-              "line": 234
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_bar.swift",
-              "line": 235
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_bar.swift",
-              "line": 236
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/pagelet.swift",
-              "line": 17
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/pagelet.swift",
-              "line": 18
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/pagelet.swift",
-              "line": 19
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/row.swift",
-              "line": 24
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/row.swift",
-              "line": 25
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/row.swift",
-              "line": 26
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/tabs.swift",
-              "line": 206
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/tabs.swift",
-              "line": 207
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/tabs.swift",
-              "line": 208
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
-              "line": 348
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
-              "line": 349
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
-              "line": 350
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
-              "line": 129
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
-              "line": 130
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
-              "line": 131
-            }
-          ]
-        },
-        "key": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 258
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 259
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 260
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
-              "line": 261
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 224
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 225
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 226
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/grid_view.swift",
-              "line": 224
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/grid_view.swift",
-              "line": 225
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/grid_view.swift",
-              "line": 226
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/list_view.swift",
-              "line": 84
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/list_view.swift",
-              "line": 85
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/list_view.swift",
-              "line": 86
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/reorderable_list_view.swift",
-              "line": 282
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/reorderable_list_view.swift",
-              "line": 283
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/reorderable_list_view.swift",
-              "line": 284
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 50
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 51
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
-              "line": 52
-            }
-          ]
-        },
-        "left": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 289
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 290
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 291
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
-              "line": 135
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
-              "line": 136
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
-              "line": 137
-            }
-          ]
-        },
-        "margin": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/banner.swift",
-              "line": 60
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/banner.swift",
-              "line": 61
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/banner.swift",
-              "line": 62
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 88
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 89
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 90
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 579
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 580
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 581
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/card.swift",
-              "line": 71
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/card.swift",
-              "line": 72
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/card.swift",
-              "line": 73
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/snack_bar.swift",
-              "line": 163
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/snack_bar.swift",
-              "line": 164
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/snack_bar.swift",
-              "line": 165
-            }
-          ]
-        },
-        "offset": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 86
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 87
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 88
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 447
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 448
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 449
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 450
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 573
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 574
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 575
-            }
-          ]
-        },
-        "on_animation_end": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 380
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 381
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 382
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 535
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 536
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 537
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 542
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 543
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 544
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 558
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 559
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 560
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 591
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 592
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 593
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 598
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 599
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 600
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 610
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 611
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 612
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 617
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 618
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 619
-            }
-          ]
-        },
-        "on_error": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/base_sensor.swift",
-              "line": 38
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/base_sensor.swift",
-              "line": 39
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/base_sensor.swift",
-              "line": 40
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/base_sensor.swift",
-              "line": 50
-            }
-          ]
-        },
-        "on_size_change": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 477
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 478
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 479
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 488
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 489
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 490
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 507
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 508
-            }
-          ]
-        },
-        "opacity": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 63
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 64
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 65
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 66
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 67
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 68
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 528
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 529
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 530
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
-              "line": 143
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
-              "line": 144
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
-              "line": 145
-            }
-          ]
-        },
-        "reconnect_interval_ms": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
-              "line": 24
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
-              "line": 25
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
-              "line": 26
-            }
-          ]
-        },
-        "reconnect_timeout_ms": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
-              "line": 25
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
-              "line": 26
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
-              "line": 27
-            }
-          ]
-        },
-        "right": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 291
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 292
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 293
-            }
-          ]
-        },
-        "rotate": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 84
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 85
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 86
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 567
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 568
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 569
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
-              "line": 751
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
-              "line": 752
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
-              "line": 753
-            }
-          ]
-        },
-        "rtl": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 73
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 74
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 75
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dismissible.swift",
-              "line": 247
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dismissible.swift",
-              "line": 248
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dismissible.swift",
-              "line": 249
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/page.swift",
-              "line": 43
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/page.swift",
-              "line": 44
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/page.swift",
-              "line": 45
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/page.swift",
-              "line": 77
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/page.swift",
-              "line": 78
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/page.swift",
-              "line": 79
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/view.swift",
-              "line": 27
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/view.swift",
-              "line": 28
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/view.swift",
-              "line": 29
-            }
-          ]
-        },
-        "scale": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 85
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 86
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 87
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 570
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 571
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 572
-            }
-          ]
-        },
-        "show_app_startup_screen": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
-              "line": 18
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
-              "line": 19
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
-              "line": 20
-            }
-          ]
-        },
-        "size_change_interval": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 489
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 490
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 491
-            }
-          ]
-        },
-        "tooltip": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 70
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 71
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 72
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/datatable.swift",
-              "line": 120
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/datatable.swift",
-              "line": 121
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/datatable.swift",
-              "line": 122
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/datatable.swift",
-              "line": 123
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/datatable.swift",
-              "line": 124
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/datatable.swift",
-              "line": 125
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/datatable.swift",
-              "line": 126
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_bar.swift",
-              "line": 169
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_bar.swift",
-              "line": 170
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_bar.swift",
-              "line": 171
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_bar_destination.swift",
-              "line": 23
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_bar_destination.swift",
-              "line": 24
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_bar_destination.swift",
-              "line": 25
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/page.swift",
-              "line": 369
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/page.swift",
-              "line": 370
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/page.swift",
-              "line": 371
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/popup_menu_button.swift",
-              "line": 49
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/popup_menu_button.swift",
-              "line": 50
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/popup_menu_button.swift",
-              "line": 51
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/segmented_button.swift",
-              "line": 58
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/segmented_button.swift",
-              "line": 59
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/segmented_button.swift",
-              "line": 60
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/semantics.swift",
-              "line": 90
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/semantics.swift",
-              "line": 91
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/semantics.swift",
-              "line": 92
-            }
-          ]
-        },
-        "top": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 290
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 291
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 292
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
-              "line": 134
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
-              "line": 135
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
-              "line": 136
-            }
-          ]
-        },
-        "url": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/button.swift",
-              "line": 95
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/button.swift",
-              "line": 96
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/button.swift",
-              "line": 97
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 366
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 367
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 368
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 382
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 383
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
-              "line": 384
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_button.swift",
-              "line": 52
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_button.swift",
-              "line": 53
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_button.swift",
-              "line": 54
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
-              "line": 16
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
-              "line": 17
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
-              "line": 18
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/floating_action_button.swift",
-              "line": 61
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/floating_action_button.swift",
-              "line": 62
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/floating_action_button.swift",
-              "line": 63
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/icon_button.swift",
-              "line": 10
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/icon_button.swift",
-              "line": 11
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/icon_button.swift",
-              "line": 12
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/list_tile.swift",
-              "line": 47
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/list_tile.swift",
-              "line": 48
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/list_tile.swift",
-              "line": 49
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/list_tile.swift",
-              "line": 56
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/list_tile.swift",
-              "line": 57
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/list_tile.swift",
-              "line": 58
-            }
-          ]
-        },
-        "visible": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
-              "line": 155
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
-              "line": 156
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
-              "line": 157
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
-              "line": 334
-            }
-          ]
-        },
-        "width": {
-          "classification": "consumed",
-          "evidence": [
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/auto_complete.swift",
-              "line": 16
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/auto_complete.swift",
-              "line": 17
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/auto_complete.swift",
-              "line": 18
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 162
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 163
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 164
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 166
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 167
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
-              "line": 168
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/button.swift",
-              "line": 43
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/button.swift",
-              "line": 44
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/button.swift",
-              "line": 45
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
-              "line": 241
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
-              "line": 242
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
-              "line": 243
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
-              "line": 671
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
-              "line": 672
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
-              "line": 673
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/column.swift",
-              "line": 25
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/column.swift",
-              "line": 26
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/column.swift",
-              "line": 27
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 36
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 37
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
-              "line": 38
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/image.swift",
-              "line": 31
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/image.swift",
-              "line": 32
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/image.swift",
-              "line": 33
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/snack_bar.swift",
-              "line": 158
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/snack_bar.swift",
-              "line": 159
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/snack_bar.swift",
-              "line": 160
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 46
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 47
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
-              "line": 48
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/vertical_divider.swift",
-              "line": 14
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/vertical_divider.swift",
-              "line": 15
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/vertical_divider.swift",
-              "line": 16
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
-              "line": 347
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
-              "line": 348
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
-              "line": 349
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
-              "line": 128
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
-              "line": 129
-            },
-            {
-              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
-              "line": 130
-            }
-          ]
-        }
-      }
-    },
-    {
-      "family": "visual",
       "wire_type": "FloatingActionButton",
       "dsl_names": [
         "floating_action_button",
@@ -94319,6 +91925,2400 @@
             {
               "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/row.swift",
               "line": 52
+            }
+          ]
+        }
+      }
+    },
+    {
+      "family": "visual",
+      "wire_type": "RufletApp",
+      "dsl_names": [
+        "ruflet_app",
+        "rufletapp"
+      ],
+      "implementations": [
+        "FletAppControl"
+      ],
+      "parent_implementations": [],
+      "service_implementations": [],
+      "properties": {
+        "align": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 87
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 88
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 89
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 576
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 577
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 578
+            }
+          ]
+        },
+        "animate_align": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 115
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 116
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 117
+            }
+          ]
+        },
+        "animate_margin": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 118
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 119
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 120
+            }
+          ]
+        },
+        "animate_offset": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 111
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 112
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 113
+            }
+          ]
+        },
+        "animate_opacity": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 65
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 66
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 67
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 531
+            }
+          ]
+        },
+        "animate_position": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 293
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 294
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 295
+            }
+          ]
+        },
+        "animate_rotation": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 100
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 101
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 102
+            }
+          ]
+        },
+        "animate_scale": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 90
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 91
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 92
+            }
+          ]
+        },
+        "animate_size": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 94
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 95
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 96
+            }
+          ]
+        },
+        "app_error_message": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
+              "line": 20
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
+              "line": 21
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
+              "line": 22
+            }
+          ]
+        },
+        "app_startup_screen_message": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
+              "line": 19
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
+              "line": 20
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
+              "line": 21
+            }
+          ]
+        },
+        "args": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
+              "line": 33
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
+              "line": 34
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
+              "line": 35
+            }
+          ]
+        },
+        "aspect_ratio": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 113
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 114
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 115
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
+              "line": 144
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
+              "line": 145
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
+              "line": 146
+            }
+          ]
+        },
+        "badge": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 432
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 433
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 434
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 453
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 454
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 455
+            }
+          ]
+        },
+        "bottom": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 292
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 293
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 294
+            }
+          ]
+        },
+        "col": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
+              "line": 70
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
+              "line": 71
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/responsive_row.swift",
+              "line": 72
+            }
+          ]
+        },
+        "data": {
+          "classification": "parent_consumed",
+          "evidence": [
+            {
+              "consumer": "Ruflet::Control wire construction",
+              "reason": "Ruflet application metadata; it is preserved on the Ruby control and has no visual native behavior"
+            }
+          ]
+        },
+        "disabled": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/auto_complete.swift",
+              "line": 43
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/auto_complete.swift",
+              "line": 91
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/button.swift",
+              "line": 27
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/button.swift",
+              "line": 32
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/button.swift",
+              "line": 96
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/checkbox.swift",
+              "line": 50
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/checkbox.swift",
+              "line": 70
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/checkbox.swift",
+              "line": 87
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/checkbox.swift",
+              "line": 111
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/checkbox.swift",
+              "line": 131
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/chip.swift",
+              "line": 70
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/chip.swift",
+              "line": 85
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/chip.swift",
+              "line": 106
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/chip.swift",
+              "line": 108
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/chip.swift",
+              "line": 144
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/chip.swift",
+              "line": 154
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/chip.swift",
+              "line": 254
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/chip.swift",
+              "line": 265
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
+              "line": 390
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/context_menu.swift",
+              "line": 98
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_action_sheet_action.swift",
+              "line": 15
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_action_sheet_action.swift",
+              "line": 26
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_button.swift",
+              "line": 26
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_button.swift",
+              "line": 36
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_button.swift",
+              "line": 39
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_button.swift",
+              "line": 53
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_context_menu_action.swift",
+              "line": 15
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_context_menu_action.swift",
+              "line": 25
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_dialog_action.swift",
+              "line": 20
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_list_tile.swift",
+              "line": 68
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_picker.swift",
+              "line": 45
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_picker.swift",
+              "line": 53
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_radio.swift",
+              "line": 32
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_radio.swift",
+              "line": 51
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_radio.swift",
+              "line": 56
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_radio.swift",
+              "line": 86
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_radio.swift",
+              "line": 99
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_segmented_button.swift",
+              "line": 26
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_segmented_button.swift",
+              "line": 76
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_slider.swift",
+              "line": 33
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_slider.swift",
+              "line": 121
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_slider.swift",
+              "line": 122
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_slider.swift",
+              "line": 126
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_slider.swift",
+              "line": 162
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_sliding_segmented_button.swift",
+              "line": 40
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_switch.swift",
+              "line": 23
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_switch.swift",
+              "line": 44
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_switch.swift",
+              "line": 108
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dismissible.swift",
+              "line": 79
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/draggable.swift",
+              "line": 50
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 11
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 41
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 59
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 79
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 95
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 148
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 159
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 176
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 331
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 42
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 49
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 59
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 74
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 121
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 143
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 255
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/expansion_panel.swift",
+              "line": 121
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/expansion_panel.swift",
+              "line": 134
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/expansion_panel.swift",
+              "line": 168
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/expansion_tile.swift",
+              "line": 68
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/expansion_tile.swift",
+              "line": 183
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/floating_action_button.swift",
+              "line": 38
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/floating_action_button.swift",
+              "line": 42
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/floating_action_button.swift",
+              "line": 61
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/floating_action_button.swift",
+              "line": 139
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/floating_action_button.swift",
+              "line": 147
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 38
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 119
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 241
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 264
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 270
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 279
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 288
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 296
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 305
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 313
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 326
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 350
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 373
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 384
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 395
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/gesture_detector.swift",
+              "line": 664
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/icon_button.swift",
+              "line": 11
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/icon_button.swift",
+              "line": 47
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/icon_button.swift",
+              "line": 48
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/icon_button.swift",
+              "line": 53
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/icon_button.swift",
+              "line": 56
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/icon_button.swift",
+              "line": 86
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/icon_button.swift",
+              "line": 97
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/image.swift",
+              "line": 59
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/interactive_viewer.swift",
+              "line": 96
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/interactive_viewer.swift",
+              "line": 109
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/interactive_viewer.swift",
+              "line": 123
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/interactive_viewer.swift",
+              "line": 177
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/list_tile.swift",
+              "line": 46
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/list_tile.swift",
+              "line": 174
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/list_tile.swift",
+              "line": 177
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/list_tile.swift",
+              "line": 329
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/menu_item_button.swift",
+              "line": 28
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/menu_item_button.swift",
+              "line": 56
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/menu_item_button.swift",
+              "line": 58
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/menu_item_button.swift",
+              "line": 92
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_bar.swift",
+              "line": 171
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_bar.swift",
+              "line": 196
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_bar_destination.swift",
+              "line": 22
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_bar_destination.swift",
+              "line": 25
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_drawer.swift",
+              "line": 63
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_drawer.swift",
+              "line": 90
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_drawer.swift",
+              "line": 91
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_rail.swift",
+              "line": 64
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_rail.swift",
+              "line": 96
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_rail.swift",
+              "line": 97
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/page_view.swift",
+              "line": 88
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/popup_menu_button.swift",
+              "line": 8
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/popup_menu_button.swift",
+              "line": 13
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/popup_menu_button.swift",
+              "line": 47
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/popup_menu_button.swift",
+              "line": 50
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/popup_menu_button.swift",
+              "line": 64
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/popup_menu_button.swift",
+              "line": 149
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/popup_menu_button.swift",
+              "line": 150
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/popup_menu_button.swift",
+              "line": 154
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/popup_menu_button.swift",
+              "line": 162
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/popup_menu_button.swift",
+              "line": 221
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/radio.swift",
+              "line": 35
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/radio.swift",
+              "line": 58
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/radio.swift",
+              "line": 63
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/radio.swift",
+              "line": 74
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/radio.swift",
+              "line": 96
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/radio.swift",
+              "line": 120
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/radio_group.swift",
+              "line": 36
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/range_slider.swift",
+              "line": 86
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/range_slider.swift",
+              "line": 177
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/range_slider.swift",
+              "line": 178
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/range_slider.swift",
+              "line": 246
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/reorderable_drag_handle.swift",
+              "line": 16
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/reorderable_list_view.swift",
+              "line": 170
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/reorderable_list_view.swift",
+              "line": 420
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/search_bar.swift",
+              "line": 84
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/search_bar.swift",
+              "line": 175
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/search_bar.swift",
+              "line": 214
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/segmented_button.swift",
+              "line": 50
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/segmented_button.swift",
+              "line": 60
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/segmented_button.swift",
+              "line": 113
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/semantics.swift",
+              "line": 52
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/semantics.swift",
+              "line": 53
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/semantics.swift",
+              "line": 54
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/semantics.swift",
+              "line": 194
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/shimmer.swift",
+              "line": 27
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/slider.swift",
+              "line": 31
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/slider.swift",
+              "line": 134
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/slider.swift",
+              "line": 254
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/slider.swift",
+              "line": 255
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/slider.swift",
+              "line": 261
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/slider.swift",
+              "line": 343
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/submenu_button.swift",
+              "line": 38
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/submenu_button.swift",
+              "line": 40
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/submenu_button.swift",
+              "line": 75
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/submenu_button.swift",
+              "line": 86
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/submenu_button.swift",
+              "line": 97
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/switch.swift",
+              "line": 26
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/switch.swift",
+              "line": 51
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/switch.swift",
+              "line": 102
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/tabs.swift",
+              "line": 290
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/tabs.swift",
+              "line": 292
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/tabs.swift",
+              "line": 319
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/tabs.swift",
+              "line": 321
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 108
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 294
+            }
+          ]
+        },
+        "expand": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 219
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 220
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 221
+            }
+          ]
+        },
+        "expand_loose": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 230
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 231
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 232
+            }
+          ]
+        },
+        "force_pyodide": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
+              "line": 22
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
+              "line": 23
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
+              "line": 24
+            }
+          ]
+        },
+        "height": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 162
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 163
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 164
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 167
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 168
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 169
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/bottom_app_bar.swift",
+              "line": 26
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/bottom_app_bar.swift",
+              "line": 27
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/bottom_app_bar.swift",
+              "line": 28
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/bottom_sheet.swift",
+              "line": 162
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/bottom_sheet.swift",
+              "line": 163
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/bottom_sheet.swift",
+              "line": 164
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/button.swift",
+              "line": 43
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/button.swift",
+              "line": 44
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/button.swift",
+              "line": 45
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
+              "line": 242
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
+              "line": 243
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
+              "line": 244
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
+              "line": 672
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
+              "line": 673
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
+              "line": 674
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/divider.swift",
+              "line": 14
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/divider.swift",
+              "line": 15
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/divider.swift",
+              "line": 16
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/image.swift",
+              "line": 32
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/image.swift",
+              "line": 33
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/image.swift",
+              "line": 34
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_bar.swift",
+              "line": 234
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_bar.swift",
+              "line": 235
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_bar.swift",
+              "line": 236
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/pagelet.swift",
+              "line": 17
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/pagelet.swift",
+              "line": 18
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/pagelet.swift",
+              "line": 19
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/row.swift",
+              "line": 24
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/row.swift",
+              "line": 25
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/row.swift",
+              "line": 26
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/tabs.swift",
+              "line": 206
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/tabs.swift",
+              "line": 207
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/tabs.swift",
+              "line": 208
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
+              "line": 348
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
+              "line": 349
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
+              "line": 350
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
+              "line": 129
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
+              "line": 130
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
+              "line": 131
+            }
+          ]
+        },
+        "key": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 258
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 259
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 260
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdown.swift",
+              "line": 261
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 224
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 225
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 226
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/grid_view.swift",
+              "line": 224
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/grid_view.swift",
+              "line": 225
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/grid_view.swift",
+              "line": 226
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/list_view.swift",
+              "line": 84
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/list_view.swift",
+              "line": 85
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/list_view.swift",
+              "line": 86
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/reorderable_list_view.swift",
+              "line": 282
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/reorderable_list_view.swift",
+              "line": 283
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/reorderable_list_view.swift",
+              "line": 284
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
+              "line": 50
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
+              "line": 51
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/control_widget.swift",
+              "line": 52
+            }
+          ]
+        },
+        "left": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 289
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 290
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 291
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
+              "line": 135
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
+              "line": 136
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
+              "line": 137
+            }
+          ]
+        },
+        "margin": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/banner.swift",
+              "line": 60
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/banner.swift",
+              "line": 61
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/banner.swift",
+              "line": 62
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 88
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 89
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 90
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 579
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 580
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 581
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/card.swift",
+              "line": 71
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/card.swift",
+              "line": 72
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/card.swift",
+              "line": 73
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/snack_bar.swift",
+              "line": 163
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/snack_bar.swift",
+              "line": 164
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/snack_bar.swift",
+              "line": 165
+            }
+          ]
+        },
+        "offset": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 86
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 87
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 88
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 447
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 448
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 449
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 450
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 573
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 574
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 575
+            }
+          ]
+        },
+        "on_animation_end": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 380
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 381
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 382
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 535
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 536
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 537
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 542
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 543
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 544
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 558
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 559
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 560
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 591
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 592
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 593
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 598
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 599
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 600
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
+              "line": 610
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
+              "line": 611
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
+              "line": 612
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
+              "line": 617
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
+              "line": 618
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
+              "line": 619
+            }
+          ]
+        },
+        "on_error": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/base_sensor.swift",
+              "line": 38
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/base_sensor.swift",
+              "line": 39
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/base_sensor.swift",
+              "line": 40
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/base_sensor.swift",
+              "line": 50
+            }
+          ]
+        },
+        "on_size_change": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 477
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 478
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 479
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 488
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 489
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 490
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 507
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 508
+            }
+          ]
+        },
+        "opacity": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 63
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 64
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 65
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 66
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 67
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 68
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 528
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 529
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 530
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
+              "line": 143
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
+              "line": 144
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
+              "line": 145
+            }
+          ]
+        },
+        "reconnect_interval_ms": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
+              "line": 24
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
+              "line": 25
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
+              "line": 26
+            }
+          ]
+        },
+        "reconnect_timeout_ms": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
+              "line": 25
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
+              "line": 26
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
+              "line": 27
+            }
+          ]
+        },
+        "right": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 291
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 292
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 293
+            }
+          ]
+        },
+        "rotate": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 84
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 85
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 86
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 567
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 568
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 569
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
+              "line": 751
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
+              "line": 752
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
+              "line": 753
+            }
+          ]
+        },
+        "rtl": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 73
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 74
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 75
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dismissible.swift",
+              "line": 247
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dismissible.swift",
+              "line": 248
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dismissible.swift",
+              "line": 249
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/page.swift",
+              "line": 43
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/page.swift",
+              "line": 44
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/page.swift",
+              "line": 45
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/page.swift",
+              "line": 77
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/page.swift",
+              "line": 78
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/page.swift",
+              "line": 79
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/view.swift",
+              "line": 27
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/view.swift",
+              "line": 28
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/view.swift",
+              "line": 29
+            }
+          ]
+        },
+        "scale": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 85
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 86
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 87
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 570
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 571
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 572
+            }
+          ]
+        },
+        "show_app_startup_screen": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
+              "line": 18
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
+              "line": 19
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
+              "line": 20
+            }
+          ]
+        },
+        "size_change_interval": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 489
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 490
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 491
+            }
+          ]
+        },
+        "tooltip": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 70
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 71
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 72
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/datatable.swift",
+              "line": 120
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/datatable.swift",
+              "line": 121
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/datatable.swift",
+              "line": 122
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/datatable.swift",
+              "line": 123
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/datatable.swift",
+              "line": 124
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/datatable.swift",
+              "line": 125
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/datatable.swift",
+              "line": 126
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_bar.swift",
+              "line": 169
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_bar.swift",
+              "line": 170
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_bar.swift",
+              "line": 171
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_bar_destination.swift",
+              "line": 23
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_bar_destination.swift",
+              "line": 24
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/navigation_bar_destination.swift",
+              "line": 25
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/page.swift",
+              "line": 369
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/page.swift",
+              "line": 370
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/page.swift",
+              "line": 371
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/popup_menu_button.swift",
+              "line": 49
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/popup_menu_button.swift",
+              "line": 50
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/popup_menu_button.swift",
+              "line": 51
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/segmented_button.swift",
+              "line": 58
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/segmented_button.swift",
+              "line": 59
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/segmented_button.swift",
+              "line": 60
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/semantics.swift",
+              "line": 90
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/semantics.swift",
+              "line": 91
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/semantics.swift",
+              "line": 92
+            }
+          ]
+        },
+        "top": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 290
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 291
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 292
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
+              "line": 134
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
+              "line": 135
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
+              "line": 136
+            }
+          ]
+        },
+        "url": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/button.swift",
+              "line": 95
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/button.swift",
+              "line": 96
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/button.swift",
+              "line": 97
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
+              "line": 366
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
+              "line": 367
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
+              "line": 368
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
+              "line": 382
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
+              "line": 383
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/container.swift",
+              "line": 384
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_button.swift",
+              "line": 52
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_button.swift",
+              "line": 53
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/cupertino_button.swift",
+              "line": 54
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
+              "line": 16
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
+              "line": 17
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/flet_app_control.swift",
+              "line": 18
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/floating_action_button.swift",
+              "line": 61
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/floating_action_button.swift",
+              "line": 62
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/floating_action_button.swift",
+              "line": 63
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/icon_button.swift",
+              "line": 10
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/icon_button.swift",
+              "line": 11
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/icon_button.swift",
+              "line": 12
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/list_tile.swift",
+              "line": 47
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/list_tile.swift",
+              "line": 48
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/list_tile.swift",
+              "line": 49
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/list_tile.swift",
+              "line": 56
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/list_tile.swift",
+              "line": 57
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/list_tile.swift",
+              "line": 58
+            }
+          ]
+        },
+        "visible": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
+              "line": 155
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
+              "line": 156
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
+              "line": 157
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
+              "line": 334
+            }
+          ]
+        },
+        "width": {
+          "classification": "consumed",
+          "evidence": [
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/auto_complete.swift",
+              "line": 16
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/auto_complete.swift",
+              "line": 17
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/auto_complete.swift",
+              "line": 18
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 162
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 163
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 164
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 166
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 167
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/base_controls.swift",
+              "line": 168
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/button.swift",
+              "line": 43
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/button.swift",
+              "line": 44
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/button.swift",
+              "line": 45
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
+              "line": 241
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
+              "line": 242
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
+              "line": 243
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
+              "line": 671
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
+              "line": 672
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/canvas.swift",
+              "line": 673
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/column.swift",
+              "line": 25
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/column.swift",
+              "line": 26
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/column.swift",
+              "line": 27
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 36
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 37
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/dropdownm2.swift",
+              "line": 38
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/image.swift",
+              "line": 31
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/image.swift",
+              "line": 32
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/image.swift",
+              "line": 33
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/snack_bar.swift",
+              "line": 158
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/snack_bar.swift",
+              "line": 159
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/snack_bar.swift",
+              "line": 160
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 46
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 47
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/textfield.swift",
+              "line": 48
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/vertical_divider.swift",
+              "line": 14
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/vertical_divider.swift",
+              "line": 15
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Controls/vertical_divider.swift",
+              "line": 16
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
+              "line": 347
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
+              "line": 348
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/RufletBackend.swift",
+              "line": 349
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
+              "line": 128
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
+              "line": 129
+            },
+            {
+              "path": "apple_packages/ruflet_apple/Sources/RufletEngine/Services/window.swift",
+              "line": 130
             }
           ]
         }
