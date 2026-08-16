@@ -1208,7 +1208,7 @@ public struct CanvasControl: View {
   }
 
   private func attach() {
-    coordinator.attach(control: control)
+    coordinator.configure(control: control)
     guard invokeToken == nil else { return }
     invokeToken = control.addInvokeMethodListener { name, arguments in
       try await coordinator.invoke(name, arguments: arguments)
@@ -1218,7 +1218,6 @@ public struct CanvasControl: View {
   private func detach() {
     if let invokeToken { control.removeInvokeMethodListener(invokeToken) }
     invokeToken = nil
-    coordinator.detach()
   }
 
   private func sizeChanged(_ size: CGSize) {
@@ -1271,8 +1270,8 @@ final class RufletCanvasCoordinator: ObservableObject {
   private(set) var capturedImage: CGImage?
   private(set) var capturedSize = CGSize.zero
 
-  func attach(control: RufletControl) {
-    if self.control !== control {
+  func configure(control: RufletControl) {
+    if self.control !== control || controlUpdateToken == nil {
       if let controlUpdateToken, let currentControl = self.control {
         currentControl.removeListener(controlUpdateToken)
       }
@@ -1283,10 +1282,6 @@ final class RufletCanvasCoordinator: ObservableObject {
         self.invalidationHandler?()
       }
     }
-    configure(control: control)
-  }
-
-  func configure(control: RufletControl) {
     self.control = control
     shapes = control.children("shapes")
     for shape in shapes { shape.notifyParent = true }
@@ -1458,6 +1453,10 @@ private func rufletCanvasPNGData(_ image: CGImage) -> Data? {
       coordinator.configure(control: control)
       view.setNeedsDisplay()
     }
+
+    static func dismantleUIView(_ view: RufletCanvasUIView, coordinator: ()) {
+      view.coordinator?.detach()
+    }
   }
 
   private final class RufletCanvasUIView: UIView {
@@ -1493,6 +1492,10 @@ private func rufletCanvasPNGData(_ image: CGImage) -> Data? {
     func updateNSView(_ view: RufletCanvasNSView, context: Context) {
       coordinator.configure(control: control)
       view.needsDisplay = true
+    }
+
+    static func dismantleNSView(_ view: RufletCanvasNSView, coordinator: ()) {
+      view.coordinator?.detach()
     }
   }
 

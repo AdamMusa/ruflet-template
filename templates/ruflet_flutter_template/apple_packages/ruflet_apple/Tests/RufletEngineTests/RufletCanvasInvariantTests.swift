@@ -318,7 +318,7 @@ final class RufletCanvasInvariantTests: XCTestCase {
     let coordinator = RufletCanvasCoordinator()
     var invalidations = 0
     coordinator.installInvalidationHandler { invalidations += 1 }
-    coordinator.attach(control: root)
+    coordinator.configure(control: root)
 
     try root.applyPatch([
       .array([0]),
@@ -334,6 +334,12 @@ final class RufletCanvasInvariantTests: XCTestCase {
     XCTAssertEqual(invalidations, 1)
     XCTAssertEqual(coordinator.shapes.map(\.id), [42, 43])
     coordinator.detach()
+
+    try root.applyPatch([
+      .array([0]),
+      .array([0, 0, "shapes", .array([])]),
+    ])
+    XCTAssertEqual(invalidations, 1)
   }
 
   func testCaptureWaitsForInlineImageLoad() async throws {
