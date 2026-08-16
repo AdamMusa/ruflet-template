@@ -2,11 +2,28 @@ import RufletEngine
 import RufletProtocol
 import SwiftUI
 import XCTest
+#if os(macOS)
+  import AppKit
+#endif
 
 @testable import RufletCharts
 
 @MainActor
 final class CartesianChartPropertyTests: XCTestCase {
+  #if os(macOS)
+    func testSharedChartFrameHonorsRubyWidthAndHeight() {
+      let chart = makeControl(id: 1, type: "BarChart", properties: [
+        "width": .double(320),
+        "height": .double(180),
+      ])
+      let hosting = NSHostingView(
+        rootView: ChartFrame(control: chart) { Color.clear })
+
+      XCTAssertEqual(hosting.fittingSize.width, 320, accuracy: 0.5)
+      XCTAssertEqual(hosting.fittingSize.height, 180, accuracy: 0.5)
+    }
+  #endif
+
   func testAxisParsesPinnedTitleLabelsAndReservedSizes() {
     let backend = CartesianChartTestBackend()
     let chart = makeControl(id: 1, type: "LineChart", properties: [

@@ -561,9 +561,14 @@ struct ChartFrame<Content: View>: View {
   @ViewBuilder let content: () -> Content
 
   var body: some View {
-    content()
-      .frame(maxWidth: .infinity, minHeight: 180, idealHeight: 300, maxHeight: .infinity)
-      .background(control.chartColor("bgcolor", default: .clear))
-      .clipped()
+    LayoutControl(control: control) {
+      content()
+        // Pinned Flet lets a chart fill a bounded parent, but caps it at 300
+        // points when its vertical constraint is unbounded. LayoutControl is
+        // what applies the Ruby width/height before this fallback is needed.
+        .frame(maxWidth: .infinity, idealHeight: 300, maxHeight: 300)
+        .background(control.chartColor("bgcolor", default: .clear))
+        .clipped()
+    }
   }
 }
