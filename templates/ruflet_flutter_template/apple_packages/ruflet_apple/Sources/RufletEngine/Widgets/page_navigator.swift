@@ -101,6 +101,18 @@ func rufletPageNavigationIdentities(_ routes: [String]) -> [RufletPageNavigation
   }
 }
 
+enum RufletPageNavigationUpdateDisposition: Equatable {
+  case activate
+  case stage
+}
+
+func rufletPageNavigationUpdateDisposition(
+  for identity: RufletPageNavigationIdentity,
+  topIdentity: RufletPageNavigationIdentity?
+) -> RufletPageNavigationUpdateDisposition {
+  identity == topIdentity ? .activate : .stage
+}
+
 #if os(iOS)
   @MainActor
   private struct RufletNativePageNavigator: UIViewControllerRepresentable {
@@ -152,6 +164,7 @@ func rufletPageNavigationIdentities(_ routes: [String]) -> [RufletPageNavigation
       }
 
       func synchronize(with parent: RufletNativePageNavigator, animated: Bool) {
+        let started = RufletProtocolDiagnostics.now()
         self.parent = parent
         guard let navigationController,
           let backend = parent.page.backend as? RufletBackend
@@ -164,7 +177,11 @@ func rufletPageNavigationIdentities(_ routes: [String]) -> [RufletPageNavigation
         let mountedControllers = Dictionary(
           uniqueKeysWithValues: zip(currentIdentities, currentControllers))
         let requestedIdentities = identities(for: parent.views)
+        let topIdentity = requestedIdentities.last
         let topViewID = parent.views.last?.id
+        var activated = 0
+        var staged = 0
+        var created = 0
         let requestedControllers = zip(requestedIdentities, parent.views).map { identity, control in
           let root = AnyView(
             RufletHostedPage(
@@ -180,17 +197,37 @@ func rufletPageNavigationIdentities(_ routes: [String]) -> [RufletPageNavigation
               heroNamespace: parent.heroNamespace,
               heroTransitionState: parent.heroTransitionState))
           if let controller = mountedControllers[identity] ?? controllers[identity] {
-            controller.rootView = root
-            controller.control = control
+            switch rufletPageNavigationUpdateDisposition(
+              for: identity, topIdentity: topIdentity)
+            {
+            case .activate:
+              controller.activate(control: control, rootView: root)
+              activated += 1
+            case .stage:
+              // Keep hidden routes current without asking SwiftUI to lay out
+              // every off-screen tree for each Flet patch. The staged root is
+              // activated in `willShow`, before a native pop reveals it.
+              controller.stage(control: control, rootView: root)
+              staged += 1
+            }
             return controller
           }
           let controller = RufletHostingController(control: control, rootView: root)
+          created += 1
           return controller
         }
 
         expectedIdentities = requestedIdentities
         controllers = Dictionary(uniqueKeysWithValues: zip(requestedIdentities, requestedControllers))
-        guard currentIdentities != requestedIdentities else { return }
+        guard currentIdentities != requestedIdentities else {
+          reportSynchronization(
+            started: started,
+            views: requestedIdentities.count,
+            activated: activated,
+            staged: staged,
+            created: created)
+          return
+        }
 
         synchronizing = true
         let isPush =
@@ -222,6 +259,26 @@ func rufletPageNavigationIdentities(_ routes: [String]) -> [RufletPageNavigation
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { [weak self] in
           self?.synchronizing = false
         }
+        reportSynchronization(
+          started: started,
+          views: requestedIdentities.count,
+          activated: activated,
+          staged: staged,
+          created: created)
+      }
+
+      private func reportSynchronization(
+        started: TimeInterval,
+        views: Int,
+        activated: Int,
+        staged: Int,
+        created: Int
+      ) {
+        RufletProtocolDiagnostics.timing(
+          "ios_navigator_sync",
+          milliseconds: (RufletProtocolDiagnostics.now() - started) * 1_000,
+          details:
+            "views=\(views) activated=\(activated) staged=\(staged) created=\(created)")
       }
 
       private func push(
@@ -241,6 +298,14 @@ func rufletPageNavigationIdentities(_ routes: [String]) -> [RufletPageNavigation
         } else {
           navigationController.pushViewController(controller, animated: animated)
         }
+      }
+
+      func navigationController(
+        _ navigationController: UINavigationController,
+        willShow viewController: UIViewController,
+        animated: Bool
+      ) {
+        (viewController as? RufletHostingController)?.activateStagedRoot()
       }
 
       func navigationController(
@@ -297,10 +362,29 @@ func rufletPageNavigationIdentities(_ routes: [String]) -> [RufletPageNavigation
   @MainActor
   private final class RufletHostingController: UIHostingController<AnyView> {
     var control: RufletControl
+    private var stagedControl: RufletControl?
+    private var stagedRootView: AnyView?
 
     init(control: RufletControl, rootView: AnyView) {
       self.control = control
       super.init(rootView: rootView)
+    }
+
+    func activate(control: RufletControl, rootView: AnyView) {
+      stagedControl = nil
+      stagedRootView = nil
+      self.control = control
+      self.rootView = rootView
+    }
+
+    func stage(control: RufletControl, rootView: AnyView) {
+      stagedControl = control
+      stagedRootView = rootView
+    }
+
+    func activateStagedRoot() {
+      guard let stagedControl, let stagedRootView else { return }
+      activate(control: stagedControl, rootView: stagedRootView)
     }
 
     @available(*, unavailable)

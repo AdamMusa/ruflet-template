@@ -95,4 +95,21 @@ struct PageViewNavigationContractTests {
     #expect(identities[2].occurrence == 1)
     #expect(identities[1] != identities[2])
   }
+
+  @Test("only the visible route refreshes while hidden routes stage their next tree")
+  func hiddenRouteRefreshDisposition() {
+    let identities = rufletPageNavigationIdentities([
+      "/", "/gallery", "/gallery/components",
+    ])
+
+    #expect(
+      rufletPageNavigationUpdateDisposition(
+        for: identities[0], topIdentity: identities.last) == .stage)
+    #expect(
+      rufletPageNavigationUpdateDisposition(
+        for: identities[1], topIdentity: identities.last) == .stage)
+    #expect(
+      rufletPageNavigationUpdateDisposition(
+        for: identities[2], topIdentity: identities.last) == .activate)
+  }
 }
