@@ -70,6 +70,21 @@ final class TabBarPropertyConsumptionTests: XCTestCase {
     XCTAssertEqual(backend.events, [TabBarBackend.Event(name: "change", data: 2)])
   }
 
+  func testCompactIOSTabSetsUseNativeSegmentedPresentation() {
+    XCTAssertTrue(rufletTabBarUsesNativeSegmentedPresentation(
+      tabCount: 2,
+      hasDisabledTab: false,
+      isIOS: true))
+    XCTAssertFalse(rufletTabBarUsesNativeSegmentedPresentation(
+      tabCount: 6,
+      hasDisabledTab: false,
+      isIOS: true))
+    XCTAssertFalse(rufletTabBarUsesNativeSegmentedPresentation(
+      tabCount: 2,
+      hasDisabledTab: true,
+      isIOS: true))
+  }
+
   private func makeControl(type: String, properties: [String: RufletValue]) -> RufletControl {
     RufletControl(id: 1, type: type, properties: properties, backend: TabBarBackend())
   }

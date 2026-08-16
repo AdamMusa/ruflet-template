@@ -260,7 +260,13 @@ public struct TabBarControl: View {
 
   @ViewBuilder
   private func tabStrip(state: RufletTabsState) -> some View {
-    if scrollable {
+    if rufletTabBarUsesNativeSegmentedPresentation(
+      tabCount: tabControls.count,
+      hasDisabledTab: tabControls.contains { $0.disabled },
+      isIOS: rufletIsIOS)
+    {
+      nativeSegmentedTabs(state: state)
+    } else if scrollable {
       ScrollView(.horizontal, showsIndicators: false) {
         tabs(state: state, fill: false)
           .frame(maxWidth: .infinity, alignment: tabAlignment)
@@ -268,6 +274,30 @@ public struct TabBarControl: View {
     } else {
       tabs(state: state, fill: true)
     }
+  }
+
+  private func nativeSegmentedTabs(state: RufletTabsState) -> some View {
+    Picker(
+      "",
+      selection: Binding(
+        get: { state.selectedIndex },
+        set: { index in
+          guard index != state.selectedIndex else { return }
+          let presentation = RufletTabBarPresentation(control: control)
+          if presentation.enableFeedback { performTabBarFeedback() }
+          state.select(index)
+          control.triggerEvent("click", data: .int(Int64(index)))
+        })
+    ) {
+      ForEach(Array(tabControls.enumerated()), id: \.element.id) { index, tab in
+        RufletTabLabel(control: tab)
+          .tag(index)
+      }
+    }
+    .pickerStyle(.segmented)
+    .padding(parsePadding(control.dynamicValue("padding")) ?? EdgeInsets())
+    .frame(minHeight: 44)
+    .accessibilityLabel(control.string("semantics_label") ?? "Tabs")
   }
 
   private func tabs(state: RufletTabsState, fill: Bool) -> some View {
@@ -480,6 +510,14 @@ private func performTabBarFeedback() {
   #elseif os(macOS)
     NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now)
   #endif
+}
+
+func rufletTabBarUsesNativeSegmentedPresentation(
+  tabCount: Int,
+  hasDisabledTab: Bool,
+  isIOS: Bool
+) -> Bool {
+  isIOS && (1...5).contains(tabCount) && !hasDisabledTab
 }
 
 private enum RufletTabsError: Error {
