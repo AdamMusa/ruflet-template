@@ -1,4 +1,5 @@
 import Foundation
+import ImageIO
 import SwiftUI
 import WebKit
 
@@ -48,8 +49,26 @@ func rufletImageFormat(
     return .bitmap
 }
 
-func rufletDecodePlatformImage(_ data: Data) -> RufletPlatformImage? {
-    RufletPlatformImage(data: data)
+func rufletDecodePlatformImage(
+    _ data: Data,
+    cacheWidth: Int? = nil,
+    cacheHeight: Int? = nil
+) -> RufletPlatformImage? {
+    if let requested = [cacheWidth, cacheHeight].compactMap({ $0 }).filter({ $0 > 0 }).max(),
+       let source = CGImageSourceCreateWithData(data as CFData, nil),
+       let image = CGImageSourceCreateThumbnailAtIndex(source, 0, [
+        kCGImageSourceCreateThumbnailFromImageAlways: true,
+        kCGImageSourceCreateThumbnailWithTransform: true,
+        kCGImageSourceThumbnailMaxPixelSize: requested,
+       ] as CFDictionary)
+    {
+        #if os(iOS)
+        return UIImage(cgImage: image)
+        #elseif os(macOS)
+        return NSImage(cgImage: image, size: .zero)
+        #endif
+    }
+    return RufletPlatformImage(data: data)
 }
 
 @MainActor
@@ -106,9 +125,14 @@ struct RufletImageSourceView: View {
     var interpolation: Image.Interpolation = .medium
     var antiAlias = false
     var tint: Color?
+    var colorBlendMode: BlendMode = .sourceAtop
+    var gaplessPlayback = false
+    var cacheWidth: Int?
+    var cacheHeight: Int?
     var placeholder: AnyView?
     var errorContent: AnyView?
     var fadeInAnimation: ImplicitAnimationDetails?
+    var placeholderFadeOutAnimation: ImplicitAnimationDetails?
     var svgFit: RufletImageFit?
     @State private var image: RufletPlatformImage?
     @State private var svgData: Data?
@@ -126,12 +150,13 @@ struct RufletImageSourceView: View {
             } else if failed, let errorContent {
                 errorContent
             } else if let placeholder {
-                placeholder
+                placeholder.transition(.opacity)
             } else {
                 Color.clear
             }
         }
         .task(id: source) { await load() }
+        .animation(placeholderFadeOutAnimation?.animation, value: image == nil && svgData == nil)
         .onDisappear { task?.cancel() }
     }
 
@@ -164,12 +189,12 @@ struct RufletImageSourceView: View {
     private func renderedImage(_ image: RufletPlatformImage) -> some View {
         if let tint {
             platformImage(image)
-                .renderingMode(.template)
                 .resizable(resizingMode: resizingMode)
                 .interpolation(interpolation)
                 .antialiased(antiAlias)
                 .aspectRatio(contentMode: contentMode)
-                .foregroundStyle(tint)
+                .overlay(tint.blendMode(colorBlendMode))
+                .compositingGroup()
         } else {
             platformImage(image)
                 .resizable(resizingMode: resizingMode)
@@ -181,6 +206,10 @@ struct RufletImageSourceView: View {
 
     private func load() async {
         do {
+            if !gaplessPlayback {
+                image = nil
+                svgData = nil
+            }
             let data: Data
             var mimeType: String?
             switch source {
@@ -207,7 +236,9 @@ struct RufletImageSourceView: View {
                 }
                 return
             }
-            guard let loaded = rufletDecodePlatformImage(data) else {
+            guard let loaded = rufletDecodePlatformImage(
+                data, cacheWidth: cacheWidth, cacheHeight: cacheHeight)
+            else {
                 throw URLError(.cannotDecodeContentData)
             }
             failed = false

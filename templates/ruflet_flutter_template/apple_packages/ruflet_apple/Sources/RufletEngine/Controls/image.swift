@@ -28,6 +28,8 @@ public struct ImageControl: View {
     let radius = parseBorderRadius(control.dynamicValue("border_radius"), .zero)!
     let placeholder = placeholderView(fit: fit, repeatMode: repeatMode, quality: quality)
     let fade = parseAnimation(control.dynamicValue("fade_in_animation"))
+    let placeholderFade = parseAnimation(
+      control.dynamicValue("placeholder_fade_out_animation"))
     let width = control.number("width").map { CGFloat($0) }
     let height = control.number("height").map { CGFloat($0) }
 
@@ -39,9 +41,14 @@ public struct ImageControl: View {
       interpolation: quality.interpolation,
       antiAlias: control.boolean("anti_alias", default: false),
       tint: parseColor(control.string("color")),
+      colorBlendMode: rufletImageBlendMode(control.string("color_blend_mode")),
+      gaplessPlayback: control.boolean("gapless_playback", default: false),
+      cacheWidth: control.integer("cache_width"),
+      cacheHeight: control.integer("cache_height"),
       placeholder: placeholder,
       errorContent: control.buildWidget("error_content"),
       fadeInAnimation: fade,
+      placeholderFadeOutAnimation: placeholderFade,
       svgFit: fit)
     let sized = AnyView(sourceView.frame(width: width, height: height))
     let clipped = AnyView(sized.clipShape(RufletCornerShape(radius: radius)))
@@ -76,6 +83,42 @@ public struct ImageControl: View {
         interpolation: quality.interpolation,
         antiAlias: control.boolean("anti_alias", default: false),
         tint: parseColor(control.string("color")),
+        colorBlendMode: rufletImageBlendMode(control.string("color_blend_mode")),
+        gaplessPlayback: control.boolean("gapless_playback", default: false),
+        cacheWidth: control.integer("cache_width"),
+        cacheHeight: control.integer("cache_height"),
         svgFit: placeholderFit))
+  }
+}
+
+private func rufletImageBlendMode(_ value: String?) -> BlendMode {
+  switch value?.lowercased().replacingOccurrences(of: "_", with: "") {
+  case "clear": .destinationOut
+  case "src", "source": .normal
+  case "dst", "destination": .destinationOver
+  case "srcin", "sourcein": .sourceAtop
+  case "dstin", "destinationin": .normal
+  case "srcout", "sourceout": .destinationOut
+  case "dstout", "destinationout": .destinationOut
+  case "srcatop", "sourceatop": .sourceAtop
+  case "dstatop", "destinationatop": .destinationOver
+  case "xor": .difference
+  case "plus": .plusLighter
+  case "modulate", "multiply": .multiply
+  case "screen": .screen
+  case "overlay": .overlay
+  case "darken": .darken
+  case "lighten": .lighten
+  case "colordodge": .colorDodge
+  case "colorburn": .colorBurn
+  case "hardlight": .hardLight
+  case "softlight": .softLight
+  case "difference": .difference
+  case "exclusion": .exclusion
+  case "hue": .hue
+  case "saturation": .saturation
+  case "color": .color
+  case "luminosity": .luminosity
+  default: .sourceAtop
   }
 }
