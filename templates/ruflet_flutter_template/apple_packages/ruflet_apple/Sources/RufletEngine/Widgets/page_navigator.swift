@@ -250,6 +250,11 @@ func rufletPageNavigationUpdateDisposition(
             last, animated: animated,
             fullscreen: last.control.boolean("fullscreen_dialog", default: false))
         } else if isPop {
+          // UIKit captures the destination controller at the start of an
+          // animated pop. Flush the newly activated SwiftUI root first so the
+          // transition cannot reveal the previously staged (or blank) frame.
+          // Only the destination is laid out; deeper hidden routes stay staged.
+          requestedControllers.last?.prepareForNavigation()
           navigationController.setViewControllers(requestedControllers, animated: animated)
         } else {
           navigationController.setViewControllers(
@@ -385,6 +390,12 @@ func rufletPageNavigationUpdateDisposition(
     func activateStagedRoot() {
       guard let stagedControl, let stagedRootView else { return }
       activate(control: stagedControl, rootView: stagedRootView)
+    }
+
+    func prepareForNavigation() {
+      loadViewIfNeeded()
+      view.setNeedsLayout()
+      view.layoutIfNeeded()
     }
 
     @available(*, unavailable)

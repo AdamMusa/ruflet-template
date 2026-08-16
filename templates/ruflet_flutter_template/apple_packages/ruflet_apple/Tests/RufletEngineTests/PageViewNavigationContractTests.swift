@@ -70,6 +70,7 @@ struct PageViewNavigationContractTests {
     #expect(view.contains("@Environment(\\.rufletTopViewID)"))
     #expect(navigator.contains("UINavigationController"))
     #expect(navigator.contains("fullscreen_dialog"))
+    #expect(navigator.contains("requestedControllers.last?.prepareForNavigation()"))
   }
 
   @Test("navigation identity follows stable routes across rebuilt wire controls")
