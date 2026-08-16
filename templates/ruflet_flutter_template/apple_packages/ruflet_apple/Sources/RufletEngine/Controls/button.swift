@@ -31,7 +31,9 @@ public struct ButtonControl: View {
       .buttonStyle(buttonStyle)
       .disabled(control.disabled)
       .focused($focused)
-      .onHover { control.triggerEvent("hover", data: .bool($0)) }
+      .onHover {
+        if !control.disabled { control.triggerEvent("hover", data: .bool($0)) }
+      }
       .simultaneousGesture(
         LongPressGesture().onEnded { _ in
           if !control.disabled { control.triggerEvent("long_press") }
@@ -98,7 +100,8 @@ public struct ButtonControl: View {
       radius: radius,
       border: border,
       elevation: control.number("elevation") ?? 1,
-      clipBehavior: control.string("clip_behavior", default: "none")!.lowercased()
+      clipBehavior: control.string("clip_behavior", default: "none")!.lowercased(),
+      disabledColor: pageTheme?.colorScheme?["on_surface"] ?? .secondary
     )
   }
 
