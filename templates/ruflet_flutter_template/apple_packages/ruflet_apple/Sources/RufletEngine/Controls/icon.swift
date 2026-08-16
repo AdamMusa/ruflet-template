@@ -4,11 +4,13 @@ import SwiftUI
 public struct IconControl: View {
   @ObservedObject public var control: RufletControl
   @EnvironmentObject private var registry: RufletExtensionRegistry
+  @Environment(\.rufletInheritedIconSize) private var inheritedIconSize
 
   public init(control: RufletControl) { self.control = control }
 
   public var body: some View {
-    let presentation = RufletIconPresentation(control: control)
+    let presentation = RufletIconPresentation(
+      control: control, inheritedSize: inheritedIconSize)
     LayoutControl(control: control) {
       // Flet passes a nullable `IconData` to Flutter's `Icon`, which paints
       // nothing when the code is unrecognised. Keep that contract: an unknown
@@ -17,7 +19,7 @@ public struct IconControl: View {
         RufletScaledIcon(
           icon: icon,
           presentation: presentation,
-          color: parseColor(control.string("color")) ?? .primary,
+          color: parseColor(control.string("color")),
           semanticsLabel: control.string("semantics_label"))
       }
     }
@@ -39,8 +41,8 @@ struct RufletIconPresentation {
   let blendMode: BlendMode
   let shadows: [RufletIconShadow]
 
-  init(control: RufletControl) {
-    size = CGFloat(max(control.number("size") ?? 24, 0))
+  init(control: RufletControl, inheritedSize: CGFloat? = nil) {
+    size = CGFloat(max(control.number("size") ?? inheritedSize.map(Double.init) ?? 24, 0))
     applyTextScaling = control.boolean("apply_text_scaling", default: false)
     fill = control.number("fill").map { min(max($0, 0), 1) }
     weight = Self.fontWeight(
@@ -112,7 +114,7 @@ struct RufletIconShadow {
 private struct RufletScaledIcon: View {
   let icon: RufletAppleIcon
   let presentation: RufletIconPresentation
-  let color: Color
+  let color: Color?
   let semanticsLabel: String?
 
   @ScaledMetric(relativeTo: .body) private var textScale: CGFloat = 1
@@ -120,7 +122,7 @@ private struct RufletScaledIcon: View {
   var body: some View {
     let resolvedSize = presentation.size * (presentation.applyTextScaling ? textScale : 1)
     let renderingSize = presentation.opticalSize ?? resolvedSize
-    RufletAppleIconView.registered(
+    let content = RufletAppleIconView.registered(
       icon: icon,
       size: renderingSize,
       weight: presentation.weight
@@ -128,10 +130,14 @@ private struct RufletScaledIcon: View {
     .symbolVariant((presentation.fill ?? 0) > 0 ? .fill : .none)
     .scaleEffect(renderingSize == 0 ? 1 : resolvedSize / renderingSize)
     .frame(width: resolvedSize, height: resolvedSize)
-    .foregroundStyle(color)
     .blendMode(presentation.blendMode)
     .modifier(RufletIconShadowModifier(shadows: presentation.shadows))
     .accessibilityLabel(semanticsLabel ?? "")
+    if let color {
+      content.foregroundStyle(color)
+    } else {
+      content
+    }
   }
 }
 

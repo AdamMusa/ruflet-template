@@ -16,6 +16,7 @@ public struct ButtonControl: View {
           control.buildIconOrWidget("icon", color: parseColor(control.string("icon_color")))
           control.buildTextOrWidget("content")
         }
+        .environment(\.rufletInheritedIconSize, buttonIconSize)
         // Flutter hands an expanded or explicitly sized button tight
         // constraints, so its material fills the allocation and only the label
         // centers inside. The label must claim that space here for the styled
@@ -110,6 +111,12 @@ public struct ButtonControl: View {
 
   private var defaultBorderColor: Color {
     pageTheme?.colorScheme?["outline"] ?? defaultForegroundColor
+  }
+
+  private var buttonIconSize: CGFloat {
+    let details = rufletDictionary(
+      control.internals?["style"].map(rufletAny) ?? control.dynamicValue("style"))
+    return CGFloat(parseDouble(details?["icon_size"], 18) ?? 18)
   }
 
   private func pressed() {

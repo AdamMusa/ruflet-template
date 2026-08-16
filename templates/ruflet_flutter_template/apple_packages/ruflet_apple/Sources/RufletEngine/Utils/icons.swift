@@ -15,6 +15,17 @@ public enum RufletAppleIcon: Equatable, Sendable {
   case materialGlyph(UInt32)
 }
 
+private struct RufletInheritedIconSizeKey: EnvironmentKey {
+  static let defaultValue: CGFloat? = nil
+}
+
+extension EnvironmentValues {
+  var rufletInheritedIconSize: CGFloat? {
+    get { self[RufletInheritedIconSizeKey.self] }
+    set { self[RufletInheritedIconSizeKey.self] = newValue }
+  }
+}
+
 /// Canonical Flet Material/Cupertino wire catalogs and their Apple artwork.
 public enum RufletAppleIconCatalog {
   public static let materialFirstCode = 65_536

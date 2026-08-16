@@ -144,6 +144,7 @@ extension RufletControl {
 struct RufletSystemIcon: View {
   let code: Int
   @EnvironmentObject private var registry: RufletExtensionRegistry
+  @Environment(\.rufletInheritedIconSize) private var inheritedIconSize
 
   @ViewBuilder
   var body: some View {
@@ -151,7 +152,7 @@ struct RufletSystemIcon: View {
     // `Icon`, which paints nothing when it is null. An unrecognised code is a
     // blank glyph there, never a crash.
     if let icon = registry.appleIcon(for: code) {
-      RufletAppleIconView.registered(icon: icon)
+      RufletAppleIconView.registered(icon: icon, size: inheritedIconSize ?? 24)
     }
   }
 }
@@ -172,6 +173,9 @@ extension RufletControl {
       return child
     }
     guard let code = integer(propertyName) else { return nil }
-    return AnyView(RufletSystemIcon(code: code).foregroundStyle(color ?? .primary))
+    if let color {
+      return AnyView(RufletSystemIcon(code: code).foregroundStyle(color))
+    }
+    return AnyView(RufletSystemIcon(code: code))
   }
 }

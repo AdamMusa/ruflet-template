@@ -51,6 +51,16 @@ final class IconPropertyConsumptionTests: XCTestCase {
     XCTAssertTrue(defaults.shadows.isEmpty)
   }
 
+  func testIconThemeSizeIsInheritedUnlessTheControlOverridesIt() {
+    let inherited = RufletIconPresentation(
+      control: makeControl(properties: [:]), inheritedSize: 18)
+    XCTAssertEqual(inherited.size, 18)
+
+    let explicit = RufletIconPresentation(
+      control: makeControl(properties: ["size": 32]), inheritedSize: 18)
+    XCTAssertEqual(explicit.size, 32)
+  }
+
   func testBlendModeNamesAcceptPinnedSnakeCaseValues() {
     XCTAssertEqual(RufletIconPresentation.blendMode("src_in"), .sourceAtop)
     XCTAssertEqual(RufletIconPresentation.blendMode("color_dodge"), .colorDodge)
