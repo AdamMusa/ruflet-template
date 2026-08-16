@@ -56,6 +56,16 @@ class AppleRendererEntryPipelineTest < Minitest::Test
     )
   end
 
+  def test_self_mode_delegates_apple_runtime_startup_without_a_hardcoded_project
+    %w[ios/Runner/Info.plist macos/Runner/Info.plist].each do |relative|
+      plist = source(relative)
+
+      assert_match(/<key>RufletRuntimeAutostart<\/key>\s*<true\/>/, plist, relative)
+      refute_includes plist, "RufletEmbeddedProject", relative
+      refute_includes plist, "<string>ruflet</string>", relative
+    end
+  end
+
   def test_runner_hosts_share_the_same_original_page_url_contract
     ios = source("ios/Runner/AppDelegate.swift")
     macos = source("macos/Runner/MainFlutterWindow.swift")

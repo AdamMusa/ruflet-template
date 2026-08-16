@@ -24,8 +24,6 @@
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
 	<key>NSHumanReadableCopyright</key>
 	<string>$(PRODUCT_COPYRIGHT)</string>
-	<key>RufletEmbeddedProject</key>
-	<string>ruflet</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
@@ -36,5 +34,9 @@
 	<string>Microphone access may be requested by previewed Ruflet applications.</string>
 	<key>NSLocationUsageDescription</key>
 	<string>Location access may be requested by previewed Ruflet applications.</string>
+	<!-- ruby_runtime owns the embedded server lifecycle in self-contained apps.
+	     It discovers the one packaged project dynamically. -->
+	<key>RufletRuntimeAutostart</key>
+	<true/>
 </dict>
 </plist>
