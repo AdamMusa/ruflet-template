@@ -172,6 +172,26 @@ struct ChartCartesianConfiguration {
   }
 }
 
+/// Shared port of fl_chart's touch contract. Built-in touch feedback remains
+/// independent from `on_event`; the latter only controls protocol emission.
+struct ChartInteractionPolicy {
+  let enabled: Bool
+  let emitsEvents: Bool
+  let showTooltipsForSelectedSpotsOnly: Bool
+
+  @MainActor init(control: RufletControl) {
+    enabled = control.boolean("interactive", default: true) && !control.disabled
+    emitsEvents = control.hasEventHandler("event")
+    showTooltipsForSelectedSpotsOnly = control.boolean(
+      "show_tooltips_for_selected_spots_only",
+      default: false)
+  }
+
+  func transientTooltipIndex(_ hit: Int?) -> Int? {
+    enabled && !showTooltipsForSelectedSpotsOnly ? hit : nil
+  }
+}
+
 struct ChartCartesianLayout {
   let size: CGSize
   let plotRect: CGRect

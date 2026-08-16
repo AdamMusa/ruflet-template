@@ -47,8 +47,7 @@ struct ScatterChartControl: View {
           value: control.revision)
         .contentShape(Rectangle())
         .chartTapGesture { location in
-          emitTap(at: location, layout: layout, domain: domain)
-          touchedSpotIndex = nil
+          handleTouch(at: location, layout: layout, domain: domain)
         }
         .simultaneousGesture(
           LongPressGesture(minimumDuration: chartLongPressDuration(
@@ -56,7 +55,7 @@ struct ScatterChartControl: View {
             .sequenced(before: DragGesture(minimumDistance: 0))
             .onEnded { value in
               guard case .second(true, let drag?) = value else { return }
-              emitTap(
+              handleTouch(
                 at: drag.location, layout: layout, domain: domain,
                 type: "longPressEnd")
             })
@@ -64,15 +63,17 @@ struct ScatterChartControl: View {
     }
   }
 
-  private func emitTap(
+  private func handleTouch(
     at location: CGPoint,
     layout: ChartCartesianLayout,
     domain: ChartDomain,
     type: String = "tapUp"
   ) {
-    guard control.hasEventHandler("event"), control.boolean("interactive", default: true),
-      !control.disabled else { return }
+    let interaction = ChartInteractionPolicy(control: control)
+    guard interaction.enabled else { return }
     let index = hitTest(location, layout: layout, domain: domain)
+    touchedSpotIndex = interaction.transientTooltipIndex(index)
+    guard interaction.emitsEvents else { return }
     control.triggerEvent("event", data: .map([
       "type": .string(type),
       "spot_index": index.map { .int(Int64($0)) } ?? .null,

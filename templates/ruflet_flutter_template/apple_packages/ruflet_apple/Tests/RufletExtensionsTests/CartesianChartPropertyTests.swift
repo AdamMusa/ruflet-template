@@ -173,6 +173,28 @@ final class CartesianChartPropertyTests: XCTestCase {
     XCTAssertFalse(chartTouchIsTap(CGSize(width: 12, height: 40)))
   }
 
+  func testChartInteractionKeepsBuiltInTouchIndependentFromEventEmission() {
+    let passive = ChartInteractionPolicy(control: makeControl(
+      id: 1,
+      type: "ScatterChart",
+      properties: ["interactive": .bool(true)]))
+    XCTAssertTrue(passive.enabled)
+    XCTAssertFalse(passive.emitsEvents)
+    XCTAssertEqual(passive.transientTooltipIndex(2), 2)
+
+    let selectedOnly = ChartInteractionPolicy(control: makeControl(
+      id: 2,
+      type: "CandlestickChart",
+      properties: [
+        "interactive": .bool(true),
+        "on_event": .bool(true),
+        "show_tooltips_for_selected_spots_only": .bool(true),
+      ]))
+    XCTAssertTrue(selectedOnly.emitsEvents)
+    XCTAssertTrue(selectedOnly.showTooltipsForSelectedSpotsOnly)
+    XCTAssertNil(selectedOnly.transientTooltipIndex(2))
+  }
+
   func testBarEventPayloadIncludesPinnedStackItemField() {
     let value = BarChartEventData(
       eventType: "tapUp", groupIndex: 2, rodIndex: 1, stackItemIndex: 0).value
