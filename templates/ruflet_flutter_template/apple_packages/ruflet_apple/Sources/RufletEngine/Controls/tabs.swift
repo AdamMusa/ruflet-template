@@ -3,8 +3,6 @@ import SwiftUI
 
 #if os(iOS)
   import UIKit
-#elseif os(macOS)
-  import AppKit
 #endif
 
 let rufletDefaultTabAnimationDuration: TimeInterval = 0.1
@@ -127,7 +125,9 @@ public struct TabsControl: View {
 
   public var body: some View {
     Group {
-      if let content = control.buildWidget("content") {
+      if !rufletIsIOS {
+        ErrorControl("The native Tabs renderer requires iOS.")
+      } else if let content = control.buildWidget("content") {
         LayoutControl(control: control, child: content)
           .environment(\.rufletTabsState, tabsState)
       } else {
@@ -152,7 +152,9 @@ public struct TabBarViewControl: View {
 
   public var body: some View {
     Group {
-      if let tabsState {
+      if !rufletIsIOS {
+        ErrorControl("The native TabBarView renderer requires iOS.")
+      } else if let tabsState {
         RufletTabsObserver(state: tabsState) { state in
           LayoutControl(control: control) {
             GeometryReader { proxy in
@@ -249,7 +251,6 @@ private struct RufletAppleSegmentLabel: View {
 public struct TabBarControl: View {
   @ObservedObject public var control: RufletControl
   @Environment(\.rufletTabsState) private var tabsState
-  @State private var hoveredIndex: Int?
   @Namespace private var appleSegmentSelection
 
   public init(control: RufletControl) {
@@ -277,18 +278,17 @@ public struct TabBarControl: View {
 
   @ViewBuilder
   private func tabStrip(state: RufletTabsState) -> some View {
-    if rufletTabBarUsesAppleSegmentedPresentation(
+    if tabControls.isEmpty {
+      ErrorControl("TabBar.tabs must contain at least one visible Tab.")
+    } else if rufletTabBarUsesAppleSegmentedPresentation(
       tabCount: tabControls.count,
       isIOS: rufletIsIOS)
     {
       appleSegmentedTabs(state: state)
-    } else if scrollable {
-      ScrollView(.horizontal, showsIndicators: false) {
-        tabs(state: state, fill: false)
-          .frame(maxWidth: .infinity, alignment: tabAlignment)
-      }
+    } else if rufletIsIOS {
+      appleScrollableTabs(state: state)
     } else {
-      tabs(state: state, fill: true)
+      ErrorControl("The native TabBar renderer requires iOS.")
     }
   }
 
@@ -351,6 +351,49 @@ public struct TabBarControl: View {
     control.triggerEvent("click", data: .int(Int64(index)))
   }
 
+  private func appleScrollableTabs(state: RufletTabsState) -> some View {
+    ScrollView(.horizontal, showsIndicators: false) {
+      HStack(spacing: 8) {
+        ForEach(Array(tabControls.enumerated()), id: \.element.id) { index, tab in
+          let selected = state.selectedIndex == index
+          Button {
+            selectTab(index, tab: tab, state: state)
+          } label: {
+            Group {
+              if tab.type == "Tab" {
+                RufletAppleSegmentLabel(control: tab)
+              } else {
+                ControlWidget(control: tab)
+              }
+            }
+            .modifier(
+              RufletTextStyleModifier(style: selected ? selectedTextStyle : unselectedTextStyle)
+            )
+            .foregroundStyle(selected ? labelColor : unselectedLabelColor)
+            .lineLimit(1)
+            .padding(.horizontal, 14)
+            .frame(minHeight: 36)
+            .background(
+              Capsule(style: .continuous)
+                .fill(selected ? labelColor.opacity(0.14) : appleSegmentTrackColor)
+            )
+            .contentShape(Capsule(style: .continuous))
+          }
+          .buttonStyle(.plain)
+          .disabled(control.disabled || tab.disabled)
+          .opacity(control.disabled || tab.disabled ? 0.38 : 1)
+          .accessibilityAddTraits(selected ? .isSelected : [])
+        }
+      }
+      .padding(
+        parsePadding(control.dynamicValue("padding"))
+          ?? EdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)
+      )
+    }
+    .frame(minHeight: 48)
+    .animation(.easeInOut(duration: 0.18), value: state.selectedIndex)
+  }
+
   private var appleSegmentTrackColor: Color {
     #if os(iOS)
       Color(uiColor: .tertiarySystemFill)
@@ -367,90 +410,6 @@ public struct TabBarControl: View {
     #endif
   }
 
-  private func tabs(state: RufletTabsState, fill: Bool) -> some View {
-    HStack(spacing: 0) {
-      ForEach(Array(tabControls.enumerated()), id: \.element.id) { index, tab in
-        tabButton(tab, index: index, state: state)
-          .frame(maxWidth: fill ? .infinity : nil)
-      }
-    }
-    .padding(parsePadding(control.dynamicValue("padding")) ?? EdgeInsets())
-  }
-
-  private func tabButton(_ tab: RufletControl, index: Int, state: RufletTabsState) -> some View {
-    let selected = state.selectedIndex == index
-    let presentation = RufletTabBarPresentation(control: control)
-    let states = presentation.states(
-      selected: selected,
-      hovered: hoveredIndex == index,
-      pressed: false,
-      disabled: control.disabled || tab.disabled)
-    return Button {
-      guard !control.disabled, !tab.disabled else { return }
-      if presentation.enableFeedback { performTabBarFeedback() }
-      state.select(index)
-      control.triggerEvent("click", data: .int(Int64(index)))
-    } label: {
-      Group {
-        if tab.type == "Tab" {
-          RufletTabLabel(control: tab)
-        } else {
-          ControlWidget(control: tab)
-        }
-      }
-      .modifier(RufletTextStyleModifier(style: selected ? selectedTextStyle : unselectedTextStyle))
-      .foregroundStyle(selected ? labelColor : unselectedLabelColor)
-      .padding(labelPadding)
-      .frame(minHeight: presentation.minimumHeight)
-      .contentShape(Rectangle())
-      .background(presentation.overlay(states))
-      .clipShape(RufletCornerShape(radius: presentation.splashBorderRadius))
-      .overlay(alignment: .bottom) {
-        if selected { indicator }
-      }
-    }
-    .buttonStyle(
-      RufletTabBarButtonStyle(
-        presentation: presentation,
-        selected: selected,
-        disabled: control.disabled || tab.disabled)
-    )
-    .disabled(control.disabled || tab.disabled)
-    .modifier(RufletMouseCursorModifier(cursor: presentation.mouseCursor))
-    .onHover { hovering in
-      hoveredIndex = hovering ? index : (hoveredIndex == index ? nil : hoveredIndex)
-      control.triggerEvent(
-        "hover",
-        data: [
-          "hovering": .bool(hovering),
-          "index": .int(Int64(index)),
-        ])
-    }
-    .animation(tabIndicatorAnimation, value: state.selectedIndex)
-    .accessibilityAddTraits(selected ? .isSelected : [])
-  }
-
-  private var indicator: some View {
-    let presentation = RufletTabBarPresentation(control: control)
-    let custom = control.underlineTabIndicator("indicator")
-    let color =
-      custom?.borderSide.color
-      ?? parseColor(control.string("indicator_color"))
-      ?? .accentColor
-    let thickness = CGFloat(
-      custom?.borderSide.width
-        ?? control.number("indicator_thickness", default: 2) ?? 2)
-    let radius = custom?.borderRadius?.uniform ?? thickness / 2
-    return Rectangle()
-      .fill(color)
-      .frame(height: thickness)
-      .clipShape(RoundedRectangle(cornerRadius: radius))
-      .padding(
-        custom?.insets ?? parsePadding(control.dynamicValue("indicator_padding")) ?? EdgeInsets()
-      )
-      .padding(.horizontal, presentation.indicatorHorizontalInset(labelPadding: labelPadding))
-  }
-
   private var tabControls: [RufletControl] {
     control.children("tabs").map { tab in
       tab.notifyParent = true
@@ -458,11 +417,6 @@ public struct TabBarControl: View {
     }
   }
 
-  private var scrollable: Bool { control.boolean("scrollable", default: true) }
-  private var labelPadding: EdgeInsets {
-    parsePadding(control.dynamicValue("label_padding"))
-      ?? RufletLayoutDefaults.tabLabel
-  }
   private var labelColor: Color {
     parseColor(control.string("label_color")) ?? .accentColor
   }
@@ -480,19 +434,6 @@ public struct TabBarControl: View {
   }
   private var dividerColor: Color {
     parseColor(control.string("divider_color")) ?? Color.secondary.opacity(0.25)
-  }
-  private var tabAlignment: Alignment {
-    switch control.string("tab_alignment")?.lowercased() {
-    case "center": .center
-    case "end": .trailing
-    default: .leading
-    }
-  }
-  private var tabIndicatorAnimation: Animation {
-    switch control.tabIndicatorAnimation("indicator_animation", default: .linear)! {
-    case .linear: .linear(duration: rufletDefaultTabAnimationDuration)
-    case .elastic: .spring(response: 0.25, dampingFraction: 0.72)
-    }
   }
 }
 
@@ -546,25 +487,6 @@ struct RufletTabBarPresentation {
   }
 }
 
-private struct RufletTabBarButtonStyle: ButtonStyle {
-  let presentation: RufletTabBarPresentation
-  let selected: Bool
-  let disabled: Bool
-
-  func makeBody(configuration: Configuration) -> some View {
-    configuration.label
-      .background(
-        presentation.overlay(
-          presentation.states(
-            selected: selected,
-            hovered: false,
-            pressed: configuration.isPressed,
-            disabled: disabled))
-      )
-      .clipShape(RufletCornerShape(radius: presentation.splashBorderRadius))
-  }
-}
-
 private func rufletTabBarColor(_ raw: Any?) -> Color? {
   if let string = raw as? String { return parseColor(string) }
   if let value = raw as? RufletValue { return parseColor(value.text) }
@@ -574,8 +496,6 @@ private func rufletTabBarColor(_ raw: Any?) -> Color? {
 private func performTabBarFeedback() {
   #if os(iOS)
     UIImpactFeedbackGenerator(style: .light).impactOccurred()
-  #elseif os(macOS)
-    NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now)
   #endif
 }
 
@@ -608,8 +528,8 @@ private struct RufletApplePagingTabStyle: ViewModifier {
   func body(content: Content) -> some View {
     #if os(iOS)
       content.tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-    #elseif os(macOS)
-      content.tabViewStyle(DefaultTabViewStyle())
+    #else
+      ErrorControl("The native paging TabBarView renderer requires iOS.")
     #endif
   }
 }
