@@ -46,7 +46,7 @@ struct RufletAppleSheetPresenter: View {
     }
     .frame(maxWidth: .infinity, maxHeight: .infinity)
     .onAppear(perform: synchronizePresentation)
-    .onChange(of: control.properties) { _ in synchronizePresentation() }
+    .onChange(of: control.revision) { _ in synchronizePresentation() }
   }
 
   @ViewBuilder

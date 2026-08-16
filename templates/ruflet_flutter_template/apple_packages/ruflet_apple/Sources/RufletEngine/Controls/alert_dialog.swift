@@ -43,7 +43,7 @@ struct RufletAppleDialogPresenter: View {
       }
     }
     .onAppear(perform: synchronizePresentation)
-    .onChange(of: control.properties) { _ in synchronizePresentation() }
+    .onChange(of: control.revision) { _ in synchronizePresentation() }
   }
 
   private var dialogLayer: some View {

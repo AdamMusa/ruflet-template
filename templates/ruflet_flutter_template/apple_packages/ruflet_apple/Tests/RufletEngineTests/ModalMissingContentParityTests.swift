@@ -103,4 +103,25 @@ final class ModalMissingContentParityTests: XCTestCase {
           hasContent: true))
     }
   }
+
+  func testPickerPresentationFollowsEveryServerOpenCycleEvenWithAStalePrivateMarker() {
+    XCTAssertEqual(
+      rufletPickerPresentationAction(open: true, presented: false),
+      .present)
+    XCTAssertEqual(
+      rufletPickerPresentationAction(open: true, presented: true),
+      .unchanged)
+    XCTAssertEqual(
+      rufletPickerPresentationAction(open: false, presented: true),
+      .dismiss)
+    XCTAssertEqual(
+      rufletPickerPresentationAction(open: false, presented: false),
+      .unchanged)
+
+    // A second false -> true server edge must make the same native sheet
+    // present again; no `_open` latch participates in this decision.
+    XCTAssertEqual(
+      rufletPickerPresentationAction(open: true, presented: false),
+      .present)
+  }
 }

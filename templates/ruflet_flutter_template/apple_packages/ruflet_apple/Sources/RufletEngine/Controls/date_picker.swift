@@ -28,7 +28,7 @@ public struct DatePickerControl: View {
       pickerSheet
     }
     .onAppear(perform: synchronizePresentation)
-    .onChange(of: control.properties) { _ in synchronizePresentation() }
+    .onChange(of: control.revision) { _ in synchronizePresentation() }
   }
 
   private var pickerSheet: some View {
@@ -126,16 +126,22 @@ public struct DatePickerControl: View {
   }
 
   func synchronizePresentation() {
-    guard control.boolean("open", default: false),
-      !control.boolean("_open", default: false),
-      !presented
-    else { return }
-    let presentation = presentation
-    draft = presentation.value ?? presentation.currentDate ?? Date()
-    inputText = rufletPickerDateText(draft, locale: presentation.locale)
-    entryMode = presentation.entryMode
-    control.updateProperties(["_open": .bool(true)], server: false)
-    presented = true
+    switch rufletPickerPresentationAction(
+      open: control.boolean("open", default: false), presented: presented)
+    {
+    case .present:
+      let presentation = presentation
+      draft = presentation.value ?? presentation.currentDate ?? Date()
+      inputText = rufletPickerDateText(draft, locale: presentation.locale)
+      entryMode = presentation.entryMode
+      control.updateProperties(["_open": .bool(true)], server: false)
+      presented = true
+    case .dismiss:
+      control.updateProperties(["_open": .bool(false)], server: false)
+      presented = false
+    case .unchanged:
+      break
+    }
   }
 
   func toggleEntryMode() {
@@ -175,6 +181,22 @@ public struct DatePickerControl: View {
   var presentation: RufletDatePickerPresentation {
     RufletDatePickerPresentation(control: control)
   }
+}
+
+enum RufletPickerPresentationAction: Equatable {
+  case present, dismiss, unchanged
+}
+
+/// The server-owned `open` property is the source of truth. `_open` is only a
+/// local compatibility marker and must never prevent a later Ruby opening
+/// edge after SwiftUI recreates or dismisses its native sheet.
+func rufletPickerPresentationAction(
+  open: Bool,
+  presented: Bool
+) -> RufletPickerPresentationAction {
+  if open, !presented { return .present }
+  if !open, presented { return .dismiss }
+  return .unchanged
 }
 
 enum RufletDateEntryMode: String, CaseIterable, RufletStringEnum {

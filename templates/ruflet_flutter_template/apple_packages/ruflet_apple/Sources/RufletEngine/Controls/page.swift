@@ -337,9 +337,15 @@ private struct RufletPageTopLayers: View {
     ZStack {
       ForEach(overlay.children("controls")) { control in
         ControlWidget(control: control)
+          .id(ObjectIdentifier(control))
       }
       ForEach(dialogs.children("controls")) { control in
         ControlWidget(control: control)
+          // Ruby publishes the dialogs collection as a fresh control snapshot
+          // every time `show_dialog` runs. The wire id intentionally stays the
+          // same, but the native presenter must be rebound to that new control
+          // instance or SwiftUI can retain the previous presentation latch.
+          .id(ObjectIdentifier(control))
       }
       RufletPageMedia(control: page)
     }

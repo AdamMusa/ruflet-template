@@ -26,7 +26,7 @@ public struct DateRangePickerControl: View {
       pickerSheet
     }
     .onAppear(perform: synchronizePresentation)
-    .onChange(of: control.properties) { _ in synchronizePresentation() }
+    .onChange(of: control.revision) { _ in synchronizePresentation() }
   }
 
   private var pickerSheet: some View {
@@ -146,19 +146,25 @@ public struct DateRangePickerControl: View {
   }
 
   func synchronizePresentation() {
-    guard control.boolean("open", default: false),
-      !control.boolean("_open", default: false),
-      !presented
-    else { return }
-    let presentation = presentation
-    let current = presentation.currentDate ?? Date()
-    draftStart = presentation.startValue ?? current
-    draftEnd = presentation.endValue ?? current
-    startInputText = rufletPickerDateText(draftStart, locale: presentation.locale)
-    endInputText = rufletPickerDateText(draftEnd, locale: presentation.locale)
-    entryMode = presentation.entryMode
-    control.updateProperties(["_open": .bool(true)], server: false)
-    presented = true
+    switch rufletPickerPresentationAction(
+      open: control.boolean("open", default: false), presented: presented)
+    {
+    case .present:
+      let presentation = presentation
+      let current = presentation.currentDate ?? Date()
+      draftStart = presentation.startValue ?? current
+      draftEnd = presentation.endValue ?? current
+      startInputText = rufletPickerDateText(draftStart, locale: presentation.locale)
+      endInputText = rufletPickerDateText(draftEnd, locale: presentation.locale)
+      entryMode = presentation.entryMode
+      control.updateProperties(["_open": .bool(true)], server: false)
+      presented = true
+    case .dismiss:
+      control.updateProperties(["_open": .bool(false)], server: false)
+      presented = false
+    case .unchanged:
+      break
+    }
   }
 
   private func startChanged(_ value: Date) {

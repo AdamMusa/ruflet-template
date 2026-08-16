@@ -69,6 +69,7 @@ struct PageViewNavigationContractTests {
     #expect(page.contains("private struct RufletPageTopLayers"))
     #expect(page.contains("@ObservedObject var dialogs: RufletControl"))
     #expect(page.contains("dialogs.addListener { topLayersRevision &+= 1 }"))
+    #expect(page.contains(".id(ObjectIdentifier(control))"))
     #expect(page.contains("revision: topLayersRevision"))
     #expect(!page.contains(".transition(.opacity)"))
     #expect(!view.contains("RufletPageMedia(control: page)"))

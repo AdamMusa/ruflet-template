@@ -23,7 +23,7 @@ public struct TimePickerControl: View {
       pickerSheet
     }
     .onAppear(perform: synchronizePresentation)
-    .onChange(of: control.properties) { _ in synchronizePresentation() }
+    .onChange(of: control.revision) { _ in synchronizePresentation() }
   }
 
   private var pickerSheet: some View {
@@ -98,21 +98,27 @@ public struct TimePickerControl: View {
   }
 
   func synchronizePresentation() {
-    guard control.boolean("open", default: false),
-      !control.boolean("_open", default: false),
-      !presented
-    else { return }
-    let presentation = presentation
-    let value = presentation.value ?? timeOfDay(from: Date())
-    draft =
-      Calendar.current.date(
-        bySettingHour: value.hour,
-        minute: value.minute,
-        second: 0,
-        of: Date()) ?? Date()
-    entryMode = presentation.entryMode
-    control.updateProperties(["_open": .bool(true)], server: false)
-    presented = true
+    switch rufletPickerPresentationAction(
+      open: control.boolean("open", default: false), presented: presented)
+    {
+    case .present:
+      let presentation = presentation
+      let value = presentation.value ?? timeOfDay(from: Date())
+      draft =
+        Calendar.current.date(
+          bySettingHour: value.hour,
+          minute: value.minute,
+          second: 0,
+          of: Date()) ?? Date()
+      entryMode = presentation.entryMode
+      control.updateProperties(["_open": .bool(true)], server: false)
+      presented = true
+    case .dismiss:
+      control.updateProperties(["_open": .bool(false)], server: false)
+      presented = false
+    case .unchanged:
+      break
+    }
   }
 
   func toggleEntryMode() {
