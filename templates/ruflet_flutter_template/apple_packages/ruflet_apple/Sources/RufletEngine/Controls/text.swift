@@ -193,7 +193,7 @@ extension TextAlignment {
   }
 }
 
-func mergeTextStyles(_ base: RufletTextStyle?, _ override: RufletTextStyle?) -> RufletTextStyle? {
+public func mergeTextStyles(_ base: RufletTextStyle?, _ override: RufletTextStyle?) -> RufletTextStyle? {
   guard base != nil || override != nil else { return nil }
   return RufletTextStyle(
     size: override?.size ?? base?.size,

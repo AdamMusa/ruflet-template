@@ -38,6 +38,7 @@ struct RufletCodeInsets {
 
 struct RufletCodeEditorStyle {
   let font: RufletCodePlatformFont
+  let lineHeight: Double
   let foreground: RufletCodePlatformColor
   let background: RufletCodePlatformColor
   let gutter: RufletGutterStyle
@@ -45,21 +46,27 @@ struct RufletCodeEditorStyle {
   let tokens: [String: RufletCodeTokenStyle]
 
   @MainActor
-  init(control: RufletControl) {
+  init(control: RufletControl, themeTextStyle: RufletTextStyle? = nil) {
     let text = control.value("text_style")?.map ?? [:]
-    let size = text["size"]?.number ?? 14
+    let explicitTextStyle = parseTextStyle(control.dynamicValue("text_style"))
+    let size = explicitTextStyle?.size ?? themeTextStyle?.size ?? 16
+    lineHeight = size * (explicitTextStyle?.height ?? themeTextStyle?.height ?? 1.5)
     let fontName = text["font_family"]?.text
     let weight = text["weight"]?.text?.lowercased() ?? "normal"
+    let themeName = control.value("code_theme")?.text
+      ?? control.value("code_theme")?.map?["name"]?.text
+      ?? "xcode"
+    let root = Self.namedRootColors(themeName)
     #if os(iOS)
     if let fontName, let custom = UIFont(name: fontName, size: size) { font = custom }
     else { font = .monospacedSystemFont(ofSize: size, weight: weight == "bold" || weight == "w700" ? .bold : .regular) }
-    foreground = UIColor(parseColor(text["color"]?.text, .primary) ?? .primary)
-    background = UIColor(parseColor(text["bgcolor"]?.text, .clear) ?? .clear)
+    foreground = UIColor(parseColor(text["color"]?.text) ?? Color(root.foreground))
+    background = UIColor(parseColor(text["bgcolor"]?.text) ?? Color(root.background))
     #elseif os(macOS)
     if let fontName, let custom = NSFont(name: fontName, size: size) { font = custom }
     else { font = .monospacedSystemFont(ofSize: size, weight: weight == "bold" || weight == "w700" ? .bold : .regular) }
-    foreground = NSColor(parseColor(text["color"]?.text, .primary) ?? .primary)
-    background = NSColor(parseColor(text["bgcolor"]?.text, .clear) ?? .clear)
+    foreground = parseColor(text["color"]?.text).map(NSColor.init) ?? root.foreground
+    background = parseColor(text["bgcolor"]?.text).map(NSColor.init) ?? root.background
     #endif
 
     let gutterMap = control.value("gutter_style")?.map ?? [:]
@@ -97,6 +104,24 @@ struct RufletCodeEditorStyle {
     tokens = Self.parseTheme(control.value("code_theme"))
   }
 
+  var paragraphStyle: NSParagraphStyle {
+    let style = NSMutableParagraphStyle()
+    style.minimumLineHeight = lineHeight
+    style.maximumLineHeight = lineHeight
+    return style
+  }
+
+  var gutterAttributes: [NSAttributedString.Key: Any] {
+    let paragraph = paragraphStyle.mutableCopy() as! NSMutableParagraphStyle
+    paragraph.alignment = .right
+    return [
+      .font: font,
+      .foregroundColor: gutter.foreground,
+      .backgroundColor: gutter.background,
+      .paragraphStyle: paragraph,
+    ]
+  }
+
   private static func parseTheme(_ value: RufletValue?) -> [String: RufletCodeTokenStyle] {
     let name = value?.text ?? value?.map?["name"]?.text ?? "xcode"
     var colors = namedTheme(name)
@@ -122,6 +147,26 @@ struct RufletCodeEditorStyle {
   }
 
   private static func namedTheme(_ name: String) -> [String: RufletCodeTokenStyle] {
+    if name.lowercased() == "atom-one-dark" {
+      func atom(_ value: UInt32) -> RufletCodePlatformColor {
+        let r = CGFloat((value >> 16) & 0xff) / 255
+        let g = CGFloat((value >> 8) & 0xff) / 255
+        let b = CGFloat(value & 0xff) / 255
+        #if os(iOS)
+        return UIColor(red: r, green: g, blue: b, alpha: 1)
+        #elseif os(macOS)
+        return NSColor(red: r, green: g, blue: b, alpha: 1)
+        #endif
+      }
+      return [
+        "keyword": .init(color: atom(0xC678DD), bold: false, italic: false),
+        "string": .init(color: atom(0x98C379), bold: false, italic: false),
+        "comment": .init(color: atom(0x5C6370), bold: false, italic: true),
+        "number": .init(color: atom(0xD19A66), bold: false, italic: false),
+        "type": .init(color: atom(0xD19A66), bold: false, italic: false),
+        "function": .init(color: atom(0x61AEEE), bold: false, italic: false),
+      ]
+    }
     let dark = ["monokai", "dracula", "atom-one-dark", "vs2015", "obsidian"].contains(name.lowercased())
     func color(_ light: UInt32, _ darkValue: UInt32) -> RufletCodePlatformColor {
       let value = dark ? darkValue : light
@@ -142,6 +187,24 @@ struct RufletCodeEditorStyle {
       "type": .init(color: color(0xC18401, 0x8BE9FD), bold: false, italic: false),
       "function": .init(color: color(0x4078F2, 0x50FA7B), bold: false, italic: false),
     ]
+  }
+
+  private static func namedRootColors(
+    _ name: String
+  ) -> (foreground: RufletCodePlatformColor, background: RufletCodePlatformColor) {
+    let values: (UInt32, UInt32) = name.lowercased() == "atom-one-dark"
+      ? (0xABB2BF, 0x282C34) : (0xE0E0E0, 0x212121)
+    func color(_ value: UInt32) -> RufletCodePlatformColor {
+      let r = CGFloat((value >> 16) & 0xff) / 255
+      let g = CGFloat((value >> 8) & 0xff) / 255
+      let b = CGFloat(value & 0xff) / 255
+      #if os(iOS)
+      return UIColor(red: r, green: g, blue: b, alpha: 1)
+      #elseif os(macOS)
+      return NSColor(red: r, green: g, blue: b, alpha: 1)
+      #endif
+    }
+    return (color(values.0), color(values.1))
   }
 }
 
@@ -175,6 +238,7 @@ struct RufletCodeHighlighter {
       .font: style.font,
       .foregroundColor: style.foreground,
       .backgroundColor: style.background,
+      .paragraphStyle: style.paragraphStyle,
     ], range: fullRange)
     apply(pattern: #"\b\d+(?:\.\d+)?\b"#, token: "number", storage: storage)
     let keywords = RufletCodeLanguage.keywords(for: language).map(NSRegularExpression.escapedPattern).joined(separator: "|")

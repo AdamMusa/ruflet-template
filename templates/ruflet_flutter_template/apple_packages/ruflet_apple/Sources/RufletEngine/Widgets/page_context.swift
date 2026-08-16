@@ -30,7 +30,7 @@ extension EnvironmentValues {
     set { self[RufletThemeModeKey.self] = newValue }
   }
 
-  var rufletPageTheme: RufletTheme? {
+  public var rufletPageTheme: RufletTheme? {
     get { self[RufletPageThemeKey.self] }
     set { self[RufletPageThemeKey.self] = newValue }
   }

@@ -158,16 +158,16 @@ private final class RufletIOSCodeEditorView: UIView {
     gutter.textColor = style.gutter.foreground
     gutter.backgroundColor = style.gutter.background
     gutter.font = style.font
-    gutter.textContainerInset = UIEdgeInsets(top: style.padding.top, left: 0, bottom: style.padding.bottom, right: style.gutter.margin)
+    gutter.textContainerInset = UIEdgeInsets(top: 16, left: 8, bottom: 16, right: style.gutter.margin)
     gutter.textContainer.lineFragmentPadding = 0
     editor.backgroundColor = style.background
     editor.font = style.font
     editor.textColor = style.foreground
     editor.textContainerInset = UIEdgeInsets(
-      top: style.padding.top,
-      left: style.padding.left,
-      bottom: style.padding.bottom,
-      right: style.padding.right)
+      top: 16,
+      left: 8,
+      bottom: 16,
+      right: 0)
   }
 }
 
@@ -266,9 +266,19 @@ private struct RufletPlatformCodeEditor: UIViewRepresentable {
     }
 
     private func updateGutter(_ host: RufletIOSCodeEditorView, style: RufletCodeEditorStyle) {
-      let prefix = style.gutter.showFoldingHandles ? "▾ " : ""
-      host.gutter.text = model.editor.lineNumbers().map { prefix + String($0) }.joined(separator: "\n")
+      host.gutter.attributedText = NSAttributedString(
+        string: gutterText(style: style),
+        attributes: style.gutterAttributes)
       host.gutter.contentOffset.y = host.editor.contentOffset.y
+    }
+
+    private func gutterText(style: RufletCodeEditorStyle) -> String {
+      let foldable = model.editor.foldableLineNumbers()
+      return model.editor.lineNumbers().map { number in
+        let prefix = style.gutter.showFoldingHandles
+          ? (foldable.contains(number) ? "▾ " : "  ") : ""
+        return prefix + String(number)
+      }.joined(separator: "\n")
     }
 
     private func updateCompletions(_ textView: UITextView) {
@@ -362,10 +372,10 @@ private final class RufletMacCodeEditorView: NSView {
     editor.backgroundColor = style.background
     editor.font = style.font
     editor.textColor = style.foreground
-    editor.textContainerInset = NSSize(width: style.padding.left, height: style.padding.top)
+    editor.textContainerInset = NSSize(width: 8, height: 16)
     editorScroll.contentInsets = NSEdgeInsets(
-      top: 0, left: 0, bottom: style.padding.bottom, right: style.padding.right)
-    gutter.textContainerInset = NSSize(width: style.gutter.margin, height: style.padding.top)
+      top: 0, left: 0, bottom: 16, right: 0)
+    gutter.textContainerInset = NSSize(width: style.gutter.margin, height: 16)
   }
 }
 
@@ -413,7 +423,9 @@ private struct RufletPlatformCodeEditor: NSViewRepresentable {
       }
       host.editor.isEditable = !model.control.boolean("read_only", default: false) && !model.control.disabled
       host.editor.isSelectable = !model.control.disabled
-      host.gutter.string = gutterText(style: style)
+      host.gutter.textStorage?.setAttributedString(NSAttributedString(
+        string: gutterText(style: style),
+        attributes: style.gutterAttributes))
       if let storage = host.editor.textStorage {
         RufletCodeHighlighter(style: style, language: model.editor.language).apply(to: storage)
       }
@@ -474,8 +486,12 @@ private struct RufletPlatformCodeEditor: NSViewRepresentable {
     }
 
     private func gutterText(style: RufletCodeEditorStyle) -> String {
-      let prefix = style.gutter.showFoldingHandles ? "▾ " : ""
-      return model.editor.lineNumbers().map { prefix + String($0) }.joined(separator: "\n")
+      let foldable = model.editor.foldableLineNumbers()
+      return model.editor.lineNumbers().map { number in
+        let prefix = style.gutter.showFoldingHandles
+          ? (foldable.contains(number) ? "▾ " : "  ") : ""
+        return prefix + String(number)
+      }.joined(separator: "\n")
     }
   }
 }
@@ -483,6 +499,7 @@ private struct RufletPlatformCodeEditor: NSViewRepresentable {
 
 struct CodeEditorControl: View {
   @ObservedObject var control: RufletControl
+  @Environment(\.rufletPageTheme) private var pageTheme
   @StateObject private var model: RufletCodeEditorModel
 
   init(control: RufletControl) {
@@ -491,13 +508,20 @@ struct CodeEditorControl: View {
   }
 
   var body: some View {
-    RufletPlatformCodeEditor(model: model, style: RufletCodeEditorStyle(control: control))
-      .onAppear {
-        model.attach()
-        model.applyControlConfiguration()
-      }
-      .onDisappear { model.detach() }
-      .onChange(of: configurationIdentity) { _ in model.applyControlConfiguration() }
+    LayoutControl(control: control) {
+      RufletPlatformCodeEditor(
+        model: model,
+        style: RufletCodeEditorStyle(
+          control: control,
+          themeTextStyle: pageTheme?.textTheme?["title_medium"]))
+        .clipped()
+        .onAppear {
+          model.attach()
+          model.applyControlConfiguration()
+        }
+        .onDisappear { model.detach() }
+        .onChange(of: configurationIdentity) { _ in model.applyControlConfiguration() }
+    }
   }
 
   private var configurationIdentity: String {

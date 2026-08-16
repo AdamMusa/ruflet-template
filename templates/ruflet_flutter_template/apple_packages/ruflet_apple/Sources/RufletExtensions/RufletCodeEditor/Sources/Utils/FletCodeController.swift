@@ -154,6 +154,27 @@ final class FletCodeController: ObservableObject {
       result.append(prefix.reduce(1) { $1 == "\n" ? $0 + 1 : $0 })
       offset = NSMaxRange(nsVisible.lineRange(for: NSRange(location: offset, length: 0)))
     }
+    if visibleText.hasSuffix("\n") {
+      let fullOffset = fullOffset(forVisibleOffset: nsVisible.length) ?? nsVisible.length
+      let prefix = (fullText as NSString).substring(to: min(fullOffset, (fullText as NSString).length))
+      result.append(prefix.reduce(1) { $1 == "\n" ? $0 + 1 : $0 })
+    }
+    return result
+  }
+
+  func foldableLineNumbers() -> Set<Int> {
+    let lines = visibleText.split(separator: "\n", omittingEmptySubsequences: false)
+    var result = Set<Int>()
+    for index in lines.indices.dropLast() {
+      let current = lines[index]
+      let currentIndent = current.prefix { $0 == " " || $0 == "\t" }.count
+      guard !current.trimmingCharacters(in: .whitespaces).isEmpty else { continue }
+      guard let next = lines[(index + 1)...].first(where: {
+        !$0.trimmingCharacters(in: .whitespaces).isEmpty
+      }) else { continue }
+      let nextIndent = next.prefix { $0 == " " || $0 == "\t" }.count
+      if nextIndent > currentIndent { result.insert(index + 1) }
+    }
     return result
   }
 
