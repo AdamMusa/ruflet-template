@@ -483,19 +483,11 @@ private struct RufletDataTableCellInteractionModifier: ViewModifier {
   @State private var tapDownSent = false
   @State private var tapCancelled = false
 
+  @ViewBuilder
   func body(content: Content) -> some View {
-    tapped(content)
-      .highPriorityGesture(
-        LongPressGesture().onEnded { _ in
-          if enabled("long_press") {
-            cell.triggerEvent("long_press")
-          } else if !overridesRow, row.boolean("on_long_press", default: false) {
-            row.triggerEvent("long_press")
-          }
-        },
-        including: handlesLongPress ? .all : .none
-      )
-      .simultaneousGesture(
+    let primary = longPressed(tapped(content))
+    if handlesTapDetails {
+      primary.simultaneousGesture(
         DragGesture(minimumDistance: 0)
           .onChanged { value in
             if !tapDownSent, enabled("tap_down") {
@@ -528,6 +520,25 @@ private struct RufletDataTableCellInteractionModifier: ViewModifier {
         }
       }
       .onPreferenceChange(RufletDataTableFrameOriginKey.self) { frameOrigin = $0 }
+    } else {
+      primary
+    }
+  }
+
+  @ViewBuilder
+  private func longPressed<Content: View>(_ content: Content) -> some View {
+    if handlesLongPress {
+      content.highPriorityGesture(
+        LongPressGesture().onEnded { _ in
+          if enabled("long_press") {
+            cell.triggerEvent("long_press")
+          } else if !overridesRow, row.boolean("on_long_press", default: false) {
+            row.triggerEvent("long_press")
+          }
+        })
+    } else {
+      content
+    }
   }
 
   @ViewBuilder
@@ -568,6 +579,9 @@ private struct RufletDataTableCellInteractionModifier: ViewModifier {
   private var overridesRow: Bool { rufletDataCellOverridesRowInteraction(cell) }
   private var handlesLongPress: Bool {
     enabled("long_press") || (!overridesRow && row.boolean("on_long_press", default: false))
+  }
+  private var handlesTapDetails: Bool {
+    enabled("tap_down") || enabled("tap_cancel")
   }
 
   private var pointerKind: String {

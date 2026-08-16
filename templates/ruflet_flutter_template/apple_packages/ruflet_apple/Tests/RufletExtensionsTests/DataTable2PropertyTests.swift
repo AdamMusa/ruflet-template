@@ -1,9 +1,33 @@
 @testable import RufletDataTable2
+import RufletEngine
 import RufletProtocol
 import SwiftUI
 import XCTest
 
 final class DataTable2PropertyTests: XCTestCase {
+  @MainActor
+  func testPassiveRowsAndCellsDoNotInstallCompetingRecognizers() {
+    let backend = DataTable2PropertyTestBackend()
+    let passive = RufletControl(id: 1, type: "DataCell", properties: [:], backend: backend)
+    let active = RufletControl(
+      id: 2,
+      type: "DataCell",
+      properties: ["on_tap": true, "on_long_press": true, "on_tap_down": true],
+      backend: backend)
+
+    let passiveContract = RufletDataTable2InteractionContract(control: passive)
+    XCTAssertFalse(passiveContract.handlesTap)
+    XCTAssertFalse(passiveContract.handlesDoubleTap)
+    XCTAssertFalse(passiveContract.handlesLongPress)
+    XCTAssertFalse(passiveContract.handlesTapDown)
+    XCTAssertFalse(passiveContract.handlesTapCancel)
+
+    let activeContract = RufletDataTable2InteractionContract(control: active)
+    XCTAssertTrue(activeContract.handlesTap)
+    XCTAssertTrue(activeContract.handlesLongPress)
+    XCTAssertTrue(activeContract.handlesTapDown)
+  }
+
   func testCheckboxThemeConsumesPinnedFillCheckBorderAndShape() {
     let theme: RufletValue = .map([
       "fill_color": .map([
@@ -40,4 +64,22 @@ final class DataTable2PropertyTests: XCTestCase {
     XCTAssertEqual(
       rufletDataTable2Duration(.int(250)), 0.25, accuracy: 0.000_000_1)
   }
+}
+
+@MainActor
+private final class DataTable2PropertyTestBackend: RufletBackendProtocol {
+  let pageURI: URL? = nil
+  let extensionRegistry = RufletExtensionRegistry([])
+  func index(_ control: RufletControl) {}
+  func triggerControlEvent(_ control: RufletControl, name: String, data: RufletValue) {}
+  func triggerControlEvent(controlID: Int, name: String, data: RufletValue) {}
+  func updateControl(
+    _ id: Int,
+    properties: [String: RufletValue],
+    client: Bool,
+    server: Bool,
+    notify: Bool
+  ) {}
+  func resolveAssetSource(_ source: RufletValue) -> RufletAssetSource? { nil }
+  func onWindowEvent(_ name: String, state: RufletWindowState) {}
 }

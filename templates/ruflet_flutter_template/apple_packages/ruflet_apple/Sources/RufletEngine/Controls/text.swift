@@ -59,7 +59,10 @@ public struct TextControl: View {
         .accessibilityLabel(
           control.string("semantics_label") ?? control.string("value", default: "")!
         )
-        .onTapGesture(perform: tapped)
+        .modifier(
+          RufletTextTapModifier(
+            enabled: interaction.handlesTap,
+            action: tapped))
     }
   }
 
@@ -80,7 +83,12 @@ public struct TextControl: View {
   }
 
   private func tapped() {
-    if control.hasEventHandler("tap") { control.triggerEvent("tap") }
+    guard interaction.handlesTap else { return }
+    control.triggerEvent("tap")
+  }
+
+  private var interaction: RufletTextInteractionContract {
+    RufletTextInteractionContract(control: control)
   }
 
   private func selectionChanged(_ selection: RufletTextSelection) {
@@ -170,6 +178,33 @@ public struct TextControl: View {
 
   private var textAlignment: TextAlignment {
     parseEnum(RufletTextAlign.self, control.string("text_align"), .start)!.alignment
+  }
+}
+
+@MainActor
+struct RufletTextInteractionContract {
+  let handlesTap: Bool
+
+  init(control: RufletControl) {
+    handlesTap = !control.disabled && control.hasEventHandler("tap")
+  }
+}
+
+private struct RufletTextTapModifier: ViewModifier {
+  let enabled: Bool
+  let action: () -> Void
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if enabled {
+      content.onTapGesture(perform: action)
+    } else {
+      // A no-op child recognizer still participates in SwiftUI gesture
+      // arbitration. Text is frequently nested inside ListTile, Button and
+      // clickable Container, so installing one here used to swallow the
+      // parent's first tap even though Ruby did not subscribe to `on_tap`.
+      content
+    }
   }
 }
 

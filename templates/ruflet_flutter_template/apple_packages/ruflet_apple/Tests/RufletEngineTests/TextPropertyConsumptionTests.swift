@@ -5,6 +5,17 @@ import XCTest
 @testable import RufletEngine
 
 final class TextPropertyConsumptionTests: XCTestCase {
+  @MainActor
+  func testTextOnlyInstallsTapRecognitionWhenRubySubscribed() {
+    let backend = TextPropertyTestBackend()
+    let passive = RufletControl(id: 1, type: "Text", properties: [:], backend: backend)
+    let interactive = RufletControl(
+      id: 2, type: "Text", properties: ["on_tap": true], backend: backend)
+
+    XCTAssertFalse(RufletTextInteractionContract(control: passive).handlesTap)
+    XCTAssertTrue(RufletTextInteractionContract(control: interactive).handlesTap)
+  }
+
   func testExplicitStyleOverridesThemeStyleWithoutDiscardingThemeFields() {
     let themed = RufletTextStyle(
       size: 18,
@@ -79,4 +90,22 @@ final class TextPropertyConsumptionTests: XCTestCase {
     URL(fileURLWithPath: #filePath)
       .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
   }
+}
+
+@MainActor
+private final class TextPropertyTestBackend: RufletBackendProtocol {
+  let pageURI: URL? = nil
+  let extensionRegistry = RufletExtensionRegistry([])
+  func index(_ control: RufletControl) {}
+  func triggerControlEvent(_ control: RufletControl, name: String, data: RufletValue) {}
+  func triggerControlEvent(controlID: Int, name: String, data: RufletValue) {}
+  func updateControl(
+    _ id: Int,
+    properties: [String: RufletValue],
+    client: Bool,
+    server: Bool,
+    notify: Bool
+  ) {}
+  func resolveAssetSource(_ source: RufletValue) -> RufletAssetSource? { nil }
+  func onWindowEvent(_ name: String, state: RufletWindowState) {}
 }

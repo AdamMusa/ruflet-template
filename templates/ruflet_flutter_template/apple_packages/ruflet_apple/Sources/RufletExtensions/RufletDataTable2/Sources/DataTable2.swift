@@ -132,13 +132,12 @@ private struct RufletDataTableHeading: View {
     .foregroundStyle(headingStyle?.color ?? .primary)
     .overlay(alignment: .trailing) { verticalDivider }
     .contentShape(Rectangle())
-    .onTapGesture {
-      guard column.hasEventHandler("sort") else { return }
+    .modifier(RufletDataTable2TapModifier(enabled: column.hasEventHandler("sort")) {
       let ascending = table.integer("sort_column_index") == index
         ? !table.boolean("sort_ascending", default: false)
         : true
       column.triggerEvent("sort", data: .map(["ci": .int(Int64(index)), "asc": .bool(ascending)]))
-    }
+    })
     .help(column.string("tooltip") ?? "")
   }
 
@@ -263,9 +262,7 @@ private struct RufletDataTableRow: View {
     .frame(height: row.number("specific_row_height") ?? table.number("data_row_height", default: 48) ?? 48)
     .background(rowBackground)
     .contentShape(Rectangle())
-    .onTapGesture { if row.hasEventHandler("tap") { row.triggerEvent("tap") } }
-    .simultaneousGesture(TapGesture(count: 2).onEnded { if row.hasEventHandler("double_tap") { row.triggerEvent("double_tap") } })
-    .onLongPressGesture { if row.hasEventHandler("long_press") { row.triggerEvent("long_press") } }
+    .modifier(RufletDataTable2InteractionModifier(control: row, handlesTapDetails: false))
     .overlay { RufletSecondaryTapSurface { point in reportSecondary(point) }.allowsHitTesting(row.hasEventHandler("secondary_tap") || row.hasEventHandler("secondary_tap_down")) }
   }
 
@@ -292,16 +289,7 @@ private struct RufletDataTableRow: View {
     .foregroundStyle(dataStyle?.color ?? .primary)
     .overlay(alignment: .trailing) { verticalDivider }
     .contentShape(Rectangle())
-    .onTapGesture { if cell.hasEventHandler("tap") { cell.triggerEvent("tap") } }
-    .simultaneousGesture(TapGesture(count: 2).onEnded { if cell.hasEventHandler("double_tap") { cell.triggerEvent("double_tap") } })
-    .onLongPressGesture { if cell.hasEventHandler("long_press") { cell.triggerEvent("long_press") } }
-    .simultaneousGesture(DragGesture(minimumDistance: 0)
-      .onChanged { value in
-        if cell.hasEventHandler("tap_down") {
-          cell.triggerEvent("tap_down", data: pointValue(value.location))
-        }
-      }
-      .onEnded { _ in if cell.hasEventHandler("tap_cancel") { cell.triggerEvent("tap_cancel") } })
+    .modifier(RufletDataTable2InteractionModifier(control: cell, handlesTapDetails: true))
   }
 
   private var dataStyle: RufletTextStyle? { parseTextStyle(table.value("data_text_style")) }
@@ -347,6 +335,104 @@ private struct RufletDataTableRow: View {
   private func reportSecondary(_ point: CGPoint) {
     if row.hasEventHandler("secondary_tap_down") { row.triggerEvent("secondary_tap_down", data: pointValue(point)) }
     if row.hasEventHandler("secondary_tap") { row.triggerEvent("secondary_tap") }
+  }
+}
+
+@MainActor
+struct RufletDataTable2InteractionContract {
+  let handlesTap: Bool
+  let handlesDoubleTap: Bool
+  let handlesLongPress: Bool
+  let handlesTapDown: Bool
+  let handlesTapCancel: Bool
+
+  init(control: RufletControl) {
+    handlesTap = control.hasEventHandler("tap")
+    handlesDoubleTap = control.hasEventHandler("double_tap")
+    handlesLongPress = control.hasEventHandler("long_press")
+    handlesTapDown = control.hasEventHandler("tap_down")
+    handlesTapCancel = control.hasEventHandler("tap_cancel")
+  }
+}
+
+private struct RufletDataTable2TapModifier: ViewModifier {
+  let enabled: Bool
+  let action: () -> Void
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if enabled { content.onTapGesture(perform: action) } else { content }
+  }
+}
+
+@MainActor
+private struct RufletDataTable2InteractionModifier: ViewModifier {
+  @ObservedObject var control: RufletControl
+  let handlesTapDetails: Bool
+  @State private var tapDownSent = false
+  @State private var tapCancelled = false
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    let primary = longPressed(tapped(content))
+    if handlesTapDetails && (interaction.handlesTapDown || interaction.handlesTapCancel) {
+      primary.simultaneousGesture(
+        DragGesture(minimumDistance: 0)
+          .onChanged { value in
+            if !tapDownSent, interaction.handlesTapDown {
+              tapDownSent = true
+              control.triggerEvent("tap_down", data: pointValue(value.location))
+            }
+            if hypot(value.translation.width, value.translation.height) > 12 {
+              tapCancelled = true
+            }
+          }
+          .onEnded { _ in
+            if tapCancelled, interaction.handlesTapCancel {
+              control.triggerEvent("tap_cancel")
+            }
+            tapDownSent = false
+            tapCancelled = false
+          })
+    } else {
+      primary
+    }
+  }
+
+  @ViewBuilder
+  private func tapped<Content: View>(_ content: Content) -> some View {
+    if interaction.handlesTap && interaction.handlesDoubleTap {
+      content.highPriorityGesture(
+        ExclusiveGesture(TapGesture(count: 2), TapGesture(count: 1))
+          .onEnded { result in
+            switch result {
+            case .first: control.triggerEvent("double_tap")
+            case .second: control.triggerEvent("tap")
+            }
+          })
+    } else if interaction.handlesDoubleTap {
+      content.highPriorityGesture(
+        TapGesture(count: 2).onEnded { control.triggerEvent("double_tap") })
+    } else if interaction.handlesTap {
+      content.highPriorityGesture(
+        TapGesture().onEnded { control.triggerEvent("tap") })
+    } else {
+      content
+    }
+  }
+
+  @ViewBuilder
+  private func longPressed<Content: View>(_ content: Content) -> some View {
+    if interaction.handlesLongPress {
+      content.highPriorityGesture(
+        LongPressGesture().onEnded { _ in control.triggerEvent("long_press") })
+    } else {
+      content
+    }
+  }
+
+  private var interaction: RufletDataTable2InteractionContract {
+    RufletDataTable2InteractionContract(control: control)
   }
 }
 
