@@ -42,8 +42,11 @@ struct RufletTextInputControl: View {
   var body: some View {
     LayoutControl(control: control) {
       chrome
-        .frame(width: control.number("width") == nil ? 300 : nil)
-        .frame(maxWidth: fitParentSize ? .infinity : nil, maxHeight: fitParentSize ? .infinity : nil)
+        // Flutter's TextField has no intrinsic width: it fills the horizontal
+        // constraints handed down by Row/Column/Container. A fixed fallback
+        // width defeats `expand`, cross-axis stretch and Container sizing.
+        .frame(maxWidth: control.number("width") == nil ? .infinity : nil)
+        .frame(maxHeight: fitParentSize ? .infinity : nil)
         .modifier(RufletTextFieldConstraintsModifier(presentation.sizeConstraints))
         .modifier(RufletTextFieldClipModifier(behavior: presentation.clipBehavior))
         .modifier(RufletMouseCursorModifier(cursor: presentation.mouseCursor))
@@ -115,6 +118,10 @@ struct RufletTextInputControl: View {
         onSelectionChange: selectionChanged,
         onTap: { control.triggerEvent("click") },
         onTapOutside: { control.triggerEvent("tap_outside") }))
+      // A platform-view representable is vertically flexible by default and so
+      // absorbs all slack a Column hands down. Flutter sizes a non-multiline
+      // EditableText to its line metrics instead.
+      .fixedSize(horizontal: false, vertical: !fitParentSize && !multiline)
   }
 
   private var inputLayer: some View {
@@ -136,6 +143,15 @@ struct RufletTextInputControl: View {
   private var supportingRow: some View {
     let error = control.buildTextOrWidget("error")
     let helper = control.buildTextOrWidget("helper")
+    // Material only lays out the subtext line when it has content; an always
+    // present row adds a caption-height band under every field.
+    if error != nil || helper != nil || control.value("counter") != nil {
+      supportingContent(error: error, helper: helper)
+    }
+  }
+
+  @ViewBuilder
+  private func supportingContent(error: AnyView?, helper: AnyView?) -> some View {
     HStack(alignment: .top) {
       if let error {
         error.modifier(RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("error_style"))))

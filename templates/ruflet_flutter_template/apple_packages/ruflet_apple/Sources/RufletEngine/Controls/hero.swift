@@ -23,10 +23,10 @@ public struct HeroControl: View {
 
   private var hero: AnyView {
     guard let namespace else {
-      preconditionFailure("HeroControl requires the root RufletHeroScope")
+      return AnyView(ErrorControl("Hero requires the root Ruflet hero scope"))
     }
     guard let content = control.buildWidget("content"), let tag = control.value("tag") else {
-      preconditionFailure("HeroControl content and tag were validated before rendering")
+      return AnyView(ErrorControl("Hero.content must be provided and visible"))
     }
     return AnyView(
       LayoutControl(control: control) {

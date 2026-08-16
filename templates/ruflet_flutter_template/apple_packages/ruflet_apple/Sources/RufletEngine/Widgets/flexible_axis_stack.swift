@@ -20,7 +20,49 @@ struct RufletFlexibleAxisStack: View {
   @State private var availableMainExtent: CGFloat = 0
   @State private var intrinsicMainExtents: [Int: CGFloat] = [:]
 
+  @ViewBuilder
   var body: some View {
+    if #available(macOS 13.0, iOS 16.0, *) {
+      // Single-pass RenderFlex port: no GeometryReader, no PreferenceKey and
+      // no @State feedback, so SwiftUI settles the stack in one layout pass
+      // instead of converging over several.
+      RufletFlexLayout(
+        axis: axis,
+        spacing: spacing,
+        mainAxisAlignment: mainAxisAlignment,
+        crossAxisStretch: crossAxisStretch,
+        crossAxisAlignment: resolvedCrossAlignment,
+        tight: tight
+      ) {
+        ForEach(children, id: \.id) { child in
+          ControlWidget(control: child)
+            .layoutValue(
+              key: RufletFlexParentDataKey.self,
+              value: fixedMainExtents[child.id] == nil
+                ? rufletExpansionContract(for: child) : nil)
+        }
+      }
+    } else {
+      legacyBody
+    }
+  }
+
+  private var resolvedCrossAlignment: RufletFlexCrossAlignment {
+    if axis == .horizontal {
+      switch verticalAlignment {
+      case .top: return .start
+      case .bottom: return .end
+      default: return .center
+      }
+    }
+    switch horizontalAlignment {
+    case .trailing: return .end
+    case .center: return .center
+    default: return .start
+    }
+  }
+
+  private var legacyBody: some View {
     Group {
       if axis == .horizontal {
         HStack(alignment: verticalAlignment, spacing: resolvedSpacing) {
@@ -54,6 +96,12 @@ struct RufletFlexibleAxisStack: View {
     ForEach(children, id: \.id) { child in
       ControlWidget(control: child)
         .modifier(RufletCrossAxisStretchModifier(axis: axis, enabled: crossAxisStretch))
+        .modifier(
+          RufletIntrinsicMainAxisModifier(
+            axis: axis,
+            enabled: rufletExpansionContract(for: child) == nil
+              && fixedMainExtents[child.id] == nil)
+        )
         .modifier(
           RufletFlexAllocationModifier(
             axis: axis,
@@ -206,6 +254,27 @@ func rufletFlexAllocation(
   let gaps = spacing * CGFloat(max(childCount - 1, 0))
   let remaining = max(availableExtent - fixedExtent - gaps, 0)
   return remaining * CGFloat(flex) / CGFloat(totalFlex)
+}
+
+/// Flutter's `RenderFlex` lays a non-flex child out with **no maximum** on the
+/// main axis (`BoxConstraints(maxHeight: ...)` for a horizontal flex), so the
+/// child takes its intrinsic extent and the row overflows when it does not fit.
+/// A SwiftUI stack instead compresses its children, and `Text` is the most
+/// compressible thing in the row — so labels beside an icon are squeezed to
+/// nothing while the icon keeps its size. That is why "Run", "Files" and
+/// "Read-only preview" vanished while their icons stayed.
+private struct RufletIntrinsicMainAxisModifier: ViewModifier {
+  let axis: Axis
+  let enabled: Bool
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if enabled {
+      content.fixedSize(horizontal: axis == .horizontal, vertical: axis == .vertical)
+    } else {
+      content
+    }
+  }
 }
 
 private struct RufletCrossAxisStretchModifier: ViewModifier {

@@ -13,7 +13,7 @@ public struct RadioControl: View {
 
   public var body: some View {
     guard groupSelection != nil else {
-      preconditionFailure("Radio must be enclosed within RadioGroup")
+      return AnyView(ErrorControl("Radio must be enclosed within RadioGroup"))
     }
     let presentation = RufletRadioPresentation(control: control)
     return AnyView(

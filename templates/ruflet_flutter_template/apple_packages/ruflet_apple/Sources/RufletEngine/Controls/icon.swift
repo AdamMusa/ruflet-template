@@ -10,19 +10,22 @@ public struct IconControl: View {
   public var body: some View {
     let presentation = RufletIconPresentation(control: control)
     LayoutControl(control: control) {
-      RufletScaledIcon(
-        icon: icon,
-        presentation: presentation,
-        color: parseColor(control.string("color")) ?? .primary,
-        semanticsLabel: control.string("semantics_label"))
+      // Flet passes a nullable `IconData` to Flutter's `Icon`, which paints
+      // nothing when the code is unrecognised. Keep that contract: an unknown
+      // icon leaves a blank slot instead of taking the app down.
+      if let icon {
+        RufletScaledIcon(
+          icon: icon,
+          presentation: presentation,
+          color: parseColor(control.string("color")) ?? .primary,
+          semanticsLabel: control.string("semantics_label"))
+      }
     }
   }
 
-  private var icon: RufletAppleIcon {
-    guard let code = control.integer("icon"), let icon = registry.appleIcon(for: code) else {
-      preconditionFailure("Unknown Ruflet icon: \(control.string("icon") ?? "nil")")
-    }
-    return icon
+  private var icon: RufletAppleIcon? {
+    guard let code = control.integer("icon") else { return nil }
+    return registry.appleIcon(for: code)
   }
 }
 

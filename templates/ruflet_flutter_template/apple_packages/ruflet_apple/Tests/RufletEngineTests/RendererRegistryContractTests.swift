@@ -42,6 +42,17 @@ final class RendererRegistryContractTests: XCTestCase {
       missing, [],
       "Every pinned Flet widget wire type must be registered in the native extension registry")
   }
+
+  func testCoreRegistryDeclaresAndCreatesEveryCoreService() {
+    let backend = RendererRegistryTestBackend()
+    let registry = backend.extensionRegistry
+    let expected = RufletCoreServiceExtension().serviceControlTypes
+
+    XCTAssertEqual(registry.serviceControlTypes, expected)
+    for type in expected {
+      XCTAssertNotNil(registry.service(for: backend.control(type: type)), type)
+    }
+  }
 }
 
 private enum PinnedFletCoreWidgetTypes {

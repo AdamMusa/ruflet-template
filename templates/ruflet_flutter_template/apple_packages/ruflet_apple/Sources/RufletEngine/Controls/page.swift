@@ -47,7 +47,7 @@ public struct PageControl: View {
     }
     .onAppear(perform: mount)
     .onDisappear(perform: unmount)
-    .onChange(of: control.properties) { _ in controlUpdated() }
+    .onChange(of: control.revision) { _ in controlUpdated() }
     .onChange(of: colorScheme) { scheme in
       backend.updateBrightness(scheme == .dark ? "dark" : "light")
     }

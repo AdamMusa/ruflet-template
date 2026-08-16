@@ -6,7 +6,8 @@ public struct CupertinoDialogActionControl: View {
     public init(control: RufletControl) { self.control = control }
     public var body: some View {
         guard let content = control.buildTextOrWidget("content") else {
-            preconditionFailure("CupertinoDialogAction.content must be a string or visible Control")
+            return AnyView(
+                ErrorControl("CupertinoDialogAction.content must be a string or visible Control"))
         }
         return AnyView(BaseControl(control: control) {
             Button(action: { control.triggerEvent("click") }) { content }

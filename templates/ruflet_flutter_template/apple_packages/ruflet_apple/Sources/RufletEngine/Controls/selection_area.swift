@@ -17,17 +17,19 @@ public struct SelectionAreaControl: View {
   @ObservedObject public var control: RufletControl
   public init(control: RufletControl) { self.control = control }
 
+  @ViewBuilder
   public var body: some View {
-    guard let content = control.buildWidget("content") else {
-      preconditionFailure("SelectionArea.content must be provided and visible")
+    if let content = control.buildWidget("content") {
+      BaseControl(control: control) {
+        content
+          .textSelection(.enabled)
+          .environment(\.rufletSelectionAreaReporter) { text, selection in
+            rufletSelectionAreaChanged(control: control, text: text, selection: selection)
+          }
+      }
+    } else {
+      ErrorControl("SelectionArea.content must be provided and visible")
     }
-    return AnyView(BaseControl(control: control) {
-      content
-        .textSelection(.enabled)
-        .environment(\.rufletSelectionAreaReporter) { text, selection in
-          rufletSelectionAreaChanged(control: control, text: text, selection: selection)
-        }
-    })
   }
 }
 

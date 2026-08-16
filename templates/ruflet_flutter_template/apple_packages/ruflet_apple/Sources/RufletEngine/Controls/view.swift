@@ -30,10 +30,7 @@ public struct ViewControl: View {
       .environment(\.rufletViewScrolledUnder, scrolledUnderAppBar)
       .onAppear(perform: mount)
       .onDisappear(perform: unmount)
-      .onChange(of: control.properties) { _ in controlUpdated() }
-      .onPreferenceChange(RufletViewScrollPositionKey.self) { position in
-        scrolledUnderAppBar = position < -0.5
-      }
+      .onChange(of: control.revision) { _ in controlUpdated() }
   }
 
   private var decoratedView: some View {
@@ -56,8 +53,14 @@ public struct ViewControl: View {
         if let appBar = control.child("appbar") {
           appBarView(appBar)
             .background {
+              // Reported straight into state rather than through a
+              // PreferenceKey: the observer sits on the ZStack that holds the
+              // whole page, so a preference here is collected and reduced once
+              // per control per layout pass.
               GeometryReader { proxy in
-                Color.clear.preference(key: RufletTopBarSizeKey.self, value: proxy.size.height)
+                Color.clear
+                  .onAppear { topBarHeight = proxy.size.height }
+                  .onChange(of: proxy.size.height) { topBarHeight = $0 }
               }
             }
         }
@@ -70,7 +73,9 @@ public struct ViewControl: View {
           ControlWidget(control: bottom)
             .background {
               GeometryReader { proxy in
-                Color.clear.preference(key: RufletBottomBarSizeKey.self, value: proxy.size.height)
+                Color.clear
+                  .onAppear { bottomBarHeight = proxy.size.height }
+                  .onChange(of: proxy.size.height) { bottomBarHeight = $0 }
               }
             }
         }
@@ -102,8 +107,6 @@ public struct ViewControl: View {
 
       drawerLayers
     }
-    .onPreferenceChange(RufletTopBarSizeKey.self) { topBarHeight = $0 }
-    .onPreferenceChange(RufletBottomBarSizeKey.self) { bottomBarHeight = $0 }
   }
 
   @ViewBuilder
@@ -121,10 +124,18 @@ public struct ViewControl: View {
     )
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: viewAlignment)
     .background {
-      GeometryReader { proxy in
-        Color.clear.preference(
-          key: RufletViewScrollPositionKey.self,
-          value: proxy.frame(in: .named("ruflet_view_scroll_\(control.id)")).minY)
+      // A PreferenceKey is collected and reduced across *every* descendant of
+      // the view that observes it, so publishing the scroll offset this way
+      // cost one reduce per control per layout pass — by far the most
+      // expensive thing on a large page. Only the app bar's scrolled-under
+      // state needs this, so read the offset directly and only when an app bar
+      // is actually present.
+      if control.child("appbar") != nil {
+        GeometryReader { proxy in
+          let offset = proxy.frame(in: .named("ruflet_view_scroll_\(control.id)")).minY
+          Color.clear
+            .onChange(of: offset < -0.5) { scrolledUnderAppBar = $0 }
+        }
       }
     }
 
@@ -426,24 +437,9 @@ private struct RufletFloatingActionPlacement<Content: View>: View {
   }
 }
 
-private struct RufletBottomBarSizeKey: PreferenceKey {
-  static let defaultValue = 0.0
-  static func reduce(value: inout Double, nextValue: () -> Double) { value = nextValue() }
-}
-
-private struct RufletTopBarSizeKey: PreferenceKey {
-  static let defaultValue = 0.0
-  static func reduce(value: inout Double, nextValue: () -> Double) { value = nextValue() }
-}
-
 private struct RufletFloatingActionSizeKey: PreferenceKey {
   static let defaultValue = CGSize(width: 56, height: 56)
   static func reduce(value: inout CGSize, nextValue: () -> CGSize) { value = nextValue() }
-}
-
-private struct RufletViewScrollPositionKey: PreferenceKey {
-  static let defaultValue = 0.0
-  static func reduce(value: inout Double, nextValue: () -> Double) { value = nextValue() }
 }
 
 @MainActor

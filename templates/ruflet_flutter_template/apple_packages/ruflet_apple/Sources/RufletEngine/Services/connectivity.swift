@@ -6,14 +6,15 @@ import RufletProtocol
 public final class ConnectivityService: RufletInvokableService {
   private var monitor: NWPathMonitor?
   private var latest: [String] = ["none"]
+  private var pathReady = false
+  private var pathWaiters: [CheckedContinuation<[String], Never>] = []
 
   public override func initialize() {
     super.initialize()
-    refreshCurrentPath()
-    updateListeners()
+    startMonitor()
   }
 
-  public override func update() { updateListeners() }
+  public override func update() {}
 
   public override func invoke(
     _ name: String,
@@ -22,33 +23,37 @@ public final class ConnectivityService: RufletInvokableService {
     guard name == "get_connectivity" else {
       throw RufletServiceError.unknownMethod(service: "Connectivity", method: name)
     }
-    return .array(latest.map(RufletValue.string))
+    let current = pathReady
+      ? latest
+      : await withCheckedContinuation { pathWaiters.append($0) }
+    return .array(current.map(RufletValue.string))
   }
 
-  private func updateListeners() {
-    let shouldListen = control.hasEventHandler("change")
-    if shouldListen, monitor == nil {
-      let nextMonitor = NWPathMonitor()
-      nextMonitor.pathUpdateHandler = { [weak self] path in
-        Task { @MainActor in
-          guard let self else { return }
-          self.latest = Self.results(for: path)
+  private func startMonitor() {
+    guard monitor == nil else { return }
+    let nextMonitor = NWPathMonitor()
+    nextMonitor.pathUpdateHandler = { [weak self] path in
+      Task { @MainActor in
+        guard let self else { return }
+        let next = Self.results(for: path)
+        let changed = next != self.latest
+        self.latest = next
+        self.pathReady = true
+        let waiters = self.pathWaiters
+        self.pathWaiters.removeAll()
+        waiters.forEach { $0.resume(returning: next) }
+        if changed, self.control.hasEventHandler("change") {
           self.control.triggerEvent("change", data: [
             "connectivity": .array(self.latest.map(RufletValue.string))
           ])
         }
       }
-      monitor = nextMonitor
-      nextMonitor.start(queue: DispatchQueue(label: "dev.ruflet.connectivity"))
-    } else if !shouldListen {
-      monitor?.cancel()
-      monitor = nil
     }
-  }
-
-  private func refreshCurrentPath() {
-    let currentMonitor = NWPathMonitor()
-    latest = Self.results(for: currentMonitor.currentPath)
+    monitor = nextMonitor
+    // NWPathMonitor.currentPath is not populated until the monitor starts.
+    // Keeping one monitor alive makes get_connectivity return the actual last
+    // path even when the Ruby control did not subscribe to on_change.
+    nextMonitor.start(queue: DispatchQueue(label: "dev.ruflet.connectivity"))
   }
 
   private static func results(for path: NWPath) -> [String] {
@@ -64,7 +69,8 @@ public final class ConnectivityService: RufletInvokableService {
   public override func dispose() {
     monitor?.cancel()
     monitor = nil
+    pathWaiters.forEach { $0.resume(returning: latest) }
+    pathWaiters.removeAll()
     super.dispose()
   }
 }
-

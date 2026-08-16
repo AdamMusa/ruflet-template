@@ -112,7 +112,7 @@ private struct RufletLayoutControlModifier: ViewModifier {
       .animation(
         parseAnimation(control.dynamicValue("animate_offset"))?.animation, value: offset ?? .zero
       )
-      .aspectRatio(control.number("aspect_ratio").map { CGFloat($0) }, contentMode: .fit)
+      .modifier(RufletAspectRatioModifier(ratio: control.number("aspect_ratio")))
       .modifier(RufletAlignmentModifier(alignment: alignment))
       .animation(parseAnimation(control.dynamicValue("animate_align"))?.animation, value: alignment)
       .padding(margin ?? EdgeInsets())
@@ -129,19 +129,27 @@ private struct RufletLayoutControlModifier: ViewModifier {
 struct RufletConstrainedSizeModifier: ViewModifier {
   let size: RufletSizeContract
   var alignment: Alignment = .center
+  /// Flutter's `Container` wraps its child in `Align` as soon as `alignment`
+  /// is set, and an `Align` without width/height factors expands to fill the
+  /// incoming bounded constraints before positioning the child. Without this
+  /// the container shrink-wraps and the alignment is unobservable.
+  var fillsAvailableSpace = false
 
   func body(content: Content) -> some View {
-    // Flutter's SizedBox is still bounded by its parent's constraints.
-    // SwiftUI's `frame(width:height:)` can overflow a narrower viewport;
-    // ideal+maximum dimensions preserve the requested size while allowing
-    // the parent to clamp it exactly like Flutter's constraint pipeline.
+    // An explicit Flet width/height is a *tight* constraint: Flutter's
+    // SizedBox/Container hands the child exactly that extent and overflows if
+    // the parent is too small — it never shrinks to fit. Leaving `minWidth`
+    // nil makes the SwiftUI frame flexible instead, so an over-subscribed
+    // HStack/VStack silently compresses it. That is what collapses a
+    // `width: 300` sidebar to 136pt, squeezes ListTile titles to zero width
+    // and overlaps AppBar leading widgets.
     content.frame(
-      minWidth: nil,
+      minWidth: size.width,
       idealWidth: size.width,
-      maxWidth: size.width,
-      minHeight: nil,
+      maxWidth: size.width ?? (fillsAvailableSpace ? .infinity : nil),
+      minHeight: size.height,
       idealHeight: size.height,
-      maxHeight: size.height,
+      maxHeight: size.height ?? (fillsAvailableSpace ? .infinity : nil),
       alignment: alignment)
   }
 }
@@ -387,6 +395,23 @@ private struct RufletMeasuredOffset: ViewModifier {
   }
 }
 
+/// Flet only wraps a control in `AspectRatio` when `aspect_ratio` is set.
+/// SwiftUI's `aspectRatio(nil, contentMode:)` is not a no-op — it adopts the
+/// child's own ideal aspect ratio and fits the child inside the proposal, which
+/// silently shrinks every control and collapses expanding frames.
+private struct RufletAspectRatioModifier: ViewModifier {
+  let ratio: Double?
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if let ratio, ratio > 0 {
+      content.aspectRatio(CGFloat(ratio), contentMode: .fit)
+    } else {
+      content
+    }
+  }
+}
+
 private struct RufletAlignmentModifier: ViewModifier {
   let alignment: RufletAlignment?
 
@@ -526,7 +551,20 @@ private struct RufletLayoutAnimationCompletionModifier: ViewModifier {
   @ObservedObject var control: RufletControl
   @State private var tasks: [String: Task<Void, Never>] = [:]
 
+  @ViewBuilder
   func body(content: Content) -> some View {
+    // Each of these five observers materializes a wire value and renders it
+    // through `String(describing:)` on every body evaluation of every layout
+    // control in the tree. `schedule` already refuses to fire without an
+    // `animation_end` subscriber, so the work is dead weight until then.
+    if control.boolean("on_animation_end", default: false) {
+      observed(content)
+    } else {
+      content
+    }
+  }
+
+  private func observed(_ content: Content) -> some View {
     content
       .onChange(of: control.dynamicValue("rotate").map(String.init(describing:)) ?? "") { _ in
         schedule("rotation", "animate_rotation")

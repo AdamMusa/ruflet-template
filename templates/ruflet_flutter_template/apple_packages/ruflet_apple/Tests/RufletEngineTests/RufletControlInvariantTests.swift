@@ -107,14 +107,13 @@ final class RufletControlInvariantTests: XCTestCase {
     XCTAssertEqual(order, [1, 2])
   }
 
-  func testMalformedPatchRollsBackEveryEarlierOperation() throws {
+  func testMalformedPatchKeepsEarlierOperationsLikePinnedFlet() throws {
     let backend = ControlInvariantBackend()
     let root = RufletControl(
       id: 1,
       type: "Page",
       properties: ["controls": .array([control(2, "Text", ["value": "A"])])],
       backend: backend)
-    let before = root.valueMap
     let tree: RufletValue = .array([
       0,
       .map(["controls": .array([1])]),
@@ -126,8 +125,8 @@ final class RufletControlInvariantTests: XCTestCase {
     ]
 
     XCTAssertThrowsError(try root.applyPatch(patch))
-    XCTAssertEqual(root.valueMap, before)
-    XCTAssertNil(backend.controls[3])
+    XCTAssertEqual(root.children("controls").map(\.id), [2, 3])
+    XCTAssertNotNil(backend.controls[3])
   }
 
   func testPatchTreePreservesIntegerKeysAndTargetsNestedControl() throws {

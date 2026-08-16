@@ -9,12 +9,17 @@ final class ServicePortTests: XCTestCase {
   func testCoreFactoryContainsAllPinnedServicesIncludingBrowserContextMenuNoOp() {
     let backend = ServiceTestBackend()
     let factory = RufletCoreServiceExtension()
-    XCTAssertTrue(factory.createService(for: backend.control(type: "Accelerometer")) is AccelerometerService)
-    XCTAssertTrue(factory.createService(for: backend.control(type: "FilePicker")) is FilePickerService)
-    XCTAssertTrue(factory.createService(for: backend.control(type: "Window")) is WindowService)
-    XCTAssertTrue(
-      factory.createService(for: backend.control(type: "BrowserContextMenu"))
-        is BrowserContextMenuService)
+    let expected: Set<String> = [
+      "Accelerometer", "Barometer", "Battery", "BrowserContextMenu", "Clipboard",
+      "Connectivity", "FilePicker", "Gyroscope", "HapticFeedback", "Magnetometer",
+      "ScreenBrightness", "SemanticsService", "ShakeDetector", "Share",
+      "SharedPreferences", "StoragePaths", "Tester", "UrlLauncher", "UserAccelerometer",
+      "Wakelock", "Window",
+    ]
+    XCTAssertEqual(factory.serviceControlTypes, expected)
+    for type in expected {
+      XCTAssertNotNil(factory.createService(for: backend.control(type: type)), type)
+    }
   }
 
   func testAccelerometerSerializationPreservesFletWireNames() {

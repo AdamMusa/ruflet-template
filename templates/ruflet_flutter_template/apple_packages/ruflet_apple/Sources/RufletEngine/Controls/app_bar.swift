@@ -69,18 +69,22 @@ struct RufletAppleAppBar: View {
   @ViewBuilder
   private var barContent: some View {
     if centerTitle && !isLarge {
-      ZStack {
+      // Flutter's `NavigationToolbar` lays the middle out *between* the
+      // leading and trailing slots and clamps it so it can never overlap them.
+      // Stacking the title over the row instead painted it on top of the back
+      // button whenever the two occupied the same pixels.
+      HStack(spacing: 0) {
+        leading
         if let title {
           title
             .modifier(RufletTextStyleModifier(style: titleStyle))
             .modifier(RufletHeaderSemantics(excluded: excludeHeaderSemantics))
             .padding(.horizontal, titleSpacing)
-        }
-        HStack(spacing: 0) {
-          leading
+            .frame(maxWidth: .infinity)
+        } else {
           Spacer(minLength: 0)
-          actions
         }
+        actions
       }
     } else {
       HStack(spacing: titleSpacing) {

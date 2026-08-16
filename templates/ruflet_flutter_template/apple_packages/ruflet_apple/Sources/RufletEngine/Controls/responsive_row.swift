@@ -4,6 +4,7 @@ import SwiftUI
 @MainActor
 public struct ResponsiveRowControl: View, RufletStoreMixin {
   @ObservedObject public var control: RufletControl
+  @State private var contentHeight: CGFloat = 0
 
   public init(control: RufletControl) {
     self.control = control
@@ -12,11 +13,32 @@ public struct ResponsiveRowControl: View, RufletStoreMixin {
   public var body: some View {
     withPageSize { page in
       LayoutControl(control: control) {
+        // The GeometryReader supplies the width the responsive column maths
+        // needs, but it has no intrinsic size of its own: it adopts whatever
+        // the parent proposes, and a vertical ScrollView proposes an
+        // *unspecified* height. That collapsed the whole ResponsiveRow to a
+        // few points tall however many rows of cards it held, so the cards
+        // painted outside their parent's bounds — the scroll view saw no
+        // content to scroll and hit-testing resolved against the wrong frames.
+        // Adopt the laid-out content's height so the row reports the extent
+        // Flutter's Wrap would.
         GeometryReader { proxy in
           responsiveContent(
             width: proxy.size.width,
             pageWidth: page.size.width,
-            pageBreakpoints: page.breakpoints)
+            pageBreakpoints: page.breakpoints
+          )
+          .background {
+            GeometryReader { content in
+              Color.clear.preference(
+                key: RufletResponsiveRowHeightKey.self,
+                value: content.size.height)
+            }
+          }
+        }
+        .frame(height: contentHeight > 0 ? contentHeight : nil)
+        .onPreferenceChange(RufletResponsiveRowHeightKey.self) { height in
+          if height > 0 { contentHeight = height }
         }
       }
     }
@@ -127,4 +149,11 @@ public struct ResponsiveRowControl: View, RufletStoreMixin {
     }
   }
 
+}
+
+private struct RufletResponsiveRowHeightKey: PreferenceKey {
+  static let defaultValue = CGFloat.zero
+  static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+    value = max(value, nextValue())
+  }
 }

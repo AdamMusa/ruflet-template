@@ -8,6 +8,8 @@ import SwiftUI
 public struct RufletCoreExtension: RufletExtension {
   private let services = RufletCoreServiceExtension()
 
+  public var serviceControlTypes: Set<String> { services.serviceControlTypes }
+
   public let renderedControlTypes: Set<String> = [
     "AdaptiveAlertDialog", "AdaptiveButton", "AdaptiveCheckbox", "AdaptiveRadio", "AdaptiveSlider",
     "AdaptiveSwitch", "AdaptiveTextField",

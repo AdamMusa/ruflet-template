@@ -22,7 +22,8 @@ public struct ContainerControl: View {
         .modifier(
           RufletConstrainedSizeModifier(
             size: rufletSizeContract(for: control),
-            alignment: parseAlignment(control.dynamicValue("alignment"), .center)!.swiftUI
+            alignment: parseAlignment(control.dynamicValue("alignment"), .center)!.swiftUI,
+            fillsAvailableSpace: control.value("alignment") != nil
           )
         )
         .background {
@@ -49,19 +50,25 @@ public struct ContainerControl: View {
         .modifier(RufletContainerBackdropModifier(presentation: presentation))
         .modifier(RufletContainerColorFilterModifier(filter: presentation.colorFilter))
         .allowsHitTesting(!control.boolean("ignore_interactions", default: false))
-        .animation(animation?.animation, value: animationSignature)
+        .animation(animation?.animation, value: animationSignature(animated: animation != nil))
         .modifier(RufletContainerAnimationCompletion(control: control, animation: animation))
     }
   }
 
-  private var animationSignature: String {
-    [
-      "width", "height", "bgcolor", "padding", "margin", "alignment", "border_radius",
-      "border", "shape", "gradient", "blend_mode", "shadow", "image",
-      "foreground_decoration", "blur", "color_filter", "clip_behavior",
-    ]
-    .map { control.dynamicValue($0).map(String.init(describing:)) ?? "nil" }
-    .joined(separator: "|")
+  /// Materializing seventeen wire values and rendering each through
+  /// `String(describing:)` costs more than the rest of a Container's body, and
+  /// it is dead work unless `animate` is set: SwiftUI only consults the value
+  /// when there is an animation to drive.
+  private func animationSignature(animated: Bool) -> String {
+    guard animated else { return "" }
+    return
+      [
+        "width", "height", "bgcolor", "padding", "margin", "alignment", "border_radius",
+        "border", "shape", "gradient", "blend_mode", "shadow", "image",
+        "foreground_decoration", "blur", "color_filter", "clip_behavior",
+      ]
+      .map { control.dynamicValue($0).map(String.init(describing:)) ?? "nil" }
+      .joined(separator: "|")
   }
 }
 
@@ -595,17 +602,26 @@ private struct RufletContainerAnimationCompletion: ViewModifier {
   let animation: ImplicitAnimationDetails?
   @State private var task: Task<Void, Never>?
 
+  @ViewBuilder
   func body(content: Content) -> some View {
-    content
-      .onChange(of: control.properties) { _ in
-        guard control.hasEventHandler("animation_end"), let animation else { return }
-        task?.cancel()
-        task = Task { @MainActor in
-          try? await Task.sleep(nanoseconds: rufletSleepNanoseconds(animation.duration))
-          guard !Task.isCancelled else { return }
-          control.triggerEvent("animation_end", data: .string("container"))
+    // `onChange(of: control.properties)` makes SwiftUI deep-compare the whole
+    // materialized property map — which contains the control's entire nested
+    // subtree — on every render pass. Installing that on every Container makes
+    // redraw cost quadratic in tree size. The handler already refuses to fire
+    // without both an animation and a subscriber, so only observe then.
+    if let animation, control.hasEventHandler("animation_end") {
+      content
+        .onChange(of: control.properties) { _ in
+          task?.cancel()
+          task = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: rufletSleepNanoseconds(animation.duration))
+            guard !Task.isCancelled else { return }
+            control.triggerEvent("animation_end", data: .string("container"))
+          }
         }
-      }
-      .onDisappear { task?.cancel() }
+        .onDisappear { task?.cancel() }
+    } else {
+      content
+    }
   }
 }

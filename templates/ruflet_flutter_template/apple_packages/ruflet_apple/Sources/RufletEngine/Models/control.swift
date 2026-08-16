@@ -64,6 +64,23 @@ private indirect enum RufletMaterializedValue {
     case .keyedMap(let values): return .keyedMap(values.mapValues(\.propertyWireValue))
     }
   }
+
+  /// A shallow Equatable projection for SwiftUI `onChange` observers.
+  /// Flet stores child `Control` references in its properties map; a child
+  /// mutation therefore does not rebuild the parent's complete serialized
+  /// subtree. Preserve that behavior by representing nested controls by
+  /// identity here. Full recursive encoding remains available through
+  /// `wireValue`, `valueMap`, and `propertyWireValue` at actual wire boundaries.
+  @MainActor var observationValue: RufletValue {
+    switch self {
+    case .scalar(let value): return value
+    case .control(let control):
+      return .map(["_c": .string(control.type), "_i": .int(Int64(control.id))])
+    case .array(let values): return .array(values.map(\.observationValue))
+    case .map(let values): return .map(values.mapValues(\.observationValue))
+    case .keyedMap(let values): return .keyedMap(values.mapValues(\.observationValue))
+    }
+  }
 }
 
 private struct RufletInvokeListener {
@@ -83,6 +100,11 @@ public final class RufletControl: ObservableObject, Identifiable {
   public let id: Int
   public let type: String
   public private(set) var properties: [String: RufletValue]
+  /// Monotonic change counter. `properties` holds this control's entire
+  /// materialized subtree, so `onChange(of: properties)` costs a deep compare
+  /// of every descendant on every render pass — quadratic on a large page.
+  /// Observers that only need "did this control update" compare this instead.
+  public private(set) var revision: Int = 0
   public var notifyParent = false
   public private(set) weak var parentControl: RufletControl?
   public unowned let backend: RufletBackendProtocol
@@ -250,15 +272,15 @@ public final class RufletControl: ObservableObject, Identifiable {
     return !changedPaths.isEmpty
   }
 
-  /// Applies every operation to a detached wire snapshot, then reconciles the
-  /// materialized tree once. A malformed later operation therefore cannot
-  /// leave earlier operations partially applied.
+  /// Applies operations directly to their indexed target, matching Flet's
+  /// `Control.applyPatch`. Only values on the addressed path are copied by
+  /// Swift's value semantics; the complete control tree is never serialized
+  /// to a wire snapshot or recursively reconciled.
   public func applyPatch(_ patch: [RufletValue], notify: Bool = true) throws {
     guard patch.count >= 2 else { throw RufletPatchError.malformedPatch }
     var paths: [Int: [RufletValue]] = [:]
     try buildPatchPaths(patch[0], path: [], result: &paths)
 
-    var snapshot = RufletValue.map(properties)
     for encodedOperation in patch.dropFirst() {
       guard let operation = encodedOperation.array,
             let opcode = operation.first?.integer,
@@ -266,18 +288,39 @@ public final class RufletControl: ObservableObject, Identifiable {
       else { throw RufletPatchError.malformedOperation }
 
       switch operationType {
-      case .replace, .add, .remove:
-        let expectedCount = operationType == .remove ? 3 : 4
-        guard operation.count == expectedCount,
+      case .replace:
+        guard operation.count == 4,
               let targetID = operation[1].integer,
               let path = paths[targetID]
         else { throw RufletPatchError.malformedOperation }
-        try mutateSnapshot(
-          &snapshot,
-          path: path,
-          operation: operationType,
-          key: operation[2],
-          value: operationType == .remove ? nil : operation[3])
+        let owner = try mutatePatchTarget(path: path) { container, owner in
+          try patchReplace(&container, key: operation[2], value: operation[3], owner: owner)
+          return owner
+        }
+        if notify { owner.notify() }
+        if operation[2].text == "visible" { owner.parentControl?.notify() }
+
+      case .add:
+        guard operation.count == 4,
+              let targetID = operation[1].integer,
+              let path = paths[targetID]
+        else { throw RufletPatchError.malformedOperation }
+        let owner = try mutatePatchTarget(path: path) { container, owner in
+          try patchAdd(&container, key: operation[2], value: operation[3], owner: owner)
+          return owner
+        }
+        if notify { owner.notify() }
+
+      case .remove:
+        guard operation.count == 3,
+              let targetID = operation[1].integer,
+              let path = paths[targetID]
+        else { throw RufletPatchError.malformedOperation }
+        let owner = try mutatePatchTarget(path: path) { container, owner in
+          _ = try patchRemove(&container, key: operation[2])
+          return owner
+        }
+        if notify { owner.notify() }
 
       case .move:
         guard operation.count == 5,
@@ -286,30 +329,27 @@ public final class RufletControl: ObservableObject, Identifiable {
               let sourcePath = paths[sourceID],
               let destinationPath = paths[destinationID]
         else { throw RufletPatchError.malformedOperation }
-        let moved = try removeSnapshotValue(&snapshot, path: sourcePath, key: operation[2])
-        try mutateSnapshot(
-          &snapshot,
-          path: destinationPath,
-          operation: .add,
-          key: operation[4],
-          value: moved)
+        let sourceKind = try patchContainerKind(path: sourcePath)
+        let destinationKind = try patchContainerKind(path: destinationPath)
+        guard sourceKind == destinationKind else { throw RufletPatchError.invalidPath }
+        var sourceOwner: RufletControl?
+        let moved = try mutatePatchTarget(path: sourcePath) { container, owner in
+          sourceOwner = owner
+          guard let value = try patchRemove(&container, key: operation[2]) else {
+            throw RufletPatchError.invalidPath
+          }
+          return value
+        }
+        let destinationOwner = try mutatePatchTarget(path: destinationPath) { container, owner in
+          try patchInsertMaterialized(&container, key: operation[4], value: moved)
+          return owner
+        }
+        if notify {
+          if let sourceOwner, sourceOwner !== destinationOwner { sourceOwner.notify() }
+          destinationOwner.notify()
+        }
       }
     }
-
-    guard let patchedProperties = snapshot.map else { throw RufletPatchError.invalidPath }
-    var changedPaths: [String] = []
-    var changedControls: [RufletControl] = []
-    var visibleOwners: [RufletControl] = []
-    reconcileProperties(
-      patchedProperties,
-      changedPaths: &changedPaths,
-      changedControls: &changedControls,
-      visibleOwners: &visibleOwners)
-    finishMutation(
-      changedPaths: changedPaths,
-      changedControls: changedControls,
-      visibleOwners: visibleOwners,
-      notify: notify)
   }
 
   @discardableResult
@@ -800,13 +840,14 @@ public final class RufletControl: ObservableObject, Identifiable {
       parentControl.notify()
       return
     }
+    revision &+= 1
     objectWillChange.send()
     let listeners = updateListeners
     listeners.forEach { $0.callback() }
   }
 
   private func synchronizeWireProperties() {
-    properties = materializedProperties.mapValues(\.wireValue)
+    properties = materializedProperties.mapValues(\.observationValue)
   }
 
   private func waitForInvokeMethodListener() async throws {
@@ -828,6 +869,169 @@ public final class RufletControl: ObservableObject, Identifiable {
 
   private func resumeInvokeWaiter(_ id: UUID) {
     invokeListenerWaiters.removeValue(forKey: id)?.resume()
+  }
+
+  private enum PatchContainerKind: Equatable {
+    case array
+    case map
+  }
+
+  private func mutatePatchTarget<Result>(
+    path: [RufletValue],
+    mutation: (inout RufletMaterializedValue, RufletControl) throws -> Result
+  ) throws -> Result {
+    var root = RufletMaterializedValue.map(materializedProperties)
+    let result = try mutatePatchTargetValue(
+      &root, path: ArraySlice(path), owner: self, mutation: mutation)
+    guard case .map(let updated) = root else { throw RufletPatchError.invalidPath }
+    materializedProperties = updated
+    synchronizeWireProperties()
+    return result
+  }
+
+  private func mutatePatchTargetValue<Result>(
+    _ value: inout RufletMaterializedValue,
+    path: ArraySlice<RufletValue>,
+    owner: RufletControl,
+    mutation: (inout RufletMaterializedValue, RufletControl) throws -> Result
+  ) throws -> Result {
+    if case .control(let control) = value {
+      var properties = RufletMaterializedValue.map(control.materializedProperties)
+      let result = try control.mutatePatchTargetValue(
+        &properties, path: path, owner: control, mutation: mutation)
+      guard case .map(let updated) = properties else { throw RufletPatchError.invalidPath }
+      control.materializedProperties = updated
+      control.synchronizeWireProperties()
+      return result
+    }
+
+    guard let component = path.first else { return try mutation(&value, owner) }
+    let remaining = path.dropFirst()
+    if let name = component.text {
+      if case .map(var values) = value, var child = values[name] {
+        let result = try mutatePatchTargetValue(
+          &child, path: remaining, owner: owner, mutation: mutation)
+        values[name] = child
+        value = .map(values)
+        return result
+      }
+      if case .keyedMap(var values) = value, var child = values[.string(name)] {
+        let result = try mutatePatchTargetValue(
+          &child, path: remaining, owner: owner, mutation: mutation)
+        values[.string(name)] = child
+        value = .keyedMap(values)
+        return result
+      }
+    }
+    if let index = component.integer {
+      if case .array(var values) = value, values.indices.contains(index) {
+        var child = values[index]
+        let result = try mutatePatchTargetValue(
+          &child, path: remaining, owner: owner, mutation: mutation)
+        values[index] = child
+        value = .array(values)
+        return result
+      }
+      if case .keyedMap(var values) = value, var child = values[.int(Int64(index))] {
+        let result = try mutatePatchTargetValue(
+          &child, path: remaining, owner: owner, mutation: mutation)
+        values[.int(Int64(index))] = child
+        value = .keyedMap(values)
+        return result
+      }
+    }
+    throw RufletPatchError.invalidPath
+  }
+
+  private func patchContainerKind(path: [RufletValue]) throws -> PatchContainerKind {
+    try mutatePatchTarget(path: path) { container, _ in
+      switch container {
+      case .array: return .array
+      case .map, .keyedMap: return .map
+      default: throw RufletPatchError.invalidPath
+      }
+    }
+  }
+
+  private func patchReplace(
+    _ container: inout RufletMaterializedValue,
+    key: RufletValue,
+    value: RufletValue,
+    owner: RufletControl
+  ) throws {
+    let transformed = materialize(value, parent: owner)
+    if case .array(var values) = container, let index = key.integer,
+       values.indices.contains(index) {
+      values[index] = transformed
+      container = .array(values)
+      return
+    }
+    try patchAssignMap(&container, key: key, value: transformed)
+  }
+
+  private func patchAdd(
+    _ container: inout RufletMaterializedValue,
+    key: RufletValue,
+    value: RufletValue,
+    owner: RufletControl
+  ) throws {
+    let transformed = materialize(value, parent: owner)
+    try patchInsertMaterialized(&container, key: key, value: transformed)
+  }
+
+  private func patchInsertMaterialized(
+    _ container: inout RufletMaterializedValue,
+    key: RufletValue,
+    value: RufletMaterializedValue
+  ) throws {
+    if case .array(var values) = container, let index = key.integer,
+       index >= 0, index <= values.count {
+      values.insert(value, at: index)
+      container = .array(values)
+      return
+    }
+    try patchAssignMap(&container, key: key, value: value)
+  }
+
+  private func patchAssignMap(
+    _ container: inout RufletMaterializedValue,
+    key: RufletValue,
+    value: RufletMaterializedValue
+  ) throws {
+    if case .map(var values) = container, let name = key.text {
+      values[name] = value
+      container = .map(values)
+      return
+    }
+    if case .keyedMap(var values) = container, let mapKey = RufletMapKey(value: key) {
+      values[mapKey] = value
+      container = .keyedMap(values)
+      return
+    }
+    throw RufletPatchError.invalidPath
+  }
+
+  private func patchRemove(
+    _ container: inout RufletMaterializedValue,
+    key: RufletValue
+  ) throws -> RufletMaterializedValue? {
+    if case .array(var values) = container, let index = key.integer,
+       values.indices.contains(index) {
+      let removed = values.remove(at: index)
+      container = .array(values)
+      return removed
+    }
+    if case .map(var values) = container, let name = key.text {
+      let removed = values.removeValue(forKey: name)
+      container = .map(values)
+      return removed
+    }
+    if case .keyedMap(var values) = container, let mapKey = RufletMapKey(value: key) {
+      let removed = values.removeValue(forKey: mapKey)
+      container = .keyedMap(values)
+      return removed
+    }
+    throw RufletPatchError.invalidPath
   }
 
   private func buildPatchPaths(
@@ -936,11 +1140,18 @@ public final class RufletControl: ObservableObject, Identifiable {
       container = .array(list)
       return
     }
+    // Flet's Dart patch applier assigns and removes map entries
+    // unconditionally (`node.obj[key] = ...` / `node.obj.remove(index)`). A
+    // server routinely replaces a property the control has never carried —
+    // setting `error` on a TextField during validation is the common case — so
+    // requiring the key to pre-exist rejects a valid patch and surfaces it as
+    // an application error.
     if var map = container.map, let name = key.text {
       switch operation {
-      case .remove: guard map.removeValue(forKey: name) != nil else { throw RufletPatchError.invalidPath }
-      case .replace: guard map[name] != nil, let value else { throw RufletPatchError.invalidPath }; map[name] = value
-      case .add: guard let value else { throw RufletPatchError.invalidPath }; map[name] = value
+      case .remove: map.removeValue(forKey: name)
+      case .replace, .add:
+        guard let value else { throw RufletPatchError.invalidPath }
+        map[name] = value
       case .move: throw RufletPatchError.malformedOperation
       }
       container = .map(map)
@@ -948,9 +1159,10 @@ public final class RufletControl: ObservableObject, Identifiable {
     }
     if var map = container.keyedMap, let mapKey = RufletMapKey(value: key) {
       switch operation {
-      case .remove: guard map.removeValue(forKey: mapKey) != nil else { throw RufletPatchError.invalidPath }
-      case .replace: guard map[mapKey] != nil, let value else { throw RufletPatchError.invalidPath }; map[mapKey] = value
-      case .add: guard let value else { throw RufletPatchError.invalidPath }; map[mapKey] = value
+      case .remove: map.removeValue(forKey: mapKey)
+      case .replace, .add:
+        guard let value else { throw RufletPatchError.invalidPath }
+        map[mapKey] = value
       case .move: throw RufletPatchError.malformedOperation
       }
       container = .keyedMap(map)
@@ -987,7 +1199,7 @@ extension RufletControl: @preconcurrency Equatable {
     lhs === rhs
       || (lhs.id == rhs.id
         && lhs.type == rhs.type
-        && lhs.properties == rhs.properties)
+        && lhs.valueMap == rhs.valueMap)
   }
 }
 

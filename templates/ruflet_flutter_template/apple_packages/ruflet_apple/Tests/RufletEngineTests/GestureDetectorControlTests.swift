@@ -113,6 +113,16 @@ final class GestureDetectorControlTests: XCTestCase {
     XCTAssertEqual(backend.events[2].data, backend.events[0].data)
   }
 
+  func testNativePlatformDoubleClickEmitsOnlyPinnedDoubleTap() {
+    let backend = GestureDetectorTestBackend()
+    let coordinator = coordinator(
+      properties: ["on_double_tap": true], backend: backend)
+
+    coordinator.nativeDoubleTap()
+
+    XCTAssertEqual(backend.events.map(\.name), ["double_tap"])
+  }
+
   func testPanUpdatePreservesPinnedRelativeDeltaContract() {
     let backend = GestureDetectorTestBackend()
     let coordinator = coordinator(

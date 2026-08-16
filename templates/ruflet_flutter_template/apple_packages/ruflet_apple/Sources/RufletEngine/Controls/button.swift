@@ -15,6 +15,13 @@ public struct ButtonControl: View {
           control.buildIconOrWidget("icon", color: parseColor(control.string("icon_color")))
           control.buildTextOrWidget("content")
         }
+        // Flutter hands an expanded or explicitly sized button tight
+        // constraints, so its material fills the allocation and only the label
+        // centers inside. The label must claim that space here for the styled
+        // background to follow.
+        .frame(
+          maxWidth: fillsAllocation(.horizontal) ? .infinity : nil,
+          maxHeight: fillsAllocation(.vertical) ? .infinity : nil)
       }
       .buttonStyle(buttonStyle)
       .disabled(control.disabled)
@@ -30,6 +37,12 @@ public struct ButtonControl: View {
       .onAppear { focusCoordinator.attach(to: control) }
       .onDisappear { focusCoordinator.detach(from: control) }
     }
+  }
+
+  private func fillsAllocation(_ axis: RufletExpansionAxis) -> Bool {
+    if rufletExpansionContract(for: control)?.axis == axis { return true }
+    return axis == .horizontal
+      ? control.number("width") != nil : control.number("height") != nil
   }
 
   private var variant: RufletButtonVariant {

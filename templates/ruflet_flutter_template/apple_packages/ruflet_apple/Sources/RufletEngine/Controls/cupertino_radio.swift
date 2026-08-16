@@ -11,7 +11,7 @@ public struct CupertinoRadioControl: View {
 
   public var body: some View {
     guard groupSelection != nil else {
-      preconditionFailure("CupertinoRadio must be enclosed within RadioGroup")
+      return AnyView(ErrorControl("CupertinoRadio must be enclosed within RadioGroup"))
     }
     let presentation = RufletCupertinoRadioPresentation(control: control)
     return AnyView(

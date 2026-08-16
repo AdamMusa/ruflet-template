@@ -10,7 +10,7 @@ public struct SafeAreaControl: View {
 
   public var body: some View {
     guard let content = control.buildWidget("content") else {
-      preconditionFailure("SafeArea.content must be provided and visible")
+      return AnyView(ErrorControl("SafeArea.content must be provided and visible"))
     }
     let configuration = RufletSafeAreaConfiguration(control: control)
     return AnyView(

@@ -17,11 +17,16 @@ public struct RadioGroupControl: View {
     @ObservedObject public var control: RufletControl
     public init(control: RufletControl) { self.control = control }
 
+    @ViewBuilder
     public var body: some View {
-        guard let content = control.buildWidget("content") else {
-            preconditionFailure("RadioGroup.content must be provided and visible")
+        // `@ViewBuilder` instead of returning `AnyView`: type erasure defeats
+        // SwiftUI's structural diffing, so an erased subtree is re-evaluated
+        // wholesale on every update instead of being compared in place.
+        if let content = control.buildWidget("content") {
+            content.environment(\.rufletRadioGroupBinding, selection)
+        } else {
+            ErrorControl("RadioGroup.content must be provided and visible")
         }
-        return AnyView(content.environment(\.rufletRadioGroupBinding, selection))
     }
 
     private var selection: Binding<String?> {

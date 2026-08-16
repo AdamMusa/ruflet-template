@@ -233,6 +233,18 @@ final class RufletGestureEventCoordinator: ObservableObject {
     cancelledTaps.remove(button)
   }
 
+  /// AppKit platform views such as NSTextView run their own mouse tracking
+  /// loop, so their mouse-up events do not reliably pass through a local
+  /// NSEvent monitor. An ancestor NSClickGestureRecognizer supplies the same
+  /// native double-tap decision without intercepting the child control.
+  func nativeDoubleTap() {
+    guard !control.disabled, enabled("on_double_tap") else { return }
+    pendingTap?.cancel()
+    pendingTap = nil
+    lastTapAt = nil
+    emit("double_tap")
+  }
+
   func forcePress(_ phase: RufletForcePressPhase, sample: RufletGesturePointerSample) {
     guard accepts(deviceKind: sample.deviceKind) else { return }
     let event: String
@@ -1010,6 +1022,7 @@ private struct RufletPlatformGestureMonitor: NSViewRepresentable {
 
 private final class RufletMacGestureMonitorView: NSView {
   weak var coordinator: RufletGestureEventCoordinator?
+  private weak var installedView: NSView?
   private var monitor: Any?
   private var pointerInside = false
   private var activeButtons: Set<RufletGesturePointerButton> = []
@@ -1022,7 +1035,8 @@ private final class RufletMacGestureMonitorView: NSView {
   }
 
   func installIfNeeded() {
-    guard monitor == nil, window != nil else { return }
+    guard monitor == nil, window != nil, let target = superview else { return }
+    installedView = target
     window?.acceptsMouseMovedEvents = true
     let mask: NSEvent.EventTypeMask = [
       .leftMouseDown, .leftMouseDragged, .leftMouseUp,
@@ -1039,12 +1053,17 @@ private final class RufletMacGestureMonitorView: NSView {
   func uninstall() {
     if let monitor { NSEvent.removeMonitor(monitor) }
     monitor = nil
+    installedView = nil
   }
 
   private func handle(_ event: NSEvent) {
-    guard let coordinator, event.window === window else { return }
-    let local = convert(event.locationInWindow, from: nil)
-    let inside = bounds.contains(local)
+    guard let coordinator, let target = installedView, event.window === target.window else { return }
+    // NSViewRepresentable backgrounds can keep a zero intrinsic frame even
+    // though SwiftUI proposes the full GestureDetector area. Its superview is
+    // the actual gesture surface, so hit-test in that coordinate space. This
+    // is essential when the child is an NSTextView/other native platform view.
+    let local = target.convert(event.locationInWindow, from: nil)
+    let inside = target.bounds.contains(local)
     let global = event.locationInWindow
     let sample = RufletGesturePointerSample(
       local: .init(local), global: .init(global), deviceKind: "mouse",
@@ -1063,7 +1082,15 @@ private final class RufletMacGestureMonitorView: NSView {
     guard inside || !activeButtons.isEmpty else { return }
 
     switch event.type {
-    case .leftMouseDown: down(.primary, sample: sample)
+    case .leftMouseDown:
+      down(.primary, sample: sample)
+      if event.clickCount >= 2 {
+        // NSTextView and other platform children consume mouse-up inside an
+        // AppKit tracking loop, but the second mouse-down still carries
+        // AppKit's authoritative click count. Defer emission until that loop
+        // returns so the event has the same completed-click ordering as Flet.
+        DispatchQueue.main.async { [weak coordinator] in coordinator?.nativeDoubleTap() }
+      }
     case .leftMouseDragged: coordinator.pointerMove(sample, button: .primary)
     case .leftMouseUp: up(.primary, sample: sample)
     case .rightMouseDown:
