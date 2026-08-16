@@ -23,6 +23,13 @@ final class NativePresentationPrimitiveTests: XCTestCase {
     XCTAssertEqual(RufletShimmerDirection.allCases.map(\.rawValue), ["ltr", "rtl", "ttb", "btt"])
   }
 
+  func testIOSDefaultsToNativePresentationAndHonorsExplicitAdaptiveOverride() {
+    XCTAssertTrue(rufletUsesCupertinoPresentation(adaptive: nil, isIOS: true))
+    XCTAssertFalse(rufletUsesCupertinoPresentation(adaptive: nil, isIOS: false))
+    XCTAssertTrue(rufletUsesCupertinoPresentation(adaptive: true, isIOS: false))
+    XCTAssertFalse(rufletUsesCupertinoPresentation(adaptive: false, isIOS: true))
+  }
+
   func testEveryInitiallyHiddenModalHasANonInteractiveLifecycleAnchor() throws {
     let packageRoot = URL(fileURLWithPath: #filePath)
       .deletingLastPathComponent()

@@ -17,5 +17,7 @@ public struct AdaptiveTextFieldControl: View {
     }
   }
 
-  var usesCupertinoStyle: Bool { control.adaptive == true }
+  var usesCupertinoStyle: Bool {
+    rufletUsesCupertinoPresentation(adaptive: control.adaptive, isIOS: rufletIsIOS)
+  }
 }

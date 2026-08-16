@@ -391,11 +391,19 @@ struct RufletTextInputControl: View {
   }
   private var borderRadius: RufletBorderRadius {
     if borderKind == .underline { return .zero }
+    let defaultRadius: Double = style == .cupertino ? 8 : 4
     return parseBorderRadius(control.dynamicValue("border_radius"),
-      RufletBorderRadius(topLeft: 4, topRight: 4, bottomLeft: 4, bottomRight: 4))!
+      RufletBorderRadius(
+        topLeft: defaultRadius,
+        topRight: defaultRadius,
+        bottomLeft: defaultRadius,
+        bottomRight: defaultRadius))!
   }
   private var activeBorderWidth: CGFloat {
-    CGFloat(focused
+    if style == .cupertino, control.number("border_width") == nil {
+      return focused ? 1 : 0.5
+    }
+    return CGFloat(focused
       ? control.number("focused_border_width") ?? control.number("border_width") ?? 2
       : control.number("border_width") ?? 1)
   }
@@ -403,13 +411,13 @@ struct RufletTextInputControl: View {
     parseColor(focused
       ? control.string("focused_border_color") ?? control.string("border_color")
       : control.string("border_color"))
-      ?? (focused ? .accentColor : .black)
+      ?? (focused ? .accentColor : (style == .cupertino ? Color.secondary.opacity(0.35) : .black))
   }
   private var activeBackgroundColor: Color {
     parseColor(focused
       ? control.string("focused_bgcolor") ?? control.string("fill_color") ?? control.string("bgcolor")
       : control.string("fill_color") ?? control.string("bgcolor"))
-      ?? (style == .cupertino ? Color.rufletSystemBackground : .clear)
+      ?? (style == .cupertino ? Color.secondary.opacity(0.1) : .clear)
   }
   private var effectiveBackgroundColor: Color {
     if hovered, let color = presentation.hoverColor { return color }
