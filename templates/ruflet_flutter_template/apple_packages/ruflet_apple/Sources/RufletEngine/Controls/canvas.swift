@@ -1208,7 +1208,7 @@ public struct CanvasControl: View {
   }
 
   private func attach() {
-    coordinator.configure(control: control)
+    coordinator.attach(control: control)
     guard invokeToken == nil else { return }
     invokeToken = control.addInvokeMethodListener { name, arguments in
       try await coordinator.invoke(name, arguments: arguments)
@@ -1261,6 +1261,7 @@ final class RufletCanvasCoordinator: ObservableObject {
   }
 
   private weak var control: RufletControl?
+  private var controlUpdateToken: UUID?
   private(set) var shapes: [RufletControl] = []
   private(set) var images: [Int: CachedImage] = [:]
   private var imageTasks: [Int: Task<Void, Never>] = [:]
@@ -1269,6 +1270,21 @@ final class RufletCanvasCoordinator: ObservableObject {
   private(set) var canvasSize = CGSize.zero
   private(set) var capturedImage: CGImage?
   private(set) var capturedSize = CGSize.zero
+
+  func attach(control: RufletControl) {
+    if self.control !== control {
+      if let controlUpdateToken, let currentControl = self.control {
+        currentControl.removeListener(controlUpdateToken)
+      }
+      self.control = control
+      controlUpdateToken = control.addListener { [weak self] in
+        guard let self, let control = self.control else { return }
+        self.configure(control: control)
+        self.invalidationHandler?()
+      }
+    }
+    configure(control: control)
+  }
 
   func configure(control: RufletControl) {
     self.control = control
@@ -1282,6 +1298,8 @@ final class RufletCanvasCoordinator: ObservableObject {
   }
 
   func detach() {
+    if let controlUpdateToken, let control { control.removeListener(controlUpdateToken) }
+    controlUpdateToken = nil
     invalidationHandler = nil
     for task in imageTasks.values { task.cancel() }
     imageTasks.removeAll()

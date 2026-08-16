@@ -306,6 +306,36 @@ final class RufletCanvasInvariantTests: XCTestCase {
     XCTAssertEqual(backend.events.first?.data.map?["h"]?.number, 3)
   }
 
+  func testShapesPatchInvalidatesAttachedNativeCanvasWithoutTreeRebuild() throws {
+    let backend = CanvasTestBackend()
+    let root = RufletControl(
+      id: 40,
+      type: "Canvas",
+      properties: [
+        "shapes": [wireShape(41, "Line", ["x1": 0, "y1": 0, "x2": 1, "y2": 1])]
+      ],
+      backend: backend)
+    let coordinator = RufletCanvasCoordinator()
+    var invalidations = 0
+    coordinator.installInvalidationHandler { invalidations += 1 }
+    coordinator.attach(control: root)
+
+    try root.applyPatch([
+      .array([0]),
+      .array([
+        0, 0, "shapes",
+        .array([
+          wireShape(42, "Line", ["x1": 2, "y1": 3, "x2": 4, "y2": 5]),
+          wireShape(43, "Line", ["x1": 6, "y1": 7, "x2": 8, "y2": 9]),
+        ]),
+      ]),
+    ])
+
+    XCTAssertEqual(invalidations, 1)
+    XCTAssertEqual(coordinator.shapes.map(\.id), [42, 43])
+    coordinator.detach()
+  }
+
   func testCaptureWaitsForInlineImageLoad() async throws {
     let backend = CanvasTestBackend()
     let png = try XCTUnwrap(solidPNGData())
