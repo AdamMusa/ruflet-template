@@ -36,6 +36,11 @@ struct RufletFlexibleAxisStack: View {
       ) {
         ForEach(children, id: \.id) { child in
           ControlWidget(control: child)
+            // CrossAxisAlignment.stretch gives every child a tight cross-axis
+            // constraint. The legacy stack already applied this frame; the
+            // single-pass Layout path must do the same so intrinsic Text/Icon
+            // children occupy the full Row/Column cross extent.
+            .modifier(RufletCrossAxisStretchModifier(axis: axis, enabled: crossAxisStretch))
             .layoutValue(
               key: RufletFlexParentDataKey.self,
               value: fixedMainExtents[child.id] == nil
