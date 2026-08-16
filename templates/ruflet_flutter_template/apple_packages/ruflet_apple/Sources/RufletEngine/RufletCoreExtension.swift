@@ -9,6 +9,16 @@ public struct RufletCoreExtension: RufletExtension {
   private let services = RufletCoreServiceExtension()
 
   public var serviceControlTypes: Set<String> { services.serviceControlTypes }
+  public let appleIconCodeRanges: [ClosedRange<Int>] = [
+    ClosedRange(
+      uncheckedBounds: (
+        lower: RufletAppleIconCatalog.materialFirstCode,
+        upper: RufletAppleIconCatalog.materialFirstCode + RufletAppleIconCatalog.materialCount - 1)),
+    ClosedRange(
+      uncheckedBounds: (
+        lower: RufletAppleIconCatalog.cupertinoFirstCode,
+        upper: RufletAppleIconCatalog.cupertinoFirstCode + RufletAppleIconCatalog.cupertinoCount - 1)),
+  ]
 
   public let renderedControlTypes: Set<String> = [
     "AdaptiveAlertDialog", "AdaptiveButton", "AdaptiveCheckbox", "AdaptiveRadio", "AdaptiveSlider",

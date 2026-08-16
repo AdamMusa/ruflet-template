@@ -41,15 +41,19 @@ public enum RufletAppleIconCatalog {
       return .cupertinoGlyph(glyph)
     }
 
-    guard let materialName = catalogs.materialNamesByCode[code],
-      let glyph = catalogs.materialGlyphs[materialName]
-    else { return nil }
-    return .materialGlyph(glyph)
+    guard let materialName = catalogs.materialNamesByCode[code] else { return nil }
+    if let symbol = materialSystemSymbols[materialName] {
+      return .systemSymbol(symbol)
+    }
+    return catalogs.materialGlyphs[materialName].map(RufletAppleIcon.materialGlyph)
   }
 
   public static func icon(forMaterialName rawName: String) -> RufletAppleIcon? {
-    catalogs.materialGlyphs[canonical(rawName).uppercased()]
-      .map(RufletAppleIcon.materialGlyph)
+    let name = canonical(rawName).uppercased()
+    if let symbol = materialSystemSymbols[name] {
+      return .systemSymbol(symbol)
+    }
+    return catalogs.materialGlyphs[name].map(RufletAppleIcon.materialGlyph)
   }
 
   public static func icon(forCupertinoName rawName: String) -> RufletAppleIcon? {
@@ -76,6 +80,85 @@ public enum RufletAppleIconCatalog {
       .replacingOccurrences(of: "-", with: "_")
       .replacingOccurrences(of: " ", with: "_")
   }
+
+  /// Native equivalents for Material names used by Ruflet applications.
+  ///
+  /// Both lookups in the hot path (`wire code -> Material name -> SF Symbol`)
+  /// are dictionaries. The Ruby protocol remains Flet-compatible while the
+  /// Apple renderer paints platform-native symbols in constant time.
+  private static let materialSystemSymbols: [String: String] = [
+    "ACCESSIBILITY": "accessibility",
+    "ACCOUNT_CIRCLE": "person.crop.circle",
+    "ADD": "plus",
+    "ALARM": "alarm",
+    "ANIMATION": "wand.and.stars",
+    "ARROW_BACK": "arrow.left",
+    "ARROW_DROP_DOWN_CIRCLE": "chevron.down.circle",
+    "AUDIOTRACK": "music.note",
+    "AUTO_AWESOME": "sparkles",
+    "BATTERY_FULL": "battery.100",
+    "CALENDAR_TODAY": "calendar",
+    "CHECK_BOX": "checkmark.square.fill",
+    "CHECK_CIRCLE": "checkmark.circle.fill",
+    "CHEVRON_RIGHT": "chevron.right",
+    "CLOSE": "xmark",
+    "CODE": "chevron.left.forwardslash.chevron.right",
+    "CROP_SQUARE": "square",
+    "DATE_RANGE": "calendar",
+    "DELETE": "trash",
+    "DIRECTIONS_CAR": "car",
+    "DONUT_LARGE": "chart.pie",
+    "EDIT": "pencil",
+    "FLASHLIGHT_ON": "flashlight.on.fill",
+    "FOLDER_OPEN": "folder",
+    "GRID_VIEW": "square.grid.2x2",
+    "HOME": "house",
+    "HUB": "network",
+    "IMAGE": "photo",
+    "INFO": "info.circle",
+    "INSERT_DRIVE_FILE": "doc",
+    "IOS_SHARE": "square.and.arrow.up",
+    "LANGUAGE": "globe",
+    "LINEAR_SCALE": "slider.horizontal.3",
+    "LINK": "link",
+    "LIST": "list.bullet",
+    "LOCATION_ON": "mappin",
+    "LOCK": "lock",
+    "LOGIN": "arrow.right.to.line",
+    "MAP": "map",
+    "MIC": "mic",
+    "OPEN_IN_NEW": "arrow.up.forward.square",
+    "OPEN_WITH": "arrow.up.and.down.and.arrow.left.and.right",
+    "PHOTO_CAMERA": "camera",
+    "PLAY_ARROW": "play.fill",
+    "PLAY_CIRCLE": "play.circle.fill",
+    "QR_CODE_SCANNER": "qrcode.viewfinder",
+    "RADIO_BUTTON_CHECKED": "largecircle.fill.circle",
+    "ROCKET_LAUNCH": "paperplane.fill",
+    "SAVE": "tray.and.arrow.down",
+    "SCHEDULE": "clock",
+    "SEARCH": "magnifyingglass",
+    "SENSORS": "dot.radiowaves.left.and.right",
+    "SETTINGS": "gearshape",
+    "SHARE": "square.and.arrow.up",
+    "SHOW_CHART": "chart.xyaxis.line",
+    "STAR": "star.fill",
+    "STOP": "stop.fill",
+    "TAB": "rectangle.split.3x1",
+    "TABLE_CHART": "tablecells",
+    "TEXT_FIELDS": "textformat",
+    "TOGGLE_ON": "switch.2",
+    "TOUCH_APP": "hand.tap",
+    "TUNE": "slider.horizontal.3",
+    "UNFOLD_LESS": "chevron.up.chevron.down",
+    "UPLOAD_FILE": "doc.badge.arrow.up",
+    "VIEW_COLUMN": "rectangle.split.3x1",
+    "VIEW_MODULE": "square.grid.2x2",
+    "VIEW_STREAM": "rectangle.split.1x2",
+    "WAVING_HAND": "hand.wave",
+    "WIDGETS": "square.grid.2x2",
+    "WIFI": "wifi",
+  ]
 
   private struct Catalogs {
     let materialNamesByCode: [Int: String]

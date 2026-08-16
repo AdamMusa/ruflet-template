@@ -25,12 +25,70 @@ final class AppleIconCatalogTests: XCTestCase {
     XCTAssertNil(RufletCupertinoIcons.icon(at: RufletCupertinoIcons.count))
   }
 
-  func testExplorerMaterialWireNamesResolveToFlutterGlyphs() {
-    XCTAssertEqual(RufletAppleIconCatalog.icon(for: 69_314), .materialGlyph(0xf051d))
-    XCTAssertEqual(RufletAppleIconCatalog.icon(for: 69_749), .materialGlyph(0xe380))
-    XCTAssertEqual(RufletAppleIconCatalog.icon(for: 69_969), .materialGlyph(0xe3b2))
-    XCTAssertEqual(RufletAppleIconCatalog.icon(for: 71_571), .materialGlyph(0xe4f7))
-    XCTAssertEqual(RufletAppleIconCatalog.icon(for: 67_006), .materialGlyph(0xe176))
+  func testExplorerMaterialWireNamesResolveToNativeSystemSymbols() {
+    let expected: [String: String] = [
+      "accessibility": "accessibility",
+      "account_circle": "person.crop.circle",
+      "add": "plus",
+      "alarm": "alarm",
+      "animation": "wand.and.stars",
+      "arrow_back": "arrow.left",
+      "audiotrack": "music.note",
+      "auto_awesome": "sparkles",
+      "battery_full": "battery.100",
+      "check_circle": "checkmark.circle.fill",
+      "chevron_right": "chevron.right",
+      "code": "chevron.left.forwardslash.chevron.right",
+      "delete": "trash",
+      "directions_car": "car",
+      "flashlight_on": "flashlight.on.fill",
+      "folder_open": "folder",
+      "home": "house",
+      "hub": "network",
+      "image": "photo",
+      "info": "info.circle",
+      "insert_drive_file": "doc",
+      "ios_share": "square.and.arrow.up",
+      "language": "globe",
+      "link": "link",
+      "location_on": "mappin",
+      "lock": "lock",
+      "login": "arrow.right.to.line",
+      "map": "map",
+      "mic": "mic",
+      "open_in_new": "arrow.up.forward.square",
+      "open_with": "arrow.up.and.down.and.arrow.left.and.right",
+      "photo_camera": "camera",
+      "play_arrow": "play.fill",
+      "play_circle": "play.circle.fill",
+      "qr_code_scanner": "qrcode.viewfinder",
+      "rocket_launch": "paperplane.fill",
+      "save": "tray.and.arrow.down",
+      "search": "magnifyingglass",
+      "sensors": "dot.radiowaves.left.and.right",
+      "settings": "gearshape",
+      "share": "square.and.arrow.up",
+      "show_chart": "chart.xyaxis.line",
+      "stop": "stop.fill",
+      "unfold_less": "chevron.up.chevron.down",
+      "upload_file": "doc.badge.arrow.up",
+      "view_module": "square.grid.2x2",
+      "widgets": "square.grid.2x2",
+      "wifi": "wifi",
+    ]
+
+    for (materialName, systemName) in expected {
+      XCTAssertEqual(
+        RufletAppleIconCatalog.icon(forMaterialName: materialName),
+        .systemSymbol(systemName),
+        materialName)
+      #if canImport(UIKit)
+        XCTAssertNotNil(UIImage(systemName: systemName), systemName)
+      #elseif canImport(AppKit)
+        XCTAssertNotNil(
+          NSImage(systemSymbolName: systemName, accessibilityDescription: nil), systemName)
+      #endif
+    }
   }
 
   func testEveryCupertinoWireIconUsesItsExactBundledGlyph() {
@@ -41,13 +99,13 @@ final class AppleIconCatalogTests: XCTestCase {
     }
   }
 
-  func testEveryMaterialWireIconUsesItsExactBundledGlyph() {
+  func testEveryMaterialWireIconHasNativeOrCanonicalArtwork() {
     var unresolved: [String] = []
     for code in 65_536...74_360 {
       guard let name = RufletAppleIconCatalog.materialName(for: code) else {
         return XCTFail("Missing canonical Material wire name for \(code)")
       }
-      guard case .materialGlyph = RufletAppleIconCatalog.icon(for: code) else {
+      guard RufletAppleIconCatalog.icon(for: code) != nil else {
         unresolved.append(name)
         continue
       }
