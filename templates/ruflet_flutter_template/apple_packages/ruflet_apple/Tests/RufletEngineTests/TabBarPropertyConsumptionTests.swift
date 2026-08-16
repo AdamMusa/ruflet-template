@@ -74,14 +74,22 @@ final class TabBarPropertyConsumptionTests: XCTestCase {
     XCTAssertTrue(rufletTabBarUsesNativeSegmentedPresentation(
       tabCount: 2,
       hasDisabledTab: false,
+      hasCompositeTab: false,
       isIOS: true))
     XCTAssertFalse(rufletTabBarUsesNativeSegmentedPresentation(
       tabCount: 6,
       hasDisabledTab: false,
+      hasCompositeTab: false,
       isIOS: true))
     XCTAssertFalse(rufletTabBarUsesNativeSegmentedPresentation(
       tabCount: 2,
       hasDisabledTab: true,
+      hasCompositeTab: false,
+      isIOS: true))
+    XCTAssertFalse(rufletTabBarUsesNativeSegmentedPresentation(
+      tabCount: 2,
+      hasDisabledTab: false,
+      hasCompositeTab: true,
       isIOS: true))
   }
 

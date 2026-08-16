@@ -263,6 +263,7 @@ public struct TabBarControl: View {
     if rufletTabBarUsesNativeSegmentedPresentation(
       tabCount: tabControls.count,
       hasDisabledTab: tabControls.contains { $0.disabled },
+      hasCompositeTab: tabControls.contains(where: rufletTabHasCompositeLabel),
       isIOS: rufletIsIOS)
     {
       nativeSegmentedTabs(state: state)
@@ -515,9 +516,22 @@ private func performTabBarFeedback() {
 func rufletTabBarUsesNativeSegmentedPresentation(
   tabCount: Int,
   hasDisabledTab: Bool,
+  hasCompositeTab: Bool,
   isIOS: Bool
 ) -> Bool {
-  isIOS && (1...5).contains(tabCount) && !hasDisabledTab
+  // SwiftUI's segmented Picker flattens a label containing both an icon and
+  // text into two UISegmentedControl segments. Keep Flet's one-Tab/one-item
+  // contract by using the regular native SwiftUI tab strip for composite
+  // labels; the segmented presentation is safe for icon-only or text-only
+  // tabs.
+  isIOS && (1...5).contains(tabCount) && !hasDisabledTab && !hasCompositeTab
+}
+
+@MainActor
+private func rufletTabHasCompositeLabel(_ tab: RufletControl) -> Bool {
+  let icon = tab.value("icon")
+  let label = tab.value("label")
+  return icon != nil && icon != .null && label != nil && label != .null
 }
 
 private enum RufletTabsError: Error {
