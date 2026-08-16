@@ -29,4 +29,23 @@ final class RufletTextInputInvariantTests: XCTestCase {
     XCTAssertEqual(selection.value.map?["affinity"]?.text, "downstream")
     XCTAssertEqual(selection.value.map?["directional"]?.bool, false)
   }
+
+  func testEnabledTapClaimsFocusWithoutStealingAnExistingResponder() {
+    XCTAssertTrue(RufletInputTapFocusContract.shouldRequestFocus(
+      enabled: true,
+      canRequestFocus: true,
+      isFirstResponder: false))
+    XCTAssertFalse(RufletInputTapFocusContract.shouldRequestFocus(
+      enabled: true,
+      canRequestFocus: true,
+      isFirstResponder: true))
+    XCTAssertFalse(RufletInputTapFocusContract.shouldRequestFocus(
+      enabled: false,
+      canRequestFocus: true,
+      isFirstResponder: false))
+    XCTAssertFalse(RufletInputTapFocusContract.shouldRequestFocus(
+      enabled: true,
+      canRequestFocus: false,
+      isFirstResponder: false))
+  }
 }

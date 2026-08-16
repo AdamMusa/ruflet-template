@@ -100,6 +100,20 @@ struct RufletOutsideTapMonitoringContract {
   }
 }
 
+/// A native text input must take first-responder ownership on its first tap.
+/// The extra recognizer used for Flet's `always_call_on_tap` contract observes
+/// the same touch as UIKit's private selection recognizers, so it must never
+/// prevent the field from focusing.
+struct RufletInputTapFocusContract {
+  static func shouldRequestFocus(
+    enabled: Bool,
+    canRequestFocus: Bool,
+    isFirstResponder: Bool
+  ) -> Bool {
+    enabled && canRequestFocus && !isFirstResponder
+  }
+}
+
 #if os(iOS)
 struct RufletNativeTextInput: UIViewRepresentable {
   let configuration: RufletNativeTextInputConfiguration
@@ -364,11 +378,23 @@ final class RufletTextInputUIView: UIView, UITextFieldDelegate, UITextViewDelega
   @objc private func textFieldChanged() { changed(textField.text ?? "") }
   @objc private func textFieldTapped() { callbacks?.onTap() }
   @objc private func inputTapped(_ recognizer: UITapGestureRecognizer) {
-    guard configuration?.alwaysCallOnTap == true,
-          recognizer.state == .ended,
-          activeView?.isFirstResponder == true
+    guard recognizer.state == .ended,
+          let configuration,
+          let activeView
     else { return }
-    callbacks?.onTap()
+    let wasFirstResponder = activeView.isFirstResponder
+    if RufletInputTapFocusContract.shouldRequestFocus(
+      enabled: configuration.enabled,
+      canRequestFocus: configuration.canRequestFocus,
+      isFirstResponder: wasFirstResponder)
+    {
+      activeView.becomeFirstResponder()
+    }
+    // The delegate callbacks report the first tap when focus begins. Flet's
+    // always-call mode additionally reports taps on an already-focused field.
+    if configuration.alwaysCallOnTap, wasFirstResponder {
+      callbacks?.onTap()
+    }
   }
   @objc private func windowTapped(_ recognizer: UITapGestureRecognizer) {
     guard configuration?.reportsTapOutside == true, recognizer.state == .ended else { return }
@@ -391,7 +417,12 @@ final class RufletTextInputUIView: UIView, UITextFieldDelegate, UITextViewDelega
     _ gestureRecognizer: UIGestureRecognizer,
     shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
   ) -> Bool {
-    gestureRecognizer === outsideTapRecognizer || otherGestureRecognizer === outsideTapRecognizer
+    gestureRecognizer === outsideTapRecognizer
+      || otherGestureRecognizer === outsideTapRecognizer
+      || gestureRecognizer === textFieldTapRecognizer
+      || gestureRecognizer === textViewTapRecognizer
+      || otherGestureRecognizer === textFieldTapRecognizer
+      || otherGestureRecognizer === textViewTapRecognizer
   }
 
   private func synchronizeOutsideTapRecognizer() {
