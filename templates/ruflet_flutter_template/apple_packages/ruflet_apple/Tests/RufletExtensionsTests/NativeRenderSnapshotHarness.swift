@@ -1,8 +1,25 @@
 #if os(macOS)
   import AppKit
+  import RufletAds
+  import RufletAudio
+  import RufletAudioRecorder
+  import RufletCamera
   import RufletCharts
+  import RufletCodeEditor
+  import RufletColorPickers
+  import RufletDataTable2
+  import RufletFlashlight
+  import RufletGeolocator
+  import RufletLottie
+  import RufletMap
+  import RufletPermissionHandler
   import RufletProtocol
+  import RufletQRScanner
+  import RufletRive
+  import RufletSecureStorage
   import RufletSpinKit
+  import RufletVideo
+  import RufletWebView
   import SwiftUI
   import XCTest
 
@@ -26,7 +43,30 @@
       let backend = RufletBackend(
         pageURL: URL(string: "http://localhost:8552")!,
         assetsDirectory: "",
-        extensions: [RufletSpinKitExtension(), RufletChartsExtension()],
+        // Keep this list aligned with the generated Apple host. A partial
+        // registry makes full Explorer snapshots report false unknown-control
+        // failures even though the shipped application has the native peer.
+        extensions: [
+          RufletAds.Extension(),
+          RufletAudioExtension(),
+          RufletAudioRecorderExtension(),
+          RufletCameraExtension(),
+          RufletChartsExtension(),
+          RufletCodeEditorExtension(),
+          RufletColorPickersExtension(),
+          RufletDataTable2Extension(),
+          RufletFlashlightExtension(),
+          RufletGeolocatorExtension(),
+          RufletLottieExtension(),
+          RufletMap.Extension(),
+          RufletPermissionHandlerExtension(),
+          RufletQRScannerExtension(),
+          RufletRiveExtension(),
+          RufletSecureStorageExtension(),
+          RufletSpinKitExtension(),
+          RufletVideoExtension(),
+          RufletWebViewExtension(),
+        ],
         channelFactory: { _, _, _ in throw RenderHarnessError.offline })
       _ = backend.page.update(
         [
