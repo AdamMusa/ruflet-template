@@ -348,7 +348,17 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
         error = try RufletSessionCrashedBody(value: message.payload).message
       case .patchControl:
         let request = try RufletPatchControlRequestBody(value: message.payload)
-        try control(id: request.id)?.applyPatch(request.patch)
+        guard let target = control(id: request.id) else {
+          RufletProtocolDiagnostics.timing(
+            "patch_missing_target", milliseconds: 0, details: "target=\(request.id)")
+          return
+        }
+        let started = RufletProtocolDiagnostics.now()
+        try target.applyPatch(request.patch)
+        RufletProtocolDiagnostics.timing(
+          "apply_patch",
+          milliseconds: (RufletProtocolDiagnostics.now() - started) * 1_000,
+          details: "target=\(request.id) patch_items=\(request.patch.count)")
       case .invokeControlMethod:
         let request = try RufletInvokeMethodRequestBody(value: message.payload)
         Task { await invoke(request) }

@@ -9,6 +9,14 @@ import SwiftUI
 class MainFlutterWindow: NSWindow {
   private var retainedFlutterViewController: FlutterViewController?
   private var nativeRendererChannel: FlutterMethodChannel?
+  /// Guards against installing the native renderer more than once. Each install
+  /// builds a fresh `RufletAppView`, and therefore a fresh `RufletBackend` with
+  /// its own websocket. Replacing `contentViewController` does not reliably run
+  /// SwiftUI's `onDisappear`, so the displaced backend is never disposed: it
+  /// keeps its reconnect loop alive and re-registers a whole new session every
+  /// 500 ms forever, making the server rebuild and resend the entire page each
+  /// time. That storm is what makes navigation feel frozen.
+  private var nativeRendererInstalled = false
 
   override func awakeFromNib() {
     let flutterViewController = FlutterViewController()
@@ -44,10 +52,22 @@ class MainFlutterWindow: NSWindow {
           result(false)
           return
         }
+        guard !self.nativeRendererInstalled else {
+          result(true)
+          return
+        }
+        self.nativeRendererInstalled = true
+        let presentedFrame = self.frame
         let native = NSHostingController(
           rootView: RufletAppView(
             pageURL: pageURL, extensions: RufletEngineChoice.extensions))
         self.contentViewController = native
+        // Installing an NSHostingController makes AppKit adopt the SwiftUI
+        // fitting size. The renderer has no page yet at this point, so that
+        // size collapses the window to a few points and the backend registers
+        // with that bogus geometry. Keep the window the Runner already sized.
+        native.view.frame = CGRect(origin: .zero, size: self.contentLayoutRect.size)
+        self.setFrame(presentedFrame, display: true)
         result(true)
       }
     }

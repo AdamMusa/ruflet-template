@@ -44,9 +44,16 @@ public final class RufletWebSocketBackendChannel: RufletBackendChannel {
           case .string(let value): data = Data(value.utf8)
           @unknown default: throw RufletTransportError.invalidResponse
           }
+          let decodeStarted = RufletProtocolDiagnostics.now()
           let value = try RufletMessagePack.decode(data)
           guard let list = value.array else { throw RufletTransportError.invalidResponse }
-          self.onMessage(try RufletMessage(list: list))
+          let message = try RufletMessage(list: list)
+          RufletProtocolDiagnostics.frame(
+            "ruby->native",
+            bytes: data.count,
+            message: message,
+            decodeMilliseconds: (RufletProtocolDiagnostics.now() - decodeStarted) * 1_000)
+          self.onMessage(message)
         } catch {
           if !Task.isCancelled { self.onDisconnect() }
           return
@@ -58,6 +65,7 @@ public final class RufletWebSocketBackendChannel: RufletBackendChannel {
   public func send(_ message: RufletMessage) throws {
     guard let task else { throw RufletTransportError.disconnected }
     let data = RufletMessagePack.encode(.array(message.list))
+    RufletProtocolDiagnostics.frame("native->ruby", bytes: data.count, message: message)
     task.send(.data(data)) { _ in }
   }
 

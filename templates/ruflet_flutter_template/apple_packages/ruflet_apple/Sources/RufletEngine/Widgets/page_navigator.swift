@@ -297,10 +297,12 @@ private struct RufletHostedPageTint: ViewModifier {
       _ container: RufletPageContainerController,
       context _: Context
     ) {
+      let started = RufletProtocolDiagnostics.now()
       guard let backend = page.backend as? RufletBackend else { return }
       let topViewID = views.last?.id
-      let controllers = views.map { control in
-        let root = AnyView(
+      let topControl = views.last
+      let root = topControl.map { control in
+        AnyView(
           RufletHostedPage(
             control: control,
             backend: backend,
@@ -312,16 +314,19 @@ private struct RufletHostedPageTint: ViewModifier {
             tint: tint,
             heroNamespace: heroNamespace,
             heroTransitionState: heroTransitionState))
-        return RufletMacHostingController(control: control, rootView: root)
       }
-      container.synchronize(controllers)
+      container.synchronize(control: topControl, rootView: root, index: views.count - 1)
+      RufletProtocolDiagnostics.timing(
+        "macos_navigator_sync",
+        milliseconds: (RufletProtocolDiagnostics.now() - started) * 1_000,
+        details: "views=\(views.count)")
     }
   }
 
   @MainActor
   private final class RufletMacHostingController: NSHostingController<AnyView>, @unchecked Sendable
   {
-    let control: RufletControl
+    var control: RufletControl
 
     init(control: RufletControl, rootView: AnyView) {
       self.control = control
@@ -343,36 +348,30 @@ private struct RufletHostedPageTint: ViewModifier {
       view = NSView()
     }
 
-    func synchronize(_ controllers: [RufletMacHostingController]) {
-      guard let next = controllers.last else {
+    func synchronize(control nextControl: RufletControl?, rootView: AnyView?, index nextIndex: Int) {
+      guard let nextControl, let rootView else {
         current?.view.removeFromSuperview()
         current?.removeFromParent()
         current = nil
         currentIndex = -1
         return
       }
-      if current?.control === next.control {
-        current?.rootView = next.rootView
-        currentIndex = controllers.count - 1
+      if let current {
+        // AppKit only hosts Page.views.last; Page mutation and back behavior
+        // remain protocol-owned. Reuse the single NSHostingController so a
+        // route push does not synchronously instantiate and measure the whole
+        // incoming control tree before AppKit can return to the event loop.
+        current.control = nextControl
+        current.rootView = rootView
+        currentIndex = nextIndex
         return
       }
 
-      let previous = current
-      let nextIndex = controllers.count - 1
+      let next = RufletMacHostingController(control: nextControl, rootView: rootView)
       addChild(next)
       next.view.frame = view.bounds
       next.view.autoresizingMask = [.width, .height]
-      if let previous {
-        transition(
-          from: previous,
-          to: next,
-          options: [nextIndex >= currentIndex ? .slideForward : .slideBackward, .crossfade]
-        ) {
-          previous.removeFromParent()
-        }
-      } else {
-        view.addSubview(next.view)
-      }
+      view.addSubview(next.view)
       current = next
       currentIndex = nextIndex
     }
