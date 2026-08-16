@@ -27,7 +27,9 @@ struct RufletAppleSheetPresenter: View {
   var body: some View {
     ZStack(alignment: .bottom) {
       Color.clear
-      if presented {
+      if let validationError {
+        ErrorControl(validationError)
+      } else if presented {
         barrierColor
           .ignoresSafeArea()
           .contentShape(Rectangle())
@@ -52,6 +54,8 @@ struct RufletAppleSheetPresenter: View {
     let body = Group {
       if let content = control.buildWidget("content") {
         if scrollable { ScrollView { content } } else { content }
+      } else {
+        ErrorControl(modalKind.missingContentMessage)
       }
     }
     .frame(
@@ -87,7 +91,13 @@ struct RufletAppleSheetPresenter: View {
   private func synchronizePresentation() {
     let open = control.boolean("open", default: false)
     let lastOpen = control.boolean("_open", default: false)
-    if open, !lastOpen, !presented, control.child("content") != nil {
+    if rufletModalShouldPresent(
+      kind: modalKind,
+      open: open,
+      lastOpen: lastOpen,
+      presented: presented,
+      hasContent: hasContent)
+    {
       control.updateProperties(["_open": .bool(true)], server: false)
       withAnimation(presentationAnimation) { presented = true }
     } else if !open, lastOpen, presented {
@@ -105,6 +115,17 @@ struct RufletAppleSheetPresenter: View {
   }
 
   private var fullscreen: Bool { control.boolean("fullscreen", default: false) }
+  private var hasContent: Bool { control.child("content") != nil }
+  private var modalKind: RufletModalKind {
+    kind == .cupertino ? .cupertinoBottomSheet : .bottomSheet
+  }
+  private var validationError: String? {
+    rufletModalPresentationError(
+      kind: modalKind,
+      open: control.boolean("open", default: false),
+      lastOpen: control.boolean("_open", default: false),
+      hasContent: hasContent)
+  }
   private var scrollable: Bool {
     fullscreen || control.boolean("scrollable", default: false)
   }
@@ -163,6 +184,54 @@ struct RufletAppleSheetPresenter: View {
     else { return nil }
     return CGFloat(control.number("height", default: 220) ?? 220)
   }
+}
+
+enum RufletModalKind: CaseIterable {
+  case alertDialog
+  case cupertinoAlertDialog
+  case bottomSheet
+  case cupertinoBottomSheet
+
+  var missingContentMessage: String {
+    switch self {
+    case .alertDialog:
+      return "AlertDialog has nothing to display. Provide at minimum one of the following: title, content, actions."
+    case .cupertinoAlertDialog:
+      return "CupertinoAlertDialog has nothing to display. Provide at minimum one of the following: title, content, actions."
+    case .bottomSheet:
+      return "BottomSheet.content must be visible"
+    case .cupertinoBottomSheet:
+      // Keep the pinned Flet spelling as part of the renderer contract.
+      return "CupertinoButtomSheet.content is empty."
+    }
+  }
+
+  var validatesBeforePresentation: Bool {
+    self != .bottomSheet
+  }
+}
+
+func rufletModalPresentationError(
+  kind: RufletModalKind,
+  open: Bool,
+  lastOpen: Bool,
+  hasContent: Bool
+) -> String? {
+  guard kind.validatesBeforePresentation, open, open != lastOpen, !hasContent else {
+    return nil
+  }
+  return kind.missingContentMessage
+}
+
+func rufletModalShouldPresent(
+  kind: RufletModalKind,
+  open: Bool,
+  lastOpen: Bool,
+  presented: Bool,
+  hasContent: Bool
+) -> Bool {
+  guard open, !lastOpen, !presented else { return false }
+  return hasContent || !kind.validatesBeforePresentation
 }
 
 private struct RufletSheetClip: ViewModifier {

@@ -29,7 +29,11 @@ struct RufletAppleDialogPresenter: View {
 
   var body: some View {
     Group {
-      if presented { dialogLayer.transition(.opacity) }
+      if let validationError {
+        ErrorControl(validationError)
+      } else if presented {
+        dialogLayer.transition(.opacity)
+      }
     }
     .onAppear(perform: synchronizePresentation)
     .onChange(of: control.properties) { _ in synchronizePresentation() }
@@ -165,7 +169,13 @@ struct RufletAppleDialogPresenter: View {
   private func synchronizePresentation() {
     let open = control.boolean("open", default: false)
     let lastOpen = control.boolean("_open", default: false)
-    if open, !lastOpen, !presented, hasContent {
+    if rufletModalShouldPresent(
+      kind: modalKind,
+      open: open,
+      lastOpen: lastOpen,
+      presented: presented,
+      hasContent: hasContent)
+    {
       control.updateProperties(["_open": .bool(true)], server: false)
       withAnimation(dialogAnimation) { presented = true }
     } else if !open, lastOpen, presented {
@@ -181,8 +191,19 @@ struct RufletAppleDialogPresenter: View {
   }
 
   private var hasContent: Bool {
-    control.value("title") != nil || control.value("content") != nil
+    control.value("title").map { !$0.isNull } ?? false
+      || control.value("content").map { !$0.isNull } ?? false
       || !control.children("actions").isEmpty
+  }
+  private var modalKind: RufletModalKind {
+    style == .cupertino ? .cupertinoAlertDialog : .alertDialog
+  }
+  private var validationError: String? {
+    rufletModalPresentationError(
+      kind: modalKind,
+      open: control.boolean("open", default: false),
+      lastOpen: control.boolean("_open", default: false),
+      hasContent: hasContent)
   }
   private var dialogAnimation: Animation {
     if style == .cupertino {
