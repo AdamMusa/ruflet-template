@@ -246,6 +246,10 @@ func rufletPageNavigationUpdateDisposition(
           {
             navigationController.setViewControllers(preceding, animated: false)
           }
+          // Build the destination's first native frame before UIKit starts
+          // the push. Large Ruby-driven views (notably the code editor) then
+          // animate a ready surface instead of laying out during the gesture.
+          last.prepareForNavigation()
           push(
             last, animated: animated,
             fullscreen: last.control.boolean("fullscreen_dialog", default: false))
