@@ -10,6 +10,13 @@ public enum RufletTabIndicatorAnimation: String, CaseIterable, RufletStringEnum 
   case elastic
 }
 
+public enum RufletTabAlignment: String, CaseIterable, RufletStringEnum {
+  case start
+  case startOffset
+  case fill
+  case center
+}
+
 public struct RufletUnderlineTabIndicator {
   public let insets: EdgeInsets
   public let borderSide: RufletBorderSide
@@ -26,6 +33,12 @@ public func parseTabIndicatorAnimation(
   _ value: String?, _ defaultValue: RufletTabIndicatorAnimation? = nil
 ) -> RufletTabIndicatorAnimation? {
   parseEnum(RufletTabIndicatorAnimation.self, value, defaultValue)
+}
+
+public func parseTabAlignment(
+  _ value: String?, _ defaultValue: RufletTabAlignment? = nil
+) -> RufletTabAlignment? {
+  parseEnum(RufletTabAlignment.self, value, defaultValue)
 }
 
 public func parseUnderlineTabIndicator(
@@ -49,6 +62,10 @@ public extension RufletControl {
   func tabIndicatorAnimation(
     _ propertyName: String, default defaultValue: RufletTabIndicatorAnimation? = nil
   ) -> RufletTabIndicatorAnimation? { parseTabIndicatorAnimation(string(propertyName), defaultValue) }
+
+  func tabAlignment(
+    _ propertyName: String, default defaultValue: RufletTabAlignment? = nil
+  ) -> RufletTabAlignment? { parseTabAlignment(string(propertyName), defaultValue) }
 
   func underlineTabIndicator(
     _ propertyName: String, default defaultValue: RufletUnderlineTabIndicator? = nil

@@ -105,7 +105,8 @@ module NativePropertyConsumptionAudit
     dismissThresholds double dynamicValue enumValue fileType integer markdownCodeTheme markdownExtensionSet
     markdownStyleSheet menuStyle number paint paintingStyle paintStrokeDashPattern propertyContent rufletBool
     rufletDouble rufletString int map skipsProperty skipsRufletProperty string systemUIOverlayStyle
-    tabBarIndicatorSize tabIndicatorAnimation textTheme theme tooltipTriggerMode underlineTabIndicator value
+    tabAlignment tabBarIndicatorSize tabIndicatorAnimation textTheme theme tooltipTriggerMode
+    underlineTabIndicator value
     visualDensity windowResizeEdge
   ].freeze
 
