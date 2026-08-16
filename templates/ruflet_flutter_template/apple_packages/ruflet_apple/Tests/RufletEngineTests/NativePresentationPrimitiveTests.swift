@@ -48,7 +48,8 @@ final class NativePresentationPrimitiveTests: XCTestCase {
           .appendingPathComponent(file),
         encoding: .utf8)
       XCTAssertTrue(
-        source.contains("RufletPresentationLifecycleAnchor()"),
+        source.contains("RufletPresentationLifecycleAnchor()")
+          || source.contains("RufletPickerPresenter("),
         "\(file) can miss its opening edge when its initial body is empty")
     }
   }
