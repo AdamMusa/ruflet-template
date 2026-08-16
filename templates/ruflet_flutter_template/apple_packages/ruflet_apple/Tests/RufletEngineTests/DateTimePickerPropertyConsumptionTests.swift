@@ -113,9 +113,8 @@ final class DateTimePickerPropertyConsumptionTests: XCTestCase {
     }
   }
 
-  func testStandardDialogsUseCupertinoPresentationOnIOS() {
-    XCTAssertEqual(rufletAlertDialogStyle(isIOS: true), .cupertino)
-    XCTAssertEqual(rufletAlertDialogStyle(isIOS: false), .standard)
+  func testIOSAlertActionsDoNotUseMaterialPresentation() {
+    XCTAssertTrue(rufletUsesAppleDialogAction(parentType: "AlertDialog", isIOS: true))
   }
 
   func testTimePickerConsumesPinnedLabelsOrientationHourFormatAndIcons() {

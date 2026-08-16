@@ -6,6 +6,13 @@ import XCTest
 
 @MainActor
 final class AlertDialogPropertyConsumptionTests: XCTestCase {
+  func testButtonsInsideIOSDialogsAlwaysUseAppleDialogActions() {
+    XCTAssertTrue(rufletUsesAppleDialogAction(parentType: "AlertDialog", isIOS: true))
+    XCTAssertTrue(rufletUsesAppleDialogAction(parentType: "CupertinoAlertDialog", isIOS: true))
+    XCTAssertFalse(rufletUsesAppleDialogAction(parentType: "AlertDialog", isIOS: false))
+    XCTAssertFalse(rufletUsesAppleDialogAction(parentType: "Column", isIOS: true))
+  }
+
   func testPinnedDefaultsDoNotClipOrOverrideAccessibilityLabel() {
     let presentation = RufletAlertDialogPresentation(control: control(properties: [:]))
 

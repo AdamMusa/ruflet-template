@@ -9,8 +9,11 @@ public struct AdaptiveButtonControl: View {
     @ObservedObject public var control: RufletControl
     public init(control: RufletControl) { self.control = control }
     public var body: some View {
-        if control.adaptive == true {
-            if ["AlertDialog", "CupertinoAlertDialog"].contains(control.parent?.type) {
+        if control.adaptive == true || rufletUsesAppleDialogAction(
+            parentType: control.parent?.type,
+            isIOS: rufletIsIOS)
+        {
+            if rufletUsesAppleDialogAction(parentType: control.parent?.type, isIOS: rufletIsIOS) {
                 CupertinoDialogActionControl(control: control)
             } else {
                 CupertinoButtonControl(control: control)
@@ -19,4 +22,8 @@ public struct AdaptiveButtonControl: View {
             ButtonControl(control: control)
         }
     }
+}
+
+func rufletUsesAppleDialogAction(parentType: String?, isIOS: Bool) -> Bool {
+    isIOS && ["AdaptiveAlertDialog", "AlertDialog", "CupertinoAlertDialog"].contains(parentType)
 }

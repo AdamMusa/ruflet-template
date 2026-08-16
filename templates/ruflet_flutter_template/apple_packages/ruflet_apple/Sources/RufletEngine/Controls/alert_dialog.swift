@@ -11,22 +11,17 @@ public struct AlertDialogControl: View {
   }
 
   public var body: some View {
-    RufletAppleDialogPresenter(
-      control: control,
-      style: rufletAlertDialogStyle(isIOS: rufletIsIOS))
+    if rufletIsIOS {
+      RufletAppleDialogPresenter(control: control)
+    } else {
+      ErrorControl("The native AlertDialog renderer requires iOS.")
+    }
   }
-}
-
-func rufletAlertDialogStyle(isIOS: Bool) -> RufletAppleDialogPresenter.Style {
-  isIOS ? .cupertino : .standard
 }
 
 @MainActor
 struct RufletAppleDialogPresenter: View {
-  enum Style: Equatable { case standard, cupertino }
-
   @ObservedObject var control: RufletControl
-  let style: Style
   @State private var presented = false
 
   private var presentation: RufletAlertDialogPresentation {
@@ -39,7 +34,7 @@ struct RufletAppleDialogPresenter: View {
       if let validationError {
         ErrorControl(validationError)
       } else if presented {
-        dialogLayer.transition(.opacity)
+        dialogLayer.transition(.scale(scale: 1.06).combined(with: .opacity))
       }
     }
     .onAppear(perform: synchronizePresentation)
@@ -60,7 +55,8 @@ struct RufletAppleDialogPresenter: View {
   }
 
   private var barrier: some View {
-    (parseColor(control.string("barrier_color")) ?? Color.black.opacity(0.54))
+    (parseColor(control.string("barrier_color"))
+      ?? Color.black.opacity(0.32))
       .contentShape(Rectangle())
       .onTapGesture {
         if !control.boolean("modal", default: false) { close() }
@@ -68,17 +64,17 @@ struct RufletAppleDialogPresenter: View {
   }
 
   private var dialog: some View {
-    VStack(spacing: style == .cupertino ? 0 : 12) {
+    VStack(spacing: 0) {
       dialogBody
       actionArea
     }
-    .padding(style == .cupertino ? EdgeInsets() : dialogPadding)
-    .frame(maxWidth: style == .cupertino ? 270 : 560)
-    .background(dialogBackground)
+    .padding(EdgeInsets())
+    .frame(maxWidth: 270)
+    .background { dialogBackground }
     .modifier(
       RufletDialogClipModifier(
         shape: RufletCornerShape(radius: radius),
-        behavior: style == .cupertino ? "antialias" : presentation.clipBehavior)
+        behavior: "antialias")
     )
     .overlay {
       if let side = shapeSide {
@@ -94,8 +90,7 @@ struct RufletAppleDialogPresenter: View {
     .padding(
       parsePadding(control.dynamicValue("inset_padding"))
         ?? EdgeInsets(
-          top: 24, leading: style == .cupertino ? 36 : 40, bottom: 24,
-          trailing: style == .cupertino ? 36 : 40)
+          top: 24, leading: 36, bottom: 24, trailing: 36)
     )
     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: dialogAlignment)
     .contentShape(Rectangle())
@@ -103,7 +98,7 @@ struct RufletAppleDialogPresenter: View {
 
   @ViewBuilder
   private var dialogBody: some View {
-    let body = VStack(spacing: 10) {
+    let body = VStack(spacing: 0) {
       if let icon = control.buildIconOrWidget("icon", color: iconColor) {
         icon.padding(
           parsePadding(control.dynamicValue("icon_padding"))
@@ -116,17 +111,16 @@ struct RufletAppleDialogPresenter: View {
           .modifier(
             RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("title_text_style")))
           )
-          .font(style == .cupertino ? .headline : .title3.weight(.semibold))
+          .font(.system(size: 17, weight: .semibold))
           .padding(
-            style == .cupertino
-              ? EdgeInsets(top: 20, leading: 20, bottom: 6, trailing: 20)
-              : parsePadding(control.dynamicValue("title_padding"))
-                ?? RufletLayoutDefaults.alertDialogTitle(
-                  hasIcon: control.value("icon") != nil,
-                  hasContent: control.value("content") != nil)
+            parsePadding(control.dynamicValue("title_padding"))
+              ?? EdgeInsets(
+                top: 18, leading: 20,
+                bottom: hasBodyContent ? 2 : 18,
+                trailing: 20)
           )
-          .frame(maxWidth: .infinity, alignment: style == .cupertino ? .center : .leading)
-          .multilineTextAlignment(style == .cupertino ? .center : .leading)
+          .frame(maxWidth: .infinity, alignment: .center)
+          .multilineTextAlignment(.center)
           .accessibilityAddTraits(.isHeader)
       }
       if let content = control.buildWidget("content") {
@@ -135,13 +129,12 @@ struct RufletAppleDialogPresenter: View {
             RufletTextStyleModifier(
               style: parseTextStyle(control.dynamicValue("content_text_style")))
           )
+          .font(.system(size: 13))
           .padding(
-            style == .cupertino
-              ? EdgeInsets(top: 0, leading: 20, bottom: 20, trailing: 20)
-              : parsePadding(control.dynamicValue("content_padding"))
-                ?? EdgeInsets(top: 20, leading: 24, bottom: 24, trailing: 24))
-          .frame(maxWidth: .infinity, alignment: style == .cupertino ? .center : .leading)
-          .multilineTextAlignment(style == .cupertino ? .center : .leading)
+            parsePadding(control.dynamicValue("content_padding"))
+              ?? EdgeInsets(top: 0, leading: 20, bottom: 18, trailing: 20))
+          .frame(maxWidth: .infinity, alignment: .center)
+          .multilineTextAlignment(.center)
       }
     }
 
@@ -152,29 +145,20 @@ struct RufletAppleDialogPresenter: View {
     }
   }
 
-  @ViewBuilder
   private var actionArea: some View {
-    if style == .cupertino {
-      VStack(spacing: 0) {
-        ForEach(control.children("actions")) { action in
-          Divider()
-          ControlWidget(control: action)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
-        }
+    VStack(spacing: 0) {
+      ForEach(control.children("actions")) { action in
+        appleSeparator
+        ControlWidget(control: action)
+          .frame(maxWidth: .infinity, minHeight: 44)
       }
-    } else {
-      HStack(spacing: control.number("actions_overflow_button_spacing") ?? 8) {
-        ForEach(control.children("actions")) { action in
-          ControlWidget(control: action)
-            .padding(presentation.actionButtonPadding ?? RufletLayoutDefaults.alertDialogActionButton)
-        }
-      }
-      .frame(maxWidth: .infinity, alignment: actionsAlignment)
-      .padding(
-        parsePadding(control.dynamicValue("actions_padding"))
-          ?? RufletLayoutDefaults.alertDialogActions)
     }
+    .padding(parsePadding(control.dynamicValue("actions_padding")) ?? EdgeInsets())
+  }
+
+  private var appleSeparator: some View {
+    Divider()
+      .overlay(appleSeparatorColor)
   }
 
   private func synchronizePresentation() {
@@ -206,8 +190,11 @@ struct RufletAppleDialogPresenter: View {
       || control.value("content").map { !$0.isNull } ?? false
       || !control.children("actions").isEmpty
   }
+  private var hasBodyContent: Bool {
+    control.value("content").map { !$0.isNull } ?? false
+  }
   private var modalKind: RufletModalKind {
-    style == .cupertino ? .cupertinoAlertDialog : .alertDialog
+    .cupertinoAlertDialog
   }
   private var validationError: String? {
     rufletModalPresentationError(
@@ -217,43 +204,35 @@ struct RufletAppleDialogPresenter: View {
       hasContent: hasContent)
   }
   private var dialogAnimation: Animation {
-    if style == .cupertino {
-      return parseAnimation(
-        control.dynamicValue("inset_animation"),
-        ImplicitAnimationDetails(duration: 0.1, curve: .decelerate))!.animation
-    }
-    return .easeOut(duration: 0.15)
+    parseAnimation(
+      control.dynamicValue("inset_animation"),
+      ImplicitAnimationDetails(duration: 0.1, curve: .decelerate))!.animation
   }
-  private var dialogPadding: EdgeInsets { EdgeInsets() }
   private var iconColor: Color? { parseColor(control.string("icon_color")) }
-  private var dialogBackground: Color {
-    if let configured = parseColor(control.string("bgcolor")) { return configured }
+  @ViewBuilder
+  private var dialogBackground: some View {
+    if let configured = parseColor(control.string("bgcolor")) {
+      configured
+    } else {
+      Rectangle().fill(.regularMaterial)
+    }
+  }
+  private var appleSeparatorColor: Color {
     #if os(iOS)
-      if style == .cupertino { return Color(uiColor: .secondarySystemBackground) }
+      Color(uiColor: .separator).opacity(0.65)
+    #else
+      Color.secondary.opacity(0.3)
     #endif
-    return Color.rufletSystemBackground
   }
   private var elevation: Double { max(control.number("elevation", default: 8) ?? 8, 0) }
   private var shapeDetails: [String: Any]? { rufletDictionary(control.dynamicValue("shape")) }
   private var radius: RufletBorderRadius {
-    if style == .cupertino {
-      return RufletBorderRadius(topLeft: 14, topRight: 14, bottomLeft: 14, bottomRight: 14)
-    }
-    return parseBorderRadius(
-      shapeDetails?["radius"],
-      RufletBorderRadius(topLeft: 14, topRight: 14, bottomLeft: 14, bottomRight: 14))!
+    parseBorderRadius(shapeDetails?["radius"])
+      ?? RufletBorderRadius(topLeft: 14, topRight: 14, bottomLeft: 14, bottomRight: 14)
   }
   private var shapeSide: RufletBorderSide? { parseBorderSide(shapeDetails?["side"]) }
   private var dialogAlignment: Alignment {
     parseAlignment(control.dynamicValue("alignment"), .center)!.swiftUI
-  }
-  private var actionsAlignment: Alignment {
-    switch control.string("actions_alignment")?.lowercased() {
-    case "start": .leading
-    case "center": .center
-    case "spacebetween", "spacearound", "spaceevenly": .center
-    default: .trailing
-    }
   }
 }
 

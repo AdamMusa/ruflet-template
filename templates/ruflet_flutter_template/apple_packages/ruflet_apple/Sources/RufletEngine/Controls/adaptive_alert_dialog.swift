@@ -10,10 +10,10 @@ public struct AdaptiveAlertDialogControl: View {
   }
 
   public var body: some View {
-    if rufletUsesCupertinoPresentation(adaptive: control.adaptive, isIOS: rufletIsIOS) {
+    if rufletIsIOS {
       CupertinoAlertDialogControl(control: control)
     } else {
-      AlertDialogControl(control: control)
+      ErrorControl("The native AdaptiveAlertDialog renderer requires iOS.")
     }
   }
 }

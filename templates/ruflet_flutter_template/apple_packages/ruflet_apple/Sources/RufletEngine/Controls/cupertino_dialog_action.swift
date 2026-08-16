@@ -10,13 +10,21 @@ public struct CupertinoDialogActionControl: View {
                 ErrorControl("CupertinoDialogAction.content must be a string or visible Control"))
         }
         return AnyView(BaseControl(control: control) {
-            Button(action: { control.triggerEvent("click") }) { content }
-                .buttonStyle(.borderless)
-                .font(.body.weight(control.boolean("default", default: false) ? .bold : .regular))
+            Button(action: { control.triggerEvent("click") }) {
+                content
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+                .buttonStyle(.plain)
+                .font(
+                    .system(
+                        size: 17,
+                        weight: control.boolean("default", default: false) ? .semibold : .regular))
                 .foregroundStyle(control.boolean("destructive", default: false) ? .red : .accentColor)
                 .modifier(
                     RufletTextStyleModifier(
                         style: parseTextStyle(control.dynamicValue("text_style"))))
+                .frame(maxWidth: .infinity, minHeight: 44)
                 .disabled(control.disabled)
         })
     }
