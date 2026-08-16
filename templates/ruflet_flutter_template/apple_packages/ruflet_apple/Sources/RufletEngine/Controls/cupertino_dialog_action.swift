@@ -14,6 +14,9 @@ public struct CupertinoDialogActionControl: View {
                 .buttonStyle(.borderless)
                 .font(.body.weight(control.boolean("default", default: false) ? .bold : .regular))
                 .foregroundStyle(control.boolean("destructive", default: false) ? .red : .accentColor)
+                .modifier(
+                    RufletTextStyleModifier(
+                        style: parseTextStyle(control.dynamicValue("text_style"))))
                 .disabled(control.disabled)
         })
     }

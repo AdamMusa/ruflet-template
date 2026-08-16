@@ -51,6 +51,7 @@ public struct DraggableControl: View {
             coordinateSpace: .global
         )
         .onChanged { value in
+            guard affinityAllows(value.translation) else { return }
             if !dragging {
                 dragging = true
                 RufletDragSession.shared.begin(source: control, group: group)
@@ -70,6 +71,16 @@ public struct DraggableControl: View {
         case "horizontal": CGSize(width: value.width, height: 0)
         case "vertical": CGSize(width: 0, height: value.height)
         default: value
+        }
+    }
+
+    /// Flutter's affinity selects the axis that wins gesture-arena
+    /// arbitration. Start a native drag only after movement favors it.
+    private func affinityAllows(_ value: CGSize) -> Bool {
+        switch control.string("affinity")?.lowercased() {
+        case "horizontal": abs(value.width) >= abs(value.height)
+        case "vertical": abs(value.height) >= abs(value.width)
+        default: true
         }
     }
 

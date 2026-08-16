@@ -11,8 +11,9 @@ public struct BannerControl: View {
   }
 
   public var body: some View {
+    let dismissed = control.boolean("_dismissed", default: false)
     Group {
-      if control.boolean("open", default: false) {
+      if !dismissed && control.boolean("open", default: false) {
         if control.child("content") == nil && control.string("content") == nil {
           ErrorControl("Banner.content must be provided and visible")
         } else if control.children("actions").isEmpty {
@@ -87,6 +88,7 @@ public struct BannerControl: View {
   }
 
   private func synchronizeLifecycle() {
+    guard !control.boolean("_dismissed", default: false) else { return }
     let open = control.boolean("open", default: false)
     let lastOpen = control.boolean("_open", default: false)
     if open && !lastOpen {
@@ -94,7 +96,6 @@ public struct BannerControl: View {
       control.updateProperties(
         [
           "_open": .bool(true),
-          "_dismissed": .bool(false),
           "_show_generation": .int(Int64(generation)),
         ],
         client: true,

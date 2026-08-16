@@ -7,7 +7,8 @@ public struct DividerControl: View {
 
     public var body: some View {
         BaseControl(control: control) {
-            Rectangle()
+            RufletCornerShape(
+                radius: parseBorderRadius(control.dynamicValue("radius"), .zero)!)
                 .fill(parseColor(control.string("color")) ?? Color.secondary.opacity(0.35))
                 .frame(height: control.number("thickness") ?? 1)
                 .padding(.leading, control.number("leading_indent") ?? 0)
