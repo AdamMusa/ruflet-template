@@ -30,6 +30,13 @@ struct RufletAppleButtonStyle: ButtonStyle {
 
   var clipsContent: Bool { clipBehavior != "none" }
   var antialiasedClip: Bool { clipBehavior.contains("antialias") }
+  var usesNativeGlassSurface: Bool {
+    guard !hasExplicitBackground else { return false }
+    return switch variant {
+    case .elevated, .filled, .tonal, .outlined: true
+    case .text: false
+    }
+  }
 
   func makeBody(configuration: Configuration) -> some View {
     let states = states(configuration: configuration)
@@ -42,6 +49,10 @@ struct RufletAppleButtonStyle: ButtonStyle {
     let effectiveBackground = isEnabled
       ? background.opacity(configuration.isPressed ? 0.72 : 1)
       : (disabledHasContainer ? disabledColor.opacity(0.12) : .clear)
+    let glassTint: Color? = switch variant {
+    case .filled, .tonal: background
+    case .elevated, .outlined, .text: nil
+    }
     let resolvedPadding = padding.resolve(states) ?? EdgeInsets()
     let fixed = fixedSize.resolve(states)
     let minimum = minimumSize.resolve(states)
@@ -56,7 +67,13 @@ struct RufletAppleButtonStyle: ButtonStyle {
         minHeight: minimum?.height,
         maxHeight: maximum?.height,
         alignment: alignment)
-      .background(effectiveBackground, in: shape)
+      .modifier(
+        RufletButtonSurfaceModifier(
+          shape: shape,
+          background: effectiveBackground,
+          glassTint: glassTint,
+          usesNativeGlass: usesNativeGlassSurface,
+          interactive: isEnabled))
       .modifier(RufletButtonClipModifier(shape: shape, style: self))
       .overlay {
         if let border {
@@ -64,15 +81,23 @@ struct RufletAppleButtonStyle: ButtonStyle {
         }
       }
       .shadow(
-        color: variant == .elevated && isEnabled ? .black.opacity(0.2) : .clear,
-        radius: variant == .elevated && isEnabled ? elevation : 0,
-        y: variant == .elevated && isEnabled ? elevation / 2 : 0
+        color: variant == .elevated && isEnabled && !rendersNativeGlass
+          ? .black.opacity(0.2) : .clear,
+        radius: variant == .elevated && isEnabled && !rendersNativeGlass ? elevation : 0,
+        y: variant == .elevated && isEnabled && !rendersNativeGlass ? elevation / 2 : 0
       )
       // Flutter's Material button paints/clips with its configured shape, but
       // GestureDetector hit-tests the complete RenderBox. Keeping the rounded
       // corners as the SwiftUI content shape creates dead pixels in the
       // visible button bounds, which is especially noticeable on a phone.
       .contentShape(Rectangle())
+  }
+
+  private var rendersNativeGlass: Bool {
+    #if os(iOS)
+      if #available(iOS 26.0, *) { return usesNativeGlassSurface }
+    #endif
+    return false
   }
 
   private func states(configuration: Configuration) -> Set<RufletWidgetState> {
@@ -82,6 +107,29 @@ struct RufletAppleButtonStyle: ButtonStyle {
     if hovered { result.insert(.hovered) }
     if !isEnabled { result.insert(.disabled) }
     return result
+  }
+}
+
+private struct RufletButtonSurfaceModifier: ViewModifier {
+  let shape: RoundedRectangle
+  let background: Color
+  let glassTint: Color?
+  let usesNativeGlass: Bool
+  let interactive: Bool
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    #if os(iOS)
+      if #available(iOS 26.0, *), usesNativeGlass {
+        content.glassEffect(
+          Glass.regular.tint(glassTint).interactive(interactive),
+          in: shape)
+      } else {
+        content.background(background, in: shape)
+      }
+    #else
+      content.background(background, in: shape)
+    #endif
   }
 }
 

@@ -86,6 +86,17 @@ final class ButtonPropertyConsumptionTests: XCTestCase {
     XCTAssertFalse(style(for: "Button", properties: [:]).hasExplicitBackground)
   }
 
+  func testOnlyDefaultContainerButtonsAreEligibleForIOSGlass() {
+    for type in ["Button", "FilledButton", "FilledTonalButton", "OutlinedButton"] {
+      XCTAssertTrue(style(for: type, properties: [:]).usesNativeGlassSurface, type)
+      XCTAssertFalse(
+        style(for: type, properties: ["bgcolor": .string("#2563eb")])
+          .usesNativeGlassSurface,
+        type)
+    }
+    XCTAssertFalse(style(for: "TextButton", properties: [:]).usesNativeGlassSurface)
+  }
+
   func testLongPressRecognizerExistsOnlyForAnEnabledSubscription() {
     let backend = ButtonPropertyTestBackend()
     let ordinary = RufletControl(

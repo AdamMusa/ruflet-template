@@ -356,10 +356,10 @@ public struct TabBarControl: View {
       }
     }
     .padding(2)
-    .background(
-      RoundedRectangle(cornerRadius: 9, style: .continuous)
-        .fill(appleSegmentTrackColor)
-    )
+    .modifier(
+      RufletTabTrackSurfaceModifier(
+        shape: RoundedRectangle(cornerRadius: 9, style: .continuous),
+        fallback: appleSegmentTrackColor))
     .frame(maxWidth: .infinity, alignment: .center)
     .padding(presentation.padding)
     .frame(minHeight: presentation.minimumHeight)
@@ -453,11 +453,16 @@ public struct TabBarControl: View {
         presentation.indicatorHorizontalInset(labelPadding: presentation.labelPadding))
       .padding(presentation.indicatorPadding)
     } else {
-      RoundedRectangle(cornerRadius: 7, style: .continuous)
-        .fill(presentation.indicatorColor ?? defaultSelectionColor(presentation))
+      let selectionShape = RoundedRectangle(cornerRadius: 7, style: .continuous)
+      selectionShape
+        .fill(.clear)
+        .modifier(
+          RufletTabSelectionSurfaceModifier(
+            shape: selectionShape,
+            tint: presentation.indicatorColor ?? defaultSelectionColor(presentation)))
         .overlay {
           if presentation.hasExplicitIndicatorThickness {
-            RoundedRectangle(cornerRadius: 7, style: .continuous)
+            selectionShape
               .stroke(
                 presentation.indicatorColor ?? presentation.labelColor,
                 lineWidth: presentation.indicatorThickness)
@@ -515,6 +520,42 @@ public struct TabBarControl: View {
     }
   }
 
+}
+
+private struct RufletTabTrackSurfaceModifier: ViewModifier {
+  let shape: RoundedRectangle
+  let fallback: Color
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    #if os(iOS)
+      if #available(iOS 26.0, *) {
+        content.glassEffect(.regular, in: shape)
+      } else {
+        content.background(fallback, in: shape)
+      }
+    #else
+      content.background(fallback, in: shape)
+    #endif
+  }
+}
+
+private struct RufletTabSelectionSurfaceModifier: ViewModifier {
+  let shape: RoundedRectangle
+  let tint: Color
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    #if os(iOS)
+      if #available(iOS 26.0, *) {
+        content.glassEffect(.regular.tint(tint).interactive(), in: shape)
+      } else {
+        content.background(tint, in: shape)
+      }
+    #else
+      content.background(tint, in: shape)
+    #endif
+  }
 }
 
 enum RufletAppleTabSelectionSurface: Equatable {

@@ -21,6 +21,16 @@ final class AlertDialogPropertyConsumptionTests: XCTestCase {
     XCTAssertFalse(presentation.clipsContent)
     XCTAssertFalse(presentation.antialiasedClip)
     XCTAssertNil(presentation.semanticsLabel)
+    XCTAssertFalse(presentation.hasExplicitBackground)
+    XCTAssertTrue(presentation.usesNativeGlassSurface)
+  }
+
+  func testExplicitDialogBackgroundRemainsProtocolDrivenInsteadOfGlass() {
+    let presentation = RufletAlertDialogPresentation(
+      control: control(properties: ["bgcolor": .string("#ffffff")]))
+
+    XCTAssertTrue(presentation.hasExplicitBackground)
+    XCTAssertFalse(presentation.usesNativeGlassSurface)
   }
 
   func testActionButtonPaddingAndSemanticLabelAreConsumed() {

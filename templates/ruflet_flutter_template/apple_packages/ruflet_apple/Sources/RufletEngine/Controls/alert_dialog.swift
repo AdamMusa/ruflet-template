@@ -70,7 +70,10 @@ struct RufletAppleDialogPresenter: View {
     }
     .padding(EdgeInsets())
     .frame(maxWidth: 270)
-    .background { dialogBackground }
+    .modifier(
+      RufletDialogSurfaceModifier(
+        shape: RufletCornerShape(radius: radius),
+        background: parseColor(control.string("bgcolor"))))
     .modifier(
       RufletDialogClipModifier(
         shape: RufletCornerShape(radius: radius),
@@ -209,14 +212,6 @@ struct RufletAppleDialogPresenter: View {
       ImplicitAnimationDetails(duration: 0.1, curve: .decelerate))!.animation
   }
   private var iconColor: Color? { parseColor(control.string("icon_color")) }
-  @ViewBuilder
-  private var dialogBackground: some View {
-    if let configured = parseColor(control.string("bgcolor")) {
-      configured
-    } else {
-      Rectangle().fill(.regularMaterial)
-    }
-  }
   private var appleSeparatorColor: Color {
     #if os(iOS)
       Color(uiColor: .separator).opacity(0.65)
@@ -241,15 +236,40 @@ struct RufletAlertDialogPresentation {
   let actionButtonPadding: EdgeInsets?
   let clipBehavior: String
   let semanticsLabel: String?
+  let hasExplicitBackground: Bool
 
   init(control: RufletControl) {
     actionButtonPadding = parsePadding(control.dynamicValue("action_button_padding"))
     clipBehavior = control.string("clip_behavior", default: "none")!.lowercased()
     semanticsLabel = control.string("semantics_label")
+    hasExplicitBackground = parseColor(control.string("bgcolor")) != nil
   }
 
   var clipsContent: Bool { clipBehavior != "none" }
   var antialiasedClip: Bool { clipBehavior.contains("antialias") }
+  var usesNativeGlassSurface: Bool { !hasExplicitBackground }
+}
+
+private struct RufletDialogSurfaceModifier: ViewModifier {
+  let shape: RufletCornerShape
+  let background: Color?
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if let background {
+      content.background(background, in: shape)
+    } else {
+      #if os(iOS)
+        if #available(iOS 26.0, *) {
+          content.glassEffect(.regular, in: shape)
+        } else {
+          content.background(.regularMaterial, in: shape)
+        }
+      #else
+        content.background(.regularMaterial, in: shape)
+      #endif
+    }
+  }
 }
 
 private struct RufletDialogClipModifier: ViewModifier {
