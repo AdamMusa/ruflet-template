@@ -80,4 +80,38 @@ class AppleRendererEntryPipelineTest < Minitest::Test
     assert_includes ios_choice, "RufletPageAddress.parse(raw)"
     refute_includes ios_choice, "websocketURL"
   end
+
+  def test_every_native_optional_extension_is_linked_and_registered_by_both_runners
+    choice = source("macos/Runner/RufletEngineChoice.swift")
+    macos_project = source("macos/Runner.xcodeproj/project.pbxproj")
+    ios_project = source("ios/Runner.xcodeproj/project.pbxproj")
+    extensions = {
+      "RufletAds" => "RufletAds.Extension()",
+      "RufletAudio" => "RufletAudioExtension()",
+      "RufletAudioRecorder" => "RufletAudioRecorderExtension()",
+      "RufletCamera" => "RufletCameraExtension()",
+      "RufletCharts" => "RufletChartsExtension()",
+      "RufletCodeEditor" => "RufletCodeEditorExtension()",
+      "RufletColorPickers" => "RufletColorPickersExtension()",
+      "RufletDataTable2" => "RufletDataTable2Extension()",
+      "RufletFlashlight" => "RufletFlashlightExtension()",
+      "RufletGeolocator" => "RufletGeolocatorExtension()",
+      "RufletLottie" => "RufletLottieExtension()",
+      "RufletMap" => "RufletMap.Extension()",
+      "RufletPermissionHandler" => "RufletPermissionHandlerExtension()",
+      "RufletQRScanner" => "RufletQRScannerExtension()",
+      "RufletRive" => "RufletRiveExtension()",
+      "RufletSecureStorage" => "RufletSecureStorageExtension()",
+      "RufletSpinKit" => "RufletSpinKitExtension()",
+      "RufletVideo" => "RufletVideoExtension()",
+      "RufletWebView" => "RufletWebViewExtension()"
+    }
+
+    extensions.each do |product, registration|
+      assert_includes choice, "canImport(#{product})", "#{product} is not imported conditionally"
+      assert_includes choice, registration, "#{product} is not registered"
+      assert_includes macos_project, "productName = #{product};", "#{product} is not linked on macOS"
+      assert_includes ios_project, "productName = #{product};", "#{product} is not linked on iOS"
+    end
+  end
 end

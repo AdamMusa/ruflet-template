@@ -42,6 +42,7 @@
 		A20000000000000000000017 /* RufletCodeEditor in Frameworks */ = {isa = PBXBuildFile; productRef = B20000000000000000000017 /* RufletCodeEditor */; };
 		A20000000000000000000018 /* RufletColorPickers in Frameworks */ = {isa = PBXBuildFile; productRef = B20000000000000000000018 /* RufletColorPickers */; };
 		A20000000000000000000019 /* RufletSpinKit in Frameworks */ = {isa = PBXBuildFile; productRef = B20000000000000000000019 /* RufletSpinKit */; };
+		A20000000000000000000020 /* RufletQRScanner in Frameworks */ = {isa = PBXBuildFile; productRef = B20000000000000000000020 /* RufletQRScanner */; };
 		331C80D8294CF71000263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C80D7294CF71000263BE5 /* RunnerTests.swift */; };
 		335BBD1B22A9A15E00E9071D /* GeneratedPluginRegistrant.swift in Sources */ = {isa = PBXBuildFile; fileRef = 335BBD1A22A9A15E00E9071D /* GeneratedPluginRegistrant.swift */; };
 		33CC10F12044A3C60003C045 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC10F02044A3C60003C045 /* AppDelegate.swift */; };
@@ -145,6 +146,7 @@
 				A20000000000000000000017 /* RufletCodeEditor in Frameworks */,
 				A20000000000000000000018 /* RufletColorPickers in Frameworks */,
 				A20000000000000000000019 /* RufletSpinKit in Frameworks */,
+				A20000000000000000000020 /* RufletQRScanner in Frameworks */,
 				96E29D3861208ABD13A39F6C /* Pods_Runner.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -312,6 +314,7 @@
 				B20000000000000000000017 /* RufletCodeEditor */,
 				B20000000000000000000018 /* RufletColorPickers */,
 				B20000000000000000000019 /* RufletSpinKit */,
+				B20000000000000000000020 /* RufletQRScanner */,
 			);
 			productName = Runner;
 			productReference = 33CC10ED2044A3C60003C045 /* ruflet_client.app */;
@@ -888,6 +891,7 @@
 		B20000000000000000000017 /* RufletCodeEditor */ = {isa = XCSwiftPackageProductDependency; productName = RufletCodeEditor; };
 		B20000000000000000000018 /* RufletColorPickers */ = {isa = XCSwiftPackageProductDependency; productName = RufletColorPickers; };
 		B20000000000000000000019 /* RufletSpinKit */ = {isa = XCSwiftPackageProductDependency; productName = RufletSpinKit; };
+		B20000000000000000000020 /* RufletQRScanner */ = {isa = XCSwiftPackageProductDependency; productName = RufletQRScanner; };
 /* End XCSwiftPackageProductDependency section */
 
 /* Begin XCLocalSwiftPackageReference section */

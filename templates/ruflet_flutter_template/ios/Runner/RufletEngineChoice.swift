@@ -41,6 +41,9 @@ import RufletAppExtensions
 #if canImport(RufletPermissionHandler)
   import RufletPermissionHandler
 #endif
+#if canImport(RufletQRScanner)
+  import RufletQRScanner
+#endif
 #if canImport(RufletRive)
   import RufletRive
 #endif
@@ -112,6 +115,9 @@ enum RufletEngineChoice {
     #endif
     #if canImport(RufletPermissionHandler)
       result.append(RufletPermissionHandlerExtension())
+    #endif
+    #if canImport(RufletQRScanner)
+      result.append(RufletQRScannerExtension())
     #endif
     #if canImport(RufletRive)
       result.append(RufletRiveExtension())
