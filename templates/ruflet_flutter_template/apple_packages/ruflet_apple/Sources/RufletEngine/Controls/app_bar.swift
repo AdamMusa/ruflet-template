@@ -137,9 +137,14 @@ struct RufletAppleAppBar: View {
     HStack(spacing: 8) {
       if let trailing = control.child("trailing") {
         ControlWidget(control: trailing)
+          .fixedSize(horizontal: true, vertical: false)
       } else {
         ForEach(control.children("actions")) { action in
           ControlWidget(control: action)
+            // Flutter's NavigationToolbar measures each action at its own
+            // width. A Row used as a button label must not consume all toolbar
+            // slack and push later actions off screen.
+            .fixedSize(horizontal: true, vertical: false)
         }
       }
     }
@@ -196,7 +201,17 @@ struct RufletAppleAppBar: View {
   }
 
   private var centerTitle: Bool {
-    control.boolean("center_title", default: true)
+    if kind == .cupertino { return true }
+    #if os(iOS)
+      let centersByPlatformDefault = true
+    #else
+      let centersByPlatformDefault = false
+    #endif
+    return rufletMaterialAppBarCenterTitle(
+      explicit: control.boolean("center_title"),
+      themed: parseBool(pageTheme?.componentTheme("appbar_theme")?["center_title"]),
+      centersByPlatformDefault: centersByPlatformDefault,
+      actionCount: control.children("actions").count)
   }
 
   private var titleSpacing: CGFloat {
@@ -265,6 +280,15 @@ struct RufletAppleAppBar: View {
   private var barShape: RufletAppBarShape {
     RufletAppBarShape(type: shapeDetails?["_type"] as? String, radius: shapeRadius)
   }
+}
+
+func rufletMaterialAppBarCenterTitle(
+  explicit: Bool?,
+  themed: Bool?,
+  centersByPlatformDefault: Bool,
+  actionCount: Int
+) -> Bool {
+  explicit ?? themed ?? (centersByPlatformDefault && actionCount < 2)
 }
 
 private struct RufletAppBarTitleTextModifier: ViewModifier {

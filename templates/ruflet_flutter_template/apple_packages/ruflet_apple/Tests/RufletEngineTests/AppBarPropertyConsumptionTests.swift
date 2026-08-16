@@ -35,6 +35,19 @@ final class AppBarPropertyConsumptionTests: XCTestCase {
       RufletAppBarPresentation(control: control, isMaterial: false).forceTransparency)
   }
 
+  func testMaterialTitleCenteringFollowsExplicitThemeAndPlatformPrecedence() {
+    XCTAssertTrue(rufletMaterialAppBarCenterTitle(
+      explicit: true, themed: false, centersByPlatformDefault: false, actionCount: 3))
+    XCTAssertFalse(rufletMaterialAppBarCenterTitle(
+      explicit: nil, themed: false, centersByPlatformDefault: true, actionCount: 0))
+    XCTAssertTrue(rufletMaterialAppBarCenterTitle(
+      explicit: nil, themed: nil, centersByPlatformDefault: true, actionCount: 1))
+    XCTAssertFalse(rufletMaterialAppBarCenterTitle(
+      explicit: nil, themed: nil, centersByPlatformDefault: true, actionCount: 2))
+    XCTAssertFalse(rufletMaterialAppBarCenterTitle(
+      explicit: nil, themed: nil, centersByPlatformDefault: false, actionCount: 0))
+  }
+
   private func control(properties: [String: RufletValue]) -> RufletControl {
     RufletControl(
       id: 1,
