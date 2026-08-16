@@ -42,6 +42,14 @@ final class RufletScreenshotCaptureCoordinator: ObservableObject {
       captureCoordinator.install(controller.capture(pixelRatio:))
     }
 
+    func sizeThatFits(
+      _ proposal: ProposedViewSize,
+      uiViewController controller: RufletScreenshotViewController,
+      context: Context
+    ) -> CGSize? {
+      controller.sizeThatFits(proposal)
+    }
+
     static func dismantleUIViewController(
       _ controller: RufletScreenshotViewController,
       coordinator: ()
@@ -76,6 +84,13 @@ final class RufletScreenshotCaptureCoordinator: ObservableObject {
 
     func update(content: AnyView) {
       host.rootView = content
+      host.view.invalidateIntrinsicContentSize()
+    }
+
+    func sizeThatFits(_ proposal: ProposedViewSize) -> CGSize {
+      let fittingWidth = proposal.width ?? UIView.layoutFittingExpandedSize.width
+      let fittingHeight = proposal.height ?? UIView.layoutFittingExpandedSize.height
+      return host.sizeThatFits(in: CGSize(width: fittingWidth, height: fittingHeight))
     }
 
     func capture(pixelRatio: CGFloat) -> Data? {
