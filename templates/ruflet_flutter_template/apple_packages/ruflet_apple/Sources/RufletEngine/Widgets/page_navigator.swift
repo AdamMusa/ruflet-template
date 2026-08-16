@@ -81,6 +81,26 @@ private struct RufletHostedPageTint: ViewModifier {
   }
 }
 
+/// Stable identity for one position in Flet's `Page.views` route stack.
+///
+/// Ruflet applications can rebuild the same logical views with fresh wire
+/// control IDs on every route update. UIKit navigation identity follows the
+/// route stack instead, matching Flet's Navigator semantics and allowing an
+/// ordinary back update to reuse the already-rendered destination controller.
+struct RufletPageNavigationIdentity: Hashable, Equatable {
+  let route: String
+  let occurrence: Int
+}
+
+func rufletPageNavigationIdentities(_ routes: [String]) -> [RufletPageNavigationIdentity] {
+  var occurrences: [String: Int] = [:]
+  return routes.map { route in
+    let occurrence = occurrences[route, default: 0]
+    occurrences[route] = occurrence + 1
+    return RufletPageNavigationIdentity(route: route, occurrence: occurrence)
+  }
+}
+
 #if os(iOS)
   @MainActor
   private struct RufletNativePageNavigator: UIViewControllerRepresentable {
@@ -103,6 +123,7 @@ private struct RufletHostedPageTint: ViewModifier {
 
     func makeUIViewController(context: Context) -> UINavigationController {
       let navigationController = UINavigationController()
+      navigationController.view.backgroundColor = .systemBackground
       navigationController.setNavigationBarHidden(true, animated: false)
       navigationController.delegate = context.coordinator
       navigationController.interactivePopGestureRecognizer?.delegate = context.coordinator
@@ -122,8 +143,8 @@ private struct RufletHostedPageTint: ViewModifier {
     final class Coordinator: NSObject, UINavigationControllerDelegate, UIGestureRecognizerDelegate {
       var parent: RufletNativePageNavigator
       weak var navigationController: UINavigationController?
-      private var controllers: [Int: RufletHostingController] = [:]
-      private var expectedIDs: [Int] = []
+      private var controllers: [RufletPageNavigationIdentity: RufletHostingController] = [:]
+      private var expectedIdentities: [RufletPageNavigationIdentity] = []
       private var synchronizing = false
 
       init(parent: RufletNativePageNavigator) {
@@ -136,8 +157,15 @@ private struct RufletHostedPageTint: ViewModifier {
           let backend = parent.page.backend as? RufletBackend
         else { return }
 
+        let currentControllers = navigationController.viewControllers.compactMap {
+          $0 as? RufletHostingController
+        }
+        let currentIdentities = identities(for: currentControllers.map(\.control))
+        let mountedControllers = Dictionary(
+          uniqueKeysWithValues: zip(currentIdentities, currentControllers))
+        let requestedIdentities = identities(for: parent.views)
         let topViewID = parent.views.last?.id
-        let requestedControllers = parent.views.map { control in
+        let requestedControllers = zip(requestedIdentities, parent.views).map { identity, control in
           let root = AnyView(
             RufletHostedPage(
               control: control,
@@ -151,32 +179,26 @@ private struct RufletHostedPageTint: ViewModifier {
               tint: parent.tint,
               heroNamespace: parent.heroNamespace,
               heroTransitionState: parent.heroTransitionState))
-          if let controller = controllers[control.id] {
+          if let controller = mountedControllers[identity] ?? controllers[identity] {
             controller.rootView = root
             controller.control = control
             return controller
           }
           let controller = RufletHostingController(control: control, rootView: root)
-          controllers[control.id] = controller
           return controller
         }
 
-        let requestedIDs = requestedControllers.map(\.control.id)
-        let currentControllers = navigationController.viewControllers.compactMap {
-          $0 as? RufletHostingController
-        }
-        let currentIDs = currentControllers.map(\.control.id)
-        expectedIDs = requestedIDs
-        controllers = controllers.filter { requestedIDs.contains($0.key) }
-        guard currentIDs != requestedIDs else { return }
+        expectedIdentities = requestedIdentities
+        controllers = Dictionary(uniqueKeysWithValues: zip(requestedIdentities, requestedControllers))
+        guard currentIdentities != requestedIdentities else { return }
 
         synchronizing = true
         let isPush =
-          currentIDs.count < requestedIDs.count
-          && requestedIDs.starts(with: currentIDs)
+          currentIdentities.count < requestedIdentities.count
+          && requestedIdentities.starts(with: currentIdentities)
         let isPop =
-          requestedIDs.count < currentIDs.count
-          && currentIDs.starts(with: requestedIDs)
+          requestedIdentities.count < currentIdentities.count
+          && currentIdentities.starts(with: requestedIdentities)
 
         if isPush, let last = requestedControllers.last {
           let preceding = Array(requestedControllers.dropLast())
@@ -194,7 +216,7 @@ private struct RufletHostedPageTint: ViewModifier {
           navigationController.setViewControllers(requestedControllers, animated: animated)
         } else {
           navigationController.setViewControllers(
-            requestedControllers, animated: animated && !currentIDs.isEmpty)
+            requestedControllers, animated: false)
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { [weak self] in
@@ -227,15 +249,22 @@ private struct RufletHostedPageTint: ViewModifier {
         animated: Bool
       ) {
         guard !synchronizing else { return }
-        let actualIDs = navigationController.viewControllers.compactMap {
-          ($0 as? RufletHostingController)?.control.id
+        let actualControls = navigationController.viewControllers.compactMap {
+          ($0 as? RufletHostingController)?.control
         }
-        guard actualIDs != expectedIDs,
-          expectedIDs.starts(with: actualIDs),
-          let removedID = expectedIDs.dropFirst(actualIDs.count).first,
-          let removed = parent.views.first(where: { $0.id == removedID })
+        let actualIdentities = identities(for: actualControls)
+        guard actualIdentities != expectedIdentities,
+          expectedIdentities.starts(with: actualIdentities),
+          let removedIdentity = expectedIdentities.dropFirst(actualIdentities.count).first,
+          let removedIndex = expectedIdentities.firstIndex(of: removedIdentity),
+          parent.views.indices.contains(removedIndex)
         else { return }
-        parent.onDidRemove(removed)
+        parent.onDidRemove(parent.views[removedIndex])
+      }
+
+      private func identities(for controls: [RufletControl]) -> [RufletPageNavigationIdentity] {
+        rufletPageNavigationIdentities(
+          controls.map { $0.string("route", default: "")! })
       }
 
       func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {

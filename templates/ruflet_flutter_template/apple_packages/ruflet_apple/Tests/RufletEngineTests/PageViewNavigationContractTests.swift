@@ -71,4 +71,28 @@ struct PageViewNavigationContractTests {
     #expect(navigator.contains("UINavigationController"))
     #expect(navigator.contains("fullscreen_dialog"))
   }
+
+  @Test("navigation identity follows stable routes across rebuilt wire controls")
+  func stableRouteNavigationIdentity() {
+    let original = rufletPageNavigationIdentities([
+      "/", "/studio", "/gallery/layout", "/gallery/layout/example/responsive-row",
+    ])
+    let rebuilt = rufletPageNavigationIdentities([
+      "/", "/studio", "/gallery/layout", "/gallery/layout/example/responsive-row",
+    ])
+    let popped = rufletPageNavigationIdentities(["/", "/studio", "/gallery/layout"])
+
+    #expect(rebuilt == original)
+    #expect(original.starts(with: popped))
+  }
+
+  @Test("duplicate routes remain distinct navigation positions")
+  func duplicateRouteNavigationIdentity() {
+    let identities = rufletPageNavigationIdentities(["/", "/dialog", "/dialog"])
+
+    #expect(identities[1].route == "/dialog")
+    #expect(identities[1].occurrence == 0)
+    #expect(identities[2].occurrence == 1)
+    #expect(identities[1] != identities[2])
+  }
 }
