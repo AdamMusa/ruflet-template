@@ -73,11 +73,11 @@ func rufletDurationValue(_ seconds: TimeInterval) -> RufletValue {
     RufletMessagePack.temporalDuration(microseconds: Int64((seconds * 1_000_000).rounded()))
 }
 
-enum DurationUnit: String, CaseIterable, RufletStringEnum {
+public enum DurationUnit: String, CaseIterable, RufletStringEnum {
     case microseconds, milliseconds, seconds, minutes, hours, days
 }
 
-func parseDuration(
+public func parseDuration(
     _ value: Any?,
     _ defaultValue: TimeInterval? = nil,
     _ treatNumberAs: DurationUnit = .milliseconds

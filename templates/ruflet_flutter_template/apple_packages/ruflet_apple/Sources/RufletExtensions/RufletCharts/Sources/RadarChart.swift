@@ -26,6 +26,19 @@ struct RadarChartControl: View {
         Canvas { context, _ in
           draw(context: &context, layout: layout, configuration: configuration)
         }
+        .animation(
+          chartAnimation(control.dynamicValue("animation")),
+          value: control.revision)
+        .simultaneousGesture(
+          LongPressGesture(minimumDuration: chartLongPressDuration(
+            control.dynamicValue("long_press_duration")))
+            .sequenced(before: DragGesture(minimumDistance: 0))
+            .onEnded { value in
+              guard case .second(true, let drag?) = value else { return }
+              emitTap(
+                at: drag.location, layout: layout,
+                configuration: configuration, type: "longPressEnd")
+            })
         .contentShape(Rectangle())
         .gesture(
           DragGesture(minimumDistance: 0).onEnded { value in
@@ -161,7 +174,8 @@ struct RadarChartControl: View {
   private func emitTap(
     at location: CGPoint,
     layout: RadarChartLayout,
-    configuration: RadarChartConfiguration
+    configuration: RadarChartConfiguration,
+    type: String = "tapUp"
   ) {
     guard configuration.interactive, control.hasEventHandler("event") else {
       return
@@ -173,7 +187,7 @@ struct RadarChartControl: View {
     control.triggerEvent(
       "event",
       data: .map([
-        "type": .string("tapUp"),
+        "type": .string(type),
         "data_set_index": hit.map { .int(Int64($0.dataSetIndex)) } ?? .null,
         "entry_index": hit.map { .int(Int64($0.entryIndex)) } ?? .null,
         "entry_value": hit.map { .double($0.entryValue) } ?? .null,

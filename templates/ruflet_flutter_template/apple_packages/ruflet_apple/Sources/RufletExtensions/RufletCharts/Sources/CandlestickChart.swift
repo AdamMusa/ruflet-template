@@ -23,12 +23,29 @@ struct CandlestickChartControl: View {
               configuration: configuration)
             draw(context: &context, layout: layout, domain: domain)
           }
-          ChartAxesOverlay(axes: configuration.axes, domain: domain, layout: layout)
+          ChartAxesOverlay(
+            axes: configuration.axes, domain: domain, layout: layout,
+            baselineX: configuration.baselineX, baselineY: configuration.baselineY)
         }
+          .rotationEffect(.degrees(Double(
+            control.integer("rotation_quarter_turns", default: 0) ?? 0) * 90))
+          .animation(
+            chartAnimation(control.dynamicValue("animation")),
+            value: control.revision)
           .contentShape(Rectangle())
           .gesture(DragGesture(minimumDistance: 0).onEnded { value in
             emitTap(at: value.location, layout: layout, domain: domain)
           })
+          .simultaneousGesture(
+            LongPressGesture(minimumDuration: chartLongPressDuration(
+              control.dynamicValue("long_press_duration")))
+              .sequenced(before: DragGesture(minimumDistance: 0))
+              .onEnded { value in
+                guard case .second(true, let drag?) = value else { return }
+                emitTap(
+                  at: drag.location, layout: layout, domain: domain,
+                  type: "longPressEnd")
+              })
       }
     }
   }
@@ -51,25 +68,29 @@ struct CandlestickChartControl: View {
       context.stroke(wick, with: .color(color), lineWidth: spot.selected ? 3 : 1.5)
       let rect = CGRect(x: open.x - bodyWidth / 2, y: min(open.y, close.y), width: bodyWidth, height: max(1, abs(close.y - open.y)))
       context.fill(Path(rect), with: .color(color))
+      if spot.selected {
+        context.draw(Text(chartNumber(spot.close)),
+          at: CGPoint(x: close.x, y: min(open.y, close.y) - 10))
+      }
     }
   }
 
   private func emitTap(
     at location: CGPoint,
     layout: ChartCartesianLayout,
-    domain: ChartDomain
+    domain: ChartDomain,
+    type: String = "tapUp"
   ) {
-    guard control.hasEventHandler("event"), control.boolean("interactive", default: true), !spots.isEmpty else { return }
+    guard control.hasEventHandler("event"), control.boolean("interactive", default: true),
+      !control.disabled, !spots.isEmpty else { return }
     let index = spots.indices.min {
       abs(layout.location(ChartPoint(x: spots[$0].x, y: spots[$0].close), domain: domain).x - location.x)
         < abs(layout.location(ChartPoint(x: spots[$1].x, y: spots[$1].close), domain: domain).x - location.x)
     }
     guard let index else { return }
-    let spot = spots[index]
-    control.triggerEvent("event", data: chartEvent(type: "tapUp", location: location, fields: [
-      "spot_index": .int(Int64(index)), "spot_x": .double(spot.x),
-      "spot_open": .double(spot.open), "spot_high": .double(spot.high),
-      "spot_low": .double(spot.low), "spot_close": .double(spot.close),
+    control.triggerEvent("event", data: .map([
+      "type": .string(type),
+      "spot_index": .int(Int64(index)),
     ]))
   }
 }

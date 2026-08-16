@@ -26,8 +26,13 @@ struct LineChartControl: View {
               configuration: configuration)
             draw(context: &context, layout: layout, domain: domain)
           }
-          ChartAxesOverlay(axes: configuration.axes, domain: domain, layout: layout)
+          ChartAxesOverlay(
+            axes: configuration.axes, domain: domain, layout: layout,
+            baselineX: configuration.baselineX, baselineY: configuration.baselineY)
         }
+          .animation(
+            chartAnimation(control.dynamicValue("animation")),
+            value: control.revision)
           .contentShape(Rectangle())
           .gesture(DragGesture(minimumDistance: 0).onEnded { value in
             emitTap(at: value.location, layout: layout, domain: domain)
@@ -75,6 +80,21 @@ struct LineChartControl: View {
           width: radius * 2,
           height: radius * 2)
         context.fill(Path(ellipseIn: circle), with: shading)
+        if point.selected && !control.boolean("interactive", default: true) {
+          let range = chartIndicatorRange(
+            start: control.number("point_line_start"),
+            end: control.number("point_line_end"),
+            pointY: point.y,
+            domain: domain)
+          var indicator = Path()
+          indicator.move(to: CGPoint(
+            x: locations[index].x,
+            y: layout.location(ChartPoint(x: point.x, y: range.lowerBound), domain: domain).y))
+          indicator.addLine(to: CGPoint(
+            x: locations[index].x,
+            y: layout.location(ChartPoint(x: point.x, y: range.upperBound), domain: domain).y))
+          context.stroke(indicator, with: .color(line.color.opacity(0.7)), lineWidth: 1)
+        }
       }
     }
   }
@@ -84,7 +104,8 @@ struct LineChartControl: View {
     layout: ChartCartesianLayout,
     domain: ChartDomain
   ) {
-    guard control.hasEventHandler("event"), control.boolean("interactive", default: true) else { return }
+    guard control.hasEventHandler("event"), control.boolean("interactive", default: true),
+      !control.disabled else { return }
     let candidates = series.enumerated().flatMap { seriesIndex, line in
       line.points.enumerated().map { pointIndex, point in
         (seriesIndex, pointIndex, point, layout.location(
@@ -96,10 +117,10 @@ struct LineChartControl: View {
     }) else { return }
     control.triggerEvent("event", data: .map([
       "type": .string("tapUp"),
-      "bar_index": .int(Int64(nearest.0)),
-      "spot_index": .int(Int64(nearest.1)),
-      "spot_x": .double(nearest.2.x),
-      "spot_y": .double(nearest.2.y),
+      "spots": .array([.map([
+        "bar_index": .int(Int64(nearest.0)),
+        "spot_index": .int(Int64(nearest.1)),
+      ])]),
     ]))
   }
 }

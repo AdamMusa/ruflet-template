@@ -4,7 +4,12 @@ public struct ImplicitAnimationDetails: Equatable, Sendable {
     public let duration: TimeInterval
     public let curve: RufletCurve
 
-    var animation: Animation { curve.animation(duration: duration) }
+    public init(duration: TimeInterval, curve: RufletCurve) {
+        self.duration = duration
+        self.curve = curve
+    }
+
+    public var animation: Animation { curve.animation(duration: duration) }
 }
 
 public enum RufletCurve: String, CaseIterable, RufletStringEnum, Sendable {

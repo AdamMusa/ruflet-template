@@ -47,7 +47,7 @@ func rufletAny(_ value: RufletValue) -> Any {
 
 @MainActor
 extension RufletControl {
-    func dynamicValue(_ name: String) -> Any? {
+    public func dynamicValue(_ name: String) -> Any? {
         value(name).map(rufletAny)
     }
 

@@ -158,6 +158,8 @@ struct ChartCartesianConfiguration {
   let axes: ChartAxes
   let grid: ChartGridConfiguration
   let border: RufletBorder?
+  let baselineX: Double
+  let baselineY: Double
 
   @MainActor init(control: RufletControl) {
     axes = ChartAxes(control: control)
@@ -165,6 +167,8 @@ struct ChartCartesianConfiguration {
       horizontal: control.value("horizontal_grid_lines"),
       vertical: control.value("vertical_grid_lines"))
     border = parseBorder(control.value("border"))
+    baselineX = control.number("baseline_x", default: 0) ?? 0
+    baselineY = control.number("baseline_y", default: 0) ?? 0
   }
 }
 
@@ -197,7 +201,11 @@ func drawCartesianDecoration(
   configuration: ChartCartesianConfiguration
 ) {
   if let horizontal = configuration.grid.horizontal {
-    for value in chartTicks(min: domain.minY, max: domain.maxY, interval: horizontal.interval) {
+    for value in chartTicks(
+      min: domain.minY, max: domain.maxY, interval: horizontal.interval,
+      baseline: configuration.baselineY,
+      includeMinimum: false, includeMaximum: false)
+    {
       let y = layout.location(ChartPoint(x: domain.minX, y: value), domain: domain).y
       var path = Path()
       path.move(to: CGPoint(x: layout.plotRect.minX, y: y))
@@ -207,7 +215,11 @@ func drawCartesianDecoration(
     }
   }
   if let vertical = configuration.grid.vertical {
-    for value in chartTicks(min: domain.minX, max: domain.maxX, interval: vertical.interval) {
+    for value in chartTicks(
+      min: domain.minX, max: domain.maxX, interval: vertical.interval,
+      baseline: configuration.baselineX,
+      includeMinimum: false, includeMaximum: false)
+    {
       let x = layout.location(ChartPoint(x: value, y: domain.minY), domain: domain).x
       var path = Path()
       path.move(to: CGPoint(x: x, y: layout.plotRect.minY))
@@ -239,17 +251,114 @@ private func drawBorderSide(
   context.stroke(path, with: .color(side.color), lineWidth: CGFloat(side.width))
 }
 
-func chartTicks(min minimum: Double, max maximum: Double, interval: Double?) -> [Double] {
+func chartTicks(
+  min minimum: Double,
+  max maximum: Double,
+  interval: Double?,
+  baseline: Double = 0,
+  includeMinimum: Bool = true,
+  includeMaximum: Bool = true
+) -> [Double] {
   guard maximum > minimum else { return [minimum] }
   let step = interval.flatMap { $0 > 0 ? $0 : nil } ?? (maximum - minimum) / 4
   guard step.isFinite, step > 0 else { return [minimum, maximum] }
-  var value = ceil(minimum / step) * step
+
+  // Matches fl_chart's Utils.getBestInitialIntervalValue() followed by
+  // AxisChartHelper.iterateThroughAxis(). Dart's `%` is a non-negative modulo.
+  let rawRemainder = (baseline - minimum).truncatingRemainder(dividingBy: step)
+  let modulo = rawRemainder < 0 ? rawRemainder + step : rawRemainder
+  let initial = (maximum - minimum).magnitude <= modulo || modulo == 0
+    ? minimum
+    : minimum + modulo
+  var value = initial
+  if !includeMinimum, value == minimum { value += step }
+
+  let count = Int((maximum - minimum) / step)
+  let lastPosition = initial + Double(count) * step
+  let lastOverlapsMaximum = lastPosition == maximum
+  let end = !includeMaximum && lastOverlapsMaximum ? maximum - step : maximum
   var result: [Double] = []
-  while value <= maximum + step * 0.000_001, result.count < 1_000 {
+  if includeMinimum, initial != minimum { result.append(minimum) }
+  while value <= end + step / 100_000, result.count < 1_000 {
     result.append(value)
     value += step
   }
+  if includeMaximum, !lastOverlapsMaximum { result.append(maximum) }
   return result
+}
+
+func chartBarGroupCenters(
+  in rect: CGRect,
+  widths: [CGFloat],
+  alignment: String?,
+  spacing: CGFloat
+) -> [CGFloat] {
+  guard !widths.isEmpty else { return [] }
+  let normalized = alignment?.lowercased().replacingOccurrences(of: "_", with: "")
+    ?? "spaceevenly"
+  let totalWidth = widths.reduce(0, +)
+  let available = rect.width - totalWidth
+
+  func evenly() -> [CGFloat] {
+    let eachSpace = available / CGFloat(widths.count + 1)
+    var cursor = rect.minX
+    return widths.map { width in
+      cursor += eachSpace + width / 2
+      let center = cursor
+      cursor += width / 2
+      return center
+    }
+  }
+
+  switch normalized {
+  case "start", "end", "center":
+    let occupied = totalWidth + spacing * CGFloat(max(0, widths.count - 1))
+    guard occupied <= rect.width else { return evenly() }
+    let margin: CGFloat = switch normalized {
+    case "end": rect.width - occupied
+    case "center": (rect.width - occupied) / 2
+    default: 0
+    }
+    var cursor = rect.minX + margin
+    return widths.enumerated().map { index, width in
+      let center = cursor + width / 2
+      cursor += width + (index == widths.count - 1 ? 0 : spacing)
+      return center
+    }
+  case "spacebetween":
+    guard widths.count > 1 else { return [rect.midX] }
+    let eachSpace = available / CGFloat(widths.count - 1)
+    var cursor = rect.minX
+    return widths.enumerated().map { index, width in
+      cursor += width / 2
+      if index != 0 { cursor += eachSpace }
+      let center = cursor
+      cursor += width / 2
+      return center
+    }
+  case "spacearound":
+    let eachSpace = available / CGFloat(widths.count * 2)
+    var cursor = rect.minX
+    return widths.map { width in
+      cursor += eachSpace + width / 2
+      let center = cursor
+      cursor += width / 2 + eachSpace
+      return center
+    }
+  default:
+    return evenly()
+  }
+}
+
+func chartIndicatorRange(
+  start: Double?,
+  end: Double?,
+  pointY: Double,
+  domain: ChartDomain
+) -> ClosedRange<Double> {
+  let clampedStart = min(domain.maxY, max(domain.minY, start ?? -.infinity))
+  let clampedEnd = min(domain.maxY, max(domain.minY, end ?? pointY))
+  return min(clampedStart, clampedEnd)...max(clampedStart, clampedEnd)
 }
 
 @MainActor
@@ -257,6 +366,8 @@ struct ChartAxesOverlay: View {
   let axes: ChartAxes
   let domain: ChartDomain
   let layout: ChartCartesianLayout
+  var baselineX = 0.0
+  var baselineY = 0.0
 
   var body: some View {
     ZStack {
@@ -294,7 +405,10 @@ struct ChartAxesOverlay: View {
       ? chartTicks(
         min: side.isVertical ? domain.minY : domain.minX,
         max: side.isVertical ? domain.maxY : domain.maxX,
-        interval: axis.labelSpacing).enumerated().map { index, value in
+        interval: axis.labelSpacing,
+        baseline: side.isVertical ? baselineY : baselineX,
+        includeMinimum: axis.showMinimum,
+        includeMaximum: axis.showMaximum).enumerated().map { index, value in
           ChartPositionedLabel.Source.text(index: index, value: value, text: chartNumber(value))
         }
       : axis.labels.enumerated().map { index, label in
@@ -334,6 +448,16 @@ struct ChartAxesOverlay: View {
   }
 }
 
+func chartAnimation(_ value: Any?) -> Animation {
+  parseAnimation(
+    value,
+    ImplicitAnimationDetails(duration: 0.15, curve: .linear))!.animation
+}
+
+func chartLongPressDuration(_ value: Any?) -> TimeInterval {
+  parseDuration(value, 0.5) ?? 0.5
+}
+
 private enum ChartSide { case left, top, right, bottom
   var isVertical: Bool { self == .left || self == .right }
 }
@@ -369,7 +493,7 @@ private struct ChartPositionedLabel: Identifiable {
   let view: AnyView
 }
 
-private func chartNumber(_ value: Double) -> String {
+func chartNumber(_ value: Double) -> String {
   value.rounded() == value ? String(Int(value)) : String(format: "%.2f", value)
 }
 

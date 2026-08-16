@@ -17,6 +17,9 @@ struct PieChartControl: View {
           Canvas { context, _ in draw(context: &context, layout: layout) }
           badges(layout: layout)
         }
+        .animation(
+          chartAnimation(control.dynamicValue("animation")),
+          value: control.revision)
         .contentShape(Rectangle())
         .gesture(DragGesture(minimumDistance: 0).onEnded { value in
           emitTap(at: value.location, layout: layout)
@@ -124,7 +127,7 @@ struct PieChartControl: View {
   }
 
   private func emitTap(at location: CGPoint, layout: PieChartLayout) {
-    guard control.hasEventHandler("event") else { return }
+    guard control.hasEventHandler("event"), !control.disabled else { return }
     control.triggerEvent("event", data: chartEvent(
       type: "tapUp",
       location: location,

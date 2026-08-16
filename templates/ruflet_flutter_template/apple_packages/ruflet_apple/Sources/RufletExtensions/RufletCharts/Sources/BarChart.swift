@@ -30,11 +30,16 @@ struct BarChartControl: View {
               configuration: configuration)
             draw(context: &context, layout: layout, domain: domain)
           }
-          ChartAxesOverlay(axes: configuration.axes, domain: domain, layout: layout)
+          ChartAxesOverlay(
+            axes: configuration.axes, domain: domain, layout: layout,
+            baselineX: configuration.baselineX, baselineY: configuration.baselineY)
         }
+          .animation(
+            chartAnimation(control.dynamicValue("animation")),
+            value: control.revision)
           .contentShape(Rectangle())
           .gesture(DragGesture(minimumDistance: 0).onEnded { value in
-            emitTap(at: value.location, layout: layout)
+            emitTap(at: value.location, layout: layout, domain: domain)
           })
       }
     }
@@ -45,18 +50,14 @@ struct BarChartControl: View {
     layout: ChartCartesianLayout,
     domain: ChartDomain
   ) {
-    let rods = groups.flatMap(\.rods)
-    let values = rods.flatMap { [$0.fromY, $0.toY] }
-    let baseline = control.number("baseline_y") ?? values.min() ?? domain.minY
-    let groupWidth = layout.plotRect.width / CGFloat(max(1, groups.count))
+    let groupCenters = barGroupCenters(in: layout.plotRect)
 
     for (groupIndex, group) in groups.enumerated() {
       let totalWidth = group.groupVertically
         ? (group.rods.map(\.width).max() ?? 0)
         : group.rods.reduce(0) { $0 + $1.width }
           + Double(max(0, group.rods.count - 1)) * group.spacing
-      var x = layout.plotRect.minX + CGFloat(groupIndex) * groupWidth
-        + (groupWidth - CGFloat(totalWidth)) / 2
+      var x = groupCenters[groupIndex] - CGFloat(totalWidth) / 2
       for rod in group.rods {
         let from = layout.location(ChartPoint(x: Double(group.x), y: rod.fromY), domain: domain).y
         let to = layout.location(ChartPoint(x: Double(group.x), y: rod.toY), domain: domain).y
@@ -91,23 +92,67 @@ struct BarChartControl: View {
       }
     }
 
-    var baselinePath = Path()
-    let baselineY = layout.location(ChartPoint(x: domain.minX, y: baseline), domain: domain).y
-    baselinePath.move(to: CGPoint(x: layout.plotRect.minX, y: baselineY))
-    baselinePath.addLine(to: CGPoint(x: layout.plotRect.maxX, y: baselineY))
-    context.stroke(baselinePath, with: .color(.secondary.opacity(0.35)), lineWidth: 1)
   }
 
-  private func emitTap(at location: CGPoint, layout: ChartCartesianLayout) {
-    guard control.hasEventHandler("event"), control.boolean("interactive", default: true), !groups.isEmpty else { return }
-    let groupWidth = layout.plotRect.width / CGFloat(groups.count)
-    let groupIndex = min(groups.count - 1, max(0, Int((location.x - layout.plotRect.minX) / groupWidth)))
-    let rods = groups[groupIndex].rods
-    let localX = location.x - layout.plotRect.minX
-    let rodIndex = rods.isEmpty ? nil : min(rods.count - 1, max(0, Int(
-      localX.truncatingRemainder(dividingBy: groupWidth)
-        / max(1, groupWidth / CGFloat(rods.count)))))
-    let event = BarChartEventData(eventType: "tapUp", groupIndex: groupIndex, rodIndex: rodIndex)
+  private func barGroupCenters(in rect: CGRect) -> [CGFloat] {
+    chartBarGroupCenters(
+      in: rect,
+      widths: groups.map(groupWidth),
+      alignment: control.string("group_alignment"),
+      spacing: CGFloat(control.number("spacing", default: 16) ?? 16))
+  }
+
+  private func groupWidth(_ group: BarChartGroup) -> CGFloat {
+    CGFloat(group.groupVertically
+      ? (group.rods.map(\.width).max() ?? 0)
+      : group.rods.reduce(0) { $0 + $1.width }
+        + Double(max(0, group.rods.count - 1)) * group.spacing)
+  }
+
+  private func emitTap(
+    at location: CGPoint,
+    layout: ChartCartesianLayout,
+    domain: ChartDomain
+  ) {
+    guard control.hasEventHandler("event"), control.boolean("interactive", default: true),
+      !control.disabled, !groups.isEmpty else { return }
+    let centers = barGroupCenters(in: layout.plotRect)
+    guard let groupIndex = centers.indices.min(by: {
+      abs(centers[$0] - location.x) < abs(centers[$1] - location.x)
+    }) else { return }
+    let group = groups[groupIndex]
+    var cursor = centers[groupIndex] - groupWidth(group) / 2
+    let rodRects = group.rods.map { rod -> CGRect in
+      let centerX = group.groupVertically ? centers[groupIndex] : cursor + CGFloat(rod.width) / 2
+      if !group.groupVertically { cursor += CGFloat(rod.width + group.spacing) }
+      let from = layout.location(ChartPoint(x: Double(group.x), y: rod.fromY), domain: domain).y
+      let to = layout.location(ChartPoint(x: Double(group.x), y: rod.toY), domain: domain).y
+      return CGRect(
+        x: centerX - CGFloat(rod.width) / 2,
+        y: min(from, to),
+        width: CGFloat(rod.width),
+        height: max(1, abs(to - from)))
+    }
+    let rodIndex = rodRects.indices.min(by: {
+      distance(from: location, to: rodRects[$0]) < distance(from: location, to: rodRects[$1])
+    })
+    let stackItemIndex = rodIndex.flatMap { rodIndex in
+      group.rods[rodIndex].stackItems.indices.first { itemIndex in
+        let item = group.rods[rodIndex].stackItems[itemIndex]
+        let from = layout.location(ChartPoint(x: Double(group.x), y: item.fromY), domain: domain).y
+        let to = layout.location(ChartPoint(x: Double(group.x), y: item.toY), domain: domain).y
+        return location.y >= min(from, to) && location.y <= max(from, to)
+      }
+    }
+    let event = BarChartEventData(
+      eventType: "tapUp", groupIndex: groupIndex,
+      rodIndex: rodIndex, stackItemIndex: stackItemIndex)
     control.triggerEvent("event", data: .map(event.value))
+  }
+
+  private func distance(from point: CGPoint, to rect: CGRect) -> CGFloat {
+    hypot(
+      max(rect.minX - point.x, 0, point.x - rect.maxX),
+      max(rect.minY - point.y, 0, point.y - rect.maxY))
   }
 }

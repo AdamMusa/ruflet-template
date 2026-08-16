@@ -59,6 +59,82 @@ final class CartesianChartPropertyTests: XCTestCase {
     XCTAssertEqual(chartTicks(min: -2.5, max: 5, interval: 2.5), [-2.5, 0, 2.5, 5])
   }
 
+  func testTicksMatchPinnedFlChartBaselineAndEndpointRules() {
+    XCTAssertEqual(
+      chartTicks(
+        min: -3, max: 3, interval: 2, baseline: 0,
+        includeMinimum: false, includeMaximum: false),
+      [-2, 0, 2])
+    XCTAssertEqual(
+      chartTicks(min: -3, max: 3, interval: 2, baseline: 0),
+      [-3, -2, 0, 2, 3])
+    XCTAssertEqual(
+      chartTicks(
+        min: 1, max: 5, interval: 2, baseline: 1,
+        includeMinimum: false, includeMaximum: false),
+      [3])
+  }
+
+  func testBarGroupCentersMatchPinnedFlChartAlignmentMath() {
+    let rect = CGRect(x: 0, y: 0, width: 100, height: 40)
+    let widths: [CGFloat] = [10, 20]
+
+    XCTAssertEqual(
+      chartBarGroupCenters(in: rect, widths: widths, alignment: "start", spacing: 7),
+      [5, 27])
+    XCTAssertEqual(
+      chartBarGroupCenters(in: rect, widths: widths, alignment: "end", spacing: 7),
+      [68, 90])
+    XCTAssertEqual(
+      chartBarGroupCenters(in: rect, widths: widths, alignment: "center", spacing: 7),
+      [36.5, 58.5])
+    XCTAssertEqual(
+      chartBarGroupCenters(in: rect, widths: widths, alignment: "space_between", spacing: 7),
+      [5, 90])
+    XCTAssertEqual(
+      chartBarGroupCenters(in: rect, widths: widths, alignment: "space_around", spacing: 7),
+      [22.5, 72.5])
+    let evenly = chartBarGroupCenters(
+      in: rect, widths: widths, alignment: "space_evenly", spacing: 7)
+    XCTAssertEqual(evenly[0], 28.333_333_333, accuracy: 0.000_001)
+    XCTAssertEqual(evenly[1], 66.666_666_667, accuracy: 0.000_001)
+
+    XCTAssertEqual(
+      chartBarGroupCenters(
+        in: CGRect(x: 0, y: 0, width: 20, height: 40),
+        widths: widths, alignment: "start", spacing: 7),
+      chartBarGroupCenters(
+        in: CGRect(x: 0, y: 0, width: 20, height: 40),
+        widths: widths, alignment: "space_evenly", spacing: 7))
+  }
+
+  func testLineIndicatorUsesDataDomainAndPinnedDefaults() {
+    let chart = makeControl(id: 1, type: "LineChart", properties: [
+      "min_y": .double(-5),
+      "max_y": .double(15),
+    ])
+    let domain = ChartDomain(points: [], control: chart)
+
+    XCTAssertEqual(
+      chartIndicatorRange(start: nil, end: nil, pointY: 8, domain: domain),
+      -5...8)
+    XCTAssertEqual(
+      chartIndicatorRange(start: -100, end: 100, pointY: 8, domain: domain),
+      -5...15)
+    XCTAssertEqual(
+      chartIndicatorRange(start: 12, end: 2, pointY: 8, domain: domain),
+      2...12)
+  }
+
+  func testBarEventPayloadIncludesPinnedStackItemField() {
+    let value = BarChartEventData(
+      eventType: "tapUp", groupIndex: 2, rodIndex: 1, stackItemIndex: 0).value
+    XCTAssertEqual(value["type"], .string("tapUp"))
+    XCTAssertEqual(value["group_index"], .int(2))
+    XCTAssertEqual(value["rod_index"], .int(1))
+    XCTAssertEqual(value["stack_item_index"], .int(0))
+  }
+
   func testBarMetadataConsumesSpacingSelectionGradientRadiusAndStackItems() {
     let group = makeControl(id: 1, type: "group", properties: [
       "bars_space": .double(7),

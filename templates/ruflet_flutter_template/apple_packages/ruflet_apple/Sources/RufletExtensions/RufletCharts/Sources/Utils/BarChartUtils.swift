@@ -80,12 +80,14 @@ struct BarChartEventData: Equatable {
   let eventType: String
   let groupIndex: Int?
   let rodIndex: Int?
+  let stackItemIndex: Int?
 
   var value: [String: RufletValue] {
     [
       "type": .string(eventType),
       "group_index": groupIndex.map { .int(Int64($0)) } ?? .null,
       "rod_index": rodIndex.map { .int(Int64($0)) } ?? .null,
+      "stack_item_index": stackItemIndex.map { .int(Int64($0)) } ?? .null,
     ]
   }
 }
