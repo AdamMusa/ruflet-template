@@ -91,7 +91,7 @@ module NativeCompoundDefaultAudit
     ],
     "SlidePicker.indicator_alignment_begin" => [
       "RufletExtensions/RufletColorPickers/Sources/SlidePicker.swift",
-      ['"indicator_alignment_begin", x: -1, y: -3']
+      ['value("indicator_alignment_begin"), defaultX: -1, defaultY: -3']
     ],
     "SlidePicker.indicator_size" => [
       "RufletExtensions/RufletColorPickers/Sources/SlidePicker.swift",

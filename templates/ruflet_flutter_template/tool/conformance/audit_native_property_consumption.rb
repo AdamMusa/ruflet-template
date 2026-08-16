@@ -353,6 +353,7 @@ module NativePropertyConsumptionAudit
   def property_reads(lines, path:, start_line: 0)
     reads = Hash.new { |hash, key| hash[key] = [] }
     scanned = code_lines(lines)
+    dynamic_event_sink = scanned.join("\n").match?(/\btriggerEvent\(\s*event\b/)
     scanned.each_with_index do |line, index|
       keys = []
       window = scanned[index, EVENT_CALL_LOOKAHEAD].join(" ")
@@ -363,6 +364,11 @@ module NativePropertyConsumptionAudit
       # unrelated framework helper cannot prove a DSL property by accident.
       line.scan(/\b[a-z][A-Za-z0-9_]*\??\.(?:#{accessor_pattern})\(\s*(?:forKey:\s*)?"([^"]+)"/) { |match| keys << match[0] }
       line.scan(/\$\d+\.(?:#{accessor_pattern})\(\s*(?:forKey:\s*)?"([^"]+)"/) { |match| keys << match[0] }
+      # SwiftFormat commonly wraps the first argument onto the next line.
+      # Scan the same bounded lookahead used for event calls so a multiline
+      # concrete accessor remains executable evidence for that property.
+      window.scan(/\b[a-z][A-Za-z0-9_]*\??\.(?:#{accessor_pattern})\(\s*(?:forKey:\s*)?"([^"]+)"/) { |match| keys << match[0] }
+      window.scan(/\$\d+\.(?:#{accessor_pattern})\(\s*(?:forKey:\s*)?"([^"]+)"/) { |match| keys << match[0] }
       line.scan(/\b[a-z][A-Za-z0-9_]*\??\.(disabled|adaptive|visible)\b/) { |match| keys << match[0] }
       line.scan(/\bnode\.props\[\s*"([^"]+)"\s*\]/) { |match| keys << match[0] }
       line.scan(/\b(?:child|control|item|option|suggestion|value)?\.?(?:props)\[\s*"([^"]+)"\s*\]/) { |match| keys << match[0] }
@@ -398,6 +404,9 @@ module NativePropertyConsumptionAudit
       # only literal is at the call site: NamedSemanticsAction(event: "copy")
       # and events.commit(..., event: "change") both name a real event.
       line.scan(/\bevent:\s*"([^"]+)"/) { |match| keys << "on_#{match[0]}" }
+      if dynamic_event_sink
+        line.scan(/\bevent\s*=\s*"([^"]+)"/) { |match| keys << "on_#{match[0]}" }
+      end
       # RufletEventSink#commit defaults to writing `value` and reporting
       # `change`, so the commonest read of either has no literal to find.
       if (commit = window[/\bevents\.commit\((.*)$/, 1])
@@ -551,11 +560,7 @@ module NativePropertyConsumptionAudit
         class_name = renderer.fetch("class")
         body = FletControlContract.renderer_scope(
           FletControlContract.strip_dart_comments(source), class_name)
-        reads = body.scan(
-          /(?:get(?:Bool|Int|Double|String|Color|Padding|EdgeInsets|Shape|MouseCursor|WidgetState\w*)?|child(?:ren)?|buildWidget|buildIconOrWidget|buildTextOrWidget)\(\s*["']([^"']+)["']/
-        ).flatten
-        reads.concat(body.scan(/\b(?:hasEventHandler|triggerEvent)\(\s*["']([^"']+)["']/).flatten.map { |event| "on_#{event}" })
-        [wire, reads.uniq]
+        [wire, FletControlContract.properties(body)]
       end
     end
   end

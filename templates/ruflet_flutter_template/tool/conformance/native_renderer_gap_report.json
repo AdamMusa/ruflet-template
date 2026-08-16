@@ -1,6 +1,6 @@
 {
   "audit_version": 2,
-  "contract_version": 2,
+  "contract_version": 3,
   "source": {
     "flet_contract": "flet_control_contract.json",
     "native_registry": "RufletCoreExtension + concrete RufletExtension implementations",

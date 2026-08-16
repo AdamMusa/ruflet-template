@@ -1,5 +1,5 @@
 {
-  "contract_version": 2,
+  "contract_version": 3,
   "source": {
     "flet_version": "0.80.5",
     "flet_ref": "67a9763da3bd2611bbb7626c3a1ec5e9d30fc965",
@@ -40,6 +40,8 @@
       "family": "core",
       "classification": "service",
       "design_family": null,
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -57,6 +59,8 @@
       "family": "core",
       "classification": "widget",
       "design_family": "adaptive",
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -74,6 +78,8 @@
       "family": "core",
       "classification": "widget",
       "design_family": "adaptive",
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -91,6 +97,8 @@
       "family": "core",
       "classification": "widget",
       "design_family": "adaptive",
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -108,6 +116,8 @@
       "family": "core",
       "classification": "widget",
       "design_family": "adaptive",
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -125,6 +135,8 @@
       "family": "core",
       "classification": "widget",
       "design_family": "adaptive",
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -142,6 +154,8 @@
       "family": "core",
       "classification": "widget",
       "design_family": "adaptive",
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -159,6 +173,8 @@
       "family": "core",
       "classification": "widget",
       "design_family": "adaptive",
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -176,6 +192,8 @@
       "family": "core",
       "classification": "widget",
       "design_family": "adaptive",
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -193,6 +211,17 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "content",
+        "duration",
+        "reverse_duration",
+        "switch_in_curve",
+        "switch_out_curve",
+        "transition"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {},
       "compound_defaults": {
         "duration": {
@@ -219,6 +248,35 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "actions",
+        "actions_padding",
+        "automatically_imply_leading",
+        "bgcolor",
+        "center_title",
+        "clip_behavior",
+        "color",
+        "elevation",
+        "elevation_on_scroll",
+        "exclude_header_semantics",
+        "force_material_transparency",
+        "leading",
+        "leading_width",
+        "secondary",
+        "shadow_color",
+        "shape",
+        "title",
+        "title_spacing",
+        "title_text_style",
+        "toolbar_height",
+        "toolbar_opacity",
+        "toolbar_text_style"
+      ],
+      "child_slots": {
+        "actions": "many",
+        "leading": "one",
+        "title": "one"
+      },
       "primitive_defaults": {
         "automatically_imply_leading": {
           "type": "bool",
@@ -257,6 +315,20 @@
       "family": "extension",
       "classification": "service",
       "design_family": null,
+      "properties": [
+        "autoplay",
+        "balance",
+        "on_duration_change",
+        "on_loaded",
+        "on_position_change",
+        "on_seek_complete",
+        "on_state_change",
+        "playback_rate",
+        "release_mode",
+        "src",
+        "volume"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "autoplay": {
           "type": "bool",
@@ -305,6 +377,10 @@
       "family": "extension",
       "classification": "service",
       "design_family": null,
+      "properties": [
+        "on_state_change"
+      ],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [
@@ -335,6 +411,14 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "on_change",
+        "on_select",
+        "suggestions",
+        "suggestions_max_height",
+        "value"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "suggestions_max_height": {
           "type": "double",
@@ -364,6 +448,13 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "content",
+        "dispose_action"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -381,6 +472,32 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "_dismissed",
+        "_open",
+        "_show_generation",
+        "actions",
+        "bgcolor",
+        "content",
+        "content_padding",
+        "content_text_style",
+        "divider_color",
+        "elevation",
+        "force_actions_below",
+        "leading",
+        "leading_padding",
+        "margin",
+        "min_action_bar_height",
+        "on_dismiss",
+        "on_visible",
+        "open",
+        "shadow_color"
+      ],
+      "child_slots": {
+        "actions": "many",
+        "content": "one",
+        "leading": "one"
+      },
       "primitive_defaults": {
         "_open": {
           "type": "bool",
@@ -422,6 +539,19 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "on_click",
+        "on_close",
+        "on_error",
+        "on_impression",
+        "on_load",
+        "on_open",
+        "on_paid",
+        "on_will_dismiss",
+        "request",
+        "unit_id"
+      ],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [
@@ -448,6 +578,32 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "animation",
+        "baseline_y",
+        "bgcolor",
+        "border",
+        "bottom_axis",
+        "group_alignment",
+        "groups",
+        "horizontal_grid_lines",
+        "interactive",
+        "left_axis",
+        "max_y",
+        "min_y",
+        "on_event",
+        "right_axis",
+        "spacing",
+        "top_axis",
+        "vertical_grid_lines"
+      ],
+      "child_slots": {
+        "bottom_axis": "one",
+        "groups": "many",
+        "left_axis": "one",
+        "right_axis": "one",
+        "top_axis": "one"
+      },
       "primitive_defaults": {
         "interactive": {
           "type": "bool",
@@ -476,6 +632,8 @@
       "family": "core",
       "classification": "service",
       "design_family": null,
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -493,6 +651,10 @@
       "family": "core",
       "classification": "service",
       "design_family": null,
+      "properties": [
+        "on_state_change"
+      ],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [
@@ -516,6 +678,12 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "available_colors",
+        "color",
+        "on_color_change"
+      ],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [
@@ -535,6 +703,21 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "bgcolor",
+        "border_radius",
+        "clip_behavior",
+        "content",
+        "elevation",
+        "height",
+        "notch_margin",
+        "padding",
+        "shadow_color",
+        "shape"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {
         "notch_margin": {
           "type": "double",
@@ -557,6 +740,29 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "_open",
+        "animation_style",
+        "barrier_color",
+        "bgcolor",
+        "clip_behavior",
+        "content",
+        "dismissible",
+        "draggable",
+        "elevation",
+        "fullscreen",
+        "maintain_bottom_view_insets_padding",
+        "on_dismiss",
+        "open",
+        "scrollable",
+        "shape",
+        "show_drag_handle",
+        "size_constraints",
+        "use_safe_area"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {
         "_open": {
           "type": "bool",
@@ -613,6 +819,8 @@
       "family": "core",
       "classification": "service",
       "design_family": null,
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -633,6 +841,8 @@
       "family": "core",
       "classification": "widget",
       "design_family": "adaptive",
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -650,6 +860,15 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "content",
+        "on_state_change",
+        "on_stream_image",
+        "preview_enabled"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {
         "on_state_change": {
           "type": "bool",
@@ -708,6 +927,37 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "animation",
+        "baseline_x",
+        "baseline_y",
+        "bgcolor",
+        "border",
+        "bottom_axis",
+        "horizontal_grid_lines",
+        "interactive",
+        "left_axis",
+        "long_press_duration",
+        "max_x",
+        "max_y",
+        "min_x",
+        "min_y",
+        "on_event",
+        "right_axis",
+        "rotation_quarter_turns",
+        "show_tooltips_for_selected_spots_only",
+        "spots",
+        "top_axis",
+        "touch_spot_threshold",
+        "vertical_grid_lines"
+      ],
+      "child_slots": {
+        "bottom_axis": "one",
+        "left_axis": "one",
+        "right_axis": "one",
+        "spots": "many",
+        "top_axis": "one"
+      },
       "primitive_defaults": {
         "interactive": {
           "type": "bool",
@@ -744,6 +994,16 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "content",
+        "on_resize",
+        "resize_interval",
+        "shapes"
+      ],
+      "child_slots": {
+        "content": "one",
+        "shapes": "many"
+      },
       "primitive_defaults": {
         "resize_interval": {
           "type": "int",
@@ -772,6 +1032,21 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "bgcolor",
+        "clip_behavior",
+        "content",
+        "elevation",
+        "margin",
+        "semantic_container",
+        "shadow_color",
+        "shape",
+        "show_border_on_foreground",
+        "variant"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {
         "semantic_container": {
           "type": "bool",
@@ -798,6 +1073,8 @@
       "family": "core",
       "classification": "widget",
       "design_family": "adaptive",
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -815,6 +1092,47 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "autofocus",
+        "bgcolor",
+        "border_side",
+        "check_color",
+        "clip_behavior",
+        "color",
+        "delete_button_tooltip",
+        "delete_drawer_animation_style",
+        "delete_icon",
+        "delete_icon_color",
+        "delete_icon_size_constraints",
+        "disabled_color",
+        "elevation",
+        "elevation_on_click",
+        "enable_animation_style",
+        "label",
+        "label_padding",
+        "label_text_style",
+        "leading",
+        "leading_drawer_animation_style",
+        "leading_size_constraints",
+        "mouse_cursor",
+        "on_click",
+        "on_delete",
+        "on_select",
+        "padding",
+        "select_animation_style",
+        "selected",
+        "selected_color",
+        "selected_shadow_color",
+        "shadow_color",
+        "shape",
+        "show_checkmark",
+        "visual_density"
+      ],
+      "child_slots": {
+        "delete_icon": "one",
+        "label": "one",
+        "leading": "one"
+      },
       "primitive_defaults": {
         "autofocus": {
           "type": "bool",
@@ -865,6 +1183,20 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "background_image_src",
+        "bgcolor",
+        "color",
+        "content",
+        "foreground_image_src",
+        "max_radius",
+        "min_radius",
+        "on_image_error",
+        "radius"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [
@@ -884,6 +1216,12 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "circles"
+      ],
+      "child_slots": {
+        "circles": "many"
+      },
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -901,6 +1239,8 @@
       "family": "core",
       "classification": "service",
       "design_family": null,
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -925,6 +1265,20 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "autocomplete",
+        "autocomplete_words",
+        "autofocus",
+        "language",
+        "on_change",
+        "on_selection_change",
+        "padding",
+        "read_only",
+        "selection",
+        "text_style",
+        "value"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "autocomplete": {
           "type": "bool",
@@ -975,6 +1329,24 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "color",
+        "color_history",
+        "color_picker_width",
+        "display_thumb_color",
+        "enable_alpha",
+        "hex_input_bar",
+        "hsv_color",
+        "label_text_style",
+        "label_types",
+        "on_color_change",
+        "on_history_change",
+        "on_hsv_color_change",
+        "palette_type",
+        "picker_area_border_radius",
+        "picker_area_height_percent"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "display_thumb_color": {
           "type": "bool",
@@ -1009,6 +1381,21 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "alignment",
+        "controls",
+        "horizontal_alignment",
+        "intrinsic_width",
+        "on_scroll",
+        "run_alignment",
+        "run_spacing",
+        "spacing",
+        "tight",
+        "wrap"
+      ],
+      "child_slots": {
+        "controls": "many"
+      },
       "primitive_defaults": {
         "alignment": {
           "type": "enum",
@@ -1065,6 +1452,10 @@
       "family": "core",
       "classification": "service",
       "design_family": null,
+      "properties": [
+        "on_change"
+      ],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [
@@ -1086,6 +1477,39 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "alignment",
+        "animate",
+        "bgcolor",
+        "blend_mode",
+        "blur",
+        "border",
+        "border_radius",
+        "clip_behavior",
+        "color_filter",
+        "content",
+        "foreground_decoration",
+        "gradient",
+        "height",
+        "ignore_interactions",
+        "image",
+        "ink",
+        "ink_color",
+        "margin",
+        "on_animation_end",
+        "on_click",
+        "on_hover",
+        "on_long_press",
+        "on_tap_down",
+        "padding",
+        "shadow",
+        "shape",
+        "url",
+        "width"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {
         "ignore_interactions": {
           "type": "bool",
@@ -1138,6 +1562,25 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "content",
+        "items",
+        "on_dismiss",
+        "on_select",
+        "primary_items",
+        "primary_trigger",
+        "secondary_items",
+        "secondary_trigger",
+        "tertiary_items",
+        "tertiary_trigger"
+      ],
+      "child_slots": {
+        "content": "one",
+        "items": "many",
+        "primary_items": "many",
+        "secondary_items": "many",
+        "tertiary_items": "many"
+      },
       "primitive_defaults": {
         "primary_trigger": {
           "type": "enum",
@@ -1173,6 +1616,18 @@
       "family": "core",
       "classification": "widget",
       "design_family": "cupertino",
+      "properties": [
+        "actions",
+        "cancel",
+        "message",
+        "title"
+      ],
+      "child_slots": {
+        "actions": "many",
+        "cancel": "one",
+        "message": "one",
+        "title": "one"
+      },
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -1190,6 +1645,16 @@
       "family": "core",
       "classification": "widget",
       "design_family": "cupertino",
+      "properties": [
+        "content",
+        "default",
+        "destructive",
+        "mouse_cursor",
+        "on_click"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {
         "default": {
           "type": "bool",
@@ -1218,6 +1683,13 @@
       "family": "core",
       "classification": "widget",
       "design_family": "cupertino",
+      "properties": [
+        "animating",
+        "color",
+        "progress",
+        "radius"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "animating": {
           "type": "bool",
@@ -1244,6 +1716,22 @@
       "family": "core",
       "classification": "widget",
       "design_family": "cupertino",
+      "properties": [
+        "_open",
+        "actions",
+        "barrier_color",
+        "content",
+        "inset_animation",
+        "modal",
+        "on_dismiss",
+        "open",
+        "title"
+      ],
+      "child_slots": {
+        "actions": "many",
+        "content": "one",
+        "title": "one"
+      },
       "primitive_defaults": {
         "_open": {
           "type": "bool",
@@ -1276,6 +1764,29 @@
       "family": "core",
       "classification": "widget",
       "design_family": "cupertino",
+      "properties": [
+        "actions",
+        "automatic_background_visibility",
+        "automatically_imply_leading",
+        "automatically_imply_title",
+        "background_filter_blur",
+        "bgcolor",
+        "border",
+        "brightness",
+        "large",
+        "leading",
+        "padding",
+        "previous_page_title",
+        "title",
+        "trailing",
+        "transition_between_routes"
+      ],
+      "child_slots": {
+        "actions": "many",
+        "leading": "one",
+        "title": "one",
+        "trailing": "one"
+      },
       "primitive_defaults": {
         "automatic_background_visibility": {
           "type": "bool",
@@ -1318,6 +1829,19 @@
       "family": "core",
       "classification": "widget",
       "design_family": "cupertino",
+      "properties": [
+        "_open",
+        "bgcolor",
+        "content",
+        "height",
+        "modal",
+        "on_dismiss",
+        "open",
+        "padding"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {
         "_open": {
           "type": "bool",
@@ -1354,6 +1878,30 @@
       "family": "core",
       "classification": "widget",
       "design_family": "cupertino",
+      "properties": [
+        "alignment",
+        "autofocus",
+        "bgcolor",
+        "border_radius",
+        "color",
+        "content",
+        "disabled_bgcolor",
+        "focus_color",
+        "icon",
+        "icon_color",
+        "min_size",
+        "mouse_cursor",
+        "on_click",
+        "on_long_press",
+        "opacity_on_click",
+        "padding",
+        "size",
+        "url"
+      ],
+      "child_slots": {
+        "content": "one",
+        "icon": "one"
+      },
       "primitive_defaults": {
         "alignment": {
           "type": "enum",
@@ -1394,6 +1942,29 @@
       "family": "core",
       "classification": "widget",
       "design_family": "cupertino",
+      "properties": [
+        "active_color",
+        "autofocus",
+        "border_side",
+        "check_color",
+        "fill_color",
+        "focus_color",
+        "height",
+        "label",
+        "label_position",
+        "label_style",
+        "mouse_cursor",
+        "on_change",
+        "semantics_label",
+        "shape",
+        "spacing",
+        "tristate",
+        "value",
+        "width"
+      ],
+      "child_slots": {
+        "label": "one"
+      },
       "primitive_defaults": {
         "autofocus": {
           "type": "bool",
@@ -1426,6 +1997,15 @@
       "family": "core",
       "classification": "widget",
       "design_family": "cupertino",
+      "properties": [
+        "actions",
+        "content",
+        "enable_haptic_feedback"
+      ],
+      "child_slots": {
+        "actions": "many",
+        "content": "one"
+      },
       "primitive_defaults": {
         "enable_haptic_feedback": {
           "type": "bool",
@@ -1448,6 +2028,16 @@
       "family": "core",
       "classification": "widget",
       "design_family": "cupertino",
+      "properties": [
+        "content",
+        "default",
+        "destructive",
+        "on_click",
+        "trailing_icon"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {
         "default": {
           "type": "bool",
@@ -1476,6 +2066,23 @@
       "family": "core",
       "classification": "widget",
       "design_family": "cupertino",
+      "properties": [
+        "bgcolor",
+        "date_order",
+        "date_picker_mode",
+        "first_date",
+        "item_extent",
+        "last_date",
+        "locale",
+        "maximum_year",
+        "minimum_year",
+        "minute_interval",
+        "on_change",
+        "show_day_of_week",
+        "use_24h_format",
+        "value"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "item_extent": {
           "type": "double",
@@ -1516,6 +2123,16 @@
       "family": "core",
       "classification": "widget",
       "design_family": "cupertino",
+      "properties": [
+        "content",
+        "default",
+        "destructive",
+        "on_click",
+        "text_style"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {
         "default": {
           "type": "bool",
@@ -1544,6 +2161,30 @@
       "family": "core",
       "classification": "widget",
       "design_family": "cupertino",
+      "properties": [
+        "alignment",
+        "autofocus",
+        "bgcolor",
+        "border_radius",
+        "color",
+        "content",
+        "disabled_bgcolor",
+        "focus_color",
+        "icon",
+        "icon_color",
+        "min_size",
+        "mouse_cursor",
+        "on_click",
+        "on_long_press",
+        "opacity_on_click",
+        "padding",
+        "size",
+        "url"
+      ],
+      "child_slots": {
+        "content": "one",
+        "icon": "one"
+      },
       "primitive_defaults": {
         "alignment": {
           "type": "enum",
@@ -1584,6 +2225,29 @@
       "family": "core",
       "classification": "widget",
       "design_family": "cupertino",
+      "properties": [
+        "additional_info",
+        "bgcolor",
+        "bgcolor_activated",
+        "content_padding",
+        "leading",
+        "leading_size",
+        "leading_to_title",
+        "notched",
+        "on_click",
+        "subtitle",
+        "title",
+        "toggle_inputs",
+        "trailing",
+        "url"
+      ],
+      "child_slots": {
+        "additional_info": "one",
+        "leading": "one",
+        "subtitle": "one",
+        "title": "one",
+        "trailing": "one"
+      },
       "primitive_defaults": {
         "notched": {
           "type": "bool",
@@ -1616,6 +2280,20 @@
       "family": "core",
       "classification": "widget",
       "design_family": "cupertino",
+      "properties": [
+        "active_color",
+        "bgcolor",
+        "border",
+        "destinations",
+        "icon_size",
+        "inactive_color",
+        "indicator_color",
+        "on_change",
+        "selected_index"
+      ],
+      "child_slots": {
+        "destinations": "many"
+      },
       "primitive_defaults": {
         "icon_size": {
           "type": "double",
@@ -1644,6 +2322,25 @@
       "family": "core",
       "classification": "widget",
       "design_family": "cupertino",
+      "properties": [
+        "bgcolor",
+        "controls",
+        "default_selection_overlay_bgcolor",
+        "diameter_ratio",
+        "item_extent",
+        "looping",
+        "magnification",
+        "off_axis_fraction",
+        "on_change",
+        "selected_index",
+        "selection_overlay",
+        "squeeze",
+        "use_magnifier"
+      ],
+      "child_slots": {
+        "controls": "many",
+        "selection_overlay": "one"
+      },
       "primitive_defaults": {
         "diameter_ratio": {
           "type": "double",
@@ -1696,6 +2393,20 @@
       "family": "core",
       "classification": "widget",
       "design_family": "cupertino",
+      "properties": [
+        "active_color",
+        "autofocus",
+        "fill_color",
+        "focus_color",
+        "inactive_color",
+        "label",
+        "label_position",
+        "mouse_cursor",
+        "toggleable",
+        "use_checkmark_style",
+        "value"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "autofocus": {
           "type": "bool",
@@ -1734,6 +2445,21 @@
       "family": "core",
       "classification": "widget",
       "design_family": "cupertino",
+      "properties": [
+        "border_color",
+        "click_color",
+        "controls",
+        "disabled_color",
+        "disabled_text_color",
+        "on_change",
+        "padding",
+        "selected_color",
+        "selected_index",
+        "unselected_color"
+      ],
+      "child_slots": {
+        "controls": "many"
+      },
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [
@@ -1753,6 +2479,18 @@
       "family": "core",
       "classification": "widget",
       "design_family": "cupertino",
+      "properties": [
+        "active_color",
+        "divisions",
+        "max",
+        "min",
+        "on_change",
+        "on_change_end",
+        "on_change_start",
+        "thumb_color",
+        "value"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "max": {
           "type": "double",
@@ -1783,6 +2521,18 @@
       "family": "core",
       "classification": "widget",
       "design_family": "cupertino",
+      "properties": [
+        "bgcolor",
+        "controls",
+        "on_change",
+        "padding",
+        "proportional_width",
+        "selected_index",
+        "thumb_color"
+      ],
+      "child_slots": {
+        "controls": "many"
+      },
       "primitive_defaults": {
         "proportional_width": {
           "type": "bool",
@@ -1819,6 +2569,27 @@
       "family": "core",
       "classification": "widget",
       "design_family": "cupertino",
+      "properties": [
+        "active_thumb_image_src",
+        "active_track_color",
+        "autofocus",
+        "focusColor",
+        "inactive_thumb_color",
+        "inactive_thumb_image_src",
+        "inactive_track_color",
+        "label",
+        "label_position",
+        "off_label_color",
+        "on_change",
+        "on_image_error",
+        "on_label_color",
+        "thumb_color",
+        "thumb_icon",
+        "track_outline_color",
+        "track_outline_width",
+        "value"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "autofocus": {
           "type": "bool",
@@ -1852,6 +2623,84 @@
       "family": "core",
       "classification": "widget",
       "design_family": "cupertino",
+      "properties": [
+        "animate_cursor_opacity",
+        "autocorrect",
+        "autofill_hints",
+        "autofocus",
+        "bgcolor",
+        "blend_mode",
+        "blur",
+        "border",
+        "border_color",
+        "border_radius",
+        "border_width",
+        "can_reveal_password",
+        "capitalization",
+        "clear_button_semantics_label",
+        "clear_button_visibility_mode",
+        "clip_behavior",
+        "color",
+        "cursor_color",
+        "cursor_height",
+        "cursor_radius",
+        "cursor_width",
+        "enable_ime_personalized_learning",
+        "enable_interactive_selection",
+        "enable_stylus_handwriting",
+        "enable_suggestions",
+        "expand",
+        "fit_parent_size",
+        "focus",
+        "focused_color",
+        "gradient",
+        "ignore_up_down_keys",
+        "image",
+        "input_filter",
+        "keyboard_brightness",
+        "keyboard_type",
+        "label",
+        "label_style",
+        "max_length",
+        "max_lines",
+        "min_lines",
+        "multiline",
+        "obscuring_character",
+        "on_change",
+        "on_click",
+        "on_selection_change",
+        "on_submit",
+        "on_tap_outside",
+        "padding",
+        "password",
+        "placeholder_style",
+        "placeholder_text",
+        "prefix",
+        "prefix_visibility_mode",
+        "read_only",
+        "rtl",
+        "scroll_padding",
+        "selection",
+        "selection_color",
+        "shadows",
+        "shift_enter",
+        "show_cursor",
+        "smart_dashes_type",
+        "smart_quotes_type",
+        "strut_style",
+        "suffix",
+        "suffix_visibility_mode",
+        "text_align",
+        "text_size",
+        "text_style",
+        "text_vertical_align",
+        "value",
+        "width"
+      ],
+      "child_slots": {
+        "prefix": "one",
+        "suffix": "one"
+      },
       "primitive_defaults": {
         "autocorrect": {
           "type": "bool",
@@ -1986,6 +2835,17 @@
       "family": "core",
       "classification": "widget",
       "design_family": "cupertino",
+      "properties": [
+        "alignment",
+        "bgcolor",
+        "item_extent",
+        "minute_interval",
+        "mode",
+        "on_change",
+        "second_interval",
+        "value"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "alignment": {
           "type": "enum",
@@ -2022,6 +2882,30 @@
       "family": "core",
       "classification": "widget",
       "design_family": "cupertino",
+      "properties": [
+        "alignment",
+        "autofocus",
+        "bgcolor",
+        "border_radius",
+        "color",
+        "content",
+        "disabled_bgcolor",
+        "focus_color",
+        "icon",
+        "icon_color",
+        "min_size",
+        "mouse_cursor",
+        "on_click",
+        "on_long_press",
+        "opacity_on_click",
+        "padding",
+        "size",
+        "url"
+      ],
+      "child_slots": {
+        "content": "one",
+        "icon": "one"
+      },
       "primitive_defaults": {
         "alignment": {
           "type": "enum",
@@ -2062,6 +2946,37 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "bgcolor",
+        "border",
+        "border_radius",
+        "checkbox_horizontal_margin",
+        "clip_behavior",
+        "column_spacing",
+        "columns",
+        "data_row_color",
+        "data_row_max_height",
+        "data_row_min_height",
+        "data_text_style",
+        "divider_thickness",
+        "gradient",
+        "heading_row_color",
+        "heading_row_height",
+        "heading_text_style",
+        "horizontal_lLines",
+        "horizontal_margin",
+        "on_select_all",
+        "rows",
+        "show_bottom_border",
+        "show_checkbox_column",
+        "sort_ascending",
+        "sort_column_index",
+        "vertical_lines"
+      ],
+      "child_slots": {
+        "columns": "many",
+        "rows": "many"
+      },
       "primitive_defaults": {
         "clip_behavior": {
           "type": "enum",
@@ -2102,6 +3017,56 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "bgcolor",
+        "border",
+        "border_radius",
+        "bottom_margin",
+        "checkbox_alignment",
+        "checkbox_horizontal_margin",
+        "clip_behavior",
+        "column_spacing",
+        "columns",
+        "data_row_checkbox_theme",
+        "data_row_color",
+        "data_row_height",
+        "data_text_style",
+        "divider_thickness",
+        "empty",
+        "fixed_columns_color",
+        "fixed_corner_color",
+        "fixed_left_columns",
+        "fixed_top_rows",
+        "gradient",
+        "heading_checkbox_theme",
+        "heading_row_color",
+        "heading_row_decoration",
+        "heading_row_height",
+        "heading_text_style",
+        "horizontal_lines",
+        "horizontal_margin",
+        "lm_ratio",
+        "min_width",
+        "on_select_all",
+        "rows",
+        "show_bottom_border",
+        "show_checkbox_column",
+        "show_heading_checkbox",
+        "sm_ratio",
+        "sort_arrow_animation_duration",
+        "sort_arrow_icon",
+        "sort_arrow_icon_color",
+        "sort_ascending",
+        "sort_column_index",
+        "vertical_lines",
+        "visible_horizontal_scroll_bar",
+        "visible_vertical_scroll_bar"
+      ],
+      "child_slots": {
+        "columns": "many",
+        "empty": "one",
+        "rows": "many"
+      },
       "primitive_defaults": {
         "checkbox_alignment": {
           "type": "enum",
@@ -2171,6 +3136,34 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "_open",
+        "barrier_color",
+        "cancel_text",
+        "confirm_text",
+        "current_date",
+        "date_picker_mode",
+        "entry_mode",
+        "error_format_text",
+        "error_invalid_text",
+        "field_hint_text",
+        "field_label_text",
+        "first_date",
+        "help_text",
+        "inset_padding",
+        "keyboard_type",
+        "last_date",
+        "locale",
+        "modal",
+        "on_change",
+        "on_dismiss",
+        "on_entry_mode_change",
+        "open",
+        "switch_to_calendar_icon",
+        "switch_to_input_icon",
+        "value"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "_open": {
           "type": "bool",
@@ -2229,6 +3222,36 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "_open",
+        "barrier_color",
+        "cancel_text",
+        "confirm_text",
+        "current_date",
+        "end_value",
+        "entry_mode",
+        "error_format_text",
+        "error_invalid_range_text",
+        "error_invalid_text",
+        "field_end_hint_text",
+        "field_end_label_text",
+        "field_start_hint_text",
+        "field_start_label_text",
+        "first_date",
+        "help_text",
+        "keyboard_type",
+        "last_date",
+        "locale",
+        "modal",
+        "on_change",
+        "on_dismiss",
+        "open",
+        "save_text",
+        "start_value",
+        "switch_to_calendar_icon",
+        "switch_to_input_icon"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "_open": {
           "type": "bool",
@@ -2279,6 +3302,24 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "background",
+        "content",
+        "cross_axis_end_offset",
+        "dismiss_direction",
+        "dismiss_thresholds",
+        "duration",
+        "on_confirm_dismiss",
+        "on_dismiss",
+        "on_resize",
+        "on_update",
+        "secondary_background"
+      ],
+      "child_slots": {
+        "background": "one",
+        "content": "one",
+        "secondary_background": "one"
+      },
       "primitive_defaults": {
         "cross_axis_end_offset": {
           "type": "double",
@@ -2324,6 +3365,15 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "color",
+        "height",
+        "leading_indent",
+        "radius",
+        "thickness",
+        "trailing_indent"
+      ],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -2341,6 +3391,17 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "content",
+        "group",
+        "on_accept",
+        "on_leave",
+        "on_move",
+        "on_will_accept"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {
         "group": {
           "type": "string",
@@ -2368,6 +3429,22 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "affinity",
+        "axis",
+        "content",
+        "content_feedback",
+        "content_when_dragging",
+        "group",
+        "max_simultaneous_drags",
+        "on_drag_complete",
+        "on_drag_start"
+      ],
+      "child_slots": {
+        "content": "one",
+        "content_feedback": "one",
+        "content_when_dragging": "one"
+      },
       "primitive_defaults": {
         "group": {
           "type": "string",
@@ -2393,6 +3470,58 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "autofocus",
+        "bgcolor",
+        "border",
+        "border_color",
+        "border_radius",
+        "border_width",
+        "capitalization",
+        "color",
+        "content_padding",
+        "dense",
+        "editable",
+        "elevation",
+        "enable_filter",
+        "enable_search",
+        "error_style",
+        "error_text",
+        "expand",
+        "fill_color",
+        "filled",
+        "focused_border_color",
+        "focused_border_width",
+        "helper_style",
+        "helper_text",
+        "hint_style",
+        "hint_text",
+        "input_filter",
+        "label",
+        "label_style",
+        "leading_icon",
+        "menu_height",
+        "menu_style",
+        "menu_width",
+        "on_select",
+        "on_text_change",
+        "options",
+        "selected_trailing_icon",
+        "text",
+        "text_align",
+        "text_size",
+        "text_style",
+        "trailing_icon",
+        "value",
+        "width"
+      ],
+      "child_slots": {
+        "label": "one",
+        "leading_icon": "one",
+        "options": "many",
+        "selected_trailing_icon": "one",
+        "trailing_icon": "one"
+      },
       "primitive_defaults": {
         "autofocus": {
           "type": "bool",
@@ -2440,6 +3569,40 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "alignment",
+        "autofocus",
+        "bgcolor",
+        "border_radius",
+        "color",
+        "disabled_hint",
+        "elevation",
+        "enable_feedback",
+        "expand",
+        "focused_color",
+        "hint",
+        "item_height",
+        "max_menu_height",
+        "on_change",
+        "on_click",
+        "options",
+        "options_fill_horizontally",
+        "padding",
+        "select_icon",
+        "select_icon_disabled_color",
+        "select_icon_enabled_color",
+        "select_icon_size",
+        "text_size",
+        "text_style",
+        "value",
+        "width"
+      ],
+      "child_slots": {
+        "disabled_hint": "one",
+        "hint": "one",
+        "options": "many",
+        "select_icon": "one"
+      },
       "primitive_defaults": {
         "autofocus": {
           "type": "bool",
@@ -2479,6 +3642,18 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "controls",
+        "divider_color",
+        "elevation",
+        "expanded_header_padding",
+        "expanded_icon_color",
+        "on_change",
+        "spacing"
+      ],
+      "child_slots": {
+        "controls": "many"
+      },
       "primitive_defaults": {
         "elevation": {
           "type": "double",
@@ -2515,6 +3690,43 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "affinity",
+        "animation_style",
+        "bgcolor",
+        "clip_behavior",
+        "collapsed_bgcolor",
+        "collapsed_icon_color",
+        "collapsed_shape",
+        "collapsed_text_color",
+        "controls",
+        "controls_padding",
+        "dense",
+        "enable_feedback",
+        "expanded",
+        "expanded_alignment",
+        "expanded_cross_axis_alignment",
+        "icon_color",
+        "leading",
+        "maintain_state",
+        "min_tile_height",
+        "on_change",
+        "shape",
+        "show_trailing_icon",
+        "subtitle",
+        "text_color",
+        "tile_padding",
+        "title",
+        "trailing",
+        "visual_density"
+      ],
+      "child_slots": {
+        "controls": "many",
+        "leading": "one",
+        "subtitle": "one",
+        "title": "one",
+        "trailing": "one"
+      },
       "primitive_defaults": {
         "expanded": {
           "type": "bool",
@@ -2551,6 +3763,10 @@
       "family": "core",
       "classification": "service",
       "design_family": null,
+      "properties": [
+        "on_upload"
+      ],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [
@@ -2575,6 +3791,8 @@
       "family": "core",
       "classification": "widget",
       "design_family": "adaptive",
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -2592,6 +3810,33 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "alignment",
+        "autofocus",
+        "content",
+        "disabled_color",
+        "enable_feedback",
+        "focus_color",
+        "highlight_color",
+        "hover_color",
+        "icon",
+        "icon_color",
+        "icon_size",
+        "mouse_cursor",
+        "on_click",
+        "on_long_press",
+        "padding",
+        "selected",
+        "selected_icon",
+        "selected_icon_color",
+        "size_constraints",
+        "splash_color",
+        "splash_radius",
+        "url"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {
         "autofocus": {
           "type": "bool",
@@ -2624,6 +3869,8 @@
       "family": "core",
       "classification": "widget",
       "design_family": "adaptive",
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -2641,6 +3888,33 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "alignment",
+        "autofocus",
+        "content",
+        "disabled_color",
+        "enable_feedback",
+        "focus_color",
+        "highlight_color",
+        "hover_color",
+        "icon",
+        "icon_color",
+        "icon_size",
+        "mouse_cursor",
+        "on_click",
+        "on_long_press",
+        "padding",
+        "selected",
+        "selected_icon",
+        "selected_icon_color",
+        "size_constraints",
+        "splash_color",
+        "splash_radius",
+        "url"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {
         "autofocus": {
           "type": "bool",
@@ -2673,6 +3947,8 @@
       "family": "extension",
       "classification": "service",
       "design_family": null,
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -2694,6 +3970,17 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "app_error_message",
+        "app_startup_screen_message",
+        "args",
+        "force_pyodide",
+        "reconnect_interval_ms",
+        "reconnect_timeout_ms",
+        "show_app_startup_screen",
+        "url"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "url": {
           "type": "string",
@@ -2716,6 +4003,32 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "autofocus",
+        "bgcolor",
+        "clip_behavior",
+        "content",
+        "disabled_elevation",
+        "elevation",
+        "enable_feedback",
+        "focus_color",
+        "focus_elevation",
+        "foreground_color",
+        "highlight_elevation",
+        "hover_color",
+        "hover_elevation",
+        "icon",
+        "mini",
+        "mouse_cursor",
+        "on_click",
+        "shape",
+        "splash_color",
+        "url"
+      ],
+      "child_slots": {
+        "content": "one",
+        "icon": "one"
+      },
       "primitive_defaults": {
         "autofocus": {
           "type": "bool",
@@ -2748,6 +4061,12 @@
       "family": "extension",
       "classification": "service",
       "design_family": null,
+      "properties": [
+        "configuration",
+        "on_error",
+        "on_position_change"
+      ],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [
@@ -2777,6 +4096,85 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "content",
+        "drag_interval",
+        "exclude_from_semantics",
+        "hover_interval",
+        "mouse_cursor",
+        "multi_tap_touches",
+        "on_double_tap",
+        "on_double_tap_cancel",
+        "on_double_tap_down",
+        "on_enter",
+        "on_exit",
+        "on_force_press_end",
+        "on_force_press_peak",
+        "on_force_press_start",
+        "on_force_press_update",
+        "on_horizontal_drag_cancel",
+        "on_horizontal_drag_down",
+        "on_horizontal_drag_end",
+        "on_horizontal_drag_start",
+        "on_horizontal_drag_update",
+        "on_hover",
+        "on_long_press",
+        "on_long_press_cancel",
+        "on_long_press_down",
+        "on_long_press_end",
+        "on_long_press_move_update",
+        "on_long_press_start",
+        "on_long_press_up",
+        "on_multi_long_press",
+        "on_multi_tap",
+        "on_pan_cancel",
+        "on_pan_down",
+        "on_pan_end",
+        "on_pan_start",
+        "on_pan_update",
+        "on_right_pan_end",
+        "on_right_pan_start",
+        "on_right_pan_update",
+        "on_scale_end",
+        "on_scale_start",
+        "on_scale_update",
+        "on_scroll",
+        "on_secondary_long_press",
+        "on_secondary_long_press_cancel",
+        "on_secondary_long_press_down",
+        "on_secondary_long_press_end",
+        "on_secondary_long_press_move_update",
+        "on_secondary_long_press_start",
+        "on_secondary_long_press_up",
+        "on_secondary_tap",
+        "on_secondary_tap_cancel",
+        "on_secondary_tap_down",
+        "on_secondary_tap_up",
+        "on_tap",
+        "on_tap_cancel",
+        "on_tap_down",
+        "on_tap_move",
+        "on_tap_up",
+        "on_tertiary_long_press",
+        "on_tertiary_long_press_cancel",
+        "on_tertiary_long_press_down",
+        "on_tertiary_long_press_end",
+        "on_tertiary_long_press_move_update",
+        "on_tertiary_long_press_start",
+        "on_tertiary_long_press_up",
+        "on_tertiary_tap_cancel",
+        "on_tertiary_tap_down",
+        "on_tertiary_tap_up",
+        "on_vertical_drag_cancel",
+        "on_vertical_drag_down",
+        "on_vertical_drag_end",
+        "on_vertical_drag_start",
+        "on_vertical_drag_update",
+        "trackpad_scroll_causes_scale"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {
         "drag_interval": {
           "type": "int",
@@ -3151,6 +4549,27 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "build_controls_on_demand",
+        "cache_extent",
+        "child_aspect_ratio",
+        "clip_behavior",
+        "controls",
+        "expand",
+        "height",
+        "horizontal",
+        "max_extent",
+        "on_scroll",
+        "padding",
+        "reverse",
+        "run_spacing",
+        "runs_count",
+        "semantic_child_count",
+        "spacing"
+      ],
+      "child_slots": {
+        "controls": "many"
+      },
       "primitive_defaults": {
         "build_controls_on_demand": {
           "type": "bool",
@@ -3207,6 +4626,8 @@
       "family": "core",
       "classification": "service",
       "design_family": null,
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -3224,6 +4645,8 @@
       "family": "core",
       "classification": "service",
       "design_family": null,
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -3247,6 +4670,14 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "content",
+        "tag",
+        "transition_on_user_gestures"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {
         "transition_on_user_gestures": {
           "type": "bool",
@@ -3269,6 +4700,16 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "color",
+        "color_picker_height",
+        "enable_alpha",
+        "hue_ring_stroke_width",
+        "on_color_change",
+        "picker_area_border_radius",
+        "portrait_only"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "enable_alpha": {
           "type": "bool",
@@ -3297,6 +4738,20 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "apply_text_scaling",
+        "blend_mode",
+        "color",
+        "fill",
+        "grade",
+        "icon",
+        "optical_size",
+        "semantics_label",
+        "shadows",
+        "size",
+        "weight"
+      ],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -3314,6 +4769,33 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "alignment",
+        "autofocus",
+        "content",
+        "disabled_color",
+        "enable_feedback",
+        "focus_color",
+        "highlight_color",
+        "hover_color",
+        "icon",
+        "icon_color",
+        "icon_size",
+        "mouse_cursor",
+        "on_click",
+        "on_long_press",
+        "padding",
+        "selected",
+        "selected_icon",
+        "selected_icon_color",
+        "size_constraints",
+        "splash_color",
+        "splash_radius",
+        "url"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {
         "autofocus": {
           "type": "bool",
@@ -3346,6 +4828,31 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "anti_alias",
+        "border_radius",
+        "cache_height",
+        "cache_width",
+        "color",
+        "color_blend_mode",
+        "error_content",
+        "exclude_from_semantics",
+        "fade_in_animation",
+        "filter_quality",
+        "fit",
+        "gapless_playback",
+        "height",
+        "placeholder_fade_out_animation",
+        "placeholder_fit",
+        "placeholder_src",
+        "repeat",
+        "semantics_label",
+        "src",
+        "width"
+      ],
+      "child_slots": {
+        "error_content": "one"
+      },
       "primitive_defaults": {
         "anti_alias": {
           "type": "bool",
@@ -3372,6 +4879,27 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "alignment",
+        "boundary_margin",
+        "clip_behavior",
+        "constrained",
+        "content",
+        "interaction_end_friction_coefficient",
+        "interaction_update_interval",
+        "max_scale",
+        "min_scale",
+        "on_interaction_end",
+        "on_interaction_start",
+        "on_interaction_update",
+        "pan_enabled",
+        "scale_enabled",
+        "scale_factor",
+        "trackpad_scroll_causes_scale"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {
         "clip_behavior": {
           "type": "enum",
@@ -3444,6 +4972,17 @@
       "family": "extension",
       "classification": "service",
       "design_family": null,
+      "properties": [
+        "on_click",
+        "on_close",
+        "on_error",
+        "on_impression",
+        "on_load",
+        "on_open",
+        "request",
+        "unit_id"
+      ],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [
@@ -3470,6 +5009,17 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "autofocus",
+        "content",
+        "include_semantics",
+        "on_key_down",
+        "on_key_repeat",
+        "on_key_up"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {
         "autofocus": {
           "type": "bool",
@@ -3502,6 +5052,35 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "animation",
+        "baseline_x",
+        "baseline_y",
+        "bgcolor",
+        "border",
+        "bottom_axis",
+        "data_series",
+        "horizontal_grid_lines",
+        "interactive",
+        "left_axis",
+        "max_x",
+        "max_y",
+        "min_x",
+        "min_y",
+        "on_event",
+        "point_line_end",
+        "point_line_start",
+        "right_axis",
+        "top_axis",
+        "vertical_grid_lines"
+      ],
+      "child_slots": {
+        "bottom_axis": "one",
+        "data_series": "many",
+        "left_axis": "one",
+        "right_axis": "one",
+        "top_axis": "one"
+      },
       "primitive_defaults": {
         "interactive": {
           "type": "bool",
@@ -3530,6 +5109,48 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "autofocus",
+        "bgcolor",
+        "content_padding",
+        "dense",
+        "enable_feedback",
+        "focus_color",
+        "horizontal_spacing",
+        "hover_color",
+        "icon_color",
+        "is_three_line",
+        "leading",
+        "leading_and_trailing_text_style",
+        "min_height",
+        "min_leading_width",
+        "min_vertical_padding",
+        "mouse_cursor",
+        "on_click",
+        "on_long_press",
+        "selected",
+        "selected_color",
+        "selected_tile_color",
+        "shape",
+        "splash_color",
+        "style",
+        "subtitle",
+        "subtitle_text_style",
+        "text_color",
+        "title",
+        "title_alignment",
+        "title_text_style",
+        "toggle_inputs",
+        "trailing",
+        "url",
+        "visual_density"
+      ],
+      "child_slots": {
+        "leading": "one",
+        "subtitle": "one",
+        "title": "one",
+        "trailing": "one"
+      },
       "primitive_defaults": {
         "autofocus": {
           "type": "bool",
@@ -3571,6 +5192,28 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "build_controls_on_demand",
+        "cache_extent",
+        "clip_behavior",
+        "controls",
+        "divider_thickness",
+        "expand",
+        "first_item_prototype",
+        "height",
+        "horizontal",
+        "item_extent",
+        "on_scroll",
+        "padding",
+        "prototype_item",
+        "reverse",
+        "semantic_child_count",
+        "spacing"
+      ],
+      "child_slots": {
+        "controls": "many",
+        "prototype_item": "one"
+      },
       "primitive_defaults": {
         "build_controls_on_demand": {
           "type": "bool",
@@ -3623,6 +5266,25 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "alignment",
+        "animate",
+        "background_loading",
+        "enable_layers_opacity",
+        "enable_merge_paths",
+        "error_content",
+        "filter_quality",
+        "fit",
+        "headers",
+        "on_error",
+        "on_load",
+        "repeat",
+        "reverse",
+        "src"
+      ],
+      "child_slots": {
+        "error_content": "one"
+      },
       "primitive_defaults": {
         "animate": {
           "type": "bool",
@@ -3672,6 +5334,8 @@
       "family": "core",
       "classification": "service",
       "design_family": null,
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -3689,6 +5353,14 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "animation_curve",
+        "animation_duration",
+        "layers"
+      ],
+      "child_slots": {
+        "layers": "many"
+      },
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -3714,6 +5386,28 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "auto_follow_links",
+        "auto_follow_links_target",
+        "code_style_sheet",
+        "code_theme",
+        "extension_set",
+        "fit_content",
+        "image_error_content",
+        "latex_scale_factor",
+        "latex_style",
+        "md_style_sheet",
+        "on_selection_change",
+        "on_tap_link",
+        "on_tap_text",
+        "selectable",
+        "shrink_wrap",
+        "soft_line_break",
+        "value"
+      ],
+      "child_slots": {
+        "image_error_content": "one"
+      },
       "primitive_defaults": {
         "auto_follow_links": {
           "type": "bool",
@@ -3760,6 +5454,14 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "alignment",
+        "markers",
+        "rotate"
+      ],
+      "child_slots": {
+        "markers": "many"
+      },
       "primitive_defaults": {
         "alignment": {
           "type": "enum",
@@ -3786,6 +5488,14 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "color",
+        "enable_label",
+        "on_color_change",
+        "on_primary_change",
+        "portrait_only"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "enable_label": {
           "type": "bool",
@@ -3815,6 +5525,14 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "clip_behavior",
+        "controls",
+        "style"
+      ],
+      "child_slots": {
+        "controls": "many"
+      },
       "primitive_defaults": {
         "clip_behavior": {
           "type": "enum",
@@ -3837,6 +5555,26 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "autofocus",
+        "clip_behavior",
+        "close_on_click",
+        "content",
+        "focus",
+        "focus_on_hover",
+        "leading",
+        "on_click",
+        "on_hover",
+        "overflow_axis",
+        "semantics_label",
+        "style",
+        "trailing_icon"
+      ],
+      "child_slots": {
+        "content": "one",
+        "leading": "one",
+        "trailing_icon": "one"
+      },
       "primitive_defaults": {
         "autofocus": {
           "type": "bool",
@@ -3882,6 +5620,12 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "content"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -3899,6 +5643,12 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "available_colors",
+        "colors",
+        "on_colors_change"
+      ],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [
@@ -3918,6 +5668,24 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "animation_duration",
+        "bgcolor",
+        "destinations",
+        "elevation",
+        "height",
+        "indicator_color",
+        "indicator_shape",
+        "label_behavior",
+        "label_padding",
+        "on_change",
+        "overlay_color",
+        "selected_index",
+        "shadow_color"
+      ],
+      "child_slots": {
+        "destinations": "many"
+      },
       "primitive_defaults": {
         "selected_index": {
           "type": "int",
@@ -3942,6 +5710,16 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "icon",
+        "label",
+        "selected_icon",
+        "tooltip"
+      ],
+      "child_slots": {
+        "icon": "one",
+        "selected_icon": "one"
+      },
       "primitive_defaults": {
         "label": {
           "type": "string",
@@ -3964,6 +5742,20 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "bgcolor",
+        "controls",
+        "elevation",
+        "indicator_color",
+        "indicator_shape",
+        "on_change",
+        "selected_index",
+        "shadow_color",
+        "tile_padding"
+      ],
+      "child_slots": {
+        "controls": "many"
+      },
       "primitive_defaults": {
         "selected_index": {
           "type": "int",
@@ -3988,6 +5780,31 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "bgcolor",
+        "destinations",
+        "elevation",
+        "extended",
+        "group_alignment",
+        "height",
+        "indicator_color",
+        "indicator_shape",
+        "label_type",
+        "leading",
+        "min_extended_width",
+        "min_width",
+        "on_change",
+        "selected_index",
+        "selected_label_text_style",
+        "trailing",
+        "unselected_label_text_style",
+        "use_indicator"
+      ],
+      "child_slots": {
+        "destinations": "many",
+        "leading": "one",
+        "trailing": "one"
+      },
       "primitive_defaults": {
         "extended": {
           "type": "bool",
@@ -4016,6 +5833,8 @@
       "family": "core",
       "classification": "widget",
       "design_family": "adaptive",
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -4033,6 +5852,33 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "alignment",
+        "autofocus",
+        "content",
+        "disabled_color",
+        "enable_feedback",
+        "focus_color",
+        "highlight_color",
+        "hover_color",
+        "icon",
+        "icon_color",
+        "icon_size",
+        "mouse_cursor",
+        "on_click",
+        "on_long_press",
+        "padding",
+        "selected",
+        "selected_icon",
+        "selected_icon_color",
+        "size_constraints",
+        "splash_color",
+        "splash_radius",
+        "url"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {
         "autofocus": {
           "type": "bool",
@@ -4065,6 +5911,31 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "_darkTheme",
+        "_lightTheme",
+        "_services",
+        "dark_theme",
+        "enable_screenshots",
+        "fonts",
+        "locale_configuration",
+        "multi_views",
+        "on_keyboard_event",
+        "on_locale_change",
+        "platform",
+        "show_semantics_debugger",
+        "theme",
+        "theme_mode",
+        "title",
+        "views",
+        "window"
+      ],
+      "child_slots": {
+        "_services": "one",
+        "multi_views": "many",
+        "views": "many",
+        "window": "one"
+      },
       "primitive_defaults": {
         "on_keyboard_event": {
           "type": "bool",
@@ -4107,6 +5978,27 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "animation_curve",
+        "animation_duration",
+        "clip_behavior",
+        "controls",
+        "expand",
+        "height",
+        "horizontal",
+        "implicit_scrolling",
+        "keep_page",
+        "on_change",
+        "pad_ends",
+        "reverse",
+        "selected_index",
+        "snap",
+        "viewport_fraction",
+        "width"
+      ],
+      "child_slots": {
+        "controls": "many"
+      },
       "primitive_defaults": {
         "clip_behavior": {
           "type": "enum",
@@ -4169,6 +6061,29 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "appbar",
+        "bgcolor",
+        "bottom_appbar",
+        "bottom_sheet",
+        "content",
+        "drawer",
+        "end_drawer",
+        "floating_action_button",
+        "floating_action_button_location",
+        "height",
+        "navigation_bar"
+      ],
+      "child_slots": {
+        "appbar": "one",
+        "bottom_appbar": "one",
+        "bottom_sheet": "one",
+        "content": "one",
+        "drawer": "one",
+        "end_drawer": "one",
+        "floating_action_button": "one",
+        "navigation_bar": "one"
+      },
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -4191,6 +6106,8 @@
       "family": "extension",
       "classification": "service",
       "design_family": null,
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -4212,6 +6129,18 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "animation",
+        "center_space_color",
+        "center_space_radius",
+        "on_event",
+        "sections",
+        "sections_space",
+        "start_degree_offset"
+      ],
+      "child_slots": {
+        "sections": "many"
+      },
       "primitive_defaults": {
         "on_event": {
           "type": "bool",
@@ -4236,6 +6165,16 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "color",
+        "content",
+        "fallback_height",
+        "fallback_width",
+        "stroke_width"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {
         "fallback_height": {
           "type": "double",
@@ -4266,6 +6205,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "draw_labels_last",
+        "polygon_culling",
+        "polygon_labels",
+        "polygons",
+        "simplification_tolerance",
+        "use_alternative_rendering"
+      ],
+      "child_slots": {
+        "polygons": "many"
+      },
       "primitive_defaults": {
         "draw_labels_last": {
           "type": "bool",
@@ -4304,6 +6254,15 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "culling_margin",
+        "min_hittable_radius",
+        "polylines",
+        "simplification_tolerance"
+      ],
+      "child_slots": {
+        "polylines": "many"
+      },
       "primitive_defaults": {
         "culling_margin": {
           "type": "double",
@@ -4334,6 +6293,35 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "bgcolor",
+        "clip_behavior",
+        "content",
+        "elevation",
+        "enable_feedback",
+        "icon",
+        "icon_color",
+        "icon_size",
+        "items",
+        "menu_padding",
+        "menu_position",
+        "on_cancel",
+        "on_open",
+        "on_select",
+        "padding",
+        "popup_animation_style",
+        "shadow_color",
+        "shape",
+        "size_constraints",
+        "splash_radius",
+        "style",
+        "tooltip"
+      ],
+      "child_slots": {
+        "content": "one",
+        "icon": "one",
+        "items": "many"
+      },
       "primitive_defaults": {
         "clip_behavior": {
           "type": "enum",
@@ -4368,6 +6356,20 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "bar_height",
+        "bgcolor",
+        "border_radius",
+        "color",
+        "semantics_label",
+        "semantics_value",
+        "stop_indicator_color",
+        "stop_indicator_radius",
+        "track_gap",
+        "value",
+        "year_2023"
+      ],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -4385,6 +6387,21 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "bgcolor",
+        "color",
+        "padding",
+        "semantics_label",
+        "semantics_value",
+        "size_constraints",
+        "stroke_align",
+        "stroke_cap",
+        "stroke_width",
+        "track_gap",
+        "value",
+        "year2023"
+      ],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -4402,6 +6419,11 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "on_detect",
+        "on_error"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "on_detect": {
           "type": "bool",
@@ -4438,6 +6460,30 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "animation",
+        "border",
+        "center_min_value",
+        "data_sets",
+        "grid_border_side",
+        "interactive",
+        "long_press_duration",
+        "on_event",
+        "radar_bgcolor",
+        "radar_border_side",
+        "radar_shape",
+        "tick_border_side",
+        "tick_count",
+        "ticks_text_style",
+        "title_position_percentage_offset",
+        "title_text_style",
+        "titles",
+        "touch_spot_threshold"
+      ],
+      "child_slots": {
+        "data_sets": "many",
+        "titles": "many"
+      },
       "primitive_defaults": {
         "center_min_value": {
           "type": "bool",
@@ -4474,6 +6520,8 @@
       "family": "core",
       "classification": "widget",
       "design_family": "adaptive",
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -4491,6 +6539,13 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "content",
+        "on_change"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [
@@ -4510,6 +6565,23 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "active_color",
+        "divisions",
+        "end_value",
+        "inactive_color",
+        "label",
+        "max",
+        "min",
+        "mouse_cursor",
+        "on_change",
+        "on_change_end",
+        "on_change_start",
+        "overlay_color",
+        "round",
+        "start_value"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "end_value": {
           "type": "double",
@@ -4556,6 +6628,13 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "content",
+        "mouse_cursor"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -4573,6 +6652,33 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "anchor",
+        "auto_scroller_velocity_scalar",
+        "build_controls_on_demand",
+        "cache_extent",
+        "clip_behavior",
+        "controls",
+        "first_item_prototype",
+        "footer",
+        "header",
+        "horizontal",
+        "item_extent",
+        "key",
+        "mouse_cursor",
+        "on_reorder",
+        "on_reorder_end",
+        "on_reorder_start",
+        "on_scroll",
+        "padding",
+        "reverse",
+        "show_default_drag_handles"
+      ],
+      "child_slots": {
+        "controls": "many",
+        "footer": "one",
+        "header": "one"
+      },
       "primitive_defaults": {
         "anchor": {
           "type": "double",
@@ -4628,6 +6734,17 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "alignment",
+        "columns",
+        "controls",
+        "run_spacing",
+        "spacing",
+        "vertical_alignment"
+      ],
+      "child_slots": {
+        "controls": "many"
+      },
       "primitive_defaults": {
         "alignment": {
           "type": "enum",
@@ -4654,6 +6771,18 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "alignment",
+        "attributions",
+        "permanent_height",
+        "popup_bgcolor",
+        "popup_border_radius",
+        "popup_initial_display_duration",
+        "show_flutter_map_attribution"
+      ],
+      "child_slots": {
+        "attributions": "many"
+      },
       "primitive_defaults": {
         "alignment": {
           "type": "enum",
@@ -4684,6 +6813,20 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "alignment",
+        "art_board",
+        "clip_rect",
+        "fit",
+        "headers",
+        "placeholder",
+        "speed_multiplier",
+        "src",
+        "use_art_board_size"
+      ],
+      "child_slots": {
+        "placeholder": "one"
+      },
       "primitive_defaults": {
         "speed_multiplier": {
           "type": "double",
@@ -4710,6 +6853,21 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "alignment",
+        "controls",
+        "intrinsic_height",
+        "on_scroll",
+        "run_alignment",
+        "run_spacing",
+        "spacing",
+        "tight",
+        "vertical_alignment",
+        "wrap"
+      ],
+      "child_slots": {
+        "controls": "many"
+      },
       "primitive_defaults": {
         "alignment": {
           "type": "enum",
@@ -4766,6 +6924,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -4792,6 +6961,18 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "avoid_intrusions_bottom",
+        "avoid_intrusions_left",
+        "avoid_intrusions_right",
+        "avoid_intrusions_top",
+        "content",
+        "maintain_bottom_view_padding",
+        "minimum_padding"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {
         "avoid_intrusions_bottom": {
           "type": "bool",
@@ -4838,6 +7019,36 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "animation",
+        "baseline_x",
+        "baseline_y",
+        "bgcolor",
+        "border",
+        "bottom_axis",
+        "horizontal_grid_lines",
+        "interactive",
+        "left_axis",
+        "long_press_duration",
+        "max_x",
+        "max_y",
+        "min_x",
+        "min_y",
+        "on_event",
+        "right_axis",
+        "rotation_quarter_turns",
+        "show_tooltips_for_selected_spots_only",
+        "spots",
+        "top_axis",
+        "vertical_grid_lines"
+      ],
+      "child_slots": {
+        "bottom_axis": "one",
+        "left_axis": "one",
+        "right_axis": "one",
+        "spots": "many",
+        "top_axis": "one"
+      },
       "primitive_defaults": {
         "interactive": {
           "type": "bool",
@@ -4870,6 +7081,11 @@
       "family": "core",
       "classification": "service",
       "design_family": null,
+      "properties": [
+        "on_application_screen_brightness_change",
+        "on_system_screen_brightness_change"
+      ],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [
@@ -4901,6 +7117,12 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "content"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -4920,6 +7142,54 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "autofocus",
+        "bar_bgcolor",
+        "bar_border_side",
+        "bar_elevation",
+        "bar_hint_text",
+        "bar_hint_text_style",
+        "bar_leading",
+        "bar_overlay_color",
+        "bar_padding",
+        "bar_scroll_padding",
+        "bar_shadow_color",
+        "bar_shape",
+        "bar_size_constraints",
+        "bar_text_style",
+        "bar_trailing",
+        "blur",
+        "capitalization",
+        "divider_color",
+        "focus",
+        "full_screen",
+        "keyboard_type",
+        "on_change",
+        "on_submit",
+        "on_tap",
+        "on_tap_outside_bar",
+        "shrink_wrap",
+        "value",
+        "view_bar_padding",
+        "view_bgcolor",
+        "view_elevation",
+        "view_header_height",
+        "view_header_text_style",
+        "view_hint_text",
+        "view_hint_text_style",
+        "view_leading",
+        "view_padding",
+        "view_shape",
+        "view_side",
+        "view_size_constraints",
+        "view_trailing"
+      ],
+      "child_slots": {
+        "bar_leading": "one",
+        "bar_trailing": "many",
+        "view_leading": "one",
+        "view_trailing": "many"
+      },
       "primitive_defaults": {
         "autofocus": {
           "type": "bool",
@@ -4975,6 +7245,10 @@
       "family": "extension",
       "classification": "service",
       "design_family": null,
+      "properties": [
+        "on_change"
+      ],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [
@@ -5002,6 +7276,21 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "allow_empty_selection",
+        "allow_multiple_selection",
+        "direction",
+        "on_change",
+        "padding",
+        "segments",
+        "selected_icon",
+        "show_selected_icon",
+        "style"
+      ],
+      "child_slots": {
+        "segments": "many",
+        "selected_icon": "one"
+      },
       "primitive_defaults": {
         "allow_empty_selection": {
           "type": "bool",
@@ -5034,6 +7323,13 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "content",
+        "on_change"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [
@@ -5053,6 +7349,56 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "button",
+        "checked",
+        "container",
+        "current_value_length",
+        "decreased_value",
+        "exclude_semantics",
+        "expanded",
+        "focusable",
+        "focused",
+        "header",
+        "heading_level",
+        "hidden",
+        "hint",
+        "image",
+        "increased_value",
+        "label",
+        "link",
+        "live_region",
+        "max_value_length",
+        "mixed",
+        "multiline",
+        "obscured",
+        "on_click",
+        "on_copy",
+        "on_cut",
+        "on_decrease",
+        "on_did_gain_accessibility_focus",
+        "on_did_lose_accessibility_focus",
+        "on_dismiss",
+        "on_increase",
+        "on_long_press_hint",
+        "on_move_cursor_backward_by_character",
+        "on_move_cursor_forward_by_character",
+        "on_paste",
+        "on_scroll_down",
+        "on_scroll_left",
+        "on_scroll_right",
+        "on_scroll_up",
+        "on_set_text",
+        "on_tap_hint",
+        "read_only",
+        "selected",
+        "slider",
+        "text_field",
+        "toggled",
+        "tooltip",
+        "value"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "container": {
           "type": "bool",
@@ -5160,6 +7506,8 @@
       "family": "core",
       "classification": "service",
       "design_family": null,
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -5181,6 +7529,15 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "blend_mode",
+        "border_radius",
+        "content",
+        "shader"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -5198,6 +7555,14 @@
       "family": "core",
       "classification": "service",
       "design_family": null,
+      "properties": [
+        "minimum_shake_count",
+        "on_shake",
+        "shake_count_reset_time_ms",
+        "shake_slop_time_ms",
+        "shake_threshold_gravity"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "minimum_shake_count": {
           "type": "int",
@@ -5234,6 +7599,8 @@
       "family": "core",
       "classification": "service",
       "design_family": null,
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -5255,6 +7622,8 @@
       "family": "core",
       "classification": "service",
       "design_family": null,
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -5279,6 +7648,18 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "base_color",
+        "content",
+        "direction",
+        "gradient",
+        "highlight_color",
+        "loop",
+        "period"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {
         "loop": {
           "type": "int",
@@ -5306,6 +7687,15 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "alignment",
+        "bgcolor",
+        "on_click",
+        "text"
+      ],
+      "child_slots": {
+        "text": "one"
+      },
       "primitive_defaults": {
         "alignment": {
           "type": "enum",
@@ -5330,6 +7720,26 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "color",
+        "color_model",
+        "display_thumb_color",
+        "enable_alpha",
+        "indicator_alignment_begin",
+        "indicator_alignment_end",
+        "indicator_border_radius",
+        "indicator_size",
+        "label_text_style",
+        "label_types",
+        "on_color_change",
+        "show_indicator",
+        "show_label",
+        "show_params",
+        "show_slider_text",
+        "slider_size",
+        "slider_text_style"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "display_thumb_color": {
           "type": "bool",
@@ -5390,6 +7800,8 @@
       "family": "core",
       "classification": "widget",
       "design_family": "adaptive",
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -5407,6 +7819,33 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "_dismissed",
+        "_open",
+        "_show_generation",
+        "action",
+        "action_overflow_threshold",
+        "behavior",
+        "bgcolor",
+        "clip_behavior",
+        "close_icon_color",
+        "content",
+        "dismiss_direction",
+        "duration",
+        "elevation",
+        "margin",
+        "on_action",
+        "on_dismiss",
+        "open",
+        "padding",
+        "persist",
+        "shape",
+        "show_close_icon",
+        "width"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {
         "_dismissed": {
           "type": "bool",
@@ -5454,6 +7893,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -5480,6 +7930,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -5506,6 +7967,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -5532,6 +8004,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -5558,6 +8041,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -5584,6 +8078,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -5610,6 +8115,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -5636,6 +8152,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -5662,6 +8189,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -5688,6 +8226,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -5714,6 +8263,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -5740,6 +8300,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -5766,6 +8337,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -5792,6 +8374,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -5818,6 +8411,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -5844,6 +8448,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -5870,6 +8485,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -5896,6 +8522,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -5922,6 +8559,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -5948,6 +8596,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -5974,6 +8633,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -6000,6 +8670,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -6026,6 +8707,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -6052,6 +8744,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -6078,6 +8781,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -6104,6 +8818,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -6130,6 +8855,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -6156,6 +8892,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -6182,6 +8929,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -6208,6 +8966,17 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "border_width",
+        "color",
+        "duration",
+        "item_count",
+        "line_width",
+        "size",
+        "variant",
+        "wave_type"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "duration": {
           "type": "int",
@@ -6234,6 +9003,15 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "alignment",
+        "clip_behavior",
+        "controls",
+        "fit"
+      ],
+      "child_slots": {
+        "controls": "many"
+      },
       "primitive_defaults": {
         "clip_behavior": {
           "type": "enum",
@@ -6256,6 +9034,8 @@
       "family": "core",
       "classification": "service",
       "design_family": null,
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -6284,6 +9064,26 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "alignment_offset",
+        "clip_behavior",
+        "content",
+        "controls",
+        "focus",
+        "leading",
+        "menu_style",
+        "on_close",
+        "on_hover",
+        "on_open",
+        "style",
+        "trailing"
+      ],
+      "child_slots": {
+        "content": "one",
+        "controls": "many",
+        "leading": "one",
+        "trailing": "one"
+      },
       "primitive_defaults": {
         "clip_behavior": {
           "type": "enum",
@@ -6322,6 +9122,8 @@
       "family": "core",
       "classification": "widget",
       "design_family": "adaptive",
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -6339,6 +9141,17 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "height",
+        "icon",
+        "icon_margin",
+        "key",
+        "label"
+      ],
+      "child_slots": {
+        "icon": "one",
+        "label": "one"
+      },
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -6356,6 +9169,35 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "divider_color",
+        "divider_height",
+        "enable_feedback",
+        "indicator",
+        "indicator_animation",
+        "indicator_color",
+        "indicator_padding",
+        "indicator_size",
+        "indicator_thickness",
+        "label_color",
+        "label_padding",
+        "label_text_style",
+        "mouse_cursor",
+        "on_click",
+        "on_hover",
+        "overlay_color",
+        "padding",
+        "scrollable",
+        "secondary",
+        "splash_border_radius",
+        "tab_alignment",
+        "tabs",
+        "unselected_label_color",
+        "unselected_label_text_style"
+      ],
+      "child_slots": {
+        "tabs": "many"
+      },
       "primitive_defaults": {
         "indicator_thickness": {
           "type": "double",
@@ -6397,6 +9239,16 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "clip_behavior",
+        "controls",
+        "expand",
+        "height",
+        "viewport_fraction"
+      ],
+      "child_slots": {
+        "controls": "many"
+      },
       "primitive_defaults": {
         "clip_behavior": {
           "type": "enum",
@@ -6423,6 +9275,16 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "animation_duration",
+        "content",
+        "length",
+        "on_change",
+        "selected_index"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {
         "length": {
           "type": "int",
@@ -6453,6 +9315,8 @@
       "family": "core",
       "classification": "service",
       "design_family": null,
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -6485,6 +9349,34 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "bgcolor",
+        "color",
+        "enable_interactive_selection",
+        "font_family",
+        "italic",
+        "max_lines",
+        "no_wrap",
+        "on_selection_change",
+        "on_tap",
+        "overflow",
+        "selectable",
+        "selection_cursor_color",
+        "selection_cursor_height",
+        "selection_cursor_width",
+        "semantics_label",
+        "show_selection_cursor",
+        "size",
+        "spans",
+        "style",
+        "text_align",
+        "theme_style",
+        "value",
+        "weight"
+      ],
+      "child_slots": {
+        "spans": "many"
+      },
       "primitive_defaults": {
         "enable_interactive_selection": {
           "type": "bool",
@@ -6542,6 +9434,8 @@
       "family": "core",
       "classification": "widget",
       "design_family": "adaptive",
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -6559,6 +9453,8 @@
       "family": "core",
       "classification": "widget",
       "design_family": "adaptive",
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -6576,6 +9472,28 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "display_mode",
+        "enable_retina_mode",
+        "enable_tms",
+        "errorImageSrc",
+        "evict_error_tile_strategy",
+        "fallback_url",
+        "keep_buffer",
+        "max_native_zoom",
+        "max_zoom",
+        "min_native_zoom",
+        "min_zoom",
+        "on_image_error",
+        "pan_buffer",
+        "tile_bounds",
+        "tile_size",
+        "url_template",
+        "user_agent_package_name",
+        "zoom_offset",
+        "zoom_reverse"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "enable_tms": {
           "type": "bool",
@@ -6640,6 +9558,29 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "_open",
+        "barrier_color",
+        "cancel_text",
+        "confirm_text",
+        "entry_mode",
+        "error_invalid_text",
+        "help_text",
+        "hour_format",
+        "hour_label_text",
+        "locale",
+        "minute_label_text",
+        "modal",
+        "on_change",
+        "on_dismiss",
+        "on_entry_mode_change",
+        "open",
+        "orientation",
+        "switch_to_input_icon",
+        "switch_to_timer_icon",
+        "value"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "_open": {
           "type": "bool",
@@ -6674,6 +9615,12 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "content"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -6691,6 +9638,8 @@
       "family": "core",
       "classification": "service",
       "design_family": null,
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -6715,6 +9664,8 @@
       "family": "core",
       "classification": "service",
       "design_family": null,
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -6732,6 +9683,15 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "color",
+        "leading_indent",
+        "radius",
+        "thickness",
+        "trailing_indent",
+        "width"
+      ],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -6749,6 +9709,43 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "_fullscreen",
+        "_pitch",
+        "_playback_rate",
+        "_playlist_mode",
+        "_shuffle_playlist",
+        "_subtitleTrack",
+        "_volume",
+        "alignment",
+        "autoplay",
+        "configuration",
+        "fill_color",
+        "filter_quality",
+        "fit",
+        "fullscreen",
+        "muted",
+        "on_complete",
+        "on_enter_fullscreen",
+        "on_error",
+        "on_exit_fullscreen",
+        "on_loaded",
+        "on_track_change",
+        "pause_upon_entering_background_mode",
+        "pitch",
+        "playback_rate",
+        "playlist",
+        "playlist_mode",
+        "resume_upon_entering_foreground_mode",
+        "show_controls",
+        "shuffle_playlist",
+        "subtitle_configuration",
+        "subtitle_track",
+        "title",
+        "volume",
+        "wakelock"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "_fullscreen": {
           "type": "bool",
@@ -6841,6 +9838,35 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "appbar",
+        "bgcolor",
+        "bottom_appbar",
+        "can_pop",
+        "controls",
+        "decoration",
+        "drawer",
+        "end_drawer",
+        "floating_action_button",
+        "floating_action_button_location",
+        "foreground_decoration",
+        "horizontal_alignment",
+        "navigation_bar",
+        "on_confirm_pop",
+        "on_scroll",
+        "padding",
+        "spacing",
+        "vertical_alignment"
+      ],
+      "child_slots": {
+        "appbar": "one",
+        "bottom_appbar": "one",
+        "controls": "many",
+        "drawer": "one",
+        "end_drawer": "one",
+        "floating_action_button": "one",
+        "navigation_bar": "one"
+      },
       "primitive_defaults": {
         "can_pop": {
           "type": "bool",
@@ -6900,6 +9926,8 @@
       "family": "core",
       "classification": "service",
       "design_family": null,
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -6921,6 +9949,8 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [],
+      "child_slots": {},
       "primitive_defaults": {},
       "compound_defaults": {},
       "events": [],
@@ -6938,6 +9968,43 @@
       "family": "core",
       "classification": "service",
       "design_family": null,
+      "properties": [
+        "alignment",
+        "always_on_bottom",
+        "always_on_top",
+        "aspect_ratio",
+        "badge_label",
+        "bgcolor",
+        "brightness",
+        "focused",
+        "frameless",
+        "full_screen",
+        "height",
+        "icon",
+        "ignore_mouse_events",
+        "left",
+        "max_height",
+        "max_width",
+        "maximizable",
+        "maximized",
+        "min_height",
+        "min_width",
+        "minimizable",
+        "minimized",
+        "movable",
+        "opacity",
+        "prevent_close",
+        "progress_bar",
+        "resizable",
+        "shadow",
+        "skip_task_bar",
+        "title_bar_buttons_hidden",
+        "title_bar_hidden",
+        "top",
+        "visible",
+        "width"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "title_bar_buttons_hidden": {
           "type": "bool",
@@ -6968,6 +10035,16 @@
       "family": "core",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "content",
+        "maximizable",
+        "on_double_tap",
+        "on_drag_end",
+        "on_drag_start"
+      ],
+      "child_slots": {
+        "content": "one"
+      },
       "primitive_defaults": {
         "maximizable": {
           "type": "bool",
@@ -6994,6 +10071,11 @@
       "family": "extension",
       "classification": "widget",
       "design_family": null,
+      "properties": [
+        "on_detect",
+        "on_error"
+      ],
+      "child_slots": {},
       "primitive_defaults": {
         "on_detect": {
           "type": "bool",

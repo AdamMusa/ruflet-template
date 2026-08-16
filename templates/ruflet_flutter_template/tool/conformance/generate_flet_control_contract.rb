@@ -5,7 +5,7 @@ require "digest"
 require "json"
 
 module FletControlContract
-  CONTRACT_VERSION = 2
+  CONTRACT_VERSION = 3
   GLOBAL_DEFAULTS = {
     "disabled" => { "type" => "bool", "value" => false },
     "expand_loose" => { "type" => "bool", "value" => false },
@@ -418,6 +418,32 @@ module FletControlContract
     bodies.flat_map { |body| body.scan(/case\s+["']([^"']+)["']\s*:/).flatten }.uniq.sort
   end
 
+  def properties(source)
+    owner = /(?:\bcontrol|\bwidget\.control)\s*\.\s*/
+    reads = source.scan(
+      /#{owner}(?:get(?:[A-Z]\w*)?|child(?:ren)?|buildWidget(?:s)?|buildIconOrWidget|buildTextOrWidget)\(\s*["']([^"']+)["']/m
+    ).flatten
+    reads.concat(source.scan(
+      /#{owner}(?:hasEventHandler|triggerEvent)\(\s*["']([^"']+)["']/m
+    ).flatten.map { |event| "on_#{event}" })
+    reads.uniq.sort
+  end
+
+  def child_slots(source)
+    owner = /(?:\bcontrol|\bwidget\.control)\s*\.\s*/
+    slots = {}
+    source.scan(
+      /#{owner}(child|children|buildWidget|buildWidgets|buildIconOrWidget|buildTextOrWidget)\(\s*["']([^"']+)["']/m
+    ).each do |accessor, property|
+      cardinality = %w[children buildWidgets].include?(accessor) ? "many" : "one"
+      current = slots[property]
+      # A slot observed through both accessors must satisfy the broader list
+      # contract; this also keeps extraction deterministic.
+      slots[property] = current == "many" ? current : cardinality
+    end
+    slots.sort.to_h
+  end
+
   def design_family(wire_type, renderer_class)
     return "cupertino" if wire_type.start_with?("Cupertino")
     return "adaptive" if wire_type.start_with?("Adaptive") || renderer_class.start_with?("Adaptive")
@@ -448,6 +474,8 @@ module FletControlContract
         "family" => family,
         "classification" => mapping[:classification],
         "design_family" => design_family(mapping[:wire_type], mapping[:renderer_class]),
+        "properties" => properties(scope),
+        "child_slots" => child_slots(scope),
         "primitive_defaults" => primitive_defaults(scope),
         "compound_defaults" => compound_defaults(scope),
         "events" => events(scope),

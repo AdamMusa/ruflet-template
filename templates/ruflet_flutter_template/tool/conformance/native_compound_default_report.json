@@ -319,7 +319,7 @@
       },
       "native_source": "apple_packages/ruflet_apple/Sources/RufletExtensions/RufletColorPickers/Sources/SlidePicker.swift",
       "native_evidence": [
-        "\"indicator_alignment_begin\", x: -1, y: -3"
+        "value(\"indicator_alignment_begin\"), defaultX: -1, defaultY: -3"
       ],
       "missing_evidence": [],
       "status": "verified"
