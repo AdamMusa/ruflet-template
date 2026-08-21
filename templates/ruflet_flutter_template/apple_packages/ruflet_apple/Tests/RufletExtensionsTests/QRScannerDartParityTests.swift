@@ -3,6 +3,12 @@ import RufletProtocol
 @testable import RufletQRScanner
 import XCTest
 
+#if os(macOS)
+  import AppKit
+  import AVFoundation
+  import SwiftUI
+#endif
+
 /// Literal translations of the executable tests in:
 ///
 /// - `ruflet_qrcode_scanner/test/extension_test.dart`
@@ -82,11 +88,64 @@ final class QRScannerDartParityTests: XCTestCase {
       QRScannerRect(x: 10, y: 20, width: 100, height: 200))
   }
 
-  private func control(_ type: String, id: Int = 1) -> RufletControl {
+  func testNativeScannerFillsItsRubyBoundsAndReportsAutomaticStartErrors() throws {
+    let package = URL(fileURLWithPath: #filePath)
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+    let controlSource = try String(
+      contentsOf: package.appendingPathComponent(
+        "Sources/RufletExtensions/RufletQRScanner/Sources/QRScannerControl.swift"),
+      encoding: .utf8)
+    let controllerSource = try String(
+      contentsOf: package.appendingPathComponent(
+        "Sources/RufletExtensions/RufletQRScanner/Sources/QRScannerController.swift"),
+      encoding: .utf8)
+
+    XCTAssertTrue(controlSource.contains("GeometryReader { proxy in"))
+    XCTAssertTrue(controlSource.contains("width: proxy.size.width"))
+    XCTAssertTrue(controlSource.contains("height: proxy.size.height"))
+    XCTAssertTrue(controllerSource.contains("private func startAndReport()"))
+    XCTAssertFalse(controllerSource.contains("try? await start()"))
+  }
+
+  #if os(macOS)
+    func testNativePreviewFillsAndCentersInTheRubySuppliedBounds() throws {
+      let scanner = control(
+        "QrcodeScanner",
+        properties: ["auto_start": .bool(false)])
+      let controller = QRScannerController(control: scanner)
+      let size = CGSize(width: 320, height: 180)
+      let hosting = NSHostingView(
+        rootView: QRScannerControl(control: scanner, controller: controller)
+          .frame(width: size.width, height: size.height))
+      hosting.frame = CGRect(origin: .zero, size: size)
+      hosting.layoutSubtreeIfNeeded()
+
+      let preview = try XCTUnwrap(
+        descendants(of: hosting).first(where: { view in
+          view.layer?.sublayers?.contains(where: { $0 is AVCaptureVideoPreviewLayer }) == true
+        }))
+      XCTAssertEqual(preview.frame.midX, size.width / 2, accuracy: 0.5)
+      XCTAssertEqual(preview.frame.midY, size.height / 2, accuracy: 0.5)
+      XCTAssertEqual(preview.frame.width, size.width, accuracy: 0.5)
+      XCTAssertEqual(preview.frame.height, size.height, accuracy: 0.5)
+    }
+
+    private func descendants(of view: NSView) -> [NSView] {
+      view.subviews.flatMap { [$0] + descendants(of: $0) }
+    }
+  #endif
+
+  private func control(
+    _ type: String,
+    id: Int = 1,
+    properties: [String: RufletValue] = [:]
+  ) -> RufletControl {
     RufletControl(
       id: id,
       type: type,
-      properties: [:],
+      properties: properties,
       backend: QRScannerDartParityBackend())
   }
 }

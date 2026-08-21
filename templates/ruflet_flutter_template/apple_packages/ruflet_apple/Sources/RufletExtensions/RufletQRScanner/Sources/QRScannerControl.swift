@@ -14,9 +14,16 @@ struct QRScannerControl: View {
 
   var body: some View {
     LayoutControl(control: control) {
-      QRScannerPreview(
-        controller: controller,
-        configuration: controller.configuration)
+      GeometryReader { proxy in
+        QRScannerPreview(
+          controller: controller,
+          configuration: controller.configuration
+        )
+        .frame(
+          width: proxy.size.width,
+          height: proxy.size.height,
+          alignment: .center)
+      }
     }
     .onAppear { controller.mount() }
     .onDisappear { controller.unmount() }

@@ -60,7 +60,7 @@ final class QRScannerController: NSObject, ObservableObject,
 
   func mount() {
     mounted = true
-    if shouldRun { Task { try? await start() } }
+    if shouldRun { startAndReport() }
   }
 
   func unmount() {
@@ -87,7 +87,7 @@ final class QRScannerController: NSObject, ObservableObject,
     if next.autoStart != configuration.autoStart { shouldRun = next.autoStart }
     configuration = next
     replaceController()
-    if shouldRun, mounted { Task { try? await start() } }
+    if shouldRun, mounted { startAndReport() }
   }
 
   private func invoke(_ name: String, arguments: RufletValue) async throws -> RufletValue {
@@ -211,7 +211,7 @@ final class QRScannerController: NSObject, ObservableObject,
       throw error
     }
     session.commitConfiguration()
-    if wasRunning, !session.isRunning { Task { try? await start() } }
+    if wasRunning, !session.isRunning { startAndReport() }
   }
 
   private func apply(_ configuration: QRScannerConfiguration) throws {
@@ -264,9 +264,20 @@ final class QRScannerController: NSObject, ObservableObject,
     ) { [weak self] _ in
       Task { @MainActor in
         guard let self, self.shouldRun, self.mounted else { return }
-        try? await self.start()
+        self.startAndReport()
       }
     })
+  }
+
+  private func startAndReport() {
+    Task { [weak self] in
+      guard let self else { return }
+      do {
+        try await self.start()
+      } catch {
+        self.report(error, stackTrace: Thread.callStackSymbols.joined(separator: "\n"))
+      }
+    }
   }
 
   private func report(_ error: Error, stackTrace: String? = nil) {
