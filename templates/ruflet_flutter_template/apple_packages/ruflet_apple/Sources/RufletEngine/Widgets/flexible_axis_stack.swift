@@ -55,11 +55,16 @@ struct RufletFlexibleAxisStack: View {
               RufletCrossAxisStretchModifier(
                 axis: axis,
                 enabled: crossAxisStretch,
-                horizontalPaintAlignment: rufletStretchedHorizontalPaintAlignment(for: child)))
+                horizontalPaintAlignment: rufletStretchedHorizontalPaintAlignment(for: child))
+            )
             .layoutValue(
               key: RufletFlexParentDataKey.self,
               value: fixedMainExtents[child.id] == nil
-                ? rufletExpansionContract(for: child) : nil)
+                ? rufletExpansionContract(for: child) : nil
+            )
+            .layoutValue(
+              key: RufletFlexCrossAxisSizingKey.self,
+              value: rufletFlexCrossAxisSizing(for: child, in: axis))
         }
       }
     } else {
@@ -119,7 +124,8 @@ struct RufletFlexibleAxisStack: View {
           RufletCrossAxisStretchModifier(
             axis: axis,
             enabled: crossAxisStretch,
-            horizontalPaintAlignment: rufletStretchedHorizontalPaintAlignment(for: child)))
+            horizontalPaintAlignment: rufletStretchedHorizontalPaintAlignment(for: child))
+        )
         .modifier(
           RufletIntrinsicMainAxisModifier(
             axis: axis,
@@ -224,6 +230,60 @@ struct RufletFlexibleAxisStack: View {
     default:
       return frameAlignment
     }
+  }
+}
+
+/// Resolves the controls whose Flutter render objects consume a bounded loose
+/// cross-axis constraint. Wrapper controls inherit the behavior of their
+/// content, so this remains protocol-driven even through Container/Card/etc.
+@MainActor
+func rufletFlexCrossAxisSizing(
+  for control: RufletControl,
+  in axis: Axis
+) -> RufletFlexCrossAxisSizing {
+  rufletFlexCrossAxisSizing(for: control, in: axis, visited: [])
+}
+
+@MainActor
+private func rufletFlexCrossAxisSizing(
+  for control: RufletControl,
+  in axis: Axis,
+  visited: Set<Int>
+) -> RufletFlexCrossAxisSizing {
+  guard !visited.contains(control.id) else { return .intrinsic }
+  var visited = visited
+  visited.insert(control.id)
+
+  let type = control.type.replacingOccurrences(of: "_", with: "").lowercased()
+  switch (axis, type) {
+  case (.vertical, "row") where !control.boolean("tight", default: false):
+    return .bounded
+  case (.horizontal, "column") where !control.boolean("tight", default: false):
+    return .bounded
+  default:
+    break
+  }
+
+  switch type {
+  case "listtile", "cupertinolisttile":
+    return .bounded
+  case "textfield", "cupertinotextfield", "dropdown", "dropdownm2":
+    return (parseExpand(control.dynamicValue("expand"), 0) ?? 0) > 0
+      ? .bounded : .intrinsic
+  case "container":
+    if control.value("alignment") != nil { return .bounded }
+    guard axis == .vertical ? control.number("width") == nil : control.number("height") == nil,
+      let child = control.child("content", visibleOnly: false)?.unwrapComponent()
+    else { return .intrinsic }
+    return rufletFlexCrossAxisSizing(for: child, in: axis, visited: visited)
+  case "card", "gesture_detector", "semantics", "selection_area", "safe_area",
+    "transparent_pointer", "shader_mask", "hero", "dismissible", "screenshot":
+    guard let child = control.child("content", visibleOnly: false)?.unwrapComponent() else {
+      return .intrinsic
+    }
+    return rufletFlexCrossAxisSizing(for: child, in: axis, visited: visited)
+  default:
+    return .intrinsic
   }
 }
 
