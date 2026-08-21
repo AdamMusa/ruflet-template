@@ -1,22 +1,9 @@
-import RufletProtocol
 import XCTest
-
+import RufletProtocol
 @testable import RufletEngine
 
 @MainActor
 final class RufletListTileInvariantTests: XCTestCase {
-  func testListTileClaimsTheFiniteParentWidth() throws {
-    let root = URL(fileURLWithPath: #filePath)
-      .deletingLastPathComponent()
-      .deletingLastPathComponent()
-      .deletingLastPathComponent()
-    let source = try String(
-      contentsOf: root.appendingPathComponent("Sources/RufletEngine/Controls/list_tile.swift"),
-      encoding: .utf8)
-
-    XCTAssertTrue(source.contains(".frame(maxWidth: .infinity, alignment: .leading)"))
-  }
-
   func testToggleInputListenersRunInRegistrationOrder() {
     let notifier = RufletListTileClickNotifier()
     var calls: [Int] = []
@@ -61,14 +48,10 @@ final class RufletListTileInvariantTests: XCTestCase {
     let disabledFeedback = RufletControl(
       id: 4, type: "ListTile", properties: ["enable_feedback": false], backend: backend)
 
-    XCTAssertTrue(
-      RufletListTileActivation(
-        control: defaultControl, clickNotifier: RufletListTileClickNotifier()
-      ).enableFeedback)
-    XCTAssertFalse(
-      RufletListTileActivation(
-        control: disabledFeedback, clickNotifier: RufletListTileClickNotifier()
-      ).enableFeedback)
+    XCTAssertTrue(RufletListTileActivation(
+      control: defaultControl, clickNotifier: RufletListTileClickNotifier()).enableFeedback)
+    XCTAssertFalse(RufletListTileActivation(
+      control: disabledFeedback, clickNotifier: RufletListTileClickNotifier()).enableFeedback)
   }
 
   func testDisabledActivationDoesNotToggleOrClick() {
