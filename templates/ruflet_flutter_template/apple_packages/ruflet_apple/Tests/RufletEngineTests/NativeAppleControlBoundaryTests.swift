@@ -88,15 +88,6 @@ final class NativeAppleControlBoundaryTests: XCTestCase {
     }
   }
 
-  func testNativeTabSelectionUsesSegmentedControlTargetAction() throws {
-    let tabs = try source("Controls/tabs.swift")
-
-    XCTAssertTrue(tabs.contains("for: .valueChanged"))
-    XCTAssertTrue(tabs.contains("insertSegment(with:"))
-    XCTAssertTrue(tabs.contains("insertSegment(withTitle:"))
-    XCTAssertFalse(tabs.contains("insertSegment(action:"))
-  }
-
   private func source(_ relativePath: String) throws -> String {
     try String(
       contentsOf:

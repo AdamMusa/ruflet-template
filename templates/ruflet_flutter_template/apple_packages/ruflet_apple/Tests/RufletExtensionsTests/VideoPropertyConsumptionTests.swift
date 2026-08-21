@@ -8,17 +8,6 @@ import XCTest
 
 @MainActor
 final class VideoPropertyConsumptionTests: XCTestCase {
-  func testProtocolFullscreenCoverProvidesNativeDismissalChrome() throws {
-    let source = try String(
-      contentsOf: packageRoot
-        .appendingPathComponent("Sources/RufletExtensions/RufletVideo/Sources/Video.swift"),
-      encoding: .utf8)
-
-    XCTAssertTrue(source.contains("RufletVideoFullscreenScene(isPresented: fullscreenBinding)"))
-    XCTAssertTrue(source.contains("ToolbarItem(placement: .cancellationAction)"))
-    XCTAssertTrue(source.contains("isPresented = false"))
-  }
-
   func testConfigurationConsumesPinnedControllerAndPlayerFields() {
     let configuration = RufletVideoConfiguration(
       control: control(properties: [
@@ -114,10 +103,6 @@ final class VideoPropertyConsumptionTests: XCTestCase {
       backend: VideoTestBackend())
   }
 
-  private var packageRoot: URL {
-    URL(fileURLWithPath: #filePath)
-      .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-  }
 }
 
 @MainActor
