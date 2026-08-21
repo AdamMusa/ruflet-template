@@ -7,21 +7,6 @@ struct RufletFlexParentDataKey: LayoutValueKey {
   static let defaultValue: RufletExpansionContract? = nil
 }
 
-/// Whether a non-stretched child needs Flutter's finite loose cross-axis
-/// constraint in order to choose its own size. SwiftUI proposals do not carry
-/// a `0...maximum` range, so intrinsic controls receive an unspecified cross
-/// proposal while controls such as ListTile and expanded form fields receive
-/// the parent's finite maximum.
-enum RufletFlexCrossAxisSizing: Equatable {
-  case intrinsic
-  case bounded
-}
-
-@available(macOS 13.0, iOS 16.0, *)
-struct RufletFlexCrossAxisSizingKey: LayoutValueKey {
-  static let defaultValue = RufletFlexCrossAxisSizing.intrinsic
-}
-
 /// Single-pass port of Flutter's `RenderFlex.performLayout`.
 ///
 /// The measurement-feedback stack this replaces published child sizes through a
@@ -136,11 +121,7 @@ struct RufletFlexLayout: Layout {
         totalFlex += contract.flex
         continue
       }
-      let size = measureSubview(
-        subviews[index],
-        main: nil,
-        crossMaximum: crossAvailable,
-        crossAxisSizing: subviews[index][RufletFlexCrossAxisSizingKey.self])
+      let size = subviews[index].sizeThatFits(childProposal(main: nil, cross: crossAvailable))
       sizes[index] = size
       fixedExtent += mainExtent(size)
     }
@@ -156,11 +137,8 @@ struct RufletFlexLayout: Layout {
       guard let contract = subviews[index][RufletFlexParentDataKey.self], contract.flex > 0
       else { continue }
       let share = remaining * CGFloat(contract.flex) / CGFloat(totalFlex)
-      let measured = measureSubview(
-        subviews[index],
-        main: share,
-        crossMaximum: crossAvailable,
-        crossAxisSizing: subviews[index][RufletFlexCrossAxisSizingKey.self])
+      let measured = subviews[index].sizeThatFits(
+        childProposal(main: share, cross: crossAvailable))
       // `Flexible` may end up smaller than its share; `Expanded` is exact.
       let main = contract.loose ? min(mainExtent(measured), share) : share
       sizes[index] =
@@ -171,51 +149,11 @@ struct RufletFlexLayout: Layout {
     return sizes
   }
 
-  /// SwiftUI proposals are ideal sizes, while Flutter gives a non-stretched
-  /// Flex child a loose `0...maxCross` constraint. Passing `maxCross` as the
-  /// ideal size made nested Columns treat every Button as full-width even
-  /// though the wire did not request `horizontal_alignment: stretch`.
-  ///
-  /// Measure intrinsically first for the loose case and constrain only an
-  /// actually oversized child. A stretched child receives and occupies the
-  /// exact cross extent, matching `CrossAxisAlignment.stretch`.
-  private func measureSubview(
-    _ subview: LayoutSubview,
-    main: CGFloat?,
-    crossMaximum: CGFloat?,
-    crossAxisSizing: RufletFlexCrossAxisSizing
-  ) -> CGSize {
-    if crossAxisStretch {
-      let measured = subview.sizeThatFits(childProposal(main: main, cross: crossMaximum))
-      guard let crossMaximum, crossMaximum.isFinite else { return measured }
-      return replacingCrossExtent(in: measured, with: max(crossMaximum, 0))
-    }
-
-    let looseCross = rufletFlexLooseCrossProposal(
-      maximum: crossMaximum,
-      sizing: crossAxisSizing)
-    let intrinsic = subview.sizeThatFits(childProposal(main: main, cross: looseCross))
-    if crossAxisSizing == .bounded { return intrinsic }
-    guard let crossMaximum, crossMaximum.isFinite,
-      crossExtent(intrinsic) > max(crossMaximum, 0)
-    else { return intrinsic }
-    let constrained = subview.sizeThatFits(
-      childProposal(main: main, cross: max(crossMaximum, 0)))
-    return replacingCrossExtent(
-      in: constrained,
-      with: min(crossExtent(constrained), max(crossMaximum, 0)))
-  }
-
   private func childProposal(main: CGFloat?, cross: CGFloat?) -> ProposedViewSize {
+    let resolvedCross = crossAxisStretch ? cross : cross
     return axis == .horizontal
-      ? ProposedViewSize(width: main, height: cross)
-      : ProposedViewSize(width: cross, height: main)
-  }
-
-  private func replacingCrossExtent(in size: CGSize, with cross: CGFloat) -> CGSize {
-    axis == .horizontal
-      ? CGSize(width: size.width, height: cross)
-      : CGSize(width: cross, height: size.height)
+      ? ProposedViewSize(width: main, height: resolvedCross)
+      : ProposedViewSize(width: resolvedCross, height: main)
   }
 
   private func contentExtent(_ sizes: [CGSize]) -> CGFloat {
@@ -248,16 +186,6 @@ struct RufletFlexLayout: Layout {
     case .end: return free
     }
   }
-}
-
-/// SwiftUI has no loose finite proposal. Preserve the maximum only for a
-/// control whose pinned Flutter renderer actively consumes it; all other
-/// controls are measured intrinsically and merely clamped if they overflow.
-func rufletFlexLooseCrossProposal(
-  maximum: CGFloat?,
-  sizing: RufletFlexCrossAxisSizing
-) -> CGFloat? {
-  sizing == .bounded ? maximum : nil
 }
 
 enum RufletFlexCrossAlignment {

@@ -231,8 +231,7 @@ final class RufletVideoController: ObservableObject {
       applyConfiguration(to: item)
       currentIndex = index
       itemStatusObservation?.invalidate()
-      itemStatusObservation = item.observe(\.status, options: [.initial, .new]) {
-        [weak self] item, _ in
+      itemStatusObservation = item.observe(\.status, options: [.initial, .new]) { [weak self] item, _ in
         Task { @MainActor [weak self] in
           guard let self else { return }
           if item.status == .readyToPlay {
@@ -509,11 +508,7 @@ struct VideoControl: View {
       }
       .onDisappear { controller.detach() }
       .onChange(of: propertyIdentity) { _ in controller.synchronizeProperties() }
-      .fullScreenCover(isPresented: fullscreenBinding) {
-        RufletVideoFullscreenScene(isPresented: fullscreenBinding) {
-          playerContent
-        }
-      }
+      .fullScreenCover(isPresented: fullscreenBinding) { playerContent.background(Color.black) }
     #elseif os(macOS)
       LayoutControl(control: control) {
         playerContent
@@ -568,43 +563,3 @@ struct VideoControl: View {
       .joined(separator: "\u{1f}")
   }
 }
-
-#if os(iOS)
-  /// The protocol-driven fullscreen property presents the player itself rather
-  /// than asking AVPlayerViewController's private fullscreen machinery to do
-  /// so. Supply standard native presentation chrome so the user can always
-  /// dismiss it; changing the binding also synchronizes `fullscreen` and emits
-  /// the pinned `exit_fullscreen` event through RufletVideoController.
-  private struct RufletVideoFullscreenScene<Content: View>: View {
-    @Binding var isPresented: Bool
-    let content: Content
-
-    init(
-      isPresented: Binding<Bool>,
-      @ViewBuilder content: () -> Content
-    ) {
-      _isPresented = isPresented
-      self.content = content()
-    }
-
-    var body: some View {
-      NavigationStack {
-        content
-          .frame(maxWidth: .infinity, maxHeight: .infinity)
-          .background(Color.black)
-          .ignoresSafeArea(edges: .bottom)
-          .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-              Button(role: .cancel) {
-                isPresented = false
-              } label: {
-                Image(systemName: "xmark")
-              }
-              .accessibilityLabel("Exit fullscreen")
-            }
-          }
-          .toolbarBackground(.hidden, for: .navigationBar)
-      }
-    }
-  }
-#endif

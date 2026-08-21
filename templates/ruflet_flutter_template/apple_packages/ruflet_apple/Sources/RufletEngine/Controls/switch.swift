@@ -36,7 +36,8 @@ public struct SwitchControl: View {
         }
         .padding(
           parsePadding(control.dynamicValue("padding"))
-            ?? RufletLayoutDefaults.materialSwitch)
+            ?? RufletLayoutDefaults.materialSwitch
+        )
         .contentShape(Rectangle())
         .disabled(control.disabled)
         .focused($focused)
@@ -55,7 +56,8 @@ public struct SwitchControl: View {
           }
           .padding(
             parsePadding(control.dynamicValue("padding"))
-              ?? RufletLayoutDefaults.materialSwitch)
+              ?? RufletLayoutDefaults.materialSwitch
+          )
           .contentShape(Rectangle())
         }
         .buttonStyle(RufletSwitchPressStyle())
@@ -77,7 +79,8 @@ public struct SwitchControl: View {
     if let label = control.buildTextOrWidget("label") {
       label
         .modifier(
-          RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("label_text_style"))))
+          RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("label_text_style")))
+        )
         // Flet merges the label into the switch's tap target. Keep UIKit in
         // charge of touches on the UISwitch itself and make only the adjacent
         // label perform the same single mutation path, so one physical tap
@@ -201,22 +204,27 @@ struct RufletStandardSwitchPresentation {
       control.dynamicValue("track_outline_width"), states: states)
     let stateThumbIcon = rufletSwitchStateInteger(
       control.dynamicValue("thumb_icon"), states: states)
-    hasExplicitThumbColor = stateThumbColor != nil
+    hasExplicitThumbColor =
+      stateThumbColor != nil
       || (states.contains(.selected) ? activeThumbColor : inactiveThumbColor) != nil
-    hasExplicitTrackColor = stateTrackColor != nil
+    hasExplicitTrackColor =
+      stateTrackColor != nil
       || (states.contains(.selected) ? activeTrackColor : inactiveTrackColor) != nil
     focusColor = parseColor(control.string("focus_color")) ?? .accentColor
     hoverColor = parseColor(control.string("hover_color"))
     splashRadius = CGFloat(control.number("splash_radius") ?? 0)
 
     let selected = states.contains(.selected)
-    thumbColor = stateThumbColor
+    thumbColor =
+      stateThumbColor
       ?? (selected ? activeThumbColor : inactiveThumbColor)
       ?? .white
-    trackColor = stateTrackColor
+    trackColor =
+      stateTrackColor
       ?? (selected ? activeTrackColor : inactiveTrackColor)
       ?? (selected ? .accentColor : .secondary.opacity(0.28))
-    overlayColor = stateOverlayColor
+    overlayColor =
+      stateOverlayColor
       ?? (states.contains(.hovered) ? hoverColor?.opacity(0.14) : nil)
       ?? .clear
     trackOutlineColor = stateTrackOutlineColor ?? .clear
@@ -229,11 +237,14 @@ func rufletSwitchStateColor(
   _ raw: Any?,
   states: Set<RufletWidgetState>
 ) -> Color? {
-  RufletWidgetStateProperty(raw, converter: { value in
-    if let string = value as? String { return parseColor(string) }
-    if let value = value as? RufletValue { return parseColor(value.text) }
-    return nil
-  }).resolve(states)
+  RufletWidgetStateProperty(
+    raw,
+    converter: { value in
+      if let string = value as? String { return parseColor(string) }
+      if let value = value as? RufletValue { return parseColor(value.text) }
+      return nil
+    }
+  ).resolve(states)
 }
 
 func rufletSwitchStateDouble(
@@ -247,10 +258,13 @@ func rufletSwitchStateInteger(
   _ raw: Any?,
   states: Set<RufletWidgetState>
 ) -> Int? {
-  RufletWidgetStateProperty(raw, converter: { value in
-    if let value = value as? RufletValue { return value.integer }
-    return parseInt(value)
-  }).resolve(states)
+  RufletWidgetStateProperty(
+    raw,
+    converter: { value in
+      if let value = value as? RufletValue { return value.integer }
+      return parseInt(value)
+    }
+  ).resolve(states)
 }
 
 private struct RufletSwitchPressedKey: EnvironmentKey {

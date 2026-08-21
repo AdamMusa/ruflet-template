@@ -2,9 +2,9 @@ import RufletProtocol
 import SwiftUI
 
 #if os(iOS)
-import UIKit
+  import UIKit
 #elseif os(macOS)
-import AppKit
+  import AppKit
 #endif
 
 /// Apple-native port of Flet's `PageMedia` widget.
@@ -12,6 +12,7 @@ import AppKit
 struct RufletPageMedia: View {
   let control: RufletControl
   @Environment(\.colorScheme) private var colorScheme
+  @Environment(\.rufletSafeAreaInsets) private var safeAreaInsets
   @State private var keyboardInset = 0.0
   @State private var pendingUpdate: Task<Void, Never>?
 
@@ -23,16 +24,22 @@ struct RufletPageMedia: View {
         .onAppear { update(proxy: proxy, immediate: true) }
         .onChange(of: proxy.size) { _ in update(proxy: proxy, immediate: false) }
         .onChange(of: proxy.safeAreaInsets) { _ in update(proxy: proxy, immediate: false) }
+        .onChange(of: safeAreaInsets) { _ in update(proxy: proxy, immediate: false) }
         .onChange(of: colorScheme) { _ in update(proxy: proxy, immediate: true) }
         #if os(iOS)
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { note in
-          keyboardInset = keyboardHeight(note, proxy: proxy)
-          update(proxy: proxy, immediate: true)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
-          keyboardInset = 0
-          update(proxy: proxy, immediate: true)
-        }
+          .onReceive(
+            NotificationCenter.default.publisher(
+              for: UIResponder.keyboardWillChangeFrameNotification)
+          ) { note in
+            keyboardInset = keyboardHeight(note, proxy: proxy)
+            update(proxy: proxy, immediate: true)
+          }
+          .onReceive(
+            NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)
+          ) { _ in
+            keyboardInset = 0
+            update(proxy: proxy, immediate: true)
+          }
         #endif
         .onDisappear { pendingUpdate?.cancel() }
     }
@@ -44,12 +51,11 @@ struct RufletPageMedia: View {
       guard let backend = control.backend as? RufletBackend else {
         preconditionFailure("RufletPageMedia requires RufletBackend")
       }
-      let insets = proxy.safeAreaInsets
       let padding = RufletPaddingData(
-        top: insets.top,
-        right: insets.trailing,
-        bottom: insets.bottom,
-        left: insets.leading)
+        top: safeAreaInsets.top,
+        right: safeAreaInsets.trailing,
+        bottom: safeAreaInsets.bottom,
+        left: safeAreaInsets.leading)
       let media = RufletPageMediaData(
         padding: padding,
         viewPadding: padding,
@@ -78,14 +84,17 @@ struct RufletPageMedia: View {
   }
 
   #if os(iOS)
-  private func keyboardHeight(_ note: Notification, proxy: GeometryProxy) -> Double {
-    guard let frame = note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return 0 }
-    return max(0, proxy.frame(in: .global).maxY - frame.minY)
-  }
+    private func keyboardHeight(_ note: Notification, proxy: GeometryProxy) -> Double {
+      guard let frame = note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else {
+        return 0
+      }
+      return max(0, proxy.frame(in: .global).maxY - frame.minY)
+    }
   #endif
 
   private var appleUses24HourTime: Bool {
-    guard let format = DateFormatter.dateFormat(fromTemplate: "j", options: 0, locale: .current) else {
+    guard let format = DateFormatter.dateFormat(fromTemplate: "j", options: 0, locale: .current)
+    else {
       return false
     }
     return !format.contains("a")

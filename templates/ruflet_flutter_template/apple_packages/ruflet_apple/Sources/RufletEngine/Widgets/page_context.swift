@@ -119,8 +119,8 @@ struct PageContext<Content: View>: View {
   }
 }
 
-private extension RufletThemeMode {
-  var colorScheme: ColorScheme? {
+extension RufletThemeMode {
+  fileprivate var colorScheme: ColorScheme? {
     switch self {
     case .system: nil
     case .light: .light

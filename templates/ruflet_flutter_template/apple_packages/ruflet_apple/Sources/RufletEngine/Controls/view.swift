@@ -70,7 +70,8 @@ public struct ViewControl: View {
           .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: viewAlignment)
           .padding(
             parsePadding(control.dynamicValue("padding"))
-              ?? EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
+              ?? EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10)
+          )
           .environment(\.rufletSafeAreaInsets, bodySafeAreaInsets)
         if let bottom = control.child("navigation_bar") ?? control.child("bottom_appbar") {
           ControlWidget(control: bottom)

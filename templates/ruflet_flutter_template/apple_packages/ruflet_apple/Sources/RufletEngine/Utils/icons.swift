@@ -415,7 +415,8 @@ extension RufletAppleIconView {
     fontName: String,
     pointSize: CGFloat
   ) -> UIImage? {
-    guard let unicode = UnicodeScalar(scalar), let font = UIFont(name: fontName, size: pointSize) else {
+    guard let unicode = UnicodeScalar(scalar), let font = UIFont(name: fontName, size: pointSize)
+    else {
       return nil
     }
     let text = String(unicode) as NSString

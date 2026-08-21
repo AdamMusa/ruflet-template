@@ -42,7 +42,8 @@ struct RufletAppleAppBar: View {
           title
             .modifier(
               RufletAppBarTitleTextModifier(
-                style: resolvedTitleStyle, nestedControl: control.child("title") != nil))
+                style: resolvedTitleStyle, nestedControl: control.child("title") != nil)
+            )
             .environment(\.rufletInheritedTextStyle, resolvedTitleStyle)
             .environment(\.rufletInheritsTextColor, true)
             .font(.largeTitle.weight(.bold))
@@ -86,7 +87,8 @@ struct RufletAppleAppBar: View {
           title
             .modifier(
               RufletAppBarTitleTextModifier(
-                style: resolvedTitleStyle, nestedControl: control.child("title") != nil))
+                style: resolvedTitleStyle, nestedControl: control.child("title") != nil)
+            )
             .environment(\.rufletInheritedTextStyle, resolvedTitleStyle)
             .environment(\.rufletInheritsTextColor, true)
             .modifier(RufletHeaderSemantics(excluded: excludeHeaderSemantics))
@@ -104,7 +106,8 @@ struct RufletAppleAppBar: View {
           title
             .modifier(
               RufletAppBarTitleTextModifier(
-                style: resolvedTitleStyle, nestedControl: control.child("title") != nil))
+                style: resolvedTitleStyle, nestedControl: control.child("title") != nil)
+            )
             .environment(\.rufletInheritedTextStyle, resolvedTitleStyle)
             .environment(\.rufletInheritsTextColor, true)
             .modifier(RufletHeaderSemantics(excluded: excludeHeaderSemantics))

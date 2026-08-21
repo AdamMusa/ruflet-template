@@ -367,14 +367,12 @@ public struct TabBarControl: View {
           )
           .environment(\.rufletInheritsTextColor, true)
           .foregroundStyle(
-            selected ? presentation.labelColor : presentation.unselectedLabelColor
-          )
+            selected ? presentation.labelColor : presentation.unselectedLabelColor)
           .lineLimit(1)
           .padding(presentation.labelPadding)
           .frame(
             maxWidth: presentation.tabAlignment == .fill ? .infinity : nil,
-            minHeight: 32
-          )
+            minHeight: 32)
           .background {
             if selected {
               appleSelectionIndicator(presentation)
@@ -382,21 +380,17 @@ public struct TabBarControl: View {
             }
           }
           .background(
-            presentation.overlay(
-              presentation.states(
-                selected: selected,
-                hovered: hoveredIndex == index,
-                pressed: false,
-                disabled: control.disabled || tab.disabled))
-          )
+            presentation.overlay(presentation.states(
+              selected: selected,
+              hovered: hoveredIndex == index,
+              pressed: false,
+              disabled: control.disabled || tab.disabled)))
           .contentShape(Rectangle())
         }
-        .buttonStyle(
-          RufletTabBarButtonStyle(
-            presentation: presentation,
-            selected: selected,
-            disabled: control.disabled || tab.disabled)
-        )
+        .buttonStyle(RufletTabBarButtonStyle(
+          presentation: presentation,
+          selected: selected,
+          disabled: control.disabled || tab.disabled))
         .disabled(control.disabled || tab.disabled)
         .opacity(control.disabled || tab.disabled ? 0.38 : 1)
         .modifier(RufletMouseCursorModifier(cursor: presentation.mouseCursor))
@@ -408,8 +402,7 @@ public struct TabBarControl: View {
     .modifier(
       RufletTabTrackSurfaceModifier(
         shape: RoundedRectangle(cornerRadius: 9, style: .continuous),
-        fallback: appleSegmentTrackColor)
-    )
+        fallback: appleSegmentTrackColor))
     .frame(maxWidth: .infinity, alignment: .center)
     .padding(presentation.padding)
     .frame(minHeight: presentation.minimumHeight)
@@ -450,8 +443,7 @@ public struct TabBarControl: View {
             )
             .environment(\.rufletInheritsTextColor, true)
             .foregroundStyle(
-              selected ? presentation.labelColor : presentation.unselectedLabelColor
-            )
+              selected ? presentation.labelColor : presentation.unselectedLabelColor)
             .lineLimit(1)
             .padding(presentation.labelPadding)
             .frame(minHeight: 36)
@@ -461,21 +453,17 @@ public struct TabBarControl: View {
               }
             }
             .background(
-              presentation.overlay(
-                presentation.states(
-                  selected: selected,
-                  hovered: hoveredIndex == index,
-                  pressed: false,
-                  disabled: control.disabled || tab.disabled))
-            )
+              presentation.overlay(presentation.states(
+                selected: selected,
+                hovered: hoveredIndex == index,
+                pressed: false,
+                disabled: control.disabled || tab.disabled)))
             .contentShape(Capsule(style: .continuous))
           }
-          .buttonStyle(
-            RufletTabBarButtonStyle(
-              presentation: presentation,
-              selected: selected,
-              disabled: control.disabled || tab.disabled)
-          )
+          .buttonStyle(RufletTabBarButtonStyle(
+            presentation: presentation,
+            selected: selected,
+            disabled: control.disabled || tab.disabled))
           .disabled(control.disabled || tab.disabled)
           .opacity(control.disabled || tab.disabled ? 0.38 : 1)
           .modifier(RufletMouseCursorModifier(cursor: presentation.mouseCursor))
@@ -505,8 +493,7 @@ public struct TabBarControl: View {
       .padding(indicator.insets)
       .padding(
         .horizontal,
-        presentation.indicatorHorizontalInset(labelPadding: presentation.labelPadding)
-      )
+        presentation.indicatorHorizontalInset(labelPadding: presentation.labelPadding))
       .padding(presentation.indicatorPadding)
     } else {
       if presentation.defaultSelectionSurface == .scrollable {
@@ -530,8 +517,7 @@ public struct TabBarControl: View {
       .modifier(
         RufletTabSelectionSurfaceModifier(
           shape: selectionShape,
-          tint: presentation.indicatorColor ?? defaultSelectionColor(presentation))
-      )
+          tint: presentation.indicatorColor ?? defaultSelectionColor(presentation)))
       .overlay {
         if presentation.hasExplicitIndicatorThickness {
           selectionShape
@@ -542,8 +528,7 @@ public struct TabBarControl: View {
       }
       .padding(
         .horizontal,
-        presentation.indicatorHorizontalInset(labelPadding: presentation.labelPadding)
-      )
+        presentation.indicatorHorizontalInset(labelPadding: presentation.labelPadding))
       .padding(presentation.indicatorPadding)
       .shadow(color: .black.opacity(0.12), radius: 1, y: 1)
   }
@@ -563,12 +548,10 @@ public struct TabBarControl: View {
   private func updateHover(_ hovering: Bool, index: Int) {
     hoveredIndex = hovering ? index : (hoveredIndex == index ? nil : hoveredIndex)
     guard control.hasEventHandler("hover") else { return }
-    control.triggerEvent(
-      "hover",
-      data: .map([
-        "hovering": .bool(hovering),
-        "index": .int(Int64(index)),
-      ]))
+    control.triggerEvent("hover", data: .map([
+      "hovering": .bool(hovering),
+      "index": .int(Int64(index)),
+    ]))
   }
 
   private var appleSegmentTrackColor: Color {
@@ -661,8 +644,7 @@ private struct RufletNativeTabSegment: Equatable {
       for (index, segment) in segments.enumerated() {
         view.setEnabled(enabled && segment.enabled, forSegmentAt: index)
       }
-      let resolvedSelection =
-        segments.indices.contains(selectedIndex)
+      let resolvedSelection = segments.indices.contains(selectedIndex)
         ? selectedIndex : UISegmentedControl.noSegment
       if view.selectedSegmentIndex != resolvedSelection {
         view.selectedSegmentIndex = resolvedSelection
@@ -677,20 +659,15 @@ private struct RufletNativeTabSegment: Equatable {
         let symbol = segment.systemImageName.flatMap { UIImage(systemName: $0) }
         let image: UIImage?
         if let symbol, !title.isEmpty {
-          image = rufletNativeSegmentImage(
-            symbol: symbol, title: title, traits: view.traitCollection)
+          image = rufletNativeSegmentImage(symbol: symbol, title: title, traits: view.traitCollection)
         } else {
           image = symbol
         }
-        // Use UISegmentedControl's target/action selection path. Installing a
-        // no-op UIAction per segment let UIKit update the visible segment but
-        // could bypass `.valueChanged`, leaving Tabs.selected_index and the
-        // TabBarView body on the old page.
-        if let image {
-          view.insertSegment(with: image, at: index, animated: false)
-        } else {
-          view.insertSegment(withTitle: title, at: index, animated: false)
-        }
+        let action = UIAction(
+          title: title,
+          image: image,
+          identifier: UIAction.Identifier("ruflet-tab-\(segment.id)")) { _ in }
+        view.insertSegment(action: action, at: index, animated: false)
       }
     }
 
@@ -719,9 +696,8 @@ private struct RufletNativeTabSegment: Equatable {
     let font = UIFontMetrics(forTextStyle: .subheadline).scaledFont(
       for: baseFont,
       compatibleWith: traits)
-    let configuredSymbol =
-      symbol.applyingSymbolConfiguration(
-        UIImage.SymbolConfiguration(font: font)) ?? symbol
+    let configuredSymbol = symbol.applyingSymbolConfiguration(
+      UIImage.SymbolConfiguration(font: font)) ?? symbol
     let textAttributes: [NSAttributedString.Key: Any] = [
       .font: font,
       .foregroundColor: UIColor.white,
@@ -797,13 +773,11 @@ private struct RufletTabBarButtonStyle: ButtonStyle {
   func makeBody(configuration: Configuration) -> some View {
     configuration.label
       .background(
-        presentation.overlay(
-          presentation.states(
-            selected: selected,
-            hovered: false,
-            pressed: configuration.isPressed,
-            disabled: disabled))
-      )
+        presentation.overlay(presentation.states(
+          selected: selected,
+          hovered: false,
+          pressed: configuration.isPressed,
+          disabled: disabled)))
       .clipShape(RufletCornerShape(radius: presentation.splashBorderRadius))
   }
 }
@@ -862,10 +836,9 @@ struct RufletTabBarPresentation {
       parsePadding(control.dynamicValue("indicator_padding"))
       ?? EdgeInsets()
     hasExplicitIndicatorThickness = control.dynamicValue("indicator_thickness") != nil
-    indicatorThickness = CGFloat(
-      max(
-        control.number("indicator_thickness", default: 2) ?? 2,
-        0))
+    indicatorThickness = CGFloat(max(
+      control.number("indicator_thickness", default: 2) ?? 2,
+      0))
     labelPadding =
       parsePadding(control.dynamicValue("label_padding"))
       ?? parsePadding(componentTheme?["label_padding"])
@@ -888,12 +861,11 @@ struct RufletTabBarPresentation {
     unselectedTextStyle =
       parseTextStyle(control.dynamicValue("unselected_label_text_style"))
       ?? parseTextStyle(componentTheme?["unselected_label_text_style"])
-    dividerHeight = CGFloat(
-      max(
-        control.number("divider_height")
-          ?? parseDouble(componentTheme?["divider_height"])
-          ?? 0,
-        0))
+    dividerHeight = CGFloat(max(
+      control.number("divider_height")
+        ?? parseDouble(componentTheme?["divider_height"])
+        ?? 0,
+      0))
     dividerColor =
       parseColor(control.string("divider_color"))
       ?? rufletTabBarColor(componentTheme?["divider_color"])

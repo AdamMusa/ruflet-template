@@ -202,9 +202,11 @@ struct RufletCupertinoSwitchPresentation {
       control.dynamicValue("track_outline_width"), states: states)
     let iconCode = rufletSwitchStateInteger(
       control.dynamicValue("thumb_icon"), states: states)
-    hasExplicitThumbColor = defaultThumbColor != nil
+    hasExplicitThumbColor =
+      defaultThumbColor != nil
       || (!states.contains(.selected) && inactiveThumbColor != nil)
-    hasExplicitTrackColor = states.contains(.selected)
+    hasExplicitTrackColor =
+      states.contains(.selected)
       ? activeTrackColor != nil : inactiveTrackColor != nil
 
     activeThumbImageSource = parseImageSource(
@@ -216,10 +218,12 @@ struct RufletCupertinoSwitchPresentation {
     onLabelColor = parseColor(control.string("on_label_color")) ?? .white
     offLabelColor = parseColor(control.string("off_label_color")) ?? .secondary
 
-    thumbColor = defaultThumbColor
+    thumbColor =
+      defaultThumbColor
       ?? (selected ? nil : inactiveThumbColor)
       ?? .white
-    trackColor = (selected ? activeTrackColor : inactiveTrackColor)
+    trackColor =
+      (selected ? activeTrackColor : inactiveTrackColor)
       ?? (selected ? .green : .secondary.opacity(0.28))
     trackOutlineColor = outlineColor ?? .clear
     trackOutlineWidth = CGFloat(outlineWidth ?? 0)

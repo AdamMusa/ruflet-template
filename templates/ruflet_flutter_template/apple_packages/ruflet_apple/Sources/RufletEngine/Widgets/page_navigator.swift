@@ -332,18 +332,21 @@ func rufletPageTransitionOffsets(
       visible: Bool
     ) -> UIView? {
       guard visible else { return nil }
-      let shadow = UIView(frame: CGRect(
-        x: rightToLeft ? max(foregroundView.bounds.width - 1, 0) : 0,
-        y: 0,
-        width: 1,
-        height: foregroundView.bounds.height))
+      let shadow = UIView(
+        frame: CGRect(
+          x: rightToLeft ? max(foregroundView.bounds.width - 1, 0) : 0,
+          y: 0,
+          width: 1,
+          height: foregroundView.bounds.height))
       shadow.isUserInteractionEnabled = false
       shadow.backgroundColor = UIColor.black.withAlphaComponent(0.12)
       shadow.layer.shadowColor = UIColor.black.cgColor
       shadow.layer.shadowOpacity = 0.22
       shadow.layer.shadowRadius = 5
       shadow.layer.shadowOffset = CGSize(width: rightToLeft ? -3 : 3, height: 0)
-      shadow.autoresizingMask = [.flexibleHeight, rightToLeft ? .flexibleLeftMargin : .flexibleRightMargin]
+      shadow.autoresizingMask = [
+        .flexibleHeight, rightToLeft ? .flexibleLeftMargin : .flexibleRightMargin,
+      ]
       foregroundView.addSubview(shadow)
       return shadow
     }

@@ -41,18 +41,21 @@ struct RufletAppleButtonStyle: ButtonStyle {
   func makeBody(configuration: Configuration) -> some View {
     let states = states(configuration: configuration)
     let shape = RoundedRectangle(cornerRadius: radius)
-    let disabledHasContainer: Bool = switch variant {
-    case .elevated, .filled, .tonal: true
-    case .text, .outlined: false
-    }
+    let disabledHasContainer: Bool =
+      switch variant {
+      case .elevated, .filled, .tonal: true
+      case .text, .outlined: false
+      }
     let effectiveForeground = isEnabled ? foreground : disabledColor.opacity(0.38)
-    let effectiveBackground = isEnabled
+    let effectiveBackground =
+      isEnabled
       ? background.opacity(configuration.isPressed ? 0.72 : 1)
       : (disabledHasContainer ? disabledColor.opacity(0.12) : .clear)
-    let glassTint: Color? = switch variant {
-    case .filled, .tonal: background
-    case .elevated, .outlined, .text: nil
-    }
+    let glassTint: Color? =
+      switch variant {
+      case .filled, .tonal: background
+      case .elevated, .outlined, .text: nil
+      }
     let resolvedPadding = padding.resolve(states) ?? EdgeInsets()
     let fixed = fixedSize.resolve(states)
     let minimum = minimumSize.resolve(states)
@@ -66,7 +69,8 @@ struct RufletAppleButtonStyle: ButtonStyle {
         maxWidth: maximum?.width,
         minHeight: minimum?.height,
         maxHeight: maximum?.height,
-        alignment: alignment)
+        alignment: alignment
+      )
       // Keep a protocol-requested outline inside the interactive surface.
       // On iOS 26 the native glass surface expands while pressed. Applying
       // the outline after glassEffect leaves the stroke stationary and shows
@@ -77,14 +81,16 @@ struct RufletAppleButtonStyle: ButtonStyle {
         RufletButtonBorderModifier(
           shape: shape,
           border: border,
-          color: isEnabled ? border?.color : disabledColor.opacity(0.12)))
+          color: isEnabled ? border?.color : disabledColor.opacity(0.12))
+      )
       .modifier(
         RufletButtonSurfaceModifier(
           shape: shape,
           background: effectiveBackground,
           glassTint: glassTint,
           usesNativeGlass: usesNativeGlassSurface,
-          interactive: isEnabled))
+          interactive: isEnabled)
+      )
       .modifier(RufletButtonClipModifier(shape: shape, style: self))
       .shadow(
         color: variant == .elevated && isEnabled && !rendersNativeGlass

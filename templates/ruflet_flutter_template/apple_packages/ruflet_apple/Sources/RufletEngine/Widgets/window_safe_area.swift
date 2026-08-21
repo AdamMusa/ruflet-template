@@ -6,8 +6,11 @@ import SwiftUI
   @MainActor
   func rufletCurrentWindowSafeAreaInsets() -> RufletSafeAreaInsets {
     let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
-    let windows = scenes
-      .filter { $0.activationState == .foregroundActive || $0.activationState == .foregroundInactive }
+    let windows =
+      scenes
+      .filter {
+        $0.activationState == .foregroundActive || $0.activationState == .foregroundInactive
+      }
       .flatMap(\.windows)
     let window = windows.first(where: \.isKeyWindow) ?? windows.first
     guard let insets = window?.safeAreaInsets else { return .zero }
