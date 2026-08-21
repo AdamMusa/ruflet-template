@@ -9,6 +9,7 @@ import SwiftUI
 @MainActor
 public struct DatePickerControl: View {
   @ObservedObject public var control: RufletControl
+  @Environment(\.rufletPageTheme) private var pageTheme
   @State private var presented = false
   @State private var draft = Date()
   @State private var inputText = ""
@@ -19,13 +20,23 @@ public struct DatePickerControl: View {
   }
 
   public var body: some View {
-    RufletPickerPresenter(
-      presented: $presented,
-      barrierColor: presentation.barrierColor,
-      modal: presentation.modal,
-      onDismiss: presentationDismissed
-    ) {
-      pickerSheet
+    Group {
+      if let presentationError,
+        control.boolean("open", default: false) || presented
+      {
+        ErrorControl(
+          "Native renderer protocol error",
+          description: "\(control.type)#\(control.id): \(presentationError)")
+      } else {
+        RufletPickerPresenter(
+          presented: $presented,
+          modal: presentation.modal,
+          preferredSize: .large,
+          onDismiss: presentationDismissed
+        ) {
+          pickerSheet
+        }
+      }
     }
     .onAppear(perform: synchronizePresentation)
     .onChange(of: control.revision) { _ in synchronizePresentation() }
@@ -33,7 +44,7 @@ public struct DatePickerControl: View {
 
   private var pickerSheet: some View {
     let presentation = presentation
-    return NavigationView {
+    return NavigationStack {
       VStack(spacing: 12) {
         if let helpText = presentation.helpText {
           Text(helpText).font(.headline).frame(maxWidth: .infinity, alignment: .leading)
@@ -51,7 +62,8 @@ public struct DatePickerControl: View {
           ) { date, _ in
             draft = date
           }
-          .frame(maxWidth: .infinity, maxHeight: .infinity)
+          .frame(maxWidth: .infinity)
+          .frame(height: nativePickerHeight)
         } else {
           TextField(
             presentation.fieldHintText ?? presentation.fieldLabelText ?? "Date",
@@ -67,7 +79,9 @@ public struct DatePickerControl: View {
         }
       }
       .padding(presentation.insetPadding)
+      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
       .navigationTitle(presentation.fieldLabelText ?? "")
+      .rufletInlineNavigationTitle()
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button(presentation.cancelText) { close(nil) }
@@ -103,6 +117,8 @@ public struct DatePickerControl: View {
             .padding(.top, 8)
         }
       }
+      .background(Color.rufletSystemBackground)
+      .tint(pageTheme?.appleAccentColor ?? .accentColor)
     }
   }
 
@@ -125,7 +141,19 @@ public struct DatePickerControl: View {
     return presentation.datePickerMode == .year ? .compact : .inline
   }
 
+  private var nativePickerHeight: CGFloat {
+    switch pickerStyle {
+    case .inline: 360
+    case .compact, .automatic: 44
+    case .wheels: 216
+    }
+  }
+
   func synchronizePresentation() {
+    guard presentationError == nil else {
+      if presented { presented = false }
+      return
+    }
     switch rufletPickerPresentationAction(
       open: control.boolean("open", default: false), presented: presented)
     {
@@ -181,6 +209,21 @@ public struct DatePickerControl: View {
   var presentation: RufletDatePickerPresentation {
     RufletDatePickerPresentation(control: control)
   }
+
+  private var presentationError: String? {
+    rufletNativePickerProtocolError(for: control)
+  }
+}
+
+extension View {
+  @ViewBuilder
+  func rufletInlineNavigationTitle() -> some View {
+    #if os(iOS)
+      navigationBarTitleDisplayMode(.inline)
+    #else
+      self
+    #endif
+  }
 }
 
 enum RufletPickerPresentationAction: Equatable {
@@ -229,7 +272,6 @@ struct RufletDatePickerPresentation {
   let insetPadding: EdgeInsets
   let locale: Locale?
   let modal: Bool
-  let barrierColor: Color?
   let switchToCalendarIcon: RufletAppleIcon?
   let switchToInputIcon: RufletAppleIcon?
 
@@ -261,7 +303,6 @@ struct RufletDatePickerPresentation {
       ?? EdgeInsets(top: 24, leading: 16, bottom: 24, trailing: 16)
     locale = parseLocale(control.dynamicValue("locale"))
     modal = control.boolean("modal", default: false)
-    barrierColor = parseColor(control.string("barrier_color"))
     switchToCalendarIcon = Self.icon(control, property: "switch_to_calendar_icon")
     switchToInputIcon = Self.icon(control, property: "switch_to_input_icon")
   }
@@ -272,128 +313,103 @@ struct RufletDatePickerPresentation {
   }
 }
 
-/// Presents picker content with the platform modal primitive. iOS uses a real
-/// UIKit-backed SwiftUI sheet; macOS retains Flet's centered dialog geometry.
+/// Presents picker content with the platform sheet primitive on every Apple
+/// platform. The OS owns all modal chrome, motion and dismissal behavior.
 @MainActor
 struct RufletPickerPresenter<Content: View>: View {
   @Binding var presented: Bool
-  let barrierColor: Color?
   let modal: Bool
+  let preferredSize: RufletPickerSheetSize
   let onDismiss: () -> Void
   let content: Content
 
   init(
     presented: Binding<Bool>,
-    barrierColor: Color?,
     modal: Bool,
+    preferredSize: RufletPickerSheetSize = .mediumAndLarge,
     onDismiss: @escaping () -> Void,
     @ViewBuilder content: () -> Content
   ) {
     _presented = presented
-    self.barrierColor = barrierColor
     self.modal = modal
+    self.preferredSize = preferredSize
     self.onDismiss = onDismiss
     self.content = content()
   }
 
   var body: some View {
-    #if os(iOS)
-      RufletPresentationLifecycleAnchor()
-        .sheet(isPresented: $presented, onDismiss: onDismiss) {
-          RufletNativePickerSheet(modal: modal) { content }
-        }
-    #else
-      ZStack {
-        RufletPresentationLifecycleAnchor()
-        if presented {
-          RufletPickerDialogLayer(
-            barrierColor: barrierColor,
-            barrierDismissible: !modal,
-            onDismiss: onDismiss
-          ) {
-            content
-          }
+    RufletPresentationLifecycleAnchor()
+      .sheet(isPresented: $presented, onDismiss: onDismiss) {
+        RufletNativePickerSheet(modal: modal, preferredSize: preferredSize) {
+          content
         }
       }
+  }
+}
+
+enum RufletPickerSheetSize: Equatable {
+  case medium
+  case large
+  case mediumAndLarge
+}
+
+@MainActor
+private struct RufletNativePickerSheet<Content: View>: View {
+  let modal: Bool
+  let preferredSize: RufletPickerSheetSize
+  let content: Content
+
+  init(
+    modal: Bool,
+    preferredSize: RufletPickerSheetSize,
+    @ViewBuilder content: () -> Content
+  ) {
+    self.modal = modal
+    self.preferredSize = preferredSize
+    self.content = content()
+  }
+
+  @ViewBuilder
+  var body: some View {
+    #if os(iOS)
+      if #available(iOS 16.0, *) {
+        switch preferredSize {
+        case .medium:
+          sheetContent.presentationDetents([.medium])
+        case .large:
+          sheetContent.presentationDetents([.large])
+        case .mediumAndLarge:
+          sheetContent.presentationDetents([.medium, .large])
+        }
+      } else {
+        sheetContent
+      }
+    #else
+      sheetContent
+    #endif
+  }
+
+  @ViewBuilder
+  private var sheetContent: some View {
+    #if os(iOS)
+      content
+        .background(Color.rufletSystemBackground.ignoresSafeArea())
+        .presentationDragIndicator(.visible)
+        .interactiveDismissDisabled(modal)
+    #else
+      content
+        .background(Color.rufletSystemBackground.ignoresSafeArea())
+        .interactiveDismissDisabled(modal)
     #endif
   }
 }
 
-#if os(iOS)
-  @MainActor
-  private struct RufletNativePickerSheet<Content: View>: View {
-    let modal: Bool
-    let content: Content
-
-    init(modal: Bool, @ViewBuilder content: () -> Content) {
-      self.modal = modal
-      self.content = content()
-    }
-
-    @ViewBuilder
-    var body: some View {
-      if #available(iOS 16.0, *) {
-        content
-          .presentationDetents([.medium, .large])
-          .presentationDragIndicator(.visible)
-          .interactiveDismissDisabled(modal)
-      } else {
-        content.interactiveDismissDisabled(modal)
-      }
-    }
-  }
-#endif
-
-/// Centered desktop dialog used for picker controls on macOS.
 @MainActor
-struct RufletPickerDialogLayer<Content: View>: View {
-  let barrierColor: Color?
-  let barrierDismissible: Bool
-  let onDismiss: () -> Void
-  let content: Content
-
-  init(
-    barrierColor: Color?,
-    barrierDismissible: Bool,
-    onDismiss: @escaping () -> Void,
-    @ViewBuilder content: () -> Content
-  ) {
-    self.barrierColor = barrierColor
-    self.barrierDismissible = barrierDismissible
-    self.onDismiss = onDismiss
-    self.content = content()
+func rufletNativePickerProtocolError(for control: RufletControl) -> String? {
+  if let value = control.value("barrier_color"), !value.isNull {
+    return "barrier_color cannot be applied by the public Apple sheet API"
   }
-
-  var body: some View {
-    ZStack {
-      (barrierColor ?? Color.black.opacity(0.54))
-        .contentShape(Rectangle())
-        .onTapGesture {
-          if barrierDismissible { onDismiss() }
-        }
-      dialog
-    }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .ignoresSafeArea()
-    .zIndex(100)
-    .accessibilityElement(children: .contain)
-    .accessibilityAddTraits(.isModal)
-  }
-
-  private var dialog: some View {
-    content
-      #if os(macOS)
-      .frame(
-        minWidth: 420, idealWidth: 520, maxWidth: 720,
-        minHeight: 420, idealHeight: 520, maxHeight: 720)
-      #else
-      .frame(maxWidth: 720, minHeight: 360, maxHeight: 720)
-      #endif
-      .background(Color.rufletSystemBackground)
-      .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
-      .shadow(color: .black.opacity(0.3), radius: 12, y: 6)
-      .padding(24)
-  }
+  return nil
 }
 
 func rufletPickerDateText(_ date: Date, locale: Locale?) -> String {

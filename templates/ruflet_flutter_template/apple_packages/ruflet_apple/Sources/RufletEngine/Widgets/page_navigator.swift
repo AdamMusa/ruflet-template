@@ -24,6 +24,7 @@ struct RufletPageNavigator: View {
   let onRequestPop: (RufletControl) -> Void
   let onDidRemove: (RufletControl) -> Void
   @Environment(\.rufletHeroNamespace) private var heroNamespace
+  @Environment(\.rufletSafeAreaInsets) private var safeAreaInsets
   @EnvironmentObject private var heroTransitionState: RufletHeroTransitionState
 
   var body: some View {
@@ -36,6 +37,7 @@ struct RufletPageNavigator: View {
       theme: theme,
       design: design,
       tint: tint,
+      safeAreaInsets: safeAreaInsets,
       heroNamespace: heroNamespace,
       heroTransitionState: heroTransitionState,
       onRequestPop: onRequestPop,
@@ -54,6 +56,7 @@ private struct RufletHostedPage: View {
   let theme: RufletTheme
   let design: RufletPageDesign
   let tint: Color?
+  let safeAreaInsets: RufletSafeAreaInsets
   let heroNamespace: Namespace.ID?
   let heroTransitionState: RufletHeroTransitionState
 
@@ -61,6 +64,7 @@ private struct RufletHostedPage: View {
     PageContext(themeMode: themeMode, theme: theme, design: design) {
       ControlWidget(control: control)
         .environment(\.rufletTopViewID, topViewID)
+        .environment(\.rufletSafeAreaInsets, safeAreaInsets)
     }
     .environment(\.locale, locale)
     .environment(\.layoutDirection, layoutDirection)
@@ -113,7 +117,238 @@ func rufletPageNavigationUpdateDisposition(
   identity == topIdentity ? .activate : .stage
 }
 
+/// Interaction ownership for a native route stack.
+///
+/// UIKit normally keeps covered view controllers out of hit testing, but a
+/// queued burst of pointer events can overlap an interactive navigation
+/// transition. SwiftUI gesture recognizers hosted by the covered controller
+/// may then receive a late tap. Keep the invariant explicit: only the
+/// controller UIKit has actually shown is interactive.
+func rufletPageNavigationInteractionStates(
+  count: Int,
+  activeIndex: Int?
+) -> [Bool] {
+  guard count > 0 else { return [] }
+  guard let activeIndex, (0..<count).contains(activeIndex) else {
+    return Array(repeating: false, count: count)
+  }
+  return (0..<count).map { $0 == activeIndex }
+}
+
+/// Reports a native route removal only when it was initiated by UIKit's
+/// interactive-pop recognizer. A representable rebuild or programmatic stack
+/// reconciliation can also produce `didShow` callbacks with a temporarily
+/// shorter controller array; those callbacks are renderer bookkeeping, not
+/// user intent, and must never become Flet `view_pop` events.
+func rufletShouldReportNativeViewRemoval(
+  interactivePopStarted: Bool,
+  synchronizing: Bool,
+  expected: [RufletPageNavigationIdentity],
+  actual: [RufletPageNavigationIdentity]
+) -> Bool {
+  interactivePopStarted && !synchronizing && actual != expected
+    && expected.starts(with: actual)
+}
+
+/// Geometry for the pinned Flet route transition.
+///
+/// Flutter's iOS page transition moves the new route across a flat,
+/// full-screen surface while the covered route shifts by one third of the
+/// width. UIKit's latest default navigation transition instead rounds and
+/// scales the route like a card. Keep the protocol renderer independent of
+/// that changing UIKit default so the same Flet `Page.views` mutation retains
+/// Flet's route geometry on every iOS release.
+enum RufletPageTransitionOperation: Equatable {
+  case push
+  case pop
+}
+
+enum RufletPageTransitionStyle: Equatable {
+  case standard
+  case fullscreenDialog
+}
+
+struct RufletPageTransitionOffsets: Equatable {
+  let fromStart: CGSize
+  let fromEnd: CGSize
+  let toStart: CGSize
+  let toEnd: CGSize
+}
+
+let rufletPageTransitionDuration: TimeInterval = 0.3
+
+func rufletPageTransitionOffsets(
+  operation: RufletPageTransitionOperation,
+  style: RufletPageTransitionStyle,
+  width: CGFloat,
+  height: CGFloat,
+  rightToLeft: Bool
+) -> RufletPageTransitionOffsets {
+  if style == .fullscreenDialog {
+    switch operation {
+    case .push:
+      return RufletPageTransitionOffsets(
+        fromStart: .zero,
+        fromEnd: .zero,
+        toStart: CGSize(width: 0, height: height),
+        toEnd: .zero)
+    case .pop:
+      return RufletPageTransitionOffsets(
+        fromStart: .zero,
+        fromEnd: CGSize(width: 0, height: height),
+        toStart: .zero,
+        toEnd: .zero)
+    }
+  }
+
+  let direction: CGFloat = rightToLeft ? -1 : 1
+  switch operation {
+  case .push:
+    return RufletPageTransitionOffsets(
+      fromStart: .zero,
+      fromEnd: CGSize(width: -direction * width / 3, height: 0),
+      toStart: CGSize(width: direction * width, height: 0),
+      toEnd: .zero)
+  case .pop:
+    return RufletPageTransitionOffsets(
+      fromStart: .zero,
+      fromEnd: CGSize(width: direction * width, height: 0),
+      toStart: CGSize(width: -direction * width / 3, height: 0),
+      toEnd: .zero)
+  }
+}
+
 #if os(iOS)
+  @MainActor
+  private final class RufletFletPageTransitionAnimator: NSObject,
+    UIViewControllerAnimatedTransitioning
+  {
+    let operation: RufletPageTransitionOperation
+    let style: RufletPageTransitionStyle
+    let rightToLeft: Bool
+    private var animator: UIViewPropertyAnimator?
+
+    init(
+      operation: RufletPageTransitionOperation,
+      style: RufletPageTransitionStyle,
+      rightToLeft: Bool
+    ) {
+      self.operation = operation
+      self.style = style
+      self.rightToLeft = rightToLeft
+    }
+
+    func transitionDuration(using _: UIViewControllerContextTransitioning?) -> TimeInterval {
+      rufletPageTransitionDuration
+    }
+
+    func animateTransition(using transitionContext: UIViewControllerContextTransitioning) {
+      interruptibleAnimator(using: transitionContext).startAnimation()
+    }
+
+    func interruptibleAnimator(
+      using transitionContext: UIViewControllerContextTransitioning
+    ) -> UIViewImplicitlyAnimating {
+      if let animator { return animator }
+      guard
+        let fromViewController = transitionContext.viewController(forKey: .from),
+        let toViewController = transitionContext.viewController(forKey: .to),
+        let fromView = transitionContext.view(forKey: .from) ?? fromViewController.view,
+        let toView = transitionContext.view(forKey: .to) ?? toViewController.view
+      else {
+        let empty = UIViewPropertyAnimator(duration: 0, curve: .linear)
+        empty.addCompletion { _ in transitionContext.completeTransition(false) }
+        animator = empty
+        return empty
+      }
+
+      let container = transitionContext.containerView
+      let bounds = container.bounds
+      let finalToFrame = transitionContext.finalFrame(for: toViewController)
+      toView.frame = finalToFrame.isEmpty ? bounds : finalToFrame
+      if fromView.frame.isEmpty { fromView.frame = bounds }
+
+      // Route views are always rectangular protocol surfaces. In particular,
+      // never inherit the rounded-card mask introduced by newer UIKit's
+      // default UINavigationController animator.
+      for routeView in [fromView, toView] {
+        routeView.layer.cornerRadius = 0
+        routeView.layer.mask = nil
+        routeView.clipsToBounds = false
+      }
+
+      switch operation {
+      case .push:
+        container.addSubview(toView)
+      case .pop:
+        container.insertSubview(toView, belowSubview: fromView)
+      }
+
+      let offsets = rufletPageTransitionOffsets(
+        operation: operation,
+        style: style,
+        width: max(bounds.width, 1),
+        height: max(bounds.height, 1),
+        rightToLeft: rightToLeft)
+      fromView.transform = CGAffineTransform(
+        translationX: offsets.fromStart.width,
+        y: offsets.fromStart.height)
+      toView.transform = CGAffineTransform(
+        translationX: offsets.toStart.width,
+        y: offsets.toStart.height)
+
+      let foregroundView = operation == .push ? toView : fromView
+      let edgeShadow = makeEdgeShadow(
+        for: foregroundView,
+        rightToLeft: rightToLeft,
+        visible: style == .standard)
+
+      let propertyAnimator = UIViewPropertyAnimator(
+        duration: transitionDuration(using: transitionContext),
+        curve: .easeInOut)
+      propertyAnimator.addAnimations {
+        fromView.transform = CGAffineTransform(
+          translationX: offsets.fromEnd.width,
+          y: offsets.fromEnd.height)
+        toView.transform = CGAffineTransform(
+          translationX: offsets.toEnd.width,
+          y: offsets.toEnd.height)
+      }
+      propertyAnimator.addCompletion { [weak self] _ in
+        let completed = !transitionContext.transitionWasCancelled
+        fromView.transform = .identity
+        toView.transform = .identity
+        edgeShadow?.removeFromSuperview()
+        transitionContext.completeTransition(completed)
+        self?.animator = nil
+      }
+      animator = propertyAnimator
+      return propertyAnimator
+    }
+
+    private func makeEdgeShadow(
+      for foregroundView: UIView,
+      rightToLeft: Bool,
+      visible: Bool
+    ) -> UIView? {
+      guard visible else { return nil }
+      let shadow = UIView(frame: CGRect(
+        x: rightToLeft ? max(foregroundView.bounds.width - 1, 0) : 0,
+        y: 0,
+        width: 1,
+        height: foregroundView.bounds.height))
+      shadow.isUserInteractionEnabled = false
+      shadow.backgroundColor = UIColor.black.withAlphaComponent(0.12)
+      shadow.layer.shadowColor = UIColor.black.cgColor
+      shadow.layer.shadowOpacity = 0.22
+      shadow.layer.shadowRadius = 5
+      shadow.layer.shadowOffset = CGSize(width: rightToLeft ? -3 : 3, height: 0)
+      shadow.autoresizingMask = [.flexibleHeight, rightToLeft ? .flexibleLeftMargin : .flexibleRightMargin]
+      foregroundView.addSubview(shadow)
+      return shadow
+    }
+  }
+
   @MainActor
   private struct RufletNativePageNavigator: UIViewControllerRepresentable {
     let page: RufletControl
@@ -124,6 +359,7 @@ func rufletPageNavigationUpdateDisposition(
     let theme: RufletTheme
     let design: RufletPageDesign
     let tint: Color?
+    let safeAreaInsets: RufletSafeAreaInsets
     let heroNamespace: Namespace.ID?
     let heroTransitionState: RufletHeroTransitionState
     let onRequestPop: (RufletControl) -> Void
@@ -135,7 +371,7 @@ func rufletPageNavigationUpdateDisposition(
 
     func makeUIViewController(context: Context) -> UINavigationController {
       let navigationController = UINavigationController()
-      navigationController.view.backgroundColor = .systemBackground
+      navigationController.view.backgroundColor = .clear
       navigationController.setNavigationBarHidden(true, animated: false)
       navigationController.delegate = context.coordinator
       navigationController.interactivePopGestureRecognizer?.delegate = context.coordinator
@@ -158,6 +394,7 @@ func rufletPageNavigationUpdateDisposition(
       private var controllers: [RufletPageNavigationIdentity: RufletHostingController] = [:]
       private var expectedIdentities: [RufletPageNavigationIdentity] = []
       private var synchronizing = false
+      private var interactivePopStarted = false
 
       init(parent: RufletNativePageNavigator) {
         self.parent = parent
@@ -169,6 +406,9 @@ func rufletPageNavigationUpdateDisposition(
         guard let navigationController,
           let backend = parent.page.backend as? RufletBackend
         else { return }
+        navigationController.view.backgroundColor = UIColor(
+          parent.views.last.flatMap { parseColor($0.string("bgcolor")) }
+            ?? parent.theme.applePageBackgroundColor!)
 
         let currentControllers = navigationController.viewControllers.compactMap {
           $0 as? RufletHostingController
@@ -194,6 +434,7 @@ func rufletPageNavigationUpdateDisposition(
               theme: parent.theme,
               design: parent.design,
               tint: parent.tint,
+              safeAreaInsets: parent.safeAreaInsets,
               heroNamespace: parent.heroNamespace,
               heroTransitionState: parent.heroTransitionState))
           if let controller = mountedControllers[identity] ?? controllers[identity] {
@@ -218,7 +459,16 @@ func rufletPageNavigationUpdateDisposition(
         }
 
         expectedIdentities = requestedIdentities
-        controllers = Dictionary(uniqueKeysWithValues: zip(requestedIdentities, requestedControllers))
+        controllers = Dictionary(
+          uniqueKeysWithValues: zip(requestedIdentities, requestedControllers))
+        var interactionControllers = currentControllers
+        interactionControllers.append(
+          contentsOf: requestedControllers.filter { requested in
+            !currentControllers.contains { $0 === requested }
+          })
+        setInteractiveController(
+          requestedControllers.last,
+          among: interactionControllers)
         guard currentIdentities != requestedIdentities else {
           reportSynchronization(
             started: started,
@@ -250,9 +500,7 @@ func rufletPageNavigationUpdateDisposition(
           // the push. Large Ruby-driven views (notably the code editor) then
           // animate a ready surface instead of laying out during the gesture.
           last.prepareForNavigation()
-          push(
-            last, animated: animated,
-            fullscreen: last.control.boolean("fullscreen_dialog", default: false))
+          push(last, animated: animated)
         } else if isPop {
           // UIKit captures the destination controller at the start of an
           // animated pop. Flush the newly activated SwiftUI root first so the
@@ -292,21 +540,39 @@ func rufletPageNavigationUpdateDisposition(
 
       private func push(
         _ controller: RufletHostingController,
-        animated: Bool,
-        fullscreen: Bool
+        animated: Bool
       ) {
         guard let navigationController else { return }
-        if fullscreen && animated {
-          let transition = CATransition()
-          transition.duration = 0.35
-          transition.type = .moveIn
-          transition.subtype = .fromBottom
-          transition.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-          navigationController.view.layer.add(transition, forKey: "ruflet_fullscreen_dialog")
-          navigationController.pushViewController(controller, animated: false)
-        } else {
-          navigationController.pushViewController(controller, animated: animated)
+        navigationController.pushViewController(controller, animated: animated)
+      }
+
+      func navigationController(
+        _ navigationController: UINavigationController,
+        animationControllerFor operation: UINavigationController.Operation,
+        from fromViewController: UIViewController,
+        to toViewController: UIViewController
+      ) -> UIViewControllerAnimatedTransitioning? {
+        let transitionOperation: RufletPageTransitionOperation
+        let fullscreenControl: RufletControl?
+        switch operation {
+        case .push:
+          transitionOperation = .push
+          fullscreenControl = (toViewController as? RufletHostingController)?.control
+        case .pop:
+          transitionOperation = .pop
+          fullscreenControl = (fromViewController as? RufletHostingController)?.control
+        case .none:
+          return nil
+        @unknown default:
+          return nil
         }
+        let style: RufletPageTransitionStyle =
+          fullscreenControl?.boolean("fullscreen_dialog", default: false) == true
+          ? .fullscreenDialog : .standard
+        return RufletFletPageTransitionAnimator(
+          operation: transitionOperation,
+          style: style,
+          rightToLeft: parent.layoutDirection == .rightToLeft)
       }
 
       func navigationController(
@@ -322,13 +588,23 @@ func rufletPageNavigationUpdateDisposition(
         didShow viewController: UIViewController,
         animated: Bool
       ) {
-        guard !synchronizing else { return }
+        let hostedControllers = navigationController.viewControllers.compactMap {
+          $0 as? RufletHostingController
+        }
+        setInteractiveController(
+          viewController as? RufletHostingController,
+          among: hostedControllers)
         let actualControls = navigationController.viewControllers.compactMap {
           ($0 as? RufletHostingController)?.control
         }
         let actualIdentities = identities(for: actualControls)
-        guard actualIdentities != expectedIdentities,
-          expectedIdentities.starts(with: actualIdentities),
+        let shouldReportRemoval = rufletShouldReportNativeViewRemoval(
+          interactivePopStarted: interactivePopStarted,
+          synchronizing: synchronizing,
+          expected: expectedIdentities,
+          actual: actualIdentities)
+        interactivePopStarted = false
+        guard shouldReportRemoval,
           let removedIdentity = expectedIdentities.dropFirst(actualIdentities.count).first,
           let removedIndex = expectedIdentities.firstIndex(of: removedIdentity),
           parent.views.indices.contains(removedIndex)
@@ -339,6 +615,23 @@ func rufletPageNavigationUpdateDisposition(
       private func identities(for controls: [RufletControl]) -> [RufletPageNavigationIdentity] {
         rufletPageNavigationIdentities(
           controls.map { $0.string("route", default: "")! })
+      }
+
+      private func setInteractiveController(
+        _ activeController: RufletHostingController?,
+        among controllers: [RufletHostingController]
+      ) {
+        let activeIndex = controllers.firstIndex { $0 === activeController }
+        let states = rufletPageNavigationInteractionStates(
+          count: controllers.count,
+          activeIndex: activeIndex)
+        for (controller, isInteractive) in zip(controllers, states) {
+          if isInteractive {
+            controller.view.isUserInteractionEnabled = true
+          } else {
+            controller.viewIfLoaded?.isUserInteractionEnabled = false
+          }
+        }
       }
 
       func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
@@ -357,9 +650,15 @@ func rufletPageNavigationUpdateDisposition(
 
       @objc func interactivePopChanged(_ gestureRecognizer: UIGestureRecognizer) {
         switch gestureRecognizer.state {
-        case .began, .changed:
+        case .began:
+          interactivePopStarted = true
           parent.heroTransitionState.updateInteractiveNavigation(true)
-        case .ended, .cancelled, .failed:
+        case .changed:
+          parent.heroTransitionState.updateInteractiveNavigation(true)
+        case .ended:
+          parent.heroTransitionState.updateInteractiveNavigation(false)
+        case .cancelled, .failed:
+          interactivePopStarted = false
           parent.heroTransitionState.updateInteractiveNavigation(false)
         default:
           break
@@ -418,6 +717,7 @@ func rufletPageNavigationUpdateDisposition(
     let theme: RufletTheme
     let design: RufletPageDesign
     let tint: Color?
+    let safeAreaInsets: RufletSafeAreaInsets
     let heroNamespace: Namespace.ID?
     let heroTransitionState: RufletHeroTransitionState
     let onRequestPop: (RufletControl) -> Void
@@ -447,6 +747,7 @@ func rufletPageNavigationUpdateDisposition(
             theme: theme,
             design: design,
             tint: tint,
+            safeAreaInsets: safeAreaInsets,
             heroNamespace: heroNamespace,
             heroTransitionState: heroTransitionState))
       }
@@ -483,7 +784,8 @@ func rufletPageNavigationUpdateDisposition(
       view = NSView()
     }
 
-    func synchronize(control nextControl: RufletControl?, rootView: AnyView?, index nextIndex: Int) {
+    func synchronize(control nextControl: RufletControl?, rootView: AnyView?, index nextIndex: Int)
+    {
       guard let nextControl, let rootView else {
         current?.view.removeFromSuperview()
         current?.removeFromParent()

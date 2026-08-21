@@ -14,6 +14,7 @@ public struct ViewControl: View {
   @State private var topBarHeight = 0.0
   @Environment(\.rufletPageBackgroundColor) private var pageBackgroundColor
   @Environment(\.rufletPageDesign) private var pageDesign
+  @Environment(\.rufletSafeAreaInsets) private var safeAreaInsets
 
   public init(control: RufletControl) {
     self.control = control
@@ -21,6 +22,10 @@ public struct ViewControl: View {
 
   public var body: some View {
     decoratedView
+      // Every route has its own native hosting controller. Fill that
+      // controller's viewport; PageControl passes the physical insets across
+      // the controller boundary for bars and explicit SafeArea controls.
+      .ignoresSafeArea(.container)
       .environment(
         \.layoutDirection, page.boolean("rtl", default: false) ? .rightToLeft : .leftToRight
       )
@@ -66,6 +71,7 @@ public struct ViewControl: View {
           .padding(
             parsePadding(control.dynamicValue("padding"))
               ?? EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 10))
+          .environment(\.rufletSafeAreaInsets, bodySafeAreaInsets)
         if let bottom = control.child("navigation_bar") ?? control.child("bottom_appbar") {
           ControlWidget(control: bottom)
             .background {
@@ -246,6 +252,14 @@ public struct ViewControl: View {
     (backend.isLoading || !backend.error.isEmpty) && (backend.showAppStartupScreen ?? false)
   }
 
+  private var bodySafeAreaInsets: RufletSafeAreaInsets {
+    rufletScaffoldBodySafeAreaInsets(
+      safeAreaInsets,
+      hasAppBar: control.child("appbar") != nil,
+      hasBottomBar: control.child("navigation_bar") != nil
+        || control.child("bottom_appbar") != nil)
+  }
+
   private var horizontalAlignment: HorizontalAlignment {
     switch control.string("horizontal_alignment")?.lowercased() {
     case "center": .center
@@ -267,6 +281,17 @@ public struct ViewControl: View {
     }
   }
 
+}
+
+func rufletScaffoldBodySafeAreaInsets(
+  _ insets: RufletSafeAreaInsets,
+  hasAppBar: Bool,
+  hasBottomBar: Bool
+) -> RufletSafeAreaInsets {
+  var result = insets
+  if hasAppBar { result.top = 0 }
+  if hasBottomBar { result.bottom = 0 }
+  return result
 }
 
 private struct RufletTopViewIDKey: EnvironmentKey {

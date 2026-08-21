@@ -48,6 +48,13 @@ final class AppBarPropertyConsumptionTests: XCTestCase {
       explicit: nil, themed: nil, centersByPlatformDefault: false, actionCount: 0))
   }
 
+  func testImpliedBackButtonFollowsTheOrderedWireStackByControlID() {
+    XCTAssertFalse(rufletAppBarCanNavigateBack(currentViewID: 10, orderedViewIDs: [10]))
+    XCTAssertTrue(rufletAppBarCanNavigateBack(currentViewID: 20, orderedViewIDs: [10, 20]))
+    XCTAssertFalse(rufletAppBarCanNavigateBack(currentViewID: 10, orderedViewIDs: [10, 20]))
+    XCTAssertFalse(rufletAppBarCanNavigateBack(currentViewID: nil, orderedViewIDs: [10, 20]))
+  }
+
   func testTitleSpacingFollowsExplicitThemeAndPinnedDefaultPrecedence() {
     XCTAssertEqual(rufletAppBarTitleSpacing(explicit: 8, themed: 12), 8)
     XCTAssertEqual(rufletAppBarTitleSpacing(explicit: nil, themed: 12), 12)

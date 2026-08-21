@@ -16,6 +16,34 @@ final class TextPropertyConsumptionTests: XCTestCase {
     XCTAssertTrue(RufletTextInteractionContract(control: interactive).handlesTap)
   }
 
+  @MainActor
+  func testTextUsesTheHorizontalBoxOnlyWhenFletSuppliesATightWidth() {
+    let backend = TextPropertyTestBackend()
+    let intrinsic = RufletControl(id: 1, type: "Text", properties: [:], backend: backend)
+    let explicit = RufletControl(
+      id: 2, type: "Text", properties: ["width": .double(240)], backend: backend)
+    let row = RufletControl(
+      id: 3,
+      type: "Row",
+      properties: ["_internals": .map(["host_expanded": .bool(true)])],
+      backend: backend)
+    let expanded = RufletControl(
+      id: 4,
+      type: "Text",
+      properties: ["expand": .bool(true)],
+      backend: backend,
+      parent: row)
+
+    XCTAssertFalse(
+      rufletTextFillsHorizontalBox(control: intrinsic, crossAxisStretchAxis: nil))
+    XCTAssertTrue(
+      rufletTextFillsHorizontalBox(control: intrinsic, crossAxisStretchAxis: .vertical))
+    XCTAssertTrue(
+      rufletTextFillsHorizontalBox(control: explicit, crossAxisStretchAxis: nil))
+    XCTAssertTrue(
+      rufletTextFillsHorizontalBox(control: expanded, crossAxisStretchAxis: nil))
+  }
+
   func testExplicitStyleOverridesThemeStyleWithoutDiscardingThemeFields() {
     let themed = RufletTextStyle(
       size: 18,

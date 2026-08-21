@@ -3,10 +3,16 @@ import SwiftUI
 struct LoadingPage: View {
     let isLoading: Bool
     let message: String
+    @Environment(\.rufletPageTheme) private var pageTheme
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         ZStack {
-            Color.rufletSystemBackground
+            // Pinned Flet paints LoadingPage with Theme.colorScheme.surface.
+            // In particular, a nested FletApp inherits its parent's theme
+            // while its own Page is still connecting; it must not flash a
+            // UIKit system background that was never sent by the application.
+            rufletLoadingSurfaceColor(pageTheme: pageTheme, colorScheme: colorScheme)
             if isLoading {
                 VStack(spacing: 10) {
                     ProgressView().controlSize(.large)
@@ -28,6 +34,14 @@ struct LoadingPage: View {
             }
         }
     }
+}
+
+func rufletLoadingSurfaceColor(pageTheme: RufletTheme?, colorScheme: ColorScheme) -> Color {
+    let theme = pageTheme ?? parseCupertinoTheme(
+        nil,
+        brightness: colorScheme == .dark ? .dark : .light)
+    // parseCupertinoTheme always materializes Flet's complete color scheme.
+    return theme.colorScheme!["surface"]!
 }
 
 extension Color {

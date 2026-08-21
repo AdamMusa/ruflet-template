@@ -67,6 +67,17 @@ struct RufletAppleButtonStyle: ButtonStyle {
         minHeight: minimum?.height,
         maxHeight: maximum?.height,
         alignment: alignment)
+      // Keep a protocol-requested outline inside the interactive surface.
+      // On iOS 26 the native glass surface expands while pressed. Applying
+      // the outline after glassEffect leaves the stroke stationary and shows
+      // a second capsule around an OutlinedButton during a sustained press.
+      // Composing the stroke first makes the complete requested button shape
+      // participate in the one native interaction.
+      .modifier(
+        RufletButtonBorderModifier(
+          shape: shape,
+          border: border,
+          color: isEnabled ? border?.color : disabledColor.opacity(0.12)))
       .modifier(
         RufletButtonSurfaceModifier(
           shape: shape,
@@ -75,11 +86,6 @@ struct RufletAppleButtonStyle: ButtonStyle {
           usesNativeGlass: usesNativeGlassSurface,
           interactive: isEnabled))
       .modifier(RufletButtonClipModifier(shape: shape, style: self))
-      .overlay {
-        if let border {
-          shape.stroke(isEnabled ? border.color : disabledColor.opacity(0.12), lineWidth: border.width)
-        }
-      }
       .shadow(
         color: variant == .elevated && isEnabled && !rendersNativeGlass
           ? .black.opacity(0.2) : .clear,
@@ -107,6 +113,23 @@ struct RufletAppleButtonStyle: ButtonStyle {
     if hovered { result.insert(.hovered) }
     if !isEnabled { result.insert(.disabled) }
     return result
+  }
+}
+
+private struct RufletButtonBorderModifier: ViewModifier {
+  let shape: RoundedRectangle
+  let border: RufletBorderSide?
+  let color: Color?
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if let border, let color {
+      content.overlay {
+        shape.stroke(color, lineWidth: border.width)
+      }
+    } else {
+      content
+    }
   }
 }
 

@@ -11,26 +11,63 @@ public struct SwitchControl: View {
 
   public var body: some View {
     LayoutControl(control: control) {
-      Button(action: activate) {
+      #if os(iOS)
+        let offPresentation = RufletStandardSwitchPresentation(
+          control: control,
+          states: nativeBaseStates)
+        let onPresentation = RufletStandardSwitchPresentation(
+          control: control,
+          states: nativeBaseStates.union([.selected]))
+        let presentation = value ? onPresentation : offPresentation
         HStack(spacing: 6) {
           if labelPosition == .left { label }
-          RufletStandardSwitchArtwork(control: control, focused: focused, hovered: hovered)
+          RufletNativeSwitch(
+            value: value,
+            enabled: !control.disabled,
+            onTintColor: onPresentation.hasExplicitTrackColor
+              ? onPresentation.trackColor : nil,
+            offTintColor: offPresentation.hasExplicitTrackColor
+              ? offPresentation.trackColor : nil,
+            thumbTintColor: presentation.hasExplicitThumbColor
+              ? presentation.thumbColor : nil,
+            accessibilityLabel: control.string("label"),
+            onChange: setValue)
           if labelPosition == .right { label }
         }
         .padding(
           parsePadding(control.dynamicValue("padding"))
             ?? RufletLayoutDefaults.materialSwitch)
         .contentShape(Rectangle())
-      }
-      .buttonStyle(RufletSwitchPressStyle())
-      .disabled(control.disabled)
-      .focused($focused)
-      .onAppear {
-        if control.boolean("autofocus", default: false) { focused = true }
-      }
-      .onHover { hovered = $0 }
-      .onChange(of: focused) { control.triggerEvent($0 ? "focus" : "blur") }
-      .modifier(RufletMouseCursorModifier(cursor: control.string("mouse_cursor")))
+        .disabled(control.disabled)
+        .focused($focused)
+        .onAppear {
+          if control.boolean("autofocus", default: false) { focused = true }
+        }
+        .onHover { hovered = $0 }
+        .onChange(of: focused) { control.triggerEvent($0 ? "focus" : "blur") }
+        .modifier(RufletMouseCursorModifier(cursor: control.string("mouse_cursor")))
+      #else
+        Button(action: activate) {
+          HStack(spacing: 6) {
+            if labelPosition == .left { label }
+            RufletStandardSwitchArtwork(control: control, focused: focused, hovered: hovered)
+            if labelPosition == .right { label }
+          }
+          .padding(
+            parsePadding(control.dynamicValue("padding"))
+              ?? RufletLayoutDefaults.materialSwitch)
+          .contentShape(Rectangle())
+        }
+        .buttonStyle(RufletSwitchPressStyle())
+        .disabled(control.disabled)
+        .focused($focused)
+        .onAppear {
+          if control.boolean("autofocus", default: false) { focused = true }
+        }
+        .onHover { hovered = $0 }
+        .onChange(of: focused) { control.triggerEvent($0 ? "focus" : "blur") }
+        .modifier(RufletMouseCursorModifier(cursor: control.string("mouse_cursor")))
+      #endif
     }
     .modifier(RufletListTileInputToggleModifier(action: activate))
   }
@@ -38,8 +75,15 @@ public struct SwitchControl: View {
   @ViewBuilder
   private var label: some View {
     if let label = control.buildTextOrWidget("label") {
-      label.modifier(
-        RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("label_text_style"))))
+      label
+        .modifier(
+          RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("label_text_style"))))
+        // Flet merges the label into the switch's tap target. Keep UIKit in
+        // charge of touches on the UISwitch itself and make only the adjacent
+        // label perform the same single mutation path, so one physical tap
+        // cannot be observed by both a native control and a parent gesture.
+        .contentShape(Rectangle())
+        .onTapGesture(perform: activate)
     }
   }
 
@@ -47,11 +91,25 @@ public struct SwitchControl: View {
     parseEnum(RufletLabelPosition.self, control.string("label_position"), .right)!
   }
 
-  func activate() {
-    guard !control.disabled else { return }
-    let next = !control.boolean("value", default: false)
+  private var value: Bool { control.boolean("value", default: false) }
+
+  private var nativeBaseStates: Set<RufletWidgetState> {
+    var states: Set<RufletWidgetState> = []
+    if control.disabled { states.insert(.disabled) }
+    if focused { states.insert(.focused) }
+    if hovered { states.insert(.hovered) }
+    return states
+  }
+
+  private func setValue(_ next: Bool) {
+    guard !control.disabled, value != next else { return }
     control.updateProperties(["value": .bool(next)], notify: true)
     control.triggerEvent("change", data: .bool(next))
+  }
+
+  func activate() {
+    guard !control.disabled else { return }
+    setValue(!value)
   }
 }
 
@@ -123,6 +181,8 @@ struct RufletStandardSwitchPresentation {
   let focusColor: Color
   let hoverColor: Color?
   let splashRadius: CGFloat
+  let hasExplicitThumbColor: Bool
+  let hasExplicitTrackColor: Bool
 
   init(control: RufletControl, states: Set<RufletWidgetState>) {
     activeThumbColor = parseColor(control.string("active_color"))
@@ -141,6 +201,10 @@ struct RufletStandardSwitchPresentation {
       control.dynamicValue("track_outline_width"), states: states)
     let stateThumbIcon = rufletSwitchStateInteger(
       control.dynamicValue("thumb_icon"), states: states)
+    hasExplicitThumbColor = stateThumbColor != nil
+      || (states.contains(.selected) ? activeThumbColor : inactiveThumbColor) != nil
+    hasExplicitTrackColor = stateTrackColor != nil
+      || (states.contains(.selected) ? activeTrackColor : inactiveTrackColor) != nil
     focusColor = parseColor(control.string("focus_color")) ?? .accentColor
     hoverColor = parseColor(control.string("hover_color"))
     splashRadius = CGFloat(control.number("splash_radius") ?? 0)

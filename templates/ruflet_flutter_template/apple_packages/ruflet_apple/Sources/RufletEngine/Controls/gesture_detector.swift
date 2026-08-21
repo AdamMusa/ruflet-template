@@ -862,6 +862,15 @@ private final class RufletGestureInstallerView: UIView, UIGestureRecognizerDeleg
     shouldReceive touch: UITouch
   ) -> Bool {
     guard let surface = installedSurface else { return false }
+    // The recognizer lives on the window so native descendants which are
+    // UIKit siblings of this SwiftUI background cannot swallow the gesture.
+    // A window recognizer, however, also outlives covered navigation routes.
+    // Respect the complete UIKit interaction chain before accepting a touch;
+    // otherwise an off-screen GestureDetector can emit the same touch handled
+    // by the visible route.
+    guard isEffectivelyInteractive(surface), belongsToTopNavigationRoute(surface) else {
+      return false
+    }
     return surface.bounds.contains(touch.location(in: surface))
   }
 
@@ -899,6 +908,54 @@ private final class RufletGestureInstallerView: UIView, UIGestureRecognizerDeleg
   }
 
   private var trackedTouch: UITouch?
+
+  private func isEffectivelyInteractive(_ view: UIView) -> Bool {
+    guard let window = view.window else { return false }
+    var ancestor: UIView? = view
+    while let current = ancestor {
+      guard current.isUserInteractionEnabled,
+            !current.isHidden,
+            current.alpha > 0.01
+      else { return false }
+      if current === window { return true }
+      ancestor = current.superview
+    }
+    return false
+  }
+
+  /// A recognizer attached to the window must still participate in the same
+  /// route ownership rules as a recognizer installed inside the hosting view.
+  /// Resolve the representable's owning view controller through the responder
+  /// chain and accept input only when that controller is the navigation top.
+  private func belongsToTopNavigationRoute(_ view: UIView) -> Bool {
+    var responder: UIResponder? = view
+    while let next = responder?.next {
+      if let controller = next as? UIViewController,
+        let ownership = navigationOwnership(startingAt: controller)
+      {
+        return ownership.navigationController.topViewController === ownership.routeController
+      }
+      responder = next
+    }
+    // GestureDetector also works outside Page.views (for example in a native
+    // overlay), where there is intentionally no navigation owner to validate.
+    return true
+  }
+
+  private func navigationOwnership(
+    startingAt controller: UIViewController
+  ) -> (navigationController: UINavigationController, routeController: UIViewController)? {
+    var routeController = controller
+    var parent = controller.parent
+    while let current = parent {
+      if let navigationController = current as? UINavigationController {
+        return (navigationController, routeController)
+      }
+      routeController = current
+      parent = current.parent
+    }
+    return nil
+  }
 
   private func handleTrackedTouch(
     _ touch: UITouch,

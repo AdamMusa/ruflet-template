@@ -5,6 +5,7 @@ import SwiftUI
 @MainActor
 public struct DateRangePickerControl: View {
   @ObservedObject public var control: RufletControl
+  @Environment(\.rufletPageTheme) private var pageTheme
   @State private var presented = false
   @State private var draftStart = Date()
   @State private var draftEnd = Date()
@@ -17,13 +18,23 @@ public struct DateRangePickerControl: View {
   }
 
   public var body: some View {
-    RufletPickerPresenter(
-      presented: $presented,
-      barrierColor: presentation.barrierColor,
-      modal: presentation.modal,
-      onDismiss: presentationDismissed
-    ) {
-      pickerSheet
+    Group {
+      if let presentationError,
+        control.boolean("open", default: false) || presented
+      {
+        ErrorControl(
+          "Native renderer protocol error",
+          description: "\(control.type)#\(control.id): \(presentationError)")
+      } else {
+        RufletPickerPresenter(
+          presented: $presented,
+          modal: presentation.modal,
+          preferredSize: .large,
+          onDismiss: presentationDismissed
+        ) {
+          pickerSheet
+        }
+      }
     }
     .onAppear(perform: synchronizePresentation)
     .onChange(of: control.revision) { _ in synchronizePresentation() }
@@ -31,7 +42,7 @@ public struct DateRangePickerControl: View {
 
   private var pickerSheet: some View {
     let presentation = presentation
-    return NavigationView {
+    return NavigationStack {
       VStack(spacing: 12) {
         if let helpText = presentation.helpText {
           Text(helpText).font(.headline).frame(maxWidth: .infinity, alignment: .leading)
@@ -42,6 +53,8 @@ public struct DateRangePickerControl: View {
         }
       }
       .padding()
+      .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+      .rufletInlineNavigationTitle()
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button(presentation.cancelText) { close(nil) }
@@ -62,6 +75,8 @@ public struct DateRangePickerControl: View {
           .disabled(validationMessage(presentation: presentation) != nil)
         }
       }
+      .background(Color.rufletSystemBackground)
+      .tint(pageTheme?.appleAccentColor ?? .accentColor)
     }
   }
 
@@ -136,7 +151,8 @@ public struct DateRangePickerControl: View {
           locale: presentation.locale,
           countdownDuration: nil
         ) { value, _ in changed(value) }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(height: 44)
       } else {
         TextField(hint ?? title, text: isStart ? $startInputText : $endInputText)
           .textFieldStyle(.roundedBorder)
@@ -146,6 +162,10 @@ public struct DateRangePickerControl: View {
   }
 
   func synchronizePresentation() {
+    guard presentationError == nil else {
+      if presented { presented = false }
+      return
+    }
     switch rufletPickerPresentationAction(
       open: control.boolean("open", default: false), presented: presented)
     {
@@ -247,6 +267,10 @@ public struct DateRangePickerControl: View {
   var presentation: RufletDateRangePickerPresentation {
     RufletDateRangePickerPresentation(control: control)
   }
+
+  private var presentationError: String? {
+    rufletNativePickerProtocolError(for: control)
+  }
 }
 
 func rufletDateRangePickerStyle(isIOS: Bool) -> RufletNativeDatePickerStyle {
@@ -278,7 +302,6 @@ struct RufletDateRangePickerPresentation {
   let entryMode: RufletDateEntryMode
   let locale: Locale?
   let modal: Bool
-  let barrierColor: Color?
   let switchToCalendarIcon: RufletAppleIcon?
   let switchToInputIcon: RufletAppleIcon?
 
@@ -309,7 +332,6 @@ struct RufletDateRangePickerPresentation {
         RufletDateEntryMode.self, control.string("entry_mode"), .calendar) ?? .calendar
     locale = parseLocale(control.dynamicValue("locale"))
     modal = control.boolean("modal", default: false)
-    barrierColor = parseColor(control.string("barrier_color"))
     switchToCalendarIcon = Self.icon(control, property: "switch_to_calendar_icon")
     switchToInputIcon = Self.icon(control, property: "switch_to_input_icon")
   }

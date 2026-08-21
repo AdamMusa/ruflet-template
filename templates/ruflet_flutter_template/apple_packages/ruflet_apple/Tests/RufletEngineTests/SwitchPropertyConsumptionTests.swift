@@ -101,6 +101,72 @@ final class SwitchPropertyConsumptionTests: XCTestCase {
     XCTAssertEqual(cupertinoBackend.events, [SwitchBackend.Event(name: "change", data: .null)])
   }
 
+  func testNativeSwitchLabelsShareTheGuardedSingleMutationPath() throws {
+    let root = URL(fileURLWithPath: #filePath)
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+    let standard = try String(
+      contentsOf: root.appendingPathComponent("Sources/RufletEngine/Controls/switch.swift"),
+      encoding: .utf8)
+    let cupertino = try String(
+      contentsOf: root.appendingPathComponent(
+        "Sources/RufletEngine/Controls/cupertino_switch.swift"),
+      encoding: .utf8)
+
+    XCTAssertTrue(standard.contains(".onTapGesture(perform: activate)"))
+    XCTAssertTrue(cupertino.contains(".onTapGesture(perform: activate)"))
+    XCTAssertEqual(
+      standard.components(separatedBy: "control.updateProperties([\"value\"").count - 1, 1)
+    XCTAssertEqual(
+      cupertino.components(separatedBy: "control.updateProperties([\"value\"").count - 1, 1)
+  }
+
+  func testNativeSwitchPreservesNativeInteractionMotionAndAnimatesModelChanges() {
+    XCTAssertEqual(
+      rufletNativeSwitchValueUpdate(
+        current: false,
+        requested: false,
+        hasAppliedInitialValue: false),
+      .none)
+    XCTAssertEqual(
+      rufletNativeSwitchValueUpdate(
+        current: false,
+        requested: true,
+        hasAppliedInitialValue: false),
+      .immediate(true))
+    XCTAssertEqual(
+      rufletNativeSwitchValueUpdate(
+        current: true,
+        requested: false,
+        hasAppliedInitialValue: true),
+      .animated(false))
+    XCTAssertEqual(
+      rufletNativeSwitchValueUpdate(
+        current: true,
+        requested: true,
+        hasAppliedInitialValue: true),
+      .none)
+  }
+
+  func testNativeSwitchRefreshDoesNotForceUIKitRelayoutOrSnapValue() throws {
+    let root = URL(fileURLWithPath: #filePath)
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+    let native = try String(
+      contentsOf: root.appendingPathComponent("Sources/RufletEngine/Widgets/native_switch.swift"),
+      encoding: .utf8)
+
+    XCTAssertFalse(native.contains("control.setOn(value, animated: false)"))
+    XCTAssertFalse(native.contains("control.setNeedsLayout()"))
+    XCTAssertTrue(
+      native.contains("case .animated(let next):")
+        || native.contains("case let .animated(next):"))
+    XCTAssertTrue(native.contains("control.setOn(next, animated: true)"))
+    XCTAssertTrue(native.contains("DispatchQueue.main.async { [weak self] in"))
+  }
+
   private func makeControl(
     type: String,
     properties: [String: RufletValue]
@@ -108,7 +174,8 @@ final class SwitchPropertyConsumptionTests: XCTestCase {
     let backend = SwitchBackend()
     return (
       RufletControl(id: 1, type: type, properties: properties, backend: backend),
-      backend)
+      backend
+    )
   }
 }
 

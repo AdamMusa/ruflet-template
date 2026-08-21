@@ -121,7 +121,10 @@ struct RufletFlexLayout: Layout {
         totalFlex += contract.flex
         continue
       }
-      let size = subviews[index].sizeThatFits(childProposal(main: nil, cross: crossAvailable))
+      let size = measureSubview(
+        subviews[index],
+        main: nil,
+        crossMaximum: crossAvailable)
       sizes[index] = size
       fixedExtent += mainExtent(size)
     }
@@ -137,8 +140,10 @@ struct RufletFlexLayout: Layout {
       guard let contract = subviews[index][RufletFlexParentDataKey.self], contract.flex > 0
       else { continue }
       let share = remaining * CGFloat(contract.flex) / CGFloat(totalFlex)
-      let measured = subviews[index].sizeThatFits(
-        childProposal(main: share, cross: crossAvailable))
+      let measured = measureSubview(
+        subviews[index],
+        main: share,
+        crossMaximum: crossAvailable)
       // `Flexible` may end up smaller than its share; `Expanded` is exact.
       let main = contract.loose ? min(mainExtent(measured), share) : share
       sizes[index] =
@@ -149,11 +154,46 @@ struct RufletFlexLayout: Layout {
     return sizes
   }
 
+  /// SwiftUI proposals are ideal sizes, while Flutter gives a non-stretched
+  /// Flex child a loose `0...maxCross` constraint. Passing `maxCross` as the
+  /// ideal size made nested Columns treat every Button as full-width even
+  /// though the wire did not request `horizontal_alignment: stretch`.
+  ///
+  /// Measure intrinsically first for the loose case and constrain only an
+  /// actually oversized child. A stretched child receives and occupies the
+  /// exact cross extent, matching `CrossAxisAlignment.stretch`.
+  private func measureSubview(
+    _ subview: LayoutSubview,
+    main: CGFloat?,
+    crossMaximum: CGFloat?
+  ) -> CGSize {
+    if crossAxisStretch {
+      let measured = subview.sizeThatFits(childProposal(main: main, cross: crossMaximum))
+      guard let crossMaximum, crossMaximum.isFinite else { return measured }
+      return replacingCrossExtent(in: measured, with: max(crossMaximum, 0))
+    }
+
+    let intrinsic = subview.sizeThatFits(childProposal(main: main, cross: nil))
+    guard let crossMaximum, crossMaximum.isFinite,
+      crossExtent(intrinsic) > max(crossMaximum, 0)
+    else { return intrinsic }
+    let constrained = subview.sizeThatFits(
+      childProposal(main: main, cross: max(crossMaximum, 0)))
+    return replacingCrossExtent(
+      in: constrained,
+      with: min(crossExtent(constrained), max(crossMaximum, 0)))
+  }
+
   private func childProposal(main: CGFloat?, cross: CGFloat?) -> ProposedViewSize {
-    let resolvedCross = crossAxisStretch ? cross : cross
     return axis == .horizontal
-      ? ProposedViewSize(width: main, height: resolvedCross)
-      : ProposedViewSize(width: resolvedCross, height: main)
+      ? ProposedViewSize(width: main, height: cross)
+      : ProposedViewSize(width: cross, height: main)
+  }
+
+  private func replacingCrossExtent(in size: CGSize, with cross: CGFloat) -> CGSize {
+    axis == .horizontal
+      ? CGSize(width: size.width, height: cross)
+      : CGSize(width: cross, height: size.height)
   }
 
   private func contentExtent(_ sizes: [CGSize]) -> CGFloat {

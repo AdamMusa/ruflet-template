@@ -1,6 +1,32 @@
 import Foundation
 import RufletProtocol
 
+struct RufletOrderedSendBuffer {
+  private(set) var frames: [Data] = []
+  private(set) var isSending = false
+
+  mutating func enqueue(_ data: Data) -> Data? {
+    frames.append(data)
+    guard !isSending else { return nil }
+    isSending = true
+    return frames.first
+  }
+
+  mutating func complete() -> Data? {
+    if !frames.isEmpty { frames.removeFirst() }
+    guard let next = frames.first else {
+      isSending = false
+      return nil
+    }
+    return next
+  }
+
+  mutating func reset() {
+    frames.removeAll(keepingCapacity: true)
+    isSending = false
+  }
+}
+
 @MainActor
 public final class RufletWebSocketBackendChannel: RufletBackendChannel {
   public let endpoint: URL
@@ -12,6 +38,8 @@ public final class RufletWebSocketBackendChannel: RufletBackendChannel {
   private let onMessage: (RufletMessage) -> Void
   private var task: URLSessionWebSocketTask?
   private var receiveTask: Task<Void, Never>?
+  private var sendBuffer = RufletOrderedSendBuffer()
+  private var connectionGeneration = 0
 
   public init(
     address: URL,
@@ -31,6 +59,8 @@ public final class RufletWebSocketBackendChannel: RufletBackendChannel {
       isLocalConnection = try await rufletIsPrivateHostResolving(host)
     }
     let task = session.webSocketTask(with: endpoint)
+    connectionGeneration &+= 1
+    sendBuffer.reset()
     self.task = task
     task.resume()
     receiveTask = Task { [weak self] in
@@ -66,13 +96,37 @@ public final class RufletWebSocketBackendChannel: RufletBackendChannel {
     guard let task else { throw RufletTransportError.disconnected }
     let data = RufletMessagePack.encode(.array(message.list))
     RufletProtocolDiagnostics.frame("native->ruby", bytes: data.count, message: message)
-    task.send(.data(data)) { _ in }
+    if let first = sendBuffer.enqueue(data) {
+      sendFrame(first, using: task, generation: connectionGeneration)
+    }
   }
 
   public func disconnect() {
+    connectionGeneration &+= 1
+    sendBuffer.reset()
     receiveTask?.cancel()
     receiveTask = nil
     task?.cancel(with: .normalClosure, reason: nil)
     task = nil
+  }
+
+  private func sendFrame(
+    _ data: Data,
+    using task: URLSessionWebSocketTask,
+    generation: Int
+  ) {
+    task.send(.data(data)) { [weak self] error in
+      Task { @MainActor [weak self] in
+        guard let self, generation == self.connectionGeneration, self.task === task else { return }
+        if error != nil {
+          self.sendBuffer.reset()
+          self.onDisconnect()
+          return
+        }
+        if let next = self.sendBuffer.complete() {
+          self.sendFrame(next, using: task, generation: generation)
+        }
+      }
+    }
   }
 }

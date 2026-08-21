@@ -4,6 +4,7 @@ import SwiftUI
 @MainActor
 public struct BottomAppBarControl: View {
   @ObservedObject public var control: RufletControl
+  @Environment(\.rufletSafeAreaInsets) private var safeAreaInsets
 
   public init(control: RufletControl) {
     self.control = control
@@ -12,20 +13,24 @@ public struct BottomAppBarControl: View {
   public var body: some View {
     let presentation = RufletBottomAppBarPresentation(control: control)
     LayoutControl(control: control) {
-      ZStack {
-        shape
-          .fill(parseColor(control.string("bgcolor")) ?? Color.rufletSystemBackground)
-          .shadow(
-            color: (parseColor(control.string("shadow_color")) ?? .black)
-              .opacity(elevation > 0 ? 0.25 : 0),
-            radius: elevation,
-            y: -elevation / 3)
-        control.buildWidget("content")
-          .padding(
-            parsePadding(control.dynamicValue("padding"))
-              ?? RufletLayoutDefaults.bottomAppBar)
+      VStack(spacing: 0) {
+        ZStack {
+          shape
+            .fill(backgroundColor)
+            .shadow(
+              color: (parseColor(control.string("shadow_color")) ?? .black)
+                .opacity(elevation > 0 ? 0.25 : 0),
+              radius: elevation,
+              y: -elevation / 3)
+          control.buildWidget("content")
+            .padding(
+              parsePadding(control.dynamicValue("padding"))
+                ?? RufletLayoutDefaults.bottomAppBar)
+        }
+        .frame(height: control.number("height").map { CGFloat($0) })
+        Color.clear.frame(height: safeAreaInsets.bottom)
       }
-      .frame(height: control.number("height").map { CGFloat($0) })
+      .background(backgroundColor)
       .modifier(
         RufletBottomAppBarClipModifier(
           shape: RufletCornerShape(radius: radius),
@@ -45,6 +50,9 @@ public struct BottomAppBarControl: View {
     parseBorderRadius(control.dynamicValue("border_radius"), .zero)!
   }
   private var elevation: Double { max(control.number("elevation", default: 0) ?? 0, 0) }
+  private var backgroundColor: Color {
+    parseColor(control.string("bgcolor")) ?? Color.rufletSystemBackground
+  }
 }
 
 @MainActor

@@ -3,6 +3,7 @@ import SwiftUI
 @MainActor
 public struct SafeAreaControl: View {
   @ObservedObject public var control: RufletControl
+  @Environment(\.rufletSafeAreaInsets) private var safeAreaInsets
   @State private var keyboardOverlap = CGFloat.zero
   @State private var persistentBottomInset = CGFloat.zero
 
@@ -16,7 +17,7 @@ public struct SafeAreaControl: View {
     return AnyView(
       LayoutControl(control: control) {
         content
-          .padding(configuration.minimumPadding)
+          .padding(configuration.resolvedPadding(safeAreaInsets: safeAreaInsets))
           .padding(
             .bottom,
             RufletSafeAreaKeyboardInsetPolicy.additionalBottomInset(
@@ -26,7 +27,6 @@ public struct SafeAreaControl: View {
               persistentBottomInset: persistentBottomInset
             )
           )
-          .ignoresSafeArea(edges: configuration.ignoredEdges)
           .overlay {
             RufletSafeAreaKeyboardBridge(
               keyboardOverlap: $keyboardOverlap,
@@ -40,21 +40,28 @@ public struct SafeAreaControl: View {
 
 @MainActor
 struct RufletSafeAreaConfiguration {
+  let avoidsLeftIntrusion: Bool
+  let avoidsTopIntrusion: Bool
+  let avoidsRightIntrusion: Bool
   let avoidsBottomIntrusion: Bool
-  let ignoredEdges: Edge.Set
   let maintainBottomViewPadding: Bool
   let minimumPadding: EdgeInsets
 
   init(control: RufletControl) {
-    var ignoredEdges: Edge.Set = []
-    if !control.boolean("avoid_intrusions_left", default: true) { ignoredEdges.insert(.leading) }
-    if !control.boolean("avoid_intrusions_top", default: true) { ignoredEdges.insert(.top) }
-    if !control.boolean("avoid_intrusions_right", default: true) { ignoredEdges.insert(.trailing) }
+    avoidsLeftIntrusion = control.boolean("avoid_intrusions_left", default: true)
+    avoidsTopIntrusion = control.boolean("avoid_intrusions_top", default: true)
+    avoidsRightIntrusion = control.boolean("avoid_intrusions_right", default: true)
     avoidsBottomIntrusion = control.boolean("avoid_intrusions_bottom", default: true)
-    if !avoidsBottomIntrusion { ignoredEdges.insert(.bottom) }
-    self.ignoredEdges = ignoredEdges
     maintainBottomViewPadding = control.boolean("maintain_bottom_view_padding", default: false)
     minimumPadding = parseEdgeInsets(control.dynamicValue("minimum_padding")) ?? EdgeInsets()
+  }
+
+  func resolvedPadding(safeAreaInsets: RufletSafeAreaInsets) -> EdgeInsets {
+    EdgeInsets(
+      top: max(minimumPadding.top, avoidsTopIntrusion ? safeAreaInsets.top : 0),
+      leading: max(minimumPadding.leading, avoidsLeftIntrusion ? safeAreaInsets.leading : 0),
+      bottom: max(minimumPadding.bottom, avoidsBottomIntrusion ? safeAreaInsets.bottom : 0),
+      trailing: max(minimumPadding.trailing, avoidsRightIntrusion ? safeAreaInsets.trailing : 0))
   }
 }
 

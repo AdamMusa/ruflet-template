@@ -290,6 +290,11 @@ public struct TabBarControl: View {
       ErrorControl("TabBar.tabs must contain at least one visible Tab.")
     } else if !rufletIsIOS {
       ErrorControl("The native TabBar renderer requires iOS.")
+    } else if let nativeTabSegments {
+      appleNativeSegmentedTabs(
+        segments: nativeTabSegments,
+        state: state,
+        presentation: presentation)
     } else if !rufletTabBarUsesAppleSegmentedPresentation(
       isIOS: rufletIsIOS,
       scrollable: presentation.scrollable)
@@ -298,6 +303,44 @@ public struct TabBarControl: View {
     } else {
       appleSegmentedTabs(state: state, presentation: presentation)
     }
+  }
+
+  @ViewBuilder
+  private func appleNativeSegmentedTabs(
+    segments: [RufletNativeTabSegment],
+    state: RufletTabsState,
+    presentation: RufletTabBarPresentation
+  ) -> some View {
+    #if os(iOS)
+      let nativeControl = RufletNativeSegmentedControl(
+        segments: segments,
+        selectedIndex: state.selectedIndex,
+        enabled: !control.disabled,
+        semanticsLabel: control.string("semantics_label") ?? "Tabs"
+      ) { index in
+        guard segments.indices.contains(index) else { return }
+        selectTab(index, tab: tabControls[index], state: state)
+      }
+      .frame(minHeight: 32)
+      .tint(presentation.indicatorColor ?? presentation.labelColor)
+
+      if presentation.scrollable {
+        ScrollView(.horizontal, showsIndicators: false) {
+          nativeControl
+            .fixedSize(horizontal: true, vertical: false)
+            .padding(.leading, presentation.tabAlignment == .startOffset ? 52 : 0)
+            .padding(presentation.padding)
+        }
+        .frame(minHeight: presentation.minimumHeight)
+      } else {
+        nativeControl
+          .frame(maxWidth: .infinity)
+          .padding(presentation.padding)
+          .frame(minHeight: presentation.minimumHeight)
+      }
+    #else
+      EmptyView()
+    #endif
   }
 
   private func appleSegmentedTabs(
@@ -324,12 +367,14 @@ public struct TabBarControl: View {
           )
           .environment(\.rufletInheritsTextColor, true)
           .foregroundStyle(
-            selected ? presentation.labelColor : presentation.unselectedLabelColor)
+            selected ? presentation.labelColor : presentation.unselectedLabelColor
+          )
           .lineLimit(1)
           .padding(presentation.labelPadding)
           .frame(
             maxWidth: presentation.tabAlignment == .fill ? .infinity : nil,
-            minHeight: 32)
+            minHeight: 32
+          )
           .background {
             if selected {
               appleSelectionIndicator(presentation)
@@ -337,17 +382,21 @@ public struct TabBarControl: View {
             }
           }
           .background(
-            presentation.overlay(presentation.states(
-              selected: selected,
-              hovered: hoveredIndex == index,
-              pressed: false,
-              disabled: control.disabled || tab.disabled)))
+            presentation.overlay(
+              presentation.states(
+                selected: selected,
+                hovered: hoveredIndex == index,
+                pressed: false,
+                disabled: control.disabled || tab.disabled))
+          )
           .contentShape(Rectangle())
         }
-        .buttonStyle(RufletTabBarButtonStyle(
-          presentation: presentation,
-          selected: selected,
-          disabled: control.disabled || tab.disabled))
+        .buttonStyle(
+          RufletTabBarButtonStyle(
+            presentation: presentation,
+            selected: selected,
+            disabled: control.disabled || tab.disabled)
+        )
         .disabled(control.disabled || tab.disabled)
         .opacity(control.disabled || tab.disabled ? 0.38 : 1)
         .modifier(RufletMouseCursorModifier(cursor: presentation.mouseCursor))
@@ -359,7 +408,8 @@ public struct TabBarControl: View {
     .modifier(
       RufletTabTrackSurfaceModifier(
         shape: RoundedRectangle(cornerRadius: 9, style: .continuous),
-        fallback: appleSegmentTrackColor))
+        fallback: appleSegmentTrackColor)
+    )
     .frame(maxWidth: .infinity, alignment: .center)
     .padding(presentation.padding)
     .frame(minHeight: presentation.minimumHeight)
@@ -388,7 +438,7 @@ public struct TabBarControl: View {
           } label: {
             Group {
               if tab.type == "Tab" {
-                RufletAppleSegmentLabel(control: tab)
+                RufletTabLabel(control: tab)
               } else {
                 ControlWidget(control: tab)
               }
@@ -400,7 +450,8 @@ public struct TabBarControl: View {
             )
             .environment(\.rufletInheritsTextColor, true)
             .foregroundStyle(
-              selected ? presentation.labelColor : presentation.unselectedLabelColor)
+              selected ? presentation.labelColor : presentation.unselectedLabelColor
+            )
             .lineLimit(1)
             .padding(presentation.labelPadding)
             .frame(minHeight: 36)
@@ -410,17 +461,21 @@ public struct TabBarControl: View {
               }
             }
             .background(
-              presentation.overlay(presentation.states(
-                selected: selected,
-                hovered: hoveredIndex == index,
-                pressed: false,
-                disabled: control.disabled || tab.disabled)))
+              presentation.overlay(
+                presentation.states(
+                  selected: selected,
+                  hovered: hoveredIndex == index,
+                  pressed: false,
+                  disabled: control.disabled || tab.disabled))
+            )
             .contentShape(Capsule(style: .continuous))
           }
-          .buttonStyle(RufletTabBarButtonStyle(
-            presentation: presentation,
-            selected: selected,
-            disabled: control.disabled || tab.disabled))
+          .buttonStyle(
+            RufletTabBarButtonStyle(
+              presentation: presentation,
+              selected: selected,
+              disabled: control.disabled || tab.disabled)
+          )
           .disabled(control.disabled || tab.disabled)
           .opacity(control.disabled || tab.disabled ? 0.38 : 1)
           .modifier(RufletMouseCursorModifier(cursor: presentation.mouseCursor))
@@ -450,30 +505,47 @@ public struct TabBarControl: View {
       .padding(indicator.insets)
       .padding(
         .horizontal,
-        presentation.indicatorHorizontalInset(labelPadding: presentation.labelPadding))
+        presentation.indicatorHorizontalInset(labelPadding: presentation.labelPadding)
+      )
       .padding(presentation.indicatorPadding)
     } else {
-      let selectionShape = RoundedRectangle(cornerRadius: 7, style: .continuous)
-      selectionShape
-        .fill(.clear)
-        .modifier(
-          RufletTabSelectionSurfaceModifier(
-            shape: selectionShape,
-            tint: presentation.indicatorColor ?? defaultSelectionColor(presentation)))
-        .overlay {
-          if presentation.hasExplicitIndicatorThickness {
-            selectionShape
-              .stroke(
-                presentation.indicatorColor ?? presentation.labelColor,
-                lineWidth: presentation.indicatorThickness)
-          }
-        }
-        .padding(
-          .horizontal,
-          presentation.indicatorHorizontalInset(labelPadding: presentation.labelPadding))
-        .padding(presentation.indicatorPadding)
-        .shadow(color: .black.opacity(0.14), radius: 1, y: 1)
+      if presentation.defaultSelectionSurface == .scrollable {
+        appleDefaultSelectionIndicator(
+          Capsule(style: .continuous),
+          presentation: presentation)
+      } else {
+        appleDefaultSelectionIndicator(
+          RoundedRectangle(cornerRadius: 7, style: .continuous),
+          presentation: presentation)
+      }
     }
+  }
+
+  private func appleDefaultSelectionIndicator<S: InsettableShape>(
+    _ selectionShape: S,
+    presentation: RufletTabBarPresentation
+  ) -> some View {
+    selectionShape
+      .fill(.clear)
+      .modifier(
+        RufletTabSelectionSurfaceModifier(
+          shape: selectionShape,
+          tint: presentation.indicatorColor ?? defaultSelectionColor(presentation))
+      )
+      .overlay {
+        if presentation.hasExplicitIndicatorThickness {
+          selectionShape
+            .stroke(
+              presentation.indicatorColor ?? presentation.labelColor,
+              lineWidth: presentation.indicatorThickness)
+        }
+      }
+      .padding(
+        .horizontal,
+        presentation.indicatorHorizontalInset(labelPadding: presentation.labelPadding)
+      )
+      .padding(presentation.indicatorPadding)
+      .shadow(color: .black.opacity(0.12), radius: 1, y: 1)
   }
 
   private func defaultSelectionColor(_ presentation: RufletTabBarPresentation) -> Color {
@@ -491,10 +563,12 @@ public struct TabBarControl: View {
   private func updateHover(_ hovering: Bool, index: Int) {
     hoveredIndex = hovering ? index : (hoveredIndex == index ? nil : hoveredIndex)
     guard control.hasEventHandler("hover") else { return }
-    control.triggerEvent("hover", data: .map([
-      "hovering": .bool(hovering),
-      "index": .int(Int64(index)),
-    ]))
+    control.triggerEvent(
+      "hover",
+      data: .map([
+        "hovering": .bool(hovering),
+        "index": .int(Int64(index)),
+      ]))
   }
 
   private var appleSegmentTrackColor: Color {
@@ -520,7 +594,159 @@ public struct TabBarControl: View {
     }
   }
 
+  private var nativeTabSegments: [RufletNativeTabSegment]? {
+    let tabs = tabControls
+    guard !tabs.isEmpty, tabs.allSatisfy({ $0.type == "Tab" }) else { return nil }
+    let segments = tabs.compactMap { tab -> RufletNativeTabSegment? in
+      let title = rufletNativePlainText("label", of: tab)
+      let symbolName: String?
+      if let code = tab.integer("icon"),
+        case .systemSymbol(let name) = control.backend.extensionRegistry.appleIcon(for: code)
+      {
+        symbolName = name
+      } else {
+        symbolName = nil
+      }
+      guard title?.isEmpty == false || symbolName != nil else { return nil }
+      return RufletNativeTabSegment(
+        id: tab.id,
+        title: title,
+        systemImageName: symbolName,
+        enabled: !tab.disabled)
+    }
+    return segments.count == tabs.count ? segments : nil
+  }
+
 }
+
+private struct RufletNativeTabSegment: Equatable {
+  let id: Int
+  let title: String?
+  let systemImageName: String?
+  let enabled: Bool
+}
+
+#if os(iOS)
+  /// Public UIKit segmented control. Ruflet supplies only protocol content and
+  /// selection state; UIKit owns the surface, materials, animation and future
+  /// iOS visual updates (including the current glass treatment).
+  @MainActor
+  private struct RufletNativeSegmentedControl: UIViewRepresentable {
+    let segments: [RufletNativeTabSegment]
+    let selectedIndex: Int
+    let enabled: Bool
+    let semanticsLabel: String
+    let onSelect: (Int) -> Void
+
+    func makeCoordinator() -> Coordinator {
+      Coordinator(onSelect: onSelect)
+    }
+
+    func makeUIView(context: Context) -> UISegmentedControl {
+      let view = UISegmentedControl(frame: .zero)
+      view.addTarget(
+        context.coordinator,
+        action: #selector(Coordinator.selectionChanged(_:)),
+        for: .valueChanged)
+      return view
+    }
+
+    func updateUIView(_ view: UISegmentedControl, context: Context) {
+      context.coordinator.onSelect = onSelect
+      if context.coordinator.segments != segments {
+        rebuild(view)
+        context.coordinator.segments = segments
+      }
+      view.isEnabled = enabled
+      for (index, segment) in segments.enumerated() {
+        view.setEnabled(enabled && segment.enabled, forSegmentAt: index)
+      }
+      let resolvedSelection =
+        segments.indices.contains(selectedIndex)
+        ? selectedIndex : UISegmentedControl.noSegment
+      if view.selectedSegmentIndex != resolvedSelection {
+        view.selectedSegmentIndex = resolvedSelection
+      }
+      view.accessibilityLabel = semanticsLabel
+    }
+
+    private func rebuild(_ view: UISegmentedControl) {
+      view.removeAllSegments()
+      for (index, segment) in segments.enumerated() {
+        let title = segment.title ?? ""
+        let symbol = segment.systemImageName.flatMap { UIImage(systemName: $0) }
+        let image: UIImage?
+        if let symbol, !title.isEmpty {
+          image = rufletNativeSegmentImage(
+            symbol: symbol, title: title, traits: view.traitCollection)
+        } else {
+          image = symbol
+        }
+        // Use UISegmentedControl's target/action selection path. Installing a
+        // no-op UIAction per segment let UIKit update the visible segment but
+        // could bypass `.valueChanged`, leaving Tabs.selected_index and the
+        // TabBarView body on the old page.
+        if let image {
+          view.insertSegment(with: image, at: index, animated: false)
+        } else {
+          view.insertSegment(withTitle: title, at: index, animated: false)
+        }
+      }
+    }
+
+    @MainActor
+    final class Coordinator: NSObject {
+      var onSelect: (Int) -> Void
+      var segments: [RufletNativeTabSegment] = []
+
+      init(onSelect: @escaping (Int) -> Void) {
+        self.onSelect = onSelect
+      }
+
+      @objc func selectionChanged(_ sender: UISegmentedControl) {
+        guard sender.selectedSegmentIndex != UISegmentedControl.noSegment else { return }
+        onSelect(sender.selectedSegmentIndex)
+      }
+    }
+  }
+
+  private func rufletNativeSegmentImage(
+    symbol: UIImage,
+    title: String,
+    traits: UITraitCollection
+  ) -> UIImage {
+    let baseFont = UIFont.systemFont(ofSize: 13, weight: .regular)
+    let font = UIFontMetrics(forTextStyle: .subheadline).scaledFont(
+      for: baseFont,
+      compatibleWith: traits)
+    let configuredSymbol =
+      symbol.applyingSymbolConfiguration(
+        UIImage.SymbolConfiguration(font: font)) ?? symbol
+    let textAttributes: [NSAttributedString.Key: Any] = [
+      .font: font,
+      .foregroundColor: UIColor.white,
+    ]
+    let textSize = (title as NSString).size(withAttributes: textAttributes)
+    let spacing: CGFloat = 5
+    let size = CGSize(
+      width: ceil(configuredSymbol.size.width + spacing + textSize.width),
+      height: ceil(max(configuredSymbol.size.height, textSize.height)))
+    let format = UIGraphicsImageRendererFormat.preferred()
+    format.opaque = false
+    let image = UIGraphicsImageRenderer(size: size, format: format).image { _ in
+      configuredSymbol.withTintColor(.white, renderingMode: .alwaysOriginal).draw(
+        at: CGPoint(
+          x: 0,
+          y: (size.height - configuredSymbol.size.height) / 2))
+      (title as NSString).draw(
+        at: CGPoint(
+          x: configuredSymbol.size.width + spacing,
+          y: (size.height - textSize.height) / 2),
+        withAttributes: textAttributes)
+    }
+    return image.withRenderingMode(.alwaysTemplate)
+  }
+#endif
 
 private struct RufletTabTrackSurfaceModifier: ViewModifier {
   let shape: RoundedRectangle
@@ -540,8 +766,8 @@ private struct RufletTabTrackSurfaceModifier: ViewModifier {
   }
 }
 
-private struct RufletTabSelectionSurfaceModifier: ViewModifier {
-  let shape: RoundedRectangle
+private struct RufletTabSelectionSurfaceModifier<SelectionShape: InsettableShape>: ViewModifier {
+  let shape: SelectionShape
   let tint: Color
 
   @ViewBuilder
@@ -571,11 +797,13 @@ private struct RufletTabBarButtonStyle: ButtonStyle {
   func makeBody(configuration: Configuration) -> some View {
     configuration.label
       .background(
-        presentation.overlay(presentation.states(
-          selected: selected,
-          hovered: false,
-          pressed: configuration.isPressed,
-          disabled: disabled)))
+        presentation.overlay(
+          presentation.states(
+            selected: selected,
+            hovered: false,
+            pressed: configuration.isPressed,
+            disabled: disabled))
+      )
       .clipShape(RufletCornerShape(radius: presentation.splashBorderRadius))
   }
 }
@@ -634,9 +862,10 @@ struct RufletTabBarPresentation {
       parsePadding(control.dynamicValue("indicator_padding"))
       ?? EdgeInsets()
     hasExplicitIndicatorThickness = control.dynamicValue("indicator_thickness") != nil
-    indicatorThickness = CGFloat(max(
-      control.number("indicator_thickness", default: 2) ?? 2,
-      0))
+    indicatorThickness = CGFloat(
+      max(
+        control.number("indicator_thickness", default: 2) ?? 2,
+        0))
     labelPadding =
       parsePadding(control.dynamicValue("label_padding"))
       ?? parsePadding(componentTheme?["label_padding"])
@@ -659,11 +888,12 @@ struct RufletTabBarPresentation {
     unselectedTextStyle =
       parseTextStyle(control.dynamicValue("unselected_label_text_style"))
       ?? parseTextStyle(componentTheme?["unselected_label_text_style"])
-    dividerHeight = CGFloat(max(
-      control.number("divider_height")
-        ?? parseDouble(componentTheme?["divider_height"])
-        ?? 0,
-      0))
+    dividerHeight = CGFloat(
+      max(
+        control.number("divider_height")
+          ?? parseDouble(componentTheme?["divider_height"])
+          ?? 0,
+        0))
     dividerColor =
       parseColor(control.string("divider_color"))
       ?? rufletTabBarColor(componentTheme?["divider_color"])

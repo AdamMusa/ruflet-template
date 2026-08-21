@@ -10,12 +10,20 @@ public struct RangeSliderControl: View {
   public var body: some View {
     let presentation = RufletRangeSliderPresentation(control: control)
     LayoutControl(control: control) {
-      RufletRangeSliderPrimitive(
-        presentation: presentation,
-        onChangeStart: { control.triggerEvent("change_start") },
-        onChange: updateValues,
-        onChangeEnd: { control.triggerEvent("change_end") }
-      )
+      #if os(iOS)
+        RufletNativeRangeSlider(
+          presentation: presentation,
+          onChangeStart: { control.triggerEvent("change_start") },
+          onChange: updateValues,
+          onChangeEnd: { control.triggerEvent("change_end") })
+        .frame(minHeight: 44)
+      #else
+        RufletRangeSliderPrimitive(
+          presentation: presentation,
+          onChangeStart: { control.triggerEvent("change_start") },
+          onChange: updateValues,
+          onChangeEnd: { control.triggerEvent("change_end") })
+      #endif
     }
   }
 
@@ -45,6 +53,8 @@ struct RufletRangeSliderPresentation {
   let mouseCursor: RufletWidgetStateProperty<String>
   let overlayColor: RufletWidgetStateProperty<Color>
   let disabled: Bool
+  let hasExplicitActiveColor: Bool
+  let hasExplicitInactiveColor: Bool
 
   init(control: RufletControl) {
     let rawMinimum = control.number("min") ?? 0
@@ -67,6 +77,8 @@ struct RufletRangeSliderPresentation {
     }
     precision = max(control.integer("round", default: 0) ?? 0, 0)
     label = control.string("label", default: "") ?? ""
+    hasExplicitActiveColor = control.string("active_color") != nil
+    hasExplicitInactiveColor = control.string("inactive_color") != nil
     activeColor = parseColor(control.string("active_color")) ?? .accentColor
     inactiveColor = parseColor(control.string("inactive_color")) ?? .secondary.opacity(0.25)
     mouseCursor = RufletWidgetStateProperty(
@@ -208,10 +220,20 @@ private struct RufletRangeSliderPrimitive: View {
     values: RufletRangeValues
   ) -> some View {
     ZStack {
-      Circle()
-        .fill(presentation.activeColor)
-        .frame(width: 20, height: 20)
-        .shadow(color: .black.opacity(0.14), radius: 1.5, y: 1)
+      #if os(iOS)
+        Circle()
+          .fill(Color(uiColor: .systemBackground))
+          .overlay {
+            Circle().stroke(Color.black.opacity(0.08), lineWidth: 0.5)
+          }
+          .frame(width: 28, height: 28)
+          .shadow(color: .black.opacity(0.22), radius: 2.5, y: 1.5)
+      #else
+        Circle()
+          .fill(presentation.activeColor)
+          .frame(width: 20, height: 20)
+          .shadow(color: .black.opacity(0.14), radius: 1.5, y: 1)
+      #endif
       if interactionActive, activeThumb == thumb, presentation.divisions != nil,
         !presentation.label.isEmpty
       {

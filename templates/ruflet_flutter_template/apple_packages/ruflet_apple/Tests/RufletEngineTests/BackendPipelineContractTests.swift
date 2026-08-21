@@ -1,5 +1,6 @@
 import CoreGraphics
 import XCTest
+
 @testable import RufletEngine
 @testable import RufletProtocol
 
@@ -59,15 +60,56 @@ final class BackendPipelineContractTests: XCTestCase {
       data: "before-registration")
     XCTAssertEqual(fixture.channel?.sentMessages.map(\.action), [.registerClient])
 
-    fixture.channel?.deliver(RufletMessage(
-      action: .registerClient,
-      payload: [
-        "session_id": "session-1",
-        "page_patch": ["registered": true],
-        "error": nil,
-      ]))
+    fixture.channel?.deliver(
+      RufletMessage(
+        action: .registerClient,
+        payload: [
+          "session_id": "session-1",
+          "page_patch": ["registered": true],
+          "error": nil,
+        ]))
 
     XCTAssertEqual(order, ["page-patch", "queued-event"])
+  }
+
+  func testChildPatchWaitsForParentPatchToMaterializeItsTarget() async throws {
+    let fixture = BackendPipelineFixture()
+    let backend = fixture.makeBackend()
+    try await register(backend, fixture: fixture)
+
+    fixture.channel?.deliver(patchMessage(target: 101, value: "from-child-patch"))
+    XCTAssertNil(backend.control(id: 101))
+    XCTAssertTrue(backend.error.isEmpty)
+
+    fixture.channel?.deliver(
+      parentMessage(
+        childID: 101,
+        initialValue: "from-parent-patch"))
+
+    XCTAssertEqual(backend.control(id: 101)?.string("value"), "from-child-patch")
+    XCTAssertTrue(backend.error.isEmpty)
+  }
+
+  func testDisconnectDoesNotReplayADeferredPatchIntoTheNextSession() async throws {
+    let fixture = BackendPipelineFixture()
+    let backend = fixture.makeBackend()
+    try await register(backend, fixture: fixture)
+
+    fixture.channel?.deliver(patchMessage(target: 102, value: "stale-session-value"))
+    fixture.channel?.disconnectFromServer()
+    try await waitUntil { fixture.channels.count == 2 }
+    fixture.channel?.deliver(
+      RufletMessage(
+        action: .registerClient,
+        payload: ["page_patch": [:], "error": nil]))
+
+    fixture.channel?.deliver(
+      parentMessage(
+        childID: 102,
+        initialValue: "new-session-value"))
+
+    XCTAssertEqual(backend.control(id: 102)?.string("value"), "new-session-value")
+    XCTAssertTrue(backend.error.isEmpty)
   }
 
   func testExistingRouteSendsUpdateBeforeRouteChangeEvent() async throws {
@@ -76,17 +118,20 @@ final class BackendPipelineContractTests: XCTestCase {
     backend.updatePageSize(CGSize(width: 390, height: 844))
     backend.onRouteUpdated("/initial")
     try await waitUntil { fixture.channel?.sentMessages.first?.action == .registerClient }
-    fixture.channel?.deliver(RufletMessage(
-      action: .registerClient,
-      payload: ["page_patch": [:], "error": nil]))
+    fixture.channel?.deliver(
+      RufletMessage(
+        action: .registerClient,
+        payload: ["page_patch": [:], "error": nil]))
     fixture.channel?.sentMessages.removeAll()
 
     backend.onRouteUpdated("/next")
 
-    XCTAssertEqual(fixture.channel?.sentMessages.map(\.action), [
-      .updateControl,
-      .controlEvent,
-    ])
+    XCTAssertEqual(
+      fixture.channel?.sentMessages.map(\.action),
+      [
+        .updateControl,
+        .controlEvent,
+      ])
     XCTAssertEqual(fixture.channel?.sentMessages[0].payload["props"]?["route"], "/next")
     XCTAssertEqual(fixture.channel?.sentMessages[1].payload["name"], "route_change")
     XCTAssertEqual(fixture.channel?.sentMessages[1].payload["data"]?["route"], "/next")
@@ -99,9 +144,10 @@ final class BackendPipelineContractTests: XCTestCase {
     backend.updatePageSize(CGSize(width: 390, height: 844))
     backend.onRouteUpdated("/")
     try await waitUntil { fixture.channel?.sentMessages.first?.action == .registerClient }
-    fixture.channel?.deliver(RufletMessage(
-      action: .registerClient,
-      payload: ["page_patch": [:], "error": nil]))
+    fixture.channel?.deliver(
+      RufletMessage(
+        action: .registerClient,
+        payload: ["page_patch": [:], "error": nil]))
 
     backend.updatePageSize(CGSize(width: 844, height: 390))
     await drainMainActor()
@@ -132,9 +178,10 @@ final class BackendPipelineContractTests: XCTestCase {
     backend.updatePageSize(CGSize(width: 390, height: 844))
     backend.onRouteUpdated("/")
     try await waitUntil { fixture.channel?.sentMessages.first?.action == .registerClient }
-    fixture.channel?.deliver(RufletMessage(
-      action: .registerClient,
-      payload: ["page_patch": [:], "error": nil]))
+    fixture.channel?.deliver(
+      RufletMessage(
+        action: .registerClient,
+        payload: ["page_patch": [:], "error": nil]))
     fixture.channel?.sentMessages.removeAll()
 
     let token = backend.page.addInvokeMethodListener { name, arguments in
@@ -145,15 +192,16 @@ final class BackendPipelineContractTests: XCTestCase {
     }
     defer { backend.page.removeInvokeMethodListener(token) }
 
-    fixture.channel?.deliver(RufletMessage(
-      action: .invokeControlMethod,
-      payload: [
-        "control_id": 1,
-        "call_id": "call-zero-timeout",
-        "name": "pinned_timeout",
-        "args": ["value": 7],
-        "timeout": 0,
-      ]))
+    fixture.channel?.deliver(
+      RufletMessage(
+        action: .invokeControlMethod,
+        payload: [
+          "control_id": 1,
+          "call_id": "call-zero-timeout",
+          "name": "pinned_timeout",
+          "args": ["value": 7],
+          "timeout": 0,
+        ]))
 
     try await waitUntil {
       fixture.channel?.sentMessages.contains { $0.action == .invokeControlMethod } == true
@@ -162,6 +210,50 @@ final class BackendPipelineContractTests: XCTestCase {
     XCTAssertEqual(response.payload["call_id"], "call-zero-timeout")
     XCTAssertEqual(response.payload["result"], "completed")
     XCTAssertEqual(response.payload["error"], .null)
+  }
+
+  private func register(
+    _ backend: RufletBackend,
+    fixture: BackendPipelineFixture
+  ) async throws {
+    backend.updatePageSize(CGSize(width: 390, height: 844))
+    backend.onRouteUpdated("/")
+    try await waitUntil { fixture.channel?.sentMessages.first?.action == .registerClient }
+    fixture.channel?.deliver(
+      RufletMessage(
+        action: .registerClient,
+        payload: ["page_patch": [:], "error": nil]))
+  }
+
+  private func patchMessage(target: Int, value: String) -> RufletMessage {
+    RufletMessage(
+      action: .patchControl,
+      payload: [
+        "id": .int(Int64(target)),
+        "patch": .array([
+          .array([0]),
+          .array([0, 0, "value", .string(value)]),
+        ]),
+      ])
+  }
+
+  private func parentMessage(childID: Int, initialValue: String) -> RufletMessage {
+    RufletMessage(
+      action: .patchControl,
+      payload: [
+        "id": 1,
+        "patch": .array([
+          .array([0]),
+          .array([
+            1, 0, "content",
+            .map([
+              "_c": "Text",
+              "_i": .int(Int64(childID)),
+              "value": .string(initialValue),
+            ]),
+          ]),
+        ]),
+      ])
   }
 }
 
@@ -230,7 +322,7 @@ private final class BackendPipelineChannel: RufletBackendChannel {
 
 @MainActor
 private func drainMainActor(iterations: Int = 20) async {
-  for _ in 0 ..< iterations { await Task.yield() }
+  for _ in 0..<iterations { await Task.yield() }
 }
 
 @MainActor
@@ -238,7 +330,7 @@ private func waitUntil(
   iterations: Int = 200,
   _ predicate: () -> Bool
 ) async throws {
-  for _ in 0 ..< iterations {
+  for _ in 0..<iterations {
     if predicate() { return }
     await Task.yield()
   }

@@ -53,6 +53,36 @@ final class SafeAreaPropertyConsumptionTests: XCTestCase {
     }
   }
 
+  func testExplicitSafeAreaUsesMediaPaddingAndMinimumByMaximum() {
+    let configuration = RufletSafeAreaConfiguration(
+      control: control(properties: [
+        "avoid_intrusions_right": .bool(false),
+        "minimum_padding": .map([
+          "left": .double(20),
+          "top": .double(4),
+          "right": .double(7),
+          "bottom": .double(40),
+        ]),
+      ]))
+
+    XCTAssertEqual(
+      configuration.resolvedPadding(
+        safeAreaInsets: RufletSafeAreaInsets(
+          top: 59, leading: 12, bottom: 34, trailing: 12)),
+      EdgeInsets(top: 59, leading: 20, bottom: 40, trailing: 7))
+  }
+
+  func testScaffoldBarsConsumeOnlyTheirMediaPaddingEdges() {
+    let insets = RufletSafeAreaInsets(top: 59, leading: 4, bottom: 34, trailing: 5)
+
+    XCTAssertEqual(
+      rufletScaffoldBodySafeAreaInsets(insets, hasAppBar: true, hasBottomBar: true),
+      RufletSafeAreaInsets(top: 0, leading: 4, bottom: 0, trailing: 5))
+    XCTAssertEqual(
+      rufletScaffoldBodySafeAreaInsets(insets, hasAppBar: false, hasBottomBar: false),
+      insets)
+  }
+
   private func control(properties: [String: RufletValue]) -> RufletControl {
     RufletControl(
       id: 1,

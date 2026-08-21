@@ -11,40 +11,94 @@ public struct CupertinoSwitchControl: View {
 
   public var body: some View {
     LayoutControl(control: control) {
-      Button(action: activate) {
+      #if os(iOS)
+        let offPresentation = RufletCupertinoSwitchPresentation(
+          control: control,
+          states: nativeBaseStates)
+        let onPresentation = RufletCupertinoSwitchPresentation(
+          control: control,
+          states: nativeBaseStates.union([.selected]))
+        let presentation = value ? onPresentation : offPresentation
         HStack(spacing: 6) {
           if labelPosition == .left { label }
-          RufletCupertinoSwitchArtwork(control: control, focused: focused, hovered: hovered)
+          RufletNativeSwitch(
+            value: value,
+            enabled: !control.disabled,
+            onTintColor: onPresentation.hasExplicitTrackColor
+              ? onPresentation.trackColor : nil,
+            offTintColor: offPresentation.hasExplicitTrackColor
+              ? offPresentation.trackColor : nil,
+            thumbTintColor: presentation.hasExplicitThumbColor
+              ? presentation.thumbColor : nil,
+            accessibilityLabel: control.string("label"),
+            onChange: setValue)
           if labelPosition == .right { label }
         }
         .contentShape(Rectangle())
-      }
-      .buttonStyle(RufletCupertinoSwitchPressStyle())
-      .disabled(control.disabled)
-      .focused($focused)
-      .onAppear {
-        if control.boolean("autofocus", default: false) { focused = true }
-      }
-      .onHover { hovered = $0 }
-      .onChange(of: focused) { control.triggerEvent($0 ? "focus" : "blur") }
+        .disabled(control.disabled)
+        .focused($focused)
+        .onAppear {
+          if control.boolean("autofocus", default: false) { focused = true }
+        }
+        .onHover { hovered = $0 }
+        .onChange(of: focused) { control.triggerEvent($0 ? "focus" : "blur") }
+      #else
+        Button(action: activate) {
+          HStack(spacing: 6) {
+            if labelPosition == .left { label }
+            RufletCupertinoSwitchArtwork(control: control, focused: focused, hovered: hovered)
+            if labelPosition == .right { label }
+          }
+          .contentShape(Rectangle())
+        }
+        .buttonStyle(RufletCupertinoSwitchPressStyle())
+        .disabled(control.disabled)
+        .focused($focused)
+        .onAppear {
+          if control.boolean("autofocus", default: false) { focused = true }
+        }
+        .onHover { hovered = $0 }
+        .onChange(of: focused) { control.triggerEvent($0 ? "focus" : "blur") }
+      #endif
     }
     .modifier(RufletListTileInputToggleModifier(action: activate))
   }
 
   @ViewBuilder
   private var label: some View {
-    if let label = control.string("label"), !label.isEmpty { Text(label) }
+    if let label = control.string("label"), !label.isEmpty {
+      Text(label)
+        // CupertinoSwitch has the same merged label contract as Switch. The
+        // UISwitch remains the native touch owner; tapping the text enters the
+        // exact same guarded update/event path once.
+        .contentShape(Rectangle())
+        .onTapGesture(perform: activate)
+    }
   }
 
   private var labelPosition: RufletLabelPosition {
     parseEnum(RufletLabelPosition.self, control.string("label_position"), .right)!
   }
 
-  func activate() {
-    guard !control.disabled else { return }
-    let next = !control.boolean("value", default: false)
+  private var value: Bool { control.boolean("value", default: false) }
+
+  private var nativeBaseStates: Set<RufletWidgetState> {
+    var states: Set<RufletWidgetState> = []
+    if control.disabled { states.insert(.disabled) }
+    if focused { states.insert(.focused) }
+    if hovered { states.insert(.hovered) }
+    return states
+  }
+
+  private func setValue(_ next: Bool) {
+    guard !control.disabled, value != next else { return }
     control.updateProperties(["value": .bool(next)], notify: true)
     control.triggerEvent("change")
+  }
+
+  func activate() {
+    guard !control.disabled else { return }
+    setValue(!value)
   }
 }
 
@@ -129,6 +183,8 @@ struct RufletCupertinoSwitchPresentation {
   let focusColor: Color
   let onLabelColor: Color
   let offLabelColor: Color
+  let hasExplicitThumbColor: Bool
+  let hasExplicitTrackColor: Bool
   private let selected: Bool
 
   init(control: RufletControl, states: Set<RufletWidgetState>) {
@@ -146,6 +202,10 @@ struct RufletCupertinoSwitchPresentation {
       control.dynamicValue("track_outline_width"), states: states)
     let iconCode = rufletSwitchStateInteger(
       control.dynamicValue("thumb_icon"), states: states)
+    hasExplicitThumbColor = defaultThumbColor != nil
+      || (!states.contains(.selected) && inactiveThumbColor != nil)
+    hasExplicitTrackColor = states.contains(.selected)
+      ? activeTrackColor != nil : inactiveTrackColor != nil
 
     activeThumbImageSource = parseImageSource(
       control.dynamicValue("active_thumb_image_src"), backend: control.backend)

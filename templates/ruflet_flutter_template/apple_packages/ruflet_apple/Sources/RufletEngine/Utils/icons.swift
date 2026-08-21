@@ -380,3 +380,54 @@ extension RufletAppleIconView {
     return RufletAppleIconView(icon: icon, size: size, weight: weight)
   }
 }
+
+#if os(iOS)
+  @MainActor
+  extension RufletAppleIcon {
+    /// UIKit artwork for native controls such as `UITabBarItem`. System
+    /// symbols stay symbols; the bundled Flet catalogs are rasterized once as
+    /// template images so UIKit continues to own tinting and selected state.
+    func rufletUIImage(pointSize: CGFloat) -> UIImage? {
+      switch self {
+      case .systemSymbol(let name):
+        let configuration = UIImage.SymbolConfiguration(pointSize: pointSize, weight: .regular)
+        return UIImage(systemName: name, withConfiguration: configuration)?
+          .withRenderingMode(.alwaysTemplate)
+      case .cupertinoGlyph(let scalar):
+        RufletCupertinoIconFont.register()
+        return rufletGlyphImage(
+          scalar: scalar,
+          fontName: RufletCupertinoIconFont.postScriptName,
+          pointSize: pointSize)
+      case .materialGlyph(let scalar):
+        RufletMaterialIconFont.register()
+        return rufletGlyphImage(
+          scalar: scalar,
+          fontName: RufletMaterialIconFont.postScriptName,
+          pointSize: pointSize)
+      }
+    }
+  }
+
+  @MainActor
+  private func rufletGlyphImage(
+    scalar: UInt32,
+    fontName: String,
+    pointSize: CGFloat
+  ) -> UIImage? {
+    guard let unicode = UnicodeScalar(scalar), let font = UIFont(name: fontName, size: pointSize) else {
+      return nil
+    }
+    let text = String(unicode) as NSString
+    let attributes: [NSAttributedString.Key: Any] = [
+      .font: font,
+      .foregroundColor: UIColor.black,
+    ]
+    let measured = text.size(withAttributes: attributes)
+    let size = CGSize(width: ceil(measured.width) + 2, height: ceil(measured.height) + 2)
+    let renderer = UIGraphicsImageRenderer(size: size)
+    return renderer.image { _ in
+      text.draw(at: CGPoint(x: 1, y: 1), withAttributes: attributes)
+    }.withRenderingMode(.alwaysTemplate)
+  }
+#endif

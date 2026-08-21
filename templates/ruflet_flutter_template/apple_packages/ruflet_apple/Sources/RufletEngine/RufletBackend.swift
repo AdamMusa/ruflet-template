@@ -43,6 +43,7 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
   private let reconnectTimeoutMilliseconds: Int?
   private let channelFactory: RufletBackendChannelFactoryClosure
   private var controlsIndex: [Int: WeakControl] = [:]
+  private var deferredControlPatches: [RufletPatchControlRequestBody] = []
   private var scrollTargets: [String: RufletScrollTarget] = [:]
   private var pageServiceBindings: PageServiceBindings?
   private var backendChannel: RufletBackendChannel?
@@ -55,6 +56,10 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
   private var connectionInProgress = false
   private var pageListener: UUID?
   private var errorListener: AnyCancellable?
+
+  // A child patch can overtake the parent patch which materializes that child.
+  // Keep the queue bounded so a broken peer cannot retain unbounded input.
+  private static let maximumDeferredControlPatches = 1_024
 
   public typealias RufletBackendChannelFactoryClosure =
     @MainActor (
@@ -154,15 +159,16 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
         guard let self else { return }
         self.receive(message)
       }
-      let channel = if forcePyodide == true {
-        try RufletBackendChannelFactory.make(
-          address: pageURI,
-          forcePyodide: true,
-          onDisconnect: onDisconnect,
-          onMessage: onMessage)
-      } else {
-        try channelFactory(pageURI, onDisconnect, onMessage)
-      }
+      let channel =
+        if forcePyodide == true {
+          try RufletBackendChannelFactory.make(
+            address: pageURI,
+            forcePyodide: true,
+            onDisconnect: onDisconnect,
+            onMessage: onMessage)
+        } else {
+          try channelFactory(pageURI, onDisconnect, onMessage)
+        }
       backendChannel = channel
       try await channel.connect()
       registerClient()
@@ -182,6 +188,7 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
     pageServiceBindings?.dispose()
     pageServiceBindings = nil
     scrollTargets.removeAll()
+    deferredControlPatches.removeAll()
     backendChannel?.disconnect()
     backendChannel = nil
   }
@@ -365,16 +372,22 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
       case .patchControl:
         let request = try RufletPatchControlRequestBody(value: message.payload)
         guard let target = control(id: request.id) else {
+          if deferredControlPatches.count == Self.maximumDeferredControlPatches {
+            let dropped = deferredControlPatches.removeFirst()
+            RufletProtocolDiagnostics.timing(
+              "deferred_patch_overflow",
+              milliseconds: 0,
+              details: "dropped_target=\(dropped.id) limit=\(Self.maximumDeferredControlPatches)")
+          }
+          deferredControlPatches.append(request)
           RufletProtocolDiagnostics.timing(
-            "patch_missing_target", milliseconds: 0, details: "target=\(request.id)")
+            "patch_deferred_missing_target",
+            milliseconds: 0,
+            details: "target=\(request.id) queued=\(deferredControlPatches.count)")
           return
         }
-        let started = RufletProtocolDiagnostics.now()
-        try target.applyPatch(request.patch)
-        RufletProtocolDiagnostics.timing(
-          "apply_patch",
-          milliseconds: (RufletProtocolDiagnostics.now() - started) * 1_000,
-          details: "target=\(request.id) patch_items=\(request.patch.count)")
+        try applyPatch(request, to: target, diagnostic: "apply_patch")
+        try drainDeferredControlPatches()
       case .invokeControlMethod:
         let request = try RufletInvokeMethodRequestBody(value: message.payload)
         Task { await invoke(request) }
@@ -393,6 +406,7 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
       reconnectStartedUptime = nil
       error = ""
       _ = page.update(response.pagePatch, notify: true)
+      try drainDeferredControlPatches()
       let queued = sendQueue
       sendQueue.removeAll()
       for message in queued { send(message) }
@@ -435,9 +449,53 @@ public final class RufletBackend: ObservableObject, RufletBackendProtocol {
         ).value))
   }
 
+  private func applyPatch(
+    _ request: RufletPatchControlRequestBody,
+    to target: RufletControl,
+    diagnostic: String
+  ) throws {
+    let started = RufletProtocolDiagnostics.now()
+    try target.applyPatch(request.patch)
+    RufletProtocolDiagnostics.timing(
+      diagnostic,
+      milliseconds: (RufletProtocolDiagnostics.now() - started) * 1_000,
+      details: "target=\(request.id) patch_items=\(request.patch.count)")
+  }
+
+  /// Replays wire updates that arrived before their controls were indexed.
+  /// A replayed parent may materialize another queued target, so keep making
+  /// passes until the remaining queue can no longer make progress.
+  private func drainDeferredControlPatches() throws {
+    while !deferredControlPatches.isEmpty {
+      let queued = deferredControlPatches
+      deferredControlPatches.removeAll(keepingCapacity: true)
+      var remaining: [RufletPatchControlRequestBody] = []
+      var madeProgress = false
+
+      for (offset, request) in queued.enumerated() {
+        guard let target = control(id: request.id) else {
+          remaining.append(request)
+          continue
+        }
+        do {
+          try applyPatch(request, to: target, diagnostic: "apply_deferred_patch")
+          madeProgress = true
+        } catch {
+          remaining.append(contentsOf: queued[offset...])
+          deferredControlPatches = remaining + deferredControlPatches
+          throw error
+        }
+      }
+
+      deferredControlPatches = remaining + deferredControlPatches
+      if !madeProgress { return }
+    }
+  }
+
   private func didDisconnect() {
     guard !disposed, let channel = backendChannel else { return }
     backendChannel = nil
+    deferredControlPatches.removeAll()
     if reconnectStartedUptime == nil {
       reconnectStartedUptime = ProcessInfo.processInfo.systemUptime
     }

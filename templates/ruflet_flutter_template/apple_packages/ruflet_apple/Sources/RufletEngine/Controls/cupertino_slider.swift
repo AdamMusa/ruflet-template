@@ -59,16 +59,28 @@ public struct CupertinoSliderControl: View {
   public var body: some View {
     let presentation = RufletCupertinoSliderPresentation(control: control)
     LayoutControl(control: control) {
-      RufletCupertinoSliderPrimitive(
-        presentation: presentation,
-        onChange: updateValue,
-        onChangeStart: { value in
-          control.triggerEvent("change_start", data: .double(value))
-        },
-        onChangeEnd: { value in
-          control.triggerEvent("change_end", data: .double(value))
-        }
-      )
+      #if os(iOS)
+        RufletNativeSlider(
+          presentation: RufletSliderPresentation(control: control),
+          onChange: updateValue,
+          onChangeStart: { value in
+            control.triggerEvent("change_start", data: .double(value))
+          },
+          onChangeEnd: { value in
+            control.triggerEvent("change_end", data: .double(value))
+          })
+        .frame(minHeight: 44)
+      #else
+        RufletCupertinoSliderPrimitive(
+          presentation: presentation,
+          onChange: updateValue,
+          onChangeStart: { value in
+            control.triggerEvent("change_start", data: .double(value))
+          },
+          onChangeEnd: { value in
+            control.triggerEvent("change_end", data: .double(value))
+          })
+      #endif
     }
   }
 

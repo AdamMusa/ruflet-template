@@ -24,6 +24,38 @@ private struct RufletBarBackgroundColorKey: EnvironmentKey {
   static let defaultValue: Color? = nil
 }
 
+struct RufletSafeAreaInsets: Equatable {
+  var top: CGFloat
+  var leading: CGFloat
+  var bottom: CGFloat
+  var trailing: CGFloat
+
+  static let zero = RufletSafeAreaInsets(top: 0, leading: 0, bottom: 0, trailing: 0)
+
+  init(top: CGFloat, leading: CGFloat, bottom: CGFloat, trailing: CGFloat) {
+    self.top = top
+    self.leading = leading
+    self.bottom = bottom
+    self.trailing = trailing
+  }
+
+  init(_ insets: EdgeInsets) {
+    self.init(
+      top: insets.top,
+      leading: insets.leading,
+      bottom: insets.bottom,
+      trailing: insets.trailing)
+  }
+
+  var edgeInsets: EdgeInsets {
+    EdgeInsets(top: top, leading: leading, bottom: bottom, trailing: trailing)
+  }
+}
+
+private struct RufletSafeAreaInsetsKey: EnvironmentKey {
+  static let defaultValue = RufletSafeAreaInsets.zero
+}
+
 extension EnvironmentValues {
   var rufletThemeMode: RufletThemeMode {
     get { self[RufletThemeModeKey.self] }
@@ -48,6 +80,11 @@ extension EnvironmentValues {
   var rufletBarBackgroundColor: Color? {
     get { self[RufletBarBackgroundColorKey.self] }
     set { self[RufletBarBackgroundColorKey.self] = newValue }
+  }
+
+  var rufletSafeAreaInsets: RufletSafeAreaInsets {
+    get { self[RufletSafeAreaInsetsKey.self] }
+    set { self[RufletSafeAreaInsetsKey.self] = newValue }
   }
 }
 

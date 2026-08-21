@@ -77,7 +77,89 @@ struct PageViewNavigationContractTests {
     #expect(!view.contains(".id(slotRevision)"))
     #expect(navigator.contains("UINavigationController"))
     #expect(navigator.contains("fullscreen_dialog"))
+    #expect(navigator.contains("animationControllerFor operation:"))
+    #expect(navigator.contains("RufletFletPageTransitionAnimator"))
+    #expect(!navigator.contains("CATransition()"))
+    #expect(navigator.contains("@Environment(\\.rufletSafeAreaInsets) private var safeAreaInsets"))
+    #expect(navigator.contains(".environment(\\.rufletSafeAreaInsets, safeAreaInsets)"))
     #expect(navigator.contains("requestedControllers.last?.prepareForNavigation()"))
+    #expect(navigator.contains("setInteractiveController(\n          requestedControllers.last,"))
+  }
+
+  @Test("ordinary iOS routes use the pinned flat Flet slide geometry")
+  func pinnedFlatRouteTransitionGeometry() {
+    let push = rufletPageTransitionOffsets(
+      operation: .push,
+      style: .standard,
+      width: 390,
+      height: 844,
+      rightToLeft: false)
+    #expect(push.fromStart == .zero)
+    #expect(push.fromEnd == CGSize(width: -130, height: 0))
+    #expect(push.toStart == CGSize(width: 390, height: 0))
+    #expect(push.toEnd == .zero)
+
+    let pop = rufletPageTransitionOffsets(
+      operation: .pop,
+      style: .standard,
+      width: 390,
+      height: 844,
+      rightToLeft: false)
+    #expect(pop.fromStart == .zero)
+    #expect(pop.fromEnd == CGSize(width: 390, height: 0))
+    #expect(pop.toStart == CGSize(width: -130, height: 0))
+    #expect(pop.toEnd == .zero)
+    #expect(rufletPageTransitionDuration == 0.3)
+  }
+
+  @Test("RTL and fullscreen routes preserve their pinned transition axes")
+  func pinnedRouteTransitionAxes() {
+    let rtlPush = rufletPageTransitionOffsets(
+      operation: .push,
+      style: .standard,
+      width: 300,
+      height: 700,
+      rightToLeft: true)
+    #expect(rtlPush.fromEnd == CGSize(width: 100, height: 0))
+    #expect(rtlPush.toStart == CGSize(width: -300, height: 0))
+
+    let fullscreenPush = rufletPageTransitionOffsets(
+      operation: .push,
+      style: .fullscreenDialog,
+      width: 300,
+      height: 700,
+      rightToLeft: false)
+    #expect(fullscreenPush.fromEnd == .zero)
+    #expect(fullscreenPush.toStart == CGSize(width: 0, height: 700))
+
+    let fullscreenPop = rufletPageTransitionOffsets(
+      operation: .pop,
+      style: .fullscreenDialog,
+      width: 300,
+      height: 700,
+      rightToLeft: false)
+    #expect(fullscreenPop.fromEnd == CGSize(width: 0, height: 700))
+    #expect(fullscreenPop.toStart == .zero)
+  }
+
+  @Test("window gesture monitors honor covered route interaction ownership")
+  func windowGestureMonitorHonorsNavigationOwnership() throws {
+    let root = URL(fileURLWithPath: #filePath)
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+      .deletingLastPathComponent()
+    let gestureDetector = try String(
+      contentsOf: root.appendingPathComponent(
+        "Sources/RufletEngine/Controls/gesture_detector.swift"),
+      encoding: .utf8)
+
+    #expect(
+      gestureDetector.contains(
+        "guard isEffectivelyInteractive(surface), belongsToTopNavigationRoute(surface) else"))
+    #expect(gestureDetector.contains("current.isUserInteractionEnabled"))
+    #expect(gestureDetector.contains("if current === window { return true }"))
+    #expect(gestureDetector.contains("belongsToTopNavigationRoute(surface)"))
+    #expect(gestureDetector.contains("navigationController.topViewController ==="))
   }
 
   @Test("navigation identity follows stable routes across rebuilt wire controls")
@@ -119,5 +201,70 @@ struct PageViewNavigationContractTests {
     #expect(
       rufletPageNavigationUpdateDisposition(
         for: identities[2], topIdentity: identities.last) == .activate)
+  }
+
+  @Test("only the shown native route accepts interaction")
+  func nativeRouteInteractionOwnership() {
+    #expect(
+      rufletPageNavigationInteractionStates(count: 3, activeIndex: 2)
+        == [false, false, true])
+    #expect(
+      rufletPageNavigationInteractionStates(count: 3, activeIndex: 0)
+        == [true, false, false])
+    #expect(
+      rufletPageNavigationInteractionStates(count: 3, activeIndex: nil)
+        == [false, false, false])
+    #expect(
+      rufletPageNavigationInteractionStates(count: 3, activeIndex: 3)
+        == [false, false, false])
+  }
+
+  @Test("only a completed native pop gesture may report a View removal")
+  func nativeViewRemovalRequiresUserGesture() {
+    let expected = rufletPageNavigationIdentities(["/", "/device"])
+    let actual = rufletPageNavigationIdentities(["/"])
+
+    #expect(
+      rufletShouldReportNativeViewRemoval(
+        interactivePopStarted: true,
+        synchronizing: false,
+        expected: expected,
+        actual: actual))
+    #expect(
+      !rufletShouldReportNativeViewRemoval(
+        interactivePopStarted: false,
+        synchronizing: false,
+        expected: expected,
+        actual: actual))
+    #expect(
+      !rufletShouldReportNativeViewRemoval(
+        interactivePopStarted: true,
+        synchronizing: true,
+        expected: expected,
+        actual: actual))
+    #expect(
+      !rufletShouldReportNativeViewRemoval(
+        interactivePopStarted: true,
+        synchronizing: false,
+        expected: expected,
+        actual: expected))
+  }
+
+  @Test("pending native pops identify one wire View occurrence, not every matching route")
+  func pendingPopUsesWireControlIdentity() {
+    var state = RufletPagePopState()
+
+    let firstMark = state.mark(viewID: 22)
+    let repeatedMark = state.mark(viewID: 22)
+    #expect(firstMark)
+    #expect(!repeatedMark)
+    #expect(!state.isPending(viewID: 11))
+    #expect(state.isPending(viewID: 22))
+    #expect(!state.isPending(viewID: 33))
+
+    state.reconcile(publishedViewIDs: [11, 33])
+    #expect(!state.isPending(viewID: 22))
+    let nextMark = state.mark(viewID: 33)
+    #expect(nextMark)
   }
 }

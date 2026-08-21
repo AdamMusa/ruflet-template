@@ -86,6 +86,8 @@ private struct RufletLayoutControlModifier: ViewModifier {
     let rotation = parseRotationDetails(control.dynamicValue("rotate"))
     let scale = parseScale(control.dynamicValue("scale"))
     let offset = parseOffset(control.dynamicValue("offset"))
+    let flip = parseFlipDetails(control.dynamicValue("flip"))
+    let transform = parseTransformDetails(control.dynamicValue("transform"))
     let alignment = parseAlignment(control.dynamicValue("align"))
     let margin = control.skipsProperty("margin") ? nil : parseMargin(control.dynamicValue("margin"))
     let size = rufletSizeContract(for: control)
@@ -112,6 +114,8 @@ private struct RufletLayoutControlModifier: ViewModifier {
       .animation(
         parseAnimation(control.dynamicValue("animate_offset"))?.animation, value: offset ?? .zero
       )
+      .modifier(RufletFlipTransformModifier(details: flip))
+      .modifier(RufletMatrixTransformModifier(details: transform))
       .modifier(RufletAspectRatioModifier(ratio: control.number("aspect_ratio")))
       .modifier(RufletAlignmentModifier(alignment: alignment))
       .animation(parseAnimation(control.dynamicValue("animate_align"))?.animation, value: alignment)
@@ -123,6 +127,65 @@ private struct RufletLayoutControlModifier: ViewModifier {
       .modifier(RufletBadgeModifier(control: control))
       .modifier(RufletSizeChangeModifier(control: control))
       .modifier(RufletLayoutAnimationCompletionModifier(control: control))
+  }
+}
+
+private struct RufletFlipTransformModifier: ViewModifier {
+  let details: RufletFlipDetails?
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if let details, details.flipX || details.flipY {
+      content.modifier(
+        RufletProjectionGeometryEffect(
+          transform: CATransform3DMakeScale(
+            details.flipX ? -1 : 1,
+            details.flipY ? -1 : 1,
+            1),
+          alignment: .center,
+          origin: details.origin))
+    } else {
+      content
+    }
+  }
+}
+
+private struct RufletMatrixTransformModifier: ViewModifier {
+  let details: RufletMatrixTransformDetails?
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if let details {
+      content.modifier(
+        RufletProjectionGeometryEffect(
+          transform: details.matrix,
+          alignment: details.alignment,
+          origin: details.origin))
+    } else {
+      content
+    }
+  }
+}
+
+private struct RufletProjectionGeometryEffect: GeometryEffect {
+  let transform: CATransform3D
+  let alignment: RufletAlignment?
+  let origin: CGSize?
+
+  func effectValue(size: CGSize) -> ProjectionTransform {
+    let alignedX: CGFloat
+    let alignedY: CGFloat
+    if let alignment {
+      alignedX = size.width * CGFloat((alignment.x + 1) / 2)
+      alignedY = size.height * CGFloat((alignment.y + 1) / 2)
+    } else {
+      alignedX = 0
+      alignedY = 0
+    }
+    let point = CGPoint(
+      x: alignedX + (origin?.width ?? 0),
+      y: alignedY + (origin?.height ?? 0))
+    return ProjectionTransform(rufletTransformAround(transform, point: point))
   }
 }
 

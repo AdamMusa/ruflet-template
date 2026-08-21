@@ -12,6 +12,7 @@ public struct CupertinoDialogActionControl: View {
         return AnyView(BaseControl(control: control) {
             Button(action: { control.triggerEvent("click") }) {
                 content
+                    .environment(\.rufletInheritsTextColor, true)
                     .frame(maxWidth: .infinity, minHeight: 44)
                     .contentShape(Rectangle())
             }
@@ -21,6 +22,7 @@ public struct CupertinoDialogActionControl: View {
                         size: 17,
                         weight: control.boolean("default", default: false) ? .semibold : .regular))
                 .foregroundStyle(control.boolean("destructive", default: false) ? .red : .accentColor)
+                .tint(control.boolean("destructive", default: false) ? .red : .accentColor)
                 .modifier(
                     RufletTextStyleModifier(
                         style: parseTextStyle(control.dynamicValue("text_style"))))

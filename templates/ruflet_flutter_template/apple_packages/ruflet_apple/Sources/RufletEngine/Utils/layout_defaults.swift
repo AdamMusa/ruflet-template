@@ -29,6 +29,7 @@ enum RufletLayoutDefaults {
   static let alertDialogActionButton = EdgeInsets(
     top: 0, leading: 8, bottom: 0, trailing: 8)
   static let appBarLeadingWidth = 56.0
+  static let appBarBackIconSize = 24.0
   static let appBarTitleSpacing = 16.0
   static let appBarActions = EdgeInsets()
   static let badge = EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4)

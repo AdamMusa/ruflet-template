@@ -6,10 +6,12 @@ final class ModalMissingContentParityTests: XCTestCase {
   func testPinnedMissingContentMessagesAreExact() {
     XCTAssertEqual(
       RufletModalKind.alertDialog.missingContentMessage,
-      "AlertDialog has nothing to display. Provide at minimum one of the following: title, content, actions.")
+      "AlertDialog has nothing to display. Provide at minimum one of the following: title, content, actions."
+    )
     XCTAssertEqual(
       RufletModalKind.cupertinoAlertDialog.missingContentMessage,
-      "CupertinoAlertDialog has nothing to display. Provide at minimum one of the following: title, content, actions.")
+      "CupertinoAlertDialog has nothing to display. Provide at minimum one of the following: title, content, actions."
+    )
     XCTAssertEqual(
       RufletModalKind.bottomSheet.missingContentMessage,
       "BottomSheet.content must be visible")
@@ -18,12 +20,8 @@ final class ModalMissingContentParityTests: XCTestCase {
       "CupertinoButtomSheet.content is empty.")
   }
 
-  func testDialogsAndCupertinoSheetRejectEmptyPendingPresentation() {
-    for kind in [
-      RufletModalKind.alertDialog,
-      .cupertinoAlertDialog,
-      .cupertinoBottomSheet,
-    ] {
+  func testEveryNativeModalRejectsEmptyPresentation() {
+    for kind in RufletModalKind.allCases {
       XCTAssertEqual(
         rufletModalPresentationError(
           kind: kind,
@@ -41,23 +39,7 @@ final class ModalMissingContentParityTests: XCTestCase {
     }
   }
 
-  func testMaterialBottomSheetPresentsItsMissingContentErrorInsideTheSheet() {
-    XCTAssertNil(
-      rufletModalPresentationError(
-        kind: .bottomSheet,
-        open: true,
-        lastOpen: false,
-        hasContent: false))
-    XCTAssertTrue(
-      rufletModalShouldPresent(
-        kind: .bottomSheet,
-        open: true,
-        lastOpen: false,
-        presented: false,
-        hasContent: false))
-  }
-
-  func testValidationOnlyRunsForAnOpeningEdge() {
+  func testValidationRemainsVisibleWhileMalformedModalStaysOpen() {
     for kind in RufletModalKind.allCases {
       XCTAssertNil(
         rufletModalPresentationError(
@@ -65,12 +47,13 @@ final class ModalMissingContentParityTests: XCTestCase {
           open: false,
           lastOpen: false,
           hasContent: false))
-      XCTAssertNil(
+      XCTAssertEqual(
         rufletModalPresentationError(
           kind: kind,
           open: true,
           lastOpen: true,
-          hasContent: false))
+          hasContent: false),
+        kind.missingContentMessage)
     }
   }
 

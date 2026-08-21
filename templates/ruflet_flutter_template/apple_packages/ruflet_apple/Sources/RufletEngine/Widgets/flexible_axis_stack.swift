@@ -1,5 +1,16 @@
 import SwiftUI
 
+private struct RufletCrossAxisStretchAxisKey: EnvironmentKey {
+  static let defaultValue: Axis? = nil
+}
+
+extension EnvironmentValues {
+  var rufletCrossAxisStretchAxis: Axis? {
+    get { self[RufletCrossAxisStretchAxisKey.self] }
+    set { self[RufletCrossAxisStretchAxisKey.self] = newValue }
+  }
+}
+
 /// iOS 16/macOS 13-compatible counterpart of Flutter's Expanded/Flexible
 /// parent-data layout. SwiftUI's ordinary `layoutPriority` does not divide
 /// remaining space by flex factors, so the hosting Row/Column/View measures its
@@ -302,9 +313,13 @@ private struct RufletCrossAxisStretchModifier: ViewModifier {
       // changing where that child's contents paint inside the new box.
       // SwiftUI's frame defaults to centered content, which made a stretched
       // Column center Text and other intrinsic children unexpectedly.
-      content.frame(maxHeight: .infinity, alignment: .top)
+      content
+        .environment(\.rufletCrossAxisStretchAxis, axis)
+        .frame(maxHeight: .infinity, alignment: .top)
     } else if enabled {
-      content.frame(maxWidth: .infinity, alignment: horizontalPaintAlignment.swiftUI)
+      content
+        .environment(\.rufletCrossAxisStretchAxis, axis)
+        .frame(maxWidth: .infinity, alignment: horizontalPaintAlignment.swiftUI)
     } else {
       content
     }

@@ -137,4 +137,32 @@ final class TransportContractTests: XCTestCase {
     XCTAssertEqual(frame.first, 1)
     XCTAssertEqual(frame.last?["page_name"], "p/demo")
   }
+
+  func testWebSocketSendBufferKeepsRapidControlEventsStrictlyFIFO() {
+    var buffer = RufletOrderedSendBuffer()
+    let increment = Data("increment".utf8)
+    let decrement = Data("decrement".utf8)
+    let navigation = Data("navigation".utf8)
+
+    XCTAssertEqual(buffer.enqueue(increment), increment)
+    XCTAssertNil(buffer.enqueue(decrement))
+    XCTAssertNil(buffer.enqueue(navigation))
+    XCTAssertEqual(buffer.complete(), decrement)
+    XCTAssertEqual(buffer.complete(), navigation)
+    XCTAssertNil(buffer.complete())
+    XCTAssertFalse(buffer.isSending)
+    XCTAssertTrue(buffer.frames.isEmpty)
+  }
+
+  func testWebSocketSendBufferResetDropsFramesFromAnOldConnection() {
+    var buffer = RufletOrderedSendBuffer()
+    XCTAssertNotNil(buffer.enqueue(Data("old".utf8)))
+    XCTAssertNil(buffer.enqueue(Data("also-old".utf8)))
+
+    buffer.reset()
+
+    XCTAssertTrue(buffer.frames.isEmpty)
+    XCTAssertFalse(buffer.isSending)
+    XCTAssertEqual(buffer.enqueue(Data("new".utf8)), Data("new".utf8))
+  }
 }

@@ -12,18 +12,33 @@ public struct SliderControl: View {
   public var body: some View {
     let presentation = RufletSliderPresentation(control: control)
     LayoutControl(control: control) {
-      RufletSliderPrimitive(
-        presentation: presentation,
-        focused: focused,
-        onFocusRequest: { focusRequest += 1 },
-        onChange: updateValue,
-        onChangeStart: { value in
-          control.triggerEvent("change_start", data: .double(value))
-        },
-        onChangeEnd: { value in
-          control.triggerEvent("change_end", data: .double(value))
-        }
-      )
+      Group {
+        #if os(iOS)
+          RufletNativeSlider(
+            presentation: presentation,
+            onChange: updateValue,
+            onChangeStart: { value in
+              focusRequest += 1
+              control.triggerEvent("change_start", data: .double(value))
+            },
+            onChangeEnd: { value in
+              control.triggerEvent("change_end", data: .double(value))
+            })
+          .frame(minHeight: 44)
+        #else
+          RufletSliderPrimitive(
+            presentation: presentation,
+            focused: focused,
+            onFocusRequest: { focusRequest += 1 },
+            onChange: updateValue,
+            onChangeStart: { value in
+              control.triggerEvent("change_start", data: .double(value))
+            },
+            onChangeEnd: { value in
+              control.triggerEvent("change_end", data: .double(value))
+            })
+        #endif
+      }
       .padding(presentation.padding)
       .modifier(RufletMouseCursorModifier(cursor: presentation.mouseCursor))
       .overlay {
@@ -89,6 +104,9 @@ struct RufletSliderPresentation {
   let autofocus: Bool
   let usesLegacy2023Appearance: Bool
   let disabled: Bool
+  let hasExplicitActiveColor: Bool
+  let hasExplicitInactiveColor: Bool
+  let hasExplicitThumbColor: Bool
 
   init(control: RufletControl) {
     let rawMinimum = control.number("min") ?? 0
@@ -112,6 +130,9 @@ struct RufletSliderPresentation {
     label = control.string("label")?.replacingOccurrences(
       of: "{value}",
       with: String(format: "%.*f", precision, value))
+    hasExplicitActiveColor = control.string("active_color") != nil
+    hasExplicitInactiveColor = control.string("inactive_color") != nil
+    hasExplicitThumbColor = control.string("thumb_color") != nil
     activeColor = parseColor(control.string("active_color")) ?? .accentColor
     inactiveColor = parseColor(control.string("inactive_color")) ?? .secondary.opacity(0.22)
     secondaryActiveColor =

@@ -1,6 +1,12 @@
 import RufletProtocol
 import SwiftUI
 
+#if os(iOS)
+  import UIKit
+#elseif os(macOS)
+  import AppKit
+#endif
+
 /// Apple-native port of pinned `alert_dialog.dart`.
 @MainActor
 public struct AlertDialogControl: View {
@@ -11,11 +17,7 @@ public struct AlertDialogControl: View {
   }
 
   public var body: some View {
-    if rufletIsIOS {
-      RufletAppleDialogPresenter(control: control)
-    } else {
-      ErrorControl("The native AlertDialog renderer requires iOS.")
-    }
+    RufletAppleDialogPresenter(control: control)
   }
 }
 
@@ -24,149 +26,45 @@ struct RufletAppleDialogPresenter: View {
   @ObservedObject var control: RufletControl
   @State private var presented = false
 
-  private var presentation: RufletAlertDialogPresentation {
-    RufletAlertDialogPresentation(control: control)
-  }
-
   var body: some View {
     ZStack {
       RufletPresentationLifecycleAnchor()
       if let validationError {
-        ErrorControl(validationError)
-      } else if presented {
-        dialogLayer.transition(.scale(scale: 1.06).combined(with: .opacity))
+        rendererError(validationError)
+      } else {
+        switch nativeAlertResolution {
+        case .native(let descriptor):
+          RufletNativeAlertAnchor(
+            presented: presented,
+            descriptor: descriptor,
+            onAction: performNativeAction
+          )
+          .frame(width: 0, height: 0)
+          .accessibilityHidden(true)
+        case .protocolError(let reason):
+          if control.boolean("open", default: false) || presented {
+            rendererError(reason)
+          }
+        }
       }
     }
     .onAppear(perform: synchronizePresentation)
     .onChange(of: control.revision) { _ in synchronizePresentation() }
   }
 
-  private var dialogLayer: some View {
-    ZStack {
-      barrier
-      dialog
-    }
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .ignoresSafeArea()
-    .zIndex(100)
-    .accessibilityElement(children: .contain)
-    .accessibilityAddTraits(.isModal)
-    .modifier(RufletDialogAccessibilityModifier(label: presentation.semanticsLabel))
-  }
-
-  private var barrier: some View {
-    (parseColor(control.string("barrier_color"))
-      ?? Color.black.opacity(0.32))
-      .contentShape(Rectangle())
-      .onTapGesture {
-        if !control.boolean("modal", default: false) { close() }
-      }
-  }
-
-  private var dialog: some View {
-    VStack(spacing: 0) {
-      dialogBody
-      actionArea
-    }
-    .padding(EdgeInsets())
-    .frame(maxWidth: 270)
-    .modifier(
-      RufletDialogSurfaceModifier(
-        shape: RufletCornerShape(radius: radius),
-        background: parseColor(control.string("bgcolor"))))
-    .modifier(
-      RufletDialogClipModifier(
-        shape: RufletCornerShape(radius: radius),
-        behavior: "antialias")
-    )
-    .overlay {
-      if let side = shapeSide {
-        RufletCornerShape(radius: radius).stroke(side.color, lineWidth: side.width)
-      }
-    }
-    .shadow(
-      color: (parseColor(control.string("shadow_color")) ?? .black)
-        .opacity(elevation > 0 ? 0.3 : 0),
-      radius: elevation,
-      y: elevation / 2
-    )
-    .padding(
-      parsePadding(control.dynamicValue("inset_padding"))
-        ?? EdgeInsets(
-          top: 24, leading: 36, bottom: 24, trailing: 36)
-    )
-    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: dialogAlignment)
-    .contentShape(Rectangle())
-  }
-
-  @ViewBuilder
-  private var dialogBody: some View {
-    let body = VStack(spacing: 0) {
-      if let icon = control.buildIconOrWidget("icon", color: iconColor) {
-        icon.padding(
-          parsePadding(control.dynamicValue("icon_padding"))
-            ?? RufletLayoutDefaults.alertDialogIcon(
-              hasTitle: control.value("title") != nil,
-              hasContent: control.value("content") != nil))
-      }
-      if let title = control.buildTextOrWidget("title") {
-        title
-          .modifier(
-            RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("title_text_style")))
-          )
-          .font(.system(size: 17, weight: .semibold))
-          .padding(
-            parsePadding(control.dynamicValue("title_padding"))
-              ?? EdgeInsets(
-                top: 18, leading: 20,
-                bottom: hasBodyContent ? 2 : 18,
-                trailing: 20)
-          )
-          .frame(maxWidth: .infinity, alignment: .center)
-          .multilineTextAlignment(.center)
-          .accessibilityAddTraits(.isHeader)
-      }
-      if let content = control.buildWidget("content") {
-        content
-          .modifier(
-            RufletTextStyleModifier(
-              style: parseTextStyle(control.dynamicValue("content_text_style")))
-          )
-          .font(.system(size: 13))
-          .padding(
-            parsePadding(control.dynamicValue("content_padding"))
-              ?? EdgeInsets(top: 0, leading: 20, bottom: 18, trailing: 20))
-          .frame(maxWidth: .infinity, alignment: .center)
-          .multilineTextAlignment(.center)
-      }
-    }
-
-    if control.boolean("scrollable", default: false) {
-      ScrollView { body }
-    } else {
-      body
-    }
-  }
-
-  private var actionArea: some View {
-    VStack(spacing: 0) {
-      ForEach(control.children("actions")) { action in
-        appleSeparator
-        ControlWidget(control: action)
-          .frame(maxWidth: .infinity, minHeight: 44)
-      }
-    }
-    .padding(parsePadding(control.dynamicValue("actions_padding")) ?? EdgeInsets())
-  }
-
-  private var appleSeparator: some View {
-    Divider()
-      .overlay(appleSeparatorColor)
+  private func rendererError(_ reason: String) -> some View {
+    ErrorControl(
+      "Native renderer protocol error",
+      description: "\(control.type)#\(control.id): \(reason)")
   }
 
   private func synchronizePresentation() {
     let open = control.boolean("open", default: false)
     let lastOpen = control.boolean("_open", default: false)
+    guard case .native = nativeAlertResolution else {
+      if presented { close(reportDismiss: false) }
+      return
+    }
     if rufletModalShouldPresent(
       kind: modalKind,
       open: open,
@@ -181,11 +79,25 @@ struct RufletAppleDialogPresenter: View {
     }
   }
 
-  private func close() {
+  private func close(reportDismiss: Bool = true) {
     withAnimation(dialogAnimation) { presented = false }
     control.updateProperties(["_open": .bool(false)], server: false)
     control.updateProperties(["open": .bool(false)])
-    control.triggerEvent("dismiss")
+    if reportDismiss { control.triggerEvent("dismiss") }
+  }
+
+  private func performNativeAction(_ action: RufletNativeAlertAction) {
+    if action.subscribed {
+      control.backend.triggerControlEvent(
+        controlID: action.id,
+        name: "click",
+        data: .null)
+    }
+    close()
+  }
+
+  private var nativeAlertResolution: RufletNativeAlertResolution {
+    rufletNativeAlertResolution(for: control)
   }
 
   private var hasContent: Bool {
@@ -193,11 +105,8 @@ struct RufletAppleDialogPresenter: View {
       || control.value("content").map { !$0.isNull } ?? false
       || !control.children("actions").isEmpty
   }
-  private var hasBodyContent: Bool {
-    control.value("content").map { !$0.isNull } ?? false
-  }
   private var modalKind: RufletModalKind {
-    .cupertinoAlertDialog
+    control.type == "AlertDialog" ? .alertDialog : .cupertinoAlertDialog
   }
   private var validationError: String? {
     rufletModalPresentationError(
@@ -211,92 +120,437 @@ struct RufletAppleDialogPresenter: View {
       control.dynamicValue("inset_animation"),
       ImplicitAnimationDetails(duration: 0.1, curve: .decelerate))!.animation
   }
-  private var iconColor: Color? { parseColor(control.string("icon_color")) }
-  private var appleSeparatorColor: Color {
-    #if os(iOS)
-      Color(uiColor: .separator).opacity(0.65)
-    #else
-      Color.secondary.opacity(0.3)
-    #endif
+}
+
+struct RufletNativeAlertAction: Equatable {
+  enum Role: Equatable {
+    case `default`
+    case destructive
   }
-  private var elevation: Double { max(control.number("elevation", default: 8) ?? 8, 0) }
-  private var shapeDetails: [String: Any]? { rufletDictionary(control.dynamicValue("shape")) }
-  private var radius: RufletBorderRadius {
-    parseBorderRadius(shapeDetails?["radius"])
-      ?? RufletBorderRadius(topLeft: 14, topRight: 14, bottomLeft: 14, bottomRight: 14)
-  }
-  private var shapeSide: RufletBorderSide? { parseBorderSide(shapeDetails?["side"]) }
-  private var dialogAlignment: Alignment {
-    parseAlignment(control.dynamicValue("alignment"), .center)!.swiftUI
+
+  let id: Int
+  let title: String
+  let role: Role
+  let enabled: Bool
+  let preferred: Bool
+  let subscribed: Bool
+}
+
+struct RufletNativeAlertDescriptor: Equatable {
+  let title: String?
+  let message: String?
+  let actions: [RufletNativeAlertAction]
+  let semanticsLabel: String?
+}
+
+enum RufletNativeAlertResolution: Equatable {
+  case native(RufletNativeAlertDescriptor)
+  case protocolError(String)
+}
+
+private struct RufletNativeAlertProtocolError: LocalizedError {
+  let reason: String
+  var errorDescription: String? { reason }
+}
+
+/// Builds only descriptions which UIKit can represent without private API.
+/// Rails and other protocol producers may place a message and its buttons in
+/// one layout control instead of splitting them into `content` and `actions`.
+/// Transparently walking that wire structure keeps the renderer generic while
+/// still letting `UIAlertController` own all alert chrome and motion.
+@MainActor
+func rufletNativeAlertResolution(for control: RufletControl) -> RufletNativeAlertResolution {
+  do {
+    return .native(try rufletBuildNativeAlertDescriptor(for: control))
+  } catch let error as RufletNativeAlertProtocolError {
+    return .protocolError(error.reason)
+  } catch {
+    return .protocolError(error.localizedDescription)
   }
 }
 
 @MainActor
-struct RufletAlertDialogPresentation {
-  let actionButtonPadding: EdgeInsets?
-  let clipBehavior: String
-  let semanticsLabel: String?
-  let hasExplicitBackground: Bool
-
-  init(control: RufletControl) {
-    actionButtonPadding = parsePadding(control.dynamicValue("action_button_padding"))
-    clipBehavior = control.string("clip_behavior", default: "none")!.lowercased()
-    semanticsLabel = control.string("semantics_label")
-    hasExplicitBackground = parseColor(control.string("bgcolor")) != nil
+func rufletNativeAlertDescriptor(for control: RufletControl) -> RufletNativeAlertDescriptor? {
+  guard case .native(let descriptor) = rufletNativeAlertResolution(for: control) else {
+    return nil
   }
-
-  var clipsContent: Bool { clipBehavior != "none" }
-  var antialiasedClip: Bool { clipBehavior.contains("antialias") }
-  var usesNativeGlassSurface: Bool { !hasExplicitBackground }
+  return descriptor
 }
 
-private struct RufletDialogSurfaceModifier: ViewModifier {
-  let shape: RufletCornerShape
-  let background: Color?
+@MainActor
+private func rufletBuildNativeAlertDescriptor(
+  for control: RufletControl
+) throws -> RufletNativeAlertDescriptor {
+  if control.child("icon") != nil || control.integer("icon") != nil {
+    throw RufletNativeAlertProtocolError(
+      reason: "icon cannot be represented by the public Apple alert API")
+  }
+  if let property = rufletUnsupportedNativeAlertStylingProperty(control) {
+    throw RufletNativeAlertProtocolError(
+      reason: "\(property) cannot be applied by the public Apple alert API")
+  }
 
-  @ViewBuilder
-  func body(content: Content) -> some View {
-    if let background {
-      content.background(background, in: shape)
-    } else {
-      #if os(iOS)
-        if #available(iOS 26.0, *) {
-          content.glassEffect(.regular, in: shape)
-        } else {
-          content.background(.regularMaterial, in: shape)
+  let title = rufletNativePlainText("title", of: control)
+  if rufletHasNonNullValue("title", of: control), title == nil {
+    throw RufletNativeAlertProtocolError(
+      reason: "title must be a string, Text, or SelectableText for a native Apple alert")
+  }
+
+  var message: String?
+  var embeddedActions: [RufletNativeAlertAction] = []
+  if let content = control.child("content") {
+    let parts = try rufletNativeAlertContent(content)
+    let text = parts.messages.filter { !$0.isEmpty }.joined(separator: "\n\n")
+    message = text.isEmpty ? nil : text
+    embeddedActions = parts.actions
+  } else if let text = control.string("content") {
+    message = text
+  } else if rufletHasNonNullValue("content", of: control) {
+    throw RufletNativeAlertProtocolError(
+      reason: "content must be native alert text, actions, or transparent layout wrappers")
+  }
+
+  let declaredActions = try control.children("actions").map(rufletNativeAlertAction)
+  let actions = embeddedActions + declaredActions
+  guard title != nil || message != nil || !actions.isEmpty else {
+    let kind: RufletModalKind =
+      control.type == "AlertDialog" ? .alertDialog : .cupertinoAlertDialog
+    throw RufletNativeAlertProtocolError(reason: kind.missingContentMessage)
+  }
+  return RufletNativeAlertDescriptor(
+    title: title,
+    message: message,
+    actions: actions,
+    semanticsLabel: control.string("semantics_label"))
+}
+
+private struct RufletNativeAlertContent {
+  var messages: [String] = []
+  var actions: [RufletNativeAlertAction] = []
+}
+
+@MainActor
+private func rufletNativeAlertContent(_ source: RufletControl) throws -> RufletNativeAlertContent {
+  let source = source.unwrapComponent()
+  if let text = rufletNativePlainText(source) {
+    return RufletNativeAlertContent(messages: [text])
+  }
+  if rufletNativeAlertButtonTypes.contains(source.type) {
+    return RufletNativeAlertContent(actions: [try rufletNativeAlertAction(source)])
+  }
+
+  let children: [RufletControl]
+  switch source.type {
+  case "Column", "Row", "Stack", "ResponsiveRow", "ListView", "GridView":
+    children = source.children("controls")
+  case "Container", "Center", "SafeArea", "TransparentPointer", "IgnorePointer":
+    guard let content = source.child("content") else {
+      throw RufletNativeAlertProtocolError(
+        reason: "\(source.type)#\(source.id) has no visible content")
+    }
+    children = [content]
+  default:
+    throw RufletNativeAlertProtocolError(
+      reason: "\(source.type)#\(source.id) is not representable by the public Apple alert API")
+  }
+  guard !children.isEmpty else {
+    throw RufletNativeAlertProtocolError(
+      reason: "\(source.type)#\(source.id) has no visible alert content")
+  }
+
+  var result = RufletNativeAlertContent()
+  for child in children {
+    let part = try rufletNativeAlertContent(child)
+    result.messages.append(contentsOf: part.messages)
+    result.actions.append(contentsOf: part.actions)
+  }
+  return result
+}
+
+private let rufletNativeAlertButtonTypes: Set<String> = [
+  "AdaptiveButton", "Button", "CupertinoButton", "CupertinoDialogAction",
+  "CupertinoFilledButton", "CupertinoTintedButton", "FilledButton",
+  "FilledTonalButton", "OutlinedButton", "TextButton",
+]
+
+@MainActor
+private func rufletNativeAlertAction(_ action: RufletControl) throws -> RufletNativeAlertAction {
+  let action = action.unwrapComponent()
+  guard rufletNativeAlertButtonTypes.contains(action.type) else {
+    throw RufletNativeAlertProtocolError(
+      reason: "\(action.type)#\(action.id) is not a native alert action")
+  }
+  guard let title = rufletNativePlainText("content", of: action), !title.isEmpty else {
+    throw RufletNativeAlertProtocolError(
+      reason: "\(action.type)#\(action.id) action content must resolve to non-empty text")
+  }
+  let role: RufletNativeAlertAction.Role =
+    action.boolean("destructive", default: false) ? .destructive : .default
+  return RufletNativeAlertAction(
+    id: action.id,
+    title: title,
+    role: role,
+    enabled: !action.disabled,
+    preferred: action.boolean("default", default: false),
+    subscribed: action.hasEventHandler("click"))
+}
+
+@MainActor
+private func rufletHasNonNullValue(_ name: String, of control: RufletControl) -> Bool {
+  guard let value = control.value(name) else { return false }
+  return !value.isNull
+}
+
+@MainActor
+private func rufletUnsupportedNativeAlertStylingProperty(_ control: RufletControl) -> String? {
+  [
+    "title_padding", "content_padding", "actions_padding", "actions_alignment",
+    "shape", "inset_padding", "icon_padding", "bgcolor", "action_button_padding",
+    "shadow_color", "elevation", "clip_behavior", "icon_color", "scrollable",
+    "actions_overflow_button_spacing", "alignment", "content_text_style",
+    "title_text_style", "barrier_color",
+  ].first { rufletHasNonNullValue($0, of: control) }
+}
+
+#if os(iOS)
+  /// An invisible SwiftUI bridge whose presented controller is the public
+  /// UIKit alert. No alert chrome is drawn by Ruflet, so iOS remains free to
+  /// update materials, spacing, typography and motion in future releases.
+  @MainActor
+  private struct RufletNativeAlertAnchor: UIViewControllerRepresentable {
+    let presented: Bool
+    let descriptor: RufletNativeAlertDescriptor
+    let onAction: (RufletNativeAlertAction) -> Void
+
+    func makeCoordinator() -> Coordinator {
+      Coordinator(onAction: onAction)
+    }
+
+    func makeUIViewController(context: Context) -> UIViewController {
+      let host = UIViewController()
+      host.view.backgroundColor = .clear
+      host.view.isUserInteractionEnabled = false
+      return host
+    }
+
+    func updateUIViewController(_ host: UIViewController, context: Context) {
+      context.coordinator.onAction = onAction
+      context.coordinator.update(
+        host: host,
+        presented: presented,
+        descriptor: descriptor)
+    }
+
+    static func dismantleUIViewController(_ host: UIViewController, coordinator: Coordinator) {
+      coordinator.dismiss(from: host, animated: false)
+    }
+
+    @MainActor
+    final class Coordinator: NSObject {
+      var onAction: (RufletNativeAlertAction) -> Void
+      private weak var alert: UIAlertController?
+      private var descriptor: RufletNativeAlertDescriptor?
+      private var wantsPresentation = false
+      private var suppressUntilClosed = false
+
+      init(onAction: @escaping (RufletNativeAlertAction) -> Void) {
+        self.onAction = onAction
+      }
+
+      func update(
+        host: UIViewController,
+        presented: Bool,
+        descriptor: RufletNativeAlertDescriptor
+      ) {
+        wantsPresentation = presented
+        if !presented {
+          suppressUntilClosed = false
+          dismiss(from: host, animated: true)
+          return
         }
-      #else
-        content.background(.regularMaterial, in: shape)
-      #endif
+        guard !suppressUntilClosed else { return }
+        if self.descriptor == descriptor, alert != nil { return }
+        if alert != nil {
+          dismiss(from: host, animated: false) { [weak self, weak host] in
+            guard let self, let host else { return }
+            self.presentIfPossible(from: host, descriptor: descriptor)
+          }
+        } else {
+          presentIfPossible(from: host, descriptor: descriptor)
+        }
+      }
+
+      func dismiss(
+        from host: UIViewController,
+        animated: Bool,
+        completion: (() -> Void)? = nil
+      ) {
+        descriptor = nil
+        guard let alert else {
+          completion?()
+          return
+        }
+        self.alert = nil
+        if alert.presentingViewController != nil {
+          alert.dismiss(animated: animated, completion: completion)
+        } else {
+          host.dismiss(animated: animated, completion: completion)
+        }
+      }
+
+      private func presentIfPossible(
+        from host: UIViewController,
+        descriptor: RufletNativeAlertDescriptor
+      ) {
+        guard wantsPresentation, !suppressUntilClosed, alert == nil else { return }
+        guard host.viewIfLoaded?.window != nil else {
+          DispatchQueue.main.async { [weak self, weak host] in
+            guard let self, let host else { return }
+            self.presentIfPossible(from: host, descriptor: descriptor)
+          }
+          return
+        }
+
+        let alert = UIAlertController(
+          title: descriptor.title,
+          message: descriptor.message,
+          preferredStyle: .alert)
+        alert.view.accessibilityLabel = descriptor.semanticsLabel
+        for item in descriptor.actions {
+          let nativeAction = UIAlertAction(
+            title: item.title,
+            style: item.role == .destructive ? .destructive : .default
+          ) { [weak self] _ in
+            guard let self else { return }
+            self.alert = nil
+            self.descriptor = nil
+            self.suppressUntilClosed = true
+            self.onAction(item)
+          }
+          nativeAction.isEnabled = item.enabled
+          alert.addAction(nativeAction)
+          if item.preferred { alert.preferredAction = nativeAction }
+        }
+        self.descriptor = descriptor
+        self.alert = alert
+        host.present(alert, animated: true)
+      }
     }
   }
-}
+#elseif os(macOS)
+  /// An invisible SwiftUI bridge to AppKit's public `NSAlert` sheet API.
+  @MainActor
+  private struct RufletNativeAlertAnchor: NSViewControllerRepresentable {
+    let presented: Bool
+    let descriptor: RufletNativeAlertDescriptor
+    let onAction: (RufletNativeAlertAction) -> Void
 
-private struct RufletDialogClipModifier: ViewModifier {
-  let shape: RufletCornerShape
-  let behavior: String
+    func makeCoordinator() -> Coordinator {
+      Coordinator(onAction: onAction)
+    }
 
-  @ViewBuilder
-  func body(content: Content) -> some View {
-    if behavior == "none" {
-      content
-    } else {
-      content.clipShape(
-        shape,
-        style: FillStyle(antialiased: behavior.contains("antialias")))
+    func makeNSViewController(context: Context) -> NSViewController {
+      NSViewController()
+    }
+
+    func updateNSViewController(_ host: NSViewController, context: Context) {
+      context.coordinator.onAction = onAction
+      context.coordinator.update(
+        host: host,
+        presented: presented,
+        descriptor: descriptor)
+    }
+
+    static func dismantleNSViewController(_ host: NSViewController, coordinator: Coordinator) {
+      coordinator.dismiss(animated: false)
+    }
+
+    @MainActor
+    final class Coordinator: NSObject {
+      var onAction: (RufletNativeAlertAction) -> Void
+      private var alert: NSAlert?
+      private var descriptor: RufletNativeAlertDescriptor?
+      private var wantsPresentation = false
+      private var suppressUntilClosed = false
+
+      init(onAction: @escaping (RufletNativeAlertAction) -> Void) {
+        self.onAction = onAction
+      }
+
+      func update(
+        host: NSViewController,
+        presented: Bool,
+        descriptor: RufletNativeAlertDescriptor
+      ) {
+        wantsPresentation = presented
+        if !presented {
+          suppressUntilClosed = false
+          dismiss(animated: true)
+          return
+        }
+        guard !suppressUntilClosed else { return }
+        if self.descriptor == descriptor, alert != nil { return }
+        dismiss(animated: false)
+        presentIfPossible(from: host, descriptor: descriptor)
+      }
+
+      func dismiss(animated: Bool) {
+        _ = animated
+        descriptor = nil
+        guard let alert else { return }
+        self.alert = nil
+        let window = alert.window
+        if let parent = window.sheetParent {
+          parent.endSheet(window)
+        }
+        window.orderOut(nil)
+      }
+
+      private func presentIfPossible(
+        from host: NSViewController,
+        descriptor: RufletNativeAlertDescriptor
+      ) {
+        guard wantsPresentation, !suppressUntilClosed, alert == nil else { return }
+        guard let window = host.view.window else {
+          DispatchQueue.main.async { [weak self, weak host] in
+            guard let self, let host else { return }
+            self.presentIfPossible(from: host, descriptor: descriptor)
+          }
+          return
+        }
+
+        let alert = NSAlert()
+        if let title = descriptor.title {
+          alert.messageText = title
+          alert.informativeText = descriptor.message ?? ""
+        } else {
+          alert.messageText = descriptor.message ?? ""
+        }
+        alert.alertStyle = .informational
+        for item in descriptor.actions {
+          let button = alert.addButton(withTitle: item.title)
+          button.isEnabled = item.enabled
+          if #available(macOS 11.0, *), item.role == .destructive {
+            button.hasDestructiveAction = true
+          }
+          if item.preferred { button.keyEquivalent = "\r" }
+        }
+        if let semanticsLabel = descriptor.semanticsLabel {
+          alert.window.setAccessibilityLabel(semanticsLabel)
+        }
+        self.descriptor = descriptor
+        self.alert = alert
+        alert.beginSheetModal(for: window) { [weak self] response in
+          guard let self else { return }
+          self.alert = nil
+          self.descriptor = nil
+          let first = NSApplication.ModalResponse.alertFirstButtonReturn.rawValue
+          let index = response.rawValue - first
+          guard descriptor.actions.indices.contains(index) else { return }
+          self.suppressUntilClosed = true
+          self.onAction(descriptor.actions[index])
+        }
+      }
     }
   }
-}
-
-private struct RufletDialogAccessibilityModifier: ViewModifier {
-  let label: String?
-
-  @ViewBuilder
-  func body(content: Content) -> some View {
-    if let label {
-      content.accessibilityLabel(label)
-    } else {
-      content
-    }
-  }
-}
+#endif

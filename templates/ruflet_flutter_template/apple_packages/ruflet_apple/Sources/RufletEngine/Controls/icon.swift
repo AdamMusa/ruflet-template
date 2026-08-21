@@ -5,6 +5,7 @@ public struct IconControl: View {
   @ObservedObject public var control: RufletControl
   @EnvironmentObject private var registry: RufletExtensionRegistry
   @Environment(\.rufletInheritedIconSize) private var inheritedIconSize
+  @Environment(\.rufletCrossAxisStretchAxis) private var crossAxisStretchAxis
 
   public init(control: RufletControl) { self.control = control }
 
@@ -20,7 +21,8 @@ public struct IconControl: View {
           icon: icon,
           presentation: presentation,
           color: parseColor(control.string("color")),
-          semanticsLabel: control.string("semantics_label"))
+          semanticsLabel: control.string("semantics_label"),
+          crossAxisStretchAxis: crossAxisStretchAxis)
       }
     }
   }
@@ -116,6 +118,7 @@ private struct RufletScaledIcon: View {
   let presentation: RufletIconPresentation
   let color: Color?
   let semanticsLabel: String?
+  let crossAxisStretchAxis: Axis?
 
   @ScaledMetric(relativeTo: .body) private var textScale: CGFloat = 1
 
@@ -132,9 +135,25 @@ private struct RufletScaledIcon: View {
     .frame(width: resolvedSize, height: resolvedSize)
     .blendMode(presentation.blendMode)
     .modifier(RufletIconShadowModifier(shadows: presentation.shadows))
+    .modifier(RufletStretchedIconFrame(axis: crossAxisStretchAxis))
     .accessibilityLabel(semanticsLabel ?? "")
     if let color {
       content.foregroundStyle(color)
+    } else {
+      content
+    }
+  }
+}
+
+private struct RufletStretchedIconFrame: ViewModifier {
+  let axis: Axis?
+
+  @ViewBuilder
+  func body(content: Content) -> some View {
+    if axis == .vertical {
+      content.frame(maxWidth: .infinity, alignment: .center)
+    } else if axis == .horizontal {
+      content.frame(maxHeight: .infinity, alignment: .center)
     } else {
       content
     }

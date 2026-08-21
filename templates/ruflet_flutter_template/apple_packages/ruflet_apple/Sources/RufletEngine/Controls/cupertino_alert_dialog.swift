@@ -10,10 +10,6 @@ public struct CupertinoAlertDialogControl: View {
   }
 
   public var body: some View {
-    if rufletIsIOS {
-      RufletAppleDialogPresenter(control: control)
-    } else {
-      ErrorControl("The native CupertinoAlertDialog renderer requires iOS.")
-    }
+    RufletAppleDialogPresenter(control: control)
   }
 }

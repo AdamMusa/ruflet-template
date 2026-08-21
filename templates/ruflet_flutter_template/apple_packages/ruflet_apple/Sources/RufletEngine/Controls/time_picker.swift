@@ -5,6 +5,7 @@ import SwiftUI
 @MainActor
 public struct TimePickerControl: View {
   @ObservedObject public var control: RufletControl
+  @Environment(\.rufletPageTheme) private var pageTheme
   @State private var presented = false
   @State private var draft = Date()
   @State private var entryMode = RufletTimeEntryMode.dial
@@ -14,13 +15,23 @@ public struct TimePickerControl: View {
   }
 
   public var body: some View {
-    RufletPickerPresenter(
-      presented: $presented,
-      barrierColor: presentation.barrierColor,
-      modal: presentation.modal,
-      onDismiss: presentationDismissed
-    ) {
-      pickerSheet
+    Group {
+      if let presentationError,
+        control.boolean("open", default: false) || presented
+      {
+        ErrorControl(
+          "Native renderer protocol error",
+          description: "\(control.type)#\(control.id): \(presentationError)")
+      } else {
+        RufletPickerPresenter(
+          presented: $presented,
+          modal: presentation.modal,
+          preferredSize: .medium,
+          onDismiss: presentationDismissed
+        ) {
+          pickerSheet
+        }
+      }
     }
     .onAppear(perform: synchronizePresentation)
     .onChange(of: control.revision) { _ in synchronizePresentation() }
@@ -28,9 +39,11 @@ public struct TimePickerControl: View {
 
   private var pickerSheet: some View {
     let presentation = presentation
-    return NavigationView {
+    return NavigationStack {
       pickerContent(presentation: presentation)
         .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .rufletInlineNavigationTitle()
         .toolbar {
           ToolbarItem(placement: .cancellationAction) {
             Button(presentation.cancelText) { close(nil) }
@@ -48,6 +61,8 @@ public struct TimePickerControl: View {
             Button(presentation.confirmText) { close(timeOfDay(from: draft)) }
           }
         }
+        .background(Color.rufletSystemBackground)
+        .tint(pageTheme?.appleAccentColor ?? .accentColor)
     }
   }
 
@@ -71,7 +86,8 @@ public struct TimePickerControl: View {
         locale: presentation.effectiveLocale,
         countdownDuration: nil
       ) { value, _ in draft = value }
-      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .frame(maxWidth: .infinity)
+      .frame(height: entryMode.usesDial ? 216 : 44)
       if entryMode == .input, let error = presentation.errorInvalidText {
         Text(error).font(.caption).foregroundStyle(.clear).accessibilityHidden(true)
       }
@@ -79,7 +95,7 @@ public struct TimePickerControl: View {
     if presentation.orientation == .landscape {
       HStack(alignment: .center, spacing: 12) { content }
     } else {
-      VStack(spacing: 12) { content }
+      VStack(spacing: 16) { content }
     }
   }
 
@@ -98,6 +114,10 @@ public struct TimePickerControl: View {
   }
 
   func synchronizePresentation() {
+    guard presentationError == nil else {
+      if presented { presented = false }
+      return
+    }
     switch rufletPickerPresentationAction(
       open: control.boolean("open", default: false), presented: presented)
     {
@@ -149,6 +169,10 @@ public struct TimePickerControl: View {
   var presentation: RufletTimePickerPresentation {
     RufletTimePickerPresentation(control: control)
   }
+
+  private var presentationError: String? {
+    rufletNativePickerProtocolError(for: control)
+  }
 }
 
 enum RufletTimeEntryMode: String, CaseIterable, RufletStringEnum {
@@ -176,7 +200,6 @@ struct RufletTimePickerPresentation {
   let hourFormat: String?
   let effectiveLocale: Locale?
   let modal: Bool
-  let barrierColor: Color?
   let switchToTimerIcon: RufletAppleIcon?
   let switchToInputIcon: RufletAppleIcon?
 
@@ -201,7 +224,6 @@ struct RufletTimePickerPresentation {
     default: effectiveLocale = locale
     }
     modal = control.boolean("modal", default: false)
-    barrierColor = parseColor(control.string("barrier_color"))
     switchToTimerIcon = Self.icon(control, property: "switch_to_timer_icon")
     switchToInputIcon = Self.icon(control, property: "switch_to_input_icon")
   }

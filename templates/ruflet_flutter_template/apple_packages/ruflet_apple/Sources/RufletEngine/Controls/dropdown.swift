@@ -18,7 +18,6 @@ public struct DropdownControl: View {
   @State private var selectedValue: String?
   @State private var text: String
   @State private var focused = false
-  @State private var menuPresented = false
   @State private var focusRequest = 0
   @State private var invokeToken: UUID?
 
@@ -33,7 +32,8 @@ public struct DropdownControl: View {
     LayoutControl(control: control) {
       VStack(alignment: .leading, spacing: 4) {
         if let label = control.buildTextOrWidget("label") {
-          label.modifier(RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("label_style"))))
+          label.modifier(
+            RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("label_style"))))
         }
         field
         supportingText
@@ -55,9 +55,8 @@ public struct DropdownControl: View {
       }
       .modifier(RufletDropdownChrome(control: control, focused: focused))
     } else {
-      Button {
-        guard !control.disabled else { return }
-        menuPresented.toggle()
+      Menu {
+        nativeMenuItems(filteredOptions)
       } label: {
         HStack(spacing: 6) {
           if let leading = control.buildIconOrWidget("leading_icon") { leading }
@@ -76,8 +75,7 @@ public struct DropdownControl: View {
         .modifier(RufletDropdownChrome(control: control, focused: focused))
       }
       .buttonStyle(.plain)
-      .disabled(control.disabled)
-      .popover(isPresented: $menuPresented) { optionPanel }
+      .disabled(control.disabled || filteredOptions.isEmpty)
     }
   }
 
@@ -132,22 +130,21 @@ public struct DropdownControl: View {
         onChange: textChanged,
         onSubmit: { _ in
           guard control.boolean("enable_search", default: true),
-                let match = filteredOptions.first
+            let match = filteredOptions.first
           else { return }
           select(match)
         },
         onFocusChange: focusChanged,
         onSelectionChange: { _ in },
         onTap: {},
-        onTapOutside: {}))
-      .frame(minHeight: 24)
+        onTapOutside: {})
+    )
+    .frame(minHeight: 24)
   }
 
   private func menuButton(iconProperty: String) -> some View {
-    Button {
-      guard !control.disabled else { return }
-      focusRequest &+= 1
-      menuPresented.toggle()
+    Menu {
+      nativeMenuItems(filteredOptions)
     } label: {
       if let icon = control.buildIconOrWidget(iconProperty) {
         icon
@@ -156,43 +153,46 @@ public struct DropdownControl: View {
       }
     }
     .buttonStyle(.plain)
-    .disabled(control.disabled)
-    .popover(isPresented: $menuPresented) { optionPanel }
+    .disabled(control.disabled || filteredOptions.isEmpty)
+    .simultaneousGesture(
+      TapGesture().onEnded {
+        guard !control.disabled else { return }
+        focusRequest &+= 1
+      })
   }
 
-  private var optionPanel: some View {
-    ScrollView {
-      LazyVStack(alignment: .leading, spacing: 0) {
-        ForEach(filteredOptions, id: \.id) { option in
-          Button {
-            select(option)
-            menuPresented = false
-          } label: {
-            RufletDropdownOptionLabel(option: option, richSlots: true)
-              .frame(maxWidth: .infinity, alignment: .leading)
-              .contentShape(Rectangle())
-          }
-          .buttonStyle(.plain)
-          .disabled(option.disabled || control.disabled)
-          .padding(.horizontal, 8)
-          .padding(.vertical, presentation.dense ? 4 : 8)
+  @ViewBuilder
+  private func nativeMenuItems(_ items: [RufletDropdownOption]) -> some View {
+    if items.isEmpty {
+      if let hintText = control.string("hint_text"), !hintText.isEmpty {
+        Text(hintText)
+      }
+    } else {
+      ForEach(items, id: \.id) { option in
+        Button {
+          select(option)
+        } label: {
+          RufletDropdownOptionLabel(option: option, richSlots: true)
         }
+        .disabled(option.disabled || control.disabled)
       }
     }
-    .frame(maxHeight: presentation.menuHeight)
-    .modifier(RufletDropdownMenuSurfaceModifier(presentation: presentation))
   }
 
   @ViewBuilder
   private var supportingText: some View {
     if let error = control.string("error_text") {
       Text(error)
-        .modifier(RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("error_style"))))
+        .modifier(
+          RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("error_style")))
+        )
         .foregroundStyle(.red)
         .font(.caption)
     } else if let helper = control.string("helper_text") {
       Text(helper)
-        .modifier(RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("helper_style"))))
+        .modifier(
+          RufletTextStyleModifier(style: parseTextStyle(control.dynamicValue("helper_style")))
+        )
         .font(.caption)
     }
   }
@@ -258,14 +258,16 @@ public struct DropdownControl: View {
     control.children("options").compactMap { option in
       option.notifyParent = true
       guard let value = option.string("key") ?? option.string("text"),
-            let label = option.string("text") ?? option.string("key")
+        let label = option.string("text") ?? option.string("key")
       else { return nil }
       return RufletDropdownOption(control: option, value: value, label: label)
     }
   }
 
   private var filteredOptions: [RufletDropdownOption] {
-    guard editable, control.boolean("enable_filter", default: false), !text.isEmpty else { return options }
+    guard editable, control.boolean("enable_filter", default: false), !text.isEmpty else {
+      return options
+    }
     return options.filter { $0.label.localizedCaseInsensitiveContains(text) }
   }
 
@@ -298,7 +300,9 @@ struct RufletDropdownOptionLabel: View {
         content
       } else {
         Text(option.label)
-          .modifier(RufletTextStyleModifier(style: parseTextStyle(option.control.dynamicValue("text_style"))))
+          .modifier(
+            RufletTextStyleModifier(
+              style: parseTextStyle(option.control.dynamicValue("text_style"))))
       }
       if richSlots, let trailing = option.control.buildIconOrWidget("trailing_icon") { trailing }
     }
@@ -350,11 +354,15 @@ struct RufletDropdownPresentation {
   var resolvedFixedSize: CGSize? { menuStyle?.fixedSize.resolve(states) }
   var resolvedAlignment: Alignment { menuStyle?.alignment?.swiftUI ?? .leading }
   var radius: CGFloat {
-    guard let details = rufletDictionary(rawMenuStyle), let shape = details["shape"] else { return 10 }
+    guard let details = rufletDictionary(rawMenuStyle), let shape = details["shape"] else {
+      return 10
+    }
     let shapeDetails = rufletDictionary(shape)
-    return CGFloat(parseBorderRadius(
-      shapeDetails?["border_radius"] ?? shapeDetails?["radius"] ?? shape,
-      RufletBorderRadius(topLeft: 10, topRight: 10, bottomLeft: 10, bottomRight: 10))?.uniform ?? 10)
+    return CGFloat(
+      parseBorderRadius(
+        shapeDetails?["border_radius"] ?? shapeDetails?["radius"] ?? shape,
+        RufletBorderRadius(topLeft: 10, topRight: 10, bottomLeft: 10, bottomRight: 10))?.uniform
+        ?? 10)
   }
 }
 
@@ -367,7 +375,8 @@ private struct RufletDropdownMenuSurfaceModifier: ViewModifier {
     let maximum = presentation.resolvedMaximumSize
     let width = presentation.menuWidth ?? fixed?.width
     let height = fixed?.height
-    return content
+    return
+      content
       .padding(presentation.resolvedPadding)
       .frame(width: width, height: height)
       .frame(
@@ -375,7 +384,8 @@ private struct RufletDropdownMenuSurfaceModifier: ViewModifier {
         maxWidth: maximum?.width,
         minHeight: minimum?.height,
         maxHeight: maximum?.height,
-        alignment: presentation.resolvedAlignment)
+        alignment: presentation.resolvedAlignment
+      )
       .background(presentation.resolvedBackgroundColor ?? Color.rufletSystemBackground)
       .clipShape(RoundedRectangle(cornerRadius: presentation.radius, style: .continuous))
       .overlay {
@@ -404,7 +414,8 @@ private struct RufletDropdownChrome: ViewModifier {
             outline: control.string("border", default: "outline")?.lowercased() == "outline",
             filled: control.boolean("filled", default: false),
             dense: dense,
-            collapsed: control.boolean("collapsed", default: false)))
+            collapsed: control.boolean("collapsed", default: false))
+      )
       .background(backgroundColor)
       .clipShape(RufletCornerShape(radius: radius))
       .overlay { border }
@@ -416,25 +427,29 @@ private struct RufletDropdownChrome: ViewModifier {
     case .none:
       EmptyView()
     case .underline:
-      Rectangle().fill(borderColor).frame(height: borderWidth).frame(maxHeight: .infinity, alignment: .bottom)
+      Rectangle().fill(borderColor).frame(height: borderWidth).frame(
+        maxHeight: .infinity, alignment: .bottom)
     case .outline:
       RufletCornerShape(radius: radius).stroke(borderColor, lineWidth: borderWidth)
     }
   }
 
   private var radius: RufletBorderRadius {
-    parseBorderRadius(control.dynamicValue("border_radius"),
+    parseBorderRadius(
+      control.dynamicValue("border_radius"),
       RufletBorderRadius(topLeft: 5, topRight: 5, bottomLeft: 5, bottomRight: 5))!
   }
   private var borderWidth: CGFloat {
-    CGFloat(focused
-      ? control.number("focused_border_width") ?? control.number("border_width") ?? 2
-      : control.number("border_width") ?? 1)
+    CGFloat(
+      focused
+        ? control.number("focused_border_width") ?? control.number("border_width") ?? 2
+        : control.number("border_width") ?? 1)
   }
   private var borderColor: Color {
-    parseColor(focused
-      ? control.string("focused_border_color") ?? control.string("border_color")
-      : control.string("border_color"))
+    parseColor(
+      focused
+        ? control.string("focused_border_color") ?? control.string("border_color")
+        : control.string("border_color"))
       ?? (focused ? .accentColor : .secondary.opacity(0.6))
   }
   private var backgroundColor: Color {
@@ -451,8 +466,8 @@ private enum RufletDropdownError: Error {
   case unknownMethod(String)
 }
 
-private extension TextAlignment {
-  var frameAlignment: Alignment {
+extension TextAlignment {
+  fileprivate var frameAlignment: Alignment {
     switch self {
     case .leading: .leading
     case .center: .center

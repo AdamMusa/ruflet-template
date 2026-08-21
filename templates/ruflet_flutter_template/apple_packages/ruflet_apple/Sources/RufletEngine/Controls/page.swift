@@ -1,6 +1,30 @@
 import RufletProtocol
 import SwiftUI
 
+/// Local acknowledgement state while a native pop waits for the Ruby tree.
+///
+/// Wire control IDs identify the exact View occurrence. Routes cannot do that:
+/// a valid stack may contain the same route more than once, and filtering by a
+/// route string would remove every occurrence while waiting for Ruby's patch.
+struct RufletPagePopState: Equatable {
+  private(set) var pendingViewIDs: Set<Int> = []
+  private(set) var sentViewIDs: Set<Int> = []
+
+  func isPending(viewID: Int) -> Bool {
+    pendingViewIDs.contains(viewID)
+  }
+
+  mutating func mark(viewID: Int) -> Bool {
+    pendingViewIDs.insert(viewID)
+    return sentViewIDs.insert(viewID).inserted
+  }
+
+  mutating func reconcile(publishedViewIDs: Set<Int>) {
+    pendingViewIDs.formIntersection(publishedViewIDs)
+    sentViewIDs.formIntersection(publishedViewIDs)
+  }
+}
+
 /// Apple-native port of Flet's `PageControl`.
 @MainActor
 public struct PageControl: View {
@@ -13,13 +37,14 @@ public struct PageControl: View {
   @State private var overlayListener: UUID?
   @State private var dialogsListener: UUID?
   @State private var topLayersRevision = 0
-  @State private var pendingPoppedRoutes: Set<String> = []
-  @State private var sentPoppedRoutes: Set<String> = []
+  @State private var popState = RufletPagePopState()
   @State private var previousLocales: [String] = []
   @State private var loadedFontSources: Set<String> = []
+  @State private var physicalSafeAreaInsets: RufletSafeAreaInsets
 
   public init(control: RufletControl) {
     self.control = control
+    _physicalSafeAreaInsets = State(initialValue: rufletCurrentWindowSafeAreaInsets())
   }
 
   public var body: some View {
@@ -27,11 +52,18 @@ public struct PageControl: View {
       PageContext(themeMode: themeMode, theme: activePageTheme, design: pageDesign) {
         GeometryReader { proxy in
           pageStack
+            .environment(\.rufletSafeAreaInsets, physicalSafeAreaInsets)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background {
-              RufletPagePlatformBridge(
-                control: control,
-                title: control.string("title", default: "")!)
+              ZStack {
+                RufletPagePlatformBridge(
+                  control: control,
+                  title: control.string("title", default: "")!)
+                RufletWindowSafeAreaProbe { insets in
+                  if physicalSafeAreaInsets != insets { physicalSafeAreaInsets = insets }
+                }
+                .frame(width: 0, height: 0)
+              }
             }
             .overlay(alignment: .topLeading) {
               RufletPageKeyboardMonitor(
@@ -42,6 +74,11 @@ public struct PageControl: View {
             .onAppear { pageSizeChanged(proxy.size) }
             .onChange(of: proxy.size, perform: pageSizeChanged)
         }
+        // Measure the full viewport here, before passing its physical insets
+        // to the Flet scaffold. Ignoring the safe area on a descendant makes
+        // GeometryProxy.safeAreaInsets collapse to zero, which puts native
+        // bar content under the Dynamic Island and home indicator.
+        .ignoresSafeArea(.container)
       }
       .environment(\.locale, localeConfiguration.locale ?? environmentLocale)
       .environment(
@@ -101,7 +138,7 @@ public struct PageControl: View {
   }
 
   private var effectiveViews: [RufletControl] {
-    control.children("views").filter { !pendingPoppedRoutes.contains(route(of: $0)) }
+    control.children("views").filter { !popState.isPending(viewID: $0.id) }
   }
 
   private func mount() {
@@ -145,9 +182,7 @@ public struct PageControl: View {
 
   private func controlUpdated() {
     synchronizeThemeCache()
-    let publishedRoutes = Set(control.children("views").map(route(of:)))
-    pendingPoppedRoutes.formIntersection(publishedRoutes)
-    sentPoppedRoutes.formIntersection(publishedRoutes)
+    popState.reconcile(publishedViewIDs: Set(control.children("views").map(\.id)))
     Task { await loadFontsIfNeeded() }
   }
 
@@ -186,7 +221,7 @@ public struct PageControl: View {
 
   private func requestPop(_ top: RufletControl) {
     let views = effectiveViews
-    guard views.last === top else { return }
+    guard views.last?.id == top.id else { return }
     if top.boolean("can_pop", default: true) {
       completePop(top, viewCount: views.count)
     } else if top.boolean("on_confirm_pop", default: false) {
@@ -207,14 +242,15 @@ public struct PageControl: View {
   }
 
   private func markPoppedView(_ view: RufletControl) {
-    guard effectiveViews.count > 1 else { return }
-    markPopped(route(of: view))
+    let views = effectiveViews
+    guard views.count > 1, views.last?.id == view.id else { return }
+    markPopped(view)
   }
 
-  private func markPopped(_ route: String) {
-    pendingPoppedRoutes.insert(route)
-    if sentPoppedRoutes.insert(route).inserted {
-      control.triggerEventWithoutSubscribers("view_pop", data: ["route": .string(route)])
+  private func markPopped(_ view: RufletControl) {
+    if popState.mark(viewID: view.id) {
+      control.triggerEventWithoutSubscribers(
+        "view_pop", data: ["route": .string(route(of: view))])
     }
   }
 

@@ -38,7 +38,7 @@ enum RufletProtocolDiagnostics {
         fields.append("name=\(payload["name"]?.text ?? "nil")")
       case .updateControl:
         fields.append("target=\(payload["id"]?.integer.map(String.init) ?? "nil")")
-        fields.append("properties=\(payload["properties"]?.map?.keys.sorted().joined(separator: ",") ?? "")")
+        fields.append("props=\(payload["props"]?.map?.keys.sorted().joined(separator: ",") ?? "")")
       case .invokeControlMethod:
         fields.append("target=\(payload["control_id"]?.integer.map(String.init) ?? "nil")")
         fields.append("name=\(payload["name"]?.text ?? "nil")")

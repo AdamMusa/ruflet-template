@@ -25,12 +25,16 @@ struct RufletAppleAppBar: View {
   @Environment(\.rufletViewScrolledUnder) private var scrolledUnder
   @Environment(\.rufletPageTheme) private var pageTheme
   @Environment(\.rufletBarBackgroundColor) private var pageBarBackgroundColor
+  @Environment(\.rufletSafeAreaInsets) private var safeAreaInsets
   let kind: Kind
 
   var body: some View {
     let presentation = RufletAppBarPresentation(control: control, isMaterial: kind == .appBar)
     BaseControl(control: control) {
       VStack(spacing: 0) {
+        if extendsIntoTop, safeAreaInsets.top > 0 {
+          Color.clear.frame(height: safeAreaInsets.top)
+        }
         barContent
           .padding(kind == .cupertino ? cupertinoPadding : EdgeInsets())
           .frame(height: toolbarHeight)
@@ -53,7 +57,6 @@ struct RufletAppleAppBar: View {
       .background {
         background(presentation)
           .allowsHitTesting(false)
-          .modifier(RufletBarSafeAreaBackground(extendsIntoTop: extendsIntoTop))
       }
       .overlay { borderOverlay }
       .modifier(RufletAppBarClipModifier(shape: barShape, presentation: presentation))
@@ -124,6 +127,10 @@ struct RufletAppleAppBar: View {
       Button(action: requestPop) {
         HStack(spacing: 4) {
           Image(systemName: "chevron.backward")
+            // Flutter's implicit BackButton uses the default IconTheme size
+            // of 24 logical pixels. Do not inherit the Apple toolbar font,
+            // which makes this protocol-generated icon vary by platform.
+            .font(.system(size: RufletLayoutDefaults.appBarBackIconSize))
           if kind == .cupertino, let previous = control.string("previous_page_title"),
             !previous.isEmpty
           {
@@ -271,7 +278,9 @@ struct RufletAppleAppBar: View {
   private var page: RufletControl? { view?.parentControl }
   private var canNavigateBack: Bool {
     guard let page, let view else { return false }
-    return page.children("views").first !== view
+    return rufletAppBarCanNavigateBack(
+      currentViewID: view.id,
+      orderedViewIDs: page.children("views").map(\.id))
   }
 
   private func requestPop() {
@@ -287,6 +296,17 @@ struct RufletAppleAppBar: View {
   private var barShape: RufletAppBarShape {
     RufletAppBarShape(type: shapeDetails?["_type"] as? String, radius: shapeRadius)
   }
+}
+
+/// Mirrors Navigator.canPop using the ordered wire stack instead of Swift
+/// object identity. Protocol patches may rebuild the same control ID as a new
+/// Swift object, so reference comparisons can leave Back visible on the root.
+func rufletAppBarCanNavigateBack(
+  currentViewID: Int?,
+  orderedViewIDs: [Int]
+) -> Bool {
+  guard orderedViewIDs.count > 1, let currentViewID else { return false }
+  return orderedViewIDs.last == currentViewID
 }
 
 func rufletMaterialAppBarCenterTitle(
@@ -341,15 +361,6 @@ extension EnvironmentValues {
   var rufletViewScrolledUnder: Bool {
     get { self[RufletViewScrolledUnderKey.self] }
     set { self[RufletViewScrolledUnderKey.self] = newValue }
-  }
-}
-
-private struct RufletBarSafeAreaBackground: ViewModifier {
-  let extendsIntoTop: Bool
-
-  @ViewBuilder
-  func body(content: Content) -> some View {
-    if extendsIntoTop { content.ignoresSafeArea(edges: .top) } else { content }
   }
 }
 

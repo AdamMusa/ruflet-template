@@ -13,6 +13,7 @@ public struct TextControl: View {
   @Environment(\.rufletPageTheme) private var pageTheme
   @Environment(\.rufletInheritedTextStyle) private var inheritedTextStyle
   @Environment(\.rufletSelectionAreaReporter) private var selectionAreaReporter
+  @Environment(\.rufletCrossAxisStretchAxis) private var crossAxisStretchAxis
 
   public init(control: RufletControl) {
     self.control = control
@@ -42,7 +43,7 @@ public struct TextControl: View {
         onSelection: selectionChanged,
         onTap: tapped
       )
-      .frame(maxWidth: .infinity, alignment: textAlignment.frameAlignment)
+      .modifier(textBoxAlignment)
     } else {
       text
         .modifier(RufletTextStyleModifier(style: resolvedStyle))
@@ -62,8 +63,19 @@ public struct TextControl: View {
         .modifier(
           RufletTextTapModifier(
             enabled: interaction.handlesTap,
-            action: tapped))
+            action: tapped)
+        )
+        .modifier(textBoxAlignment)
     }
+  }
+
+  private var textBoxAlignment: RufletTextBoxAlignmentModifier {
+    RufletTextBoxAlignmentModifier(
+      fillsWidth: rufletTextFillsHorizontalBox(
+        control: control,
+        crossAxisStretchAxis: crossAxisStretchAxis),
+      fillsHeight: crossAxisStretchAxis == .horizontal,
+      horizontalAlignment: textAlignment.frameAlignment)
   }
 
   private var text: Text {
@@ -228,7 +240,40 @@ extension TextAlignment {
   }
 }
 
-public func mergeTextStyles(_ base: RufletTextStyle?, _ override: RufletTextStyle?) -> RufletTextStyle? {
+@MainActor
+func rufletTextFillsHorizontalBox(
+  control: RufletControl,
+  crossAxisStretchAxis: Axis?
+) -> Bool {
+  crossAxisStretchAxis == .vertical
+    || (!control.skipsProperty("width") && control.number("width") != nil)
+    || rufletExpansionContract(for: control)?.axis == .horizontal
+}
+
+private struct RufletTextBoxAlignmentModifier: ViewModifier {
+  let fillsWidth: Bool
+  let fillsHeight: Bool
+  let horizontalAlignment: Alignment
+
+  func body(content: Content) -> some View {
+    content.frame(
+      maxWidth: fillsWidth ? .infinity : nil,
+      maxHeight: fillsHeight ? .infinity : nil,
+      alignment: fillsHeight ? verticalStretchAlignment : horizontalAlignment)
+  }
+
+  private var verticalStretchAlignment: Alignment {
+    switch horizontalAlignment {
+    case .center: .top
+    case .trailing: .topTrailing
+    default: .topLeading
+    }
+  }
+}
+
+public func mergeTextStyles(_ base: RufletTextStyle?, _ override: RufletTextStyle?)
+  -> RufletTextStyle?
+{
   guard base != nil || override != nil else { return nil }
   return RufletTextStyle(
     size: override?.size ?? base?.size,
