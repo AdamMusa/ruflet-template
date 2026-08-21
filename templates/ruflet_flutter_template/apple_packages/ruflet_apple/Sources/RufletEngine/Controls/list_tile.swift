@@ -149,12 +149,15 @@ public struct ListTileControl: View {
   private var interactiveTile: some View {
     if activation.isEnabled {
       Button(action: activation.callAsFunction) { tileSurface }
-        .buttonStyle(RufletListTileButtonStyle(
-          pressedColor: splashColor,
-          radius: radius))
-        .modifier(RufletListTileLongPressModifier(
-          enabled: canLongPress,
-          action: longPress))
+        .buttonStyle(
+          RufletListTileButtonStyle(
+            pressedColor: splashColor,
+            radius: radius)
+        )
+        .modifier(
+          RufletListTileLongPressModifier(
+            enabled: canLongPress,
+            action: longPress))
     } else if canLongPress {
       tileSurface.onLongPressGesture(minimumDuration: 0.5, perform: longPress)
     } else {
@@ -167,6 +170,11 @@ public struct ListTileControl: View {
       .padding(.vertical, minimumVerticalPadding)
       .padding(contentPadding)
       .frame(minHeight: minimumHeight)
+      // Flutter's ListTile consumes the finite width supplied by its parent.
+      // Claim that width here even when a Column uses start cross alignment;
+      // otherwise the trailing control collapses beside the title instead of
+      // remaining at the parent's trailing edge.
+      .frame(maxWidth: .infinity, alignment: .leading)
       .background(backgroundColor)
       .clipShape(RufletCornerShape(radius: radius))
       .overlay { shapeBorder }
