@@ -211,6 +211,64 @@ final class BaseLayoutControlContractTests: XCTestCase {
       RufletMainAxisDistribution(edgeInset: 75, additionalGap: 75))
   }
 
+  func testStretchedColumnPreservesChildPaintAlignment() {
+    let backend = BaseLayoutBackend()
+    let centeredText = RufletControl(
+      id: 10,
+      type: "Text",
+      properties: ["text_align": .string("center")],
+      backend: backend)
+    let trailingText = RufletControl(
+      id: 11,
+      type: "Text",
+      properties: ["text_align": .string("end")],
+      backend: backend)
+    let icon = RufletControl(id: 12, type: "Icon", properties: [:], backend: backend)
+    let ordinary = RufletControl(id: 13, type: "Container", properties: [:], backend: backend)
+
+    XCTAssertEqual(rufletStretchedHorizontalPaintAlignment(for: centeredText), .center)
+    XCTAssertEqual(rufletStretchedHorizontalPaintAlignment(for: trailingText), .trailing)
+    XCTAssertEqual(rufletStretchedHorizontalPaintAlignment(for: icon), .center)
+    XCTAssertEqual(rufletStretchedHorizontalPaintAlignment(for: ordinary), .leading)
+  }
+
+  func testLooseCrossAxisKeepsMediaButtonsIntrinsicButBoundsFillSeekingControls() {
+    let backend = BaseLayoutBackend()
+    let mediaButton = RufletControl(
+      id: 20,
+      type: "Button",
+      properties: ["content": .map(["_c": .string("Text"), "_i": .int(21)])],
+      backend: backend)
+    let searchContainer = RufletControl(
+      id: 22,
+      type: "Container",
+      properties: [
+        "content": .map([
+          "_c": .string("TextField"),
+          "_i": .int(23),
+          "expand": .bool(true),
+        ])
+      ],
+      backend: backend)
+    let tileContainer = RufletControl(
+      id: 24,
+      type: "Container",
+      properties: [
+        "height": .int(60),
+        "content": .map([
+          "_c": .string("ListTile"),
+          "_i": .int(25),
+        ]),
+      ],
+      backend: backend)
+
+    XCTAssertEqual(rufletFlexCrossAxisSizing(for: mediaButton, in: .vertical), .intrinsic)
+    XCTAssertEqual(rufletFlexCrossAxisSizing(for: searchContainer, in: .vertical), .bounded)
+    XCTAssertEqual(rufletFlexCrossAxisSizing(for: tileContainer, in: .vertical), .bounded)
+    XCTAssertNil(rufletFlexLooseCrossProposal(maximum: 393, sizing: .intrinsic))
+    XCTAssertEqual(rufletFlexLooseCrossProposal(maximum: 393, sizing: .bounded), 393)
+  }
+
   func testHorizontalWrapPlacesRunsAndItemsWithPinnedAlignments() {
     let plan = rufletFlowPlan(
       axis: .horizontal,
