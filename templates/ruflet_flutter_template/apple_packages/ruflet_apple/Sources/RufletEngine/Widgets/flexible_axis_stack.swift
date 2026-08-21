@@ -40,7 +40,11 @@ struct RufletFlexibleAxisStack: View {
             // constraint. The legacy stack already applied this frame; the
             // single-pass Layout path must do the same so intrinsic Text/Icon
             // children occupy the full Row/Column cross extent.
-            .modifier(RufletCrossAxisStretchModifier(axis: axis, enabled: crossAxisStretch))
+            .modifier(
+              RufletCrossAxisStretchModifier(
+                axis: axis,
+                enabled: crossAxisStretch,
+                horizontalPaintAlignment: rufletStretchedHorizontalPaintAlignment(for: child)))
             .layoutValue(
               key: RufletFlexParentDataKey.self,
               value: fixedMainExtents[child.id] == nil
@@ -100,7 +104,11 @@ struct RufletFlexibleAxisStack: View {
   private var stackChildren: some View {
     ForEach(children, id: \.id) { child in
       ControlWidget(control: child)
-        .modifier(RufletCrossAxisStretchModifier(axis: axis, enabled: crossAxisStretch))
+        .modifier(
+          RufletCrossAxisStretchModifier(
+            axis: axis,
+            enabled: crossAxisStretch,
+            horizontalPaintAlignment: rufletStretchedHorizontalPaintAlignment(for: child)))
         .modifier(
           RufletIntrinsicMainAxisModifier(
             axis: axis,
@@ -285,6 +293,7 @@ private struct RufletIntrinsicMainAxisModifier: ViewModifier {
 private struct RufletCrossAxisStretchModifier: ViewModifier {
   let axis: Axis
   let enabled: Bool
+  let horizontalPaintAlignment: RufletStretchedHorizontalPaintAlignment
 
   @ViewBuilder
   func body(content: Content) -> some View {
@@ -295,10 +304,48 @@ private struct RufletCrossAxisStretchModifier: ViewModifier {
       // Column center Text and other intrinsic children unexpectedly.
       content.frame(maxHeight: .infinity, alignment: .top)
     } else if enabled {
-      content.frame(maxWidth: .infinity, alignment: .leading)
+      content.frame(maxWidth: .infinity, alignment: horizontalPaintAlignment.swiftUI)
     } else {
       content
     }
+  }
+}
+
+enum RufletStretchedHorizontalPaintAlignment: Equatable {
+  case leading
+  case center
+  case trailing
+
+  var swiftUI: Alignment {
+    switch self {
+    case .leading: .leading
+    case .center: .center
+    case .trailing: .trailing
+    }
+  }
+}
+
+/// Flutter gives a child of a `Column(crossAxisAlignment: stretch)` a tight
+/// width. The child's own renderer then decides where its pixels live inside
+/// that width: `Text.textAlign` positions text, while `Icon` centers its glyph.
+/// A SwiftUI `frame(maxWidth:)` must be told that paint alignment explicitly;
+/// using `.leading` for every control discarded those Flet semantics even
+/// though the wire properties arrived intact.
+@MainActor
+func rufletStretchedHorizontalPaintAlignment(
+  for control: RufletControl
+) -> RufletStretchedHorizontalPaintAlignment {
+  switch control.type.lowercased() {
+  case "text":
+    switch control.string("text_align")?.lowercased() {
+    case "center": return .center
+    case "end", "right": return .trailing
+    default: return .leading
+    }
+  case "icon":
+    return .center
+  default:
+    return .leading
   }
 }
 

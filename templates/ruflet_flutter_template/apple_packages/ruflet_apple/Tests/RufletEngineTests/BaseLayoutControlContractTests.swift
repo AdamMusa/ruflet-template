@@ -211,6 +211,27 @@ final class BaseLayoutControlContractTests: XCTestCase {
       RufletMainAxisDistribution(edgeInset: 75, additionalGap: 75))
   }
 
+  func testStretchedColumnPreservesChildPaintAlignment() {
+    let backend = BaseLayoutBackend()
+    let centeredText = RufletControl(
+      id: 10,
+      type: "Text",
+      properties: ["text_align": .string("center")],
+      backend: backend)
+    let trailingText = RufletControl(
+      id: 11,
+      type: "Text",
+      properties: ["text_align": .string("end")],
+      backend: backend)
+    let icon = RufletControl(id: 12, type: "Icon", properties: [:], backend: backend)
+    let ordinary = RufletControl(id: 13, type: "Container", properties: [:], backend: backend)
+
+    XCTAssertEqual(rufletStretchedHorizontalPaintAlignment(for: centeredText), .center)
+    XCTAssertEqual(rufletStretchedHorizontalPaintAlignment(for: trailingText), .trailing)
+    XCTAssertEqual(rufletStretchedHorizontalPaintAlignment(for: icon), .center)
+    XCTAssertEqual(rufletStretchedHorizontalPaintAlignment(for: ordinary), .leading)
+  }
+
   func testHorizontalWrapPlacesRunsAndItemsWithPinnedAlignments() {
     let plan = rufletFlowPlan(
       axis: .horizontal,
