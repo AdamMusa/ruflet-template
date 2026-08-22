@@ -265,6 +265,16 @@ final class BaseLayoutControlContractTests: XCTestCase {
     let sliders = sliderTypes.enumerated().map { index, type in
       RufletControl(id: 30 + index, type: type, properties: [:], backend: backend)
     }
+    let stretchedColumn = RufletControl(
+      id: 40,
+      type: "Column",
+      properties: ["horizontal_alignment": .string("stretch")],
+      backend: backend)
+    let stretchedRow = RufletControl(
+      id: 41,
+      type: "Row",
+      properties: ["vertical_alignment": .string("stretch")],
+      backend: backend)
 
     XCTAssertEqual(rufletFlexCrossAxisSizing(for: mediaButton, in: .vertical), .intrinsic)
     XCTAssertEqual(rufletFlexCrossAxisSizing(for: searchContainer, in: .vertical), .bounded)
@@ -273,6 +283,8 @@ final class BaseLayoutControlContractTests: XCTestCase {
       XCTAssertEqual(rufletFlexCrossAxisSizing(for: slider, in: .vertical), .bounded)
       XCTAssertEqual(rufletFlexCrossAxisSizing(for: slider, in: .horizontal), .intrinsic)
     }
+    XCTAssertEqual(rufletFlexCrossAxisSizing(for: stretchedColumn, in: .vertical), .bounded)
+    XCTAssertEqual(rufletFlexCrossAxisSizing(for: stretchedRow, in: .horizontal), .bounded)
     XCTAssertNil(rufletFlexLooseCrossProposal(maximum: 393, sizing: .intrinsic))
     XCTAssertEqual(rufletFlexLooseCrossProposal(maximum: 393, sizing: .bounded), 393)
   }

@@ -260,6 +260,16 @@ private func rufletFlexCrossAxisSizing(
     return .bounded
   case (.horizontal, "column") where !control.boolean("tight", default: false):
     return .bounded
+  case (.vertical, "column")
+  where control.string("horizontal_alignment")?.lowercased() == "stretch":
+    // Flutter passes every non-flex Column child a finite loose width. A
+    // nested Column that explicitly requests CrossAxisAlignment.stretch then
+    // consumes that maximum. Measuring it with an unspecified SwiftUI width
+    // instead shrinks the complete subtree to an arbitrary intrinsic child.
+    return .bounded
+  case (.horizontal, "row")
+  where control.string("vertical_alignment")?.lowercased() == "stretch":
+    return .bounded
   default:
     break
   }
