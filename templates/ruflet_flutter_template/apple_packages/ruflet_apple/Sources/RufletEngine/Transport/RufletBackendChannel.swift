@@ -35,6 +35,10 @@ public enum RufletBackendChannelFactory {
         onMessage: onMessage)
     }
     switch address.scheme?.lowercased() {
+    case "inprocess":
+      return try RufletInProcessBackendChannel(
+        onDisconnect: onDisconnect,
+        onMessage: onMessage)
     case "http", "https":
       return try RufletWebSocketBackendChannel(
         address: address,
@@ -166,6 +170,8 @@ public enum RufletTransportError: Error, Equatable {
   case disconnected
   case invalidResponse
   case cannotResolveHost(String)
+  case missingInProcessBridgeSymbol(String)
+  case inProcessBridgeFailure(String)
 }
 
 func rufletWebSocketEndpoint(_ address: URL) throws -> URL {
