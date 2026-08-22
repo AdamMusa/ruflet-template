@@ -267,6 +267,11 @@ private func rufletFlexCrossAxisSizing(
   switch type {
   case "listtile", "cupertinolisttile":
     return .bounded
+  case "slider", "adaptiveslider", "cupertinoslider", "rangeslider":
+    // Flutter sliders consume the finite loose width supplied by a Column.
+    // Measuring their UIKit bridge with an unspecified width collapses the
+    // native track to zero and leaves only the thumb visible and hittable.
+    return axis == .vertical ? .bounded : .intrinsic
   case "textfield", "cupertinotextfield", "dropdown", "dropdownm2":
     return (parseExpand(control.dynamicValue("expand"), 0) ?? 0) > 0
       ? .bounded : .intrinsic

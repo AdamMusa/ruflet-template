@@ -261,10 +261,18 @@ final class BaseLayoutControlContractTests: XCTestCase {
         ]),
       ],
       backend: backend)
+    let sliderTypes = ["Slider", "AdaptiveSlider", "CupertinoSlider", "RangeSlider"]
+    let sliders = sliderTypes.enumerated().map { index, type in
+      RufletControl(id: 30 + index, type: type, properties: [:], backend: backend)
+    }
 
     XCTAssertEqual(rufletFlexCrossAxisSizing(for: mediaButton, in: .vertical), .intrinsic)
     XCTAssertEqual(rufletFlexCrossAxisSizing(for: searchContainer, in: .vertical), .bounded)
     XCTAssertEqual(rufletFlexCrossAxisSizing(for: tileContainer, in: .vertical), .bounded)
+    for slider in sliders {
+      XCTAssertEqual(rufletFlexCrossAxisSizing(for: slider, in: .vertical), .bounded)
+      XCTAssertEqual(rufletFlexCrossAxisSizing(for: slider, in: .horizontal), .intrinsic)
+    }
     XCTAssertNil(rufletFlexLooseCrossProposal(maximum: 393, sizing: .intrinsic))
     XCTAssertEqual(rufletFlexLooseCrossProposal(maximum: 393, sizing: .bounded), 393)
   }
