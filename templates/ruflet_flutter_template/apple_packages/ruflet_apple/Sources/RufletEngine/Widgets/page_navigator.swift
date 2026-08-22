@@ -679,6 +679,14 @@ func rufletPageTransitionOffsets(
     init(control: RufletControl, rootView: AnyView) {
       self.control = control
       super.init(rootView: rootView)
+      if #available(iOS 16.4, *) {
+        // The nested route controller must expose its complete viewport to the
+        // Flet View. Physical insets are already carried through
+        // `rufletSafeAreaInsets` and consumed by bars/SafeArea controls when
+        // Ruby asks for them. Letting UIHostingController apply the same
+        // system insets again narrows and leading-aligns the entire route.
+        safeAreaRegions = []
+      }
     }
 
     func activate(control: RufletControl, rootView: AnyView) {
