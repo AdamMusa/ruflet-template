@@ -25,10 +25,14 @@ bundle exec ruflet build apk --self
 bundle exec ruflet build ios --self
 bundle exec ruflet build apk
 bundle exec ruflet build ios
+bundle exec ruflet build ios --experimental
+bundle exec ruflet build macos --experimental
 ```
 
 `--self` packages the Ruby runtime and application with the native client.
 Without it, the client connects to a separately running Ruflet backend.
+`--experimental` is Apple-only and selects the native Swift renderer. Without
+that flag, iOS and macOS builds use only the Flutter renderer.
 
 Linux WebView builds require WebKitGTK 4.1 development files. On Debian or
 Ubuntu install them with `sudo apt install libwebkit2gtk-4.1-dev`.
@@ -60,6 +64,7 @@ services:
 ```
 
 The same selection rules apply to self-contained and server-driven clients.
-Ruflet also replaces its Android permissions and iOS usage descriptions from
+Ruflet also replaces its Android permissions, iOS/macOS usage descriptions,
+and macOS sandbox service entitlements from
 the current `services:` declarations, rather than retaining template defaults
 or permissions from an earlier build.

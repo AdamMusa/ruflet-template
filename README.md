@@ -75,6 +75,18 @@ extensions:
 extension package, backed by `mobile_scanner`, exposed to Ruby as
 `qrcode_scanner(...)`.
 
+## Experimental Apple renderer
+
+`ruflet build ios --experimental` and `ruflet build macos --experimental`
+replace the Flutter renderer with the native Swift renderer. The mode remains
+part of the ordinary build pipeline: the same `services:` and `extensions:`
+selection drives Dart packages, Swift products and registrations, Apple usage
+descriptions, macOS entitlements, and project-owned `apple_extensions/`.
+
+Apple builds without `--experimental` remove the Swift renderer integration
+and use the normal Flutter host. Native bridge failures in experimental builds
+are surfaced as errors; they do not silently fall back to a different renderer.
+
 ## How the CLI finds this repository
 
 In order:
