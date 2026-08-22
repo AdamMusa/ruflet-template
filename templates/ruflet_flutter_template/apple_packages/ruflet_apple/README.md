@@ -3,23 +3,29 @@
 A native Ruflet engine for iOS and macOS, written in Swift.
 
 It is a peer of the Flutter engine, not a layer on top of it: it speaks the same
-Ruflet wire protocol over the same socket, so the same Ruby application runs
-against either without renderer-specific flags or platform-specific code.
+Ruflet wire protocol, so the same Ruby application runs against either without
+renderer-specific flags or platform-specific code. The host selects the
+transport by endpoint: packaged Apple apps use the in-process bridge, while an
+explicit external Ruflet or Rails server uses a socket transport.
 
 ```
 Ruby app
    ↓
 Ruflet runtime
    ↓
-Ruflet protocol  (MessagePack over ws://…/ws)
+Ruflet protocol  (MessagePack)
    ↓
 ┌──────────────────┬──────────────────────┐
 Flet engine        Ruflet Apple engine
 Flutter            Swift · SwiftUI
 other platforms    iOS + macOS
+                    ↙             ↘
+            in-process VM     external server
 ```
 
-No Flutter, no native extensions, no embedding native controls inside Flutter.
+The Apple UI is rendered by native controls. Flutter can remain alive as the
+generated app shell for plugins and lifecycle services, but it does not render
+the Ruflet control tree.
 
 ## Which engine renders what
 
@@ -43,9 +49,9 @@ import SwiftUI
 struct MyApp: App {
   var body: some Scene {
     WindowGroup {
-      // Boots the mruby VM from the Ruby project in the app bundle, then
-      // connects to the port it publishes.
-      RufletAppView()
+      // The generated shell starts the packaged VM before presenting this
+      // view. `inprocess://embedded` is not a network URL.
+      RufletAppView(pageURL: URL(string: "inprocess://embedded")!)
     }
   }
 }
@@ -59,7 +65,9 @@ import RufletCamera
 import RufletGeolocator
 import RufletMotion
 
-RufletAppView(extensions: [RufletCamera.self, RufletGeolocator.self, RufletMotion.self])
+RufletAppView(
+  pageURL: pageURL,
+  extensions: [RufletCamera.self, RufletGeolocator.self, RufletMotion.self])
 ```
 
 Application extensions use the same first-match contract as Flutter's
@@ -101,44 +109,36 @@ return a per-control `RufletService`, or `createIcon(for:)` to return custom
 SwiftUI artwork for an integer icon code. All three creation hooks use ordered
 first-match dispatch and default to nil.
 
-That is the whole template app. Three other entry points exist:
+The same view attaches to an external development server when the host passes
+an HTTP or HTTPS page address:
 
 ```swift
 // Attach to a `ruflet run` server during development.
-RufletAppView(serverURL: URL(string: "ws://127.0.0.1:8550/ws")!)
-
-// Name the packaged project explicitly.
-RufletAppView(embeddedProject: .init(projectRoot: path))
-
-// Drive the session yourself and render into your own hierarchy.
-let session = RufletSession(serverURL: url)
-ControlView(id: RufletWireID.page, axis: .vertical)
-  .environmentObject(session.store)
-  .environment(\.rufletEvents, .connected(to: session))
+RufletAppView(pageURL: URL(string: "http://127.0.0.1:8550")!)
 ```
 
 ### The embedded VM
 
-VM startup stays on the native side, exactly as it is for the Flutter engine.
-`EmbeddedRuntime` calls the same four `ruflet_vm_*` entry points from
-`ruby_runtime/desktop/ruflet_vm_host.h` and waits for the runtime to publish its
-port into `RUFLET_RUNTIME_PORT_FILE`.
+The generated application shell starts the packaged VM and then presents this
+engine with `inprocess://embedded`. `RufletInProcessBackendChannel` resolves the
+`ruflet_bridge_*` functions from the current process and exchanges MessagePack
+frames through native FIFO queues. It never opens a loopback port and never
+falls back to a WebSocket when the bridge is unavailable.
 
-The symbols are resolved with `dlsym` rather than linked, because the VM ships
-as an XCFramework on iOS and a static archive on macOS. Link whichever your
-target needs:
+The bridge symbols are resolved with `dlsym` because the VM ships as an
+XCFramework on iOS and a static archive on macOS. Link whichever your target
+needs:
 
 | Platform | Link |
 |----------|------|
 | iOS | `ruby_runtime/ios/Frameworks/RufletVM.xcframework` |
 | macOS | `ruby_runtime/macos/Frameworks/libruflet_vm.a` |
 
-The package itself stays a pure Swift package that builds anywhere. If nothing
-is linked, `RufletAppView` says so on screen instead of showing a blank window.
-
-Package the Ruby project as a bundle resource — the directory holding `main.rb`.
-When a bundle carries more than one, name it in `Info.plist` under
-`RufletEmbeddedProject`.
+The package itself stays a pure Swift package that builds without the VM. A host
+that selects the in-process endpoint without linking the bridge receives an
+explicit transport error. The Ruflet build pipeline packages `main.rb` or
+`main.mrb`, starts the VM, and supplies the endpoint; the renderer does not
+discover or boot application code on its own.
 
 ## Layout
 
@@ -168,7 +168,7 @@ That gives three things the renderer depends on:
 ### Events
 
 ```
-SwiftUI  →  RufletEventSink  →  RufletSession  →  control_event  →  Ruby handler
+SwiftUI  →  RufletEventSink  →  RufletBackend  →  control_event  →  Ruby handler
 ```
 
 A control reports an event only when Ruby declared a handler for it
