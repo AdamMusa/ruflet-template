@@ -4,8 +4,8 @@ import SwiftUI
 import UIKit
 
 /// Flutter owns startup on every platform. The selected Dart entrypoint resolves
-/// either the embedded or configured backend URL, then calls this Runner over a
-/// method channel when iOS should present Ruflet's native Apple renderer.
+/// either the embedded transport endpoint or configured server address, then
+/// calls this Runner when iOS should present Ruflet's native Apple renderer.
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   private var nativeRendererChannel: FlutterMethodChannel?

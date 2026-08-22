@@ -3,19 +3,19 @@ import FlutterMacOS
 import RufletApple
 import SwiftUI
 
-/// Flutter starts normally. The selected Dart entrypoint resolves the self or
-/// server backend URL and calls this Runner when macOS should switch only the
-/// visible content to Ruflet's native renderer.
+/// Flutter starts normally. The selected Dart entrypoint resolves the embedded
+/// transport endpoint or configured server address and calls this Runner when
+/// macOS should switch only the visible content to Ruflet's native renderer.
 class MainFlutterWindow: NSWindow {
   private var retainedFlutterViewController: FlutterViewController?
   private var nativeRendererChannel: FlutterMethodChannel?
   /// Guards against installing the native renderer more than once. Each install
   /// builds a fresh `RufletAppView`, and therefore a fresh `RufletBackend` with
-  /// its own websocket. Replacing `contentViewController` does not reliably run
-  /// SwiftUI's `onDisappear`, so the displaced backend is never disposed: it
-  /// keeps its reconnect loop alive and re-registers a whole new session every
-  /// 500 ms forever, making the server rebuild and resend the entire page each
-  /// time. That storm is what makes navigation feel frozen.
+  /// its own transport channel. Replacing `contentViewController` does not
+  /// reliably run SwiftUI's `onDisappear`, so the displaced backend is never
+  /// disposed: it keeps its reconnect loop alive and re-registers a whole new
+  /// session every 500 ms forever, making the server rebuild and resend the
+  /// entire page each time. That storm is what makes navigation feel frozen.
   private var nativeRendererInstalled = false
 
   override func awakeFromNib() {

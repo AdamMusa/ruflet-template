@@ -163,8 +163,8 @@ class TemplateApp extends StatefulWidget {
 }
 
 class _TemplateAppState extends State<TemplateApp> {
-  Timer? _serverErrorPoller;
-  String? _lastEmbeddedServerError;
+  Timer? _runtimeErrorPoller;
+  String? _lastRuntimeError;
   String _pageUrl = '';
   String? _startupError;
 
@@ -173,7 +173,7 @@ class _TemplateAppState extends State<TemplateApp> {
     super.initState();
     _pageUrl = widget.pageUrl;
     if (_pageUrl.isEmpty && !kIsWeb) {
-      unawaited(_resolveEmbeddedServer());
+      unawaited(_resolveEmbeddedTransport());
     }
   }
 
@@ -183,14 +183,14 @@ class _TemplateAppState extends State<TemplateApp> {
   /// packaged project, unpacks it if the platform needs that, sets the
   /// runtime's environment, and starts the VM. Flutter only needs the endpoint
   /// used to select the matching Flet channel.
-  Future<void> _resolveEmbeddedServer() async {
+  Future<void> _resolveEmbeddedTransport() async {
     try {
       final url = await RufletRuntime.serverUrl();
       if (!mounted) return;
       // Used as-is. An embedded in-process endpoint is not a network address
       // and must never pass through host rewriting.
       setState(() => _pageUrl = url.toString());
-      _watchForServerErrors();
+      _watchForRuntimeErrors();
     } catch (error) {
       if (!mounted) return;
       setState(
@@ -199,23 +199,23 @@ class _TemplateAppState extends State<TemplateApp> {
     }
   }
 
-  void _watchForServerErrors() {
-    _serverErrorPoller = Timer.periodic(const Duration(seconds: 1), (_) async {
+  void _watchForRuntimeErrors() {
+    _runtimeErrorPoller = Timer.periodic(const Duration(seconds: 1), (_) async {
       final status = await RufletRuntime.status();
-      final serverError = status.error;
+      final runtimeError = status.error;
       if (!mounted ||
-          serverError.isEmpty ||
-          serverError == _lastEmbeddedServerError) {
+          runtimeError.isEmpty ||
+          runtimeError == _lastRuntimeError) {
         return;
       }
-      _lastEmbeddedServerError = serverError;
-      debugPrint('Embedded server error: $serverError');
+      _lastRuntimeError = runtimeError;
+      debugPrint('Embedded runtime error: $runtimeError');
     });
   }
 
   @override
   void dispose() {
-    _serverErrorPoller?.cancel();
+    _runtimeErrorPoller?.cancel();
     unawaited(RufletRuntime.stop());
     super.dispose();
   }

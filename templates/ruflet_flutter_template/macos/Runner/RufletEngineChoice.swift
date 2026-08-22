@@ -66,8 +66,8 @@ enum RufletEngineChoice {
   /// startup and plugin channels; visible Ruflet controls are always SwiftUI.
   static let usesNativeRenderer = true
 
-  /// Keeps the resolved page URI unchanged. The native backend creates its
-  /// websocket endpoint from this page URI exactly once.
+  /// Keeps the resolved server address or embedded endpoint unchanged. The
+  /// native backend selects its transport from this value exactly once.
   static func pageURL(from raw: String) -> URL? {
     RufletPageAddress.parse(raw)
   }
