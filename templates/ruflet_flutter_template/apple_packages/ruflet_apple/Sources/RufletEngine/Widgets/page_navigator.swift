@@ -73,6 +73,11 @@ private struct RufletHostedPage: View {
     .modifier(RufletHostedPageTint(color: tint))
     .environment(\.rufletHeroNamespace, heroNamespace)
     .environmentObject(heroTransitionState)
+    // Apply the full-viewport contract at the hosting root, before SwiftUI
+    // proposes a safe-area-reduced width to the route's View/ScrollView tree.
+    // Physical insets remain available through `rufletSafeAreaInsets` for
+    // explicit SafeArea, app bar, and bottom bar controls.
+    .ignoresSafeArea(.container)
   }
 }
 

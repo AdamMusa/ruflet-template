@@ -83,6 +83,8 @@ struct PageViewNavigationContractTests {
     #expect(navigator.contains("@Environment(\\.rufletSafeAreaInsets) private var safeAreaInsets"))
     #expect(navigator.contains(".environment(\\.rufletSafeAreaInsets, safeAreaInsets)"))
     #expect(navigator.contains("safeAreaRegions = []"))
+    #expect(navigator.contains("private struct RufletHostedPage: View"))
+    #expect(navigator.contains(".ignoresSafeArea(.container)"))
     #expect(navigator.contains("requestedControllers.last?.prepareForNavigation()"))
     #expect(navigator.contains("setInteractiveController(\n          requestedControllers.last,"))
   }
