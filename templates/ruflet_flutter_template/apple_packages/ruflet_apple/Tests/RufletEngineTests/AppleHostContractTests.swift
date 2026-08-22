@@ -18,6 +18,13 @@ final class AppleHostContractTests: XCTestCase {
     XCTAssertFalse(channel.endpoint.path.contains("/ws/ws"))
   }
 
+  func testPageAddressPreservesTheEmbeddedInProcessEndpoint() throws {
+    let raw = "inprocess://embedded"
+    let pageURL = try XCTUnwrap(RufletPageAddress.parse(raw))
+
+    XCTAssertEqual(pageURL.absoluteString, raw)
+  }
+
   func testPageAddressRejectsMalformedOrUnsupportedValues() {
     XCTAssertNil(RufletPageAddress.parse(""))
     XCTAssertNil(RufletPageAddress.parse(" https://example.com"))
