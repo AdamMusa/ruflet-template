@@ -19,6 +19,8 @@ export 'src/models/page_size_view_model.dart';
 export 'src/routing/deep_linking_bootstrap.dart';
 export 'src/testing/test_finder.dart';
 export 'src/testing/tester.dart';
+export 'src/transport/flet_backend_channel.dart';
+export 'src/transport/flet_backend_channel_in_process.dart';
 export 'src/utils.dart';
 export 'src/utils/alignment.dart';
 export 'src/utils/animations.dart';

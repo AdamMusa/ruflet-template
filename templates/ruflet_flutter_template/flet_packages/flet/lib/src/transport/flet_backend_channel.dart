@@ -9,6 +9,13 @@ import 'flet_backend_channel_web_socket.dart';
 
 typedef FletBackendChannelOnDisconnectCallback = void Function();
 typedef FletBackendChannelOnMessageCallback = void Function(Message message);
+typedef FletBackendChannelBuilder = FletBackendChannel Function({
+  required String address,
+  required Map<String, dynamic> args,
+  required bool forcePyodide,
+  required FletBackendChannelOnDisconnectCallback onDisconnect,
+  required FletBackendChannelOnMessageCallback onMessage,
+});
 
 abstract class FletBackendChannel {
   factory FletBackendChannel(

@@ -143,9 +143,8 @@ Future<void> main() async {
 
   // The embedded runtime is deliberately not awaited here. Platforms that can
   // start the VM before the Flutter engine exists have already been booting it
-  // while these extensions initialized, and blocking startup on it would hand
-  // back exactly the time that parallelism buys. TemplateApp resolves the URL
-  // from the widget tree and shows a splash until it arrives.
+  // while these extensions initialized. TemplateApp resolves its transport
+  // endpoint from the widget tree and shows a splash until it arrives.
   runApp(TemplateApp(pageUrl: pageUrl, extensions: extensions));
 }
 
@@ -178,20 +177,18 @@ class _TemplateAppState extends State<TemplateApp> {
     }
   }
 
-  /// Asks the platform where the runtime it started ended up.
+  /// Asks the platform for the runtime transport it started.
   ///
   /// The runtime is entirely the platform layer's concern: it locates the
   /// packaged project, unpacks it if the platform needs that, sets the
-  /// runtime's environment, starts the VM and waits for the port. None of that
-  /// belongs in Flutter, which only needs the address to point FletApp at.
+  /// runtime's environment, and starts the VM. Flutter only needs the endpoint
+  /// used to select the matching Flet channel.
   Future<void> _resolveEmbeddedServer() async {
     try {
       final url = await RufletRuntime.serverUrl();
       if (!mounted) return;
-      // Used as-is, deliberately. normalizePageUrlForPlatform rewrites
-      // 127.0.0.1 to 10.0.2.2 on Android, which is the emulator's alias for the
-      // host machine — right for a development server, wrong for an embedded
-      // one running on the device itself.
+      // Used as-is. An embedded in-process endpoint is not a network address
+      // and must never pass through host rewriting.
       setState(() => _pageUrl = url.toString());
       _watchForServerErrors();
     } catch (error) {
@@ -259,6 +256,21 @@ class _TemplateAppState extends State<TemplateApp> {
       extensions: widget.extensions,
       multiView: isMultiView(),
       tester: tester,
+      channelBuilder: _pageUrl.startsWith('inprocess://')
+          ? ({
+              required address,
+              required args,
+              required forcePyodide,
+              required onDisconnect,
+              required onMessage,
+            }) => FletInProcessBackendChannel(
+              sendBytes: RufletRuntime.sendToRuby,
+              receiveBytes: RufletRuntime.receiveFromRuby,
+              closeBytes: RufletRuntime.closeBridge,
+              onDisconnect: onDisconnect,
+              onMessage: onMessage,
+            )
+          : null,
     );
   }
 }

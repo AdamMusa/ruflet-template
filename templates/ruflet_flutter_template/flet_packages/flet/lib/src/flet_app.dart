@@ -7,6 +7,7 @@ import 'flet_backend.dart';
 import 'flet_extension.dart';
 import 'models/control.dart';
 import 'testing/tester.dart';
+import 'transport/flet_backend_channel.dart';
 
 /// FletApp - The top-level widget that initializes everything
 class FletApp extends StatefulWidget {
@@ -25,6 +26,7 @@ class FletApp extends StatefulWidget {
   final bool? forcePyodide;
   final Tester? tester;
   final bool multiView;
+  final FletBackendChannelBuilder? channelBuilder;
 
   const FletApp(
       {super.key,
@@ -42,6 +44,7 @@ class FletApp extends StatefulWidget {
       this.args,
       this.forcePyodide,
       this.tester,
+      this.channelBuilder,
       this.multiView = false});
 
   @override
@@ -75,6 +78,7 @@ class _FletAppState extends State<FletApp> {
             args: widget.args,
             forcePyodide: widget.forcePyodide,
             tester: widget.tester,
+            channelBuilder: widget.channelBuilder,
             multiView: widget.multiView,
             parentFletBackend:
                 Provider.of<FletBackend?>(context, listen: false));

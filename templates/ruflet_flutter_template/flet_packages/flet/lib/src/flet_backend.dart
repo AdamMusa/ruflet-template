@@ -53,6 +53,7 @@ class FletBackend extends ChangeNotifier {
   final Map<String, dynamic>? args;
   final bool? forcePyodide;
   final Tester? tester;
+  final FletBackendChannelBuilder? channelBuilder;
   final Map<String, GlobalKey> globalKeys = {};
 
   final WeakValueMap<int, Control> controlsIndex = WeakValueMap<int, Control>();
@@ -102,6 +103,7 @@ class FletBackend extends ChangeNotifier {
       this.args,
       this.forcePyodide,
       this.tester,
+      this.channelBuilder,
       required extensions,
       FletBackend? parentFletBackend})
       : _parentFletBackend =
@@ -176,7 +178,7 @@ class FletBackend extends ChangeNotifier {
   Future<void> connect() async {
     debugPrint("Connecting to Flet backend $pageUri...");
     try {
-      _backendChannel = FletBackendChannel(
+      _backendChannel = (channelBuilder ?? FletBackendChannel.new)(
           address: pageUri.toString(),
           args: args ?? {},
           forcePyodide: forcePyodide == true,
