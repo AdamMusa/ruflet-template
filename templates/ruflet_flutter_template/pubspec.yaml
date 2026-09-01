@@ -34,7 +34,7 @@ dependencies:
     sdk: flutter
 
   # Flet Flutter packages, vendored locally (Dart only) from flet ref
-  # f50743b89c7fbfee60b0737a9c4ab1fdea4d6c4f. No git/Python dependency.
+  # 5b68e8bb2d1f88c99fa0a5807a5c67e102e5c171. No git/Python dependency.
   flet:
     path: flet_packages/flet
   flet_audio:
