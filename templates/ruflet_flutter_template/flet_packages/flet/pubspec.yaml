@@ -24,6 +24,7 @@ dependencies:
   battery_plus: ^7.0.0
   collection: ^1.19.0
   connectivity_plus: ^7.0.0
+  cupertino_icons: ^1.0.8
   device_info_plus: ^12.3.0
   equatable: ^2.0.3
   file_picker: ^10.3.10

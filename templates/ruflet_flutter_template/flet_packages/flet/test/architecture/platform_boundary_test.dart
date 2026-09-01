@@ -6,6 +6,12 @@ void main() {
   final coreFile = File('lib/src/flet_core_extension.dart');
   final coreSource = coreFile.readAsStringSync();
 
+  test('the engine packages assets for both platform icon families', () {
+    final pubspec = File('pubspec.yaml').readAsStringSync();
+
+    expect(pubspec, contains('cupertino_icons:'));
+  });
+
   test('the canonical control registry has no design-specific protocol cases',
       () {
     expect(coreSource, isNot(contains('case "Cupertino')));
