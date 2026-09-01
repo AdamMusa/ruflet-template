@@ -153,16 +153,13 @@ class _ContextMenuControlState extends State<ContextMenuControl> {
   /// Picks popup menu items configured for the provided button, falling back
   /// to the shared `items` collection when a button-specific list is empty.
   List<Control> _getPopupItemsFromButton(_MouseButton? button) {
-    switch (button) {
-      case _MouseButton.primary:
-        return widget.control.children("primary_items");
-      case _MouseButton.secondary:
-        return widget.control.children("secondary_items");
-      case _MouseButton.tertiary:
-        return widget.control.children("tertiary_items");
-      default:
-        return widget.control.children("items");
-    }
+    var items = switch (button) {
+      _MouseButton.primary => widget.control.children("primary_items"),
+      _MouseButton.secondary => widget.control.children("secondary_items"),
+      _MouseButton.tertiary => widget.control.children("tertiary_items"),
+      _ => widget.control.children("items"),
+    };
+    return items.isNotEmpty ? items : widget.control.children("actions");
   }
 
   /// Serialises menu event data to a compact payload sent to Python handlers.

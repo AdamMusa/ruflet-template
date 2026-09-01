@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../models/control.dart';
-import '../widgets/flet_store_mixin.dart';
+import '../widgets/platform_control_renderer.dart';
 import 'checkbox.dart';
 import 'cupertino_checkbox.dart';
 
-class AdaptiveCheckboxControl extends StatelessWidget with FletStoreMixin {
+class AdaptiveCheckboxControl extends StatelessWidget {
   final Control control;
 
   const AdaptiveCheckboxControl({super.key, required this.control});
@@ -14,14 +14,9 @@ class AdaptiveCheckboxControl extends StatelessWidget with FletStoreMixin {
   Widget build(BuildContext context) {
     debugPrint("AdaptiveCheckboxControl build: ${control.id}");
 
-    return withPagePlatform((context, platform) {
-      if (control.adaptive == true &&
-          (platform == TargetPlatform.iOS ||
-              platform == TargetPlatform.macOS)) {
-        return CupertinoCheckboxControl(control: control);
-      } else {
-        return CheckboxControl(control: control);
-      }
-    });
+    return PlatformControlRenderer(
+      material: (_) => CheckboxControl(control: control),
+      cupertino: (_) => CupertinoCheckboxControl(control: control),
+    );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
 import '../models/control.dart';
+import '../models/control_type.dart';
 import '../utils/buttons.dart';
 import '../utils/colors.dart';
 import '../utils/launch_url.dart';
@@ -58,10 +59,11 @@ class _ButtonControlState extends State<ButtonControl> with FletStoreMixin {
   Widget build(BuildContext context) {
     debugPrint("Button build: ${widget.control.id}");
 
-    bool isFilledButton = widget.control.type == "FilledButton";
-    bool isFilledTonalButton = widget.control.type == "FilledTonalButton";
-    bool isTextButton = widget.control.type == "TextButton";
-    bool isOutlinedButton = widget.control.type == "OutlinedButton";
+    var variant = widget.control.canonicalType;
+    bool isFilledButton = variant == "FilledButton";
+    bool isFilledTonalButton = variant == "FilledTonalButton";
+    bool isTextButton = variant == "TextButton";
+    bool isOutlinedButton = variant == "OutlinedButton";
 
     var url = widget.control.getUrl("url");
     var iconColor = widget.control.getColor("icon_color", context);

@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
+import 'package:flutter/widgets.dart';
 
-import '../extensions/control.dart';
 import '../models/control.dart';
-import '../widgets/error.dart';
-import 'base_controls.dart';
+import '../widgets/platform_control_renderer.dart';
+import 'cupertino_selection_area.dart';
+import 'material_selection_area.dart';
 
 class SelectionAreaControl extends StatelessWidget {
   final Control control;
@@ -12,21 +11,8 @@ class SelectionAreaControl extends StatelessWidget {
   const SelectionAreaControl({super.key, required this.control});
 
   @override
-  Widget build(BuildContext context) {
-    debugPrint("SelectionArea build: ${control.id}");
-
-    var content = control.buildWidget("content");
-    if (content == null) {
-      return const ErrorControl(
-          "SelectionArea.content must be provided and visible");
-    }
-    var selectionArea = SelectionArea(
-      child: content,
-      onSelectionChanged: (SelectedContent? selection) {
-        control.triggerEvent("change", selection?.plainText);
-      },
-    );
-
-    return BaseControl(control: control, child: selectionArea);
-  }
+  Widget build(BuildContext context) => PlatformControlRenderer(
+        material: (_) => MaterialSelectionAreaControl(control: control),
+        cupertino: (_) => CupertinoSelectionAreaControl(control: control),
+      );
 }

@@ -1,8 +1,9 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:msgpack_dart/msgpack_dart.dart';
+
+import '../models/flet_time.dart';
 
 class FletMsgpackDecoder extends ExtDecoder {
   final codec = const Utf8Codec();
@@ -15,7 +16,7 @@ class FletMsgpackDecoder extends ExtDecoder {
     } else if (extType == 2) {
       var parts =
           codec.decode(data).split(":").map((s) => int.parse(s)).toList();
-      return TimeOfDay(hour: parts[0], minute: parts[1]);
+      return FletTime(hour: parts[0], minute: parts[1]);
     } else if (extType == 3) {
       var microseconds = int.parse(codec.decode(data));
       return Duration(microseconds: microseconds);

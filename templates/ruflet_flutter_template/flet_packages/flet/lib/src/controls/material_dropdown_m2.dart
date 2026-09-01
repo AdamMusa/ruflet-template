@@ -12,17 +12,17 @@ import '../utils/numbers.dart';
 import '../utils/text.dart';
 import 'base_controls.dart';
 
-class DropdownM2Control extends StatefulWidget {
+class MaterialDropdownM2Control extends StatefulWidget {
   final Control control;
 
-  DropdownM2Control({Key? key, required this.control})
+  MaterialDropdownM2Control({Key? key, required this.control})
       : super(key: key ?? ValueKey("control_${control.id}"));
 
   @override
-  State<DropdownM2Control> createState() => _DropdownM2ControlState();
+  State<MaterialDropdownM2Control> createState() => _DropdownM2ControlState();
 }
 
-class _DropdownM2ControlState extends State<DropdownM2Control> {
+class _DropdownM2ControlState extends State<MaterialDropdownM2Control> {
   String? _value;
   bool _focused = false;
   late final FocusNode _focusNode;

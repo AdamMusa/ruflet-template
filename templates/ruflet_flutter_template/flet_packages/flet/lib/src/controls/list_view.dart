@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../extensions/control.dart';
 import '../models/control.dart';
@@ -62,6 +62,25 @@ class _ListViewControlState extends State<ListViewControl> {
             ? ControlWidget(control: controls.first)
             : null);
 
+    Widget separator() {
+      if (dividerThickness == 0) {
+        return SizedBox(
+            width: horizontal ? spacing : null,
+            height: horizontal ? null : spacing);
+      }
+      return SizedBox(
+        width: horizontal ? spacing : dividerThickness,
+        height: horizontal ? dividerThickness : spacing,
+        child: Center(
+          child: SizedBox(
+            width: horizontal ? dividerThickness : double.infinity,
+            height: horizontal ? double.infinity : dividerThickness,
+            child: const ColoredBox(color: Color(0x1F000000)),
+          ),
+        ),
+      );
+    }
+
     Widget listView = LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         debugPrint("ListView constraints.maxWidth: ${constraints.maxWidth}");
@@ -91,16 +110,7 @@ class _ListViewControlState extends State<ListViewControl> {
                       control: item,
                     ));
                     if (spacing > 0 && index < controls.length - 1) {
-                      childWidgets.add(horizontal
-                          ? dividerThickness == 0
-                              ? SizedBox(width: spacing)
-                              : VerticalDivider(
-                                  width: spacing, thickness: dividerThickness)
-                          : dividerThickness == 0
-                              ? SizedBox(height: spacing)
-                              : Divider(
-                                  height: spacing,
-                                  thickness: dividerThickness));
+                      childWidgets.add(separator());
                     }
                   }
                   return childWidgets;
@@ -124,15 +134,7 @@ class _ListViewControlState extends State<ListViewControl> {
                       );
                     },
                     separatorBuilder: (context, index) {
-                      return horizontal
-                          ? dividerThickness == 0
-                              ? SizedBox(width: spacing)
-                              : VerticalDivider(
-                                  width: spacing, thickness: dividerThickness)
-                          : dividerThickness == 0
-                              ? SizedBox(height: spacing)
-                              : Divider(
-                                  height: spacing, thickness: dividerThickness);
+                      return separator();
                     },
                   )
                 : ListView.builder(

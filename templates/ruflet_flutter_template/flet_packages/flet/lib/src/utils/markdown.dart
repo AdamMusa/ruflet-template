@@ -49,11 +49,16 @@ Map<String, TextStyle> parseMarkdownCodeTheme(dynamic value, ThemeData theme) {
   return {};
 }
 
-MarkdownStyleSheet? parseMarkdownStyleSheet(dynamic value, BuildContext context,
-    [MarkdownStyleSheet? defaultValue]) {
+MarkdownStyleSheet? parseMarkdownStyleSheet(
+  dynamic value,
+  BuildContext context, [
+  MarkdownStyleSheet? defaultValue,
+  ThemeData? parserTheme,
+  MarkdownStyleSheet? baseStyleSheet,
+]) {
   if (value == null) return null;
-  var theme = Theme.of(context);
-  return MarkdownStyleSheet.fromTheme(theme).copyWith(
+  var theme = parserTheme ?? Theme.of(context);
+  return (baseStyleSheet ?? MarkdownStyleSheet.fromTheme(theme)).copyWith(
     a: parseTextStyle(
         value["a_text_style"], theme, const TextStyle(color: Colors.blue))!,
     p: parseTextStyle(value["p_text_style"], theme, theme.textTheme.bodyMedium),
@@ -164,7 +169,10 @@ extension MarkdownParsers on Control {
 
   MarkdownStyleSheet? getMarkdownStyleSheet(
       String propertyName, BuildContext context,
-      [MarkdownStyleSheet? defaultValue]) {
-    return parseMarkdownStyleSheet(get(propertyName), context, defaultValue);
+      [MarkdownStyleSheet? defaultValue,
+      ThemeData? parserTheme,
+      MarkdownStyleSheet? baseStyleSheet]) {
+    return parseMarkdownStyleSheet(
+        get(propertyName), context, defaultValue, parserTheme, baseStyleSheet);
   }
 }

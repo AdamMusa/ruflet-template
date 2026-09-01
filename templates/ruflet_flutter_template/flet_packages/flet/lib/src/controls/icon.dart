@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../models/control.dart';
 import '../utils/box.dart';
 import '../utils/colors.dart';
+import '../utils/cupertino_material_style_adapter.dart';
 import '../utils/icons.dart';
 import '../utils/images.dart';
 import '../utils/numbers.dart';
@@ -30,7 +31,8 @@ class IconControl extends StatelessWidget {
           grade: control.getDouble("grade"),
           weight: control.getDouble("weight"),
           opticalSize: control.getDouble("optical_size"),
-          shadows: control.getBoxShadows("shadows", Theme.of(context)),
+          shadows: control.getBoxShadows(
+              "shadows", materialStyleSchemaTheme(context)),
         ));
   }
 }

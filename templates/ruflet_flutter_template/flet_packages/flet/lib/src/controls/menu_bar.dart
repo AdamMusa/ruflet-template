@@ -1,38 +1,18 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
-import '../extensions/control.dart';
 import '../models/control.dart';
-import '../utils/menu.dart';
-import '../utils/misc.dart';
-import '../widgets/error.dart';
-import 'base_controls.dart';
+import '../widgets/platform_control_renderer.dart';
+import 'cupertino_navigation_controls.dart';
+import 'material_menu_bar.dart';
 
-class MenuBarControl extends StatefulWidget {
+class MenuBarControl extends StatelessWidget {
   final Control control;
 
-  MenuBarControl({Key? key, required this.control})
-      : super(key: key ?? ValueKey("control_${control.id}"));
+  const MenuBarControl({super.key, required this.control});
 
   @override
-  State<MenuBarControl> createState() => _MenuBarControlState();
-}
-
-class _MenuBarControlState extends State<MenuBarControl> {
-  @override
-  Widget build(BuildContext context) {
-    debugPrint("MenuBar build: ${widget.control.id}");
-
-    var controls = widget.control.buildWidgets("controls");
-    if (controls.isEmpty) {
-      return const ErrorControl(
-          "MenuBar must have at minimum one visible child control");
-    }
-    final menuBar = MenuBar(
-        style: widget.control.getMenuStyle("style", Theme.of(context)),
-        clipBehavior:
-            widget.control.getClipBehavior("clip_behavior", Clip.none)!,
-        children: controls);
-
-    return LayoutControl(control: widget.control, child: menuBar);
-  }
+  Widget build(BuildContext context) => PlatformControlRenderer(
+        material: (_) => MaterialMenuBarControl(control: control),
+        cupertino: (_) => CupertinoMenuBarControl(control: control),
+      );
 }

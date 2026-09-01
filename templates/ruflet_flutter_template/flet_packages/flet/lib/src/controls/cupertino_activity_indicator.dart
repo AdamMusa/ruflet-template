@@ -18,7 +18,8 @@ class CupertinoActivityIndicatorControl extends StatelessWidget {
     debugPrint("CupertinoActivityIndicatorControl build: ${control.id}");
     final radius = control.getDouble("radius", 10)!;
     final color = control.getColor("color", context);
-    final progress = control.getDouble("progress");
+    final progress =
+        control.getDouble("progress") ?? control.getDouble("value");
     final bool animating =
         progress == null ? control.getBool("animating", true)! : false;
 

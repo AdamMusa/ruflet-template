@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter/widgets.dart';
 
 import '../extensions/control.dart';
 import '../flet_backend.dart';
 import '../models/control.dart';
-import '../utils/theme.dart';
+import 'platform_control_theme.dart';
 
 /// InheritedNotifier for a [Control].
 ///
@@ -86,38 +85,10 @@ Widget withControlTheme(Control control, BuildContext context, Widget child) {
 
   final hasNoThemes =
       control.get("theme") == null && control.get("dark_theme") == null;
-  final themeMode = control.getThemeMode("theme_mode");
+  final themeMode = control.get("theme_mode");
   if (hasNoThemes && themeMode == null) return child;
 
-  final ThemeData? parentTheme = (themeMode == null) ? Theme.of(context) : null;
-
-  /// Converts [ThemeMode] to [Brightness] used by [Control.getTheme].
-  Brightness? themeModeToBrightness(ThemeMode? mode) {
-    switch (mode) {
-      case ThemeMode.light:
-        return Brightness.light;
-      case ThemeMode.dark:
-        return Brightness.dark;
-      case ThemeMode.system:
-        return context.select<FletBackend, Brightness>(
-          (backend) => backend.platformBrightness,
-        );
-      case null:
-        return parentTheme?.brightness;
-    }
-  }
-
-  Widget buildTheme(Brightness? brightness) {
-    final themeData = control.getTheme(
-      brightness == Brightness.dark ? "dark_theme" : "theme",
-      context,
-      brightness,
-      parentTheme: parentTheme,
-    );
-    return Theme(data: themeData, child: child);
-  }
-
-  return buildTheme(themeModeToBrightness(themeMode));
+  return PlatformControlTheme(control: control, child: child);
 }
 
 extension ControlContextBuilder on Control {

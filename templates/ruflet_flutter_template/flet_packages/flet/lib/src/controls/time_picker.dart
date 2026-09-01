@@ -1,12 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../models/control.dart';
-import '../utils/colors.dart';
-import '../utils/icons.dart';
-import '../utils/locale.dart';
-import '../utils/misc.dart';
-import '../utils/numbers.dart';
-import '../utils/time.dart';
+import '../widgets/platform_control_renderer.dart';
+import 'cupertino_input_controls.dart';
+import 'material_time_picker.dart';
 
 class TimePickerControl extends StatelessWidget {
   final Control control;
@@ -14,78 +11,8 @@ class TimePickerControl extends StatelessWidget {
   const TimePickerControl({super.key, required this.control});
 
   @override
-  Widget build(BuildContext context) {
-    debugPrint("TimePicker build: ${control.id}");
-
-    bool lastOpen = control.getBool("_open", false)!;
-
-    var open = control.getBool("open", false)!;
-    var value = control.getTimeOfDay("value", TimeOfDay.now())!;
-    var hourFormat = control.getString("hour_format");
-    var switchToTimerEntryModeIcon =
-        control.getIconData("switch_to_timer_icon");
-    var switchToInputEntryModeIcon =
-        control.getIconData("switch_to_input_icon");
-    var locale = control.getLocale("locale");
-
-    void onClosed(TimeOfDay? timeValue) {
-      control.updateProperties({"_open": false}, python: false);
-      control.updateProperties({"value": timeValue, "open": false});
-      if (timeValue != null) {
-        control.triggerEvent("change", timeValue);
-      }
-      control.triggerEvent("dismiss", timeValue == null);
-    }
-
-    Widget createSelectTimeDialog() {
-      Widget dialog = TimePickerDialog(
-        initialTime: value,
-        helpText: control.getString("help_text"),
-        cancelText: control.getString("cancel_text"),
-        confirmText: control.getString("confirm_text"),
-        hourLabelText: control.getString("hour_label_text"),
-        minuteLabelText: control.getString("minute_label_text"),
-        errorInvalidText: control.getString("error_invalid_text"),
-        initialEntryMode: control.getTimePickerEntryMode(
-            "entry_mode", TimePickerEntryMode.dial)!,
-        orientation: control.getOrientation("orientation"),
-        switchToTimerEntryModeIcon: switchToTimerEntryModeIcon != null
-            ? Icon(switchToTimerEntryModeIcon)
-            : null,
-        switchToInputEntryModeIcon: switchToInputEntryModeIcon != null
-            ? Icon(switchToInputEntryModeIcon)
-            : null,
-        onEntryModeChanged: (TimePickerEntryMode mode) {
-          control.updateProperties({"entry_mode": mode.name});
-          control.triggerEvent("entry_mode_change", {"entry_mode": mode.name});
-        },
+  Widget build(BuildContext context) => PlatformControlRenderer(
+        material: (_) => MaterialTimePickerControl(control: control),
+        cupertino: (_) => CupertinoTimePickerControl(control: control),
       );
-
-      final hourFormatMap = {"h12": false, "h24": true, "system": null};
-      return MediaQuery(
-        data: MediaQuery.of(context)
-            .copyWith(alwaysUse24HourFormat: hourFormatMap[hourFormat]),
-        child: locale == null || !locale.isSupportedByDelegates()
-            ? dialog
-            : Localizations.override(
-                context: context, locale: locale, child: dialog),
-      );
-    }
-
-    if (open && (open != lastOpen)) {
-      control.updateProperties({"_open": open}, python: false);
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        showDialog<TimeOfDay>(
-            barrierColor: control.getColor("barrier_color", context),
-            barrierDismissible: !control.getBool("modal", false)!,
-            useRootNavigator: false,
-            context: context,
-            builder: (context) => createSelectTimeDialog()).then((result) {
-          onClosed(result);
-        });
-      });
-    }
-    return const SizedBox.shrink();
-  }
 }

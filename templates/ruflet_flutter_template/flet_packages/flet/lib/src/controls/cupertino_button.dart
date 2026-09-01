@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 
 import '../extensions/control.dart';
 import '../models/control.dart';
+import '../models/control_type.dart';
 import '../utils/alignment.dart';
 import '../utils/borders.dart';
 import '../utils/buttons.dart';
@@ -91,10 +92,9 @@ class _CupertinoButtonControlState extends State<CupertinoButtonControl> {
         "border_radius", const BorderRadius.all(Radius.circular(8.0)))!;
 
     var padding = widget.control.getPadding("padding");
-    bool isFilledButton =
-        {"CupertinoFilledButton", "FilledButton"}.contains(widget.control.type);
-    bool isTintedButton = {"CupertinoTintedButton", "FilledTonalButton"}
-        .contains(widget.control.type);
+    var variant = widget.control.canonicalType;
+    bool isFilledButton = variant == "FilledButton";
+    bool isTintedButton = variant == "FilledTonalButton";
 
     // var style = widget.control.getButtonStyle("style", Theme.of(context),
     //     defaultForegroundColor: theme.colorScheme.primary,

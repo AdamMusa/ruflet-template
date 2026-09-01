@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../models/page_design.dart';
 
 class PageContext extends InheritedWidget {
   final PageDesign widgetsDesign;
-  final ThemeMode? themeMode;
+  final FletThemeMode? themeMode;
   final Brightness? brightness;
 
   const PageContext(

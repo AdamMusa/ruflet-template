@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import '../flet_backend.dart';
 import '../models/control.dart';
+import '../models/page_design.dart';
 import '../utils/tabs.dart';
 import '../utils/transforms.dart';
 import 'alignment.dart';
@@ -81,6 +82,11 @@ Brightness? parseBrightness(String? value, [Brightness? defaultValue]) {
 
 ThemeMode? parseThemeMode(String? value, [ThemeMode? defaultValue]) {
   return parseEnum(ThemeMode.values, value, defaultValue);
+}
+
+FletThemeMode? parseFletThemeMode(String? value,
+    [FletThemeMode? defaultValue]) {
+  return parseEnum(FletThemeMode.values, value, defaultValue);
 }
 
 ThemeData parseTheme(
@@ -1125,6 +1131,11 @@ class NoPageTransitionsBuilder extends PageTransitionsBuilder {
 }
 
 extension ThemeParsers on Control {
+  FletThemeMode? getFletThemeMode(String propertyName,
+      [FletThemeMode? defaultValue]) {
+    return parseFletThemeMode(get(propertyName)?.toString(), defaultValue);
+  }
+
   Brightness? getBrightness(String propertyName, [Brightness? defaultValue]) {
     return parseBrightness(get(propertyName), defaultValue);
   }

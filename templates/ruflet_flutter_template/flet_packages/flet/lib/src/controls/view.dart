@@ -1,7 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
@@ -9,10 +8,10 @@ import '../controls/control_widget.dart';
 import '../extensions/control.dart';
 import '../flet_backend.dart';
 import '../models/control.dart';
+import '../models/control_type.dart';
 import '../models/page_design.dart';
 import '../utils/alignment.dart';
 import '../utils/box.dart';
-import '../utils/buttons.dart';
 import '../utils/colors.dart';
 import '../utils/edge_insets.dart';
 import '../utils/numbers.dart';
@@ -20,8 +19,8 @@ import '../utils/theme.dart';
 import '../widgets/loading_page.dart';
 import '../widgets/page_context.dart';
 import '../widgets/page_media.dart';
-import 'app_bar.dart';
-import 'cupertino_app_bar.dart';
+import '../widgets/platform_page_scaffold.dart';
+import 'adaptive_app_bar.dart';
 import 'scroll_notification_control.dart';
 import 'scrollable_control.dart';
 
@@ -36,8 +35,7 @@ class ViewControl extends StatefulWidget {
 }
 
 class _ViewControlState extends State<ViewControl> {
-  final _materialScaffoldKey = GlobalKey<ScaffoldState>();
-  final _cupertinoPageScaffoldKey = GlobalKey();
+  final _scaffoldController = PlatformPageScaffoldController();
   Control? _overlay;
   Control? _dialogs;
   Completer<bool>? _popCompleter;
@@ -73,16 +71,16 @@ class _ViewControlState extends State<ViewControl> {
     debugPrint("View.$name($args)");
     switch (name) {
       case "show_drawer":
-        _materialScaffoldKey.currentState?.openDrawer();
+        _scaffoldController.showDrawer();
         break;
       case "close_drawer":
-        _materialScaffoldKey.currentState?.closeDrawer();
+        _scaffoldController.closeDrawer();
         break;
       case "show_end_drawer":
-        _materialScaffoldKey.currentState?.openEndDrawer();
+        _scaffoldController.showEndDrawer();
         break;
       case "close_end_drawer":
-        _materialScaffoldKey.currentState?.closeEndDrawer();
+        _scaffoldController.closeEndDrawer();
         break;
       case "confirm_pop":
         if (_popCompleter != null && !_popCompleter!.isCompleted) {
@@ -146,11 +144,9 @@ class _ViewControlState extends State<ViewControl> {
     Widget? appBarWidget;
     if (appBar != null) {
       appBar.notifyParent = true;
-      appBarWidget = pageData?.widgetsDesign == PageDesign.cupertino ||
-              appBar.type == "CupertinoAppBar"
-          ? CupertinoAppBarControl(control: appBar)
-              as ObstructingPreferredSizeWidget
-          : AppBarControl(control: appBar);
+      appBarWidget = appBar.canonicalType == "AppBar"
+          ? AdaptiveAppBarControl(control: appBar)
+          : null;
     }
 
     List<Widget> overlayWidgets = [];
@@ -181,10 +177,9 @@ class _ViewControlState extends State<ViewControl> {
       ...overlayWidgets
     ]);
 
-    var materialTheme = pageData?.themeMode == ThemeMode.light ||
-            ((pageData?.themeMode == null ||
-                    pageData?.themeMode == ThemeMode.system) &&
-                pageData?.brightness == Brightness.light)
+    var materialTheme = pageData?.themeMode
+                .usesLight(pageData.brightness ?? Brightness.light) ==
+            true
         ? parseTheme(control.parent!.get("theme"), context, Brightness.light)
         : control.parent!.getString("dark_theme") != null
             ? parseTheme(
@@ -192,13 +187,12 @@ class _ViewControlState extends State<ViewControl> {
             : parseTheme(
                 control.parent!.get("theme"), context, Brightness.dark);
 
-    Widget scaffold = Scaffold(
-      key: _materialScaffoldKey,
-      backgroundColor: control.getColor("bgcolor", context) ??
-          ((pageData?.widgetsDesign == PageDesign.cupertino)
-              ? CupertinoTheme.of(context).scaffoldBackgroundColor
-              : Theme.of(context).scaffoldBackgroundColor),
-      appBar: appBarWidget is AppBarControl ? appBarWidget : null,
+    final widgetsDesign = pageData?.widgetsDesign ?? PageDesign.material;
+    Widget scaffold = PlatformPageScaffold(
+      controller: _scaffoldController,
+      design: widgetsDesign,
+      backgroundColor: control.getColor("bgcolor", context),
+      appBar: appBarWidget,
       drawer: drawer != null ? ControlWidget(control: drawer) : null,
       onDrawerChanged: (opened) {
         if (!opened) {
@@ -214,10 +208,10 @@ class _ViewControlState extends State<ViewControl> {
       body: body,
       bottomNavigationBar: control.buildWidget("navigation_bar") ??
           control.buildWidget("bottom_appbar"),
+      bottomSheet: control.buildWidget("bottom_sheet"),
       floatingActionButton: control.buildWidget("floating_action_button"),
-      floatingActionButtonLocation: control.getFloatingActionButtonLocation(
-          "floating_action_button_location",
-          FloatingActionButtonLocation.endFloat),
+      floatingActionButtonLocation:
+          control.get("floating_action_button_location"),
     );
 
     var systemOverlayStyle =
@@ -230,14 +224,6 @@ class _ViewControlState extends State<ViewControl> {
         value: systemOverlayStyle.systemUiOverlayStyle!,
         child: scaffold,
       );
-    }
-
-    if (appBarWidget is CupertinoAppBarControl) {
-      scaffold = CupertinoPageScaffold(
-          key: _cupertinoPageScaffoldKey,
-          backgroundColor: control.getColor("bgcolor", context),
-          navigationBar: appBarWidget,
-          child: scaffold);
     }
 
     var backend = FletBackend.of(context);

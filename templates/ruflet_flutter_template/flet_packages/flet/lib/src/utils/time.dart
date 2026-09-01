@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'enums.dart';
 
 import '../models/control.dart';
+import '../models/flet_time.dart';
 import 'numbers.dart';
 
 enum DurationUnit { microseconds, milliseconds, seconds, minutes, hours, days }
@@ -129,6 +130,11 @@ extension TimeParsers on Control {
   }
 
   TimeOfDay? getTimeOfDay(String propertyName, [TimeOfDay? defaultValue]) {
-    return get<TimeOfDay>(propertyName, defaultValue);
+    final value = get(propertyName);
+    return value is FletTime
+        ? TimeOfDay(hour: value.hour, minute: value.minute)
+        : value is TimeOfDay
+            ? value
+            : defaultValue;
   }
 }

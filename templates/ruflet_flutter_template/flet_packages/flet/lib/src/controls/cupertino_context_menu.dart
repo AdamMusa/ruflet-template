@@ -25,6 +25,9 @@ class _CupertinoContextMenuControlState
 
     var content = widget.control.buildWidget("content");
     var actions = widget.control.buildWidgets("actions");
+    if (actions.isEmpty) {
+      actions = widget.control.buildWidgets("items");
+    }
 
     if (actions.isEmpty) {
       return const ErrorControl(

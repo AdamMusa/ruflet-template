@@ -9,6 +9,7 @@ import '../utils/numbers.dart';
 import '../widgets/error.dart';
 import '../widgets/flet_store_mixin.dart';
 import 'base_controls.dart';
+import 'control_widget.dart';
 
 class SegmentedButtonControl extends StatefulWidget {
   final Control control;
@@ -50,15 +51,25 @@ class _SegmentedButtonControlState extends State<SegmentedButtonControl>
         widget.control.getBool("allow_empty_selection", false)!;
     var allowMultipleSelection =
         widget.control.getBool("allow_multiple_selection", false)!;
-    var selected = widget.control
-        .get<List>("selected", [])!
-        .map((e) => e.toString())
-        .toSet();
     var segments = widget.control.children("segments");
+    var legacyControls = widget.control.children("controls");
+    var usesLegacyIndexSchema = segments.isEmpty && legacyControls.isNotEmpty;
+    var selected = usesLegacyIndexSchema
+        ? {widget.control.getInt("selected_index", 0)!.toString()}
+        : widget.control
+            .get<List>("selected", [])!
+            .map((e) => e.toString())
+            .toSet();
 
-    if (segments.isEmpty) {
+    if (segments.isEmpty && legacyControls.isEmpty) {
       return const ErrorControl(
           "SegmentedButton.segments must be contain at least one visible segment");
+    }
+
+    if (usesLegacyIndexSchema) {
+      segments = legacyControls;
+      allowEmptySelection = false;
+      allowMultipleSelection = false;
     }
 
     if (selected.isEmpty && !allowEmptySelection) {
@@ -86,18 +97,35 @@ class _SegmentedButtonControlState extends State<SegmentedButtonControl>
         style: style,
         selectedIcon: widget.control.buildIconOrWidget("selected_icon"),
         onSelectionChanged: !widget.control.disabled
-            ? (newSelection) => onChange(newSelection)
+            ? (newSelection) {
+                if (usesLegacyIndexSchema) {
+                  var index = int.parse(newSelection.first);
+                  widget.control.updateProperties({"selected_index": index},
+                      notify: true);
+                  widget.control.triggerEvent("change", index);
+                } else {
+                  onChange(newSelection);
+                }
+              }
             : null,
         direction: widget.control.getAxis("direction", Axis.horizontal)!,
         expandedInsets: widget.control.getPadding("padding"),
-        segments: segments.map((segment) {
+        segments: segments.asMap().entries.map((entry) {
+          var index = entry.key;
+          var segment = entry.value;
           segment.notifyParent = true;
           return ButtonSegment(
-              value: segment.getString("value")!,
+              value: usesLegacyIndexSchema
+                  ? index.toString()
+                  : segment.getString("value")!,
               enabled: !segment.disabled,
               tooltip: segment.disabled ? null : segment.getString("tooltip"),
-              icon: segment.buildIconOrWidget("icon"),
-              label: segment.buildTextOrWidget("label"));
+              icon: usesLegacyIndexSchema
+                  ? null
+                  : segment.buildIconOrWidget("icon"),
+              label: usesLegacyIndexSchema
+                  ? ControlWidget(control: segment)
+                  : segment.buildTextOrWidget("label"));
         }).toList());
 
     return LayoutControl(control: widget.control, child: segmentedButton);

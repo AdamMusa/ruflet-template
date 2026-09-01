@@ -1,57 +1,41 @@
 import 'package:flutter/widgets.dart';
 
 import 'controls/adaptive_alert_dialog.dart';
+import 'controls/adaptive_app_bar.dart';
+import 'controls/adaptive_action_sheet.dart';
+import 'controls/adaptive_bottom_sheet.dart';
 import 'controls/adaptive_button.dart';
 import 'controls/adaptive_checkbox.dart';
+import 'controls/adaptive_context_menu.dart';
+import 'controls/adaptive_context_menu_action.dart';
+import 'controls/adaptive_date_picker.dart';
+import 'controls/adaptive_list_tile.dart';
+import 'controls/adaptive_picker.dart';
+import 'controls/adaptive_progress_ring.dart';
 import 'controls/adaptive_radio.dart';
+import 'controls/adaptive_segmented_button.dart';
 import 'controls/adaptive_slider.dart';
 import 'controls/adaptive_switch.dart';
 import 'controls/adaptive_texfield.dart';
+import 'controls/adaptive_timer_picker.dart';
 import 'controls/animated_switcher.dart';
-import 'controls/app_bar.dart';
 import 'controls/auto_complete.dart';
 import 'controls/autofill_group.dart';
 import 'controls/banner.dart';
 import 'controls/bottom_app_bar.dart';
-import 'controls/bottom_sheet.dart';
 import 'controls/canvas.dart';
 import 'controls/card.dart';
 import 'controls/chip.dart';
 import 'controls/circle_avatar.dart';
 import 'controls/column.dart';
 import 'controls/container.dart';
-import 'controls/context_menu.dart';
-import 'controls/cupertino_action_sheet.dart';
-import 'controls/cupertino_action_sheet_action.dart';
-import 'controls/cupertino_activity_indicator.dart';
-import 'controls/cupertino_alert_dialog.dart';
-import 'controls/cupertino_app_bar.dart';
-import 'controls/cupertino_bottom_sheet.dart';
-import 'controls/cupertino_button.dart';
-import 'controls/cupertino_checkbox.dart';
-import 'controls/cupertino_context_menu.dart';
-import 'controls/cupertino_context_menu_action.dart';
-import 'controls/cupertino_date_picker.dart';
-import 'controls/cupertino_dialog_action.dart';
-import 'controls/cupertino_list_tile.dart';
-import 'controls/cupertino_navigation_bar.dart';
-import 'controls/cupertino_picker.dart';
-import 'controls/cupertino_radio.dart';
-import 'controls/cupertino_segmented_button.dart';
-import 'controls/cupertino_slider.dart';
-import 'controls/cupertino_sliding_segmented_button.dart';
-import 'controls/cupertino_switch.dart';
-import 'controls/cupertino_textfield.dart';
-import 'controls/cupertino_timer_picker.dart';
 import 'controls/datatable.dart';
-import 'controls/date_picker.dart';
 import 'controls/date_range_picker.dart';
 import 'controls/dismissible.dart';
 import 'controls/divider.dart';
 import 'controls/drag_target.dart';
 import 'controls/draggable.dart';
 import 'controls/dropdown.dart';
-import 'controls/dropdownm2.dart';
 import 'controls/expansion_panel.dart';
 import 'controls/expansion_tile.dart';
 import 'controls/flet_app_control.dart';
@@ -64,7 +48,6 @@ import 'controls/icon_button.dart';
 import 'controls/image.dart';
 import 'controls/interactive_viewer.dart';
 import 'controls/keyboard_listener.dart';
-import 'controls/list_tile.dart';
 import 'controls/list_view.dart';
 import 'controls/markdown.dart';
 import 'controls/menu_bar.dart';
@@ -80,17 +63,16 @@ import 'controls/pagelet.dart';
 import 'controls/placeholder.dart';
 import 'controls/popup_menu_button.dart';
 import 'controls/progress_bar.dart';
-import 'controls/progress_ring.dart';
 import 'controls/radio_group.dart';
 import 'controls/range_slider.dart';
 import 'controls/reorderable_drag_handle.dart';
 import 'controls/reorderable_list_view.dart';
 import 'controls/responsive_row.dart';
+import 'controls/rotated_box.dart';
 import 'controls/row.dart';
 import 'controls/safe_area.dart';
 import 'controls/screenshot.dart';
 import 'controls/search_bar.dart';
-import 'controls/segmented_button.dart';
 import 'controls/selection_area.dart';
 import 'controls/semantics.dart';
 import 'controls/shader_mask.dart';
@@ -108,6 +90,7 @@ import 'controls/window_drag_area.dart';
 import 'flet_extension.dart';
 import 'flet_service.dart';
 import 'models/control.dart';
+import 'models/control_type.dart';
 import 'services/browser_context_menu.dart';
 import 'services/battery.dart';
 import 'services/accelerometer.dart';
@@ -135,31 +118,22 @@ import 'utils/material_icons.dart';
 class FletCoreExtension extends FletExtension {
   @override
   Widget? createWidget(Key? key, Control control) {
-    switch (control.type) {
-      case "AdaptiveAlertDialog":
-        return AdaptiveAlertDialogControl(key: key, control: control);
-      case "AdaptiveButton":
+    switch (control.canonicalType) {
       case "FilledButton":
       case "FilledTonalButton":
       case "OutlinedButton":
       case "TextButton":
         return AdaptiveButtonControl(key: key, control: control);
-      case "AdaptiveCheckbox":
-        return AdaptiveCheckboxControl(key: key, control: control);
-      case "AdaptiveRadio":
-        return AdaptiveRadioControl(key: key, control: control);
-      case "AdaptiveSlider":
-        return AdaptiveSliderControl(key: key, control: control);
-      case "AdaptiveSwitch":
-        return AdaptiveSwitchControl(key: key, control: control);
-      case "AdaptiveTextField":
-        return AdaptiveTextFieldControl(key: key, control: control);
       case "AlertDialog":
         return AdaptiveAlertDialogControl(key: key, control: control);
       case "AnimatedSwitcher":
         return AnimatedSwitcherControl(key: key, control: control);
+      case "ActionSheet":
+        return AdaptiveActionSheetControl(key: key, control: control);
+      case "ActionSheetAction":
+        return AdaptiveActionSheetActionControl(key: key, control: control);
       case "AppBar":
-        return AppBarControl(key: key, control: control);
+        return AdaptiveAppBarControl(key: key, control: control);
       case "AutoComplete":
         return AutoCompleteControl(key: key, control: control);
       case "AutofillGroup":
@@ -169,7 +143,7 @@ class FletCoreExtension extends FletExtension {
       case "BottomAppBar":
         return BottomAppBarControl(key: key, control: control);
       case "BottomSheet":
-        return BottomSheetControl(key: key, control: control);
+        return AdaptiveBottomSheetControl(key: key, control: control);
       case "Button":
         return AdaptiveButtonControl(key: key, control: control);
       case "Canvas":
@@ -187,58 +161,13 @@ class FletCoreExtension extends FletExtension {
       case "Container":
         return ContainerControl(key: key, control: control);
       case "ContextMenu":
-        return ContextMenuControl(key: key, control: control);
-      case "CupertinoActionSheet":
-        return CupertinoActionSheetControl(key: key, control: control);
-      case "CupertinoActionSheetAction":
-        return CupertinoActionSheetActionControl(key: key, control: control);
-      case "CupertinoActivityIndicator":
-        return CupertinoActivityIndicatorControl(key: key, control: control);
-      case "CupertinoAlertDialog":
-        return CupertinoAlertDialogControl(key: key, control: control);
-      case "CupertinoAppBar":
-        return CupertinoAppBarControl(key: key, control: control);
-      case "CupertinoBottomSheet":
-        return CupertinoBottomSheetControl(key: key, control: control);
-      case "CupertinoButton":
-      case "CupertinoFilledButton":
-      case "CupertinoTintedButton":
-        return CupertinoButtonControl(key: key, control: control);
-      case "CupertinoCheckbox":
-        return CupertinoCheckboxControl(key: key, control: control);
-      case "CupertinoContextMenu":
-        return CupertinoContextMenuControl(key: key, control: control);
-      case "CupertinoContextMenuAction":
-        return CupertinoContextMenuActionControl(key: key, control: control);
-      case "CupertinoDatePicker":
-        return CupertinoDatePickerControl(key: key, control: control);
-      case "CupertinoDialogAction":
-        return CupertinoDialogActionControl(key: key, control: control);
-      case "CupertinoListTile":
-        return CupertinoListTileControl(key: key, control: control);
-      case "CupertinoNavigationBar":
-        return CupertinoNavigationBarControl(key: key, control: control);
-      case "CupertinoPicker":
-        return CupertinoPickerControl(key: key, control: control);
-      case "CupertinoRadio":
-        return CupertinoRadioControl(key: key, control: control);
-      case "CupertinoSegmentedButton":
-        return CupertinoSegmentedButtonControl(key: key, control: control);
-      case "CupertinoSlider":
-        return CupertinoSliderControl(key: key, control: control);
-      case "CupertinoSlidingSegmentedButton":
-        return CupertinoSlidingSegmentedButtonControl(
-            key: key, control: control);
-      case "CupertinoSwitch":
-        return CupertinoSwitchControl(key: key, control: control);
-      case "CupertinoTextField":
-        return CupertinoTextFieldControl(key: key, control: control);
-      case "CupertinoTimerPicker":
-        return CupertinoTimerPickerControl(key: key, control: control);
+        return AdaptiveContextMenuControl(key: key, control: control);
+      case "ContextMenuAction":
+        return AdaptiveContextMenuActionControl(key: key, control: control);
       case "DataTable":
         return DataTableControl(key: key, control: control);
       case "DatePicker":
-        return DatePickerControl(key: key, control: control);
+        return AdaptiveDatePickerControl(key: key, control: control);
       case "DateRangePicker":
         return DateRangePickerControl(key: key, control: control);
       case "Dismissible":
@@ -251,8 +180,6 @@ class FletCoreExtension extends FletExtension {
         return DraggableControl(key: key, control: control);
       case "Dropdown":
         return DropdownControl(key: key, control: control);
-      case "DropdownM2":
-        return DropdownM2Control(key: key, control: control);
       case "ExpansionPanelList":
         return ExpansionPanelListControl(key: key, control: control);
       case "ExpansionTile":
@@ -281,7 +208,7 @@ class FletCoreExtension extends FletExtension {
       case "KeyboardListener":
         return KeyboardListenerControl(key: key, control: control);
       case "ListTile":
-        return ListTileControl(key: key, control: control);
+        return AdaptiveListTileControl(key: key, control: control);
       case "ListView":
         return ListViewControl(key: key, control: control);
       case "Markdown":
@@ -308,12 +235,14 @@ class FletCoreExtension extends FletExtension {
         return PageViewControl(key: key, control: control);
       case "Placeholder":
         return PlaceholderControl(key: key, control: control);
+      case "Picker":
+        return AdaptivePickerControl(key: key, control: control);
       case "PopupMenuButton":
         return PopupMenuButtonControl(key: key, control: control);
       case "ProgressBar":
         return ProgressBarControl(key: key, control: control);
       case "ProgressRing":
-        return ProgressRingControl(key: key, control: control);
+        return AdaptiveProgressRingControl(key: key, control: control);
       case "Radio":
         return AdaptiveRadioControl(key: key, control: control);
       case "RadioGroup":
@@ -326,6 +255,8 @@ class FletCoreExtension extends FletExtension {
         return ReorderableListViewControl(key: key, control: control);
       case "ResponsiveRow":
         return ResponsiveRowControl(key: key, control: control);
+      case "RotatedBox":
+        return RotatedBoxControl(key: key, control: control);
       case "Row":
         return RowControl(key: key, control: control);
       case "SafeArea":
@@ -335,7 +266,7 @@ class FletCoreExtension extends FletExtension {
       case "SearchBar":
         return SearchBarControl(key: key, control: control);
       case "SegmentedButton":
-        return SegmentedButtonControl(key: key, control: control);
+        return AdaptiveSegmentedButtonControl(key: key, control: control);
       case "SelectionArea":
         return SelectionAreaControl(key: key, control: control);
       case "Semantics":
@@ -368,6 +299,8 @@ class FletCoreExtension extends FletExtension {
         return AdaptiveTextFieldControl(key: key, control: control);
       case "TimePicker":
         return TimePickerControl(key: key, control: control);
+      case "TimerPicker":
+        return AdaptiveTimerPickerControl(key: key, control: control);
       case "TransparentPointer":
         return TransparentPointerControl(key: key, control: control);
       case "VerticalDivider":

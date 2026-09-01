@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:highlight/highlight.dart' show highlight, Node;
 
 /// Highlight Flutter Widget
@@ -28,8 +28,6 @@ class HighlightView extends StatelessWidget {
   /// Specify text styles such as font family and font size
   final TextStyle? textStyle;
 
-  final bool selectable;
-
   HighlightView(String input,
       {super.key,
       this.language,
@@ -37,8 +35,7 @@ class HighlightView extends StatelessWidget {
       this.padding,
       this.decoration,
       this.textStyle,
-      int tabSize = 8, // TODO: https://github.com/flutter/flutter/issues/50087
-      this.selectable = false})
+      int tabSize = 8})
       : source = input.replaceAll('\t', ' ' * tabSize);
 
   List<TextSpan> _convert(List<Node> nodes) {
@@ -85,16 +82,14 @@ class HighlightView extends StatelessWidget {
   Widget build(BuildContext context) {
     var style = TextStyle(
       fontFamily: _defaultFontFamily,
-      color: theme[_rootKey]?.color ??
-          Theme.of(context).colorScheme.onSurfaceVariant,
+      color: theme[_rootKey]?.color ?? DefaultTextStyle.of(context).style.color,
     );
     if (textStyle != null) {
       style = style.merge(textStyle);
     }
 
     var d = BoxDecoration(
-        color: theme[_rootKey]?.backgroundColor ??
-            Theme.of(context).colorScheme.surfaceContainerHighest);
+        color: theme[_rootKey]?.backgroundColor ?? const Color(0x14000000));
 
     if (decoration != null) {
       d = d.copyWith(borderRadius: (decoration as BoxDecoration).borderRadius);
@@ -103,19 +98,13 @@ class HighlightView extends StatelessWidget {
     return Container(
       padding: padding,
       decoration: d,
-      child: selectable
-          ? SelectableText.rich(TextSpan(
-              style: style,
-              children:
-                  _convert(highlight.parse(source, language: language).nodes!),
-            ))
-          : Text.rich(
-              TextSpan(
-                style: style,
-                children: _convert(
-                    highlight.parse(source, language: language).nodes!),
-              ),
-            ),
+      child: Text.rich(
+        TextSpan(
+          style: style,
+          children:
+              _convert(highlight.parse(source, language: language).nodes!),
+        ),
+      ),
     );
   }
 }

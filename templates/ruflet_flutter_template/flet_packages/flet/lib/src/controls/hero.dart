@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../extensions/control.dart';
 import '../models/control.dart';
@@ -19,12 +19,9 @@ class HeroControl extends StatelessWidget {
     BuildContext toHeroContext,
   ) {
     final toHero = toHeroContext.widget as Hero;
-    return Material(
-      type: MaterialType.transparency,
-      child: DefaultTextStyle(
-        style: DefaultTextStyle.of(toHeroContext).style,
-        child: toHero.child,
-      ),
+    return DefaultTextStyle(
+      style: DefaultTextStyle.of(toHeroContext).style,
+      child: toHero.child,
     );
   }
 

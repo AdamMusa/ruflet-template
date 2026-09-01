@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
 import '../models/control.dart';
+import '../models/control_type.dart';
 import 'edge_insets.dart';
 import 'mouse.dart';
 import 'numbers.dart';
@@ -13,7 +14,9 @@ import 'text.dart';
 /// visible content are treated as menu dividers.
 List<PopupMenuEntry<String>> buildPopupMenuEntries(
     Iterable<Control> items, BuildContext context) {
-  return items.where((item) => item.type == "PopupMenuItem").map((item) {
+  return items
+      .where((item) => item.canonicalType == "ContextMenuAction")
+      .map((item) {
     var checked = item.getBool("checked");
     var height = item.getDouble("height", 48.0)!;
     var padding = item.getPadding("padding");

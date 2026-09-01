@@ -1,12 +1,9 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
 import '../models/control.dart';
-import '../utils/borders.dart';
 import '../utils/colors.dart';
 import '../utils/numbers.dart';
-import '../widgets/flet_store_mixin.dart';
 import 'base_controls.dart';
 
 class CupertinoNavigationBarControl extends StatefulWidget {
@@ -21,7 +18,7 @@ class CupertinoNavigationBarControl extends StatefulWidget {
 }
 
 class _CupertinoNavigationBarControlState
-    extends State<CupertinoNavigationBarControl> with FletStoreMixin {
+    extends State<CupertinoNavigationBarControl> {
   int _selectedIndex = 0;
 
   void _onTap(int index) {
@@ -48,7 +45,12 @@ class _CupertinoNavigationBarControlState
             .getColor("inactive_color", context, CupertinoColors.inactiveGray)!,
         iconSize: widget.control.getDouble("icon_size", 30.0)!,
         currentIndex: _selectedIndex,
-        border: widget.control.getBorder("border", Theme.of(context)),
+        border: Border(
+          top: BorderSide(
+            color: CupertinoColors.separator.resolveFrom(context),
+            width: 0.5,
+          ),
+        ),
         onTap: widget.control.disabled ? null : _onTap,
         items: widget.control.children("destinations").map((dest) {
           dest.notifyParent = true;

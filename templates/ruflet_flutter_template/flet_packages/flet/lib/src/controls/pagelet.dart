@@ -1,18 +1,18 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../extensions/control.dart';
 import '../models/control.dart';
+import '../models/control_type.dart';
 import '../models/page_design.dart';
-import '../utils/buttons.dart';
 import '../utils/colors.dart';
 import '../utils/numbers.dart';
-import '../utils/platform.dart';
 import '../widgets/error.dart';
-import 'app_bar.dart';
+import '../widgets/flet_store_mixin.dart';
+import '../widgets/platform_page_scaffold.dart';
+import '../widgets/platform_control_renderer.dart';
+import 'adaptive_app_bar.dart';
 import 'base_controls.dart';
 import 'control_widget.dart';
-import 'cupertino_app_bar.dart';
 
 class PageletControl extends StatefulWidget {
   final Control control;
@@ -24,9 +24,8 @@ class PageletControl extends StatefulWidget {
   State<PageletControl> createState() => _PageletControlState();
 }
 
-class _PageletControlState extends State<PageletControl> {
-  final _materialScaffoldKey = GlobalKey<ScaffoldState>();
-  final _cupertinoPageScaffoldKey = GlobalKey();
+class _PageletControlState extends State<PageletControl> with FletStoreMixin {
+  final _scaffoldController = PlatformPageScaffoldController();
 
   @override
   void initState() {
@@ -44,16 +43,16 @@ class _PageletControlState extends State<PageletControl> {
     debugPrint("Pagelet.$name($args)");
     switch (name) {
       case "show_drawer":
-        _materialScaffoldKey.currentState?.openDrawer();
+        _scaffoldController.showDrawer();
         break;
       case "close_drawer":
-        _materialScaffoldKey.currentState?.closeDrawer();
+        _scaffoldController.closeDrawer();
         break;
       case "show_end_drawer":
-        _materialScaffoldKey.currentState?.openEndDrawer();
+        _scaffoldController.showEndDrawer();
         break;
       case "close_end_drawer":
-        _materialScaffoldKey.currentState?.closeEndDrawer();
+        _scaffoldController.closeEndDrawer();
         break;
       default:
         throw Exception("Unknown Pagelet method: $name");
@@ -62,6 +61,10 @@ class _PageletControlState extends State<PageletControl> {
 
   @override
   Widget build(BuildContext context) {
+    return withPagePlatform(_buildForPlatform);
+  }
+
+  Widget _buildForPlatform(BuildContext context, TargetPlatform platform) {
     debugPrint("Pagelet build: ${widget.control.id}");
 
     var appBar = widget.control.child("appbar");
@@ -78,7 +81,7 @@ class _PageletControlState extends State<PageletControl> {
       return const ErrorControl("Pagelet.content must be provided and visible");
     }
 
-    var widgetsDesign = widget.control.adaptive == true && isApplePlatform()
+    var widgetsDesign = usesCupertinoControls(platform)
         ? PageDesign.cupertino
         : PageDesign.material;
 
@@ -89,21 +92,16 @@ class _PageletControlState extends State<PageletControl> {
     }
 
     var bar = appBar != null
-        ? appBar.type == "AppBar"
-            ? widgetsDesign == PageDesign.cupertino
-                ? CupertinoAppBarControl(control: appBar)
-                : AppBarControl(control: appBar)
-            : appBar.type == "CupertinoAppBar"
-                ? CupertinoAppBarControl(control: appBar)
-                    as ObstructingPreferredSizeWidget
-                : null
+        ? appBar.canonicalType == "AppBar"
+            ? AdaptiveAppBarControl(control: appBar)
+            : null
         : null;
 
-    Widget scaffold = Scaffold(
-        key: _materialScaffoldKey,
-        backgroundColor: widget.control.getColor("bgcolor", context) ??
-            CupertinoTheme.of(context).scaffoldBackgroundColor,
-        appBar: bar is AppBarControl ? bar : null,
+    Widget scaffold = PlatformPageScaffold(
+        controller: _scaffoldController,
+        design: widgetsDesign,
+        backgroundColor: widget.control.getColor("bgcolor", context),
+        appBar: bar,
         drawer: drawer != null ? ControlWidget(control: drawer) : null,
         onDrawerChanged: (opened) {
           if (drawer != null && !opened) {
@@ -120,21 +118,12 @@ class _PageletControlState extends State<PageletControl> {
         bottomNavigationBar: bnb,
         bottomSheet: bottomSheet,
         floatingActionButton: fab,
-        floatingActionButtonLocation: widget.control
-            .getFloatingActionButtonLocation("floating_action_button_location",
-                FloatingActionButtonLocation.endFloat));
+        floatingActionButtonLocation:
+            widget.control.get("floating_action_button_location"));
 
     if (hasDrawer) {
       // Clip to page bounds so the drawer animation stays hidden outside the pagelet.
       scaffold = ClipRect(child: scaffold);
-    }
-
-    if (bar is CupertinoAppBarControl) {
-      scaffold = CupertinoPageScaffold(
-          key: _cupertinoPageScaffoldKey,
-          backgroundColor: widget.control.getColor("bgcolor", context),
-          navigationBar: bar as ObstructingPreferredSizeWidget,
-          child: scaffold);
     }
 
     final scaffoldWithBoundsCheck = scaffold;
@@ -147,7 +136,7 @@ class _PageletControlState extends State<PageletControl> {
       if (constraints.maxHeight == double.infinity &&
           widget.control.getDouble("height") == null) {
         return const ErrorControl(
-                "Error displaying Pagelet: height is unbounded.",
+            "Error displaying Pagelet: height is unbounded.",
             description:
                 "Either set a fixed \"height\" or nest Pagelet inside expanded control or control with a fixed height.");
       }

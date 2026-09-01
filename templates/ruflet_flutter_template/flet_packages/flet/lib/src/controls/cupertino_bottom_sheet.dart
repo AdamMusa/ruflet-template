@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 
 import '../controls/control_widget.dart';
 import '../models/control.dart';
+import '../models/control_type.dart';
 import '../utils/colors.dart';
 import '../utils/edge_insets.dart';
 import '../utils/numbers.dart';
@@ -20,13 +20,13 @@ class CupertinoBottomSheetControl extends StatelessWidget {
     Control? content = control.child("content");
 
     if (content == null) {
-      return const ErrorControl("CupertinoButtomSheet.content is empty.");
+      return const ErrorControl("CupertinoBottomSheet.content is empty.");
     }
 
     Widget child = ControlWidget(control: content);
 
-    if (["CupertinoPicker", "CupertinoTimerPicker", "CupertinoDatePicker"]
-        .contains(content.type)) {
+    if (["Picker", "TimerPicker", "DatePicker"]
+        .contains(content.canonicalType)) {
       child = Container(
         height: control.getDouble("height", 220.0)!,
         padding: control.getPadding("padding"),
@@ -44,7 +44,7 @@ class CupertinoBottomSheetControl extends StatelessWidget {
       );
     }
 
-    return Material(child: child);
+    return child;
   }
 
   @override
@@ -65,7 +65,10 @@ class CupertinoBottomSheetControl extends StatelessWidget {
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showCupertinoModalPopup(
-            barrierDismissible: !control.getBool("modal", false)!,
+            barrierDismissible: control.getBool("dismissible") ??
+                !control.getBool("modal", false)!,
+            barrierColor: control.getColor("barrier_color", context) ??
+                kCupertinoModalBarrierColor,
             useRootNavigator: false,
             context: context,
             builder: (context) => dialog).then((value) {

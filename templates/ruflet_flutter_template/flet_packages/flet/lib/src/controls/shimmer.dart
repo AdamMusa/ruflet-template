@@ -1,15 +1,16 @@
-import 'package:flutter/material.dart';
-import 'package:shimmer/shimmer.dart';
+import 'package:flutter/widgets.dart';
 import '../utils/enums.dart';
 
 import '../extensions/control.dart';
 import '../models/control.dart';
 import '../utils/colors.dart';
+import '../utils/cupertino_material_style_adapter.dart';
 import '../utils/gradient.dart';
 import '../utils/numbers.dart';
 import '../utils/time.dart';
 import '../widgets/error.dart';
 import 'base_controls.dart';
+import '../third_party/shimmer.dart';
 
 class ShimmerControl extends StatelessWidget {
   final Control control;
@@ -25,7 +26,8 @@ class ShimmerControl extends StatelessWidget {
       return const ErrorControl("Shimmer.content must be specified");
     }
 
-    final gradient = control.getGradient("gradient", Theme.of(context));
+    final gradient =
+        control.getGradient("gradient", materialStyleSchemaTheme(context));
     final baseColor = control.getColor("base_color", context);
     final highlightColor = control.getColor("highlight_color", context);
 

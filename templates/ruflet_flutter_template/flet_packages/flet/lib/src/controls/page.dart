@@ -3,9 +3,8 @@ import 'dart:ui' as ui;
 import 'dart:ui';
 
 import 'package:collection/collection.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -37,6 +36,9 @@ import '../utils/time.dart';
 import '../utils/user_fonts.dart';
 import '../widgets/animated_transition_page.dart';
 import '../widgets/loading_page.dart';
+import '../widgets/platform_control_renderer.dart';
+import '../widgets/platform_app.dart';
+import '../widgets/platform_empty_page.dart';
 import '../widgets/page_context.dart';
 import '../widgets/page_media.dart';
 import 'control_widget.dart';
@@ -491,13 +493,12 @@ class _PageControlState extends State<PageControl> with WidgetsBindingObserver {
             control.getString("platform", "")!.toLowerCase(),
         orElse: () => defaultTargetPlatform);
 
-    var widgetsDesign = control.adaptive == true &&
-            (platform == TargetPlatform.iOS || platform == TargetPlatform.macOS)
+    var widgetsDesign = usesCupertinoControls(platform)
         ? PageDesign.cupertino
         : PageDesign.material;
 
     // theme
-    var themeMode = control.getThemeMode("theme_mode") ??
+    var themeMode = control.getFletThemeMode("theme_mode") ??
         PageContext.of(context)?.themeMode;
 
     var localeConfiguration =
@@ -531,82 +532,33 @@ class _PageControlState extends State<PageControl> with WidgetsBindingObserver {
       darkTheme = newDarkTheme;
     }
 
-    var cupertinoTheme = themeMode == ThemeMode.light ||
-            ((themeMode == null || themeMode == ThemeMode.system) &&
-                brightness == Brightness.light)
+    var cupertinoTheme = themeMode.usesLight(brightness)
         ? control.getCupertinoTheme("theme", context, Brightness.light)
         : control.getString("dark_theme") != null
             ? control.getCupertinoTheme("dark_theme", context, Brightness.dark)
             : control.getCupertinoTheme("theme", context, Brightness.dark);
 
-    var materialTheme = themeMode == ThemeMode.dark ||
-            ((themeMode == null || themeMode == ThemeMode.system) &&
-                brightness == Brightness.dark)
-        ? darkTheme
-        : lightTheme;
-
-    Widget scaffoldMessengerBuilder(BuildContext context, Widget? child) {
-      return Theme(
-          data: materialTheme ?? lightTheme ?? ThemeData(),
-          child: ScaffoldMessenger(child: child ?? const SizedBox.shrink()));
-    }
-
     var showSemanticsDebugger =
         control.getBool("show_semantics_debugger", false)!;
 
-    Widget? app = widgetsDesign == PageDesign.cupertino
-        ? home != null
-            ? CupertinoApp(
-                debugShowCheckedModeBanner: false,
-                showSemanticsDebugger: showSemanticsDebugger,
-                title: windowTitle,
-                theme: cupertinoTheme,
-                builder: scaffoldMessengerBuilder,
-                supportedLocales: localeConfiguration.supportedLocales,
-                locale: localeConfiguration.locale,
-                localizationsDelegates: localizationsDelegates,
-                home: home,
-              )
-            : CupertinoApp.router(
-                debugShowCheckedModeBanner: false,
-                showSemanticsDebugger: showSemanticsDebugger,
-                routerDelegate: _routerDelegate,
-                routeInformationParser: _routeParser,
-                routeInformationProvider: _routeInformationProvider,
-                title: windowTitle,
-                theme: cupertinoTheme,
-                builder: scaffoldMessengerBuilder,
-                localizationsDelegates: localizationsDelegates,
-                supportedLocales: localeConfiguration.supportedLocales,
-                locale: localeConfiguration.locale,
-              )
-        : home != null
-            ? MaterialApp(
-                debugShowCheckedModeBanner: false,
-                showSemanticsDebugger: showSemanticsDebugger,
-                title: windowTitle,
-                theme: lightTheme,
-                darkTheme: darkTheme,
-                themeMode: themeMode,
-                supportedLocales: localeConfiguration.supportedLocales,
-                locale: localeConfiguration.locale,
-                localizationsDelegates: localizationsDelegates,
-                home: home,
-              )
-            : MaterialApp.router(
-                debugShowCheckedModeBanner: false,
-                showSemanticsDebugger: showSemanticsDebugger,
-                routerDelegate: _routerDelegate,
-                routeInformationParser: _routeParser,
-                routeInformationProvider: _routeInformationProvider,
-                title: windowTitle,
-                theme: lightTheme,
-                darkTheme: darkTheme,
-                themeMode: themeMode,
-                localizationsDelegates: localizationsDelegates,
-                supportedLocales: localeConfiguration.supportedLocales,
-                locale: localeConfiguration.locale,
-              );
+    Widget app = PlatformApp(
+      design: widgetsDesign,
+      config: PlatformAppConfig(
+        title: windowTitle,
+        showSemanticsDebugger: showSemanticsDebugger,
+        home: home,
+        routerDelegate: _routerDelegate,
+        routeInformationParser: _routeParser,
+        routeInformationProvider: _routeInformationProvider,
+        materialTheme: lightTheme,
+        materialDarkTheme: darkTheme,
+        materialThemeMode: themeMode,
+        cupertinoTheme: cupertinoTheme,
+        localizationsDelegates: localizationsDelegates,
+        supportedLocales: localeConfiguration.supportedLocales,
+        locale: localeConfiguration.locale,
+      ),
+    );
 
     if (control.getBool("enable_screenshots") == true) {
       app = RepaintBoundary(key: _rootKey, child: app);
@@ -665,8 +617,10 @@ class _PageControlState extends State<PageControl> with WidgetsBindingObserver {
                         : formattedErrorMessage,
                   )
                 ])
-              : const Scaffold(
-                  body: PageMedia(),
+              : PlatformEmptyPage(
+                  design: PageContext.of(context)?.widgetsDesign ??
+                      PageDesign.material,
+                  child: const PageMedia(),
                 )));
     } else {
       String viewRoutes = effectiveViews

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 
@@ -11,6 +11,7 @@ import '../models/control.dart';
 import '../utils/alignment.dart';
 import '../utils/borders.dart';
 import '../utils/colors.dart';
+import '../utils/cupertino_material_style_adapter.dart';
 import '../utils/dash_path.dart';
 import '../utils/drawing.dart';
 import '../utils/hashing.dart';
@@ -105,7 +106,7 @@ class _CanvasControlState extends State<CanvasControl> {
 
         final painter = FletCustomPainter(
             context: context,
-            theme: Theme.of(context),
+            theme: materialStyleSchemaTheme(context),
             shapes: shapes,
             capturedImage: _capturedImage,
             capturedSize: capturedSize,
@@ -148,7 +149,7 @@ class _CanvasControlState extends State<CanvasControl> {
     var paint = CustomPaint(
       painter: FletCustomPainter(
         context: context,
-        theme: Theme.of(context),
+        theme: materialStyleSchemaTheme(context),
         shapes: widget.control.children("shapes"),
         capturedImage: _capturedImage,
         capturedSize: _capturedSize,
@@ -173,7 +174,7 @@ class _CanvasControlState extends State<CanvasControl> {
 
 class FletCustomPainter extends CustomPainter {
   final BuildContext context;
-  final ThemeData theme;
+  final dynamic theme;
   final List<Control> shapes;
   final CanvasControlOnPaintCallback onPaintCallback;
   final ui.Image? capturedImage;
@@ -332,7 +333,7 @@ class FletCustomPainter extends CustomPainter {
   }
 
   void drawColor(Canvas canvas, Control shape) {
-    var color = shape.getColor("color", context, Colors.black)!;
+    var color = shape.getColor("color", context, const Color(0xFF000000))!;
     var blendMode =
         parseBlendMode(shape.getString("blend_mode"), BlendMode.srcOver)!;
     canvas.drawColor(color, blendMode);
@@ -432,7 +433,7 @@ class FletCustomPainter extends CustomPainter {
 
   void drawShadow(Canvas canvas, Control shape) {
     var path = buildPath(shape.get("path", [])!);
-    var color = shape.getColor("color", context, Colors.black)!;
+    var color = shape.getColor("color", context, const Color(0xFF000000))!;
     var elevation = shape.getDouble("elevation", 0)!;
     var transparentOccluder = shape.getBool("transparent_occluder", false)!;
     canvas.drawShadow(path, color, elevation, transparentOccluder);

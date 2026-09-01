@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../models/control.dart';
-import '../widgets/flet_store_mixin.dart';
+import '../widgets/platform_control_renderer.dart';
 import 'cupertino_radio.dart';
 import 'radio.dart';
 
-class AdaptiveRadioControl extends StatelessWidget with FletStoreMixin {
+class AdaptiveRadioControl extends StatelessWidget {
   final Control control;
 
   const AdaptiveRadioControl({super.key, required this.control});
@@ -14,14 +14,9 @@ class AdaptiveRadioControl extends StatelessWidget with FletStoreMixin {
   Widget build(BuildContext context) {
     debugPrint("AdaptiveRadioControl build: ${control.id}");
 
-    return withPagePlatform((context, platform) {
-      if (control.adaptive == true &&
-          (platform == TargetPlatform.iOS ||
-              platform == TargetPlatform.macOS)) {
-        return CupertinoRadioControl(control: control);
-      } else {
-        return RadioControl(control: control);
-      }
-    });
+    return PlatformControlRenderer(
+      material: (_) => RadioControl(control: control),
+      cupertino: (_) => CupertinoRadioControl(control: control),
+    );
   }
 }

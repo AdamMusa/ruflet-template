@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
-import '../extensions/control.dart';
 import '../models/control.dart';
-import '../utils/icons.dart';
-import '../utils/numbers.dart';
-import 'base_controls.dart';
+import '../widgets/platform_control_renderer.dart';
+import 'cupertino_navigation_controls.dart';
+import 'material_navigation_bar_destination.dart';
 
 class NavigationBarDestinationControl extends StatelessWidget {
   final Control control;
@@ -12,18 +11,10 @@ class NavigationBarDestinationControl extends StatelessWidget {
   const NavigationBarDestinationControl({super.key, required this.control});
 
   @override
-  Widget build(BuildContext context) {
-    debugPrint("NavigationBarDestination build: ${control.id}");
-
-    var selectedIcon = control.getIconData("selected_icon");
-    var child = NavigationDestination(
-        enabled: !control.disabled,
-        tooltip: !control.disabled ? control.getString("tooltip") : null,
-        icon: control.buildIconOrWidget("icon")!,
-        selectedIcon: control.buildWidget("selected_icon") ??
-            (selectedIcon != null ? Icon(selectedIcon) : null),
-        label: control.getString("label", "")!);
-
-    return BaseControl(control: control, child: child);
-  }
+  Widget build(BuildContext context) => PlatformControlRenderer(
+        material: (_) =>
+            MaterialNavigationBarDestinationControl(control: control),
+        cupertino: (_) =>
+            CupertinoNavigationBarDestinationControl(control: control),
+      );
 }

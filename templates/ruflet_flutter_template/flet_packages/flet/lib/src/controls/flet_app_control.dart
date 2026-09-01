@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../flet_app.dart';
 import '../flet_app_errors_handler.dart';

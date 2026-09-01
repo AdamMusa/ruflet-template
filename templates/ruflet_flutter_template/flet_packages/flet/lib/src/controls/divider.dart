@@ -1,10 +1,9 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../models/control.dart';
-import '../utils/borders.dart';
-import '../utils/colors.dart';
-import '../utils/numbers.dart';
-import 'base_controls.dart';
+import '../widgets/platform_control_renderer.dart';
+import 'cupertino_surface_controls.dart';
+import 'material_divider.dart';
 
 class DividerControl extends StatelessWidget {
   final Control control;
@@ -12,18 +11,8 @@ class DividerControl extends StatelessWidget {
   const DividerControl({super.key, required this.control});
 
   @override
-  Widget build(BuildContext context) {
-    debugPrint("Divider build: ${control.id}");
-
-    var divider = Divider(
-      height: control.getDouble("height"),
-      thickness: control.getDouble("thickness"),
-      color: control.getColor("color", context),
-      indent: control.getDouble("leading_indent"),
-      endIndent: control.getDouble("trailing_indent"),
-      radius: control.getBorderRadius("radius"),
-    );
-
-    return BaseControl(control: control, child: divider);
-  }
+  Widget build(BuildContext context) => PlatformControlRenderer(
+        material: (_) => MaterialDividerControl(control: control),
+        cupertino: (_) => CupertinoDividerControl(control: control),
+      );
 }
