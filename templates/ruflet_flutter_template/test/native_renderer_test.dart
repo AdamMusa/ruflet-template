@@ -1,9 +1,11 @@
+// ignore_for_file: avoid_relative_lib_imports
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ruflet_client/main.self.dart' as self_entry;
-import 'package:ruflet_client/main.server.dart' as server_entry;
-import 'package:ruflet_client/native_renderer.dart';
+import '../lib/main.self.dart' as self_entry;
+import '../lib/main.server.dart' as server_entry;
+import '../lib/native_renderer.dart';
 
 const _channel = MethodChannel('ruflet/native_renderer');
 
