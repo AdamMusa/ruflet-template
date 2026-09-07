@@ -6,6 +6,7 @@ import '../models/ruflet_time.dart';
 import '../utils/colors.dart';
 import '../utils/edge_insets.dart';
 import '../utils/numbers.dart';
+import '../utils/time.dart';
 import 'base_controls.dart';
 import 'control_widget.dart';
 
@@ -358,12 +359,10 @@ class CupertinoDateRangePickerControl extends StatelessWidget {
     final open = control.getBool("open", false)!;
     final lastOpen = control.getBool("_open", false)!;
     final now = DateTime.now();
-    final initialStart = control.get("start_value") is DateTime
-        ? (control.get("start_value") as DateTime).toLocal()
-        : now;
-    final initialEnd = control.get("end_value") is DateTime
-        ? (control.get("end_value") as DateTime).toLocal()
-        : initialStart;
+    final initialStart = control.getDateTime("start_value", now)!;
+    final initialEnd = control.getDateTime("end_value", initialStart)!;
+    final firstDate = control.getDateTime("first_date");
+    final lastDate = control.getDateTime("last_date");
 
     if (open && open != lastOpen) {
       control.updateProperties({"_open": true}, python: false);
@@ -402,8 +401,8 @@ class CupertinoDateRangePickerControl extends StatelessWidget {
                       child: CupertinoDatePicker(
                         mode: CupertinoDatePickerMode.date,
                         initialDateTime: start,
-                        minimumDate: control.get("first_date") as DateTime?,
-                        maximumDate: control.get("last_date") as DateTime?,
+                        minimumDate: firstDate,
+                        maximumDate: lastDate,
                         onDateTimeChanged: (value) => start = value,
                       ),
                     ),
@@ -412,8 +411,8 @@ class CupertinoDateRangePickerControl extends StatelessWidget {
                       child: CupertinoDatePicker(
                         mode: CupertinoDatePickerMode.date,
                         initialDateTime: end,
-                        minimumDate: control.get("first_date") as DateTime?,
-                        maximumDate: control.get("last_date") as DateTime?,
+                        minimumDate: firstDate,
+                        maximumDate: lastDate,
                         onDateTimeChanged: (value) => end = value,
                       ),
                     ),

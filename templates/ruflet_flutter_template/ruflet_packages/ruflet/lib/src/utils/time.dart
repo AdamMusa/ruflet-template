@@ -60,7 +60,14 @@ extension TimeParsers on Control {
   }
 
   DateTime? getDateTime(String propertyName, [DateTime? defaultValue]) {
-    final value = get<DateTime>(propertyName, defaultValue); // UTC time
-    return value?.toLocal();
+    final value = get(propertyName) ?? defaultValue;
+    if (value == null) return null;
+    // Ruby DSL dates can be ISO strings or decoded MessagePack timestamps.
+    // Date-only strings stay local calendar dates; offsets/UTC are converted
+    // to local time just like the existing timestamp path.
+    if (value is DateTime) return value.toLocal();
+    if (value is String) return DateTime.parse(value).toLocal();
+    throw FormatException(
+        '$propertyName must be a DateTime or ISO date string');
   }
 }
