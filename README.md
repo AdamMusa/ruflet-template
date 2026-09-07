@@ -77,6 +77,10 @@ extension package, backed by `mobile_scanner`, exposed to Ruby as
 
 ## Experimental Apple renderer
 
+The ordinary Flutter host uses [independent Material and Cupertino renderers](docs/platform-renderers.md)
+behind the same Ruby control names. This is separate from the experimental Swift
+renderer described below.
+
 `ruflet build ios --experimental` and `ruflet build macos --experimental`
 replace the Flutter renderer with the native Swift renderer. The mode remains
 part of the ordinary build pipeline: the same `services:` and `extensions:`
