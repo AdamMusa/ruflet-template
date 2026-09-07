@@ -39,8 +39,8 @@ Ubuntu install them with `sudo apt install libwebkit2gtk-4.1-dev`.
 
 ## Conditional extensions and services
 
-The Flutter packages under `flet_packages/` are the local source catalog for
-this template. During a build, the Ruflet CLI keeps the core `flet` package and
+The Flutter packages under `ruflet_packages/` are the local source catalog for
+this template. During a build, the Ruflet CLI keeps the core `ruflet` package and
 only the optional packages and registrations declared by the developer
 application:
 

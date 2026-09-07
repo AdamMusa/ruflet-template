@@ -14,7 +14,7 @@ just to an example app. Rebuild an existing generated client to adopt changes.
   target platform also controls platform-sensitive selection and theme behavior.
 - Neutral control entrypoints choose one lazy renderer. Each renderer owns its
   theme, application shell, navigation, overlays, input chrome, selection, and
-  scrollbars. Shared parsing uses the typed, design-neutral `FletStyleTheme`.
+  scrollbars. Shared parsing uses the typed, design-neutral `RufletStyleTheme`.
   Cupertino does not construct a Material theme to interpret the Ruby DSL.
 - Embedded startup, loading, and error screens use the same renderer selection.
   The template's in-process transport overlay is preserved independently from
@@ -36,10 +36,10 @@ Keep their license files and runtime assets when synchronizing or packaging.
 From the template's `templates/ruflet_flutter_template` directory:
 
 ```sh
-ruby tool/sync_flet_source.rb --check
-ruby tool/test_sync_flet_source.rb
-ruby tool/conformance/test_flet_source_integrity.rb
-cd flet_packages/flet
+ruby tool/sync_ruflet_source.rb --check
+ruby tool/test_sync_ruflet_source.rb
+ruby tool/conformance/test_ruflet_source_integrity.rb
+cd ruflet_packages/ruflet
 flutter test
 flutter analyze lib test
 ```
@@ -56,9 +56,9 @@ The engine test suite includes:
 - Focused native theme, input, button, dialog, page layout, navigation gesture,
   scrollbar, loading, startup, and error-state regressions.
 
-Run extension tests in each package under `flet_packages`: `flet_code_editor`,
-`flet_color_pickers`, `flet_datatable2`, `flet_video`, `flet_map`, `flet_charts`,
-`flet_spinkit`, and `flet_ads`. Run vendored Markdown and math tests inside their
+Run extension tests in each package under `ruflet_packages`: `ruflet_code_editor`,
+`ruflet_color_pickers`, `ruflet_datatable2`, `ruflet_video`, `ruflet_map`, `ruflet_charts`,
+`ruflet_spinkit`, and `ruflet_ads`. Run vendored Markdown and math tests inside their
 own package directories too; the engine's test command does not discover them.
 
 The source repository also retains a simulator smoke-test harness. It exercises
@@ -66,14 +66,18 @@ the real canonical Page/View tree with both Cupertino and Material rendering:
 counter events, text editing, checkbox changes, tabs, dialog open/close, scrolling,
 and navigation-bar geometry. This is more than a screenshot of isolated widgets.
 
-See [the source sync guide](../templates/ruflet_flutter_template/tool/FLET_SOURCE_SYNC.md)
+See [the source sync guide](../templates/ruflet_flutter_template/tool/RUFLET_SOURCE_SYNC.md)
 for exact-commit synchronization, transport overlay preservation, and drift checks.
 
 ## Verified local revision
 
-Source commit `7cce34b72837bc4a3e8518bb24e10c530c91c29b` is mirrored by template
-commit `58fe4bc`. The inventory verifies 594 byte-exact source files, four
-explicit transport overlays, and two preserved template-only transport files.
+Source commit `7cce34b72837bc4a3e8518bb24e10c530c91c29b` was first mirrored by
+template commit `58fe4bc`. The current distribution transforms that source into
+the Ruflet package namespace before applying four transport overlays and two
+preserved template-only transport files. Its version-3 inventory records original
+paths and hashes alongside transformed hashes and the namespace recipe checksum.
+The historical test results below predate the namespace change; rerun the checks
+above when changing the engine.
 The obsolete Material-to-Cupertino theme adapter was removed; its previous
 implementation remains recoverable from Git history.
 
@@ -103,7 +107,7 @@ path. No runtime release was published as part of this task.
 
 ## Scope of the evidence
 
-The separation is in Flet-owned renderers and the identified dependency UI paths.
+The separation is in Ruflet-owned renderers and the identified dependency UI paths.
 It does not remove Flutter's own internal compatibility code from the SDK, prove
 that the other design system is absent from the compiled binary, or imply a
 measured bundle-size reduction. Both design systems remain available for explicit

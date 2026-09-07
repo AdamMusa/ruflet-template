@@ -1,0 +1,23 @@
+name: ruflet_color_pickers
+description: Ruflet color picker controls
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: '>=3.2.3 <4.0.0'
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  flutter_colorpicker: ^1.0.3
+
+  ruflet:
+    path: ../ruflet
+
+dev_dependencies:
+  provider: ^6.1.5
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0

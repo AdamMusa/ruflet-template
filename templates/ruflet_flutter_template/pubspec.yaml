@@ -33,46 +33,48 @@ dependencies:
   flutter_web_plugins:
     sdk: flutter
 
-  # Flet Flutter packages, vendored locally (Dart only) from flet ref
+  # Ruflet Flutter packages, renamed locally from upstream source ref
   # 7cce34b72837bc4a3e8518bb24e10c530c91c29b. No git/Python dependency.
-  flet:
-    path: flet_packages/flet
-  flet_audio:
-    path: flet_packages/flet_audio
-  flet_audio_recorder:
-    path: flet_packages/flet_audio_recorder
-  flet_camera:
-    path: flet_packages/flet_camera
-  flet_charts:
-    path: flet_packages/flet_charts
-  flet_code_editor:
-    path: flet_packages/flet_code_editor
-  flet_color_pickers:
-    path: flet_packages/flet_color_pickers
-  flet_datatable2:
-    path: flet_packages/flet_datatable2
-  flet_flashlight:
-    path: flet_packages/flet_flashlight
-  flet_geolocator:
-    path: flet_packages/flet_geolocator
-  flet_lottie:
-    path: flet_packages/flet_lottie
-  flet_map:
-    path: flet_packages/flet_map
-  flet_rive:
-    path: flet_packages/flet_rive
-  flet_permission_handler:
-    path: flet_packages/flet_permission_handler
-  flet_secure_storage:
-    path: flet_packages/flet_secure_storage
-  flet_spinkit:
-    path: flet_packages/flet_spinkit
-  flet_video:
-    path: flet_packages/flet_video
-  flet_webview:
-    path: flet_packages/flet_webview
+  ruflet:
+    path: ruflet_packages/ruflet
+  ruflet_ads:
+    path: ruflet_packages/ruflet_ads
+  ruflet_audio:
+    path: ruflet_packages/ruflet_audio
+  ruflet_audio_recorder:
+    path: ruflet_packages/ruflet_audio_recorder
+  ruflet_camera:
+    path: ruflet_packages/ruflet_camera
+  ruflet_charts:
+    path: ruflet_packages/ruflet_charts
+  ruflet_code_editor:
+    path: ruflet_packages/ruflet_code_editor
+  ruflet_color_pickers:
+    path: ruflet_packages/ruflet_color_pickers
+  ruflet_datatable2:
+    path: ruflet_packages/ruflet_datatable2
+  ruflet_flashlight:
+    path: ruflet_packages/ruflet_flashlight
+  ruflet_geolocator:
+    path: ruflet_packages/ruflet_geolocator
+  ruflet_lottie:
+    path: ruflet_packages/ruflet_lottie
+  ruflet_map:
+    path: ruflet_packages/ruflet_map
+  ruflet_rive:
+    path: ruflet_packages/ruflet_rive
+  ruflet_permission_handler:
+    path: ruflet_packages/ruflet_permission_handler
+  ruflet_secure_storage:
+    path: ruflet_packages/ruflet_secure_storage
+  ruflet_spinkit:
+    path: ruflet_packages/ruflet_spinkit
+  ruflet_video:
+    path: ruflet_packages/ruflet_video
+  ruflet_webview:
+    path: ruflet_packages/ruflet_webview
   ruflet_qrcode_scanner:
-    path: flet_packages/ruflet_qrcode_scanner
+    path: ruflet_packages/ruflet_qrcode_scanner
   ruby_runtime: ^0.0.13
   flutter_native_splash: ^2.4.7
 dev_dependencies:

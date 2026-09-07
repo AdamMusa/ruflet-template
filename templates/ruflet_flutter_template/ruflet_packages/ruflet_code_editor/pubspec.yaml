@@ -1,0 +1,28 @@
+name: ruflet_code_editor
+description: Ruflet CodeEditor control
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: '>=3.2.3 <4.0.0'
+  flutter: ">=1.17.0"
+
+dependencies:
+  linked_scroll_controller: ^0.2.0
+  scrollable_positioned_list: ^0.3.8
+  url_launcher: ^6.1.8
+  flutter:
+    sdk: flutter
+
+  flutter_code_editor: ^0.3.1
+  flutter_highlight: ^0.7.0
+  highlight: ^0.7.0
+
+  ruflet:
+    path: ../ruflet
+
+dev_dependencies:
+  provider: ^6.1.5
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0

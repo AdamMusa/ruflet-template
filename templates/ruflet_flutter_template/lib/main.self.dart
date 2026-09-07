@@ -1,32 +1,33 @@
 import 'dart:async';
 
-import 'package:flet/flet.dart';
-import 'package:flet/src/widgets/platform_startup_app.dart';
+import 'package:ruflet/ruflet.dart';
+import 'package:ruflet_ads/ruflet_ads.dart' as ruflet_ads;
+import 'package:ruflet/src/widgets/platform_startup_app.dart';
 // --FAT_CLIENT_START--
-import 'package:flet_audio/flet_audio.dart' as ruflet_audio;
+import 'package:ruflet_audio/ruflet_audio.dart' as ruflet_audio;
 // --FAT_CLIENT_END--
-import 'package:flet_audio_recorder/flet_audio_recorder.dart'
+import 'package:ruflet_audio_recorder/ruflet_audio_recorder.dart'
     as ruflet_audio_recorder;
-import 'package:flet_camera/flet_camera.dart' as ruflet_camera;
-import 'package:flet_charts/flet_charts.dart' as ruflet_charts;
-import 'package:flet_code_editor/flet_code_editor.dart' as ruflet_code_editor;
-import 'package:flet_color_pickers/flet_color_pickers.dart'
+import 'package:ruflet_camera/ruflet_camera.dart' as ruflet_camera;
+import 'package:ruflet_charts/ruflet_charts.dart' as ruflet_charts;
+import 'package:ruflet_code_editor/ruflet_code_editor.dart' as ruflet_code_editor;
+import 'package:ruflet_color_pickers/ruflet_color_pickers.dart'
     as ruflet_color_picker;
-import 'package:flet_datatable2/flet_datatable2.dart' as ruflet_datatable2;
-import 'package:flet_flashlight/flet_flashlight.dart' as ruflet_flashlight;
-import 'package:flet_geolocator/flet_geolocator.dart' as ruflet_geolocator;
-import 'package:flet_lottie/flet_lottie.dart' as ruflet_lottie;
-import 'package:flet_map/flet_map.dart' as ruflet_map;
-import 'package:flet_permission_handler/flet_permission_handler.dart'
+import 'package:ruflet_datatable2/ruflet_datatable2.dart' as ruflet_datatable2;
+import 'package:ruflet_flashlight/ruflet_flashlight.dart' as ruflet_flashlight;
+import 'package:ruflet_geolocator/ruflet_geolocator.dart' as ruflet_geolocator;
+import 'package:ruflet_lottie/ruflet_lottie.dart' as ruflet_lottie;
+import 'package:ruflet_map/ruflet_map.dart' as ruflet_map;
+import 'package:ruflet_permission_handler/ruflet_permission_handler.dart'
     as ruflet_permission_handler;
-import 'package:flet_rive/flet_rive.dart' as ruflet_rive;
+import 'package:ruflet_rive/ruflet_rive.dart' as ruflet_rive;
 // --FAT_CLIENT_START--
 // --FAT_CLIENT_END--
-import 'package:flet_secure_storage/flet_secure_storage.dart'
+import 'package:ruflet_secure_storage/ruflet_secure_storage.dart'
     as ruflet_secure_storage;
-import 'package:flet_spinkit/flet_spinkit.dart' as ruflet_spinkit;
+import 'package:ruflet_spinkit/ruflet_spinkit.dart' as ruflet_spinkit;
 // --FAT_CLIENT_START--
-import 'package:flet_video/flet_video.dart' as ruflet_video;
+import 'package:ruflet_video/ruflet_video.dart' as ruflet_video;
 // --FAT_CLIENT_END--
 import 'package:ruflet_qrcode_scanner/ruflet_qrcode_scanner.dart'
     as ruflet_qrcode_scanner;
@@ -35,7 +36,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:ruby_runtime/ruflet_runtime.dart';
 
-import 'package:flet_webview/flet_webview.dart' as ruflet_webview;
+import 'package:ruflet_webview/ruflet_webview.dart' as ruflet_webview;
 import 'native_renderer.dart';
 
 const bool isProduction = bool.fromEnvironment('dart.vm.product');
@@ -95,13 +96,14 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   if (kIsWeb) {
-    final routeUrlStrategy = getFletRouteUrlStrategy();
+    final routeUrlStrategy = getRufletRouteUrlStrategy();
     if (routeUrlStrategy == 'path') {
       usePathUrlStrategy();
     }
   }
 
-  final extensions = <FletExtension>[
+  final extensions = <RufletExtension>[
+    ruflet_ads.Extension(),
     ruflet_spinkit.Extension(),
     ruflet_audio_recorder.Extension(),
     ruflet_camera.Extension(),
@@ -157,7 +159,7 @@ class TemplateApp extends StatefulWidget {
   });
 
   final String pageUrl;
-  final List<FletExtension> extensions;
+  final List<RufletExtension> extensions;
 
   @override
   State<TemplateApp> createState() => _TemplateAppState();
@@ -183,7 +185,7 @@ class _TemplateAppState extends State<TemplateApp> {
   /// The runtime is entirely the platform layer's concern: it locates the
   /// packaged project, unpacks it if the platform needs that, sets the
   /// runtime's environment, and starts the VM. Flutter only needs the endpoint
-  /// used to select the matching Flet channel.
+  /// used to select the matching Ruflet channel.
   Future<void> _resolveEmbeddedTransport() async {
     try {
       final url = await RufletRuntime.serverUrl();
@@ -229,16 +231,16 @@ class _TemplateAppState extends State<TemplateApp> {
     }
 
     if (_pageUrl.isEmpty) {
-      // FletApp cannot be built without a URL, and the runtime has not reported
+      // RufletApp cannot be built without a URL, and the runtime has not reported
       // one yet. Hold a splash rather than delay startup waiting for it.
       return const PlatformStartupApp(title: 'Ruflet');
     }
 
-    return FletApp(
+    return RufletApp(
       title: 'Ruflet',
       pageUrl: _pageUrl,
       assetsDir: '',
-      errorsHandler: FletAppErrorsHandler(),
+      errorsHandler: RufletAppErrorsHandler(),
       showAppStartupScreen: true,
       appStartupScreenMessage: 'Working...',
       appErrorMessage: 'The application encountered an error: {message}',
@@ -252,7 +254,7 @@ class _TemplateAppState extends State<TemplateApp> {
               required forcePyodide,
               required onDisconnect,
               required onMessage,
-            }) => FletInProcessBackendChannel(
+            }) => RufletInProcessBackendChannel(
               sendBytes: RufletRuntime.sendToRuby,
               receiveBytes: RufletRuntime.receiveFromRuby,
               closeBytes: RufletRuntime.closeBridge,

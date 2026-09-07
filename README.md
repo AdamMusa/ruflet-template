@@ -52,14 +52,14 @@ address is baked in.
 
 ## Bundled extensions
 
-`flet_packages/` carries the Flet Flutter extension packages a Ruflet app can
+`ruflet_packages/` carries the Ruflet Flutter extension packages a Ruflet app can
 switch on from `ruflet.yaml`:
 
-`flet` · `flet_ads` · `flet_audio` · `flet_audio_recorder` · `flet_camera` ·
-`flet_charts` · `flet_code_editor` · `flet_color_pickers` · `flet_datatable2` ·
-`flet_flashlight` · `flet_geolocator` · `flet_lottie` · `flet_map` ·
-`flet_permission_handler` · `flet_rive` · `flet_secure_storage` · `flet_spinkit` ·
-`flet_video` · `flet_webview` · `ruflet_qrcode_scanner`
+`ruflet` · `ruflet_ads` · `ruflet_audio` · `ruflet_audio_recorder` · `ruflet_camera` ·
+`ruflet_charts` · `ruflet_code_editor` · `ruflet_color_pickers` · `ruflet_datatable2` ·
+`ruflet_flashlight` · `ruflet_geolocator` · `ruflet_lottie` · `ruflet_map` ·
+`ruflet_permission_handler` · `ruflet_rive` · `ruflet_secure_storage` · `ruflet_spinkit` ·
+`ruflet_video` · `ruflet_webview` · `ruflet_qrcode_scanner`
 
 Listing an extension in `ruflet.yaml` adds its package and registration to the
 generated client. Leaving it out strips both, so an app only carries what it uses.
@@ -71,7 +71,7 @@ extensions:
   - qrcode_scanner
 ```
 
-`ruflet_qrcode_scanner` is first-party and shows the pattern: an ordinary Flet
+`ruflet_qrcode_scanner` is first-party and shows the pattern: an ordinary Ruflet
 extension package, backed by `mobile_scanner`, exposed to Ruby as
 `qrcode_scanner(...)`.
 
@@ -118,18 +118,18 @@ rm -rf ~/.ruflet/templates/ruflet_flutter_template
 The extension packages are normal Flutter packages and are tested as such:
 
 ```bash
-cd templates/ruflet_flutter_template/flet_packages/ruflet_qrcode_scanner
+cd templates/ruflet_flutter_template/ruflet_packages/ruflet_qrcode_scanner
 flutter test
 ```
 
 ## Credit
 
-The rendering engine and wire protocol are [Flet](https://github.com/flet-dev/flet)'s
-work — which is why a Flet extension package drops in here unchanged. Ruflet would
+The rendering engine and wire protocol originate in [Flet](https://github.com/flet-dev/flet).
+This distribution maintains the renamed Ruflet engine and extension forks. Ruflet would
 not exist without it.
 
 ## License
 
 Distributed as part of [Ruflet](https://github.com/AdamMusa/ruflet), under its
-MIT license. The bundled `flet_packages/` keep the licenses of their upstream
+MIT license. The bundled `ruflet_packages/` keep the licenses of their upstream
 projects.

@@ -1,0 +1,58 @@
+import 'package:ruflet/ruflet.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_map/flutter_map.dart';
+
+import 'utils/map.dart';
+
+class PolylineLayerControl extends StatelessWidget with RufletStoreMixin {
+  final Control control;
+
+  const PolylineLayerControl({super.key, required this.control});
+
+  @override
+  Widget build(BuildContext context) {
+    debugPrint("PolylineLayerControl build: ${control.id}");
+
+    var polylines = control
+        .children("polylines")
+        .where((c) => c.type == "PolylineMarker")
+        .map((polyline) {
+      polyline.notifyParent = true;
+      return Polyline(
+          borderStrokeWidth: polyline.getDouble("border_stroke_width", 0)!,
+          borderColor: polyline.getColor(
+              "border_color", context, const Color(0xFFFFEB3B))!,
+          color: polyline.getColor("color", context, const Color(0xFFFFEB3B))!,
+          pattern: parseStrokePattern(
+              polyline.get("stroke_pattern"), const StrokePattern.solid())!,
+          strokeCap: polyline.getStrokeCap("stroke_cap", StrokeCap.round)!,
+          strokeJoin: polyline.getStrokeJoin("stroke_join", StrokeJoin.round)!,
+          strokeWidth: polyline.getDouble("stroke_width", 1.0)!,
+          useStrokeWidthInMeter:
+              polyline.getBool("use_stroke_width_in_meter", false)!,
+          colorsStop: polyline
+              .get("colors_stop", [])!
+              .map((e) => parseDouble(e))
+              .nonNulls
+              .toList(),
+          gradientColors: polyline
+              .get("gradient_colors", [])!
+              .map((e) => parseColor(e, RufletStyleTheme.of(context)))
+              .nonNulls
+              .toList(),
+          points: polyline
+              .get("coordinates", [])!
+              .map((c) => parseLatLng(c))
+              .nonNulls
+              .toList());
+    }).toList();
+
+    return PolylineLayer(
+      polylines: polylines,
+      cullingMargin: control.getDouble("culling_margin", 10.0)!,
+      minimumHitbox: control.getDouble("min_hittable_radius", 10.0)!,
+      simplificationTolerance:
+          control.getDouble("simplification_tolerance", 0.3)!,
+    );
+  }
+}
