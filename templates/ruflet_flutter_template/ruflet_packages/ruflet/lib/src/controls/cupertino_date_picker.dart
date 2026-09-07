@@ -43,7 +43,10 @@ class _CupertinoDatePickerControlState
         use24hFormat: widget.control.getBool("use_24h_format", false)!,
         dateOrder: widget.control.getDatePickerDateOrder("date_order"),
         mode: widget.control.getCupertinoDatePickerMode(
-            "date_picker_mode", CupertinoDatePickerMode.dateAndTime)!,
+            "date_picker_mode",
+            widget.control.type == "CupertinoDatePicker"
+                ? CupertinoDatePickerMode.dateAndTime
+                : CupertinoDatePickerMode.date)!,
         onDateTimeChanged: (DateTime value) {
           widget.control.updateProperties({"value": value});
           widget.control.triggerEvent("change", value);

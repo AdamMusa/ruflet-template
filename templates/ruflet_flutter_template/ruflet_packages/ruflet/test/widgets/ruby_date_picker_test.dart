@@ -22,6 +22,40 @@ class _Backend extends RufletBackend {
 }
 
 void main() {
+  for (final type in ['DatePicker', 'CupertinoDatePicker']) {
+    for (final explicitMode in [null, 'date', 'dateAndTime']) {
+      testWidgets('iOS $type respects picker mode ${explicitMode ?? "default"}',
+          (tester) async {
+        final backend = _Backend(TargetPlatform.iOS);
+        final control = Control.fromMap({
+          '_c': type,
+          '_i': 1,
+          'open': true,
+          'value': '2026-05-21',
+          if (explicitMode != null) 'date_picker_mode': explicitMode,
+        }, backend);
+        await tester.pumpWidget(ChangeNotifierProvider<RufletBackend>.value(
+          value: backend,
+          child: CupertinoApp(
+              home: Center(
+                  child: SizedBox(
+                      height: 400, child: ControlWidget(control: control)))),
+        ));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull);
+        expect(find.byType(ErrorControl), findsNothing);
+        final picker = tester
+            .widget<CupertinoDatePicker>(find.byType(CupertinoDatePicker));
+        expect(
+            picker.mode,
+            explicitMode == 'date' ||
+                    (explicitMode == null && type == 'DatePicker')
+                ? CupertinoDatePickerMode.date
+                : CupertinoDatePickerMode.dateAndTime);
+      });
+    }
+  }
+
   test('date attributes accept Ruby ISO strings and decoded wire dates', () {
     final control = Control.fromMap(
         {'_c': 'DatePicker', '_i': 1}, _Backend(TargetPlatform.iOS));
