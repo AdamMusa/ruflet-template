@@ -1,6 +1,8 @@
 import 'package:flet/flet.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+
+import 'platform_pumping_heart.dart';
 
 class SpinKitControl extends StatefulWidget {
   final Control control;
@@ -15,7 +17,8 @@ class _SpinKitControlState extends State<SpinKitControl> {
   @override
   Widget build(BuildContext context) {
     final color = widget.control.getColor("color", context) ??
-        Theme.of(context).primaryColor;
+        FletStyleTheme.of(context).color('primary') ??
+        const Color(0xFF007AFF);
     final size = widget.control.getDouble("size", 50.0)!;
     final isRufletControl = widget.control.type == "RufletSpinKit";
     final duration = isRufletControl
@@ -137,7 +140,7 @@ class _SpinKitControlState extends State<SpinKitControl> {
         );
         break;
       case "SpinKitPumpingHeart":
-        spinner = SpinKitPumpingHeart(
+        spinner = PlatformPumpingHeart(
           color: color,
           size: size,
           duration: duration ?? const Duration(milliseconds: 1000),
