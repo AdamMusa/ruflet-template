@@ -1,6 +1,0 @@
-{
-  "report_version": 1,
-  "scope": "non-public top-level Swift declarations with exactly one corpus occurrence",
-  "source_files": 372,
-  "proven_unreferenced": []
-}

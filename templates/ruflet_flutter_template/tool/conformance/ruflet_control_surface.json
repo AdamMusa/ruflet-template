@@ -2,10 +2,10 @@
   "contract_version": 1,
   "source": "Ruflet::UI control and service registries",
   "summary": {
-    "advertised_entries": 329,
-    "visual_entries": 293,
-    "service_entries": 36,
-    "wire_types": 196
+    "advertised_entries": 386,
+    "visual_entries": 348,
+    "service_entries": 38,
+    "wire_types": 205
   },
   "entries": [
     {
@@ -75,6 +75,26 @@
         "data",
         "key",
         "on_state_change"
+      ]
+    },
+    {
+      "dsl_name": "browser_context_menu",
+      "family": "service",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::BrowserContextMenuControl",
+      "wire_type": "BrowserContextMenu",
+      "keywords": [
+        "data",
+        "key"
+      ]
+    },
+    {
+      "dsl_name": "browsercontextmenu",
+      "family": "service",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::BrowserContextMenuControl",
+      "wire_type": "BrowserContextMenu",
+      "keywords": [
+        "data",
+        "key"
       ]
     },
     {
@@ -935,130 +955,74 @@
       "keywords": []
     },
     {
+      "dsl_name": "banner_ad",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::BannerAdControl",
+      "wire_type": "BannerAd",
+      "keywords": []
+    },
+    {
+      "dsl_name": "bannerad",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::BannerAdControl",
+      "wire_type": "BannerAd",
+      "keywords": []
+    },
+    {
       "dsl_name": "bar_chart",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::BarChartControl",
       "wire_type": "BarChart",
-      "keywords": [
-        "border",
-        "bottom_axis",
-        "groups",
-        "height",
-        "horizontal_grid_lines",
-        "left_axis",
-        "max_x",
-        "max_y",
-        "min_x",
-        "min_y",
-        "on_event",
-        "right_axis",
-        "tooltip",
-        "top_axis",
-        "vertical_grid_lines",
-        "width"
-      ]
+      "keywords": []
     },
     {
       "dsl_name": "bar_chart_group",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::BarChartGroupControl",
-      "wire_type": "group",
-      "keywords": [
-        "bars_space",
-        "rods",
-        "showing_tooltip_indicators",
-        "x"
-      ]
+      "wire_type": "BarChartGroup",
+      "keywords": []
     },
     {
       "dsl_name": "bar_chart_rod",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::BarChartRodControl",
-      "wire_type": "rod",
-      "keywords": [
-        "border_radius",
-        "color",
-        "from_y",
-        "gradient",
-        "rod_stack_items",
-        "to_y",
-        "width"
-      ]
+      "wire_type": "BarChartRod",
+      "keywords": []
     },
     {
       "dsl_name": "bar_chart_rod_stack_item",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::BarChartRodStackItemControl",
-      "wire_type": "stack_item",
-      "keywords": [
-        "border_side",
-        "color",
-        "from_y",
-        "to_y"
-      ]
+      "wire_type": "BarChartRodStackItem",
+      "keywords": []
     },
     {
       "dsl_name": "barchart",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::BarChartControl",
       "wire_type": "BarChart",
-      "keywords": [
-        "border",
-        "bottom_axis",
-        "groups",
-        "height",
-        "horizontal_grid_lines",
-        "left_axis",
-        "max_x",
-        "max_y",
-        "min_x",
-        "min_y",
-        "on_event",
-        "right_axis",
-        "tooltip",
-        "top_axis",
-        "vertical_grid_lines",
-        "width"
-      ]
+      "keywords": []
     },
     {
       "dsl_name": "barchartgroup",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::BarChartGroupControl",
-      "wire_type": "group",
-      "keywords": [
-        "bars_space",
-        "rods",
-        "showing_tooltip_indicators",
-        "x"
-      ]
+      "wire_type": "BarChartGroup",
+      "keywords": []
     },
     {
       "dsl_name": "barchartrod",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::BarChartRodControl",
-      "wire_type": "rod",
-      "keywords": [
-        "border_radius",
-        "color",
-        "from_y",
-        "gradient",
-        "rod_stack_items",
-        "to_y",
-        "width"
-      ]
+      "wire_type": "BarChartRod",
+      "keywords": []
     },
     {
       "dsl_name": "barchartrodstackitem",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::BarChartRodStackItemControl",
-      "wire_type": "stack_item",
-      "keywords": [
-        "border_side",
-        "color",
-        "from_y",
-        "to_y"
-      ]
+      "wire_type": "BarChartRodStackItem",
+      "keywords": []
     },
     {
       "dsl_name": "base_page",
@@ -1072,6 +1036,20 @@
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::BasePageControl",
       "wire_type": "BasePage",
+      "keywords": []
+    },
+    {
+      "dsl_name": "block_picker",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::BlockPickerControl",
+      "wire_type": "BlockPicker",
+      "keywords": []
+    },
+    {
+      "dsl_name": "blockpicker",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::BlockPickerControl",
+      "wire_type": "BlockPicker",
       "keywords": []
     },
     {
@@ -1195,14 +1173,20 @@
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::BrowserContextMenuControl",
       "wire_type": "BrowserContextMenu",
-      "keywords": []
+      "keywords": [
+        "data",
+        "key"
+      ]
     },
     {
       "dsl_name": "browsercontextmenu",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::BrowserContextMenuControl",
       "wire_type": "BrowserContextMenu",
-      "keywords": []
+      "keywords": [
+        "data",
+        "key"
+      ]
     },
     {
       "dsl_name": "button",
@@ -1267,70 +1251,28 @@
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CandlestickChartControl",
       "wire_type": "CandlestickChart",
-      "keywords": [
-        "bottom_axis",
-        "height",
-        "left_axis",
-        "max_x",
-        "max_y",
-        "min_x",
-        "min_y",
-        "on_event",
-        "right_axis",
-        "spots",
-        "tooltip",
-        "top_axis",
-        "width"
-      ]
+      "keywords": []
     },
     {
       "dsl_name": "candlestick_chart_spot",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CandlestickChartSpotControl",
       "wire_type": "CandlestickChartSpot",
-      "keywords": [
-        "close",
-        "high",
-        "low",
-        "open",
-        "selected",
-        "x"
-      ]
+      "keywords": []
     },
     {
       "dsl_name": "candlestickchart",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CandlestickChartControl",
       "wire_type": "CandlestickChart",
-      "keywords": [
-        "bottom_axis",
-        "height",
-        "left_axis",
-        "max_x",
-        "max_y",
-        "min_x",
-        "min_y",
-        "on_event",
-        "right_axis",
-        "spots",
-        "tooltip",
-        "top_axis",
-        "width"
-      ]
+      "keywords": []
     },
     {
       "dsl_name": "candlestickchartspot",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CandlestickChartSpotControl",
       "wire_type": "CandlestickChartSpot",
-      "keywords": [
-        "close",
-        "high",
-        "low",
-        "open",
-        "selected",
-        "x"
-      ]
+      "keywords": []
     },
     {
       "dsl_name": "canvas",
@@ -1434,47 +1376,29 @@
       "dsl_name": "chart_axis",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::ChartAxisControl",
-      "wire_type": "axis",
-      "keywords": [
-        "label_size",
-        "labels",
-        "show_labels",
-        "title",
-        "title_size"
-      ]
+      "wire_type": "ChartAxis",
+      "keywords": []
     },
     {
       "dsl_name": "chart_axis_label",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::ChartAxisLabelControl",
-      "wire_type": "l",
-      "keywords": [
-        "label",
-        "value"
-      ]
+      "wire_type": "ChartAxisLabel",
+      "keywords": []
     },
     {
       "dsl_name": "chartaxis",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::ChartAxisControl",
-      "wire_type": "axis",
-      "keywords": [
-        "label_size",
-        "labels",
-        "show_labels",
-        "title",
-        "title_size"
-      ]
+      "wire_type": "ChartAxis",
+      "keywords": []
     },
     {
       "dsl_name": "chartaxislabel",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::ChartAxisLabelControl",
-      "wire_type": "l",
-      "keywords": [
-        "label",
-        "value"
-      ]
+      "wire_type": "ChartAxisLabel",
+      "keywords": []
     },
     {
       "dsl_name": "checkbox",
@@ -1684,6 +1608,20 @@
       ]
     },
     {
+      "dsl_name": "circle_layer",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::CircleLayerControl",
+      "wire_type": "CircleLayer",
+      "keywords": []
+    },
+    {
+      "dsl_name": "circle_marker",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::CircleMarkerControl",
+      "wire_type": "CircleMarker",
+      "keywords": []
+    },
+    {
       "dsl_name": "circleavatar",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CircleAvatarControl",
@@ -1735,10 +1673,52 @@
       ]
     },
     {
+      "dsl_name": "circlelayer",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::CircleLayerControl",
+      "wire_type": "CircleLayer",
+      "keywords": []
+    },
+    {
+      "dsl_name": "circlemarker",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::CircleMarkerControl",
+      "wire_type": "CircleMarker",
+      "keywords": []
+    },
+    {
+      "dsl_name": "code_editor",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::CodeEditorControl",
+      "wire_type": "CodeEditor",
+      "keywords": []
+    },
+    {
+      "dsl_name": "codeeditor",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::CodeEditorControl",
+      "wire_type": "CodeEditor",
+      "keywords": []
+    },
+    {
       "dsl_name": "color",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::ColorControl",
       "wire_type": "Color",
+      "keywords": []
+    },
+    {
+      "dsl_name": "color_picker",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::ColorPickerControl",
+      "wire_type": "ColorPicker",
+      "keywords": []
+    },
+    {
+      "dsl_name": "colorpicker",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::ColorPickerControl",
+      "wire_type": "ColorPicker",
       "keywords": []
     },
     {
@@ -1975,7 +1955,7 @@
       "dsl_name": "cupertino_action_sheet",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoActionSheetControl",
-      "wire_type": "CupertinoActionSheet",
+      "wire_type": "ActionSheet",
       "keywords": [
         "actions",
         "align",
@@ -2021,7 +2001,7 @@
       "dsl_name": "cupertino_action_sheet_action",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoActionSheetActionControl",
-      "wire_type": "CupertinoActionSheetAction",
+      "wire_type": "ActionSheetAction",
       "keywords": [
         "align",
         "animate_align",
@@ -2068,7 +2048,7 @@
       "dsl_name": "cupertino_activity_indicator",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoActivityIndicatorControl",
-      "wire_type": "CupertinoActivityIndicator",
+      "wire_type": "ProgressRing",
       "keywords": [
         "align",
         "animate_align",
@@ -2114,28 +2094,28 @@
       "dsl_name": "cupertino_alert_dialog",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoAlertDialogControl",
-      "wire_type": "CupertinoAlertDialog",
+      "wire_type": "AlertDialog",
       "keywords": []
     },
     {
       "dsl_name": "cupertino_app_bar",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoAppBarControl",
-      "wire_type": "CupertinoAppBar",
+      "wire_type": "AppBar",
       "keywords": []
     },
     {
       "dsl_name": "cupertino_bottom_sheet",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoBottomSheetControl",
-      "wire_type": "CupertinoBottomSheet",
+      "wire_type": "BottomSheet",
       "keywords": []
     },
     {
       "dsl_name": "cupertino_button",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoButtonControl",
-      "wire_type": "CupertinoButton",
+      "wire_type": "Button",
       "keywords": [
         "align",
         "alignment",
@@ -2197,7 +2177,7 @@
       "dsl_name": "cupertino_checkbox",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoCheckboxControl",
-      "wire_type": "CupertinoCheckbox",
+      "wire_type": "Checkbox",
       "keywords": [
         "active_color",
         "align",
@@ -2256,21 +2236,21 @@
       "dsl_name": "cupertino_context_menu",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoContextMenuControl",
-      "wire_type": "CupertinoContextMenu",
+      "wire_type": "ContextMenu",
       "keywords": []
     },
     {
       "dsl_name": "cupertino_context_menu_action",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoContextMenuActionControl",
-      "wire_type": "CupertinoContextMenuAction",
+      "wire_type": "ContextMenuAction",
       "keywords": []
     },
     {
       "dsl_name": "cupertino_date_picker",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoDatePickerControl",
-      "wire_type": "CupertinoDatePicker",
+      "wire_type": "DatePicker",
       "keywords": [
         "align",
         "animate_align",
@@ -2326,14 +2306,14 @@
       "dsl_name": "cupertino_dialog_action",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoDialogActionControl",
-      "wire_type": "CupertinoDialogAction",
+      "wire_type": "Button",
       "keywords": []
     },
     {
       "dsl_name": "cupertino_filled_button",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoFilledButtonControl",
-      "wire_type": "CupertinoFilledButton",
+      "wire_type": "FilledButton",
       "keywords": [
         "align",
         "alignment",
@@ -2395,7 +2375,7 @@
       "dsl_name": "cupertino_list_tile",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoListTileControl",
-      "wire_type": "CupertinoListTile",
+      "wire_type": "ListTile",
       "keywords": [
         "additional_info",
         "align",
@@ -2451,7 +2431,7 @@
       "dsl_name": "cupertino_navigation_bar",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoNavigationBarControl",
-      "wire_type": "CupertinoNavigationBar",
+      "wire_type": "NavigationBar",
       "keywords": [
         "active_color",
         "align",
@@ -2501,7 +2481,7 @@
       "dsl_name": "cupertino_picker",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoPickerControl",
-      "wire_type": "CupertinoPicker",
+      "wire_type": "Picker",
       "keywords": [
         "align",
         "animate_align",
@@ -2556,7 +2536,7 @@
       "dsl_name": "cupertino_radio",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoRadioControl",
-      "wire_type": "CupertinoRadio",
+      "wire_type": "Radio",
       "keywords": [
         "active_color",
         "align",
@@ -2611,7 +2591,7 @@
       "dsl_name": "cupertino_segmented_button",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoSegmentedButtonControl",
-      "wire_type": "CupertinoSegmentedButton",
+      "wire_type": "SegmentedButton",
       "keywords": [
         "align",
         "animate_align",
@@ -2663,7 +2643,7 @@
       "dsl_name": "cupertino_slider",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoSliderControl",
-      "wire_type": "CupertinoSlider",
+      "wire_type": "Slider",
       "keywords": [
         "active_color",
         "align",
@@ -2716,7 +2696,7 @@
       "dsl_name": "cupertino_sliding_segmented_button",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoSlidingSegmentedButtonControl",
-      "wire_type": "CupertinoSlidingSegmentedButton",
+      "wire_type": "SegmentedButton",
       "keywords": [
         "align",
         "animate_align",
@@ -2765,7 +2745,7 @@
       "dsl_name": "cupertino_switch",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoSwitchControl",
-      "wire_type": "CupertinoSwitch",
+      "wire_type": "Switch",
       "keywords": [
         "active_thumb_image",
         "active_thumb_image_src",
@@ -2829,7 +2809,7 @@
       "dsl_name": "cupertino_text_field",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoTextFieldControl",
-      "wire_type": "CupertinoTextField",
+      "wire_type": "TextField",
       "keywords": [
         "adaptive",
         "align",
@@ -2977,7 +2957,7 @@
       "dsl_name": "cupertino_timer_picker",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoTimerPickerControl",
-      "wire_type": "CupertinoTimerPicker",
+      "wire_type": "TimerPicker",
       "keywords": [
         "align",
         "alignment",
@@ -3027,7 +3007,7 @@
       "dsl_name": "cupertino_tinted_button",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoTintedButtonControl",
-      "wire_type": "CupertinoTintedButton",
+      "wire_type": "FilledTonalButton",
       "keywords": [
         "align",
         "alignment",
@@ -3089,7 +3069,7 @@
       "dsl_name": "cupertinoactionsheet",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoActionSheetControl",
-      "wire_type": "CupertinoActionSheet",
+      "wire_type": "ActionSheet",
       "keywords": [
         "actions",
         "align",
@@ -3135,7 +3115,7 @@
       "dsl_name": "cupertinoactionsheetaction",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoActionSheetActionControl",
-      "wire_type": "CupertinoActionSheetAction",
+      "wire_type": "ActionSheetAction",
       "keywords": [
         "align",
         "animate_align",
@@ -3182,7 +3162,7 @@
       "dsl_name": "cupertinoactivityindicator",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoActivityIndicatorControl",
-      "wire_type": "CupertinoActivityIndicator",
+      "wire_type": "ProgressRing",
       "keywords": [
         "align",
         "animate_align",
@@ -3228,28 +3208,28 @@
       "dsl_name": "cupertinoalertdialog",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoAlertDialogControl",
-      "wire_type": "CupertinoAlertDialog",
+      "wire_type": "AlertDialog",
       "keywords": []
     },
     {
       "dsl_name": "cupertinoappbar",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoAppBarControl",
-      "wire_type": "CupertinoAppBar",
+      "wire_type": "AppBar",
       "keywords": []
     },
     {
       "dsl_name": "cupertinobottomsheet",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoBottomSheetControl",
-      "wire_type": "CupertinoBottomSheet",
+      "wire_type": "BottomSheet",
       "keywords": []
     },
     {
       "dsl_name": "cupertinobutton",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoButtonControl",
-      "wire_type": "CupertinoButton",
+      "wire_type": "Button",
       "keywords": [
         "align",
         "alignment",
@@ -3311,7 +3291,7 @@
       "dsl_name": "cupertinocheckbox",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoCheckboxControl",
-      "wire_type": "CupertinoCheckbox",
+      "wire_type": "Checkbox",
       "keywords": [
         "active_color",
         "align",
@@ -3370,21 +3350,21 @@
       "dsl_name": "cupertinocontextmenu",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoContextMenuControl",
-      "wire_type": "CupertinoContextMenu",
+      "wire_type": "ContextMenu",
       "keywords": []
     },
     {
       "dsl_name": "cupertinocontextmenuaction",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoContextMenuActionControl",
-      "wire_type": "CupertinoContextMenuAction",
+      "wire_type": "ContextMenuAction",
       "keywords": []
     },
     {
       "dsl_name": "cupertinodatepicker",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoDatePickerControl",
-      "wire_type": "CupertinoDatePicker",
+      "wire_type": "DatePicker",
       "keywords": [
         "align",
         "animate_align",
@@ -3440,14 +3420,14 @@
       "dsl_name": "cupertinodialogaction",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoDialogActionControl",
-      "wire_type": "CupertinoDialogAction",
+      "wire_type": "Button",
       "keywords": []
     },
     {
       "dsl_name": "cupertinofilledbutton",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoFilledButtonControl",
-      "wire_type": "CupertinoFilledButton",
+      "wire_type": "FilledButton",
       "keywords": [
         "align",
         "alignment",
@@ -3509,7 +3489,7 @@
       "dsl_name": "cupertinolisttile",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoListTileControl",
-      "wire_type": "CupertinoListTile",
+      "wire_type": "ListTile",
       "keywords": [
         "additional_info",
         "align",
@@ -3565,7 +3545,7 @@
       "dsl_name": "cupertinonavigationbar",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoNavigationBarControl",
-      "wire_type": "CupertinoNavigationBar",
+      "wire_type": "NavigationBar",
       "keywords": [
         "active_color",
         "align",
@@ -3615,7 +3595,7 @@
       "dsl_name": "cupertinopicker",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoPickerControl",
-      "wire_type": "CupertinoPicker",
+      "wire_type": "Picker",
       "keywords": [
         "align",
         "animate_align",
@@ -3670,7 +3650,7 @@
       "dsl_name": "cupertinoradio",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoRadioControl",
-      "wire_type": "CupertinoRadio",
+      "wire_type": "Radio",
       "keywords": [
         "active_color",
         "align",
@@ -3725,7 +3705,7 @@
       "dsl_name": "cupertinosegmentedbutton",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoSegmentedButtonControl",
-      "wire_type": "CupertinoSegmentedButton",
+      "wire_type": "SegmentedButton",
       "keywords": [
         "align",
         "animate_align",
@@ -3777,7 +3757,7 @@
       "dsl_name": "cupertinoslider",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoSliderControl",
-      "wire_type": "CupertinoSlider",
+      "wire_type": "Slider",
       "keywords": [
         "active_color",
         "align",
@@ -3830,7 +3810,7 @@
       "dsl_name": "cupertinoslidingsegmentedbutton",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoSlidingSegmentedButtonControl",
-      "wire_type": "CupertinoSlidingSegmentedButton",
+      "wire_type": "SegmentedButton",
       "keywords": [
         "align",
         "animate_align",
@@ -3879,7 +3859,7 @@
       "dsl_name": "cupertinoswitch",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoSwitchControl",
-      "wire_type": "CupertinoSwitch",
+      "wire_type": "Switch",
       "keywords": [
         "active_thumb_image",
         "active_thumb_image_src",
@@ -3943,7 +3923,7 @@
       "dsl_name": "cupertinotextfield",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoTextFieldControl",
-      "wire_type": "CupertinoTextField",
+      "wire_type": "TextField",
       "keywords": [
         "adaptive",
         "align",
@@ -4091,7 +4071,7 @@
       "dsl_name": "cupertinotimerpicker",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoTimerPickerControl",
-      "wire_type": "CupertinoTimerPicker",
+      "wire_type": "TimerPicker",
       "keywords": [
         "align",
         "alignment",
@@ -4141,7 +4121,7 @@
       "dsl_name": "cupertinotintedbutton",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::CupertinoTintedButtonControl",
-      "wire_type": "CupertinoTintedButton",
+      "wire_type": "FilledTonalButton",
       "keywords": [
         "align",
         "alignment",
@@ -4214,10 +4194,24 @@
       "keywords": []
     },
     {
+      "dsl_name": "data_column2",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::DataColumn2Control",
+      "wire_type": "DataColumn2",
+      "keywords": []
+    },
+    {
       "dsl_name": "data_row",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::DataRowControl",
       "wire_type": "DataRow",
+      "keywords": []
+    },
+    {
+      "dsl_name": "data_row2",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::DataRow2Control",
+      "wire_type": "DataRow2",
       "keywords": []
     },
     {
@@ -4288,6 +4282,13 @@
       ]
     },
     {
+      "dsl_name": "data_table2",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::DataTable2Control",
+      "wire_type": "DataTable2",
+      "keywords": []
+    },
+    {
       "dsl_name": "datacell",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::DataCellControl",
@@ -4302,10 +4303,24 @@
       "keywords": []
     },
     {
+      "dsl_name": "datacolumn2",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::DataColumn2Control",
+      "wire_type": "DataColumn2",
+      "keywords": []
+    },
+    {
       "dsl_name": "datarow",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::DataRowControl",
       "wire_type": "DataRow",
+      "keywords": []
+    },
+    {
+      "dsl_name": "datarow2",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::DataRow2Control",
+      "wire_type": "DataRow2",
       "keywords": []
     },
     {
@@ -4374,6 +4389,13 @@
         "visible",
         "width"
       ]
+    },
+    {
+      "dsl_name": "datatable2",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::DataTable2Control",
+      "wire_type": "DataTable2",
+      "keywords": []
     },
     {
       "dsl_name": "date_picker",
@@ -4737,7 +4759,7 @@
       "dsl_name": "dropdown_m2",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::Dropdown2Control",
-      "wire_type": "DropdownM2",
+      "wire_type": "Dropdown",
       "keywords": [
         "align",
         "align_label_with_hint",
@@ -4852,7 +4874,7 @@
       "dsl_name": "dropdownm2",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::Dropdown2Control",
-      "wire_type": "DropdownM2",
+      "wire_type": "Dropdown",
       "keywords": [
         "align",
         "align_label_with_hint",
@@ -6348,6 +6370,20 @@
       ]
     },
     {
+      "dsl_name": "hue_ring_picker",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::HueRingPickerControl",
+      "wire_type": "HueRingPicker",
+      "keywords": []
+    },
+    {
+      "dsl_name": "hueringpicker",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::HueRingPickerControl",
+      "wire_type": "HueRingPicker",
+      "keywords": []
+    },
+    {
       "dsl_name": "icon",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::IconControl",
@@ -6548,6 +6584,20 @@
       "keywords": []
     },
     {
+      "dsl_name": "image_source_attribution",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::ImageSourceAttributionControl",
+      "wire_type": "ImageSourceAttribution",
+      "keywords": []
+    },
+    {
+      "dsl_name": "imagesourceattribution",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::ImageSourceAttributionControl",
+      "wire_type": "ImageSourceAttribution",
+      "keywords": []
+    },
+    {
       "dsl_name": "interactive_viewer",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::InteractiveViewerControl",
@@ -6664,6 +6714,20 @@
       ]
     },
     {
+      "dsl_name": "interstitial_ad",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::InterstitialAdControl",
+      "wire_type": "InterstitialAd",
+      "keywords": []
+    },
+    {
+      "dsl_name": "interstitialad",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::InterstitialAdControl",
+      "wire_type": "InterstitialAd",
+      "keywords": []
+    },
+    {
       "dsl_name": "keyboard_listener",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::KeyboardListenerControl",
@@ -6697,92 +6761,42 @@
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::LineChartControl",
       "wire_type": "LineChart",
-      "keywords": [
-        "bottom_axis",
-        "data_series",
-        "height",
-        "interactive",
-        "left_axis",
-        "max_x",
-        "max_y",
-        "min_x",
-        "min_y",
-        "on_event",
-        "right_axis",
-        "tooltip",
-        "top_axis",
-        "width"
-      ]
+      "keywords": []
     },
     {
       "dsl_name": "line_chart_data",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::LineChartDataControl",
-      "wire_type": "data",
-      "keywords": [
-        "color",
-        "curved",
-        "gradient",
-        "points",
-        "rounded_stroke_cap",
-        "stroke_width"
-      ]
+      "wire_type": "LineChartData",
+      "keywords": []
     },
     {
       "dsl_name": "line_chart_data_point",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::LineChartDataPointControl",
-      "wire_type": "p",
-      "keywords": [
-        "x",
-        "y"
-      ]
+      "wire_type": "LineChartDataPoint",
+      "keywords": []
     },
     {
       "dsl_name": "linechart",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::LineChartControl",
       "wire_type": "LineChart",
-      "keywords": [
-        "bottom_axis",
-        "data_series",
-        "height",
-        "interactive",
-        "left_axis",
-        "max_x",
-        "max_y",
-        "min_x",
-        "min_y",
-        "on_event",
-        "right_axis",
-        "tooltip",
-        "top_axis",
-        "width"
-      ]
+      "keywords": []
     },
     {
       "dsl_name": "linechartdata",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::LineChartDataControl",
-      "wire_type": "data",
-      "keywords": [
-        "color",
-        "curved",
-        "gradient",
-        "points",
-        "rounded_stroke_cap",
-        "stroke_width"
-      ]
+      "wire_type": "LineChartData",
+      "keywords": []
     },
     {
       "dsl_name": "linechartdatapoint",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::LineChartDataPointControl",
-      "wire_type": "p",
-      "keywords": [
-        "x",
-        "y"
-      ]
+      "wire_type": "LineChartDataPoint",
+      "keywords": []
     },
     {
       "dsl_name": "list_tile",
@@ -7057,10 +7071,31 @@
       ]
     },
     {
+      "dsl_name": "lottie",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::LottieControl",
+      "wire_type": "Lottie",
+      "keywords": []
+    },
+    {
       "dsl_name": "map",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::MapControl",
       "wire_type": "Map",
+      "keywords": []
+    },
+    {
+      "dsl_name": "map_layer",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::MapLayerControl",
+      "wire_type": "MapLayer",
+      "keywords": []
+    },
+    {
+      "dsl_name": "maplayer",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::MapLayerControl",
+      "wire_type": "MapLayer",
       "keywords": []
     },
     {
@@ -7121,6 +7156,41 @@
         "visible",
         "width"
       ]
+    },
+    {
+      "dsl_name": "marker",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::MarkerControl",
+      "wire_type": "Marker",
+      "keywords": []
+    },
+    {
+      "dsl_name": "marker_layer",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::MarkerLayerControl",
+      "wire_type": "MarkerLayer",
+      "keywords": []
+    },
+    {
+      "dsl_name": "markerlayer",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::MarkerLayerControl",
+      "wire_type": "MarkerLayer",
+      "keywords": []
+    },
+    {
+      "dsl_name": "material_picker",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::MaterialPickerControl",
+      "wire_type": "MaterialPicker",
+      "keywords": []
+    },
+    {
+      "dsl_name": "materialpicker",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::MaterialPickerControl",
+      "wire_type": "MaterialPicker",
+      "keywords": []
     },
     {
       "dsl_name": "menu_bar",
@@ -7260,6 +7330,34 @@
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::MergeSemanticsControl",
       "wire_type": "MergeSemantics",
+      "keywords": []
+    },
+    {
+      "dsl_name": "multiple_choice_block_picker",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::MultipleChoiceBlockPickerControl",
+      "wire_type": "MultipleChoiceBlockPicker",
+      "keywords": []
+    },
+    {
+      "dsl_name": "multiplechoiceblockpicker",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::MultipleChoiceBlockPickerControl",
+      "wire_type": "MultipleChoiceBlockPicker",
+      "keywords": []
+    },
+    {
+      "dsl_name": "native_ad",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::NativeAdControl",
+      "wire_type": "NativeAd",
+      "keywords": []
+    },
+    {
+      "dsl_name": "nativead",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::NativeAdControl",
+      "wire_type": "NativeAd",
       "keywords": []
     },
     {
@@ -8068,60 +8166,28 @@
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::PieChartControl",
       "wire_type": "PieChart",
-      "keywords": [
-        "center_space_radius",
-        "height",
-        "on_event",
-        "sections",
-        "sections_space",
-        "tooltip",
-        "width"
-      ]
+      "keywords": []
     },
     {
       "dsl_name": "pie_chart_section",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::PieChartSectionControl",
-      "wire_type": "section",
-      "keywords": [
-        "badge_position_percentage_offset",
-        "badge_widget",
-        "color",
-        "radius",
-        "title",
-        "title_style",
-        "value"
-      ]
+      "wire_type": "PieChartSection",
+      "keywords": []
     },
     {
       "dsl_name": "piechart",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::PieChartControl",
       "wire_type": "PieChart",
-      "keywords": [
-        "center_space_radius",
-        "height",
-        "on_event",
-        "sections",
-        "sections_space",
-        "tooltip",
-        "width"
-      ]
+      "keywords": []
     },
     {
       "dsl_name": "piechartsection",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::PieChartSectionControl",
-      "wire_type": "section",
-      "keywords": [
-        "badge_position_percentage_offset",
-        "badge_widget",
-        "color",
-        "radius",
-        "title",
-        "title_style",
-        "value"
-      ]
+      "wire_type": "PieChartSection",
+      "keywords": []
     },
     {
       "dsl_name": "placeholder",
@@ -8182,6 +8248,62 @@
         "point_mode",
         "points"
       ]
+    },
+    {
+      "dsl_name": "polygon_layer",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::PolygonLayerControl",
+      "wire_type": "PolygonLayer",
+      "keywords": []
+    },
+    {
+      "dsl_name": "polygon_marker",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::PolygonMarkerControl",
+      "wire_type": "PolygonMarker",
+      "keywords": []
+    },
+    {
+      "dsl_name": "polygonlayer",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::PolygonLayerControl",
+      "wire_type": "PolygonLayer",
+      "keywords": []
+    },
+    {
+      "dsl_name": "polygonmarker",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::PolygonMarkerControl",
+      "wire_type": "PolygonMarker",
+      "keywords": []
+    },
+    {
+      "dsl_name": "polyline_layer",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::PolylineLayerControl",
+      "wire_type": "PolylineLayer",
+      "keywords": []
+    },
+    {
+      "dsl_name": "polyline_marker",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::PolylineMarkerControl",
+      "wire_type": "PolylineMarker",
+      "keywords": []
+    },
+    {
+      "dsl_name": "polylinelayer",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::PolylineLayerControl",
+      "wire_type": "PolylineLayer",
+      "keywords": []
+    },
+    {
+      "dsl_name": "polylinemarker",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::PolylineMarkerControl",
+      "wire_type": "PolylineMarker",
+      "keywords": []
     },
     {
       "dsl_name": "popup_menu_button",
@@ -8542,90 +8664,56 @@
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::RadarChartControl",
       "wire_type": "RadarChart",
-      "keywords": [
-        "data_sets",
-        "height",
-        "on_event",
-        "titles",
-        "width"
-      ]
+      "keywords": []
     },
     {
       "dsl_name": "radar_chart_title",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::RadarChartTitleControl",
       "wire_type": "RadarChartTitle",
-      "keywords": [
-        "angle",
-        "position_percentage_offset",
-        "text"
-      ]
+      "keywords": []
     },
     {
       "dsl_name": "radar_data_set",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::RadarDataSetControl",
       "wire_type": "RadarDataSet",
-      "keywords": [
-        "border_color",
-        "border_width",
-        "entries",
-        "fill_color"
-      ]
+      "keywords": []
     },
     {
       "dsl_name": "radar_data_set_entry",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::RadarDataSetEntryControl",
       "wire_type": "RadarDataSetEntry",
-      "keywords": [
-        "value"
-      ]
+      "keywords": []
     },
     {
       "dsl_name": "radarchart",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::RadarChartControl",
       "wire_type": "RadarChart",
-      "keywords": [
-        "data_sets",
-        "height",
-        "on_event",
-        "titles",
-        "width"
-      ]
+      "keywords": []
     },
     {
       "dsl_name": "radarcharttitle",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::RadarChartTitleControl",
       "wire_type": "RadarChartTitle",
-      "keywords": [
-        "angle",
-        "position_percentage_offset",
-        "text"
-      ]
+      "keywords": []
     },
     {
       "dsl_name": "radardataset",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::RadarDataSetControl",
       "wire_type": "RadarDataSet",
-      "keywords": [
-        "border_color",
-        "border_width",
-        "entries",
-        "fill_color"
-      ]
+      "keywords": []
     },
     {
       "dsl_name": "radardatasetentry",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::RadarDataSetEntryControl",
       "wire_type": "RadarDataSetEntry",
-      "keywords": [
-        "value"
-      ]
+      "keywords": []
     },
     {
       "dsl_name": "radio",
@@ -9157,6 +9245,27 @@
       ]
     },
     {
+      "dsl_name": "rich_attribution",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::RichAttributionControl",
+      "wire_type": "RichAttribution",
+      "keywords": []
+    },
+    {
+      "dsl_name": "richattribution",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::RichAttributionControl",
+      "wire_type": "RichAttribution",
+      "keywords": []
+    },
+    {
+      "dsl_name": "rive",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::RiveControl",
+      "wire_type": "Rive",
+      "keywords": []
+    },
+    {
       "dsl_name": "rotated_box",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::RotatedBoxControl",
@@ -9507,64 +9616,28 @@
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::ScatterChartControl",
       "wire_type": "ScatterChart",
-      "keywords": [
-        "bottom_axis",
-        "height",
-        "left_axis",
-        "max_x",
-        "max_y",
-        "min_x",
-        "min_y",
-        "on_event",
-        "right_axis",
-        "spots",
-        "top_axis",
-        "width"
-      ]
+      "keywords": []
     },
     {
       "dsl_name": "scatter_chart_spot",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::ScatterChartSpotControl",
       "wire_type": "ScatterChartSpot",
-      "keywords": [
-        "color",
-        "radius",
-        "x",
-        "y"
-      ]
+      "keywords": []
     },
     {
       "dsl_name": "scatterchart",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::ScatterChartControl",
       "wire_type": "ScatterChart",
-      "keywords": [
-        "bottom_axis",
-        "height",
-        "left_axis",
-        "max_x",
-        "max_y",
-        "min_x",
-        "min_y",
-        "on_event",
-        "right_axis",
-        "spots",
-        "top_axis",
-        "width"
-      ]
+      "keywords": []
     },
     {
       "dsl_name": "scatterchartspot",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::ScatterChartSpotControl",
       "wire_type": "ScatterChartSpot",
-      "keywords": [
-        "color",
-        "radius",
-        "x",
-        "y"
-      ]
+      "keywords": []
     },
     {
       "dsl_name": "screenshot",
@@ -9950,14 +10023,24 @@
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::ServiceRegistryControl",
       "wire_type": "ServiceRegistry",
-      "keywords": []
+      "keywords": [
+        "_services",
+        "data",
+        "key",
+        "services"
+      ]
     },
     {
       "dsl_name": "serviceregistry",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::ServiceRegistryControl",
       "wire_type": "ServiceRegistry",
-      "keywords": []
+      "keywords": [
+        "_services",
+        "data",
+        "key",
+        "services"
+      ]
     },
     {
       "dsl_name": "shader_mask",
@@ -10106,6 +10189,34 @@
         "visible",
         "width"
       ]
+    },
+    {
+      "dsl_name": "simple_attribution",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::SimpleAttributionControl",
+      "wire_type": "SimpleAttribution",
+      "keywords": []
+    },
+    {
+      "dsl_name": "simpleattribution",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::SimpleAttributionControl",
+      "wire_type": "SimpleAttribution",
+      "keywords": []
+    },
+    {
+      "dsl_name": "slide_picker",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::SlidePickerControl",
+      "wire_type": "SlidePicker",
+      "keywords": []
+    },
+    {
+      "dsl_name": "slidepicker",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::SlidePickerControl",
+      "wire_type": "SlidePicker",
+      "keywords": []
     },
     {
       "dsl_name": "slider",
@@ -11046,6 +11157,13 @@
       ]
     },
     {
+      "dsl_name": "text_source_attribution",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::TextSourceAttributionControl",
+      "wire_type": "TextSourceAttribution",
+      "keywords": []
+    },
+    {
       "dsl_name": "text_span",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::TextSpanControl",
@@ -11245,10 +11363,31 @@
       ]
     },
     {
+      "dsl_name": "textsourceattribution",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::TextSourceAttributionControl",
+      "wire_type": "TextSourceAttribution",
+      "keywords": []
+    },
+    {
       "dsl_name": "textspan",
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::TextSpanControl",
       "wire_type": "TextSpan",
+      "keywords": []
+    },
+    {
+      "dsl_name": "tile_layer",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::TileLayerControl",
+      "wire_type": "TileLayer",
+      "keywords": []
+    },
+    {
+      "dsl_name": "tilelayer",
+      "family": "visual",
+      "ruby_class": "Ruflet::UI::Controls::RufletComponents::TileLayerControl",
+      "wire_type": "TileLayer",
       "keywords": []
     },
     {
@@ -11434,47 +11573,7 @@
       "family": "visual",
       "ruby_class": "Ruflet::UI::Controls::RufletComponents::VideoControl",
       "wire_type": "Video",
-      "keywords": [
-        "alignment",
-        "aspect_ratio",
-        "autoplay",
-        "configuration",
-        "data",
-        "fill_color",
-        "filter_quality",
-        "fit",
-        "fullscreen",
-        "height",
-        "key",
-        "muted",
-        "on_complete",
-        "on_completed",
-        "on_enter_fullscreen",
-        "on_error",
-        "on_exit_fullscreen",
-        "on_load",
-        "on_loaded",
-        "on_state_change",
-        "on_track_change",
-        "on_track_changed",
-        "opacity",
-        "pause_upon_entering_background_mode",
-        "pitch",
-        "playback_rate",
-        "playlist",
-        "playlist_mode",
-        "resume_upon_entering_foreground_mode",
-        "rtl",
-        "show_controls",
-        "shuffle_playlist",
-        "subtitle_configuration",
-        "title",
-        "tooltip",
-        "visible",
-        "volume",
-        "wakelock",
-        "width"
-      ]
+      "keywords": []
     },
     {
       "dsl_name": "view",

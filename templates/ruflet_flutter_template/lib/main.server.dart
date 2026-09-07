@@ -35,7 +35,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 
 import 'connection_probe.dart';
-import 'native_renderer.dart';
 import 'package:ruflet_webview/ruflet_webview.dart' as ruflet_webview;
 
 const bool isProduction = bool.fromEnvironment('dart.vm.product');
@@ -157,11 +156,6 @@ Future<void> main([List<String>? args]) async {
   }
 
   final pageUrl = resolveBackendUrl(args);
-  if (usesNativeAppleRenderer) {
-    await requireNativeAppleRenderer(pageUrl);
-    return;
-  }
-
   await waitForBackend(pageUrl);
 
   runApp(TemplateApp(pageUrl: pageUrl, extensions: extensions));

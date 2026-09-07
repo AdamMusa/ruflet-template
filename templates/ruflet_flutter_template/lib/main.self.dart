@@ -38,7 +38,6 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:ruby_runtime/ruflet_runtime.dart';
 
 import 'package:ruflet_webview/ruflet_webview.dart' as ruflet_webview;
-import 'native_renderer.dart';
 
 const bool isProduction = bool.fromEnvironment('dart.vm.product');
 const String kConfiguredClientUrl = String.fromEnvironment(
@@ -130,19 +129,6 @@ Future<void> main() async {
 
   for (final extension in extensions) {
     extension.ensureInitialized();
-  }
-
-  var pageUrl = resolveBackendUrl();
-  if (usesNativeAppleRenderer) {
-    if (pageUrl.isEmpty) {
-      try {
-        pageUrl = (await RufletRuntime.serverUrl()).toString();
-      } catch (error) {
-        throw StateError('Failed to start embedded Ruflet: $error');
-      }
-    }
-    await requireNativeAppleRenderer(pageUrl);
-    return;
   }
 
   // The embedded runtime is deliberately not awaited here. Platforms that can

@@ -117,5 +117,5 @@ Five-platform widget tests are not five native-device runs. The simulator smoke
 test checks iOS plus a Material override on iOS, not an Android emulator or desktop
 integration run. Hardware services and real media playback require their own
 device tests. No new CRuby/mruby memory or launch-time benchmark is claimed by
-these rendering tests. The experimental Swift renderer is a separate pipeline
-and is not replaced by this Flutter-engine work.
+these rendering tests. Experimental Apple builds use this same Flutter-engine
+path; there is no second Swift rendering pipeline in the template.

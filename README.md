@@ -75,21 +75,18 @@ extensions:
 extension package, backed by `mobile_scanner`, exposed to Ruby as
 `qrcode_scanner(...)`.
 
-## Experimental Apple renderer
+## Apple renderer
 
-The ordinary Flutter host uses [independent Material and Cupertino renderers](docs/platform-renderers.md)
-behind the same Ruby control names. This is separate from the experimental Swift
-renderer described below.
+iOS and macOS use the same Ruflet Flutter engine as every other platform. The
+engine selects its independent Cupertino or Material implementation behind the
+same Ruby control name, as described in
+[platform renderers](docs/platform-renderers.md).
 
-`ruflet build ios --experimental` and `ruflet build macos --experimental`
-replace the Flutter renderer with the native Swift renderer. The mode remains
-part of the ordinary build pipeline: the same `services:` and `extensions:`
-selection drives Dart packages, Swift products and registrations, Apple usage
-descriptions, macOS entitlements, and project-owned `apple_extensions/`.
-
-Apple builds without `--experimental` remove the Swift renderer integration
-and use the normal Flutter host. Native bridge failures in experimental builds
-are surfaced as errors; they do not silently fall back to a different renderer.
+`ruflet build ios --experimental` and `ruflet build macos --experimental` remain
+accepted for compatibility with existing scripts, but they do not select or
+bundle a second renderer. Experimental builds use the Flutter engine and the
+same `services:` and `extensions:` package selection as ordinary builds. The
+template contains no Swift rendering engine or native-renderer bridge.
 
 ## How the CLI finds this repository
 

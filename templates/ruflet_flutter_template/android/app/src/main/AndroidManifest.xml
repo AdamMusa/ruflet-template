@@ -6,6 +6,11 @@
         android:icon="@mipmap/launcher_icon"
         android:enableOnBackInvokedCallback="true"
         android:usesCleartextTraffic="true">
+        <!-- Match Apple and desktop self-contained startup: the platform owns
+             the embedded Ruflet engine and Dart only asks for serverUrl(). -->
+        <meta-data
+            android:name="ruflet.runtime.autostart"
+            android:value="true" />
         <activity
             android:name=".MainActivity"
             android:exported="true"

@@ -31,8 +31,9 @@ bundle exec ruflet build macos --experimental
 
 `--self` packages the Ruby runtime and application with the native client.
 Without it, the client connects to a separately running Ruflet backend.
-`--experimental` is Apple-only and selects the native Swift renderer. Without
-that flag, iOS and macOS builds use only the Flutter renderer.
+`--experimental` is retained for compatibility with existing Apple build
+scripts. It uses the same Ruflet Flutter renderer as an ordinary build and does
+not add a Swift rendering engine.
 
 Linux WebView builds require WebKitGTK 4.1 development files. On Debian or
 Ubuntu install them with `sudo apt install libwebkit2gtk-4.1-dev`.

@@ -23,7 +23,8 @@ extensions under the generated client's `ruflet_packages/`. The CLI verified
 21 local packages including the three transitive vendor forks. No `flet` or
 `flet_*` package resolved. Unselected optional extensions were pruned.
 
-The ordinary Flutter renderer was built, without the experimental Swift flag.
+The ordinary Flutter renderer was built. Experimental Apple builds now use this
+same renderer and do not contain a separate Swift rendering engine.
 Its platform policy selects Cupertino on iOS and Material on Android; this run
 does not constitute an Android device test or visual verification of every screen.
 

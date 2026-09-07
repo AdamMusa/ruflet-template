@@ -5,7 +5,6 @@ require "minitest/autorun"
 require "open3"
 require "rbconfig"
 require_relative "generate_ruflet_control_surface"
-require_relative "audit_native_renderer_gaps"
 
 class RufletControlSurfaceTest < Minitest::Test
   def setup
@@ -14,10 +13,10 @@ class RufletControlSurfaceTest < Minitest::Test
   end
 
   def test_every_advertised_entry_is_preserved_and_contract_is_current
-    assert_equal 329, @contract.dig("summary", "advertised_entries")
-    assert_equal 293, @contract.dig("summary", "visual_entries")
-    assert_equal 36, @contract.dig("summary", "service_entries")
-    assert_equal 196, @contract.dig("summary", "wire_types")
+    assert_equal 386, @contract.dig("summary", "advertised_entries")
+    assert_equal 348, @contract.dig("summary", "visual_entries")
+    assert_equal 38, @contract.dig("summary", "service_entries")
+    assert_equal 205, @contract.dig("summary", "wire_types")
     assert_equal RufletControlSurface.generate, File.read(RufletControlSurface.output_path)
 
     _stdout, stderr, status = Open3.capture3(
@@ -43,13 +42,6 @@ class RufletControlSurfaceTest < Minitest::Test
     assert_equal "Map", entry("visual", "map").fetch("wire_type")
     assert_equal "Camera", entry("service", "camera").fetch("wire_type")
     assert_equal "AudioRecorder", entry("service", "audio_recorder").fetch("wire_type")
-  end
-
-  def test_every_advertised_entry_resolves_to_a_native_descriptor
-    native = NativeRendererGapAudit.declared_native_surface
-    missing = @entries.reject { |entry| native.key?(entry.fetch("wire_type")) }
-
-    assert_empty missing.map { |entry| [entry.fetch("family"), entry.fetch("dsl_name"), entry.fetch("wire_type")] }
   end
 
   private
