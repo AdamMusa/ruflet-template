@@ -24,7 +24,7 @@
     "ruflet_webview"
   ],
   "engine_version": "0.81.0",
-  "source_ref": "e8145f816ee497cd64a15dd38fca5ba455a86c79",
+  "source_ref": "98377b7ffd4f87c13b6443ceb173ca25170f6115",
   "source_package": "packages",
   "summary": {
     "exact_source": 987
@@ -3753,10 +3753,10 @@
     "ruflet/vendor/flutter_math_fork/lib/src/ast/nodes/matrix.dart": {
       "classification": "exact_source",
       "source_path": "ruflet/vendor/flutter_math_fork/lib/src/ast/nodes/matrix.dart",
-      "source_git_blob": "b545e570bdc594eff395033a1a56f4f652fc052f",
+      "source_git_blob": "5707522cf999e041937b3d9137ec04b8bae51da3",
       "source_mode": "100644",
-      "source_sha256": "9f6c7c89f9d9a04ac6823edb071764dd1a74bb0881453ef639e1344ad75998de",
-      "vendored_sha256": "9f6c7c89f9d9a04ac6823edb071764dd1a74bb0881453ef639e1344ad75998de"
+      "source_sha256": "8bbcbc45321dceb279072cb50fcb0780b8f9bcbf527686be01d0300f9c1d8a2e",
+      "vendored_sha256": "8bbcbc45321dceb279072cb50fcb0780b8f9bcbf527686be01d0300f9c1d8a2e"
     },
     "ruflet/vendor/flutter_math_fork/lib/src/ast/nodes/multiscripts.dart": {
       "classification": "exact_source",
@@ -4081,10 +4081,10 @@
     "ruflet/vendor/flutter_math_fork/lib/src/font/metrics/font_metrics.dart": {
       "classification": "exact_source",
       "source_path": "ruflet/vendor/flutter_math_fork/lib/src/font/metrics/font_metrics.dart",
-      "source_git_blob": "79ca00d3058306a12eced81dcf5e8c8103fb7ba4",
+      "source_git_blob": "1e06ee451171502f954fa080c6bb10946e3cc90e",
       "source_mode": "100644",
-      "source_sha256": "fd675e7b9a515daf14ad23d2d338b9f7d6cca953a7fcc72824b76b307e2d23ff",
-      "vendored_sha256": "fd675e7b9a515daf14ad23d2d338b9f7d6cca953a7fcc72824b76b307e2d23ff"
+      "source_sha256": "d09d5a997f7d5552b14982af4d42295195238553a1191ed18440ae33ebd25d18",
+      "vendored_sha256": "d09d5a997f7d5552b14982af4d42295195238553a1191ed18440ae33ebd25d18"
     },
     "ruflet/vendor/flutter_math_fork/lib/src/font/metrics/font_metrics_data.dart": {
       "classification": "exact_source",
@@ -4537,10 +4537,10 @@
     "ruflet/vendor/flutter_math_fork/lib/src/render/layout/line_editable.dart": {
       "classification": "exact_source",
       "source_path": "ruflet/vendor/flutter_math_fork/lib/src/render/layout/line_editable.dart",
-      "source_git_blob": "f6a69975febea89bf68e0e4c0b88b96a266ee24e",
+      "source_git_blob": "febea8ae86ccf81f733958823c7d665491d759c6",
       "source_mode": "100644",
-      "source_sha256": "a35b0f6f423600d2a5d40769efacbe2830c7380853bbb9d87003e9c807751560",
-      "vendored_sha256": "a35b0f6f423600d2a5d40769efacbe2830c7380853bbb9d87003e9c807751560"
+      "source_sha256": "4e3a432f6b3b37d27bbaf22b7ff77a34315991ace5212ae58ee34735c437fb84",
+      "vendored_sha256": "4e3a432f6b3b37d27bbaf22b7ff77a34315991ace5212ae58ee34735c437fb84"
     },
     "ruflet/vendor/flutter_math_fork/lib/src/render/layout/min_dimension.dart": {
       "classification": "exact_source",
@@ -4577,10 +4577,10 @@
     "ruflet/vendor/flutter_math_fork/lib/src/render/layout/reset_dimension.dart": {
       "classification": "exact_source",
       "source_path": "ruflet/vendor/flutter_math_fork/lib/src/render/layout/reset_dimension.dart",
-      "source_git_blob": "599882339e782522d21f2d27102435f3bc1df7b8",
+      "source_git_blob": "eb745c788ab00d254c7b8b1f0cf6e33f43333559",
       "source_mode": "100644",
-      "source_sha256": "2d3aa7ed8313e6cfd42afee9585527fe18bbae48b36c9ec45a3261ab9bfb1dd8",
-      "vendored_sha256": "2d3aa7ed8313e6cfd42afee9585527fe18bbae48b36c9ec45a3261ab9bfb1dd8"
+      "source_sha256": "e12df9e3243add9659b87d6413519bed03f7bbc9725aadf50ade0b59963d8d29",
+      "vendored_sha256": "e12df9e3243add9659b87d6413519bed03f7bbc9725aadf50ade0b59963d8d29"
     },
     "ruflet/vendor/flutter_math_fork/lib/src/render/layout/shift_baseline.dart": {
       "classification": "exact_source",
@@ -4593,10 +4593,10 @@
     "ruflet/vendor/flutter_math_fork/lib/src/render/layout/vlist.dart": {
       "classification": "exact_source",
       "source_path": "ruflet/vendor/flutter_math_fork/lib/src/render/layout/vlist.dart",
-      "source_git_blob": "91b2382b4b5c43978fa274515ebce645823625df",
+      "source_git_blob": "0182d830b18fbb867b025f4aa3a0f8883b51f0a0",
       "source_mode": "100644",
-      "source_sha256": "0d85ce2de93a6afe48f89677981eea83a3210ec7a57861678179cb2452562c71",
-      "vendored_sha256": "0d85ce2de93a6afe48f89677981eea83a3210ec7a57861678179cb2452562c71"
+      "source_sha256": "6334451d065a4c00e4830883edd3848fbb3ffbb06e80b22d5713685b922ee425",
+      "vendored_sha256": "6334451d065a4c00e4830883edd3848fbb3ffbb06e80b22d5713685b922ee425"
     },
     "ruflet/vendor/flutter_math_fork/lib/src/render/svg/delimiter.dart": {
       "classification": "exact_source",
@@ -4873,10 +4873,10 @@
     "ruflet/vendor/flutter_math_fork/lib/src/widgets/selection/overlay.dart": {
       "classification": "exact_source",
       "source_path": "ruflet/vendor/flutter_math_fork/lib/src/widgets/selection/overlay.dart",
-      "source_git_blob": "217d713faebd7cdbe5c7019fe92d5c2c69ffbe11",
+      "source_git_blob": "85b656f7fdecff9d1c6d8d90be4b72d612b67deb",
       "source_mode": "100644",
-      "source_sha256": "5779508bfae174c4237a630d70e7521f347132890daf2ed10c39a8ecffe7cabe",
-      "vendored_sha256": "5779508bfae174c4237a630d70e7521f347132890daf2ed10c39a8ecffe7cabe"
+      "source_sha256": "8a4ec22b3032499cb3d26a778b71f175ab8f8eb555844657ebab00837b3eff7a",
+      "vendored_sha256": "8a4ec22b3032499cb3d26a778b71f175ab8f8eb555844657ebab00837b3eff7a"
     },
     "ruflet/vendor/flutter_math_fork/lib/src/widgets/selection/overlay_manager.dart": {
       "classification": "exact_source",

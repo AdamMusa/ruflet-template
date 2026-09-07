@@ -346,7 +346,6 @@ class MatrixLayoutDelegate extends IntrinsicLayoutDelegate<int> {
         case MatrixColumnAlign.right:
           return colPos[col] + colWidths[col] - childWidths[index];
         case MatrixColumnAlign.center:
-        default:
           return colPos[col] + (colWidths[col] - childWidths[index]) / 2;
       }
     }, growable: false);

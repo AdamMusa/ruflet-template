@@ -295,7 +295,7 @@ class RenderEditableLine extends RenderLine {
 
   EquationRowNode node;
 
-  /// {@template flutter.rendering.editable.paintCursorOnTop}
+  /// {@macro flutter.rendering.RenderEditable.paintCursorAboveText}
   bool get paintCursorAboveText => _paintCursorAboveText;
   bool _paintCursorAboveText;
   set paintCursorAboveText(bool value) {
