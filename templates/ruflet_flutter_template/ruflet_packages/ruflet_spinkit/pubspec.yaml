@@ -1,4 +1,5 @@
 name: ruflet_spinkit
+repository: https://github.com/AdamMusa/ruflet-engine
 description: Ruflet SpinKit control (animated loading indicators)
 version: 0.1.0
 publish_to: none

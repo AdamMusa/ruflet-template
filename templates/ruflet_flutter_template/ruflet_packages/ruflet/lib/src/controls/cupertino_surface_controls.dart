@@ -290,23 +290,21 @@ class CupertinoFloatingActionButtonControl extends StatelessWidget {
           : EdgeInsets.zero,
       borderRadius: BorderRadius.circular(mini ? 20 : 28),
       color: control.getColor("bgcolor", context) ??
-          CupertinoColors.activeBlue.resolveFrom(context),
-      disabledColor: CupertinoColors.inactiveGray.resolveFrom(context),
+          CupertinoTheme.of(context).primaryColor,
+      foregroundColor: control.getColor("foreground_color", context) ??
+          (control.disabled
+              ? null
+              : CupertinoTheme.of(context).primaryContrastingColor),
+      disabledColor: CupertinoColors.tertiarySystemFill.resolveFrom(context),
       onPressed: control.disabled
           ? null
           : () {
               if (url != null) openWebBrowser(url);
               control.triggerEvent("click");
             },
-      child: DefaultTextStyle.merge(
-        style: TextStyle(
-          color: control.getColor("foreground_color", context) ??
-              CupertinoColors.white,
-        ),
-        child: icon != null && content != null
-            ? Row(mainAxisSize: MainAxisSize.min, children: [icon, content])
-            : child,
-      ),
+      child: icon != null && content != null
+          ? Row(mainAxisSize: MainAxisSize.min, children: [icon, content])
+          : child,
     );
     return LayoutControl(control: control, child: button);
   }

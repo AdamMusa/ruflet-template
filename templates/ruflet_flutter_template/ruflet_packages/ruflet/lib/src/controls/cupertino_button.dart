@@ -13,10 +13,12 @@ import '../utils/edge_insets.dart';
 import '../utils/geometry.dart';
 import '../utils/launch_url.dart';
 import '../utils/mouse.dart';
+import '../utils/misc.dart';
 import '../utils/numbers.dart';
 import '../utils/text.dart';
 import '../utils/time.dart';
 import '../utils/widget_state.dart';
+import '../widgets/constrained_default_padding.dart';
 import 'base_controls.dart';
 
 class CupertinoButtonControl extends StatefulWidget {
@@ -89,9 +91,11 @@ class _CupertinoButtonControlState extends State<CupertinoButtonControl> {
     Widget child;
     if (icon != null) {
       if (content != null) {
-        child = Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [icon, const SizedBox(width: 8), content]);
+        child = Row(mainAxisSize: MainAxisSize.min, children: [
+          icon,
+          const SizedBox(width: 8),
+          Flexible(child: content)
+        ]);
       } else {
         child = icon;
       }
@@ -179,6 +183,16 @@ class _CupertinoButtonControlState extends State<CupertinoButtonControl> {
     if (shape != null) {
       bgColor = const Color(0x00000000);
       disabledColor = const Color(0x00000000);
+    }
+    if (padding == null) {
+      // Keep the native size-style padding when it fits. A Ruby height/width
+      // constraint must not make that implicit padding clip the label/icon.
+      child = ConstrainedDefaultPadding(
+        padding:
+            kCupertinoButtonPadding[size]!.resolve(Directionality.of(context)),
+        child: child,
+      );
+      padding = EdgeInsets.zero;
     }
     Widget button;
     if (isFilledButton) {
@@ -275,7 +289,10 @@ class _CupertinoButtonControlState extends State<CupertinoButtonControl> {
             ? null
             : ShapeDecoration(color: overlayColor, shape: effectiveShape),
         child: ClipPath(
-            clipper: ShapeBorderClipper(shape: effectiveShape), child: button),
+            clipper: ShapeBorderClipper(shape: effectiveShape),
+            clipBehavior:
+                widget.control.getClipBehavior("clip_behavior", Clip.none)!,
+            child: button),
       );
     }
     final fixedSize =

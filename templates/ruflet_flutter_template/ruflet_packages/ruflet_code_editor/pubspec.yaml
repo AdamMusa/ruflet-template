@@ -1,4 +1,5 @@
 name: ruflet_code_editor
+repository: https://github.com/AdamMusa/ruflet-engine
 description: Ruflet CodeEditor control
 version: 0.1.0
 publish_to: none

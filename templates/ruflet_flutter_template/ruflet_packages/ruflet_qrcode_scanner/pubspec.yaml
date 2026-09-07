@@ -1,4 +1,5 @@
 name: ruflet_qrcode_scanner
+repository: https://github.com/AdamMusa/ruflet-engine
 description: Ruflet Flutter extension for Ruflet QR and barcode scanning.
 version: 0.1.0
 publish_to: none

@@ -1,4 +1,5 @@
 name: ruflet_audio_recorder
+repository: https://github.com/AdamMusa/ruflet-engine
 description: Ruflet AudioRecorder control
 version: 0.1.0
 publish_to: none

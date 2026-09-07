@@ -35,6 +35,11 @@ class CupertinoContainerControl extends StatelessWidget {
     final interactive =
         onClick || onTapDown || onLongPress || onHover || url != null;
     final animation = control.getAnimation("animate");
+    final ownsSize = control.getAnimation("animate_size") == null;
+    final ownsMargin = control.getAnimation("animate_margin") == null;
+    final width = ownsSize ? control.getDouble("width") : null;
+    final height = ownsSize ? control.getDouble("height") : null;
+    final margin = ownsMargin ? control.getMargin("margin") : null;
     final blur = control.getBlur("blur");
     final borderRadius = control.getBorderRadius("border_radius");
     final clipBehavior = control.getClipBehavior(
@@ -59,9 +64,9 @@ class CupertinoContainerControl extends StatelessWidget {
 
     Widget result = animation == null
         ? Container(
-            width: control.getDouble("width"),
-            height: control.getDouble("height"),
-            margin: control.getMargin("margin"),
+            width: width,
+            height: height,
+            margin: margin,
             padding: control.getPadding("padding"),
             alignment: control.getAlignment("alignment"),
             decoration: decoration,
@@ -72,9 +77,9 @@ class CupertinoContainerControl extends StatelessWidget {
         : AnimatedContainer(
             duration: animation.duration,
             curve: animation.curve,
-            width: control.getDouble("width"),
-            height: control.getDouble("height"),
-            margin: control.getMargin("margin"),
+            width: width,
+            height: height,
+            margin: margin,
             padding: control.getPadding("padding"),
             alignment: control.getAlignment("alignment"),
             decoration: decoration,
@@ -123,7 +128,14 @@ class CupertinoContainerControl extends StatelessWidget {
     if (control.getBool("ignore_interactions", false)!) {
       result = IgnorePointer(child: result);
     }
-    return LayoutControl(control: control, child: result);
+    return LayoutControl(
+      control: control,
+      skipProperties: {
+        if (ownsSize) ...{'width', 'height'},
+        if (ownsMargin) 'margin',
+      },
+      child: result,
+    );
   }
 }
 

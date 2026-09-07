@@ -1,4 +1,5 @@
 name: ruflet_lottie
+repository: https://github.com/AdamMusa/ruflet-engine
 description: Ruflet Lottie control
 version: 0.1.0
 publish_to: none

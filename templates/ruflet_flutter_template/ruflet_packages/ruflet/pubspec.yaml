@@ -1,7 +1,7 @@
 name: ruflet
 description: Ruflet Flutter rendering engine for Ruby applications.
 homepage: https://github.com/AdamMusa/ruflet
-repository: https://github.com/AdamMusa/ruflet-template
+repository: https://github.com/AdamMusa/ruflet-engine
 version: 0.81.0
 publish_to: none # Local engine fork with vendored renderer dependencies.
 

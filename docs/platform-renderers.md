@@ -17,8 +17,8 @@ just to an example app. Rebuild an existing generated client to adopt changes.
   scrollbars. Shared parsing uses the typed, design-neutral `RufletStyleTheme`.
   Cupertino does not construct a Material theme to interpret the Ruby DSL.
 - Embedded startup, loading, and error screens use the same renderer selection.
-  The template's in-process transport overlay is preserved independently from
-  engine source synchronization. Renderer selection does not select a Ruby VM.
+  The Ruflet engine owns in-process transport as ordinary committed source.
+  Renderer selection does not select a Ruby VM.
 - Services and protocol/state helpers remain design-neutral. Static icon tables
   retain both wire icon families; icon data is not another widget renderer.
 
@@ -67,15 +67,15 @@ counter events, text editing, checkbox changes, tabs, dialog open/close, scrolli
 and navigation-bar geometry. This is more than a screenshot of isolated widgets.
 
 See [the source sync guide](../templates/ruflet_flutter_template/tool/RUFLET_SOURCE_SYNC.md)
-for exact-commit synchronization, transport overlay preservation, and drift checks.
+for exact-commit synchronization and drift checks.
 
 ## Verified local revision
 
 Source commit `7cce34b72837bc4a3e8518bb24e10c530c91c29b` was first mirrored by
-template commit `58fe4bc`. The current distribution transforms that source into
-the Ruflet package namespace before applying four transport overlays and two
-preserved template-only transport files. Its version-3 inventory records original
-paths and hashes alongside transformed hashes and the namespace recipe checksum.
+template commit `58fe4bc`. The engine was subsequently extracted into its own
+`ruflet-engine` repository. The current version-5 inventory pins all 20 committed
+Ruflet packages, including transport; it no longer transforms Flet sources
+or applies template-owned transport overlays.
 The historical test results below predate the namespace change; rerun the checks
 above when changing the engine.
 The obsolete Material-to-Cupertino theme adapter was removed; its previous

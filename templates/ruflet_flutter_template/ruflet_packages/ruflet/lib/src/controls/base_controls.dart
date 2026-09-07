@@ -34,10 +34,14 @@ class LayoutControl extends StatelessWidget {
   final Control control;
   final Widget child;
 
+  /// Geometry already implemented by the selected renderer, not by the SDK.
+  final Set<String> skipProperties;
+
   const LayoutControl({
     super.key,
     required this.control,
     required this.child,
+    this.skipProperties = const {},
   });
 
   @override
@@ -45,7 +49,7 @@ class LayoutControl extends StatelessWidget {
     Widget w = _opacity(context, child, control);
     w = _tooltip(w, control);
     w = _directionality(w, control);
-    w = _sizedControl(w, control);
+    w = _sizedControl(w, control, skipProperties: skipProperties);
     w = _rotatedControl(context, w, control);
     w = _scaledControl(context, w, control);
     w = _offsetControl(context, w, control);
@@ -53,7 +57,7 @@ class LayoutControl extends StatelessWidget {
     w = _transformedControl(w, control);
     w = _aspectRatio(w, control);
     w = _alignedControl(context, w, control);
-    w = _marginControl(context, w, control);
+    w = _marginControl(context, w, control, skipProperties: skipProperties);
     w = _positionedControl(context, w, control);
     w = _badge(w, control);
     w = _sizeChangeObserver(w, control);
@@ -312,7 +316,9 @@ Widget _alignedControl(BuildContext context, Widget widget, Control control) {
   return widget;
 }
 
-Widget _marginControl(BuildContext context, Widget widget, Control control) {
+Widget _marginControl(BuildContext context, Widget widget, Control control,
+    {Set<String> skipProperties = const {}}) {
+  if (skipProperties.contains('margin')) return widget;
   final skipProps = control.internals?["skip_properties"] as List?;
   if (skipProps?.contains("margin") == true) return widget;
 
@@ -385,7 +391,11 @@ Widget _positionedControl(
   return widget;
 }
 
-Widget _sizedControl(Widget widget, Control control) {
+Widget _sizedControl(Widget widget, Control control,
+    {Set<String> skipProperties = const {}}) {
+  if (skipProperties.contains('width') && skipProperties.contains('height')) {
+    return widget;
+  }
   final skipProps = control.internals?['skip_properties'] as List?;
   if (skipProps != null && ['width', 'height'].any(skipProps.contains)) {
     return widget;

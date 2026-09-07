@@ -8,41 +8,33 @@ require "json"
 require "open3"
 require "optparse"
 require "tmpdir"
-require_relative "ruflet_namespace"
 
-# Sync only the core Ruflet package. Extension packages and host code are separate
-# sources of truth and are deliberately outside this utility's write boundary.
+# Sync all owned engine packages. Application and platform host code are outside
+# this utility's write boundary.
 class RufletSourceSync
   class Error < StandardError; end
-  # This is upstream provenance, not a consumer dependency. The distributed
-  # package and every owned Dart import are transformed into the Ruflet namespace.
-  SOURCE_PACKAGE = "packages/flet"
+  # The Ruflet engine owns both its renderers and embedded transport.
+  SOURCE_PACKAGE = "packages"
   PACKAGE = "#{SOURCE_PACKAGE}/"
-  MANIFEST_VERSION = 3
-  DIRECTORIES = %w[lib test vendor third_party assets fonts licenses].freeze
-  METADATA = %w[pubspec.yaml analysis_options.yaml LICENSE LICENSE.md LICENSE.txt
-                NOTICE CHANGELOG.md README.md .gitignore .metadata].freeze
-  CACHES = %w[.git .dart_tool build .pub-cache .idea .vscode coverage].freeze
+  MANIFEST_VERSION = 5
+  CACHES = %w[.git .dart_tool .cache build .pub-cache .idea .vscode coverage].freeze
 
-  def initialize(template:, source: nil, ref: "HEAD", overlay: nil)
+  def initialize(template:, source: nil, ref: "HEAD")
     @template = File.expand_path(template)
-    @target = File.join(@template, "ruflet_packages/ruflet")
+    @target = File.join(@template, "ruflet_packages")
     [@template, File.dirname(@target), @target].each do |path|
       raise Error, "Refusing symbolic link: #{path}" if File.symlink?(path)
     end
     @source = source && File.expand_path(source)
     @ref = ref
     @manifest_path = File.join(@template, "tool/conformance/ruflet_source_integrity.json")
-    @overlay_path = overlay || File.join(@template, "tool/ruflet_transport_overlay.json")
-    @overlay_bytes = File.binread(@overlay_path)
-    @overlay = JSON.parse(@overlay_bytes)
   end
 
   def self.managed?(path)
     parts = path.split("/")
     return false if (parts & CACHES).any? || parts.include?("..") || path.start_with?("/")
-    return false if %w[pubspec.lock .DS_Store].include?(parts.last)
-    DIRECTORIES.include?(parts.first) || METADATA.include?(path)
+    return false if %w[pubspec.lock .DS_Store .flutter-plugins .flutter-plugins-dependencies].include?(parts.last)
+    parts.length > 1 && parts.first.match?(/\Aruflet(?:_[a-z0-9_]+)?\z/)
   end
 
   def safe_path(root, relative)
@@ -84,7 +76,7 @@ class RufletSourceSync
   end
 
   def source_files
-    raise Error, "--source (or RUFLET_UPSTREAM_ROOT) is required for synchronization" unless @source
+    raise Error, "--source (or RUFLET_ENGINE_ROOT) is required for synchronization" unless @source
     dirty = git("status", "--porcelain", "--untracked-files=all", "--", SOURCE_PACKAGE)
     raise Error, "Source #{SOURCE_PACKAGE} has uncommitted changes; commit before syncing" unless dirty.empty?
     ref = git("rev-parse", "--verify", "--end-of-options", "#{@ref}^{commit}").strip
@@ -95,22 +87,22 @@ class RufletSourceSync
       relative = path.delete_prefix(PACKAGE)
       next unless self.class.managed?(relative)
       raise Error, "Source must contain regular files: #{path}" unless type == "blob" && %w[100644 100755].include?(mode)
-      [relative, object]
+      [relative, object, mode]
     end.sort
-    raise Error, "Source ref has no Ruflet package" unless entries.any? { |path, _| path == "pubspec.yaml" }
+    raise Error, "Source ref has no Ruflet package" unless entries.any? { |path, _| path == "ruflet/pubspec.yaml" }
 
     files = {}
     Open3.popen3("git", "-C", @source, "cat-file", "--batch") do |input, output, error, wait|
       input.binmode
       output.binmode
-      entries.each do |path, object|
+      entries.each do |path, object, mode|
         input.puts(object)
         input.flush
         header = output.gets&.split
         raise Error, "Cannot read source blob #{object}" unless header&.[](1) == "blob"
         bytes = output.read(Integer(header.fetch(2)))
         output.read(1)
-        files[path] = { bytes: bytes, object: object }
+        files[path] = { bytes: bytes, object: object, mode: mode }
       end
       input.close
       raise Error, "Cannot read source blobs: #{error.read}" unless wait.value.success?
@@ -119,57 +111,21 @@ class RufletSourceSync
   end
 
   def desired
-    ref, upstream = source_files
-    originals = {}
-    files = upstream.to_h do |path, entry|
-      destination = RufletNamespace.rename(path)
-      raise Error, "Namespace collision at #{destination}" if originals.key?(destination)
-      originals[destination] = entry.merge(source_path: path)
-      [destination, RufletNamespace.rewrite(path, entry.fetch(:bytes))]
-    end
-    @overlay.fetch("patches").each do |path, patches|
-      bytes = files.fetch(path) { raise Error, "Overlay source file disappeared: #{path}" }
-      patches.each do |patch|
-        before, after = patch.values_at("before", "after")
-        count = bytes.scan(Regexp.new(Regexp.escape(before))).length
-        raise Error, "Transport overlay needs review: #{path} (expected one anchor, found #{count})" unless count == 1 && !bytes.include?(after)
-        bytes = bytes.sub(before, after)
-      end
-      files[path] = bytes
-    end
-    @overlay.fetch("preserved_files").each do |path, expected_sha|
-      raise Error, "Upstream now owns a template-only transport file: #{path}" if files.key?(path)
-      full = safe_path(@target, path)
-      raise Error, "Restore the reviewed template transport file: #{path}" unless File.file?(full)
-      bytes = File.binread(full)
-      raise Error, "Template transport changed; review overlay hash: #{path}" unless sha(bytes) == expected_sha
-      files[path] = bytes
-    end
+    ref, source = source_files
+    files = source.transform_values { |entry| entry.fetch(:bytes) }
     entries = files.sort.to_h do |path, bytes|
-      original = originals[path]
-      classification = if !original
-        "reviewed_template_addition"
-      elsif @overlay.fetch("patches").key?(path)
-        "reviewed_transport_overlay"
-      elsif original.fetch(:source_path) != path || original.fetch(:bytes) != bytes
-        "namespaced_source"
-      else
-        "exact_source"
-      end
-      [path, { "classification" => classification, "source_path" => original&.fetch(:source_path),
-               "source_git_blob" => original&.fetch(:object),
-               "source_sha256" => original && sha(original.fetch(:bytes)), "vendored_sha256" => sha(bytes) }]
+      [path, { "classification" => "exact_source", "source_path" => path,
+               "source_git_blob" => source.fetch(path).fetch(:object),
+               "source_mode" => source.fetch(path).fetch(:mode),
+               "source_sha256" => sha(bytes), "vendored_sha256" => sha(bytes) }]
     end
     manifest = {
       "manifest_version" => MANIFEST_VERSION,
-      "package_name" => "ruflet",
-      "engine_version" => files.fetch("pubspec.yaml")[/^version:\s*(\S+)/, 1],
+      "package_name" => "ruflet-engine",
+      "packages" => files.keys.filter_map { |path| path.split('/').first if path.match?(%r{\Aruflet[^/]*/pubspec.yaml\z}) }.sort,
+      "engine_version" => files.fetch("ruflet/pubspec.yaml")[/^version:\s*(\S+)/, 1],
       "source_ref" => ref,
       "source_package" => SOURCE_PACKAGE,
-      "namespace_version" => RufletNamespace::VERSION,
-      "namespace_sha256" => namespace_sha,
-      "transport_overlay_sha256" => sha(@overlay_bytes),
-      "transport_overlay_ref" => @overlay.fetch("reviewed_template_ref"),
       "summary" => entries.values.group_by { |entry| entry.fetch("classification") }.transform_values(&:length),
       "files" => entries
     }
@@ -178,10 +134,6 @@ class RufletSourceSync
 
   def manifest
     JSON.parse(File.read(@manifest_path)) if File.file?(@manifest_path)
-  end
-
-  def namespace_sha
-    sha(File.binread(File.join(__dir__, "ruflet_namespace.rb")))
   end
 
   def source_ref_comment(ref)
@@ -194,17 +146,22 @@ class RufletSourceSync
   end
 
   def drift(record)
-    raise Error, "Source inventory needs initialization with --source ... --initialize" unless record && record["manifest_version"] == MANIFEST_VERSION
+    raise Error, "Source inventory needs initialization with --source ... --initialize" unless record && [3, 4, MANIFEST_VERSION].include?(record["manifest_version"])
+    legacy_core = record["manifest_version"] < MANIFEST_VERSION
     files = record.fetch("files")
+    files = files.transform_keys { |path| "ruflet/#{path}" } if legacy_core
     errors = []
-    errors << "Ruflet namespace transform changed" unless record.fetch("namespace_sha256") == namespace_sha && record.fetch("namespace_version") == RufletNamespace::VERSION
-    errors << "transport overlay contract changed" unless record.fetch("transport_overlay_sha256") == sha(@overlay_bytes)
     errors << "template source-ref comment drifted" unless source_ref_comment(record.fetch("source_ref")) == File.binread(File.join(@template, "pubspec.yaml"))
     actual = inventory
+    actual = actual.select { |path| path.start_with?("ruflet/") } if legacy_core
     (actual - files.keys).each { |path| errors << "unexpected file: #{path}" }
     (files.keys - actual).each { |path| errors << "missing file: #{path}" }
     (files.keys & actual).each do |path|
       errors << "content drift: #{path}" unless sha(File.binread(safe_path(@target, path))) == files.fetch(path).fetch("vendored_sha256")
+      mode = files.fetch(path)["source_mode"]
+      if mode && (File.stat(safe_path(@target, path)).mode & 0o777) != (mode.to_i(8) & 0o777)
+        errors << "file mode drift: #{path}"
+      end
     end
     errors
   end
@@ -212,6 +169,7 @@ class RufletSourceSync
   def check
     current = manifest
     errors = drift(current)
+    errors << "Migrate to the Ruflet engine with --source ... --initialize" unless current["manifest_version"] == MANIFEST_VERSION
     if @source
       _files, expected = desired
       errors << "manifest differs from source ref #{@ref}" unless expected == current
@@ -222,9 +180,13 @@ class RufletSourceSync
 
   def sync(initialize_inventory: false)
     current = manifest
-    if current && current["manifest_version"] == MANIFEST_VERSION
+    if current && [3, 4, MANIFEST_VERSION].include?(current["manifest_version"])
       errors = drift(current)
       raise Error, "Local changes must be reviewed/restored before sync:\n#{errors.join("\n")}" unless errors.empty?
+      if current["manifest_version"] != MANIFEST_VERSION && !initialize_inventory
+        raise Error, "Engine adoption requires --initialize; existing managed files are backed up"
+      end
+      validate_extension_migration if current["manifest_version"] < MANIFEST_VERSION
     elsif !initialize_inventory
       raise Error, "Initial adoption requires --initialize; existing managed files are backed up"
     end
@@ -234,7 +196,8 @@ class RufletSourceSync
     removed = old_paths - files.keys
     changed = files.keys.select do |path|
       full = safe_path(@target, path)
-      !File.file?(full) || File.binread(full) != files.fetch(path)
+      !File.file?(full) || File.binread(full) != files.fetch(path) ||
+        (File.stat(full).mode & 0o777) != (record.fetch("files").fetch(path).fetch("source_mode").to_i(8) & 0o777)
     end
     backup = nil
     affected_existing = (changed + removed).select { |path| File.file?(safe_path(@target, path)) }
@@ -252,6 +215,7 @@ class RufletSourceSync
       destination = safe_path(@target, path)
       FileUtils.mkdir_p(File.dirname(destination))
       File.binwrite(destination, files.fetch(path))
+      File.chmod(record.fetch("files").fetch(path).fetch("source_mode").to_i(8) & 0o777, destination)
     end
     removed.each { |path| File.delete(safe_path(@target, path)) }
     # Only this comment changes; preserve user dependency/host configuration edits.
@@ -262,12 +226,24 @@ class RufletSourceSync
       (backup ? " Recoverable originals: #{backup}" : "")
   end
 
+  def validate_extension_migration
+    output, _error, status = Open3.capture3("git", "-C", @template,
+      "status", "--porcelain", "-z", "--untracked-files=all", "--", @target)
+    return unless status.success? # Explicit initialization also supports non-Git fixtures.
+
+    changed = output.split("\0").filter_map do |entry|
+      relative = entry[3..].to_s.split("ruflet_packages/", 2).last
+      relative if relative && self.class.managed?(relative) && !relative.start_with?("ruflet/")
+    end
+    raise Error, "Commit/review local extension changes before engine adoption: #{changed.join(', ')}" unless changed.empty?
+  end
+
   def self.run(argv)
-    options = { template: File.expand_path("..", __dir__), source: ENV["RUFLET_UPSTREAM_ROOT"] }
+    options = { template: File.expand_path("..", __dir__), source: ENV["RUFLET_ENGINE_ROOT"] }
     check = initialize_inventory = false
     parser = OptionParser.new do |opts|
       opts.banner = "Usage: ruby tool/sync_ruflet_source.rb [--source RUFLET_REPO] [--ref COMMIT] [--check] [--initialize]"
-      opts.on("--source PATH", "Clean source Ruflet repository (or RUFLET_UPSTREAM_ROOT)") { |value| options[:source] = value }
+      opts.on("--source PATH", "Clean ruflet-engine repository (or RUFLET_ENGINE_ROOT)") { |value| options[:source] = value }
       opts.on("--ref REF", "Source commit, defaults to HEAD") { |value| options[:ref] = value }
       opts.on("--template PATH", "Template root; primarily useful for fixtures") { |value| options[:template] = value }
       opts.on("--check", "Read-only local integrity check; also verify source when supplied") { check = true }

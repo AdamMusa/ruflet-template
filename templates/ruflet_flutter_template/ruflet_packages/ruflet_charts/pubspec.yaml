@@ -1,4 +1,5 @@
 name: ruflet_charts
+repository: https://github.com/AdamMusa/ruflet-engine
 description: A Ruflet extension for creating interactive charts and graphs.
 version: 0.1.0
 publish_to: none

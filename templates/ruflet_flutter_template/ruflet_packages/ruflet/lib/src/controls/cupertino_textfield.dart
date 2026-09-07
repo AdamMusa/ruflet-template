@@ -34,6 +34,21 @@ class CupertinoTextFieldControl extends StatefulWidget {
 }
 
 class _CupertinoTextFieldControlState extends State<CupertinoTextFieldControl> {
+  Widget? _inputAffix(String side) {
+    final icon = widget.control.buildIconOrWidget('${side}_icon');
+    final text = widget.control.buildTextOrWidget(side,
+        textStyle: widget.control
+            .getTextStyle('${side}_style', cupertinoStyleTheme(context)));
+    if (icon == null) return text;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        icon,
+        if (text != null) ...[const SizedBox(width: 6), text],
+      ]),
+    );
+  }
+
   String _value = "";
   bool _focused = false;
   bool _revealPassword = false;
@@ -277,10 +292,12 @@ class _CupertinoTextFieldControlState extends State<CupertinoTextFieldControl> {
         textAlignVertical: textVerticalAlign != null
             ? TextAlignVertical(y: textVerticalAlign)
             : null,
-        placeholder: widget.control.getString("placeholder_text") ?? labelStr,
-        placeholderStyle:
+        placeholder: widget.control.getString("hint_text") ??
+            widget.control.getString("placeholder_text") ??
+            labelStr,
+        placeholderStyle: widget.control.getTextStyle("hint_style", theme) ??
             widget.control.getTextStyle("placeholder_style", theme) ??
-                widget.control.getTextStyle("label_style", theme),
+            widget.control.getTextStyle("label_style", theme),
         // label_style for adaptive TextField
         autofocus: autofocus,
         enabled: !widget.control.disabled,
@@ -325,14 +342,13 @@ class _CupertinoTextFieldControlState extends State<CupertinoTextFieldControl> {
         minLines: fitParentSize ? null : minLines,
         maxLines: fitParentSize ? null : maxLines,
         maxLength: maxLength,
-        prefix: widget.control.buildTextOrWidget("prefix"),
-        suffix:
-            revealPasswordIcon ?? widget.control.buildTextOrWidget("suffix"),
+        prefix: _inputAffix("prefix"),
+        suffix: revealPasswordIcon ?? _inputAffix("suffix"),
         readOnly: readOnly,
         textDirection: rtl ? TextDirection.rtl : null,
         inputFormatters: inputFormatters.isNotEmpty ? inputFormatters : null,
         obscureText: password && !_revealPassword,
-        padding:
+        padding: widget.control.getPadding("content_padding") ??
             widget.control.getPadding("padding", const EdgeInsets.all(7.0))!,
         stylusHandwritingEnabled:
             widget.control.getBool("enable_stylus_handwriting", true)!,

@@ -1,4 +1,5 @@
 name: ruflet_color_pickers
+repository: https://github.com/AdamMusa/ruflet-engine
 description: Ruflet color picker controls
 version: 0.1.0
 publish_to: none

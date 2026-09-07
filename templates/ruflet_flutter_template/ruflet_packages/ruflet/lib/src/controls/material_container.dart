@@ -38,11 +38,14 @@ class MaterialContainerControl extends StatelessWidget with RufletStoreMixin {
     var ignoreInteractions = control.getBool("ignore_interactions", false)!;
     var animation = control.getAnimation("animate");
     var blur = control.getBlur("blur");
-    var colorFilter = control.getColorFilter("color_filter", materialStyleTheme(Theme.of(context)));
-    var width = control.getDouble("width");
-    var height = control.getDouble("height");
+    var colorFilter = control.getColorFilter(
+        "color_filter", materialStyleTheme(Theme.of(context)));
+    final ownsSize = control.getAnimation("animate_size") == null;
+    final ownsMargin = control.getAnimation("animate_margin") == null;
+    var width = ownsSize ? control.getDouble("width") : null;
+    var height = ownsSize ? control.getDouble("height") : null;
     var padding = control.getPadding("padding");
-    var margin = control.getMargin("margin");
+    var margin = ownsMargin ? control.getMargin("margin") : null;
     var alignment = control.getAlignment("alignment");
     var borderRadius = control.getBorderRadius("border_radius");
     var clipBehavior = control.getClipBehavior(
@@ -52,7 +55,8 @@ class MaterialContainerControl extends StatelessWidget with RufletStoreMixin {
     var boxDecoration = boxDecorationFromDetails(
       shape: control.getBoxShape("shape", BoxShape.rectangle)!,
       color: bgColor,
-      gradient: parseGradient(control.get("gradient"), materialStyleTheme(theme)),
+      gradient:
+          parseGradient(control.get("gradient"), materialStyleTheme(theme)),
       borderRadius: borderRadius,
       border: control.getBorder("border", materialStyleTheme(theme),
           defaultSideColor: theme.colorScheme.primary),
@@ -93,8 +97,8 @@ class MaterialContainerControl extends StatelessWidget with RufletStoreMixin {
             borderRadius: borderRadius,
             splashColor: control.getColor("ink_color", context),
             child: Container(
-              padding: padding,
-              alignment: alignment,
+              padding: animation == null ? padding : null,
+              alignment: animation == null ? alignment : null,
               clipBehavior: Clip.none,
               child: content,
             ),
@@ -189,6 +193,13 @@ class MaterialContainerControl extends StatelessWidget with RufletStoreMixin {
     }
     if (ignoreInteractions) container = IgnorePointer(child: container);
 
-    return LayoutControl(control: control, child: container);
+    return LayoutControl(
+      control: control,
+      skipProperties: {
+        if (ownsSize) ...{'width', 'height'},
+        if (ownsMargin) 'margin',
+      },
+      child: container,
+    );
   }
 }

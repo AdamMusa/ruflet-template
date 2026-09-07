@@ -1,4 +1,5 @@
 name: ruflet_secure_storage
+repository: https://github.com/AdamMusa/ruflet-engine
 description: Ruflet Secure Storage control
 version: 0.1.0
 publish_to: none
