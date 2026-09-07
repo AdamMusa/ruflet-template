@@ -2,7 +2,7 @@ import "dart:async";
 import "dart:convert";
 
 import "package:flet/flet.dart";
-import "package:flutter/material.dart";
+import "package:flutter/widgets.dart";
 import "package:mobile_scanner/mobile_scanner.dart";
 
 import "scanner_config.dart";
