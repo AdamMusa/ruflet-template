@@ -1,6 +1,5 @@
 import 'package:flet/flet.dart';
 import 'package:flutter/widgets.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_map_animations/flutter_map_animations.dart';
 
 import 'utils/map.dart';
