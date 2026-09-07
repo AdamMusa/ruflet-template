@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flet/flet.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import 'charts.dart';
 
@@ -55,13 +55,13 @@ LineTooltipItem? parseLineTooltipItem(
   var tooltip = dataPoint.internals?["tooltip"];
   if (tooltip == null) return null;
 
-  final theme = Theme.of(context);
+  final theme = FletStyleTheme.of(context);
   var style = parseTextStyle(tooltip["text_style"], theme, const TextStyle())!;
   if (style.color == null) {
     style = style.copyWith(
         color: spot.bar.gradient?.colors.first ??
             spot.bar.color ??
-            Colors.blueGrey);
+            const Color(0xFF607D8B));
   }
   return LineTooltipItem(
       tooltip["text"] ?? dataPoint.getDouble("y", 0)!.toString(), style,
@@ -83,7 +83,7 @@ LineTouchTooltipData? parseLineTouchTooltipData(
   final tooltip = control.get("tooltip");
   if (tooltip == null) return defaultValue;
 
-  final theme = Theme.of(context);
+  final theme = FletStyleTheme.of(context);
 
   return LineTouchTooltipData(
     getTooltipColor: (LineBarSpot spot) => parseColor(
@@ -124,17 +124,19 @@ LineChartBarData parseLineChartBarData(
     bool interactiveChart,
     BuildContext context,
     Map<int, List<FlSpot>> barSpots) {
-  final theme = Theme.of(context);
+  final theme = FletStyleTheme.of(context);
 
   var aboveLineBgcolor = chartData.getColor("above_line_bgcolor", context);
   var aboveLineGradient = chartData.getGradient("above_line_gradient", theme);
   var belowLineBgcolor = chartData.getColor("below_line_bgcolor", context);
   var belowLineGradient = chartData.getGradient("below_line_gradient", theme);
   var dashPattern = chartData.get("dash_pattern");
-  var barColor = chartData.getColor("color", context, Colors.cyan)!;
+  var barColor = chartData.getColor("color", context, const Color(0xFF00BCD4))!;
   var barGradient = chartData.getGradient("gradient", theme);
-  var aboveLine = parseFlLine(chartData.get("above_line"), Theme.of(context));
-  var belowLine = parseFlLine(chartData.get("below_line"), Theme.of(context));
+  var aboveLine =
+      parseFlLine(chartData.get("above_line"), FletStyleTheme.of(context));
+  var belowLine =
+      parseFlLine(chartData.get("below_line"), FletStyleTheme.of(context));
   var aboveLineCutoffY = chartData.getDouble("above_line_cutoff_y");
   var belowLineCutoffY = chartData.getDouble("below_line_cutoff_y");
   var stepDirection = chartData.getDouble("step_direction");
@@ -168,8 +170,9 @@ LineChartBarData parseLineChartBarData(
       dashArray: dashPattern != null
           ? (dashPattern as List).map((e) => parseInt(e)).nonNulls.toList()
           : null,
-      shadow: parseBoxShadow(chartData.get("shadow"), Theme.of(context)) ??
-          const Shadow(color: Colors.transparent),
+      shadow:
+          parseBoxShadow(chartData.get("shadow"), FletStyleTheme.of(context)) ??
+              const Shadow(color: Color(0x00000000)),
       dotData: FlDotData(
           show: true,
           getDotPainter: (spot, percent, barData, index) {

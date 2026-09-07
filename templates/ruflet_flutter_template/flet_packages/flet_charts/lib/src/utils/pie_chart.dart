@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flet/flet.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import 'charts.dart';
 
@@ -38,7 +38,7 @@ class PieChartEventData extends Equatable {
 PieChartSectionData parsePieChartSectionData(
     Control section, BuildContext context) {
   section.notifyParent = true;
-  var theme = Theme.of(context);
+  var theme = FletStyleTheme.of(context);
   var title = section.getString("title");
   return PieChartSectionData(
     value: section.getDouble("value"),

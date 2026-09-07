@@ -1,14 +1,51 @@
 import 'package:collection/collection.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flet/flet.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+
+// Stable data-series colors are independent of the surrounding widget library.
+const chartSeriesColors = <Color>[
+  Color(0xFFF44336),
+  Color(0xFFE91E63),
+  Color(0xFF9C27B0),
+  Color(0xFF673AB7),
+  Color(0xFF3F51B5),
+  Color(0xFF2196F3),
+  Color(0xFF03A9F4),
+  const Color(0xFF00BCD4),
+  Color(0xFF009688),
+  Color(0xFF4CAF50),
+  Color(0xFF8BC34A),
+  Color(0xFFCDDC39),
+  Color(0xFFFFEB3B),
+  Color(0xFFFFC107),
+  Color(0xFFFF9800),
+  Color(0xFFFF5722),
+  Color(0xFF795548),
+  const Color(0xFF607D8B),
+];
+
+/// Supplying the painter prevents fl_chart's touch fallback from consulting a
+/// Material Theme inside an otherwise neutral CustomPainter chart.
+AxisSpotIndicator chartTouchIndicator(FletStyleTheme theme) {
+  final color = (theme.color('outline') ?? const Color(0xFF8E8E93))
+      .withValues(alpha: 0.5);
+  return AxisSpotIndicator(
+    painter: AxisLinesIndicatorPainter(
+      horizontalLineProvider: (y) =>
+          HorizontalLine(y: y, color: color, strokeWidth: 1),
+      verticalLineProvider: (x) =>
+          VerticalLine(x: x, color: color, strokeWidth: 1),
+    ),
+  );
+}
 
 FlDotPainter invisibleDotPainter =
     FlDotCirclePainter(radius: 0, strokeWidth: 0);
 FlLine invisibleLine = const FlLine(strokeWidth: 0);
 
 FlGridData parseChartGridData(
-    dynamic horizontal, dynamic vertical, ThemeData theme) {
+    dynamic horizontal, dynamic vertical, FletStyleTheme theme) {
   if (horizontal == null && vertical == null) {
     return const FlGridData(show: false);
   }
@@ -30,7 +67,8 @@ FlGridData parseChartGridData(
   );
 }
 
-FlLine? parseFlLine(dynamic value, ThemeData theme, [FlLine? defaultValue]) {
+FlLine? parseFlLine(dynamic value, FletStyleTheme theme,
+    [FlLine? defaultValue]) {
   if (value == null ||
       (value['color'] == null &&
           value['width'] == null &&
@@ -40,7 +78,7 @@ FlLine? parseFlLine(dynamic value, ThemeData theme, [FlLine? defaultValue]) {
   }
 
   return FlLine(
-      color: parseColor(value['color'], theme, Colors.black)!,
+      color: parseColor(value['color'], theme, const Color(0xFF000000))!,
       strokeWidth: parseDouble(value['width'], 2)!,
       gradient: parseGradient(value['gradient'], theme),
       dashArray: (value['dash_pattern'] as List?)
@@ -50,7 +88,7 @@ FlLine? parseFlLine(dynamic value, ThemeData theme, [FlLine? defaultValue]) {
 }
 
 FlLine? parseSelectedFlLine(
-    dynamic value, ThemeData theme, Color? color, Gradient? gradient,
+    dynamic value, FletStyleTheme theme, Color? color, Gradient? gradient,
     [FlLine? defaultValue]) {
   if (value == null) return defaultValue;
 
@@ -66,7 +104,7 @@ FlLine? parseSelectedFlLine(
           value['color'], theme, defaultGetDotStrokeColor(0, color, gradient)));
 }
 
-FlDotPainter? parseChartDotPainter(dynamic value, ThemeData theme,
+FlDotPainter? parseChartDotPainter(dynamic value, FletStyleTheme theme,
     double percentage, Color? barColor, Gradient? barGradient,
     {FlDotPainter? defaultValue, bool selected = false}) {
   if (value == null) {
@@ -124,7 +162,7 @@ Color getDefaultPointColor(
     return lerpGradient(
         barGradient.colors, barGradient.getSafeColorStops(), percentage / 100);
   }
-  return barGradient?.colors.first ?? barColor ?? Colors.blueGrey;
+  return barGradient?.colors.first ?? barColor ?? const Color(0xFF607D8B);
 }
 
 Color defaultGetDotStrokeColor(double percentage,

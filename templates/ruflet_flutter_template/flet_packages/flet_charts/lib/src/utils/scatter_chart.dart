@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flet/flet.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import 'charts.dart';
 
@@ -28,7 +28,7 @@ ScatterTouchTooltipData parseScatterTouchTooltipData(
     BuildContext context, Control control, List<ScatterSpot> spots) {
   var tooltip = control.get("tooltip") ?? {};
 
-  final theme = Theme.of(context);
+  final theme = FletStyleTheme.of(context);
 
   return ScatterTouchTooltipData(
     tooltipBorder: parseBorderSide(tooltip["border_side"], theme,
@@ -64,7 +64,7 @@ ScatterTooltipItem? parseScatterTooltipItem(
   var tooltip = dataPoint.internals?["tooltip"];
   if (tooltip == null) return null;
 
-  final theme = Theme.of(context);
+  final theme = FletStyleTheme.of(context);
   var style = parseTextStyle(tooltip["text_style"], theme, const TextStyle())!;
   if (style.color == null) {
     style = style.copyWith(color: spot.dotPainter.mainColor);

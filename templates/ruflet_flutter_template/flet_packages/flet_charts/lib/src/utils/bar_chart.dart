@@ -2,7 +2,7 @@ import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flet/flet.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import 'charts.dart';
 
@@ -67,11 +67,11 @@ BarTouchTooltipData? parseBarTouchTooltipData(
   var tooltip = control.get("tooltip");
   if (tooltip == null) return defaultValue;
 
-  final theme = Theme.of(context);
+  final theme = FletStyleTheme.of(context);
 
   return BarTouchTooltipData(
     getTooltipColor: (BarChartGroupData group) =>
-        parseColor(tooltip["bgcolor"], theme, theme.colorScheme.secondary)!,
+        parseColor(tooltip["bgcolor"], theme, theme.color("secondary"))!,
     tooltipBorderRadius: parseBorderRadius(tooltip["border_radius"]),
     tooltipMargin: parseDouble(tooltip["margin"], 16)!,
     tooltipPadding: parsePadding(
@@ -109,7 +109,7 @@ BarTooltipItem? parseBarTooltipItem(Control rod, BuildContext context) {
   var tooltip = rod.internals?["tooltip"];
   if (tooltip == null) return null;
 
-  final theme = Theme.of(context);
+  final theme = FletStyleTheme.of(context);
   var tooltipTextStyle = parseTextStyle(
     tooltip["text_style"],
     theme,
@@ -118,7 +118,7 @@ BarTooltipItem? parseBarTooltipItem(Control rod, BuildContext context) {
   if (tooltipTextStyle.color == null) {
     tooltipTextStyle = tooltipTextStyle.copyWith(
       color: rod.getGradient("gradient", theme)?.colors.first ??
-          rod.getColor("color", context, Colors.blueGrey)!,
+          rod.getColor("color", context, const Color(0xFF607D8B))!,
     );
   }
   return BarTooltipItem(
@@ -173,7 +173,7 @@ BarChartRodData parseBarChartRodData(
 ) {
   rod.notifyParent = true;
 
-  final theme = Theme.of(context);
+  final theme = FletStyleTheme.of(context);
   var bgFromY = rod.getDouble("bg_from_y");
   var bgToY = rod.getDouble("bg_to_y");
   var bgcolor = rod.getColor("bgcolor", context);
@@ -226,7 +226,7 @@ BarChartRodStackItem parseBarChartRodStackItem(
     rodStackItem.getColor("color", context)!,
     borderSide: rodStackItem.getBorderSide(
       "border_side",
-      Theme.of(context),
+      FletStyleTheme.of(context),
       defaultValue: BorderSide.none,
     )!,
   );

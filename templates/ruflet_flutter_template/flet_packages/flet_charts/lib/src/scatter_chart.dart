@@ -1,6 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flet/flet.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import 'utils/charts.dart';
 import 'utils/scatter_chart.dart';
@@ -20,7 +20,7 @@ class _ScatterChartControlState extends State<ScatterChartControl> {
   Widget build(BuildContext context) {
     debugPrint("ScatterChart build: ${widget.control.id}");
 
-    final theme = Theme.of(context);
+    final theme = FletStyleTheme.of(context);
     var animation = widget.control.getAnimation(
         "animation",
         ImplicitAnimationDetails(
@@ -53,8 +53,8 @@ class _ScatterChartControlState extends State<ScatterChartControl> {
                   color: spot.getColor(
                       "color",
                       context,
-                      Colors.primaries[
-                          ((x * y) % Colors.primaries.length).toInt()])!,
+                      chartSeriesColors[
+                          ((x * y) % chartSeriesColors.length).toInt()])!,
                 ));
     }).toList();
 

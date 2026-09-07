@@ -1,6 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flet/flet.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import 'utils/candlestick_chart.dart';
 import 'utils/charts.dart';
@@ -23,7 +23,7 @@ class _CandlestickChartControlState extends State<CandlestickChartControl> {
   Widget build(BuildContext context) {
     debugPrint("CandlestickChart build: ${widget.control.id}");
 
-    final theme = Theme.of(context);
+    final theme = FletStyleTheme.of(context);
     final animation = widget.control.getAnimation(
         "animation",
         ImplicitAnimationDetails(
@@ -76,6 +76,7 @@ class _CandlestickChartControlState extends State<CandlestickChartControl> {
 
     final chart = CandlestickChart(
       CandlestickChartData(
+        touchedPointIndicator: chartTouchIndicator(theme),
         candlestickSpots: candlestickSpots,
         backgroundColor: widget.control.getColor("bgcolor", context),
         minX: widget.control.getDouble("min_x"),

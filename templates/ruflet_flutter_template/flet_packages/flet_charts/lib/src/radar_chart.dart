@@ -1,6 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flet/flet.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import 'utils/radar_chart.dart';
 
@@ -21,7 +21,7 @@ class _RadarChartControlState extends State<RadarChartControl> {
   Widget build(BuildContext context) {
     debugPrint("RadarChart build: ${widget.control.id}‚");
 
-    final theme = Theme.of(context);
+    final theme = FletStyleTheme.of(context);
     final animation = widget.control.getAnimation(
         "animation",
         ImplicitAnimationDetails(
@@ -41,7 +41,7 @@ class _RadarChartControlState extends State<RadarChartControl> {
 
         // Radar and borders
         radarBackgroundColor: widget.control
-            .getColor("radar_bgcolor", context, Colors.transparent)!,
+            .getColor("radar_bgcolor", context, const Color(0x00000000))!,
         radarBorderData: widget.control.getBorderSide(
             "radar_border_side", theme,
             defaultValue: const BorderSide(width: 2))!,

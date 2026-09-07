@@ -1,7 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flet/flet.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import 'utils/charts.dart';
 import 'utils/line_chart.dart';
@@ -66,7 +66,7 @@ class _LineChartControlState extends State<LineChartControl> {
   @override
   Widget build(BuildContext context) {
     debugPrint("LineChart build: ${widget.control.id}");
-    final theme = Theme.of(context);
+    final theme = FletStyleTheme.of(context);
     var animation = widget.control.getAnimation(
         "animation",
         ImplicitAnimationDetails(

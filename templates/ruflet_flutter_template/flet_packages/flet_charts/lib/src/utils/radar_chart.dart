@@ -2,7 +2,7 @@ import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flet/flet.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import 'charts.dart';
 
@@ -50,11 +50,13 @@ class RadarChartEventData extends Equatable {
 }
 
 RadarDataSet parseRadarDataSet(
-    Control dataSet, ThemeData theme, BuildContext context) {
+    Control dataSet, FletStyleTheme theme, BuildContext context) {
   dataSet.notifyParent = true;
-  final fillColor = dataSet.getColor("fill_color", context, Colors.cyan)!;
+  final fillColor =
+      dataSet.getColor("fill_color", context, const Color(0xFF00BCD4))!;
   final fillGradient = dataSet.getGradient("fill_gradient", theme);
-  final borderColor = dataSet.getColor("border_color", context, Colors.cyan)!;
+  final borderColor =
+      dataSet.getColor("border_color", context, const Color(0xFF00BCD4))!;
   final borderWidth = dataSet.getDouble("border_width", 2.0)!;
   final entryRadius = dataSet.getDouble("entry_radius", 5.0)!;
 
@@ -74,7 +76,7 @@ RadarDataSet parseRadarDataSet(
 }
 
 RadarChartTitle parseRadarChartTitle(
-    Control title, ThemeData theme, double defaultAngle) {
+    Control title, FletStyleTheme theme, double defaultAngle) {
   title.notifyParent = true;
   final spansValue = title.get("text_spans");
   final spans = spansValue != null

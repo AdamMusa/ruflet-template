@@ -1,6 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flet/flet.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import 'utils/bar_chart.dart';
 import 'utils/charts.dart';
@@ -21,7 +21,7 @@ class _BarChartControlState extends State<BarChartControl> {
   @override
   Widget build(BuildContext context) {
     debugPrint("BarChart build: ${widget.control.id}");
-    final theme = Theme.of(context);
+    final theme = FletStyleTheme.of(context);
 
     var animation = widget.control.getAnimation(
         "animation",

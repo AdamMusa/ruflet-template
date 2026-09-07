@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flet/flet.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import 'charts.dart';
 
@@ -36,7 +36,7 @@ class CandlestickChartEventData extends Equatable {
 CandlestickTouchTooltipData parseCandlestickTouchTooltipData(
     BuildContext context, Control control, List<Control> spotControls) {
   final tooltip = control.get("tooltip") ?? {};
-  final theme = Theme.of(context);
+  final theme = FletStyleTheme.of(context);
 
   return CandlestickTouchTooltipData(
     tooltipBorder: parseBorderSide(tooltip["border_side"], theme,
@@ -88,7 +88,7 @@ CandlestickTooltipItem? parseCandlestickTooltipItem(
     return null;
   }
 
-  final theme = Theme.of(context);
+  final theme = FletStyleTheme.of(context);
   var textStyle =
       parseTextStyle(tooltip["text_style"], theme, const TextStyle())!;
   if (textStyle.color == null) {
