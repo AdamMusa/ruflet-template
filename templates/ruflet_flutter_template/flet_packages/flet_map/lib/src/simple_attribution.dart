@@ -1,23 +1,17 @@
 import 'package:flet/flet.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter/widgets.dart';
+
+import 'cupertino_attribution.dart';
+import 'material_simple_attribution.dart';
 
 class SimpleAttributionControl extends StatelessWidget {
-  final Control control;
-
   const SimpleAttributionControl({super.key, required this.control});
 
-  @override
-  Widget build(BuildContext context) {
-    debugPrint("SimpleAttributionControl build: ${control.id}");
-    var text = control.buildTextOrWidget("text");
+  final Control control;
 
-    return SimpleAttributionWidget(
-      source: text is Text ? text : const Text("Placeholder Text"),
-      onTap: () => control.triggerEvent("click"),
-      backgroundColor: control.getColor(
-          "bgcolor", context, Theme.of(context).colorScheme.surface)!,
-      alignment: control.getAlignment("alignment", Alignment.bottomRight)!,
-    );
-  }
+  @override
+  Widget build(BuildContext context) => PlatformControlRenderer(
+        material: (_) => MaterialSimpleAttribution(control: control),
+        cupertino: (_) => CupertinoSimpleAttribution(control: control),
+      );
 }

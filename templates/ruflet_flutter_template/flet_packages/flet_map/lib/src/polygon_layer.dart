@@ -1,5 +1,5 @@
 import 'package:flet/flet.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_map/flutter_map.dart';
 
 import 'utils/map.dart';
@@ -20,13 +20,14 @@ class PolygonLayerControl extends StatelessWidget with FletStoreMixin {
       polygon.notifyParent = true;
       return Polygon(
           borderStrokeWidth: polygon.getDouble("border_stroke_width", 0)!,
-          borderColor: polygon.getColor("border_color", context, Colors.green)!,
-          color: polygon.getColor("color", context, Colors.green)!,
+          borderColor: polygon.getColor(
+              "border_color", context, const Color(0xFF4CAF50))!,
+          color: polygon.getColor("color", context, const Color(0xFF4CAF50))!,
           disableHolesBorder: polygon.getBool("disable_holes_border", false)!,
           rotateLabel: polygon.getBool("rotate_label", false)!,
           label: polygon.getString("label"),
-          labelStyle: polygon.getTextStyle(
-              "label_text_style", Theme.of(context), const TextStyle())!,
+          labelStyle: polygon.getTextStyle("label_text_style",
+              FletStyleTheme.of(context), const TextStyle())!,
           strokeCap: polygon.getStrokeCap("stroke_cap", StrokeCap.round)!,
           strokeJoin: polygon.getStrokeJoin("stroke_join", StrokeJoin.round)!,
           points: polygon

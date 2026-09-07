@@ -1,7 +1,7 @@
 import 'package:collection/collection.dart';
 import 'package:flet/flet.dart';
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -258,7 +258,8 @@ MapOptions? parseConfiguration(Control control, BuildContext context,
         parseLatLng(control.get("initial_center"), const LatLng(50.5, 30.51))!,
     interactionOptions: parseInteractionOptions(
         control.get("interaction_configuration"), const InteractionOptions())!,
-    backgroundColor: control.getColor("bgcolor", context, Colors.grey[300])!,
+    backgroundColor:
+        control.getColor("bgcolor", context, const Color(0xFFE0E0E0))!,
     initialRotation: control.getDouble("initial_rotation", 0.0)!,
     initialZoom: control.getDouble("initial_zoom", 13.0)!,
     keepAlive: control.getBool("keep_alive", false)!,

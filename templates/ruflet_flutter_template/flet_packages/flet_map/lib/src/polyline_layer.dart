@@ -1,5 +1,5 @@
 import 'package:flet/flet.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_map/flutter_map.dart';
 
 import 'utils/map.dart';
@@ -20,9 +20,9 @@ class PolylineLayerControl extends StatelessWidget with FletStoreMixin {
       polyline.notifyParent = true;
       return Polyline(
           borderStrokeWidth: polyline.getDouble("border_stroke_width", 0)!,
-          borderColor:
-              polyline.getColor("border_color", context, Colors.yellow)!,
-          color: polyline.getColor("color", context, Colors.yellow)!,
+          borderColor: polyline.getColor(
+              "border_color", context, const Color(0xFFFFEB3B))!,
+          color: polyline.getColor("color", context, const Color(0xFFFFEB3B))!,
           pattern: parseStrokePattern(
               polyline.get("stroke_pattern"), const StrokePattern.solid())!,
           strokeCap: polyline.getStrokeCap("stroke_cap", StrokeCap.round)!,
@@ -37,7 +37,7 @@ class PolylineLayerControl extends StatelessWidget with FletStoreMixin {
               .toList(),
           gradientColors: polyline
               .get("gradient_colors", [])!
-              .map((e) => parseColor(e, Theme.of(context)))
+              .map((e) => parseColor(e, FletStyleTheme.of(context)))
               .nonNulls
               .toList(),
           points: polyline
