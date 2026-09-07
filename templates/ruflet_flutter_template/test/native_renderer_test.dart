@@ -8,6 +8,10 @@ import '../lib/main.server.dart' as server_entry;
 import '../lib/native_renderer.dart';
 
 const _channel = MethodChannel('ruflet/native_renderer');
+const _nativeAppleRendererEnabled = bool.fromEnvironment(
+  'RUFLET_EXPERIMENTAL_NATIVE_RENDERER',
+  defaultValue: false,
+);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -30,26 +34,40 @@ void main() {
   });
 
   test(
-    'iOS hands the exact resolved HTTP page URL to the native host',
+    'iOS native handoff follows the experimental build flag',
     () async {
       debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
       const pageUrl = 'http://192.168.1.226:8550/gallery?mode=server';
 
-      expect(usesNativeAppleRenderer, isTrue);
-      expect(await showNativeAppleRenderer(pageUrl), isTrue);
-      expect(calls, hasLength(1));
-      expect(calls.single.method, 'show');
-      expect(calls.single.arguments, {'pageUrl': pageUrl});
+      expect(usesNativeAppleRenderer, _nativeAppleRendererEnabled);
+      expect(
+        await showNativeAppleRenderer(pageUrl),
+        _nativeAppleRendererEnabled,
+      );
+      if (_nativeAppleRendererEnabled) {
+        expect(calls, hasLength(1));
+        expect(calls.single.method, 'show');
+        expect(calls.single.arguments, {'pageUrl': pageUrl});
+      } else {
+        expect(calls, isEmpty);
+      }
     },
   );
 
-  test('macOS uses the same native channel and exact page URL', () async {
+  test('macOS native handoff follows the experimental build flag', () async {
     debugDefaultTargetPlatformOverride = TargetPlatform.macOS;
     const pageUrl = 'https://example.test/ruflet/native?token=unchanged';
 
-    expect(usesNativeAppleRenderer, isTrue);
-    expect(await showNativeAppleRenderer(pageUrl), isTrue);
-    expect(calls.single.arguments, {'pageUrl': pageUrl});
+    expect(usesNativeAppleRenderer, _nativeAppleRendererEnabled);
+    expect(
+      await showNativeAppleRenderer(pageUrl),
+      _nativeAppleRendererEnabled,
+    );
+    if (_nativeAppleRendererEnabled) {
+      expect(calls.single.arguments, {'pageUrl': pageUrl});
+    } else {
+      expect(calls, isEmpty);
+    }
   });
 
   test('Apple requires a successful native handoff', () async {
@@ -63,7 +81,7 @@ void main() {
     );
   });
 
-  test('non-Apple platforms keep Flet and never invoke the bridge', () async {
+  test('non-Apple platforms keep Ruflet and never invoke the bridge', () async {
     debugDefaultTargetPlatformOverride = TargetPlatform.android;
 
     expect(usesNativeAppleRenderer, isFalse);
