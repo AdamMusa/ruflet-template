@@ -1,5 +1,5 @@
 import 'package:flet/flet.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart' as fce;
 import 'package:flutter_highlight/theme_map.dart';
 
@@ -34,7 +34,7 @@ fce.CodeThemeData? parseCodeThemeData(Control control, BuildContext context) {
 
   final parsedStyles = <String, TextStyle>{};
   stylesSource.forEach((key, value) {
-    final style = parseTextStyle(value, Theme.of(context));
+    final style = parseTextStyle(value, FletStyleTheme.of(context));
     if (style != null) {
       parsedStyles[key.toString()] = style;
     }
@@ -53,9 +53,10 @@ fce.GutterStyle? parseGutterStyle(Control control, BuildContext context) {
     return null;
   }
 
-  final textStyle = parseTextStyle(gutterStyle["text_style"], Theme.of(context));
+  final textStyle =
+      parseTextStyle(gutterStyle["text_style"], FletStyleTheme.of(context));
   final background =
-      parseColor(gutterStyle["background_color"], Theme.of(context));
+      parseColor(gutterStyle["background_color"], FletStyleTheme.of(context));
   final width = parseDouble(gutterStyle["width"]);
   final margin = _parseGutterMargin(gutterStyle["margin"]);
 

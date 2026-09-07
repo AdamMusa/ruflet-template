@@ -1,10 +1,12 @@
 import 'package:flet/flet.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart' as fce;
 import 'package:highlight/languages/all.dart';
 
 import 'utils/code_editor.dart';
 import 'utils/flet_code_controller.dart';
+import 'cupertino_code_editor.dart';
+import 'material_code_editor.dart';
 
 class CodeEditorControl extends StatefulWidget {
   final Control control;
@@ -170,7 +172,8 @@ class _CodeEditorControlState extends State<CodeEditorControl> {
       minOffset: 0,
       maxOffset: _controller.text.length,
     );
-    if (explicitSelection != null && explicitSelection != _controller.selection) {
+    if (explicitSelection != null &&
+        explicitSelection != _controller.selection) {
       _controller.selection = explicitSelection;
     }
 
@@ -186,8 +189,7 @@ class _CodeEditorControlState extends State<CodeEditorControl> {
 
     final themeData = parseCodeThemeData(widget.control, context);
     final gutterStyle = parseGutterStyle(widget.control, context);
-    final autocompleteEnabled =
-        widget.control.getBool("autocomplete", false)!;
+    final autocompleteEnabled = widget.control.getBool("autocomplete", false)!;
     final autocompleteWords =
         _stringList(widget.control.get("autocomplete_words")) ?? const [];
     _controller.autocompletionEnabled = autocompleteEnabled;
@@ -198,16 +200,20 @@ class _CodeEditorControlState extends State<CodeEditorControl> {
       _controller.popupController.hide();
     }
 
-    Widget editor = SingleChildScrollView(
-        child: fce.CodeField(
-      controller: _controller,
-      focusNode: _focusNode,
-      readOnly: widget.control.getBool("read_only", false)!,
-      textStyle: widget.control.getTextStyle("text_style", Theme.of(context)),
-      gutterStyle: gutterStyle,
-      padding: widget.control.getEdgeInsets("padding", EdgeInsets.zero)!,
-      enabled: !widget.control.disabled,
-    ));
+    Widget editor = PlatformControlRenderer(
+      material: (_) => MaterialCodeEditorRenderer(
+        control: widget.control,
+        controller: _controller,
+        focusNode: _focusNode,
+        gutterStyle: gutterStyle,
+      ),
+      cupertino: (_) => CupertinoCodeEditorRenderer(
+        control: widget.control,
+        controller: _controller,
+        focusNode: _focusNode,
+        gutterStyle: gutterStyle,
+      ),
+    );
 
     if (themeData != null) {
       editor = fce.CodeTheme(data: themeData, child: editor);
