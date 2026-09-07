@@ -1,0 +1,31 @@
+# The Ruflet source-integrity manifest pins each template file by its git blob
+# hash, and the build verifies the client copy against it. Git for Windows
+# checks out text files as CRLF by default, which changes every hash and fails
+# the check on a tree nobody touched. Normalise to LF on every platform.
+* text=auto eol=lf
+
+# Windows scripts are stored with CRLF already. Leave them exactly as they are:
+# normalising them would rewrite gradlew.bat for no gain and risk the batch
+# interpreter, which needs CRLF.
+*.bat -text
+*.cmd -text
+*.ps1 -text
+
+# Binaries must never be touched by that normalisation.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.icns binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.zip binary
+*.jar binary
+*.keystore binary
+*.so binary
+*.a binary
+*.dylib binary
+*.dll binary
