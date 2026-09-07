@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
 class _Backend extends RufletBackend {
+  final events = <String>[];
+
   _Backend(TargetPlatform target)
       : super(
             pageUri: Uri.parse('inprocess://date-test'),
@@ -18,7 +20,9 @@ class _Backend extends RufletBackend {
           {bool dart = true, bool python = true, bool notify = false}) =>
       super.updateControl(id, props, dart: dart, python: false, notify: notify);
   @override
-  void triggerControlEvent(Control control, String name, [dynamic data]) {}
+  void triggerControlEvent(Control control, String name, [dynamic data]) {
+    events.add(name);
+  }
 }
 
 void main() {
@@ -75,6 +79,53 @@ void main() {
     control.updateProperties({'value': 'not-a-date'}, python: false);
     expect(() => control.getDateTime('value'), throwsFormatException);
   });
+
+  for (final action in ['Cancel', 'Done']) {
+    testWidgets('iOS canonical DatePicker $action stages its selection',
+        (tester) async {
+      final backend = _Backend(TargetPlatform.iOS);
+      final initial = DateTime(2026, 5, 21);
+      final changed = DateTime(2026, 6, 12);
+      final control = Control.fromMap({
+        '_c': 'DatePicker',
+        '_i': 1,
+        'open': true,
+        'value': '2026-05-21',
+        'first_date': '2026-01-01',
+        'last_date': '2026-12-31',
+        'cancel_text': 'Cancel',
+        'confirm_text': 'Done',
+        'help_text': 'Pick a date',
+        'height': 300,
+      }, backend);
+      await tester.pumpWidget(ChangeNotifierProvider<RufletBackend>.value(
+        value: backend,
+        child: CupertinoApp(home: ControlWidget(control: control)),
+      ));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Cancel'), findsOneWidget);
+      expect(find.text('Done'), findsOneWidget);
+      expect(find.text('Pick a date'), findsOneWidget);
+      expect(tester.getSize(find.byType(CupertinoDatePicker)).height, 256);
+      tester
+          .widget<CupertinoDatePicker>(find.byType(CupertinoDatePicker))
+          .onDateTimeChanged(changed);
+      await tester.pump();
+      expect(control.getDateTime('value'), initial);
+      expect(backend.events.where((event) => event == 'change'), isEmpty);
+
+      await tester.tap(find.text(action));
+      await tester.pumpAndSettle();
+      expect(
+          control.getDateTime('value'), action == 'Done' ? changed : initial);
+      expect(backend.events.where((event) => event == 'change'),
+          hasLength(action == 'Done' ? 1 : 0));
+      expect(backend.events.where((event) => event == 'dismiss'), hasLength(1));
+      expect(control.getBool('open'), isFalse);
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   for (final platform in [TargetPlatform.iOS, TargetPlatform.android]) {
     for (final type in [

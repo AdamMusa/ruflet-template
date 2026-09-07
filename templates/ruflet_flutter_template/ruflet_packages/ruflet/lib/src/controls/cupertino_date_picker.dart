@@ -11,8 +11,14 @@ import 'base_controls.dart';
 
 class CupertinoDatePickerControl extends StatefulWidget {
   final Control control;
+  final void Function(DateTime)? onDateTimeChanged;
+  final bool applyLayout;
 
-  CupertinoDatePickerControl({Key? key, required this.control})
+  CupertinoDatePickerControl(
+      {Key? key,
+      required this.control,
+      this.onDateTimeChanged,
+      this.applyLayout = true})
       : super(key: key ?? ValueKey("control_${control.id}"));
 
   @override
@@ -47,21 +53,22 @@ class _CupertinoDatePickerControlState
             widget.control.type == "CupertinoDatePicker"
                 ? CupertinoDatePickerMode.dateAndTime
                 : CupertinoDatePickerMode.date)!,
-        onDateTimeChanged: (DateTime value) {
-          widget.control.updateProperties({"value": value});
-          widget.control.triggerEvent("change", value);
-        },
+        onDateTimeChanged: widget.onDateTimeChanged ??
+            (DateTime value) {
+              widget.control.updateProperties({"value": value});
+              widget.control.triggerEvent("change", value);
+            },
       );
     } catch (e) {
       return ErrorControl("CupertinoDatePicker Error: ${e.toString()}");
     }
 
-    return LayoutControl(
-      control: widget.control,
-      child: locale == null || !locale.isSupportedByDelegates()
-          ? dialog
-          : Localizations.override(
-              context: context, locale: locale, child: dialog),
-    );
+    final picker = locale == null || !locale.isSupportedByDelegates()
+        ? dialog
+        : Localizations.override(
+            context: context, locale: locale, child: dialog);
+    return widget.applyLayout
+        ? LayoutControl(control: widget.control, child: picker)
+        : picker;
   }
 }
