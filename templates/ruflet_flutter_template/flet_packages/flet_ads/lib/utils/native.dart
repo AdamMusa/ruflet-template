@@ -1,6 +1,5 @@
 import 'package:collection/collection.dart';
 import 'package:flet/flet.dart';
-import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 TemplateType? parseTemplateType(String? value, [TemplateType? defaultValue]) {
@@ -19,7 +18,7 @@ NativeTemplateFontStyle? parseNativeTemplateFontStyle(String? value,
 }
 
 NativeTemplateTextStyle? parseNativeTemplateTextStyle(
-    dynamic value, ThemeData theme,
+    dynamic value, FletStyleTheme theme,
     [NativeTemplateTextStyle? defaultValue]) {
   if (value == null) return defaultValue;
 
@@ -31,7 +30,8 @@ NativeTemplateTextStyle? parseNativeTemplateTextStyle(
   );
 }
 
-NativeTemplateStyle? parseNativeTemplateStyle(dynamic value, ThemeData theme,
+NativeTemplateStyle? parseNativeTemplateStyle(
+    dynamic value, FletStyleTheme theme,
     [NativeTemplateStyle? defaultValue]) {
   if (value == null) return defaultValue;
 
@@ -41,7 +41,7 @@ NativeTemplateStyle? parseNativeTemplateStyle(dynamic value, ThemeData theme,
       mainBackgroundColor: parseColor(value["main_bgcolor"], theme),
       cornerRadius: parseDouble(value["corner_radius"]),
       callToActionTextStyle: parseNativeTemplateTextStyle(
-          theme, value["call_to_action_text_style"]),
+          value["call_to_action_text_style"], theme),
       primaryTextStyle:
           parseNativeTemplateTextStyle(value["primary_text_style"], theme),
       secondaryTextStyle:

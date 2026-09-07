@@ -1,5 +1,5 @@
 import 'package:flet/flet.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../utils/ads.dart';
@@ -26,7 +26,7 @@ class _NativeAdControlState extends State<NativeAdControl> with FletStoreMixin {
         : 'ca-app-pub-3940256099942544/2247696110';
     var factoryId = widget.control.getString("factory_id");
     var templateStyle = parseNativeTemplateStyle(
-        widget.control.get("template_style"), Theme.of(context));
+        widget.control.get("template_style"), FletStyleTheme.of(context));
     if (factoryId == null && templateStyle == null) {
       return const ErrorControl("factory_id or template_style is required");
     }
