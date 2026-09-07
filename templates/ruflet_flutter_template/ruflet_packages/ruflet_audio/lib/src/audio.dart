@@ -87,7 +87,10 @@ class AudioService extends RufletService {
         srcChanged = true;
 
         var assetSrc = control.backend.getAssetSource(_src!);
-        if (assetSrc.isFile) {
+        if (assetSrc.isAsset) {
+          player.audioCache = AudioCache(prefix: '');
+          await player.setSourceAsset(assetSrc.path);
+        } else if (assetSrc.isFile) {
           await player.setSourceDeviceFile(assetSrc.path);
         } else {
           await player.setSourceUrl(assetSrc.path);

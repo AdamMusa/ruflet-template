@@ -19,6 +19,7 @@ class _RiveControlState extends State<RiveControl> {
   rive.File? _file;
   String? _filePath;
   bool _fileIsLocal = false;
+  bool _fileIsAsset = false;
   Map<String, String>? _fileHeaders;
   _RiveMultiAnimationPainter? _painter;
   List<String> _animations = const [];
@@ -57,7 +58,7 @@ class _RiveControlState extends State<RiveControl> {
     var clipRect = widget.control.getRect("clip_rect");
 
     var assetSrc = widget.control.backend.getAssetSource(src);
-    _syncFileLoader(assetSrc.path, assetSrc.isFile, headers);
+    _syncFileLoader(assetSrc.path, assetSrc.isFile, assetSrc.isAsset, headers);
     _syncPainter(
       animations: animations,
       stateMachines: stateMachines,
@@ -135,11 +136,13 @@ class _RiveControlState extends State<RiveControl> {
   void _syncFileLoader(
     String path,
     bool isFile,
+    bool isAsset,
     Map<String, String>? headers,
   ) {
     if (_fileFuture != null &&
         _filePath == path &&
         _fileIsLocal == isFile &&
+        _fileIsAsset == isAsset &&
         mapEquals(_fileHeaders, headers)) {
       return;
     }
@@ -147,8 +150,9 @@ class _RiveControlState extends State<RiveControl> {
     _file = null;
     _filePath = path;
     _fileIsLocal = isFile;
+    _fileIsAsset = isAsset;
     _fileHeaders = headers == null ? null : Map<String, String>.from(headers);
-    _fileFuture = _loadFile(path, isFile, headers);
+    _fileFuture = _loadFile(path, isFile, isAsset, headers);
   }
 
   void _syncPainter({
@@ -194,8 +198,12 @@ class _RiveControlState extends State<RiveControl> {
   Future<rive.File?> _loadFile(
     String path,
     bool isFile,
+    bool isAsset,
     Map<String, String>? headers,
   ) async {
+    if (isAsset) {
+      return rive.File.asset(path, riveFactory: rive.Factory.rive);
+    }
     if (isFile) {
       return rive.File.path(
         path,

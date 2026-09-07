@@ -3,8 +3,8 @@ import 'package:flutter/cupertino.dart';
 import '../extensions/control.dart';
 import '../models/control.dart';
 import '../utils/animations.dart';
-import '../utils/colors.dart';
 import '../utils/numbers.dart';
+import '../widgets/cupertino_dialog_route.dart';
 import '../widgets/control_inherited_notifier.dart';
 import '../widgets/error.dart';
 import 'base_controls.dart';
@@ -19,8 +19,6 @@ class CupertinoAlertDialogControl extends StatelessWidget {
       notifier: control,
       child: Builder(builder: (context) {
         ControlInheritedNotifier.of(context);
-        final routeAnimation = ModalRoute.of(context)?.animation ??
-            const AlwaysStoppedAnimation(1.0);
         var insetAnimation = parseAnimation(
             control.get("inset_animation"),
             ImplicitAnimationDetails(
@@ -34,21 +32,7 @@ class CupertinoAlertDialogControl extends StatelessWidget {
           content: control.buildWidget("content"),
           actions: control.buildWidgets("actions"),
         );
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            IgnorePointer(
-              child: FadeTransition(
-                opacity: routeAnimation,
-                child: ColoredBox(
-                  color: control.getColor("barrier_color", context) ??
-                      CupertinoDynamicColor.resolve(kCupertinoModalBarrierColor, context),
-                ),
-              ),
-            ),
-            SafeArea(child: BaseControl(control: control, child: dialog)),
-          ],
-        );
+        return SafeArea(child: BaseControl(control: control, child: dialog));
       }),
     );
   }
@@ -72,13 +56,14 @@ class CupertinoAlertDialogControl extends StatelessWidget {
       control.updateProperties({"_open": open}, python: false);
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        showCupertinoDialog(
-            barrierDismissible: !modal,
-            // Render the barrier in the dialog widget so it updates live.
-            barrierColor: const Color(0x00000000),
-            useRootNavigator: false,
-            context: context,
-            builder: (context) => _createCupertinoAlertDialog()).then((value) {
+        if (!context.mounted || !control.getBool("open", false)!) return;
+        Navigator.of(context)
+            .push(ControlCupertinoDialogRoute<void>(
+                control: control,
+                barrierDismissible: !modal,
+                context: context,
+                builder: (context) => _createCupertinoAlertDialog()))
+            .then((value) {
           debugPrint("Dismissing CupertinoAlertDialog(${control.id})");
           control.updateProperties({"_open": false}, python: false);
           control.updateProperties({"open": false});

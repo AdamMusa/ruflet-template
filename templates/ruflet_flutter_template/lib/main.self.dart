@@ -10,7 +10,8 @@ import 'package:ruflet_audio_recorder/ruflet_audio_recorder.dart'
     as ruflet_audio_recorder;
 import 'package:ruflet_camera/ruflet_camera.dart' as ruflet_camera;
 import 'package:ruflet_charts/ruflet_charts.dart' as ruflet_charts;
-import 'package:ruflet_code_editor/ruflet_code_editor.dart' as ruflet_code_editor;
+import 'package:ruflet_code_editor/ruflet_code_editor.dart'
+    as ruflet_code_editor;
 import 'package:ruflet_color_pickers/ruflet_color_pickers.dart'
     as ruflet_color_picker;
 import 'package:ruflet_datatable2/ruflet_datatable2.dart' as ruflet_datatable2;
@@ -227,7 +228,11 @@ class _TemplateAppState extends State<TemplateApp> {
   Widget build(BuildContext context) {
     final error = _startupError;
     if (error != null) {
-      return PlatformStartupApp(title: 'Ruflet', isLoading: false, message: error);
+      return PlatformStartupApp(
+        title: 'Ruflet',
+        isLoading: false,
+        message: error,
+      );
     }
 
     if (_pageUrl.isEmpty) {
@@ -240,6 +245,9 @@ class _TemplateAppState extends State<TemplateApp> {
       title: 'Ruflet',
       pageUrl: _pageUrl,
       assetsDir: '',
+      assetsBundlePath: _pageUrl.startsWith('inprocess://')
+          ? 'assets/${const String.fromEnvironment('RUFLET_EMBEDDED_PROJECT')}/assets'
+          : null,
       errorsHandler: RufletAppErrorsHandler(),
       showAppStartupScreen: true,
       appStartupScreenMessage: 'Working...',

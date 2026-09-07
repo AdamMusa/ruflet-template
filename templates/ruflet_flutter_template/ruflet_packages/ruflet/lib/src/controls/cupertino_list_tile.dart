@@ -9,6 +9,7 @@ import '../utils/numbers.dart';
 import '../widgets/error.dart';
 import 'base_controls.dart';
 import '../widgets/list_tile_clicks.dart';
+import '../widgets/ruflet_cupertino_list_tile.dart';
 
 class CupertinoListTileControl extends StatelessWidget {
   final Control control;
@@ -57,7 +58,7 @@ class CupertinoListTileControl extends StatelessWidget {
 
     Widget tile;
     notched
-        ? tile = CupertinoListTile.notched(
+        ? tile = RufletCupertinoListTile.notched(
             onTap: onPressed,
             additionalInfo: additionalInfo,
             backgroundColor: backgroundColor,
@@ -70,7 +71,7 @@ class CupertinoListTileControl extends StatelessWidget {
             subtitle: subtitle,
             trailing: trailing,
           )
-        : tile = CupertinoListTile(
+        : tile = RufletCupertinoListTile(
             onTap: onPressed,
             additionalInfo: additionalInfo,
             backgroundColor: backgroundColor,

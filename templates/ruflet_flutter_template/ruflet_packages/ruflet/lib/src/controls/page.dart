@@ -81,6 +81,9 @@ class _PageControlState extends State<PageControl> with WidgetsBindingObserver {
     super.initState();
 
     WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) didChangePlatformBrightness();
+    });
     _updateMultiViews();
 
     _routeParser = RouteParser();
@@ -152,6 +155,16 @@ class _PageControlState extends State<PageControl> with WidgetsBindingObserver {
   @override
   void didChangeMetrics() {
     _updateMultiViews();
+  }
+
+  @override
+  void didChangePlatformBrightness() {
+    final brightness =
+        WidgetsBinding.instance.platformDispatcher.platformBrightness;
+    final backend = widget.control.backend;
+    if (backend.platformBrightness != brightness) {
+      backend.updateBrightness(brightness);
+    }
   }
 
   @override
@@ -424,7 +437,9 @@ class _PageControlState extends State<PageControl> with WidgetsBindingObserver {
       final fontUrl = entry.value;
       var assetSrc = backend.getAssetSource(fontUrl);
       try {
-        if (assetSrc.isFile) {
+        if (assetSrc.isAsset) {
+          await UserFonts.loadFontFromAsset(fontFamily, assetSrc.path);
+        } else if (assetSrc.isFile) {
           await UserFonts.loadFontFromFile(fontFamily, assetSrc.path);
         } else {
           await UserFonts.loadFontFromUrl(fontFamily, assetSrc.path);

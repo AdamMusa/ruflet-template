@@ -86,6 +86,16 @@ class _CupertinoButtonControlState extends State<CupertinoButtonControl> {
         widget.control.getColor("icon_color", context);
 
     Widget? icon = widget.control.buildIconOrWidget("icon", color: iconColor);
+    // A canonical back action in navigation chrome uses the platform glyph.
+    // Do not reinterpret custom icon controls or icons elsewhere in the app.
+    if (widget.control.canonicalType == "IconButton" &&
+        widget.control.parent?.canonicalType == "AppBar" &&
+        widget.control.parent?.child("leading") == widget.control &&
+        icon is Icon &&
+        icon.icon?.fontFamily == "MaterialIcons" &&
+        const {0xe092, 0xe093, 0xe094}.contains(icon.icon?.codePoint)) {
+      icon = Icon(CupertinoIcons.back, color: iconColor);
+    }
     Widget? content = widget.control.buildTextOrWidget("content");
 
     Widget child;
@@ -143,7 +153,8 @@ class _CupertinoButtonControlState extends State<CupertinoButtonControl> {
           child: child);
     }
     final iconSize =
-        parseWidgetStateDouble(style?["icon_size"])?.resolve(states);
+        parseWidgetStateDouble(style?["icon_size"])?.resolve(states) ??
+            widget.control.getDouble("icon_size");
     if (iconColor != null || iconSize != null) {
       child = IconTheme.merge(
           data: IconThemeData(color: iconColor, size: iconSize), child: child);

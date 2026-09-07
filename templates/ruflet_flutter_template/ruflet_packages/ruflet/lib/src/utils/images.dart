@@ -91,6 +91,7 @@ ImageProvider? parseImageProvider(dynamic src, BuildContext context) {
   // URL or asset path
   if (resolvedSrc.hasUri) {
     var assetSrc = RufletBackend.of(context).getAssetSource(resolvedSrc.uri!);
+    if (assetSrc.isAsset) return AssetImage(assetSrc.path);
     return assetSrc.isFile
         ? getFileImageProvider(assetSrc.path)
         : NetworkImage(assetSrc.path);
@@ -234,8 +235,10 @@ Widget buildImage({
       } else {
         // SVG URL
         if (assetSrc.path.endsWith(".svg")) {
-          return SvgPicture.network(
-            assetSrc.path,
+          return SvgPicture(
+            assetSrc.isAsset
+                ? SvgAssetLoader(assetSrc.path)
+                : SvgNetworkLoader(assetSrc.path),
             width: width,
             height: height,
             excludeFromSemantics: excludeFromSemantics,
@@ -250,14 +253,19 @@ Widget buildImage({
           );
         } else {
           // other image URL
-          return Image.network(
-            assetSrc.path,
+          final ImageProvider<Object> provider;
+          if (assetSrc.isAsset) {
+            provider = AssetImage(assetSrc.path);
+          } else {
+            provider = NetworkImage(assetSrc.path);
+          }
+          return Image(
+            image:
+                ResizeImage.resizeIfNeeded(cacheWidth, cacheHeight, provider),
             width: width,
             height: height,
             repeat: repeat,
             filterQuality: filterQuality,
-            cacheHeight: cacheHeight,
-            cacheWidth: cacheWidth,
             isAntiAlias: antiAlias,
             excludeFromSemantics: excludeFromSemantics,
             fit: fit,

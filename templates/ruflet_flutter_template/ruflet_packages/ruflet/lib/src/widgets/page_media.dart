@@ -44,30 +44,31 @@ class _PageMediaState extends State<PageMedia> {
   @override
   Widget build(BuildContext context) {
     RufletBackend backend = RufletBackend.of(context);
+    // Subscribe during build, before deferring notifications until after layout.
+    final platformBrightness = MediaQuery.platformBrightnessOf(context);
+    final newMedia = PageMediaData(
+      padding: PaddingData(MediaQuery.paddingOf(context)),
+      viewPadding: PaddingData(MediaQuery.viewPaddingOf(context)),
+      viewInsets: PaddingData(MediaQuery.viewInsetsOf(context)),
+      devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
+      orientation: MediaQuery.orientationOf(context),
+      alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context),
+    );
+    final pageSize = MediaQuery.sizeOf(context);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       var pageSizeUpdated = backend.pageSizeUpdated.isCompleted;
 
-      var platformBrightness = MediaQuery.platformBrightnessOf(context);
       if (platformBrightness != backend.platformBrightness ||
           !pageSizeUpdated) {
         _onPlatformBrightnessChanged(platformBrightness);
       }
 
-      var newMedia = PageMediaData(
-        padding: PaddingData(MediaQuery.paddingOf(context)),
-        viewPadding: PaddingData(MediaQuery.viewPaddingOf(context)),
-        viewInsets: PaddingData(MediaQuery.viewInsetsOf(context)),
-        devicePixelRatio: MediaQuery.devicePixelRatioOf(context),
-        orientation: MediaQuery.orientationOf(context),
-        alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context),
-      );
-
       if (newMedia != backend.media || !pageSizeUpdated) {
         _onMediaChanged(newMedia);
       }
 
-      var pageSize = MediaQuery.sizeOf(context);
       if (pageSize != backend.pageSize) {
         _onPageSizeChanged(pageSizeUpdated, pageSize);
       }

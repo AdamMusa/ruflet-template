@@ -13,6 +13,7 @@ import 'transport/ruflet_backend_channel.dart';
 class RufletApp extends StatefulWidget {
   final String pageUrl;
   final String assetsDir;
+  final String? assetsBundlePath;
   final bool? showAppStartupScreen;
   final String? appStartupScreenMessage;
   final String? appErrorMessage;
@@ -32,6 +33,7 @@ class RufletApp extends StatefulWidget {
       {super.key,
       required this.pageUrl,
       required this.assetsDir,
+      this.assetsBundlePath,
       this.showAppStartupScreen,
       this.appStartupScreenMessage,
       this.appErrorMessage,
@@ -73,6 +75,7 @@ class _RufletAppState extends State<RufletApp> {
             reconnectTimeoutMs: widget.reconnectTimeoutMs,
             pageUri: Uri.parse(widget.pageUrl),
             assetsDir: widget.assetsDir,
+            assetsBundlePath: widget.assetsBundlePath,
             errorsHandler: widget.errorsHandler,
             extensions: widget.extensions ?? [],
             args: widget.args,

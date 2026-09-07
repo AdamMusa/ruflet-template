@@ -6,6 +6,7 @@ import 'package:path/path.dart' as p;
 
 import '../models/asset_source.dart';
 import 'lru_cache.dart';
+import 'bundled_assets.dart';
 import 'uri.dart';
 
 String _fileKey(String path) {
@@ -50,7 +51,8 @@ SvgPicture getSvgPictureFromFile(
       semanticsLabel: semanticsLabel);
 }
 
-AssetSource getAssetSrc(String src, Uri pageUri, String assetsDir) {
+AssetSource getAssetSrc(String src, Uri pageUri, String assetsDir,
+    {String? assetsBundlePath}) {
   if (src.startsWith("http://") || src.startsWith("https://")) {
     return AssetSource(path: src, isFile: false);
   } else if (io.File(src).existsSync()) {
@@ -63,6 +65,8 @@ AssetSource getAssetSrc(String src, Uri pageUri, String assetsDir) {
     return AssetSource(
         path: p.join(normalizePath(assetsDir), filePath), isFile: true);
   } else {
+    final bundled = bundledAssetSource(src, assetsBundlePath);
+    if (bundled != null) return bundled;
     var uri = Uri.parse(src);
     return AssetSource(
         path: uri.hasAuthority ? src : getAssetUri(pageUri, src).toString(),

@@ -552,7 +552,10 @@ Future<void> loadCanvasImage(Control shape) async {
       bytes = src.bytes!;
     } else if (src.hasUri) {
       var assetSrc = shape.backend.getAssetSource(src.uri!);
-      if (assetSrc.isFile) {
+      if (assetSrc.isAsset) {
+        final data = await rootBundle.load(assetSrc.path);
+        bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+      } else if (assetSrc.isFile) {
         final file = File(assetSrc.path);
         bytes = await file.readAsBytes();
       } else {

@@ -13,18 +13,12 @@ class TileLayerControl extends StatelessWidget {
   Widget build(BuildContext context) {
     debugPrint("TileLayerControl build: ${control.id}");
 
-    var errorImageSrc = control.getString("errorImageSrc");
+    var errorImageSrc = control.getString("error_image_src") ??
+        control.getString("errorImageSrc");
     ImageProvider<Object>? errorImage;
 
     if (errorImageSrc != null) {
-      var assetSrc = control.backend.getAssetSource(errorImageSrc);
-      if (assetSrc.isFile) {
-        // from File
-        errorImage = AssetImage(assetSrc.path);
-      } else {
-        // URL
-        errorImage = NetworkImage(assetSrc.path);
-      }
+      errorImage = parseImageProvider(errorImageSrc, context);
     }
     Widget tileLayer = TileLayer(
       urlTemplate: control.getString("url_template"),

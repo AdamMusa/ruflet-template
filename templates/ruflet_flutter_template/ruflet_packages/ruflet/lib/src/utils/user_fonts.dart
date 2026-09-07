@@ -8,6 +8,19 @@ import 'user_fonts_web.dart' if (dart.library.io) "user_fonts_io.dart";
 class UserFonts {
   static Map<String, FontLoader> fontLoaders = {};
 
+  static Future<void> loadFontFromAsset(String family, String path) async {
+    final key = 'asset:$family:$path';
+    if (fontLoaders.containsKey(key)) return;
+    final loader = FontLoader(family)..addFont(rootBundle.load(path));
+    fontLoaders[key] = loader;
+    try {
+      await loader.load();
+    } catch (_) {
+      fontLoaders.remove(key);
+      rethrow;
+    }
+  }
+
   static Future<void> loadFontFromUrl(String fontFamily, String fontUrl) async {
     var key = "$fontFamily$fontUrl";
     if (fontLoaders.containsKey(key)) return;

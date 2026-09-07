@@ -1,3 +1,4 @@
+import 'dart:io' as io;
 import 'package:ruflet/ruflet.dart';
 import 'package:flutter/widgets.dart';
 import 'package:lottie/lottie.dart';
@@ -90,9 +91,24 @@ class _LottieControlState extends State<LottieControl> {
     } else {
       var assetSrc = widget.control.backend.getAssetSource(resolvedSrc.uri!);
       // Local File
-      if (assetSrc.isFile) {
+      if (assetSrc.isAsset) {
         lottie = Lottie.asset(
           assetSrc.path,
+          repeat: repeat,
+          reverse: reverse,
+          animate: animate,
+          alignment: alignment,
+          options: options,
+          fit: fit,
+          filterQuality: filterQuality,
+          backgroundLoading: backgroundLoading,
+          errorBuilder: errorBuilder,
+          onLoaded: onLoad,
+          onWarning: onError,
+        );
+      } else if (assetSrc.isFile) {
+        lottie = Lottie.file(
+          io.File(assetSrc.path),
           repeat: repeat,
           reverse: reverse,
           animate: animate,

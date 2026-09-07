@@ -298,6 +298,7 @@ class CupertinoTimePickerControl extends StatelessWidget {
         var selected = value;
         final result = await showCupertinoModalPopup<RufletTime>(
           context: context,
+          useRootNavigator: false,
           barrierDismissible: !control.getBool("modal", false)!,
           builder: (context) => CupertinoPopupSurface(
             child: SafeArea(
@@ -371,6 +372,7 @@ class CupertinoDateRangePickerControl extends StatelessWidget {
         var end = initialEnd;
         final result = await showCupertinoModalPopup<List<DateTime>>(
           context: context,
+          useRootNavigator: false,
           barrierDismissible: !control.getBool("modal", false)!,
           builder: (context) => CupertinoPopupSurface(
             child: SafeArea(

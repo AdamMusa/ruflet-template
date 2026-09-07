@@ -44,6 +44,7 @@ class RufletBackend extends ChangeNotifier {
   final WeakReference<RufletBackend>? _parentRufletBackend;
   final Uri pageUri;
   final String assetsDir;
+  final String? assetsBundlePath;
   final bool? showAppStartupScreen;
   final String? appStartupScreenMessage;
   final String? appErrorMessage;
@@ -92,6 +93,7 @@ class RufletBackend extends ChangeNotifier {
   RufletBackend(
       {required this.pageUri,
       required this.assetsDir,
+      this.assetsBundlePath,
       required this.multiView,
       int? reconnectIntervalMs,
       int? reconnectTimeoutMs,
@@ -106,8 +108,9 @@ class RufletBackend extends ChangeNotifier {
       this.channelBuilder,
       required extensions,
       RufletBackend? parentRufletBackend})
-      : _parentRufletBackend =
-            parentRufletBackend != null ? WeakReference(parentRufletBackend) : null,
+      : _parentRufletBackend = parentRufletBackend != null
+            ? WeakReference(parentRufletBackend)
+            : null,
         _reconnectTimeoutMs = reconnectTimeoutMs,
         _reconnectIntervalMs = reconnectIntervalMs {
     // add Ruflet extension with core controls and services
@@ -405,7 +408,8 @@ class RufletBackend extends ChangeNotifier {
   /// - [src]: The relative or absolute path to the asset.
   /// - Returns: An [AssetSource] object representing the resolved asset source.
   AssetSource getAssetSource(String src) {
-    return getAssetSrc(src, pageUri, assetsDir);
+    return getAssetSrc(src, pageUri, assetsDir,
+        assetsBundlePath: assetsBundlePath);
   }
 
   _onMessage(Message message) {

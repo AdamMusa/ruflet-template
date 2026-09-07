@@ -11,6 +11,7 @@ import '../utils/misc.dart';
 import '../utils/numbers.dart';
 import '../utils/text.dart';
 import '../widgets/control_inherited_notifier.dart';
+import '../widgets/material_dialog_route.dart';
 import '../widgets/error.dart';
 import 'base_controls.dart';
 
@@ -24,8 +25,6 @@ class AlertDialogControl extends StatelessWidget {
       notifier: control,
       child: Builder(builder: (context) {
         ControlInheritedNotifier.of(context);
-        final routeAnimation = ModalRoute.of(context)?.animation ??
-            const AlwaysStoppedAnimation(1.0);
         final dialog = AlertDialog(
           title: control.buildTextOrWidget("title"),
           titlePadding: control.getPadding("title_padding"),
@@ -35,7 +34,8 @@ class AlertDialogControl extends StatelessWidget {
           actions: control.buildWidgets("actions"),
           actionsPadding: control.getPadding("actions_padding"),
           actionsAlignment: control.getMainAxisAlignment("actions_alignment"),
-          shape: control.getShape("shape", materialStyleTheme(Theme.of(context))),
+          shape:
+              control.getShape("shape", materialStyleTheme(Theme.of(context))),
           semanticLabel: control.getString("semantics_label"),
           insetPadding: control.getPadding("inset_padding",
               const EdgeInsets.symmetric(horizontal: 40.0, vertical: 24.0))!,
@@ -52,28 +52,12 @@ class AlertDialogControl extends StatelessWidget {
           actionsOverflowButtonSpacing:
               control.getDouble("actions_overflow_button_spacing"),
           alignment: control.getAlignment("alignment"),
-          contentTextStyle:
-              control.getTextStyle("content_text_style", materialStyleTheme(Theme.of(context))),
-          titleTextStyle:
-              control.getTextStyle("title_text_style", materialStyleTheme(Theme.of(context))),
+          contentTextStyle: control.getTextStyle(
+              "content_text_style", materialStyleTheme(Theme.of(context))),
+          titleTextStyle: control.getTextStyle(
+              "title_text_style", materialStyleTheme(Theme.of(context))),
         );
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            IgnorePointer(
-              child: FadeTransition(
-                opacity: routeAnimation,
-                child: ColoredBox(
-                  color: control.getColor("barrier_color", context) ??
-                      DialogTheme.of(context).barrierColor ??
-                      Theme.of(context).dialogTheme.barrierColor ??
-                      Colors.black54,
-                ),
-              ),
-            ),
-            SafeArea(child: BaseControl(control: control, child: dialog)),
-          ],
-        );
+        return SafeArea(child: BaseControl(control: control, child: dialog));
       }),
     );
   }
@@ -97,14 +81,14 @@ class AlertDialogControl extends StatelessWidget {
       control.updateProperties({"_open": open}, python: false);
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        showDialog(
-            barrierDismissible: !modal,
-            // Render the barrier in the dialog widget so it updates live.
-            barrierColor: Colors.transparent,
-            useSafeArea: false,
-            useRootNavigator: false,
-            context: context,
-            builder: (context) => _createAlertDialog(context)).then((value) {
+        if (!context.mounted || !control.getBool("open", false)!) return;
+        Navigator.of(context)
+            .push(ControlMaterialDialogRoute<void>(
+                control: control,
+                barrierDismissible: !modal,
+                context: context,
+                builder: (context) => _createAlertDialog(context)))
+            .then((value) {
           debugPrint("Dismissing AlertDialog(${control.id})");
           control.updateProperties({"_open": false}, python: false);
           control.updateProperties({"open": false});
