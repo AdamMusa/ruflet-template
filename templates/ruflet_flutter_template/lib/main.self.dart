@@ -131,6 +131,10 @@ Future<void> main() async {
     extension.ensureInitialized();
   }
 
+  // Empty for an ordinary self-contained build, which is what makes
+  // TemplateApp ask the platform for the embedded transport instead.
+  final pageUrl = resolveBackendUrl();
+
   // The embedded runtime is deliberately not awaited here. Platforms that can
   // start the VM before the Flutter engine exists have already been booting it
   // while these extensions initialized. TemplateApp resolves its transport
