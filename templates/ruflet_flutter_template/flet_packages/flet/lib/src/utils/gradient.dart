@@ -1,14 +1,15 @@
+import 'style_theme.dart';
 import 'dart:typed_data';
 import 'enums.dart';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../models/control.dart';
 import 'alignment.dart';
 import 'colors.dart';
 import 'numbers.dart';
 
-Gradient? parseGradient(dynamic value, ThemeData theme,
+Gradient? parseGradient(dynamic value, FletStyleTheme theme,
     [Gradient? defaultValue]) {
   if (value == null) return defaultValue;
 
@@ -47,7 +48,7 @@ Gradient? parseGradient(dynamic value, ThemeData theme,
   return defaultValue;
 }
 
-List<Color> parseColors(dynamic value, ThemeData? theme) {
+List<Color> parseColors(dynamic value, FletStyleTheme? theme) {
   return (value as List).map((c) => parseColor(c as String, theme)!).toList();
 }
 
@@ -123,11 +124,11 @@ Color lerpGradient(List<Color> colors, List<double> stops, double t) {
 }
 
 extension GradientParsers on Control {
-  Gradient? getGradient(String propertyName, ThemeData theme) {
+  Gradient? getGradient(String propertyName, FletStyleTheme theme) {
     return parseGradient(get(propertyName), theme);
   }
 
-  List<Color> getColors(String propertyName, ThemeData theme) {
+  List<Color> getColors(String propertyName, FletStyleTheme theme) {
     return parseColors(get(propertyName), theme);
   }
 

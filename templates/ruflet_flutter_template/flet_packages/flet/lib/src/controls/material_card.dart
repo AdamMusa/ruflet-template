@@ -1,3 +1,4 @@
+import '../utils/material_style_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../models/control.dart';
@@ -29,7 +30,7 @@ class MaterialCardControl extends StatelessWidget {
         : null;
     var clipBehavior = control.getClipBehavior("clip_behavior");
     var elevation = control.getDouble("elevation");
-    var shape = control.getShape("shape", Theme.of(context));
+    var shape = control.getShape("shape", materialStyleTheme(Theme.of(context)));
     var margin = control.getMargin("margin");
     var isSemanticContainer = control.getBool("semantic_container", true)!;
     var showBorderOnForeground =

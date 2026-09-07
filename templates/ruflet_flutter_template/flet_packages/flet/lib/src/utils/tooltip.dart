@@ -1,3 +1,4 @@
+import 'material_style_theme.dart';
 import 'package:flutter/material.dart';
 import 'enums.dart';
 
@@ -33,7 +34,7 @@ Tooltip? parseTooltip(dynamic value, BuildContext context, Widget widget) {
       borderRadius: BorderRadius.circular(4.0),
       color: parseColor(
           value["bgcolor"],
-          theme,
+          materialStyleTheme(theme),
           theme.brightness == Brightness.light
               ? Colors.grey[700]
               : Colors.white));
@@ -58,7 +59,7 @@ Tooltip? parseTooltip(dynamic value, BuildContext context, Widget widget) {
     preferBelow: parseBool(value["prefer_below"]),
     padding: parseEdgeInsets(value["padding"]),
     decoration: finalDecoration,
-    textStyle: parseTextStyle(value["text_style"], theme),
+    textStyle: parseTextStyle(value["text_style"], materialStyleTheme(theme)),
     verticalOffset: parseDouble(value["vertical_offset"]),
     margin: parseEdgeInsets(value["margin"]),
     mouseCursor: parseMouseCursor(value["mouse_cursor"]),

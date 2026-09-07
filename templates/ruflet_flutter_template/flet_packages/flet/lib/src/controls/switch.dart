@@ -1,3 +1,4 @@
+import '../utils/material_style_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../models/control.dart';
@@ -10,7 +11,7 @@ import '../utils/numbers.dart';
 import '../utils/text.dart';
 import 'base_controls.dart';
 import 'control_widget.dart';
-import 'list_tile.dart';
+import '../widgets/list_tile_clicks.dart';
 
 class SwitchControl extends StatefulWidget {
   final Control control;
@@ -81,7 +82,7 @@ class _SwitchControlState extends State<SwitchControl> {
     bool autofocus = widget.control.getBool("autofocus", false)!;
 
     TextStyle? labelStyle =
-        widget.control.getTextStyle("label_text_style", Theme.of(context));
+        widget.control.getTextStyle("label_text_style", materialStyleTheme(Theme.of(context)));
     if (widget.control.disabled && labelStyle != null) {
       labelStyle = labelStyle.apply(color: Theme.of(context).disabledColor);
     }
@@ -103,18 +104,18 @@ class _SwitchControlState extends State<SwitchControl> {
             widget.control.getColor("inactive_thumb_color", context),
         inactiveTrackColor:
             widget.control.getColor("inactive_track_color", context),
-        thumbColor: widget.control.getWidgetStateColor("thumb_color", theme),
-        thumbIcon: widget.control.getWidgetStateIcon("thumb_icon", theme),
-        trackColor: widget.control.getWidgetStateColor("track_color", theme),
+        thumbColor: widget.control.getWidgetStateColor("thumb_color", materialStyleTheme(theme)),
+        thumbIcon: widget.control.getWidgetStateIcon("thumb_icon", materialStyleTheme(theme)),
+        trackColor: widget.control.getWidgetStateColor("track_color", materialStyleTheme(theme)),
         focusColor: widget.control.getColor("focus_color", context),
         value: _value,
         mouseCursor: widget.control.getMouseCursor("mouse_cursor"),
         splashRadius: widget.control.getDouble("splash_radius"),
         hoverColor: widget.control.getColor("hover_color", context),
         overlayColor:
-            widget.control.getWidgetStateColor("overlay_color", theme),
+            widget.control.getWidgetStateColor("overlay_color", materialStyleTheme(theme)),
         trackOutlineColor:
-            widget.control.getWidgetStateColor("track_outline_color", theme),
+            widget.control.getWidgetStateColor("track_outline_color", materialStyleTheme(theme)),
         trackOutlineWidth:
             widget.control.getWidgetStateDouble("track_outline_width"),
         onChanged: !widget.control.disabled

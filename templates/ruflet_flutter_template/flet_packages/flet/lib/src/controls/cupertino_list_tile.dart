@@ -8,7 +8,7 @@ import '../utils/launch_url.dart';
 import '../utils/numbers.dart';
 import '../widgets/error.dart';
 import 'base_controls.dart';
-import 'list_tile.dart';
+import '../widgets/list_tile_clicks.dart';
 
 class CupertinoListTileControl extends StatelessWidget {
   final Control control;

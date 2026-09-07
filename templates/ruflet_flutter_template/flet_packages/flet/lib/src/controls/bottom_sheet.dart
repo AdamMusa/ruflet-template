@@ -1,3 +1,4 @@
+import '../utils/material_style_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
@@ -70,7 +71,7 @@ class BottomSheetControl extends StatelessWidget {
                     : control.getBoxConstraints("size_constraints"),
                 showDragHandle: control.getBool("show_drag_handle", false)!,
                 clipBehavior: control.getClipBehavior("clip_behavior"),
-                shape: control.getOutlinedBorder("shape", Theme.of(context)),
+                shape: control.getOutlinedBorder("shape", materialStyleTheme(Theme.of(context))),
                 useSafeArea: control.getBool("use_safe_area", true)!)
             .then((value) {
           control.updateProperties({"_open": false}, python: false);

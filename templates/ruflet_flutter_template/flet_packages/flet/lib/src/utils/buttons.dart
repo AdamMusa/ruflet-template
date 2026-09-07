@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'material_style_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../models/control.dart';
@@ -6,7 +6,6 @@ import 'alignment.dart';
 import 'borders.dart';
 import 'colors.dart';
 import 'edge_insets.dart';
-import 'enums.dart';
 import 'geometry.dart';
 import 'mouse.dart';
 import 'numbers.dart';
@@ -33,7 +32,7 @@ ButtonStyle? parseButtonStyle(dynamic value, ThemeData theme,
   WidgetStateProperty<TextStyle?>? parseButtonTextStyle(
       dynamic value, ThemeData theme,
       {TextStyle? defaultTextStyle}) {
-    final ts = parseWidgetStateTextStyle(value, theme,
+    final ts = parseWidgetStateTextStyle(value, materialStyleTheme(theme),
         defaultTextStyle: defaultTextStyle);
     if (ts == null) return null;
 
@@ -46,13 +45,17 @@ ButtonStyle? parseButtonStyle(dynamic value, ThemeData theme,
   }
 
   return ButtonStyle(
-    foregroundColor: parseWidgetStateColor(value["color"], theme,
+    foregroundColor: parseWidgetStateColor(
+        value["color"], materialStyleTheme(theme),
         defaultColor: defaultForegroundColor),
-    backgroundColor: parseWidgetStateColor(value["bgcolor"], theme,
+    backgroundColor: parseWidgetStateColor(
+        value["bgcolor"], materialStyleTheme(theme),
         defaultColor: defaultBackgroundColor),
-    overlayColor: parseWidgetStateColor(value["overlay_color"], theme,
+    overlayColor: parseWidgetStateColor(
+        value["overlay_color"], materialStyleTheme(theme),
         defaultColor: defaultOverlayColor),
-    shadowColor: parseWidgetStateColor(value["shadow_color"], theme,
+    shadowColor: parseWidgetStateColor(
+        value["shadow_color"], materialStyleTheme(theme),
         defaultColor: defaultShadowColor),
     elevation: parseWidgetStateDouble(value["elevation"],
         defaultDouble: defaultElevation),
@@ -61,12 +64,14 @@ ButtonStyle? parseButtonStyle(dynamic value, ThemeData theme,
         defaultPadding: defaultPadding),
     side: getWidgetStateProperty<BorderSide?>(
         value["side"],
-        (jv) => parseBorderSide(jv, theme,
+        (jv) => parseBorderSide(jv, materialStyleTheme(theme),
             defaultSideColor: theme.colorScheme.outline),
         defaultBorderSide),
-    shape: parseWidgetStateOutlinedBorder(value["shape"], theme,
+    shape: parseWidgetStateOutlinedBorder(
+        value["shape"], materialStyleTheme(theme),
         defaultOutlinedBorder: defaultShape),
-    iconColor: parseWidgetStateColor(value["icon_color"], theme,
+    iconColor: parseWidgetStateColor(
+        value["icon_color"], materialStyleTheme(theme),
         defaultColor: defaultForegroundColor),
     alignment: parseAlignment(value["alignment"]),
     enableFeedback: parseBool(value["enable_feedback"]),
@@ -142,11 +147,6 @@ class CustomFloatingActionButtonLocation extends FloatingActionButtonLocation {
   String toString() => 'CustomFloatingActionButtonLocation(dx: $dx, dy: $dy)';
 }
 
-CupertinoButtonSize? parseCupertinoButtonSize(String? value,
-    [CupertinoButtonSize? defaultValue]) {
-  return parseEnum(CupertinoButtonSize.values, value, defaultValue);
-}
-
 extension ButtonParsers on Control {
   ButtonStyle? getButtonStyle(String propertyName, ThemeData theme,
       {Color? defaultForegroundColor,
@@ -176,10 +176,5 @@ extension ButtonParsers on Control {
       String propertyName,
       [FloatingActionButtonLocation? defaultValue]) {
     return parseFloatingActionButtonLocation(get(propertyName), defaultValue);
-  }
-
-  CupertinoButtonSize? getCupertinoButtonSize(String propertyName,
-      [CupertinoButtonSize? defaultValue]) {
-    return parseCupertinoButtonSize(get(propertyName), defaultValue);
   }
 }

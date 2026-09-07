@@ -1,14 +1,14 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 
 import '../models/control.dart';
 import '../utils/colors.dart';
+import '../utils/cupertino_theme.dart';
 import '../utils/icons.dart';
 import '../utils/images.dart';
 import '../utils/misc.dart';
 import '../utils/numbers.dart';
+import '../widgets/list_tile_clicks.dart';
 import 'base_controls.dart';
-import 'list_tile.dart';
 
 class CupertinoSwitchControl extends StatefulWidget {
   final Control control;
@@ -53,6 +53,7 @@ class _CupertinoSwitchControlState extends State<CupertinoSwitchControl> {
   }
 
   void _toggleValue() {
+    if (widget.control.disabled) return;
     _onChange(!_value);
   }
 
@@ -64,6 +65,7 @@ class _CupertinoSwitchControlState extends State<CupertinoSwitchControl> {
   }
 
   void _onFocusChange() {
+    setState(() {});
     widget.control.triggerEvent(_focusNode.hasFocus ? "focus" : "blur");
   }
 
@@ -81,10 +83,14 @@ class _CupertinoSwitchControlState extends State<CupertinoSwitchControl> {
       _value = value;
     }
 
-    ThemeData theme = Theme.of(context);
+    final theme = cupertinoStyleTheme(context);
 
-    var materialThumbColor =
-        widget.control.getWidgetStateColor("thumb_color", theme);
+    var thumbColor = widget.control.getWidgetStateColor("thumb_color", theme);
+    final states = <WidgetState>{
+      if (_value) WidgetState.selected,
+      if (widget.control.disabled) WidgetState.disabled,
+      if (_focusNode.hasFocus) WidgetState.focused,
+    };
     var activeThumbImage =
         widget.control.getImageProvider("active_thumb_image_src", context);
     var inactiveThumbImage =
@@ -95,8 +101,8 @@ class _CupertinoSwitchControlState extends State<CupertinoSwitchControl> {
         focusNode: _focusNode,
         activeTrackColor:
             widget.control.getColor("active_track_color", context),
-        thumbColor: materialThumbColor?.resolve({}),
-        focusColor: widget.control.getColor("focusColor", context),
+        thumbColor: thumbColor?.resolve(states),
+        focusColor: widget.control.getColor("focus_color", context),
         inactiveTrackColor:
             widget.control.getColor("inactive_track_color", context),
         inactiveThumbColor:
@@ -132,8 +138,7 @@ class _CupertinoSwitchControlState extends State<CupertinoSwitchControl> {
     Widget result = swtch;
     if (label != "") {
       var labelWidget = widget.control.disabled
-          ? Text(label,
-              style: TextStyle(color: Theme.of(context).disabledColor))
+          ? Text(label, style: TextStyle(color: theme.color('disabled')))
           : MouseRegion(cursor: SystemMouseCursors.click, child: Text(label));
       result = MergeSemantics(
           child: GestureDetector(

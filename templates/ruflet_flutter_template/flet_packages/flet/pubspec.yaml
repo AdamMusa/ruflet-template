@@ -3,6 +3,7 @@ description: Write entire Flutter app in Python or add server-driven UI experien
 homepage: https://flet.dev
 repository: https://github.com/flet-dev/flet/tree/main/packages/flet
 version: 0.81.0
+publish_to: none # Local engine fork with vendored renderer dependencies.
 
 # Supported platforms
 platforms:
@@ -29,8 +30,10 @@ dependencies:
   equatable: ^2.0.3
   file_picker: ^10.3.10
   flutter_highlight: ^0.7.0
-  flutter_markdown_plus: ^1.0.7
-  flutter_math_fork: ^0.7.4
+  flutter_markdown_plus:
+    path: vendor/flutter_markdown_plus
+  flutter_math_fork:
+    path: vendor/flutter_math_fork
   flutter_svg: ^2.2.1
   highlight: ^0.7.0
   http: ^1.5.0
@@ -54,6 +57,7 @@ dependencies:
   wakelock_plus: ^1.2.8
 
 dev_dependencies:
+  analyzer: ^9.0.0
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.1

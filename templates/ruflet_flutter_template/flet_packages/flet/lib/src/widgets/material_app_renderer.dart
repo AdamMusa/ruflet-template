@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 import '../models/page_design.dart';
+import '../utils/theme.dart';
+import '../utils/material_style_theme.dart';
+import '../utils/style_theme.dart';
 import 'platform_app_config.dart';
 
 class MaterialAppRenderer extends StatelessWidget {
@@ -10,13 +14,21 @@ class MaterialAppRenderer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final platform = config.targetPlatform ??
+        switch (defaultTargetPlatform) {
+          TargetPlatform.iOS || TargetPlatform.macOS => TargetPlatform.android,
+          final platform => platform,
+        };
     final common = (
       debugShowCheckedModeBanner: false,
       showSemanticsDebugger: config.showSemanticsDebugger,
       title: config.title,
-      theme: config.materialTheme as ThemeData?,
-      darkTheme: config.materialDarkTheme as ThemeData?,
-      themeMode: _materialThemeMode(config.materialThemeMode),
+      theme: parseTheme(config.theme, context, Brightness.light)
+          .copyWith(platform: platform),
+      darkTheme:
+          parseTheme(config.darkTheme ?? config.theme, context, Brightness.dark)
+              .copyWith(platform: platform),
+      themeMode: _materialThemeMode(config.themeMode),
       localizationsDelegates: config.localizationsDelegates,
       supportedLocales: config.supportedLocales,
       locale: config.locale,
@@ -33,6 +45,7 @@ class MaterialAppRenderer extends StatelessWidget {
             supportedLocales: common.supportedLocales,
             locale: common.locale,
             home: config.home,
+            builder: _styleScope,
           )
         : MaterialApp.router(
             debugShowCheckedModeBanner: common.debugShowCheckedModeBanner,
@@ -47,9 +60,15 @@ class MaterialAppRenderer extends StatelessWidget {
             routerDelegate: config.routerDelegate,
             routeInformationParser: config.routeInformationParser,
             routeInformationProvider: config.routeInformationProvider,
+            builder: _styleScope,
           );
   }
 }
+
+Widget _styleScope(BuildContext context, Widget? child) => FletStyleThemeScope(
+      data: materialStyleTheme(Theme.of(context)),
+      child: child ?? const SizedBox.shrink(),
+    );
 
 ThemeMode? _materialThemeMode(Object? value) => switch (value) {
       ThemeMode mode => mode,

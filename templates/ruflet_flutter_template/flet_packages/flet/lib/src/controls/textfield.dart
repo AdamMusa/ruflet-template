@@ -1,3 +1,4 @@
+import '../utils/material_style_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -170,7 +171,7 @@ class _TextFieldControlState extends State<TextFieldControl> {
     var color = widget.control.getColor("color", context);
     var focusedColor = widget.control.getColor("focused_color", context);
     var textStyle = widget.control
-        .getTextStyle("text_style", Theme.of(context), const TextStyle())!;
+        .getTextStyle("text_style", materialStyleTheme(Theme.of(context)), const TextStyle())!;
     if (textSize != null || color != null || focusedColor != null) {
       textStyle = textStyle.copyWith(
           fontSize: textSize, color: _focused ? focusedColor ?? color : color);

@@ -67,4 +67,29 @@ void main() {
     expect(find.byType(MaterialControlTheme), findsOneWidget);
     expect(find.byType(CupertinoControlTheme), findsNothing);
   });
+
+  testWidgets('Cupertino default text inherits local theme typography',
+      (tester) async {
+    backend.platform = TargetPlatform.iOS;
+    final theme = themedControl();
+    theme.update({
+      'theme': {
+        'text_theme': {
+          'body_medium': {'size': 23, 'color': '#123456'}
+        }
+      }
+    }, shouldNotify: false);
+    final text = Control.fromMap(
+        {'_c': 'Text', '_i': 104, 'value': 'Locally themed'}, backend);
+    await tester.pumpWidget(withBackend(CupertinoApp(
+      home: PlatformControlTheme(
+        control: theme,
+        child: ControlWidget(control: text),
+      ),
+    )));
+    final rendered = tester.widget<RichText>(find.descendant(
+        of: find.text('Locally themed'), matching: find.byType(RichText)));
+    expect(rendered.text.style?.fontSize, 23);
+    expect(rendered.text.style?.color, const Color(0xff123456));
+  });
 }

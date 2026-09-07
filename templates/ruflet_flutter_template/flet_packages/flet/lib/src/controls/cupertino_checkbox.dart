@@ -1,16 +1,16 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
 import '../models/control.dart';
 import '../utils/borders.dart';
 import '../utils/colors.dart';
+import '../utils/cupertino_theme.dart';
 import '../utils/misc.dart';
 import '../utils/mouse.dart';
 import '../utils/numbers.dart';
 import '../utils/text.dart';
+import '../widgets/list_tile_clicks.dart';
 import 'base_controls.dart';
-import 'list_tile.dart';
 
 class CupertinoCheckboxControl extends StatefulWidget {
   final Control control;
@@ -60,6 +60,7 @@ class _CheckboxControlState extends State<CupertinoCheckboxControl> {
   }
 
   void _toggleValue() {
+    if (widget.control.disabled) return;
     bool? newValue;
     if (!_tristate) {
       newValue = !_value!;
@@ -80,6 +81,7 @@ class _CheckboxControlState extends State<CupertinoCheckboxControl> {
   @override
   Widget build(BuildContext context) {
     debugPrint("CupertinoCheckBox build: ${widget.control.id}");
+    final theme = cupertinoStyleTheme(context);
 
     _tristate = widget.control.getBool("tristate", false)!;
     var value = widget.control.getBool("value", _tristate ? null : false);
@@ -94,13 +96,11 @@ class _CheckboxControlState extends State<CupertinoCheckboxControl> {
         activeColor: widget.control.getColor("active_color", context),
         checkColor: widget.control.getColor("check_color", context),
         focusColor: widget.control.getColor("focus_color", context),
-        shape: widget.control.getShape("shape", Theme.of(context)),
+        shape: widget.control.getShape("shape", theme),
         mouseCursor: widget.control.getMouseCursor("mouse_cursor"),
         semanticLabel: widget.control.getString("semantics_label"),
-        side: widget.control
-            .getWidgetStateBorderSide("border_side", Theme.of(context)),
-        fillColor:
-            widget.control.getWidgetStateColor("fill_color", Theme.of(context)),
+        side: widget.control.getWidgetStateBorderSide("border_side", theme),
+        fillColor: widget.control.getWidgetStateColor("fill_color", theme),
         tristate: _tristate,
         onChanged: !widget.control.disabled
             ? (bool? value) => _onChange(value)
@@ -108,10 +108,11 @@ class _CheckboxControlState extends State<CupertinoCheckboxControl> {
 
     Widget result = cupertinoCheckbox;
 
-    var labelStyle =
-        widget.control.getTextStyle("label_style", Theme.of(context));
-    if (widget.control.disabled && labelStyle != null) {
-      labelStyle = labelStyle.apply(color: Theme.of(context).disabledColor);
+    var labelStyle = widget.control.getTextStyle("label_style", theme);
+    if (widget.control.disabled) {
+      labelStyle =
+          (labelStyle ?? CupertinoTheme.of(context).textTheme.textStyle)
+              .copyWith(color: theme.color('disabled'));
     }
     var label =
         widget.control.buildTextOrWidget("label", textStyle: labelStyle);

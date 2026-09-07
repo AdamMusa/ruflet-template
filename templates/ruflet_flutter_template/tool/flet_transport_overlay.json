@@ -1,6 +1,7 @@
 {
   "version": 1,
-  "reviewed_template_ref": "9b31830",
+  "reviewed_template_ref": "9b318301bebc8968f08c6de1854d50694f06e06d",
+  "reviewed_source_ref": "5b68e8bb2d1f88c99fa0a5807a5c67e102e5c171",
   "reason": "Preserve Ruflet's embedded binary transport injection without changing the Flet protocol or platform renderers.",
   "patches": {
     "lib/flet.dart": [

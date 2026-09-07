@@ -8826,4 +8826,4 @@ List<IconData> materialIcons = [
   Icons.zoom_out_outlined,
   Icons.zoom_out_rounded,
   Icons.zoom_out_sharp,
-  ];
+];

@@ -1,3 +1,4 @@
+import '../utils/material_style_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
@@ -23,7 +24,7 @@ class MaterialBannerControl extends StatelessWidget {
       forceActionsBelow: control.getBool("force_actions_below", false)!,
       backgroundColor: control.getColor("bgcolor", context),
       contentTextStyle:
-          control.getTextStyle("content_text_style", Theme.of(context)),
+          control.getTextStyle("content_text_style", materialStyleTheme(Theme.of(context))),
       shadowColor: control.getColor("shadow_color", context),
       dividerColor: control.getColor("divider_color", context),
       elevation: control.getDouble("elevation"),

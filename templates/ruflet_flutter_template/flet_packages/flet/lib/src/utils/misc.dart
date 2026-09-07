@@ -1,6 +1,7 @@
+import 'style_theme.dart';
 import 'dart:ui';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter/rendering.dart';
 
 import '../models/control.dart';
@@ -28,7 +29,7 @@ BoxShape? parseBoxShape(String? value, [BoxShape? defaultValue]) {
   return parseEnum(BoxShape.values, value, defaultValue);
 }
 
-NotchedShape? parseNotchedShape(dynamic value, ThemeData? theme,
+NotchedShape? parseNotchedShape(dynamic value, FletStyleTheme? theme,
     [NotchedShape? defaultValue]) {
   if (value == null) return defaultValue;
 
@@ -38,22 +39,12 @@ NotchedShape? parseNotchedShape(dynamic value, ThemeData? theme,
         inverted: parseBool(value["inverted"], false)!);
   } else if (type == "auto") {
     return AutomaticNotchedShape(
-        parseShapeBorder(
-            value["host"], theme, const ContinuousRectangleBorder())!,
-        parseShapeBorder(value["guest"], theme));
+        parseShapeBorder(value["host"], (theme),
+            const ContinuousRectangleBorder())!,
+        parseShapeBorder(value["guest"], (theme)));
   } else {
     return defaultValue;
   }
-}
-
-SliderInteraction? parseSliderInteraction(String? value,
-    [SliderInteraction? defaultValue]) {
-  return parseEnum(SliderInteraction.values, value, defaultValue);
-}
-
-SnackBarBehavior? parseSnackBarBehavior(String? value,
-    [SnackBarBehavior? defaultValue]) {
-  return parseEnum(SnackBarBehavior.values, value, defaultValue);
 }
 
 StackFit? parseStackFit(String? value, [StackFit? defaultValue]) {
@@ -80,36 +71,9 @@ LabelPosition? parseLabelPosition(String? value,
   return parseEnum(LabelPosition.values, value, defaultValue);
 }
 
-ListTileControlAffinity? parseListTileControlAffinity(String? value,
-    [ListTileControlAffinity? defaultValue]) {
-  return parseEnum(ListTileControlAffinity.values, value, defaultValue);
-}
-
-ListTileStyle? parseListTileStyle(String? value,
-    [ListTileStyle? defaultValue]) {
-  return parseEnum(ListTileStyle.values, value, defaultValue);
-}
-
-NavigationDestinationLabelBehavior? parseNavigationDestinationLabelBehavior(
-    String? value,
-    [NavigationDestinationLabelBehavior? defaultValue]) {
-  return parseEnum(
-      NavigationDestinationLabelBehavior.values, value, defaultValue);
-}
-
-PopupMenuPosition? parsePopupMenuPosition(String? value,
-    [PopupMenuPosition? defaultValue]) {
-  return parseEnum(PopupMenuPosition.values, value, defaultValue);
-}
-
 Assertiveness? parseAssertiveness(String? value,
     [Assertiveness? defaultValue]) {
   return parseEnum(Assertiveness.values, value, defaultValue);
-}
-
-ListTileTitleAlignment? parseListTileTitleAlignment(String? value,
-    [ListTileTitleAlignment? defaultValue]) {
-  return parseEnum(ListTileTitleAlignment.values, value, defaultValue);
 }
 
 Axis? parseAxis(String? value, [Axis? defaultValue]) {
@@ -121,18 +85,8 @@ PointerDeviceKind? parsePointerDeviceKind(String? value,
   return parseEnum(PointerDeviceKind.values, value, defaultValue);
 }
 
-NavigationRailLabelType? parseNavigationRailLabelType(String? value,
-    [NavigationRailLabelType? defaultValue]) {
-  return parseEnum(NavigationRailLabelType.values, value, defaultValue);
-}
-
 BlurStyle? parseBlurStyle(String? value, [BlurStyle? defaultValue]) {
   return parseEnum(BlurStyle.values, value, defaultValue);
-}
-
-FloatingLabelBehavior? parseFloatingLabelBehavior(String? value,
-    [FloatingLabelBehavior? defaultValue]) {
-  return parseEnum(FloatingLabelBehavior.values, value, defaultValue);
 }
 
 extension MiscParsers on Control {
@@ -157,19 +111,9 @@ extension MiscParsers on Control {
     return parseBoxShape(get(propertyName), defaultValue);
   }
 
-  NotchedShape? getNotchedShape(String propertyName, ThemeData? theme,
+  NotchedShape? getNotchedShape(String propertyName, FletStyleTheme? theme,
       [NotchedShape? defaultValue]) {
     return parseNotchedShape(get(propertyName), theme, defaultValue);
-  }
-
-  SliderInteraction? getSliderInteraction(String propertyName,
-      [SliderInteraction? defaultValue]) {
-    return parseSliderInteraction(get(propertyName), defaultValue);
-  }
-
-  SnackBarBehavior? getSnackBarBehavior(String propertyName,
-      [SnackBarBehavior? defaultValue]) {
-    return parseSnackBarBehavior(get(propertyName), defaultValue);
   }
 
   StackFit? getStackFit(String propertyName, [StackFit? defaultValue]) {
@@ -191,36 +135,9 @@ extension MiscParsers on Control {
     return parseLabelPosition(get(propertyName), defaultValue);
   }
 
-  ListTileControlAffinity? getListTileControlAffinity(String propertyName,
-      [ListTileControlAffinity? defaultValue]) {
-    return parseListTileControlAffinity(get(propertyName), defaultValue);
-  }
-
-  ListTileStyle? getListTileStyle(String propertyName,
-      [ListTileStyle? defaultValue]) {
-    return parseListTileStyle(get(propertyName), defaultValue);
-  }
-
-  NavigationDestinationLabelBehavior? getNavigationDestinationLabelBehavior(
-      String propertyName,
-      [NavigationDestinationLabelBehavior? defaultValue]) {
-    return parseNavigationDestinationLabelBehavior(
-        get(propertyName), defaultValue);
-  }
-
-  PopupMenuPosition? getPopupMenuPosition(String propertyName,
-      [PopupMenuPosition? defaultValue]) {
-    return parsePopupMenuPosition(get(propertyName), defaultValue);
-  }
-
   Assertiveness? getAssertiveness(String propertyName,
       [Assertiveness? defaultValue]) {
     return parseAssertiveness(get(propertyName), defaultValue);
-  }
-
-  ListTileTitleAlignment? getListTileTitleAlignment(String propertyName,
-      [ListTileTitleAlignment? defaultValue]) {
-    return parseListTileTitleAlignment(get(propertyName), defaultValue);
   }
 
   Axis? getAxis(String propertyName, [Axis? defaultValue]) {
@@ -232,17 +149,7 @@ extension MiscParsers on Control {
     return parsePointerDeviceKind(get(propertyName), defaultValue);
   }
 
-  NavigationRailLabelType? getNavigationRailLabelType(String propertyName,
-      [NavigationRailLabelType? defaultValue]) {
-    return parseNavigationRailLabelType(get(propertyName), defaultValue);
-  }
-
   BlurStyle? getBlurStyle(String propertyName, [BlurStyle? defaultValue]) {
     return parseBlurStyle(get(propertyName), defaultValue);
-  }
-
-  FloatingLabelBehavior? getFloatingLabelBehavior(String propertyName,
-      [FloatingLabelBehavior? defaultValue]) {
-    return parseFloatingLabelBehavior(get(propertyName), defaultValue);
   }
 }

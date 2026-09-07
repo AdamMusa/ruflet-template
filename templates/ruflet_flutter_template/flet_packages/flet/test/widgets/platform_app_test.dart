@@ -2,6 +2,7 @@ import 'package:flet/src/models/page_design.dart';
 import 'package:flet/src/widgets/platform_app.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 PlatformAppConfig config({required Widget home}) => PlatformAppConfig(
@@ -11,10 +12,7 @@ PlatformAppConfig config({required Widget home}) => PlatformAppConfig(
       routerDelegate: null,
       routeInformationParser: null,
       routeInformationProvider: null,
-      materialTheme: ThemeData(),
-      materialDarkTheme: ThemeData.dark(),
-      materialThemeMode: ThemeMode.system,
-      cupertinoTheme: const CupertinoThemeData(),
+      themeMode: FletThemeMode.system,
       localizationsDelegates: const [],
       supportedLocales: const [Locale('en')],
       locale: const Locale('en'),
@@ -39,5 +37,24 @@ void main() {
 
     expect(find.byType(MaterialApp), findsOneWidget);
     expect(find.byType(CupertinoApp), findsNothing);
+  });
+
+  testWidgets(
+      'Material renderer stays Material when previewed on an Apple host',
+      (tester) async {
+    debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+    try {
+      TargetPlatform? observed;
+      await tester.pumpWidget(PlatformApp(
+        design: PageDesign.material,
+        config: config(home: Builder(builder: (context) {
+          observed = Theme.of(context).platform;
+          return const SizedBox();
+        })),
+      ));
+      expect(observed, TargetPlatform.android);
+    } finally {
+      debugDefaultTargetPlatformOverride = null;
+    }
   });
 }

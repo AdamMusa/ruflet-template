@@ -1,13 +1,13 @@
-import 'package:flutter/material.dart';
+import 'style_theme.dart';
 import 'package:flutter/services.dart';
 
 import '../models/control.dart';
 import '../utils/numbers.dart';
-import '../utils/theme.dart';
+import 'platform_theme.dart';
 import 'colors.dart';
 
 SystemUiOverlayStyle? parseSystemUiOverlayStyle(
-    dynamic value, ThemeData? theme, Brightness? brightness,
+    dynamic value, FletStyleTheme? theme, Brightness? brightness,
     [SystemUiOverlayStyle? defaultValue]) {
   if (value == null) return defaultValue;
   Brightness? invertedBrightness = brightness != null
@@ -36,7 +36,7 @@ SystemUiOverlayStyle? parseSystemUiOverlayStyle(
 
 extension SystemUiParsers on Control {
   SystemUiOverlayStyle? getSystemUiOverlayStyle(
-      String propertyName, ThemeData? theme, Brightness? brightness,
+      String propertyName, FletStyleTheme? theme, Brightness? brightness,
       [SystemUiOverlayStyle? defaultValue]) {
     return parseSystemUiOverlayStyle(
         get(propertyName), theme, brightness, defaultValue);

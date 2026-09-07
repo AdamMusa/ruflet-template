@@ -10,7 +10,7 @@ import '../utils/colors.dart';
 import '../utils/desktop.dart';
 import '../utils/numbers.dart';
 import '../utils/platform.dart';
-import '../utils/theme.dart';
+import '../utils/platform_theme.dart';
 import '../utils/window.dart';
 
 class WindowService extends FletService with WindowListener {

@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import '../models/page_design.dart';
 
 class PlatformAppConfig {
   final String title;
@@ -7,10 +8,11 @@ class PlatformAppConfig {
   final dynamic routerDelegate;
   final dynamic routeInformationParser;
   final RouteInformationProvider? routeInformationProvider;
-  final Object? materialTheme;
-  final Object? materialDarkTheme;
-  final Object? materialThemeMode;
-  final Object? cupertinoTheme;
+  final Map<dynamic, dynamic>? theme;
+  final Map<dynamic, dynamic>? darkTheme;
+  final FletThemeMode? themeMode;
+  final Brightness platformBrightness;
+  final TargetPlatform? targetPlatform;
   final Iterable<LocalizationsDelegate<dynamic>> localizationsDelegates;
   final Iterable<Locale> supportedLocales;
   final Locale? locale;
@@ -22,10 +24,11 @@ class PlatformAppConfig {
     required this.routerDelegate,
     required this.routeInformationParser,
     required this.routeInformationProvider,
-    required this.materialTheme,
-    required this.materialDarkTheme,
-    required this.materialThemeMode,
-    required this.cupertinoTheme,
+    this.theme,
+    this.darkTheme,
+    this.themeMode,
+    this.platformBrightness = Brightness.light,
+    this.targetPlatform,
     required this.localizationsDelegates,
     required this.supportedLocales,
     required this.locale,

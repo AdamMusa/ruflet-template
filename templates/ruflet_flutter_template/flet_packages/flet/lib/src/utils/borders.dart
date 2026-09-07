@@ -1,6 +1,8 @@
+import 'color_palette.dart';
+import 'style_theme.dart';
 import 'dart:collection';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../models/control.dart';
 import 'colors.dart';
@@ -33,8 +35,8 @@ BorderStyle? parseBorderStyle(String? value, [BorderStyle? defaultValue]) {
   return parseEnum(BorderStyle.values, value, defaultValue);
 }
 
-Border? parseBorder(dynamic value, ThemeData? theme,
-    {Color defaultSideColor = Colors.black,
+Border? parseBorder(dynamic value, FletStyleTheme? theme,
+    {Color defaultSideColor = FletColors.black,
     BorderSide? defaultBorderSide,
     Border? defaultValue}) {
   if (value == null) return defaultValue;
@@ -53,8 +55,8 @@ Border? parseBorder(dynamic value, ThemeData? theme,
           defaultValue: defaultBorderSide ?? BorderSide.none)!);
 }
 
-BorderSide? parseBorderSide(dynamic value, ThemeData? theme,
-    {Color defaultSideColor = Colors.black, BorderSide? defaultValue}) {
+BorderSide? parseBorderSide(dynamic value, FletStyleTheme? theme,
+    {Color defaultSideColor = FletColors.black, BorderSide? defaultValue}) {
   if (value == null) return defaultValue;
   return BorderSide(
     color: parseColor(value['color'], theme, defaultSideColor)!,
@@ -65,14 +67,14 @@ BorderSide? parseBorderSide(dynamic value, ThemeData? theme,
   );
 }
 
-ShapeBorder? parseShapeBorder(dynamic value, ThemeData? theme,
+ShapeBorder? parseShapeBorder(dynamic value, FletStyleTheme? theme,
     [ShapeBorder? defaultValue]) {
   if (value == null) return defaultValue;
   return parseOutlinedBorder(value, theme,
       defaultValue: defaultValue as OutlinedBorder?);
 }
 
-OutlinedBorder? parseOutlinedBorder(dynamic value, ThemeData? theme,
+OutlinedBorder? parseOutlinedBorder(dynamic value, FletStyleTheme? theme,
     {BorderSide defaultBorderSide = BorderSide.none,
     BorderRadius defaultBorderRadius = BorderRadius.zero,
     OutlinedBorder? defaultValue}) {
@@ -104,7 +106,7 @@ OutlinedBorder? parseOutlinedBorder(dynamic value, ThemeData? theme,
   }
 }
 
-OutlinedBorder? parseShape(dynamic value, ThemeData? theme,
+OutlinedBorder? parseShape(dynamic value, FletStyleTheme? theme,
     {BorderSide defaultBorderSide = BorderSide.none,
     BorderRadius defaultBorderRadius = BorderRadius.zero,
     OutlinedBorder? defaultValue}) {
@@ -115,7 +117,7 @@ OutlinedBorder? parseShape(dynamic value, ThemeData? theme,
 }
 
 WidgetStateBorderSide? parseWidgetStateBorderSide(
-    dynamic value, ThemeData theme,
+    dynamic value, FletStyleTheme theme,
     {BorderSide? defaultBorderSide = BorderSide.none,
     WidgetStateBorderSide? defaultValue}) {
   if (value == null) return defaultValue;
@@ -164,7 +166,7 @@ class WidgetStateBorderSideFromJSON extends WidgetStateBorderSide {
 }
 
 WidgetStateProperty<OutlinedBorder?>? parseWidgetStateOutlinedBorder(
-    dynamic value, ThemeData? theme,
+    dynamic value, FletStyleTheme? theme,
     {OutlinedBorder? defaultOutlinedBorder,
     WidgetStateProperty<OutlinedBorder?>? defaultValue}) {
   if (value == null) return defaultValue;
@@ -188,8 +190,8 @@ extension BorderParsers on Control {
     return parseBorderStyle(get(propertyName), defaultValue);
   }
 
-  Border? getBorder(String propertyName, ThemeData theme,
-      {Color defaultSideColor = Colors.black,
+  Border? getBorder(String propertyName, FletStyleTheme theme,
+      {Color defaultSideColor = FletColors.black,
       BorderSide? defaultBorderSide,
       Border? defaultValue}) {
     return parseBorder(get(propertyName), theme,
@@ -198,13 +200,13 @@ extension BorderParsers on Control {
         defaultValue: defaultValue);
   }
 
-  BorderSide? getBorderSide(String propertyName, ThemeData theme,
-      {Color defaultSideColor = Colors.black, BorderSide? defaultValue}) {
+  BorderSide? getBorderSide(String propertyName, FletStyleTheme theme,
+      {Color defaultSideColor = FletColors.black, BorderSide? defaultValue}) {
     return parseBorderSide(get(propertyName), theme,
         defaultSideColor: defaultSideColor, defaultValue: defaultValue);
   }
 
-  OutlinedBorder? getOutlinedBorder(String propertyName, ThemeData? theme,
+  OutlinedBorder? getOutlinedBorder(String propertyName, FletStyleTheme? theme,
       {BorderSide defaultBorderSide = BorderSide.none,
       BorderRadius defaultBorderRadius = BorderRadius.zero,
       OutlinedBorder? defaultValue}) {
@@ -214,7 +216,7 @@ extension BorderParsers on Control {
         defaultValue: defaultValue);
   }
 
-  OutlinedBorder? getShape(String propertyName, ThemeData? theme,
+  OutlinedBorder? getShape(String propertyName, FletStyleTheme? theme,
       {BorderSide defaultBorderSide = BorderSide.none,
       BorderRadius defaultBorderRadius = BorderRadius.zero,
       OutlinedBorder? defaultValue}) {
@@ -225,7 +227,7 @@ extension BorderParsers on Control {
   }
 
   WidgetStateBorderSide? getWidgetStateBorderSide(
-      String propertyName, ThemeData theme,
+      String propertyName, FletStyleTheme theme,
       {BorderSide defaultBorderSide = BorderSide.none,
       WidgetStateBorderSide? defaultValue}) {
     return parseWidgetStateBorderSide(get(propertyName), theme,
@@ -233,7 +235,7 @@ extension BorderParsers on Control {
   }
 
   WidgetStateProperty<OutlinedBorder?>? getWidgetStateOutlinedBorder(
-      String propertyName, ThemeData? theme,
+      String propertyName, FletStyleTheme? theme,
       {OutlinedBorder? defaultOutlinedBorder,
       WidgetStateProperty<OutlinedBorder?>? defaultValue}) {
     return parseWidgetStateOutlinedBorder(get(propertyName), theme,

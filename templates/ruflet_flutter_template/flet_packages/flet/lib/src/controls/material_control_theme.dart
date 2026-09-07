@@ -4,6 +4,8 @@ import '../flet_backend.dart';
 import '../models/control.dart';
 import '../models/page_design.dart';
 import '../utils/theme.dart';
+import '../utils/material_style_theme.dart';
+import '../utils/style_theme.dart';
 
 class MaterialControlTheme extends StatelessWidget {
   final Control control;
@@ -36,7 +38,11 @@ class MaterialControlTheme extends StatelessWidget {
         brightness,
         parentTheme: parentTheme,
       ),
-      child: child,
+      child: Builder(
+          builder: (context) => FletStyleThemeScope(
+                data: materialStyleTheme(Theme.of(context)),
+                child: child,
+              )),
     );
   }
 }

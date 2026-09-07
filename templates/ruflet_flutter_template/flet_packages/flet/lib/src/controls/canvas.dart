@@ -11,7 +11,7 @@ import '../models/control.dart';
 import '../utils/alignment.dart';
 import '../utils/borders.dart';
 import '../utils/colors.dart';
-import '../utils/cupertino_material_style_adapter.dart';
+import '../utils/style_theme.dart';
 import '../utils/dash_path.dart';
 import '../utils/drawing.dart';
 import '../utils/hashing.dart';
@@ -106,7 +106,7 @@ class _CanvasControlState extends State<CanvasControl> {
 
         final painter = FletCustomPainter(
             context: context,
-            theme: materialStyleSchemaTheme(context),
+            theme: FletStyleTheme.of(context),
             shapes: shapes,
             capturedImage: _capturedImage,
             capturedSize: capturedSize,
@@ -149,7 +149,7 @@ class _CanvasControlState extends State<CanvasControl> {
     var paint = CustomPaint(
       painter: FletCustomPainter(
         context: context,
-        theme: materialStyleSchemaTheme(context),
+        theme: FletStyleTheme.of(context),
         shapes: widget.control.children("shapes"),
         capturedImage: _capturedImage,
         capturedSize: _capturedSize,

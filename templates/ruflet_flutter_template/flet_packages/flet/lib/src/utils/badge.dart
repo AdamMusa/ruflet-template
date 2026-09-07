@@ -1,3 +1,4 @@
+import 'material_style_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
@@ -21,12 +22,14 @@ extension BadgeParsers on Control {
         isLabelVisible: badge.getBool("label_visible", true)!,
         offset: badge.getOffset("offset"),
         alignment: badge.getAlignment("alignment"),
-        backgroundColor: parseColor(badge.get("bgcolor"), theme),
+        backgroundColor:
+            parseColor(badge.get("bgcolor"), materialStyleTheme(theme)),
         largeSize: badge.getDouble("large_size"),
         padding: badge.getPadding("padding"),
         smallSize: badge.getDouble("small_size"),
-        textColor: parseColor(badge.get("text_color"), theme),
-        textStyle: badge.getTextStyle("text_style", theme),
+        textColor:
+            parseColor(badge.get("text_color"), materialStyleTheme(theme)),
+        textStyle: badge.getTextStyle("text_style", materialStyleTheme(theme)),
         child: child,
       );
     } else {

@@ -1,3 +1,4 @@
+import '../utils/material_style_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../models/control.dart';
@@ -26,7 +27,7 @@ class MaterialTextControl extends StatelessWidget {
         control.getBool("enable_interactive_selection", true)!;
     final spans = parseTextSpans(
       control.children("spans"),
-      theme,
+      materialStyleTheme(theme),
       (control, eventName, [eventData]) {
         control.triggerEvent(eventName, eventData);
       },
@@ -34,7 +35,7 @@ class MaterialTextControl extends StatelessWidget {
     final semanticsLabel = control.getString("semantics_label");
     final noWrap = control.getBool("no_wrap", false)!;
     final maxLines = control.getInt("max_lines");
-    var style = control.getTextStyle("style", theme);
+    var style = control.getTextStyle("style", materialStyleTheme(theme));
     final themeStyle =
         parseTextThemeStyle(control.getString("theme_style"), context);
     if (style == null && themeStyle != null) {

@@ -1,3 +1,4 @@
+import '../utils/style_theme.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:markdown/markdown.dart' as md;
@@ -15,7 +16,7 @@ import 'highlight_view.dart';
 
 class PlatformMarkdownBody extends StatelessWidget {
   final Control control;
-  final dynamic parserTheme;
+  final FletStyleTheme parserTheme;
   final MarkdownStyleSheet baseStyleSheet;
   final MarkdownStyleSheetBaseTheme baseTheme;
 
@@ -71,7 +72,7 @@ class PlatformMarkdownBody extends StatelessWidget {
           textScaleFactor: control.getDouble("latex_scale_factor"),
         ),
       },
-      styleSheet: mdStyleSheet,
+      styleSheet: mdStyleSheet ?? baseStyleSheet,
       imageBuilder: (Uri uri, String? title, String? alt) => buildImage(
         context: context,
         src: uri.toString(),

@@ -1,3 +1,4 @@
+import 'material_style_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
@@ -23,8 +24,8 @@ List<PopupMenuEntry<String>> buildPopupMenuEntries(
     var itemContent = item.buildTextOrWidget("content");
     var itemIcon = item.buildIconOrWidget("icon");
     var mouseCursor = item.getMouseCursor("mouse_cursor");
-    var labelTextStyle =
-        item.getWidgetStateTextStyle("label_text_style", Theme.of(context));
+    var labelTextStyle = item.getWidgetStateTextStyle(
+        "label_text_style", materialStyleTheme(Theme.of(context)));
 
     Widget? child;
     if (itemContent != null && itemIcon == null) {

@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'style_theme.dart';
+import 'package:flutter/widgets.dart';
 
 import '../flet_backend.dart';
 import '../models/control.dart';
@@ -21,7 +22,7 @@ IconData? parseIconData(int? value, FletBackend backend,
 WidgetStateProperty<Icon?>? parseWidgetStateIcon(
   dynamic value,
   FletBackend backend,
-  ThemeData theme, {
+  FletStyleTheme theme, {
   Icon? defaultIcon,
   WidgetStateProperty<Icon?>? defaultValue,
 }) {
@@ -36,7 +37,7 @@ extension IconParsers on Control {
   }
 
   WidgetStateProperty<Icon?>? getWidgetStateIcon(
-      String propertyName, ThemeData theme,
+      String propertyName, FletStyleTheme theme,
       {Icon? defaultIcon, WidgetStateProperty<Icon?>? defaultValue}) {
     return parseWidgetStateIcon(get(propertyName), backend, theme,
         defaultIcon: defaultIcon, defaultValue: defaultValue);

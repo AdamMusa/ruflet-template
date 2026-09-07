@@ -3,7 +3,9 @@ import 'package:flutter/cupertino.dart';
 import '../flet_backend.dart';
 import '../models/control.dart';
 import '../models/page_design.dart';
-import '../utils/theme.dart';
+import '../utils/cupertino_theme.dart';
+import '../utils/platform_theme.dart';
+import '../utils/style_theme.dart';
 
 class CupertinoControlTheme extends StatelessWidget {
   final Control control;
@@ -31,9 +33,20 @@ class CupertinoControlTheme extends StatelessWidget {
             ? "dark_theme"
             : "theme";
     return CupertinoTheme(
-      data: control.getCupertinoTheme(property, context, brightness) ??
-          CupertinoTheme.of(context),
-      child: child,
+      data: control.getCupertinoTheme(property, context, brightness,
+          parentTheme: context
+              .dependOnInheritedWidgetOfExactType<InheritedCupertinoTheme>()
+              ?.theme
+              .data),
+      child: Builder(
+        builder: (context) => FletStyleThemeScope(
+          data: cupertinoStyleTheme(context),
+          child: DefaultTextStyle(
+            style: CupertinoTheme.of(context).textTheme.textStyle,
+            child: child,
+          ),
+        ),
+      ),
     );
   }
 }

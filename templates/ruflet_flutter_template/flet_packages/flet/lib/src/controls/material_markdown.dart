@@ -1,3 +1,4 @@
+import '../utils/material_style_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 
@@ -16,7 +17,7 @@ class MaterialMarkdownControl extends StatelessWidget {
     final theme = Theme.of(context);
     Widget body = PlatformMarkdownBody(
       control: control,
-      parserTheme: theme,
+      parserTheme: materialStyleTheme(theme),
       baseStyleSheet: MarkdownStyleSheet.fromTheme(theme),
       baseTheme: MarkdownStyleSheetBaseTheme.material,
     );

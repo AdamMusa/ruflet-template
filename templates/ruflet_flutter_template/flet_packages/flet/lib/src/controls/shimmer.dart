@@ -4,7 +4,7 @@ import '../utils/enums.dart';
 import '../extensions/control.dart';
 import '../models/control.dart';
 import '../utils/colors.dart';
-import '../utils/cupertino_material_style_adapter.dart';
+import '../utils/style_theme.dart';
 import '../utils/gradient.dart';
 import '../utils/numbers.dart';
 import '../utils/time.dart';
@@ -27,7 +27,7 @@ class ShimmerControl extends StatelessWidget {
     }
 
     final gradient =
-        control.getGradient("gradient", materialStyleSchemaTheme(context));
+        control.getGradient("gradient", FletStyleTheme.of(context));
     final baseColor = control.getColor("base_color", context);
     final highlightColor = control.getColor("highlight_color", context);
 

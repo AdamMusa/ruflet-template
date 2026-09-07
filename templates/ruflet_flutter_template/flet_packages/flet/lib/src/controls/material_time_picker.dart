@@ -1,3 +1,4 @@
+import '../utils/material_time.dart';
 import 'package:flutter/material.dart';
 
 import '../models/control.dart';
@@ -7,7 +8,6 @@ import '../utils/icons.dart';
 import '../utils/locale.dart';
 import '../utils/misc.dart';
 import '../utils/numbers.dart';
-import '../utils/time.dart';
 
 class MaterialTimePickerControl extends StatelessWidget {
   final Control control;

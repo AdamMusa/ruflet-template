@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 
 import '../models/control.dart';
 import '../utils/colors.dart';
+import '../utils/cupertino_theme.dart';
 import '../utils/misc.dart';
 import '../utils/mouse.dart';
 import '../utils/numbers.dart';
@@ -58,13 +58,14 @@ class _CupertinoRadioControlState extends State<CupertinoRadioControl>
       autofocus: widget.control.getBool("autofocus", false)!,
       focusNode: _focusNode,
       value: value,
+      enabled: !widget.control.disabled,
       useCheckmarkStyle: widget.control.getBool("use_checkmark_style", false)!,
       fillColor: widget.control.getColor("fill_color", context),
       focusColor: widget.control.getColor("focus_color", context),
       toggleable: widget.control.getBool("toggleable", false)!,
       mouseCursor: widget.control.getMouseCursor("mouse_cursor"),
       activeColor: widget.control.getColor(
-          "active_color", context, Theme.of(context).colorScheme.primary)!,
+          "active_color", context, CupertinoTheme.of(context).primaryColor)!,
       inactiveColor: widget.control.getColor("inactive_color", context),
     );
 
@@ -76,7 +77,8 @@ class _CupertinoRadioControlState extends State<CupertinoRadioControl>
           .getLabelPosition("label_position", LabelPosition.right)!;
       var labelWidget = widget.control.disabled
           ? Text(label,
-              style: TextStyle(color: Theme.of(context).disabledColor))
+              style: TextStyle(
+                  color: cupertinoStyleTheme(context).color('disabled')))
           : MouseRegion(cursor: SystemMouseCursors.click, child: Text(label));
       result = MergeSemantics(
           child: GestureDetector(

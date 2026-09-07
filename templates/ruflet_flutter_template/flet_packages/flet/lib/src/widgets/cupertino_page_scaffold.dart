@@ -189,7 +189,12 @@ class _FletCupertinoPageScaffoldState extends State<FletCupertinoPageScaffold> {
           : navigationBar is ObstructingPreferredSizeWidget
               ? navigationBar
               : _CupertinoNavigationBarHost(child: navigationBar),
-      child: _buildContent(),
+      // CupertinoPageScaffold exposes the obstructed area as MediaQuery
+      // padding when its navigation bar is translucent. The shared View body
+      // is a Stack, not an inset-aware Cupertino scroll view, so consume it
+      // here before laying out the canonical controls. Opaque bars already
+      // consume their top inset and therefore are not padded twice.
+      child: SafeArea(child: _buildContent()),
     );
   }
 }

@@ -1,3 +1,5 @@
+import '../utils/material_enums.dart';
+import '../utils/material_style_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
@@ -99,9 +101,9 @@ class _ExpansionTileControlState extends State<MaterialExpansionTileControl> {
       maintainState: widget.control.getBool("maintain_state", false)!,
       initiallyExpanded: expanded,
       clipBehavior: widget.control.getClipBehavior("clip_behavior"),
-      shape: widget.control.getShape("shape", Theme.of(context)),
+      shape: widget.control.getShape("shape", materialStyleTheme(Theme.of(context))),
       collapsedShape:
-          widget.control.getShape("collapsed_shape", Theme.of(context)),
+          widget.control.getShape("collapsed_shape", materialStyleTheme(Theme.of(context))),
       onExpansionChanged: (bool expanded) {
         _expanded = expanded;
         widget.control.updateProperties({"expanded": expanded});

@@ -3,7 +3,7 @@ import 'package:flutter/widgets.dart';
 import '../extensions/control.dart';
 import '../models/control.dart';
 import '../utils/borders.dart';
-import '../utils/cupertino_material_style_adapter.dart';
+import '../utils/style_theme.dart';
 import '../utils/gradient.dart';
 import '../utils/images.dart';
 import '../widgets/error.dart';
@@ -18,7 +18,7 @@ class ShaderMaskControl extends StatelessWidget {
   Widget build(BuildContext context) {
     debugPrint("ShaderMask build: ${control.id}");
     var gradient =
-        control.getGradient("shader", materialStyleSchemaTheme(context));
+        control.getGradient("shader", FletStyleTheme.of(context));
     if (gradient == null) {
       return const ErrorControl("ShaderMask.shader must be provided");
     }

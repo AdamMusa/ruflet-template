@@ -1,3 +1,5 @@
+import '../utils/material_enums.dart';
+import '../utils/material_style_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
@@ -5,7 +7,6 @@ import '../models/control.dart';
 import '../utils/borders.dart';
 import '../utils/colors.dart';
 import '../utils/edge_insets.dart';
-import '../utils/misc.dart';
 import '../utils/numbers.dart';
 import '../utils/text.dart';
 import '../widgets/error.dart';
@@ -72,12 +73,12 @@ class _NavigationRailControlState extends State<MaterialNavigationRailControl>
           elevation: widget.control.getDouble("elevation"),
           selectedLabelTextStyle: parseTextStyle(
               widget.control.get("selected_label_text_style"),
-              Theme.of(context)),
+              materialStyleTheme(Theme.of(context))),
           unselectedLabelTextStyle: parseTextStyle(
               widget.control.get("unselected_label_text_style"),
-              Theme.of(context)),
+              materialStyleTheme(Theme.of(context))),
           indicatorShape: widget.control
-              .getOutlinedBorder("indicator_shape", Theme.of(context)),
+              .getOutlinedBorder("indicator_shape", materialStyleTheme(Theme.of(context))),
           minWidth: widget.control.getDouble("min_width"),
           minExtendedWidth: widget.control.getDouble("min_extended_width"),
           groupAlignment: widget.control.getDouble("group_alignment"),
@@ -100,7 +101,7 @@ class _NavigationRailControlState extends State<MaterialNavigationRailControl>
                 indicatorColor:
                     destinationControl.getColor("indicator_color", context),
                 indicatorShape: destinationControl.getOutlinedBorder(
-                    "indicator_shape", Theme.of(context)),
+                    "indicator_shape", materialStyleTheme(Theme.of(context))),
                 icon: icon,
                 selectedIcon: selectedIcon,
                 label: destinationControl.buildTextOrWidget("label",

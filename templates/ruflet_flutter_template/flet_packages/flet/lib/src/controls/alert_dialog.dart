@@ -1,3 +1,4 @@
+import '../utils/material_style_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
@@ -34,7 +35,7 @@ class AlertDialogControl extends StatelessWidget {
           actions: control.buildWidgets("actions"),
           actionsPadding: control.getPadding("actions_padding"),
           actionsAlignment: control.getMainAxisAlignment("actions_alignment"),
-          shape: control.getShape("shape", Theme.of(context)),
+          shape: control.getShape("shape", materialStyleTheme(Theme.of(context))),
           semanticLabel: control.getString("semantics_label"),
           insetPadding: control.getPadding("inset_padding",
               const EdgeInsets.symmetric(horizontal: 40.0, vertical: 24.0))!,
@@ -52,9 +53,9 @@ class AlertDialogControl extends StatelessWidget {
               control.getDouble("actions_overflow_button_spacing"),
           alignment: control.getAlignment("alignment"),
           contentTextStyle:
-              control.getTextStyle("content_text_style", Theme.of(context)),
+              control.getTextStyle("content_text_style", materialStyleTheme(Theme.of(context))),
           titleTextStyle:
-              control.getTextStyle("title_text_style", Theme.of(context)),
+              control.getTextStyle("title_text_style", materialStyleTheme(Theme.of(context))),
         );
         return Stack(
           fit: StackFit.expand,

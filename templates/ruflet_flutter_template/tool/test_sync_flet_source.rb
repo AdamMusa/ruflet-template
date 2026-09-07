@@ -147,4 +147,42 @@ class SyncFletSourceTest < Minitest::Test
     assert_raises(FletSourceSync::Error) { sync }
     assert_equal "user bytes", File.read(outside)
   end
+
+  def test_source_ref_comment_is_checked_without_changing_user_settings
+    sync
+    path = File.join(@template, "pubspec.yaml")
+    write(path, File.read(path).sub(@sync.manifest.fetch("flet_ref"), "0" * 40))
+    error = assert_raises(FletSourceSync::Error) { @sync.check }
+    assert_match(/source-ref comment drifted/, error.message)
+  end
+
+  def test_upstream_cannot_take_over_template_owned_transport_silently
+    source("lib/embedded.dart", "new upstream transport")
+    commit
+    error = assert_raises(FletSourceSync::Error) { sync }
+    assert_match(/now owns a template-only/, error.message)
+  end
+
+  def test_duplicate_overlay_anchors_need_review
+    source("lib/flet.dart", "export 'original.dart';\n" * 2)
+    commit
+    error = assert_raises(FletSourceSync::Error) { sync }
+    assert_match(/expected one anchor, found 2/, error.message)
+  end
+
+  def test_tracked_source_symlink_is_rejected
+    File.symlink("flet.dart", File.join(@source, "packages/flet/lib/link.dart"))
+    commit
+    error = assert_raises(FletSourceSync::Error) { sync }
+    assert_match(/regular files/, error.message)
+  end
+
+  def test_template_parent_symlink_is_rejected
+    parent = File.join(@tmp, "linked-packages")
+    FileUtils.mkdir_p(parent)
+    linked_template = File.join(@tmp, "linked-template")
+    FileUtils.mkdir_p(linked_template)
+    File.symlink(parent, File.join(linked_template, "flet_packages"))
+    assert_raises(FletSourceSync::Error) { FletSourceSync.new(template: linked_template) }
+  end
 end

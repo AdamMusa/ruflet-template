@@ -1,3 +1,4 @@
+import '../utils/material_style_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
@@ -37,7 +38,7 @@ class MaterialContainerControl extends StatelessWidget with FletStoreMixin {
     var ignoreInteractions = control.getBool("ignore_interactions", false)!;
     var animation = control.getAnimation("animate");
     var blur = control.getBlur("blur");
-    var colorFilter = control.getColorFilter("color_filter", Theme.of(context));
+    var colorFilter = control.getColorFilter("color_filter", materialStyleTheme(Theme.of(context)));
     var width = control.getDouble("width");
     var height = control.getDouble("height");
     var padding = control.getPadding("padding");
@@ -51,11 +52,11 @@ class MaterialContainerControl extends StatelessWidget with FletStoreMixin {
     var boxDecoration = boxDecorationFromDetails(
       shape: control.getBoxShape("shape", BoxShape.rectangle)!,
       color: bgColor,
-      gradient: parseGradient(control.get("gradient"), theme),
+      gradient: parseGradient(control.get("gradient"), materialStyleTheme(theme)),
       borderRadius: borderRadius,
-      border: control.getBorder("border", theme,
+      border: control.getBorder("border", materialStyleTheme(theme),
           defaultSideColor: theme.colorScheme.primary),
-      boxShadow: control.getBoxShadows("shadow", theme),
+      boxShadow: control.getBoxShadows("shadow", materialStyleTheme(theme)),
       blendMode: control.getBlendMode("blend_mode"),
       image: decorationImage,
     );

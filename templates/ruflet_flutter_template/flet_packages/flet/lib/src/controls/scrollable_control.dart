@@ -1,13 +1,13 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../models/control.dart';
 import '../utils/animations.dart';
 import '../utils/keys.dart';
 import '../utils/misc.dart';
 import '../utils/numbers.dart';
-import '../utils/platform.dart';
 import '../utils/time.dart';
-import '../widgets/flet_store_mixin.dart';
+import '../widgets/platform_design.dart';
+import '../widgets/platform_scrollbar.dart';
 
 class ScrollableControl extends StatefulWidget {
   final Control control;
@@ -29,8 +29,7 @@ class ScrollableControl extends StatefulWidget {
   State<ScrollableControl> createState() => _ScrollableControlState();
 }
 
-class _ScrollableControlState extends State<ScrollableControl>
-    with FletStoreMixin {
+class _ScrollableControlState extends State<ScrollableControl> {
   late final ScrollController _controller;
   late bool _ownController = false;
 
@@ -61,23 +60,28 @@ class _ScrollableControlState extends State<ScrollableControl>
         if (globalKey != null) {
           var ctx = globalKey.currentContext;
           if (ctx != null) {
-            Scrollable.ensureVisible(ctx, duration: duration, curve: curve);
+            await Scrollable.ensureVisible(ctx,
+                duration: duration, curve: curve);
           }
         } else if (offset != null) {
+          if (!_controller.hasClients) return null;
           if (offset < 0) {
             offset = _controller.position.maxScrollExtent + offset + 1;
           }
           if (duration.inMilliseconds < 1) {
             _controller.jumpTo(offset);
           } else {
-            _controller.animateTo(offset, duration: duration, curve: curve);
+            await _controller.animateTo(offset,
+                duration: duration, curve: curve);
           }
         } else if (delta != null) {
+          if (!_controller.hasClients) return null;
           var offset = _controller.position.pixels + delta;
           if (duration.inMilliseconds < 1) {
             _controller.jumpTo(offset);
           } else {
-            _controller.animateTo(offset, duration: duration, curve: curve);
+            await _controller.animateTo(offset,
+                duration: duration, curve: curve);
           }
         }
     }
@@ -100,6 +104,7 @@ class _ScrollableControlState extends State<ScrollableControl>
 
     if (widget.control.getBool("auto_scroll", false)!) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_controller.hasClients) return;
         _controller.animateTo(
           _controller.position.maxScrollExtent,
           duration: const Duration(seconds: 1),
@@ -107,16 +112,18 @@ class _ScrollableControlState extends State<ScrollableControl>
         );
       });
     }
+    final platform = effectiveTargetPlatform(context);
+    final mobile =
+        platform == TargetPlatform.iOS || platform == TargetPlatform.android;
     return scrollMode != ScrollMode.none
-        ? Scrollbar(
+        ? PlatformScrollbar(
             // todo: create class ScrollBarConfiguration on Py end, for more customizability
             thumbVisibility: (scrollMode == ScrollMode.always ||
-                    (scrollMode == ScrollMode.adaptive &&
-                        !isMobilePlatform())) &&
+                    (scrollMode == ScrollMode.adaptive && !mobile)) &&
                 scrollMode != ScrollMode.hidden,
             thickness: scrollMode == ScrollMode.hidden
                 ? 0
-                : isMobilePlatform()
+                : mobile
                     ? 4.0
                     : null,
             controller: _controller,

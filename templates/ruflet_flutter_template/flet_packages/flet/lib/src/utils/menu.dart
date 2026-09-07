@@ -1,3 +1,4 @@
+import 'material_style_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../models/control.dart';
@@ -30,9 +31,11 @@ MenuStyle? parseMenuStyle(dynamic value, ThemeData theme,
 
   return MenuStyle(
     alignment: parseAlignment(value["alignment"], defaultAlignment),
-    backgroundColor: parseWidgetStateColor(value["bgcolor"], theme,
+    backgroundColor: parseWidgetStateColor(
+        value["bgcolor"], materialStyleTheme(theme),
         defaultColor: defaultBackgroundColor),
-    shadowColor: parseWidgetStateColor(value["shadow_color"], theme,
+    shadowColor: parseWidgetStateColor(
+        value["shadow_color"], materialStyleTheme(theme),
         defaultColor: defaultShadowColor),
     elevation: parseWidgetStateDouble(value["elevation"],
         defaultDouble: defaultElevation),
@@ -40,10 +43,11 @@ MenuStyle? parseMenuStyle(dynamic value, ThemeData theme,
         value["padding"], (jv) => parseEdgeInsets(jv), defaultPadding),
     side: getWidgetStateProperty<BorderSide?>(
         value["side"],
-        (jv) => parseBorderSide(jv, theme,
+        (jv) => parseBorderSide(jv, materialStyleTheme(theme),
             defaultSideColor: theme.colorScheme.outline),
         defaultBorderSide),
-    shape: parseWidgetStateOutlinedBorder(value["shape"], theme,
+    shape: parseWidgetStateOutlinedBorder(
+        value["shape"], materialStyleTheme(theme),
         defaultOutlinedBorder: defaultShape),
     mouseCursor: parseWidgetStateMouseCursor(value["mouse_cursor"],
         defaultMouseCursor: defaultMouseCursor),

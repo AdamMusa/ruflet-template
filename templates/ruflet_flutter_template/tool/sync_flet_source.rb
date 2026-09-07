@@ -22,6 +22,9 @@ class FletSourceSync
   def initialize(template:, source: nil, ref: "HEAD", overlay: nil)
     @template = File.expand_path(template)
     @target = File.join(@template, "flet_packages/flet")
+    [@template, File.dirname(@target), @target].each do |path|
+      raise Error, "Refusing symbolic link: #{path}" if File.symlink?(path)
+    end
     @source = source && File.expand_path(source)
     @ref = ref
     @manifest_path = File.join(@template, "tool/conformance/flet_source_integrity.json")
@@ -79,7 +82,7 @@ class FletSourceSync
     raise Error, "--source (or FLET_UPSTREAM_ROOT) is required for synchronization" unless @source
     dirty = git("status", "--porcelain", "--untracked-files=all", "--", "packages/flet")
     raise Error, "Source packages/flet has uncommitted changes; commit before syncing" unless dirty.empty?
-    ref = git("rev-parse", "--verify", "#{@ref}^{commit}").strip
+    ref = git("rev-parse", "--verify", "--end-of-options", "#{@ref}^{commit}").strip
     tree = git("ls-tree", "-rz", "--full-tree", ref, "--", "packages/flet")
     entries = tree.split("\0").filter_map do |line|
       mode, type, object, path = line.match(/\A(\d+) (\w+) ([0-9a-f]+)\t(.+)\z/m)&.captures

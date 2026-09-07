@@ -74,3 +74,11 @@ export 'src/utils/uri.dart';
 export 'src/utils/widget_state.dart';
 export 'src/widgets/error.dart';
 export 'src/widgets/flet_store_mixin.dart';
+
+export 'src/utils/style_theme.dart';
+export 'src/utils/platform_theme.dart';
+export 'src/utils/input.dart';
+export 'src/utils/material_enums.dart';
+export 'src/utils/material_time.dart';
+export 'src/utils/cupertino_enums.dart';
+export 'src/widgets/platform_control_renderer.dart';

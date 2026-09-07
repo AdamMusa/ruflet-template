@@ -1,9 +1,35 @@
 import 'package:flet/src/widgets/platform_control_renderer.dart';
 import 'package:flet/src/models/page_design.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flet/src/widgets/page_context.dart';
+import 'package:flet/src/widgets/platform_design.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  testWidgets('renderer uses per-view design before a backend exists',
+      (tester) async {
+    Widget tree(PageDesign design, TargetPlatform platform) => Directionality(
+          textDirection: TextDirection.ltr,
+          child: PageContext(
+            themeMode: FletThemeMode.light,
+            brightness: Brightness.light,
+            widgetsDesign: design,
+            targetPlatform: platform,
+            child: PlatformControlRenderer(
+              material: (_) => const Text('Material'),
+              cupertino: (context) =>
+                  Text(effectiveTargetPlatform(context).name),
+            ),
+          ),
+        );
+    await tester.pumpWidget(tree(PageDesign.cupertino, TargetPlatform.iOS));
+    expect(find.text('iOS'), findsOneWidget);
+    await tester.pumpWidget(tree(PageDesign.cupertino, TargetPlatform.macOS));
+    expect(find.text('macOS'), findsOneWidget);
+    await tester.pumpWidget(tree(PageDesign.material, TargetPlatform.android));
+    expect(find.text('Material'), findsOneWidget);
+  });
+
   test('neutral theme mode resolves platform brightness', () {
     expect(FletThemeMode.light.usesLight(Brightness.dark), isTrue);
     expect(FletThemeMode.dark.usesLight(Brightness.light), isFalse);

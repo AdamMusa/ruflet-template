@@ -7,7 +7,7 @@ import '../models/control.dart';
 import '../utils/alignment.dart';
 import '../utils/box.dart';
 import '../utils/colors.dart';
-import '../utils/cupertino_material_style_adapter.dart';
+import '../utils/cupertino_theme.dart';
 import '../utils/edge_insets.dart';
 import '../utils/numbers.dart';
 import '../utils/text.dart';
@@ -33,7 +33,7 @@ class CupertinoControlBadge extends StatelessWidget {
     if (badge?.getBool("label_visible", true) == false) return child;
 
     final label = badge?.buildTextOrWidget("label") ?? Text(value.toString());
-    final styleTheme = materialStyleAdapterFromCupertino(context);
+    final styleTheme = cupertinoStyleTheme(context);
     final smallSize = badge?.getDouble("small_size", 8) ?? 8;
     final largeSize = badge?.getDouble("large_size", 18) ?? 18;
     final padding = badge?.getPadding(
@@ -185,7 +185,7 @@ class _CupertinoControlTooltipState extends State<CupertinoControlTooltip> {
 
   Widget _buildOverlay(BuildContext context) {
     final value = _value;
-    final styleTheme = materialStyleAdapterFromCupertino(context);
+    final styleTheme = cupertinoStyleTheme(context);
     final padding = value is Map
         ? parseEdgeInsets(value["padding"],
             const EdgeInsets.symmetric(horizontal: 10, vertical: 6))!

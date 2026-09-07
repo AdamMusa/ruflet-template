@@ -1,3 +1,4 @@
+import '../utils/material_style_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../models/control.dart';
@@ -9,7 +10,7 @@ import '../utils/text.dart';
 import '../utils/theme.dart';
 import '../widgets/error.dart';
 import 'base_controls.dart';
-import 'list_tile.dart';
+import '../widgets/list_tile_clicks.dart';
 
 class RadioControl extends StatefulWidget {
   final Control control;
@@ -82,7 +83,7 @@ class _RadioControlState extends State<RadioControl> {
     var labelPosition =
         widget.control.getLabelPosition("label_position", LabelPosition.right)!;
     var labelStyle =
-        widget.control.getTextStyle("label_style", Theme.of(context));
+        widget.control.getTextStyle("label_style", materialStyleTheme(Theme.of(context)));
     if (widget.control.disabled && labelStyle != null) {
       labelStyle = labelStyle.apply(color: Theme.of(context).disabledColor);
     }
@@ -98,9 +99,9 @@ class _RadioControlState extends State<RadioControl> {
       splashRadius: widget.control.getDouble("splash_radius"),
       toggleable: widget.control.getBool("toggleable", false)!,
       fillColor:
-          widget.control.getWidgetStateColor("fill_color", Theme.of(context)),
+          widget.control.getWidgetStateColor("fill_color", materialStyleTheme(Theme.of(context))),
       overlayColor: widget.control
-          .getWidgetStateColor("overlay_color", Theme.of(context)),
+          .getWidgetStateColor("overlay_color", materialStyleTheme(Theme.of(context))),
       visualDensity: widget.control.getVisualDensity("visual_density"),
     );
 

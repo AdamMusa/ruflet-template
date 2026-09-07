@@ -1,3 +1,4 @@
+import '../utils/material_style_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
@@ -31,7 +32,7 @@ class MaterialBottomAppBarControl extends StatelessWidget {
       padding: control.getPadding("padding"),
       height: control.getDouble("height"),
       elevation: control.getDouble("elevation"),
-      shape: control.getNotchedShape("shape", theme),
+      shape: control.getNotchedShape("shape", materialStyleTheme(theme)),
       shadowColor: control.getColor("shadow_color", context),
       color: control.getColor("bgcolor", context),
       notchMargin: control.getDouble("notch_margin", 4.0)!,

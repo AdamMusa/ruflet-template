@@ -1,4 +1,6 @@
-import 'package:flutter/material.dart';
+import 'style_theme.dart';
+import 'color_palette.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_highlight/theme_map.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:markdown/markdown.dart' as md;
@@ -25,7 +27,8 @@ md.ExtensionSet? parseMarkdownExtensionSet(String? value,
   }
 }
 
-Map<String, TextStyle> parseMarkdownCodeTheme(dynamic value, ThemeData theme) {
+Map<String, TextStyle> parseMarkdownCodeTheme(
+    dynamic value, FletStyleTheme theme) {
   if (value == null) return {};
   if (value is String) return themeMap[value.toLowerCase()] ?? {};
   if (value is Map<dynamic, dynamic>) {
@@ -53,35 +56,43 @@ MarkdownStyleSheet? parseMarkdownStyleSheet(
   dynamic value,
   BuildContext context, [
   MarkdownStyleSheet? defaultValue,
-  ThemeData? parserTheme,
+  FletStyleTheme? parserTheme,
   MarkdownStyleSheet? baseStyleSheet,
 ]) {
   if (value == null) return null;
-  var theme = parserTheme ?? Theme.of(context);
-  return (baseStyleSheet ?? MarkdownStyleSheet.fromTheme(theme)).copyWith(
+  var theme = parserTheme ?? FletStyleTheme.of(context);
+  return (baseStyleSheet ??
+          MarkdownStyleSheet(
+              p: theme.textStyle('bodymedium') ??
+                  DefaultTextStyle.of(context).style))
+      .copyWith(
     a: parseTextStyle(
-        value["a_text_style"], theme, const TextStyle(color: Colors.blue))!,
-    p: parseTextStyle(value["p_text_style"], theme, theme.textTheme.bodyMedium),
+        value["a_text_style"], theme, const TextStyle(color: FletColors.blue))!,
+    p: parseTextStyle(
+        value["p_text_style"], theme, theme.textStyle('bodymedium')),
     pPadding: parsePadding(value["p_padding"], EdgeInsets.zero)!,
-    code: parseTextStyle(value["code_text_style"], theme,
-        theme.textTheme.bodyMedium!.copyWith(fontFamily: "monospace")),
+    code: parseTextStyle(
+        value["code_text_style"],
+        theme,
+        (theme.textStyle('bodymedium') ?? DefaultTextStyle.of(context).style)
+            .copyWith(fontFamily: "monospace")),
     h1: parseTextStyle(value["h1_text_style"], theme) ??
-        theme.textTheme.headlineSmall,
+        theme.textStyle('headlinesmall'),
     h1Padding: parsePadding(value["h1_padding"], EdgeInsets.zero)!,
     h2: parseTextStyle(
-        value["h2_text_style"], theme, theme.textTheme.titleLarge),
+        value["h2_text_style"], theme, theme.textStyle('titlelarge')),
     h2Padding: parsePadding(value["h2_padding"], EdgeInsets.zero)!,
     h3: parseTextStyle(
-        value["h3_text_style"], theme, theme.textTheme.titleMedium),
+        value["h3_text_style"], theme, theme.textStyle('titlemedium')),
     h3Padding: parsePadding(value["h3_padding"], EdgeInsets.zero)!,
     h4: parseTextStyle(
-        value["h4_text_style"], theme, theme.textTheme.bodyLarge),
+        value["h4_text_style"], theme, theme.textStyle('bodylarge')),
     h4Padding: parsePadding(value["h4_padding"], EdgeInsets.zero)!,
     h5: parseTextStyle(
-        value["h5_text_style"], theme, theme.textTheme.bodyLarge),
+        value["h5_text_style"], theme, theme.textStyle('bodylarge')),
     h5Padding: parsePadding(value["h5_padding"], EdgeInsets.zero)!,
     h6: parseTextStyle(
-        value["h6_text_style"], theme, theme.textTheme.bodyLarge),
+        value["h6_text_style"], theme, theme.textStyle('bodylarge')),
     h6Padding: parsePadding(value["h6_padding"], EdgeInsets.zero)!,
     em: parseTextStyle(value["em_text_style"], theme,
         const TextStyle(fontStyle: FontStyle.italic))!,
@@ -90,26 +101,30 @@ MarkdownStyleSheet? parseMarkdownStyleSheet(
     del: parseTextStyle(value["del_text_style"], theme,
         const TextStyle(decoration: TextDecoration.lineThrough)),
     blockquote: parseTextStyle(
-        value["blockquote_text_style"], theme, theme.textTheme.bodyMedium),
+        value["blockquote_text_style"], theme, theme.textStyle('bodymedium')),
     img: parseTextStyle(
-        value["img_text_style"], theme, theme.textTheme.bodyMedium),
-    checkbox: parseTextStyle(value["checkbox_text_style"], theme,
-        theme.textTheme.bodyMedium!.copyWith(color: theme.primaryColor)),
+        value["img_text_style"], theme, theme.textStyle('bodymedium')),
+    checkbox: parseTextStyle(
+        value["checkbox_text_style"],
+        theme,
+        (theme.textStyle('bodymedium') ?? DefaultTextStyle.of(context).style)
+            .copyWith(color: theme.color('primary'))),
     blockSpacing: parseDouble(value["block_spacing"], 8.0)!,
     listIndent: parseDouble(value["list_indent"], 24.0)!,
     listBullet: parseTextStyle(
-        value["list_bullet_text_style"], theme, theme.textTheme.bodyMedium),
+        value["list_bullet_text_style"], theme, theme.textStyle('bodymedium')),
     listBulletPadding: parsePadding(
         value["list_bullet_padding"], const EdgeInsets.only(right: 4))!,
     tableHead: parseTextStyle(value["table_head_text_style"], theme,
         const TextStyle(fontWeight: FontWeight.w600))!,
     tableBody: parseTextStyle(
-        value["table_body_text_style"], theme, theme.textTheme.bodyMedium),
+        value["table_body_text_style"], theme, theme.textStyle('bodymedium')),
     tableHeadAlign:
         parseTextAlign(value["table_head_text_align"], TextAlign.center)!,
     tablePadding: parsePadding(
         value["table_padding"], const EdgeInsets.only(bottom: 4.0))!,
-    tableBorder: TableBorder.all(color: theme.dividerColor),
+    tableBorder: TableBorder.all(
+        color: (theme.color('outlinevariant') ?? const Color(0x33000000))),
     tableColumnWidth: const FlexColumnWidth(),
     tableCellsPadding: parsePadding(
         value["table_cells_padding"], const EdgeInsets.fromLTRB(16, 8, 16, 8))!,
@@ -121,7 +136,7 @@ MarkdownStyleSheet? parseMarkdownStyleSheet(
         value["blockquote_decoration"],
         context,
         BoxDecoration(
-            color: Colors.blue.shade100,
+            color: (theme.color('primarycontainer') ?? const Color(0xffe3f2fd)),
             borderRadius: BorderRadius.circular(2.0)))!,
     codeblockPadding:
         parsePadding(value["codeblock_padding"], const EdgeInsets.all(8.0))!,
@@ -129,14 +144,17 @@ MarkdownStyleSheet? parseMarkdownStyleSheet(
         value["codeblock_decoration"],
         context,
         BoxDecoration(
-            color: theme.cardTheme.color ?? theme.cardColor,
+            color: theme.color('surfacecontainer'),
             borderRadius: BorderRadius.circular(2.0)))!,
     horizontalRuleDecoration: parseBoxDecoration(
         value["horizontal_rule_decoration"],
         context,
         BoxDecoration(
             border: Border(
-                top: BorderSide(width: 5.0, color: theme.dividerColor))))!,
+                top: BorderSide(
+                    width: 5.0,
+                    color: (theme.color('outlinevariant') ??
+                        const Color(0x33000000))))))!,
     blockquoteAlign:
         parseWrapAlignment(value["blockquote_alignment"], WrapAlignment.start)!,
     codeblockAlign:
@@ -158,7 +176,7 @@ MarkdownStyleSheet? parseMarkdownStyleSheet(
 
 extension MarkdownParsers on Control {
   Map<String, TextStyle> getMarkdownCodeTheme(
-      String propertyName, ThemeData theme) {
+      String propertyName, FletStyleTheme theme) {
     return parseMarkdownCodeTheme(get(propertyName), theme);
   }
 
@@ -170,7 +188,7 @@ extension MarkdownParsers on Control {
   MarkdownStyleSheet? getMarkdownStyleSheet(
       String propertyName, BuildContext context,
       [MarkdownStyleSheet? defaultValue,
-      ThemeData? parserTheme,
+      FletStyleTheme? parserTheme,
       MarkdownStyleSheet? baseStyleSheet]) {
     return parseMarkdownStyleSheet(
         get(propertyName), context, defaultValue, parserTheme, baseStyleSheet);

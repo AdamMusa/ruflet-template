@@ -1,9 +1,10 @@
+import '../utils/material_enums.dart';
+import '../utils/material_style_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../models/control.dart';
 import '../utils/colors.dart';
 import '../utils/edge_insets.dart';
-import '../utils/misc.dart';
 import '../utils/mouse.dart';
 import '../utils/numbers.dart';
 import 'base_controls.dart';
@@ -82,7 +83,7 @@ class _SliderControlState extends State<SliderControl> {
         activeColor: widget.control.getColor("active_color", context),
         inactiveColor: widget.control.getColor("inactive_color", context),
         overlayColor: widget.control
-            .getWidgetStateColor("overlay_color", Theme.of(context)),
+            .getWidgetStateColor("overlay_color", materialStyleTheme(Theme.of(context))),
         allowedInteraction: widget.control.getSliderInteraction("interaction"),
         thumbColor: widget.control.getColor("thumb_color", context),
         padding: widget.control.getPadding("padding"),

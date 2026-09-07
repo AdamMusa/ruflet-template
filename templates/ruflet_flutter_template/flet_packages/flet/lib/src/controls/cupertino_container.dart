@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart' show Theme;
 
 import '../extensions/control.dart';
 import '../models/control.dart';
@@ -8,6 +7,7 @@ import '../utils/animations.dart';
 import '../utils/borders.dart';
 import '../utils/box.dart';
 import '../utils/colors.dart';
+import '../utils/cupertino_theme.dart';
 import '../utils/edge_insets.dart';
 import '../utils/events.dart';
 import '../utils/gradient.dart';
@@ -39,7 +39,7 @@ class CupertinoContainerControl extends StatelessWidget {
     final borderRadius = control.getBorderRadius("border_radius");
     final clipBehavior = control.getClipBehavior(
         "clip_behavior", borderRadius != null ? Clip.antiAlias : Clip.none)!;
-    final theme = Theme.of(context);
+    final theme = cupertinoStyleTheme(context);
     final decoration = boxDecorationFromDetails(
       shape: control.getBoxShape("shape", BoxShape.rectangle)!,
       color: control.getColor("bgcolor", context),
@@ -116,8 +116,7 @@ class CupertinoContainerControl extends StatelessWidget {
               child: BackdropFilter(filter: blur, child: result))
           : ClipRect(child: BackdropFilter(filter: blur, child: result));
     }
-    final colorFilter =
-        control.getColorFilter("color_filter", Theme.of(context));
+    final colorFilter = control.getColorFilter("color_filter", theme);
     if (colorFilter != null) {
       result = ColorFiltered(colorFilter: colorFilter, child: result);
     }

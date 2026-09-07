@@ -1,13 +1,13 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
 import '../models/control.dart';
 import '../utils/borders.dart';
 import '../utils/colors.dart';
+import '../utils/cupertino_theme.dart';
 import '../utils/edge_insets.dart';
 import '../utils/numbers.dart';
-import '../utils/theme.dart';
+import '../utils/platform_theme.dart';
 import 'base_controls.dart';
 
 class CupertinoAppBarControl extends StatelessWidget
@@ -29,7 +29,7 @@ class CupertinoAppBarControl extends StatelessWidget
         control.getBool("automatically_imply_title", true)!;
     var transitionBetweenRoutes =
         control.getBool("transition_between_routes", true)!;
-    var border = control.getBorder("border", Theme.of(context));
+    var border = control.getBorder("border", cupertinoStyleTheme(context));
     var previousPageTitle = control.getString("previous_page_title");
     var padding = control.getEdgeInsetsDirectional("padding");
     var backgroundColor = control.getColor("bgcolor", context);
@@ -83,7 +83,11 @@ class CupertinoAppBarControl extends StatelessWidget
 
   @override
   Size get preferredSize {
-    return const Size.fromHeight(44);
+    // Ask the SDK rather than duplicating its large-title height constants.
+    return control.getBool("large", false)!
+        ? const CupertinoNavigationBar.large(largeTitle: SizedBox())
+            .preferredSize
+        : const CupertinoNavigationBar().preferredSize;
   }
 
   @override

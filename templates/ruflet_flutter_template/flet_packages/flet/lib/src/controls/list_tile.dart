@@ -1,3 +1,6 @@
+import '../utils/material_enums.dart';
+import '../utils/material_style_theme.dart';
+import '../widgets/list_tile_clicks.dart';
 import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
@@ -6,7 +9,6 @@ import '../utils/borders.dart';
 import '../utils/colors.dart';
 import '../utils/edge_insets.dart';
 import '../utils/launch_url.dart';
-import '../utils/misc.dart';
 import '../utils/mouse.dart';
 import '../utils/numbers.dart';
 import '../utils/text.dart';
@@ -14,22 +16,6 @@ import '../utils/theme.dart';
 import '../widgets/flet_store_mixin.dart';
 import 'base_controls.dart';
 
-class ListTileClicks extends InheritedWidget {
-  const ListTileClicks({
-    super.key,
-    required this.notifier,
-    required super.child,
-  });
-
-  final ListTileClickNotifier notifier;
-
-  static ListTileClicks? of(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<ListTileClicks>();
-  }
-
-  @override
-  bool updateShouldNotify(ListTileClicks oldWidget) => true;
-}
 
 class ListTileControl extends StatelessWidget with FletStoreMixin {
   final Control control;
@@ -95,13 +81,13 @@ class ListTileControl extends StatelessWidget with FletStoreMixin {
       textColor: control.getColor("text_color", context),
       mouseCursor: control.getMouseCursor("mouse_cursor"),
       visualDensity: control.getVisualDensity("visual_density"),
-      shape: control.getShape("shape", Theme.of(context)),
+      shape: control.getShape("shape", materialStyleTheme(Theme.of(context))),
       titleTextStyle:
-          control.getTextStyle("title_text_style", Theme.of(context)),
+          control.getTextStyle("title_text_style", materialStyleTheme(Theme.of(context))),
       leadingAndTrailingTextStyle: control.getTextStyle(
-          "leading_and_trailing_text_style", Theme.of(context)),
+          "leading_and_trailing_text_style", materialStyleTheme(Theme.of(context))),
       subtitleTextStyle:
-          control.getTextStyle("subtitle_text_style", Theme.of(context)),
+          control.getTextStyle("subtitle_text_style", materialStyleTheme(Theme.of(context))),
       titleAlignment: control.getListTileTitleAlignment("title_alignment"),
       style: control.getListTileStyle("style"),
       onFocusChange: (bool hasFocus) {
@@ -120,11 +106,5 @@ class ListTileControl extends StatelessWidget with FletStoreMixin {
     tile = Material(type: MaterialType.transparency, child: tile);
 
     return LayoutControl(control: control, child: tile);
-  }
-}
-
-class ListTileClickNotifier extends ChangeNotifier {
-  void onClick() {
-    notifyListeners();
   }
 }

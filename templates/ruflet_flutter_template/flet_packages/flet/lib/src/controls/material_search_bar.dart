@@ -1,3 +1,4 @@
+import '../utils/material_style_theme.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
@@ -161,10 +162,10 @@ class _SearchBarControlState extends State<MaterialSearchBarControl> {
     Widget anchor = SearchAnchor(
         searchController: _controller,
         headerHintStyle:
-            widget.control.getTextStyle("view_hint_text_style", theme),
+            widget.control.getTextStyle("view_hint_text_style", materialStyleTheme(theme)),
         headerTextStyle:
-            widget.control.getTextStyle("view_header_text_style", theme),
-        viewSide: widget.control.getBorderSide("view_side", theme),
+            widget.control.getTextStyle("view_header_text_style", materialStyleTheme(theme)),
+        viewSide: widget.control.getBorderSide("view_side", materialStyleTheme(theme)),
         viewPadding: widget.control.getPadding("view_padding"),
         viewBarPadding: widget.control.getPadding("view_bar_padding"),
         shrinkWrap: widget.control.getBool("shrink_wrap"),
@@ -176,7 +177,7 @@ class _SearchBarControlState extends State<MaterialSearchBarControl> {
         headerHeight: widget.control.getDouble("view_header_height"),
         viewConstraints:
             widget.control.getBoxConstraints("view_size_constraints"),
-        viewShape: widget.control.getShape("view_shape", theme),
+        viewShape: widget.control.getShape("view_shape", materialStyleTheme(theme)),
         viewTrailing: widget.control.buildWidgets("view_trailing"),
         viewLeading: widget.control.buildWidget("view_leading"),
         viewOnSubmitted: onSubmit
@@ -203,22 +204,22 @@ class _SearchBarControlState extends State<MaterialSearchBarControl> {
             hintText: widget.control.getString("bar_hint_text"),
             elevation: widget.control.getWidgetStateDouble("bar_elevation"),
             shape:
-                widget.control.getWidgetStateOutlinedBorder("bar_shape", theme),
+                widget.control.getWidgetStateOutlinedBorder("bar_shape", materialStyleTheme(theme)),
             padding: widget.control.getWidgetStatePadding("bar_padding"),
             constraints:
                 widget.control.getBoxConstraints("bar_size_constraints"),
             textStyle:
-                widget.control.getWidgetStateTextStyle("bar_text_style", theme),
+                widget.control.getWidgetStateTextStyle("bar_text_style", materialStyleTheme(theme)),
             hintStyle: widget.control
-                .getWidgetStateTextStyle("bar_hint_text_style", theme),
+                .getWidgetStateTextStyle("bar_hint_text_style", materialStyleTheme(theme)),
             shadowColor:
-                widget.control.getWidgetStateColor("bar_shadow_color", theme),
+                widget.control.getWidgetStateColor("bar_shadow_color", materialStyleTheme(theme)),
             side: widget.control
-                .getWidgetStateBorderSide("bar_border_side", theme),
+                .getWidgetStateBorderSide("bar_border_side", materialStyleTheme(theme)),
             backgroundColor:
-                widget.control.getWidgetStateColor("bar_bgcolor", theme),
+                widget.control.getWidgetStateColor("bar_bgcolor", materialStyleTheme(theme)),
             overlayColor:
-                widget.control.getWidgetStateColor("bar_overlay_color", theme),
+                widget.control.getWidgetStateColor("bar_overlay_color", materialStyleTheme(theme)),
             scrollPadding: widget.control
                 .getPadding("bar_scroll_padding", const EdgeInsets.all(20.0))!,
             leading: widget.control.buildWidget("bar_leading"),

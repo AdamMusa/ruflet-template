@@ -1,3 +1,5 @@
+import '../utils/material_enums.dart';
+import '../utils/material_style_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
@@ -5,7 +7,6 @@ import '../models/control.dart';
 import '../utils/borders.dart';
 import '../utils/colors.dart';
 import '../utils/edge_insets.dart';
-import '../utils/misc.dart';
 import '../utils/numbers.dart';
 import '../utils/time.dart';
 import 'base_controls.dart';
@@ -49,10 +50,10 @@ class _NavigationBarControlState extends State<MaterialNavigationBarControl> {
         labelPadding: widget.control.getPadding("label_padding"),
         shadowColor: widget.control.getColor("shadow_color", context),
         overlayColor: widget.control
-            .getWidgetStateColor("overlay_color", Theme.of(context)),
+            .getWidgetStateColor("overlay_color", materialStyleTheme(Theme.of(context))),
         indicatorColor: widget.control.getColor("indicator_color", context),
         indicatorShape:
-            widget.control.getShape("indicator_shape", Theme.of(context)),
+            widget.control.getShape("indicator_shape", materialStyleTheme(Theme.of(context))),
         backgroundColor: widget.control.getColor("bgcolor", context),
         selectedIndex: _selectedIndex,
         onDestinationSelected:

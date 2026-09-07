@@ -1,9 +1,9 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
+import '../widgets/platform_design.dart';
 
 import '../models/control.dart';
 import '../utils/colors.dart';
-import '../utils/cupertino_material_style_adapter.dart';
+import '../utils/cupertino_theme.dart';
 import '../utils/numbers.dart';
 import '../utils/text.dart';
 import 'base_controls.dart';
@@ -15,7 +15,7 @@ class CupertinoTextControl extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = materialStyleAdapterFromCupertino(context);
+    final theme = cupertinoStyleTheme(context);
     final text = control.getString("value", "")!;
     final spans = parseTextSpans(
       control.children("spans"),
@@ -25,10 +25,7 @@ class CupertinoTextControl extends StatelessWidget {
       },
     );
     var style = control.getTextStyle("style", theme);
-    final themeStyle = _cupertinoThemeStyle(
-      CupertinoTheme.of(context).textTheme,
-      control.getString("theme_style"),
-    );
+    final themeStyle = theme.textStyle(control.getString("theme_style") ?? "");
     if (style == null && themeStyle != null) {
       style = themeStyle;
     } else if (style != null && themeStyle != null) {
@@ -40,7 +37,9 @@ class CupertinoTextControl extends StatelessWidget {
       variations
           .add(FontVariation('wght', parseDouble(fontWeight.substring(1), 0)!));
     }
-    style = (style ?? CupertinoTheme.of(context).textTheme.textStyle).copyWith(
+    // Let native parents supply their role-specific typography (navigation
+    // titles, list subtitles, buttons). Explicit DSL styles still override it.
+    style = (style ?? const TextStyle()).copyWith(
       overflow: control.getTextOverflow("overflow"),
       fontSize: control.getDouble("size"),
       fontWeight: parseFontWeight(fontWeight),
@@ -115,23 +114,6 @@ class CupertinoTextControl extends StatelessWidget {
   }
 }
 
-TextStyle? _cupertinoThemeStyle(
-    CupertinoTextThemeData theme, String? styleName) {
-  return switch (styleName?.toLowerCase()) {
-    "displaylarge" || "headlinelarge" => theme.navLargeTitleTextStyle,
-    "displaymedium" ||
-    "displaysmall" ||
-    "headlinemedium" ||
-    "headlinesmall" ||
-    "titlelarge" =>
-      theme.navTitleTextStyle,
-    "titlesmall" || "labellarge" => theme.actionTextStyle,
-    "labelmedium" || "labelsmall" || "bodysmall" => theme.tabLabelTextStyle,
-    "titlemedium" || "bodylarge" || "bodymedium" => theme.textStyle,
-    _ => null,
-  };
-}
-
 class _CupertinoSelectableText extends StatefulWidget {
   final String fullText;
   final Color cursorColor;
@@ -167,7 +149,7 @@ class _CupertinoSelectableTextState extends State<_CupertinoSelectableText> {
 
   @override
   Widget build(BuildContext context) {
-    final controls = defaultTargetPlatform == TargetPlatform.macOS
+    final controls = effectiveTargetPlatform(context) == TargetPlatform.macOS
         ? cupertinoDesktopTextSelectionHandleControls
         : cupertinoTextSelectionHandleControls;
     return DefaultSelectionStyle(

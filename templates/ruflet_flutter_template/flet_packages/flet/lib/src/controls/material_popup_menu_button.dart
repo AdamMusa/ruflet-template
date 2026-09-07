@@ -1,3 +1,5 @@
+import '../utils/material_enums.dart';
+import '../utils/material_style_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
@@ -39,7 +41,7 @@ class MaterialPopupMenuButtonControl extends StatelessWidget {
         clipBehavior: control.getClipBehavior("clip_behavior", Clip.none)!,
         shape: control.getShape(
           "shape",
-          Theme.of(context),
+          materialStyleTheme(Theme.of(context)),
         ),
         constraints: control.getBoxConstraints("size_constraints"),
         style: control.getButtonStyle("style", Theme.of(context)),

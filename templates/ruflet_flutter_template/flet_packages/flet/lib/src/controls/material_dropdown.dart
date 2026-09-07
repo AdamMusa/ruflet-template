@@ -1,3 +1,4 @@
+import '../utils/material_style_theme.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -112,7 +113,7 @@ class _DropdownControlState extends State<MaterialDropdownControl> {
     var borderWidth = widget.control.getDouble("border_width");
     var focusedBorderWidth = widget.control.getDouble("focused_border_width");
     var menuWidth = widget.control.getDouble("menu_width");
-    var bgColor = widget.control.getWidgetStateColor("bgcolor", theme);
+    var bgColor = widget.control.getWidgetStateColor("bgcolor", materialStyleTheme(theme));
     var elevation = widget.control.getWidgetStateDouble("elevation");
 
     var inputBorder = widget.control
@@ -168,9 +169,9 @@ class _DropdownControlState extends State<MaterialDropdownControl> {
     InputDecorationTheme inputDecorationTheme = InputDecorationTheme(
       filled: widget.control.getBool("filled", false)!,
       fillColor: fillColor,
-      hintStyle: widget.control.getTextStyle("hint_style", theme),
-      errorStyle: widget.control.getTextStyle("error_style", theme),
-      helperStyle: widget.control.getTextStyle("helper_style", theme),
+      hintStyle: widget.control.getTextStyle("hint_style", materialStyleTheme(theme)),
+      errorStyle: widget.control.getTextStyle("error_style", materialStyleTheme(theme)),
+      helperStyle: widget.control.getTextStyle("helper_style", materialStyleTheme(theme)),
       border: border,
       enabledBorder: border,
       focusedBorder: focusedBorder,
@@ -178,7 +179,7 @@ class _DropdownControlState extends State<MaterialDropdownControl> {
       contentPadding: widget.control.getPadding("content_padding"),
     );
 
-    TextStyle? textStyle = widget.control.getTextStyle("text_style", theme);
+    TextStyle? textStyle = widget.control.getTextStyle("text_style", materialStyleTheme(theme));
     if (textSize != null || color != null) {
       textStyle =
           (textStyle ?? theme.dropdownMenuTheme.textStyle ?? const TextStyle())
@@ -291,7 +292,7 @@ class _DropdownControlState extends State<MaterialDropdownControl> {
       enableSearch: widget.control.getBool("enable_search", true)!,
       menuHeight: widget.control.getDouble("menu_height"),
       label: widget.control.buildTextOrWidget("label",
-          textStyle: widget.control.getTextStyle("label_style", theme)),
+          textStyle: widget.control.getTextStyle("label_style", materialStyleTheme(theme))),
       leadingIcon: widget.control.buildIconOrWidget("leading_icon"),
       trailingIcon: widget.control.buildIconOrWidget("trailing_icon"),
       selectedTrailingIcon:

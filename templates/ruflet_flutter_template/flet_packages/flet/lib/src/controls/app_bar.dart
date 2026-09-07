@@ -1,3 +1,4 @@
+import '../utils/material_style_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
@@ -45,11 +46,11 @@ class AppBarControl extends StatelessWidget implements PreferredSizeWidget {
           control.getBool("exclude_header_semantics", false)!,
       clipBehavior: control.getClipBehavior("clip_behavior"),
       titleTextStyle:
-          control.getTextStyle("title_text_style", Theme.of(context)),
-      shape: control.getShape("shape", Theme.of(context)),
+          control.getTextStyle("title_text_style", materialStyleTheme(Theme.of(context))),
+      shape: control.getShape("shape", materialStyleTheme(Theme.of(context))),
       toolbarOpacity: control.getDouble("toolbar_opacity", 1)!,
       toolbarTextStyle:
-          control.getTextStyle("toolbar_text_style", Theme.of(context)),
+          control.getTextStyle("toolbar_text_style", materialStyleTheme(Theme.of(context))),
       actionsPadding: control.getPadding("actions_padding"),
     );
 

@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 
 import '../models/control.dart';
+import '../utils/cupertino_enums.dart';
 import '../utils/alignment.dart';
 import '../utils/colors.dart';
 import '../utils/numbers.dart';

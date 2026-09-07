@@ -1,7 +1,9 @@
+import 'style_theme.dart';
 import 'dart:math';
 
 import 'package:flutter/gestures.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 
 import '../models/control.dart';
 import '../utils/box.dart';
@@ -12,27 +14,8 @@ import 'enums.dart';
 import 'launch_url.dart';
 import 'widget_state.dart';
 
-TextStyle? parseTextThemeStyle(String? styleName, BuildContext context) {
-  var textTheme = Theme.of(context).textTheme;
-  final styles = <String, TextStyle?>{
-    "displaylarge": textTheme.displayLarge,
-    "displaymedium": textTheme.displayMedium,
-    "displaysmall": textTheme.displaySmall,
-    "headlinelarge": textTheme.headlineLarge,
-    "headlinemedium": textTheme.headlineMedium,
-    "headlinesmall": textTheme.headlineSmall,
-    "titlelarge": textTheme.titleLarge,
-    "titlemedium": textTheme.titleMedium,
-    "titlesmall": textTheme.titleSmall,
-    "labellarge": textTheme.labelLarge,
-    "labelmedium": textTheme.labelMedium,
-    "labelsmall": textTheme.labelSmall,
-    "bodylarge": textTheme.bodyLarge,
-    "bodymedium": textTheme.bodyMedium,
-    "bodysmall": textTheme.bodySmall,
-  };
-  return styles[styleName?.toLowerCase()];
-}
+TextStyle? parseTextThemeStyle(String? styleName, BuildContext context) =>
+    styleName == null ? null : FletStyleTheme.of(context).textStyle(styleName);
 
 FontWeight? parseFontWeight(String? weightName, [FontWeight? defaultWeight]) {
   if (weightName == null) return defaultWeight;
@@ -52,7 +35,7 @@ FontWeight? parseFontWeight(String? weightName, [FontWeight? defaultWeight]) {
   return weights[weightName.toLowerCase()] ?? defaultWeight;
 }
 
-List<TextSpan> parseTextSpans(List<Control> spans, ThemeData theme,
+List<TextSpan> parseTextSpans(List<Control> spans, FletStyleTheme theme,
     [void Function(Control, String, [dynamic eventData])? sendControlEvent]) {
   return spans
       .map((span) => parseInlineSpan(span, theme, sendControlEvent))
@@ -60,7 +43,7 @@ List<TextSpan> parseTextSpans(List<Control> spans, ThemeData theme,
       .toList();
 }
 
-TextSpan? parseInlineSpan(Control span, ThemeData theme,
+TextSpan? parseInlineSpan(Control span, FletStyleTheme theme,
     [void Function(Control, String, [dynamic eventData])? sendControlEvent]) {
   span.notifyParent = true;
   var onClick = span.getBool("on_click", false)!;
@@ -147,7 +130,7 @@ List<TextDecoration> parseTextDecorations(dynamic decorationValue) {
   return decorations;
 }
 
-TextStyle? parseTextStyle(dynamic value, ThemeData theme,
+TextStyle? parseTextStyle(dynamic value, FletStyleTheme theme,
     [TextStyle? defaultValue]) {
   if (value == null) return defaultValue;
 
@@ -179,7 +162,7 @@ TextStyle? parseTextStyle(dynamic value, ThemeData theme,
 }
 
 WidgetStateProperty<TextStyle?>? parseWidgetStateTextStyle(
-    dynamic value, ThemeData theme,
+    dynamic value, FletStyleTheme theme,
     {TextStyle? defaultTextStyle,
     WidgetStateProperty<TextStyle?>? defaultValue}) {
   if (value == null) return defaultValue;
@@ -217,7 +200,7 @@ TextSelection? parseTextSelection(
 }
 
 extension TextParsers on Control {
-  TextStyle? getTextStyle(String propertyName, ThemeData theme,
+  TextStyle? getTextStyle(String propertyName, FletStyleTheme theme,
       [TextStyle? defaultValue]) {
     return parseTextStyle(get(propertyName), theme, defaultValue);
   }
@@ -262,7 +245,7 @@ extension TextParsers on Control {
   }
 
   WidgetStateProperty<TextStyle?>? getWidgetStateTextStyle(
-      String propertyName, ThemeData theme,
+      String propertyName, FletStyleTheme theme,
       {TextStyle? defaultTextStyle,
       WidgetStateProperty<TextStyle?>? defaultValue}) {
     return parseWidgetStateTextStyle(get(propertyName), theme,

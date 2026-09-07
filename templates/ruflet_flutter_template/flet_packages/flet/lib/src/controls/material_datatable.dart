@@ -1,3 +1,4 @@
+import '../utils/material_style_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
@@ -24,11 +25,11 @@ class MaterialDataTableControl extends StatelessWidget {
 
     var theme = Theme.of(context);
     var bgcolor = control.getString("bgcolor");
-    var border = control.getBorder("border", theme);
+    var border = control.getBorder("border", materialStyleTheme(theme));
     var borderRadius = control.getBorderRadius("border_radius");
-    var gradient = control.getGradient("gradient", theme);
-    var horizontalLines = control.getBorderSide("horizontal_lLines", theme);
-    var verticalLines = control.getBorderSide("vertical_lines", theme);
+    var gradient = control.getGradient("gradient", materialStyleTheme(theme));
+    var horizontalLines = control.getBorderSide("horizontal_lLines", materialStyleTheme(theme));
+    var verticalLines = control.getBorderSide("vertical_lines", materialStyleTheme(theme));
     var defaultDecoration = theme.dataTableTheme.decoration as BoxDecoration? ??
         const BoxDecoration();
 
@@ -39,7 +40,7 @@ class MaterialDataTableControl extends StatelessWidget {
         borderRadius != null ||
         gradient != null) {
       decoration = defaultDecoration.copyWith(
-          color: parseColor(bgcolor, theme),
+          color: parseColor(bgcolor, materialStyleTheme(theme)),
           border: border,
           borderRadius: borderRadius,
           gradient: gradient);
@@ -55,13 +56,13 @@ class MaterialDataTableControl extends StatelessWidget {
       clipBehavior: parseClip(control.getString("clip_behavior"), Clip.none)!,
       checkboxHorizontalMargin: control.getDouble("checkbox_horizontal_margin"),
       columnSpacing: control.getDouble("column_spacing"),
-      dataRowColor: control.getWidgetStateColor("data_row_color", theme),
+      dataRowColor: control.getWidgetStateColor("data_row_color", materialStyleTheme(theme)),
       dataRowMinHeight: control.getDouble("data_row_min_height"),
       dataRowMaxHeight: control.getDouble("data_row_max_height"),
-      dataTextStyle: control.getTextStyle("data_text_style", theme),
-      headingRowColor: control.getWidgetStateColor("heading_row_color", theme),
+      dataTextStyle: control.getTextStyle("data_text_style", materialStyleTheme(theme)),
+      headingRowColor: control.getWidgetStateColor("heading_row_color", materialStyleTheme(theme)),
       headingRowHeight: control.getDouble("heading_row_height"),
-      headingTextStyle: control.getTextStyle("heading_text_style", theme),
+      headingTextStyle: control.getTextStyle("heading_text_style", materialStyleTheme(theme)),
       dividerThickness: control.getDouble("divider_thickness"),
       horizontalMargin: control.getDouble("horizontal_margin"),
       showBottomBorder: control.getBool("show_bottom_border", false)!,
@@ -93,7 +94,7 @@ class MaterialDataTableControl extends StatelessWidget {
         return DataRow(
           key: ValueKey(row.id),
           selected: row.getBool("selected", false)!,
-          color: row.getWidgetStateColor("color", theme),
+          color: row.getWidgetStateColor("color", materialStyleTheme(theme)),
           onSelectChanged: row.getBool("on_select_change", false)!
               ? (selected) => row.triggerEvent("select_change", selected)
               : null,

@@ -42,8 +42,7 @@ Future<void> openWebBrowser(
     Uri.parse(urlObj.url),
     mode: resolvedMode,
     webViewConfiguration: webViewConfiguration ?? const WebViewConfiguration(),
-    browserConfiguration:
-        browserConfiguration ?? const BrowserConfiguration(),
+    browserConfiguration: browserConfiguration ?? const BrowserConfiguration(),
     webOnlyWindowName: target,
   );
 }

@@ -1323,4 +1323,4 @@ List<IconData> cupertinoIcons = [
   CupertinoIcons.zoom_in,
   CupertinoIcons.zoom_out,
   CupertinoIcons.zzz,
-  ];
+];

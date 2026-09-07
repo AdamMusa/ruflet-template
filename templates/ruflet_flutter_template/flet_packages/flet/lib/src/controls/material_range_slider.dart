@@ -1,3 +1,4 @@
+import '../utils/material_style_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../models/control.dart';
@@ -60,7 +61,7 @@ class _SliderControlState extends State<MaterialRangeSliderControl> {
         inactiveColor: widget.control.getColor("inactive_color", context),
         mouseCursor: widget.control.getWidgetStateMouseCursor("mouse_cursor"),
         overlayColor: widget.control
-            .getWidgetStateColor("overlay_color", Theme.of(context)),
+            .getWidgetStateColor("overlay_color", materialStyleTheme(Theme.of(context))),
         onChanged: !widget.control.disabled
             ? (RangeValues newValues) {
                 onChange(newValues.start, newValues.end);

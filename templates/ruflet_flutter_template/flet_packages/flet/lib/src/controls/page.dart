@@ -31,7 +31,7 @@ import '../utils/platform_utils_web.dart'
     if (dart.library.io) "../utils/platform_utils_non_web.dart";
 import '../utils/session_store_web.dart'
     if (dart.library.io) "../utils/session_store_non_web.dart";
-import '../utils/theme.dart';
+import '../utils/platform_theme.dart';
 import '../utils/time.dart';
 import '../utils/user_fonts.dart';
 import '../widgets/animated_transition_page.dart';
@@ -515,29 +515,6 @@ class _PageControlState extends State<PageControl> with WidgetsBindingObserver {
 
     var windowTitle = control.getString("title", "")!;
 
-    var newLightTheme = control.getTheme("theme", context, Brightness.light);
-    var newDarkTheme = control.getString("dark_theme") == null
-        ? control.getTheme("theme", context, Brightness.dark)
-        : control.getTheme("dark_theme", context, Brightness.dark);
-
-    var lightTheme = control.get("_lightTheme");
-    if (lightTheme == null || newLightTheme != lightTheme) {
-      control.updateProperties({"_lightTheme": newLightTheme}, python: false);
-      lightTheme = newLightTheme;
-    }
-
-    var darkTheme = control.get("_darkTheme");
-    if (darkTheme == null || newDarkTheme != darkTheme) {
-      control.updateProperties({"_darkTheme": newDarkTheme}, python: false);
-      darkTheme = newDarkTheme;
-    }
-
-    var cupertinoTheme = themeMode.usesLight(brightness)
-        ? control.getCupertinoTheme("theme", context, Brightness.light)
-        : control.getString("dark_theme") != null
-            ? control.getCupertinoTheme("dark_theme", context, Brightness.dark)
-            : control.getCupertinoTheme("theme", context, Brightness.dark);
-
     var showSemanticsDebugger =
         control.getBool("show_semantics_debugger", false)!;
 
@@ -550,10 +527,11 @@ class _PageControlState extends State<PageControl> with WidgetsBindingObserver {
         routerDelegate: _routerDelegate,
         routeInformationParser: _routeParser,
         routeInformationProvider: _routeInformationProvider,
-        materialTheme: lightTheme,
-        materialDarkTheme: darkTheme,
-        materialThemeMode: themeMode,
-        cupertinoTheme: cupertinoTheme,
+        theme: control.get("theme"),
+        darkTheme: control.get("dark_theme"),
+        themeMode: themeMode,
+        platformBrightness: brightness,
+        targetPlatform: platform,
         localizationsDelegates: localizationsDelegates,
         supportedLocales: localeConfiguration.supportedLocales,
         locale: localeConfiguration.locale,
@@ -568,6 +546,7 @@ class _PageControlState extends State<PageControl> with WidgetsBindingObserver {
       themeMode: themeMode,
       brightness: brightness,
       widgetsDesign: widgetsDesign,
+      targetPlatform: platform,
       child: app,
     );
   }

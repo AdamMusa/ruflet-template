@@ -1,9 +1,4 @@
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'enums.dart';
-
 import '../models/control.dart';
-import '../models/flet_time.dart';
 import 'numbers.dart';
 
 enum DurationUnit { microseconds, milliseconds, seconds, minutes, hours, days }
@@ -47,36 +42,6 @@ Duration? parseDuration(dynamic value,
       microseconds: parseInt(value["microseconds"], 0)!);
 }
 
-TimePickerEntryMode? parseTimePickerEntryMode(String? value,
-    [TimePickerEntryMode? defaultValue]) {
-  return parseEnum(TimePickerEntryMode.values, value, defaultValue);
-}
-
-CupertinoDatePickerMode? parseCupertinoDatePickerMode(String? value,
-    [CupertinoDatePickerMode? defaultValue]) {
-  return parseEnum(CupertinoDatePickerMode.values, value, defaultValue);
-}
-
-CupertinoTimerPickerMode? parseCupertinoTimerPickerMode(String? value,
-    [CupertinoTimerPickerMode? defaultValue]) {
-  return parseEnum(CupertinoTimerPickerMode.values, value, defaultValue);
-}
-
-DatePickerDateOrder? parseDatePickerDateOrder(String? value,
-    [DatePickerDateOrder? defaultValue]) {
-  return parseEnum(DatePickerDateOrder.values, value, defaultValue);
-}
-
-DatePickerEntryMode? parseDatePickerEntryMode(String? value,
-    [DatePickerEntryMode? defaultValue]) {
-  return parseEnum(DatePickerEntryMode.values, value, defaultValue);
-}
-
-DatePickerMode? parseDatePickerMode(String? value,
-    [DatePickerMode? defaultValue]) {
-  return parseEnum(DatePickerMode.values, value, defaultValue);
-}
-
 extension TimeParsers on Control {
   /// Retrieves and parses a duration value from the control's properties.
   ///
@@ -94,47 +59,8 @@ extension TimeParsers on Control {
     return parseDuration(get(propertyName), defaultValue, treatNumAs);
   }
 
-  DatePickerDateOrder? getDatePickerDateOrder(String propertyName,
-      [DatePickerDateOrder? defaultValue]) {
-    return parseDatePickerDateOrder(get(propertyName), defaultValue);
-  }
-
-  TimePickerEntryMode? getTimePickerEntryMode(String propertyName,
-      [TimePickerEntryMode? defaultValue]) {
-    return parseTimePickerEntryMode(get(propertyName), defaultValue);
-  }
-
-  CupertinoDatePickerMode? getCupertinoDatePickerMode(String propertyName,
-      [CupertinoDatePickerMode? defaultValue]) {
-    return parseCupertinoDatePickerMode(get(propertyName), defaultValue);
-  }
-
-  CupertinoTimerPickerMode? getCupertinoTimerPickerMode(String propertyName,
-      [CupertinoTimerPickerMode? defaultValue]) {
-    return parseCupertinoTimerPickerMode(get(propertyName), defaultValue);
-  }
-
-  DatePickerMode? getDatePickerMode(String propertyName,
-      [DatePickerMode? defaultValue]) {
-    return parseDatePickerMode(get(propertyName), defaultValue);
-  }
-
-  DatePickerEntryMode? getDatePickerEntryMode(String propertyName,
-      [DatePickerEntryMode? defaultValue]) {
-    return parseDatePickerEntryMode(get(propertyName), defaultValue);
-  }
-
   DateTime? getDateTime(String propertyName, [DateTime? defaultValue]) {
     final value = get<DateTime>(propertyName, defaultValue); // UTC time
     return value?.toLocal();
-  }
-
-  TimeOfDay? getTimeOfDay(String propertyName, [TimeOfDay? defaultValue]) {
-    final value = get(propertyName);
-    return value is FletTime
-        ? TimeOfDay(hour: value.hour, minute: value.minute)
-        : value is TimeOfDay
-            ? value
-            : defaultValue;
   }
 }

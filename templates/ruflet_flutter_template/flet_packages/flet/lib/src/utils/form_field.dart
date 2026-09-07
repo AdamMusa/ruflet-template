@@ -1,6 +1,7 @@
-import 'package:flutter/cupertino.dart';
+import 'input.dart';
+export 'input.dart';
+import 'material_style_theme.dart';
 import 'package:flutter/material.dart';
-import 'enums.dart';
 
 import '../extensions/control.dart';
 import '../models/control.dart';
@@ -11,33 +12,6 @@ import 'edge_insets.dart';
 import 'numbers.dart';
 import 'text.dart';
 import 'time.dart';
-
-enum FormFieldInputBorder { outline, underline, none }
-
-FormFieldInputBorder? parseFormFieldInputBorder(String? value,
-    [FormFieldInputBorder? defaultValue]) {
-  return parseEnum(FormFieldInputBorder.values, value, defaultValue);
-}
-
-TextInputType? parseTextInputType(String? value,
-    [TextInputType? defaultValue]) {
-  const typeMap = {
-    "datetime": TextInputType.datetime,
-    "email": TextInputType.emailAddress,
-    "multiline": TextInputType.multiline,
-    "name": TextInputType.name,
-    "none": TextInputType.none,
-    "number": TextInputType.number,
-    "phone": TextInputType.phone,
-    "streetaddress": TextInputType.streetAddress,
-    "text": TextInputType.text,
-    "url": TextInputType.url,
-    "visiblepassword": TextInputType.visiblePassword,
-    "websearch": TextInputType.webSearch,
-    "twitter": TextInputType.twitter,
-  };
-  return typeMap[value?.toLowerCase()] ?? defaultValue;
-}
 
 InputDecoration buildInputDecoration(
   BuildContext context,
@@ -169,7 +143,8 @@ InputDecoration buildInputDecoration(
       contentPadding: control.getEdgeInsets("content_padding"),
       isDense: control.getBool("dense"),
       label: control.buildTextOrWidget("label"),
-      labelStyle: control.getTextStyle("label_style", Theme.of(context)),
+      labelStyle: control.getTextStyle(
+          "label_style", materialStyleTheme(Theme.of(context))),
       border: border,
       enabledBorder: border,
       focusedBorder: focusedBorder,
@@ -179,22 +154,26 @@ InputDecoration buildInputDecoration(
       fillColor: fillColor ?? (focused ? (focusedBgcolor ?? bgcolor) : bgcolor),
       //hint
       hintText: control.getString("hint_text"),
-      hintStyle: control.getTextStyle("hint_style", Theme.of(context)),
+      hintStyle: control.getTextStyle(
+          "hint_style", materialStyleTheme(Theme.of(context))),
       hintFadeDuration: control.getDuration("hint_fade_duration"),
       hintMaxLines: control.getInt("hint_max_lines"),
       //helper
       helper: helperWidget,
       helperText: helperText,
-      helperStyle: control.getTextStyle("helper_style", Theme.of(context)),
+      helperStyle: control.getTextStyle(
+          "helper_style", materialStyleTheme(Theme.of(context))),
       helperMaxLines: control.getInt("helper_max_lines"),
       //counter
       counter: counterWidget,
       counterText: counterText,
-      counterStyle: control.getTextStyle("counter_style", Theme.of(context)),
+      counterStyle: control.getTextStyle(
+          "counter_style", materialStyleTheme(Theme.of(context))),
       //error
       error: errorWidget,
       errorText: errorText,
-      errorStyle: control.getTextStyle("error_style", Theme.of(context)),
+      errorStyle: control.getTextStyle(
+          "error_style", materialStyleTheme(Theme.of(context))),
       errorMaxLines: control.getInt("error_max_lines"),
       constraints: control.getBoxConstraints("size_constraints"),
       isCollapsed: control.getBool("collapsed"),
@@ -208,50 +187,12 @@ InputDecoration buildInputDecoration(
       //prefix
       prefix: prefixWidget,
       prefixText: prefixText,
-      prefixStyle: control.getTextStyle("prefix_style", Theme.of(context)),
+      prefixStyle: control.getTextStyle(
+          "prefix_style", materialStyleTheme(Theme.of(context))),
       suffixIcon: control.buildIconOrWidget("suffix_icon") ?? customSuffix,
       //suffix
       suffix: suffixWidget,
       suffixText: suffixText,
-      suffixStyle: control.getTextStyle("suffix_style", Theme.of(context)));
-}
-
-OverlayVisibilityMode? parseOverlayVisibilityMode(String? value,
-    [OverlayVisibilityMode? defaultValue]) {
-  return parseEnum(OverlayVisibilityMode.values, value, defaultValue);
-}
-
-StrutStyle? parseStrutStyle(dynamic value, [StrutStyle? defaultValue]) {
-  if (value == null) return defaultValue;
-
-  return StrutStyle(
-    fontSize: parseDouble(value["size"]),
-    fontWeight: parseFontWeight(value["weight"]),
-    fontStyle: parseBool(value["italic"], false)! ? FontStyle.italic : null,
-    fontFamily: value["font_family"],
-    height: parseDouble(value["height"]),
-    leading: parseDouble(value["leading"]),
-    forceStrutHeight: parseBool(value["force_strut_height"]),
-  );
-}
-
-extension FormFieldParsers on Control {
-  FormFieldInputBorder? getFormFieldInputBorder(String propertyName,
-      [FormFieldInputBorder? defaultValue]) {
-    return parseFormFieldInputBorder(get(propertyName), defaultValue);
-  }
-
-  TextInputType? getTextInputType(String propertyName,
-      [TextInputType? defaultValue]) {
-    return parseTextInputType(get(propertyName), defaultValue);
-  }
-
-  OverlayVisibilityMode? getOverlayVisibilityMode(String propertyName,
-      [OverlayVisibilityMode? defaultValue]) {
-    return parseOverlayVisibilityMode(get(propertyName), defaultValue);
-  }
-
-  StrutStyle? getStrutStyle(String propertyName, [StrutStyle? defaultValue]) {
-    return parseStrutStyle(get(propertyName), defaultValue);
-  }
+      suffixStyle: control.getTextStyle(
+          "suffix_style", materialStyleTheme(Theme.of(context))));
 }

@@ -1,3 +1,4 @@
+import '../utils/material_style_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
@@ -36,7 +37,7 @@ class MaterialFloatingActionButtonControl extends StatelessWidget {
     var splashColor = control.getColor("splash_color", context);
     var hoverColor = control.getColor("hover_color", context);
     var focusColor = control.getColor("focus_color", context);
-    var shape = control.getShape("shape", Theme.of(context));
+    var shape = control.getShape("shape", materialStyleTheme(Theme.of(context)));
     var clipBehavior =
         parseClip(control.getString("clip_behavior"), Clip.none)!;
     var autofocus = control.getBool("autofocus", false)!;

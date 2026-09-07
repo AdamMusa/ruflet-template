@@ -1,7 +1,9 @@
+import 'color_palette.dart';
+import 'style_theme.dart';
 import 'dart:ui' as ui;
 import 'enums.dart';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../models/control.dart';
 import '../utils/numbers.dart';
@@ -11,11 +13,11 @@ import 'gradient.dart';
 import 'images.dart';
 import 'misc.dart';
 
-Paint? parsePaint(dynamic value, ThemeData theme, [Paint? defaultValue]) {
+Paint? parsePaint(dynamic value, FletStyleTheme theme, [Paint? defaultValue]) {
   if (value == null) return defaultValue;
 
   var paint = Paint();
-  paint.color = parseColor(value["color"] as String?, theme, Colors.black)!;
+  paint.color = parseColor(value["color"] as String?, theme, FletColors.black)!;
   paint.blendMode = parseBlendMode(value["blend_mode"], BlendMode.srcOver)!;
   paint.isAntiAlias = parseBool(value["anti_alias"], true)!;
   paint.imageFilter = parseBlur(value["blur_image"]);
@@ -44,7 +46,8 @@ List<double>? parsePaintStrokeDashPattern(dynamic value,
       defaultValue;
 }
 
-ui.Gradient? parsePaintGradient(Map<dynamic, dynamic>? value, ThemeData? theme,
+ui.Gradient? parsePaintGradient(
+    Map<dynamic, dynamic>? value, FletStyleTheme? theme,
     [ui.Gradient? defaultValue]) {
   if (value == null) return defaultValue;
 
@@ -82,7 +85,8 @@ ui.Gradient? parsePaintGradient(Map<dynamic, dynamic>? value, ThemeData? theme,
 }
 
 extension DrawingParsers on Control {
-  Paint? getPaint(String propertyName, ThemeData theme, [Paint? defaultValue]) {
+  Paint? getPaint(String propertyName, FletStyleTheme theme,
+      [Paint? defaultValue]) {
     return parsePaint(get(propertyName), theme, defaultValue);
   }
 

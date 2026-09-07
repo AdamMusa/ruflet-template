@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
 import '../models/control.dart';
+import '../utils/cupertino_theme.dart';
 import '../utils/numbers.dart';
 import '../utils/text.dart';
 import '../widgets/error.dart';
@@ -26,7 +26,8 @@ class CupertinoDialogActionControl extends StatelessWidget {
     var cupertinoDialogAction = CupertinoDialogAction(
       isDefaultAction: control.getBool("default", false)!,
       isDestructiveAction: control.getBool("destructive", false)!,
-      textStyle: control.getTextStyle("text_style", Theme.of(context)),
+      textStyle:
+          control.getTextStyle("text_style", cupertinoStyleTheme(context)),
       onPressed: !control.disabled ? () => control.triggerEvent("click") : null,
       child: content,
     );

@@ -1,3 +1,4 @@
+import '../utils/material_style_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
@@ -69,7 +70,7 @@ class _DropdownM2ControlState extends State<MaterialDropdownM2Control> {
     var focusedColor = widget.control.getColor("focused_color", context);
 
     var textStyle = widget.control
-        .getTextStyle("text_style", Theme.of(context), const TextStyle())!;
+        .getTextStyle("text_style", materialStyleTheme(Theme.of(context)), const TextStyle())!;
 
     if (textSize != null) {
       textStyle = textStyle.copyWith(fontSize: textSize);
@@ -93,7 +94,7 @@ class _DropdownM2ControlState extends State<MaterialDropdownM2Control> {
         .children("options")
         .map<DropdownMenuItem<String>>((Control item) {
       item.notifyParent = true;
-      var textStyle = item.getTextStyle("text_style", Theme.of(context));
+      var textStyle = item.getTextStyle("text_style", materialStyleTheme(Theme.of(context)));
       if (item.disabled && textStyle != null) {
         textStyle = textStyle.apply(color: Theme.of(context).disabledColor);
       }

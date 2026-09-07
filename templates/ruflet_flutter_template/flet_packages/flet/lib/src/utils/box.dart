@@ -1,4 +1,6 @@
-import 'package:flutter/material.dart';
+import 'color_palette.dart';
+import 'style_theme.dart';
+import 'package:flutter/widgets.dart';
 
 import '../models/control.dart';
 import '../utils/alignment.dart';
@@ -22,7 +24,7 @@ BoxConstraints? parseBoxConstraints(dynamic value,
   );
 }
 
-List<BoxShadow>? parseBoxShadows(dynamic value, ThemeData theme,
+List<BoxShadow>? parseBoxShadows(dynamic value, FletStyleTheme theme,
     [List<BoxShadow>? defaultValue]) {
   if (value == null) return defaultValue;
   if (value is List) {
@@ -32,12 +34,12 @@ List<BoxShadow>? parseBoxShadows(dynamic value, ThemeData theme,
   }
 }
 
-BoxShadow? parseBoxShadow(dynamic value, ThemeData theme,
+BoxShadow? parseBoxShadow(dynamic value, FletStyleTheme theme,
     [BoxShadow? defaultValue]) {
   if (value == null) return defaultValue;
 
   return BoxShadow(
-      color: parseColor(value["color"], theme, Colors.black)!,
+      color: parseColor(value["color"], theme, FletColors.black)!,
       offset: parseOffset(value["offset"], Offset.zero)!,
       blurStyle: parseBlurStyle(value["blur_style"], BlurStyle.normal)!,
       blurRadius: parseDouble(value["blur_radius"], 0)!,
@@ -47,7 +49,7 @@ BoxShadow? parseBoxShadow(dynamic value, ThemeData theme,
 BoxDecoration? parseBoxDecoration(dynamic value, BuildContext context,
     [BoxDecoration? defaultValue]) {
   if (value == null) return defaultValue;
-  var theme = Theme.of(context);
+  var theme = FletStyleTheme.of(context);
 
   var shape = parseBoxShape(value["shape"], BoxShape.rectangle)!;
   var borderRadius = parseBorderRadius(value["border_radius"]);
@@ -110,7 +112,8 @@ DecorationImage? parseDecorationImage(dynamic value, BuildContext context,
 
   return DecorationImage(
     image: image,
-    colorFilter: parseColorFilter(value["color_filter"], Theme.of(context)),
+    colorFilter:
+        parseColorFilter(value["color_filter"], FletStyleTheme.of(context)),
     fit: parseBoxFit(value["fit"]),
     alignment: parseAlignment(value["alignment"], Alignment.center)!,
     repeat: parseImageRepeat(value["repeat"], ImageRepeat.noRepeat)!,
@@ -130,7 +133,7 @@ extension BoxParsers on Control {
     return parseBoxConstraints(get(propertyName), defaultValue);
   }
 
-  List<BoxShadow>? getBoxShadows(String propertyName, ThemeData theme,
+  List<BoxShadow>? getBoxShadows(String propertyName, FletStyleTheme theme,
       [List<BoxShadow>? defaultValue]) {
     return parseBoxShadows(get(propertyName), theme, defaultValue);
   }

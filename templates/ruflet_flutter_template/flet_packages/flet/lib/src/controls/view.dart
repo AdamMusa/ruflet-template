@@ -15,7 +15,8 @@ import '../utils/box.dart';
 import '../utils/colors.dart';
 import '../utils/edge_insets.dart';
 import '../utils/numbers.dart';
-import '../utils/theme.dart';
+import '../utils/overlay_style.dart';
+import '../utils/style_theme.dart';
 import '../widgets/loading_page.dart';
 import '../widgets/page_context.dart';
 import '../widgets/page_media.dart';
@@ -145,7 +146,10 @@ class _ViewControlState extends State<ViewControl> {
     if (appBar != null) {
       appBar.notifyParent = true;
       appBarWidget = appBar.canonicalType == "AppBar"
-          ? AdaptiveAppBarControl(control: appBar)
+          ? AdaptiveAppBarControl.resolve(
+              control: appBar,
+              design: pageData?.widgetsDesign ?? PageDesign.material,
+            )
           : null;
     }
 
@@ -177,15 +181,10 @@ class _ViewControlState extends State<ViewControl> {
       ...overlayWidgets
     ]);
 
-    var materialTheme = pageData?.themeMode
-                .usesLight(pageData.brightness ?? Brightness.light) ==
-            true
-        ? parseTheme(control.parent!.get("theme"), context, Brightness.light)
-        : control.parent!.getString("dark_theme") != null
-            ? parseTheme(
-                control.parent!.get("dark_theme"), context, Brightness.dark)
-            : parseTheme(
-                control.parent!.get("theme"), context, Brightness.dark);
+    final styleTheme = FletStyleTheme.of(context);
+    final themeData = styleTheme.brightness == Brightness.dark
+        ? control.parent!.get("dark_theme") ?? control.parent!.get("theme")
+        : control.parent!.get("theme");
 
     final widgetsDesign = pageData?.widgetsDesign ?? PageDesign.material;
     Widget scaffold = PlatformPageScaffold(
@@ -214,14 +213,15 @@ class _ViewControlState extends State<ViewControl> {
           control.get("floating_action_button_location"),
     );
 
-    var systemOverlayStyle =
-        materialTheme.extension<SystemUiOverlayStyleTheme>();
+    final systemOverlayStyle = parseSystemUiOverlayStyle(
+      themeData?["system_overlay_style"],
+      styleTheme,
+      styleTheme.brightness,
+    );
 
-    if (systemOverlayStyle != null &&
-        systemOverlayStyle.systemUiOverlayStyle != null &&
-        appBarWidget == null) {
+    if (systemOverlayStyle != null && appBarWidget == null) {
       scaffold = AnnotatedRegion<SystemUiOverlayStyle>(
-        value: systemOverlayStyle.systemUiOverlayStyle!,
+        value: systemOverlayStyle,
         child: scaffold,
       );
     }

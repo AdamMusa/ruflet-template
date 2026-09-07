@@ -1,10 +1,11 @@
+import 'style_theme.dart';
 import 'dart:convert';
 import 'dart:io' as io;
 import 'dart:typed_data';
 import 'dart:ui';
 import 'enums.dart';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/svg.dart';
 
 import '../flet_backend.dart';
@@ -52,7 +53,7 @@ ImageFilter? parseBlur(dynamic value, [ImageFilter? defaultValue]) {
   return ImageFilter.blur(sigmaX: sigmaX, sigmaY: sigmaY, tileMode: tileMode);
 }
 
-ColorFilter? parseColorFilter(dynamic value, ThemeData theme,
+ColorFilter? parseColorFilter(dynamic value, FletStyleTheme theme,
     [ColorFilter? defaultValue]) {
   if (value == null) return defaultValue;
   Color? color = parseColor(value["color"], theme);
@@ -448,7 +449,7 @@ extension ImageParsers on Control {
     return parseBlur(get(propertyName), defaultValue);
   }
 
-  ColorFilter? getColorFilter(String propertyName, ThemeData theme,
+  ColorFilter? getColorFilter(String propertyName, FletStyleTheme theme,
       [ColorFilter? defaultValue]) {
     return parseColorFilter(get(propertyName), theme, defaultValue);
   }

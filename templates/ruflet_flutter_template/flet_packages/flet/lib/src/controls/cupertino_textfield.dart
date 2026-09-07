@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../extensions/control.dart';
@@ -8,8 +7,10 @@ import '../utils/autofill.dart';
 import '../utils/borders.dart';
 import '../utils/box.dart';
 import '../utils/colors.dart';
+import '../utils/cupertino_enums.dart';
+import '../utils/cupertino_theme.dart';
 import '../utils/edge_insets.dart';
-import '../utils/form_field.dart';
+import '../utils/input.dart';
 import '../utils/gradient.dart';
 import '../utils/images.dart';
 import '../utils/layout.dart';
@@ -18,7 +19,7 @@ import '../utils/numbers.dart';
 import '../utils/platform.dart';
 import '../utils/text.dart';
 import '../utils/textfield.dart';
-import '../utils/theme.dart';
+import '../utils/platform_theme.dart';
 import 'base_controls.dart';
 
 class CupertinoTextFieldControl extends StatefulWidget {
@@ -144,6 +145,7 @@ class _CupertinoTextFieldControlState extends State<CupertinoTextFieldControl> {
   @override
   Widget build(BuildContext context) {
     debugPrint("CupertinoTextField build: ${widget.control.id}");
+    final theme = cupertinoStyleTheme(context);
 
     var autofocus = widget.control.getBool("autofocus", false)!;
     var value = widget.control.getString("value", "")!;
@@ -176,8 +178,7 @@ class _CupertinoTextFieldControlState extends State<CupertinoTextFieldControl> {
     var color = widget.control.getColor("color", context);
     var focusedColor = widget.control.getColor("focused_color", context);
 
-    var textStyle =
-        widget.control.getTextStyle("text_style", Theme.of(context));
+    var textStyle = widget.control.getTextStyle("text_style", theme);
     if (textSize != null || color != null || focusedColor != null) {
       textStyle = (textStyle ?? const TextStyle()).copyWith(
           fontSize: textSize, color: _focused ? focusedColor ?? color : color);
@@ -225,7 +226,7 @@ class _CupertinoTextFieldControlState extends State<CupertinoTextFieldControl> {
         const Color(0xFF000000);
 
     try {
-      border = widget.control.getBorder("border", Theme.of(context));
+      border = widget.control.getBorder("border", theme);
       // adaptive TextField is being created
     } catch (e) {
       FormFieldInputBorder inputBorder = parseFormFieldInputBorder(
@@ -262,7 +263,7 @@ class _CupertinoTextFieldControlState extends State<CupertinoTextFieldControl> {
     }
     var fitParentSize = widget.control.getBool("fit_parent_size", false)!;
     var defaultDecoration = const CupertinoTextField().decoration;
-    var gradient = widget.control.getGradient("gradient", Theme.of(context));
+    var gradient = widget.control.getGradient("gradient", theme);
     var blendMode = widget.control.getBlendMode("blend_mode");
     var bgcolor = widget.control.getColor("bgcolor", context);
     var label = widget.control.get("label");
@@ -278,8 +279,8 @@ class _CupertinoTextFieldControlState extends State<CupertinoTextFieldControl> {
             : null,
         placeholder: widget.control.getString("placeholder_text") ?? labelStr,
         placeholderStyle:
-            widget.control.getTextStyle("placeholder_style", Theme.of(context)) ??
-                widget.control.getTextStyle("label_style", Theme.of(context)),
+            widget.control.getTextStyle("placeholder_style", theme) ??
+                widget.control.getTextStyle("label_style", theme),
         // label_style for adaptive TextField
         autofocus: autofocus,
         enabled: !widget.control.disabled,
@@ -296,8 +297,7 @@ class _CupertinoTextFieldControlState extends State<CupertinoTextFieldControl> {
                 bgcolor != null || gradient != null ? blendMode : null,
             border: border,
             borderRadius: borderRadius,
-            boxShadow:
-                widget.control.getBoxShadows("shadows", Theme.of(context))),
+            boxShadow: widget.control.getBoxShadows("shadows", theme)),
         cursorHeight: widget.control.getDouble("cursor_height"),
         showCursor: widget.control.getBool("show_cursor"),
         cursorWidth: widget.control.getDouble("cursor_width", 2.0)!,
@@ -305,8 +305,8 @@ class _CupertinoTextFieldControlState extends State<CupertinoTextFieldControl> {
             .getRadius("cursor_radius", const Radius.circular(2.0))!,
         keyboardType: multiline
             ? TextInputType.multiline
-            : widget.control
-                .getTextInputType("keyboard_type", TextInputType.text)!,
+            : parseTextInputType(
+                widget.control.getString("keyboard_type"), TextInputType.text)!,
         clearButtonSemanticLabel:
             widget.control.getString("clear_button_semantics_label"),
         autocorrect: autocorrect,
@@ -352,7 +352,8 @@ class _CupertinoTextFieldControlState extends State<CupertinoTextFieldControl> {
         keyboardAppearance: widget.control.getBrightness("keyboard_brightness"),
         enableInteractiveSelection:
             widget.control.getBool("enable_interactive_selection"),
-        clearButtonMode: widget.control.getOverlayVisibilityMode("clear_button_visibility_mode", OverlayVisibilityMode.never)!,
+        clearButtonMode: widget.control.getOverlayVisibilityMode(
+            "clear_button_visibility_mode", OverlayVisibilityMode.never)!,
         strutStyle: widget.control.getStrutStyle("strut_style"),
         onTap: () => widget.control.triggerEvent("click"),
         controller: _controller,
@@ -371,9 +372,9 @@ class _CupertinoTextFieldControlState extends State<CupertinoTextFieldControl> {
         });
 
     if (cursorColor != null || selectionColor != null) {
-      textField = TextSelectionTheme(
-          data: TextSelectionTheme.of(context).copyWith(
-              cursorColor: cursorColor, selectionColor: selectionColor),
+      textField = DefaultSelectionStyle.merge(
+          cursorColor: cursorColor,
+          selectionColor: selectionColor,
           child: textField);
     }
 

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 
 import '../models/control.dart';
 import 'enums.dart';
@@ -12,10 +12,6 @@ MainAxisAlignment? parseMainAxisAlignment(String? value,
 CrossAxisAlignment? parseCrossAxisAlignment(String? value,
     [CrossAxisAlignment? defaultValue]) {
   return parseEnum(CrossAxisAlignment.values, value, defaultValue);
-}
-
-TabAlignment? parseTabAlignment(String? value, [TabAlignment? defaultValue]) {
-  return parseEnum(TabAlignment.values, value, defaultValue);
 }
 
 WrapAlignment? parseWrapAlignment(String? value,
@@ -42,11 +38,6 @@ extension AlignmentParsers on Control {
   CrossAxisAlignment? getCrossAxisAlignment(String propertyName,
       [CrossAxisAlignment? defaultValue]) {
     return parseCrossAxisAlignment(get(propertyName), defaultValue);
-  }
-
-  TabAlignment? getTabAlignment(String propertyName,
-      [TabAlignment? defaultValue]) {
-    return parseTabAlignment(get(propertyName), defaultValue);
   }
 
   WrapAlignment? getWrapAlignment(String propertyName,

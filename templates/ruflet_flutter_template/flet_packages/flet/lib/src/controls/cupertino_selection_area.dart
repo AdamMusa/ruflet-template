@@ -1,5 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
+import '../widgets/platform_design.dart';
 import 'package:flutter/rendering.dart';
 
 import '../extensions/control.dart';
@@ -72,7 +72,7 @@ class _CupertinoSelectableRegionState extends State<CupertinoSelectableRegion> {
 
   @override
   Widget build(BuildContext context) {
-    final controls = defaultTargetPlatform == TargetPlatform.macOS
+    final controls = effectiveTargetPlatform(context) == TargetPlatform.macOS
         ? cupertinoDesktopTextSelectionHandleControls
         : cupertinoTextSelectionHandleControls;
     return SelectableRegion(

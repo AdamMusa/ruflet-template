@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
-import 'flet_store_mixin.dart';
+import '../models/page_design.dart';
+import 'platform_design.dart';
 
 /// The native visual language used to render a Flet control.
 enum FletControlDesign { material, cupertino }
@@ -23,7 +24,7 @@ bool usesCupertinoControls(TargetPlatform platform) {
 
 /// A single control entry point with separate Material and Cupertino
 /// renderers selected from the page's effective platform.
-class PlatformControlRenderer extends StatelessWidget with FletStoreMixin {
+class PlatformControlRenderer extends StatelessWidget {
   final WidgetBuilder material;
   final WidgetBuilder cupertino;
 
@@ -35,10 +36,8 @@ class PlatformControlRenderer extends StatelessWidget with FletStoreMixin {
 
   @override
   Widget build(BuildContext context) {
-    return withPagePlatform((context, platform) {
-      return usesCupertinoControls(platform)
-          ? cupertino(context)
-          : material(context);
-    });
+    return effectivePageDesign(context) == PageDesign.cupertino
+        ? cupertino(context)
+        : material(context);
   }
 }

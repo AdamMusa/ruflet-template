@@ -1,8 +1,9 @@
+import '../utils/material_enums.dart';
+import '../utils/material_style_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
 import '../models/control.dart';
-import '../utils/alignment.dart';
 import '../utils/animations.dart';
 import '../utils/borders.dart';
 import '../utils/colors.dart';
@@ -269,7 +270,7 @@ class _TabBarControlState extends State<MaterialTabBarControl> {
       final tabController = tabsState._tabController;
 
       var overlayColor = widget.control
-          .getWidgetStateColor("overlay_color", Theme.of(context));
+          .getWidgetStateColor("overlay_color", materialStyleTheme(Theme.of(context)));
       var indicatorPadding =
           widget.control.getPadding("indicator_padding", EdgeInsets.zero)!;
       var indicatorColor = widget.control.getColor("indicator_color", context);
@@ -290,9 +291,9 @@ class _TabBarControlState extends State<MaterialTabBarControl> {
       var padding = parseEdgeInsets(widget.control.getPadding("padding"));
       var labelPadding = widget.control.getPadding("label_padding");
       var labelStyle =
-          widget.control.getTextStyle("label_text_style", Theme.of(context));
+          widget.control.getTextStyle("label_text_style", materialStyleTheme(Theme.of(context)));
       var unselectedLabelStyle = widget.control
-          .getTextStyle("unselected_label_text_style", Theme.of(context));
+          .getTextStyle("unselected_label_text_style", materialStyleTheme(Theme.of(context)));
       var splashBorderRadius =
           widget.control.getBorderRadius("splash_border_radius");
       final tabs = widget.control.children("tabs").map((tab) {

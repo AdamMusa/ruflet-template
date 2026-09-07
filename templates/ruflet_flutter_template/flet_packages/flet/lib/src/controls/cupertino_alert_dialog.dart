@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
 import '../models/control.dart';
@@ -43,9 +42,7 @@ class CupertinoAlertDialogControl extends StatelessWidget {
                 opacity: routeAnimation,
                 child: ColoredBox(
                   color: control.getColor("barrier_color", context) ??
-                      DialogTheme.of(context).barrierColor ??
-                      Theme.of(context).dialogTheme.barrierColor ??
-                      Colors.black54,
+                      CupertinoDynamicColor.resolve(kCupertinoModalBarrierColor, context),
                 ),
               ),
             ),
@@ -75,11 +72,10 @@ class CupertinoAlertDialogControl extends StatelessWidget {
       control.updateProperties({"_open": open}, python: false);
 
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        showDialog(
+        showCupertinoDialog(
             barrierDismissible: !modal,
             // Render the barrier in the dialog widget so it updates live.
-            barrierColor: Colors.transparent,
-            useSafeArea: false,
+            barrierColor: const Color(0x00000000),
             useRootNavigator: false,
             context: context,
             builder: (context) => _createCupertinoAlertDialog()).then((value) {

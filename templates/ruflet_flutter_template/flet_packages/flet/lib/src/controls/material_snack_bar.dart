@@ -1,3 +1,5 @@
+import '../utils/material_enums.dart';
+import '../utils/material_style_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
@@ -63,7 +65,7 @@ class MaterialSnackBarControl extends StatelessWidget {
       behavior: behavior,
       clipBehavior: control.getClipBehavior("clip_behavior", Clip.hardEdge)!,
       actionOverflowThreshold: control.getDouble("action_overflow_threshold"),
-      shape: control.getOutlinedBorder("shape", Theme.of(context)),
+      shape: control.getOutlinedBorder("shape", materialStyleTheme(Theme.of(context))),
       onVisible: () {
         backend.triggerControlEvent(control, "visible");
       },

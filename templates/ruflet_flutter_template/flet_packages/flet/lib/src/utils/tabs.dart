@@ -1,3 +1,4 @@
+import 'material_style_theme.dart';
 import 'package:flutter/material.dart';
 import 'enums.dart';
 
@@ -21,7 +22,7 @@ UnderlineTabIndicator? parseUnderlineTabIndicator(
   if (value == null) return defaultValue;
   return UnderlineTabIndicator(
     insets: parseEdgeInsets(value['insets'], EdgeInsets.zero)!,
-    borderSide: parseBorderSide(value['border_side'], theme,
+    borderSide: parseBorderSide(value['border_side'], materialStyleTheme(theme),
         defaultValue: const BorderSide(width: 2.0, color: Colors.white))!,
     borderRadius: parseBorderRadius(value['border_radius']),
   );

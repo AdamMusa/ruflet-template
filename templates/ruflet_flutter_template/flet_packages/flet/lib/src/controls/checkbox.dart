@@ -1,3 +1,4 @@
+import '../utils/material_style_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
@@ -10,7 +11,7 @@ import '../utils/numbers.dart';
 import '../utils/text.dart';
 import '../utils/theme.dart';
 import 'base_controls.dart';
-import 'list_tile.dart';
+import '../widgets/list_tile_clicks.dart';
 
 class CheckboxControl extends StatefulWidget {
   final Control control;
@@ -93,18 +94,18 @@ class _CheckboxControlState extends State<CheckboxControl> {
         value: _value,
         isError: widget.control.getBool("error", false)!,
         semanticLabel: widget.control.getString("semantics_label"),
-        shape: widget.control.getShape("shape", Theme.of(context)),
+        shape: widget.control.getShape("shape", materialStyleTheme(Theme.of(context))),
         side: widget.control
-            .getWidgetStateBorderSide("border_side", Theme.of(context)),
+            .getWidgetStateBorderSide("border_side", materialStyleTheme(Theme.of(context))),
         splashRadius: widget.control.getDouble("splash_radius"),
         activeColor: widget.control.getColor("active_color", context),
         focusColor: widget.control.getColor("focus_color", context),
         hoverColor: widget.control.getColor("hover_color", context),
         overlayColor: widget.control
-            .getWidgetStateColor("overlay_color", Theme.of(context)),
+            .getWidgetStateColor("overlay_color", materialStyleTheme(Theme.of(context))),
         checkColor: widget.control.getColor("check_color", context),
         fillColor:
-            widget.control.getWidgetStateColor("fill_color", Theme.of(context)),
+            widget.control.getWidgetStateColor("fill_color", materialStyleTheme(Theme.of(context))),
         tristate: _tristate,
         visualDensity: widget.control.getVisualDensity("visual_density"),
         mouseCursor: widget.control.getMouseCursor("mouse_cursor"),
@@ -115,7 +116,7 @@ class _CheckboxControlState extends State<CheckboxControl> {
     Widget result = checkbox;
 
     var labelStyle =
-        widget.control.getTextStyle("label_style", Theme.of(context));
+        widget.control.getTextStyle("label_style", materialStyleTheme(Theme.of(context)));
     if (widget.control.disabled && labelStyle != null) {
       labelStyle = labelStyle.apply(color: Theme.of(context).disabledColor);
     }

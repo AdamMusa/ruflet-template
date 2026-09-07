@@ -1,3 +1,4 @@
+import '../utils/material_style_theme.dart';
 import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
@@ -90,15 +91,15 @@ class _ChipControlState extends State<MaterialChipControl> {
       padding: widget.control.getPadding("padding"),
       labelPadding: widget.control.getPadding("label_padding"),
       labelStyle:
-          widget.control.getTextStyle("label_text_style", Theme.of(context)),
+          widget.control.getTextStyle("label_text_style", materialStyleTheme(Theme.of(context))),
       selectedColor: widget.control.getColor("selected_color", context),
       selectedShadowColor:
           widget.control.getColor("selected_shadow_color", context),
       shadowColor: widget.control.getColor("shadow_color", context),
-      shape: widget.control.getShape("shape", Theme.of(context)),
-      color: widget.control.getWidgetStateColor("color", Theme.of(context)),
+      shape: widget.control.getShape("shape", materialStyleTheme(Theme.of(context))),
+      color: widget.control.getWidgetStateColor("color", materialStyleTheme(Theme.of(context))),
       pressElevation: widget.control.getDouble("elevation_on_click"),
-      side: widget.control.getBorderSide("border_side", Theme.of(context)),
+      side: widget.control.getBorderSide("border_side", materialStyleTheme(Theme.of(context))),
       clipBehavior:
           parseClip(widget.control.getString("clip_behavior"), Clip.none)!,
       visualDensity: widget.control.getVisualDensity("visual_density"),
