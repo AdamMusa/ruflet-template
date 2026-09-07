@@ -1,11 +1,12 @@
 import 'dart:async';
 
 import 'package:flet/flet.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 
 import 'utils/video.dart';
+import 'platform_video_controls.dart';
 
 class VideoControl extends StatefulWidget {
   final Control control;
@@ -211,7 +212,7 @@ class _VideoControlState extends State<VideoControl> with FletStoreMixin {
 
     var subtitleConfiguration = parseSubtitleConfiguration(
         widget.control.get("subtitle_configuration"),
-        Theme.of(context),
+        FletStyleTheme.of(context),
         const SubtitleViewConfiguration())!;
     var subtitleTrack =
         parseSubtitleTrack(widget.control.get("subtitle_track"), context);
@@ -239,7 +240,7 @@ class _VideoControlState extends State<VideoControl> with FletStoreMixin {
       key: _videoKey,
       controller: _controller,
       wakelock: widget.control.getBool("wakelock", true)!,
-      controls: showControls ? AdaptiveVideoControls : null,
+      controls: showControls ? platformVideoControls : null,
       pauseUponEnteringBackgroundMode:
           widget.control.getBool("pause_upon_entering_background_mode", true)!,
       resumeUponEnteringForegroundMode: widget.control
@@ -249,7 +250,8 @@ class _VideoControlState extends State<VideoControl> with FletStoreMixin {
       filterQuality:
           widget.control.getFilterQuality("filter_quality", FilterQuality.low)!,
       subtitleViewConfiguration: subtitleConfiguration,
-      fill: widget.control.getColor("fill_color", context, Colors.black)!,
+      fill: widget.control
+          .getColor("fill_color", context, const Color(0xFF000000))!,
       onEnterFullscreen: _handleEnterFullscreen,
       onExitFullscreen: _handleExitFullscreen,
     );
