@@ -9,7 +9,7 @@ import '../utils/time.dart';
 import '../widgets/error.dart';
 import 'base_controls.dart';
 
-class CupertinoDatePickerControl extends StatefulWidget {
+class CupertinoDatePickerControl extends StatelessWidget {
   final Control control;
   final void Function(DateTime)? onDateTimeChanged;
   final bool applyLayout;
@@ -22,41 +22,32 @@ class CupertinoDatePickerControl extends StatefulWidget {
       : super(key: key ?? ValueKey("control_${control.id}"));
 
   @override
-  State<CupertinoDatePickerControl> createState() =>
-      _CupertinoDatePickerControlState();
-}
-
-class _CupertinoDatePickerControlState
-    extends State<CupertinoDatePickerControl> {
-  @override
   Widget build(BuildContext context) {
-    debugPrint("CupertinoDatePicker build: ${widget.control.id}");
-
-    var locale = widget.control.getLocale("locale");
+    var locale = control.getLocale("locale");
 
     Widget dialog;
     try {
       dialog = CupertinoDatePicker(
-        initialDateTime: widget.control.getDateTime("value"),
-        showDayOfWeek: widget.control.getBool("show_day_of_week", false)!,
-        minimumDate: widget.control.getDateTime("first_date"),
-        maximumDate: widget.control.getDateTime("last_date"),
-        backgroundColor: widget.control.getColor("bgcolor", context),
-        minimumYear: widget.control.getInt("minimum_year", 1)!,
-        maximumYear: widget.control.getInt("maximum_year"),
-        itemExtent: widget.control.getDouble("item_extent", 32.0)!,
-        minuteInterval: widget.control.getInt("minute_interval", 1)!,
-        use24hFormat: widget.control.getBool("use_24h_format", false)!,
-        dateOrder: widget.control.getDatePickerDateOrder("date_order"),
-        mode: widget.control.getCupertinoDatePickerMode(
+        initialDateTime: control.getDateTime("value"),
+        showDayOfWeek: control.getBool("show_day_of_week", false)!,
+        minimumDate: control.getDateTime("first_date"),
+        maximumDate: control.getDateTime("last_date"),
+        backgroundColor: control.getColor("bgcolor", context),
+        minimumYear: control.getInt("minimum_year", 1)!,
+        maximumYear: control.getInt("maximum_year"),
+        itemExtent: control.getDouble("item_extent", 32.0)!,
+        minuteInterval: control.getInt("minute_interval", 1)!,
+        use24hFormat: control.getBool("use_24h_format", false)!,
+        dateOrder: control.getDatePickerDateOrder("date_order"),
+        mode: control.getCupertinoDatePickerMode(
             "date_picker_mode",
-            widget.control.type == "CupertinoDatePicker"
+            control.type == "CupertinoDatePicker"
                 ? CupertinoDatePickerMode.dateAndTime
                 : CupertinoDatePickerMode.date)!,
-        onDateTimeChanged: widget.onDateTimeChanged ??
+        onDateTimeChanged: onDateTimeChanged ??
             (DateTime value) {
-              widget.control.updateProperties({"value": value});
-              widget.control.triggerEvent("change", value);
+              control.updateProperties({"value": value});
+              control.triggerEvent("change", value);
             },
       );
     } catch (e) {
@@ -67,8 +58,8 @@ class _CupertinoDatePickerControlState
         ? dialog
         : Localizations.override(
             context: context, locale: locale, child: dialog);
-    return widget.applyLayout
-        ? LayoutControl(control: widget.control, child: picker)
+    return applyLayout
+        ? LayoutControl(control: control, child: picker)
         : picker;
   }
 }
