@@ -33,7 +33,7 @@ dependencies:
   flutter_web_plugins:
     sdk: flutter
 
-  # Ruflet Flutter packages, renamed locally from upstream source ref
+  # Exact Ruflet engine and extension packages from the pinned engine commit
   # c72b74cfa54f641eace60696f88e41d6e08f37ed. No git/Python dependency.
   ruflet:
     path: ruflet_packages/ruflet

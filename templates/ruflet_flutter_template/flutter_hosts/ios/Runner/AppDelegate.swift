@@ -14,3 +14,8 @@ import UIKit
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
   }
 }
+
+/// Flutter's UIKit scene host for the standard (non-native-renderer) build.
+/// Info.plist names this class, so it must live in the Runner module rather
+/// than referring directly to FlutterSceneDelegate in the Flutter framework.
+@objc class SceneDelegate: FlutterSceneDelegate {}
