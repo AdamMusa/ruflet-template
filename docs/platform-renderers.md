@@ -69,6 +69,38 @@ and navigation-bar geometry. This is more than a screenshot of isolated widgets.
 See [the source sync guide](../templates/ruflet_flutter_template/tool/FLET_SOURCE_SYNC.md)
 for exact-commit synchronization, transport overlay preservation, and drift checks.
 
+## Verified local revision
+
+Source commit `7cce34b72837bc4a3e8518bb24e10c530c91c29b` is mirrored by template
+commit `58fe4bc`. The inventory verifies 594 byte-exact source files, four
+explicit transport overlays, and two preserved template-only transport files.
+The obsolete Material-to-Cupertino theme adapter was removed; its previous
+implementation remains recoverable from Git history.
+
+| Check | Result |
+| --- | --- |
+| Source engine tests | 591 passed, including the 475-case platform matrix |
+| Mirrored template engine tests | 593 passed, including the preserved in-process channel |
+| Owned engine `lib/test` analysis | No issues in source or template |
+| Eight extension packages | 28 tests passed; no analyzer errors or warnings |
+| Vendored Markdown / math | 3 / 5 tests passed |
+| Full Ruby core suite | 609 tests, 3,690 assertions, no failures/errors/skips |
+| Template source integrity / sync safety | 2 / 14 tests passed |
+| Fresh iOS simulator harness | Both renderer passes completed; seven screenshots reviewed |
+| Embedded template entrypoint with local runtime | Analysis and compilation smoke test passed |
+
+The fresh simulator run used the existing iPhone 17 Pro Max, iOS 26.0, with
+Flutter 3.41.2 / Dart 3.11.0. Extension and dependency packages still have
+informational upstream/internal-import/deprecation lints; the table does not
+describe them as entirely lint-free.
+
+There is a separate, pre-existing publication mismatch: published `ruby_runtime`
+0.0.14 lacks `sendToRuby`, `receiveFromRuby`, and `closeBridge`, already required
+by the embedded template before this renderer work. The local runtime provides
+them; the CLI's local-runtime selection tests pass. A raw template resolving only
+the published runtime is therefore not equivalent to the verified local build
+path. No runtime release was published as part of this task.
+
 ## Scope of the evidence
 
 The separation is in Flet-owned renderers and the identified dependency UI paths.
