@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flet/flet.dart';
+import 'package:flet/src/widgets/platform_startup_app.dart';
 // --FAT_CLIENT_START--
 import 'package:flet_audio/flet_audio.dart' as ruflet_audio;
 // --FAT_CLIENT_END--
@@ -30,7 +31,7 @@ import 'package:flet_video/flet_video.dart' as ruflet_video;
 import 'package:ruflet_qrcode_scanner/ruflet_qrcode_scanner.dart'
     as ruflet_qrcode_scanner;
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:ruby_runtime/ruflet_runtime.dart';
 
@@ -224,25 +225,13 @@ class _TemplateAppState extends State<TemplateApp> {
   Widget build(BuildContext context) {
     final error = _startupError;
     if (error != null) {
-      return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: Scaffold(
-          appBar: AppBar(title: const Text('Ruflet')),
-          body: Padding(
-            padding: const EdgeInsets.all(16),
-            child: SelectableText(error),
-          ),
-        ),
-      );
+      return PlatformStartupApp(title: 'Ruflet', isLoading: false, message: error);
     }
 
     if (_pageUrl.isEmpty) {
       // FletApp cannot be built without a URL, and the runtime has not reported
       // one yet. Hold a splash rather than delay startup waiting for it.
-      return const MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: Scaffold(body: Center(child: CircularProgressIndicator())),
-      );
+      return const PlatformStartupApp(title: 'Ruflet');
     }
 
     return FletApp(
