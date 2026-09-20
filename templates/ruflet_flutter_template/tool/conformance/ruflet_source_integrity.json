@@ -24,10 +24,10 @@
     "ruflet_webview"
   ],
   "engine_version": "0.81.0",
-  "source_ref": "98377b7ffd4f87c13b6443ceb173ca25170f6115",
+  "source_ref": "c9b9d76ed0ccb22b50561c7b4e183d0425ef6b54",
   "source_package": "packages",
   "summary": {
-    "exact_source": 987
+    "exact_source": 988
   },
   "files": {
     "ruflet/.gitignore": {
@@ -657,10 +657,10 @@
     "ruflet/lib/src/controls/cupertino_textfield.dart": {
       "classification": "exact_source",
       "source_path": "ruflet/lib/src/controls/cupertino_textfield.dart",
-      "source_git_blob": "13cf08b68eb2a4b7712419f75104ebaae4c1d80b",
+      "source_git_blob": "0fbfe33d5dbb860d8a63b194cc55446f4755a92e",
       "source_mode": "100644",
-      "source_sha256": "01985f18f64128baca337cddb9f970c80cb36bf58ac55dc966b6d790f8cd6c8f",
-      "vendored_sha256": "01985f18f64128baca337cddb9f970c80cb36bf58ac55dc966b6d790f8cd6c8f"
+      "source_sha256": "623ffbe34743c05a9e6bc1037a319ff3dc8605da8c5875319fef50fe4313b8ed",
+      "vendored_sha256": "623ffbe34743c05a9e6bc1037a319ff3dc8605da8c5875319fef50fe4313b8ed"
     },
     "ruflet/lib/src/controls/cupertino_timer_picker.dart": {
       "classification": "exact_source",
@@ -3357,6 +3357,14 @@
       "source_mode": "100644",
       "source_sha256": "c58e65e35c833f8d21d4cb7c6f432e01fa8a9d2f24a73ee995d27fd32a5de2d4",
       "vendored_sha256": "c58e65e35c833f8d21d4cb7c6f432e01fa8a9d2f24a73ee995d27fd32a5de2d4"
+    },
+    "ruflet/test/widgets/textfield_validation_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet/test/widgets/textfield_validation_test.dart",
+      "source_git_blob": "ed141da5defd4080d6028e01768af775f2a5d0c1",
+      "source_mode": "100644",
+      "source_sha256": "e9885df922ac645149976f89ae4ee81d767df70df15c97450b7226cdb3dac076",
+      "vendored_sha256": "e9885df922ac645149976f89ae4ee81d767df70df15c97450b7226cdb3dac076"
     },
     "ruflet/third_party/shimmer/LICENSE": {
       "classification": "exact_source",

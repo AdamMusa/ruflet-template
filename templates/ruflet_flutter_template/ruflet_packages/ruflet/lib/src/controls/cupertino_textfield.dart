@@ -394,6 +394,34 @@ class _CupertinoTextFieldControlState extends State<CupertinoTextFieldControl> {
           child: textField);
     }
 
+    final error = widget.control.get("error");
+    final errorStyle = TextStyle(
+      fontSize: 12,
+      color: CupertinoColors.systemRed.resolveFrom(context),
+    ).merge(widget.control.getTextStyle("error_style", theme));
+    final errorWidget = error is Control
+        ? widget.control.buildWidget("error")
+        : error == null
+            ? null
+            : Text(
+                error.toString(),
+                style: errorStyle,
+                maxLines: widget.control.getInt("error_max_lines"),
+              );
+    textField = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      textDirection: rtl ? TextDirection.rtl : null,
+      children: [
+        if (fitParentSize) Expanded(child: textField) else textField,
+        if (errorWidget != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Semantics(liveRegion: true, child: errorWidget),
+          ),
+      ],
+    );
+
     if (widget.control.getExpand("expand", 0)! > 0) {
       return LayoutControl(control: widget.control, child: textField);
     } else {
