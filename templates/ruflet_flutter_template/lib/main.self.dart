@@ -17,6 +17,7 @@ import 'package:ruflet_color_pickers/ruflet_color_pickers.dart'
 import 'package:ruflet_datatable2/ruflet_datatable2.dart' as ruflet_datatable2;
 import 'package:ruflet_flashlight/ruflet_flashlight.dart' as ruflet_flashlight;
 import 'package:ruflet_geolocator/ruflet_geolocator.dart' as ruflet_geolocator;
+import 'package:ruflet_local_auth/ruflet_local_auth.dart' as ruflet_local_auth;
 import 'package:ruflet_lottie/ruflet_lottie.dart' as ruflet_lottie;
 import 'package:ruflet_map/ruflet_map.dart' as ruflet_map;
 import 'package:ruflet_permission_handler/ruflet_permission_handler.dart'
@@ -113,6 +114,7 @@ Future<void> main() async {
     ruflet_datatable2.Extension(),
     ruflet_flashlight.Extension(),
     ruflet_geolocator.Extension(),
+    ruflet_local_auth.Extension(),
     ruflet_lottie.Extension(),
     ruflet_map.Extension(),
     ruflet_permission_handler.Extension(),
