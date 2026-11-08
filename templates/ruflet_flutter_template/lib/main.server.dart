@@ -138,7 +138,6 @@ Future<void> main([List<String>? args]) async {
     ruflet_datatable2.Extension(),
     ruflet_flashlight.Extension(),
     ruflet_geolocator.Extension(),
-    ruflet_local_auth.Extension(),
     ruflet_lottie.Extension(),
     ruflet_map.Extension(),
     ruflet_permission_handler.Extension(),
@@ -151,6 +150,7 @@ Future<void> main([List<String>? args]) async {
     ruflet_audio.Extension(),
     ruflet_video.Extension(),
     // --FAT_CLIENT_END--
+    ruflet_local_auth.Extension(),
   ];
 
   for (final extension in extensions) {
