@@ -57,12 +57,19 @@ switch on from `ruflet.yaml`:
 
 `ruflet` · `ruflet_ads` · `ruflet_audio` · `ruflet_audio_recorder` · `ruflet_camera` ·
 `ruflet_charts` · `ruflet_code_editor` · `ruflet_color_pickers` · `ruflet_datatable2` ·
-`ruflet_flashlight` · `ruflet_geolocator` · `ruflet_lottie` · `ruflet_map` ·
+`ruflet_flashlight` · `ruflet_geolocator` · `ruflet_local_auth` · `ruflet_lottie` · `ruflet_map` ·
 `ruflet_permission_handler` · `ruflet_rive` · `ruflet_secure_storage` · `ruflet_spinkit` ·
 `ruflet_video` · `ruflet_webview` · `ruflet_qrcode_scanner`
 
 Listing an extension in `ruflet.yaml` adds its package and registration to the
 generated client. Leaving it out strips both, so an app only carries what it uses.
+
+`ruflet_local_auth` needs a gem newer than 0.0.23. Gems 0.0.21 to 0.0.23 do not
+know it and strip it as an unconfigured external extension. Its registration
+comes after `// --FAT_CLIENT_END--` in both entrypoints: there, those gems'
+stripping removes only that line, and the entrypoints they generate stay
+byte-identical. Register any package the released gems do not know in the
+same place.
 
 ```yaml
 extensions:
