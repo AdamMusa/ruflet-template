@@ -76,6 +76,24 @@ class BootstrapHooksContractTest < Minitest::Test
     end
   end
 
+  # `ruflet build` renames this package to the app's package name
+  # (apply_pubspec_metadata in AdamMusa/ruflet) and build/client keeps lib/ and
+  # test/ as they are, so a Dart file that reaches this package by its
+  # template name stops resolving there. test/ reaches lib/ relatively.
+  def test_dart_files_never_import_the_client_package_by_its_template_name
+    package = read("pubspec.yaml")[/^name:[ \t]*([A-Za-z0-9_]+)/, 1]
+    refute_nil package, "pubspec.yaml has no name"
+    files = Dir.glob("{lib,test}/**/*.dart", base: TEMPLATE_ROOT).sort
+    assert_includes files, "test/ruflet_bootstrap_test.dart"
+
+    files.each do |relative_path|
+      directive_uris(relative_path).each do |keyword, uri|
+        refute uri.start_with?("package:#{package}/"),
+               "#{relative_path}: #{keyword} '#{uri}' stops resolving once `ruflet build` renames the package"
+      end
+    end
+  end
+
   def test_entrypoints_declare_both_hook_lists_empty_in_one_marked_block
     ENTRYPOINTS.each do |relative_path|
       source = read(relative_path)

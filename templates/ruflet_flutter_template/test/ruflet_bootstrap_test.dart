@@ -1,10 +1,15 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+// Relative, not package:ruflet_client/: `ruflet build` renames this package to
+// the app's package name, and build/client keeps this test, so a package
+// import would stop resolving there.
+//
 // lib/main.self.dart carries a byte-identical copy of these functions
 // (tool/conformance/test_bootstrap_hooks_contract.rb holds them equal). It is
 // not imported here because it only compiles against the ruby_runtime that
 // `ruflet build --self` pins.
-import 'package:ruflet_client/main.server.dart';
+// ignore: avoid_relative_lib_imports
+import '../lib/main.server.dart';
 
 void main() {
   test('the template declares both hook lists empty', () {
