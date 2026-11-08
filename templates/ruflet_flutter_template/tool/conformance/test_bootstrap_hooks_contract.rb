@@ -21,6 +21,7 @@ class BootstrapHooksContractTest < Minitest::Test
     const rufletPreRunAppHooks = <RufletBootstrapHook>[];
     const rufletPostFirstFrameHooks = <RufletBootstrapHook>[];
   DART
+  HOOK_LIST_NAMES = %w[rufletPreRunAppHooks rufletPostFirstFrameHooks].freeze
   GENERATED_BOOTSTRAP = "lib/ruflet_bootstrap.g.dart"
 
   PRE_RUN_APP_HOOKS = <<~DART.gsub(/^/, "  ")
@@ -90,6 +91,23 @@ class BootstrapHooksContractTest < Minitest::Test
       directive_uris(relative_path).each do |keyword, uri|
         refute uri.start_with?("package:#{package}/"),
                "#{relative_path}: #{keyword} '#{uri}' stops resolving once `ruflet build` renames the package"
+      end
+    end
+  end
+
+  # While a build feature adds hooks, `ruflet build` moves both lists into
+  # lib/ruflet_bootstrap.g.dart, which the entrypoints import but do not
+  # export. build/client keeps test/ as it is, so a test that names a list
+  # would stop compiling there. Tests reach the hooks through the runner only.
+  def test_tests_never_name_the_hook_lists
+    files = Dir.glob("test/**/*.dart", base: TEMPLATE_ROOT).sort
+    assert_includes files, "test/ruflet_bootstrap_test.dart"
+
+    files.each do |relative_path|
+      code = code_lines(read(relative_path))
+      HOOK_LIST_NAMES.each do |name|
+        assert_empty code.grep(/(?<![A-Za-z0-9_$])#{name}(?![A-Za-z0-9_$])/),
+                     "#{relative_path}: #{name} is not visible to tests once a build adds hooks"
       end
     end
   end

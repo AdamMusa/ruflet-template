@@ -11,12 +11,13 @@ import 'package:flutter_test/flutter_test.dart';
 // ignore: avoid_relative_lib_imports
 import '../lib/main.server.dart';
 
+// Only the runner is tested here, never the two hook lists by name. While a
+// build feature adds hooks, `ruflet build` moves the lists into
+// lib/ruflet_bootstrap.g.dart, which the entrypoints import but do not
+// export, so a test naming them would stop compiling in that build/client.
+// tool/conformance/test_bootstrap_hooks_contract.rb pins that the template
+// declares both lists empty.
 void main() {
-  test('the template declares both hook lists empty', () {
-    expect(rufletPreRunAppHooks, isEmpty);
-    expect(rufletPostFirstFrameHooks, isEmpty);
-  });
-
   test('awaits each hook before starting the next, in list order', () async {
     final calls = <String>[];
     await runRufletBootstrapHooks([
