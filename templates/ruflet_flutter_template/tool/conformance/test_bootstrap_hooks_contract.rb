@@ -2,43 +2,26 @@
 
 require "minitest/autorun"
 
-# The entrypoints run the ordered hook lists `ruflet build` writes into
-# lib/ruflet_bootstrap.g.dart: one list just before runApp and one after the
-# first frame. The template ships the file the CLI writes when no build feature
-# adds a hook, so an unmodified template starts exactly as it did without them.
+# The entrypoints run two ordered startup hook lists: one just before runApp
+# and one after the first frame. They declare both lists empty themselves, so
+# they compile with every ruflet gem, including the released ones that copy
+# lib/main*.dart into an existing client dir file by file and know nothing
+# about hooks. Only while a build feature adds hooks does `ruflet build`
+# (Ruflet::CLI::ClientBootstrap in AdamMusa/ruflet) write
+# lib/ruflet_bootstrap.g.dart, import it and empty the marked block.
 class BootstrapHooksContractTest < Minitest::Test
   TEMPLATE_ROOT = File.expand_path("../..", __dir__)
   ENTRYPOINTS = %w[lib/main.self.dart lib/main.server.dart].freeze
 
-  # Byte-identical to what Ruflet::CLI::ClientBootstrap (AdamMusa/ruflet,
-  # packages/ruflet/lib/ruflet/cli/client_bootstrap.rb) writes with no hooks;
-  # packages/ruflet/test/client_bootstrap_test.rb pins the same text. Change
-  # both together.
-  DEFAULT_BOOTSTRAP = <<~DART
-    // GENERATED FILE. DO NOT EDIT.
-    //
-    // `ruflet build` writes this file into the Flutter client on every build.
-    // lib/main.self.dart and lib/main.server.dart run its hooks in list order:
-    //
-    // * rufletPreRunAppHooks are awaited one at a time just before runApp, once
-    //   the Flutter binding and every extension are initialized.
-    // * rufletPostFirstFrameHooks run one at a time after the first frame.
-    //
-    // A hook that throws is reported through FlutterError.reportError and does
-    // not stop the hooks after it or the app. With both lists empty the
-    // entrypoints skip the hooks entirely. Build features add hooks through
-    // Ruflet::CLI::ClientBootstrap in the ruflet gem.
-
-    import 'dart:async';
-
-    /// A bootstrap hook: a top-level or static function that takes no
-    /// arguments.
-    typedef RufletBootstrapHook = FutureOr<void> Function();
-
+  # The CLI finds the block by these exact marker lines
+  # (packages/ruflet/lib/ruflet/cli/client_bootstrap.rb). Change both together.
+  HOOKS_START = "// --RUFLET_BOOTSTRAP_HOOKS_START--\n"
+  HOOKS_END = "// --RUFLET_BOOTSTRAP_HOOKS_END--\n"
+  HOOK_LISTS = <<~DART
     const rufletPreRunAppHooks = <RufletBootstrapHook>[];
-
     const rufletPostFirstFrameHooks = <RufletBootstrapHook>[];
   DART
+  GENERATED_BOOTSTRAP = "lib/ruflet_bootstrap.g.dart"
 
   PRE_RUN_APP_HOOKS = <<~DART.gsub(/^/, "  ")
     if (rufletPreRunAppHooks.isNotEmpty) {
@@ -47,15 +30,37 @@ class BootstrapHooksContractTest < Minitest::Test
   DART
   POST_FIRST_FRAME_HOOKS = "  scheduleRufletBootstrapHooksAfterFirstFrame(rufletPostFirstFrameHooks);\n"
 
-  def test_template_ships_the_bootstrap_the_cli_writes_without_hooks
-    path = File.join(TEMPLATE_ROOT, "lib/ruflet_bootstrap.g.dart")
-
-    assert_equal DEFAULT_BOOTSTRAP, File.binread(path)
+  # A file the CLI writes must never ship here: the default build/client copy
+  # would carry it, but a client dir an older gem refreshes would not, and the
+  # two would start to differ.
+  def test_template_does_not_ship_the_generated_bootstrap
+    refute File.exist?(File.join(TEMPLATE_ROOT, GENERATED_BOOTSTRAP)),
+           "#{GENERATED_BOOTSTRAP} is written by `ruflet build` only while a feature adds hooks"
   end
 
-  def test_entrypoints_import_the_bootstrap
+  # Released gems refresh lib/main*.dart without the rest of lib/, so an
+  # entrypoint may only import what the template itself ships.
+  def test_entrypoints_import_only_files_the_template_ships
+    (ENTRYPOINTS + ["lib/main.dart"]).each do |relative_path|
+      read(relative_path).scan(/^import '([^':]+)'/).flatten.each do |import|
+        assert File.file?(File.join(TEMPLATE_ROOT, "lib", import)),
+               "#{relative_path} imports #{import}, which the template does not ship"
+      end
+      refute_includes read(relative_path), "ruflet_bootstrap.g.dart'", relative_path
+    end
+  end
+
+  def test_entrypoints_declare_both_hook_lists_empty_in_one_marked_block
     ENTRYPOINTS.each do |relative_path|
-      assert_includes read(relative_path), "\nimport 'ruflet_bootstrap.g.dart';\n", relative_path
+      source = read(relative_path)
+
+      assert_equal 1, source.scan(HOOKS_START).size, relative_path
+      assert_equal 1, source.scan(HOOKS_END).size, relative_path
+      assert_match(/^#{Regexp.escape(HOOKS_START)}/, source, "#{relative_path}: the start marker begins a line")
+      block = source[(source.index(HOOKS_START) + HOOKS_START.size)...source.index(HOOKS_END)]
+      assert_equal HOOK_LISTS, block, relative_path
+      assert_includes source, "\ntypedef RufletBootstrapHook = FutureOr<void> Function();\n", relative_path
+      refute_includes main_body(relative_path), HOOKS_START, "#{relative_path}: the block is top level"
     end
   end
 
@@ -83,10 +88,10 @@ class BootstrapHooksContractTest < Minitest::Test
     end
   end
 
-  def test_entrypoints_share_one_hook_runner
+  def test_entrypoints_share_one_hook_block_and_runner
     runners = ENTRYPOINTS.map do |relative_path|
       source = read(relative_path)
-      start = source.index("/// Runs build-written bootstrap hooks")
+      start = source.index("// Startup hooks for build features.")
       refute_nil start, relative_path
       finish = source.index("\n}\n", source.index("void scheduleRufletBootstrapHooksAfterFirstFrame", start))
       source[start..finish + 2]

@@ -35,7 +35,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 
 import 'connection_probe.dart';
-import 'ruflet_bootstrap.g.dart';
 import 'package:ruflet_webview/ruflet_webview.dart' as ruflet_webview;
 
 const bool isProduction = bool.fromEnvironment('dart.vm.product');
@@ -159,8 +158,8 @@ Future<void> main([List<String>? args]) async {
   final pageUrl = resolveBackendUrl(args);
   await waitForBackend(pageUrl);
 
-  // Hooks a build feature asked for (lib/ruflet_bootstrap.g.dart). Without
-  // any, startup is exactly what it was before the hooks existed.
+  // Startup hooks a build feature asked for (see rufletPreRunAppHooks below).
+  // Without any, startup is exactly what it was before the hooks existed.
   if (rufletPreRunAppHooks.isNotEmpty) {
     await runRufletBootstrapHooks(rufletPreRunAppHooks, 'pre-runApp');
   }
@@ -169,8 +168,22 @@ Future<void> main([List<String>? args]) async {
   scheduleRufletBootstrapHooksAfterFirstFrame(rufletPostFirstFrameHooks);
 }
 
-/// Runs build-written bootstrap hooks (lib/ruflet_bootstrap.g.dart) one at a
-/// time, in list order, awaiting each before the next starts.
+// Startup hooks for build features. main() above awaits rufletPreRunAppHooks
+// one at a time just before runApp and runs rufletPostFirstFrameHooks after
+// the first frame. Both lists are empty here, so this file builds on its own
+// with every ruflet gem. Only while a build feature adds hooks does
+// `ruflet build` write them to lib/ruflet_bootstrap.g.dart, import that file
+// and empty this block (Ruflet::CLI::ClientBootstrap in the ruflet gem).
+// --RUFLET_BOOTSTRAP_HOOKS_START--
+const rufletPreRunAppHooks = <RufletBootstrapHook>[];
+const rufletPostFirstFrameHooks = <RufletBootstrapHook>[];
+// --RUFLET_BOOTSTRAP_HOOKS_END--
+
+/// A startup hook: a top-level or static function that takes no arguments.
+typedef RufletBootstrapHook = FutureOr<void> Function();
+
+/// Runs startup hooks one at a time, in list order, awaiting each before the
+/// next starts.
 ///
 /// A hook that throws is reported through [FlutterError.reportError] and does
 /// not stop the hooks after it, or the app.

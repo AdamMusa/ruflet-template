@@ -5,10 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 // not imported here because it only compiles against the ruby_runtime that
 // `ruflet build --self` pins.
 import 'package:ruflet_client/main.server.dart';
-import 'package:ruflet_client/ruflet_bootstrap.g.dart';
 
 void main() {
-  test('an unmodified template ships no bootstrap hooks', () {
+  test('the template declares both hook lists empty', () {
     expect(rufletPreRunAppHooks, isEmpty);
     expect(rufletPostFirstFrameHooks, isEmpty);
   });

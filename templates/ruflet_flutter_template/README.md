@@ -40,18 +40,23 @@ Ubuntu install them with `sudo apt install libwebkit2gtk-4.1-dev`.
 
 ## Bootstrap hooks
 
-Both entrypoints run the ordered hook lists in `lib/ruflet_bootstrap.g.dart`:
-`rufletPreRunAppHooks` are awaited one at a time just before `runApp`, and
-`rufletPostFirstFrameHooks` run after the first frame. A hook that throws is
+`lib/main.self.dart` and `lib/main.server.dart` run two ordered startup hook
+lists: `rufletPreRunAppHooks` are awaited one at a time just before `runApp`,
+and `rufletPostFirstFrameHooks` run after the first frame. A hook that throws is
 reported through `FlutterError.reportError` and the app still starts.
 
-`ruflet build` rewrites that file on every build (`Ruflet::CLI::ClientBootstrap`
-in the ruflet gem); build features add their hooks there, never in
-`lib/main*.dart`. The copy in this template is exactly what the CLI writes when
-no feature adds a hook, and with both lists empty the entrypoints skip the hooks
-entirely. Keep the two in step:
-`tool/conformance/test_bootstrap_hooks_contract.rb` pins the shipped file and
-the hook points.
+Both entrypoints declare the two lists empty, between the
+`// --RUFLET_BOOTSTRAP_HOOKS_START--` and `// --RUFLET_BOOTSTRAP_HOOKS_END--`
+markers, and import nothing the template does not ship. With empty lists they
+skip the hooks entirely, so they build with every ruflet gem, including the
+released ones that refresh `lib/main*.dart` in an existing client file by file.
+
+Build features add hooks in the ruflet gem (`Ruflet::CLI::ClientBootstrap`),
+never in `lib/main*.dart`. Only while a feature adds hooks does `ruflet build`
+write them to `lib/ruflet_bootstrap.g.dart`, import that file and empty the
+marked block. Do not add that file to this template.
+`tool/conformance/test_bootstrap_hooks_contract.rb` pins the markers, the empty
+lists and the hook points.
 
 ## Conditional extensions and services
 
