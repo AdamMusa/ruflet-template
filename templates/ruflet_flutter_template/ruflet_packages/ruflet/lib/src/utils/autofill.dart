@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../models/control.dart';
+import 'enums.dart';
 
 List<String>? parseAutofillHints(dynamic value, [List<String>? defaultValue]) {
   if (value == null) return defaultValue;
@@ -90,12 +91,12 @@ String? parseAutofillHint(String? value, [String? defaultValue]) {
     'username': AutofillHints.username,
   };
 
-  return hints[value.toLowerCase()] ?? defaultValue;
+  return hints[normalizeEnumName(value)] ?? defaultValue;
 }
 
 AutofillContextAction? parseAutofillContextAction(String? value,
     [AutofillContextAction? defaultValue]) {
-  switch (value?.toLowerCase()) {
+  switch (value == null ? null : normalizeEnumName(value)) {
     case 'commit':
       return AutofillContextAction.commit;
     case 'cancel':

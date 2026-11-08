@@ -80,41 +80,43 @@ class _PageViewControlState extends State<PageViewControl> {
         .getDuration("animation_duration", const Duration(seconds: 1))!;
     final defaultAnimationCurve =
         widget.control.getCurve("animation_curve", Curves.linear)!;
+    // Page#invoke sends `args: nil` for methods called without arguments.
+    final a = args is Map ? args : const {};
 
     switch (name) {
       case "go_to_page":
-        final index = parseInt(args["index"]);
+        final index = parseInt(a["index"]);
         if (index != null) {
           await _pageController.animateToPage(
             index,
             duration:
-                parseDuration(args["duration"], defaultAnimationDuration)!,
-            curve: parseCurve(args["curve"], defaultAnimationCurve)!,
+                parseDuration(a["duration"], defaultAnimationDuration)!,
+            curve: parseCurve(a["curve"], defaultAnimationCurve)!,
           );
         }
         break;
       case "jump_to_page":
-        final index = parseInt(args["index"]);
+        final index = parseInt(a["index"]);
         if (index != null) {
           _pageController.jumpToPage(index);
         }
         break;
       case "jump_to":
-        final value = parseDouble(args["value"]);
+        final value = parseDouble(a["value"]);
         if (value != null) {
           _pageController.jumpTo(value);
         }
         break;
       case "next_page":
         await _pageController.nextPage(
-          duration: parseDuration(args["duration"], defaultAnimationDuration)!,
-          curve: parseCurve(args["curve"], defaultAnimationCurve)!,
+          duration: parseDuration(a["duration"], defaultAnimationDuration)!,
+          curve: parseCurve(a["curve"], defaultAnimationCurve)!,
         );
         break;
       case "previous_page":
         await _pageController.previousPage(
-          duration: parseDuration(args["duration"], defaultAnimationDuration)!,
-          curve: parseCurve(args["curve"], defaultAnimationCurve)!,
+          duration: parseDuration(a["duration"], defaultAnimationDuration)!,
+          curve: parseCurve(a["curve"], defaultAnimationCurve)!,
         );
         break;
       default:

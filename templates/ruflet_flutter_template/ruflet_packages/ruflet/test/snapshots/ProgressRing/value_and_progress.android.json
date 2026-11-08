@@ -1,0 +1,30 @@
+{
+  "fixture": "value_and_progress",
+  "design": "android",
+  "geometry": {
+    "size": {
+      "w": 36.0,
+      "h": 36.0
+    },
+    "elements": []
+  },
+  "semantics": [
+    {
+      "label": "",
+      "value": "80",
+      "flags": [],
+      "actions": [],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 36.0,
+        "h": 36.0
+      }
+    }
+  ],
+  "steps": [],
+  "native": {
+    "type": "CircularProgressIndicator",
+    "value": 0.8
+  }
+}

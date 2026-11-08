@@ -98,6 +98,31 @@ class RufletCupertinoThemeData extends CupertinoThemeData {
 RufletStyleTheme cupertinoStyleTheme(BuildContext context) =>
     _styleTheme(CupertinoTheme.of(context), context);
 
+/// The [RufletStyleThemeScope] the Cupertino app and control themes install:
+/// [cupertinoStyleTheme] for [context], and for a descendant on a surface of
+/// another [CupertinoUserInterfaceLevel] (alert dialogs, action sheets, modal
+/// popups and sheets raise it below this scope) the theme for that level, so
+/// a colour role read there resolves to the shade UIKit uses on the surface.
+/// Every Ruflet CupertinoTheme installs its own scope, so the descendants of
+/// one scope share its theme and each level is resolved once.
+Widget cupertinoStyleThemeScope(BuildContext context, Widget child) {
+  CupertinoUserInterfaceLevelData levelOf(BuildContext context) =>
+      CupertinoUserInterfaceLevel.maybeOf(context) ??
+      CupertinoUserInterfaceLevelData.base;
+  final level = levelOf(context);
+  final themes = {level: cupertinoStyleTheme(context)};
+  return RufletStyleThemeScope(
+    data: themes[level]!,
+    localTheme: (reading) {
+      final readingLevel = levelOf(reading);
+      return readingLevel == level
+          ? null
+          : themes[readingLevel] ??= cupertinoStyleTheme(reading);
+    },
+    child: child,
+  );
+}
+
 RufletStyleTheme _styleTheme(CupertinoThemeData theme, BuildContext context) {
   final brightness = theme.brightness ??
       MediaQuery.maybePlatformBrightnessOf(context) ??

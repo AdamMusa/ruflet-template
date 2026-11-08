@@ -1,0 +1,39 @@
+{
+  "fixture": "layout",
+  "design": "android",
+  "geometry": {
+    "size": {
+      "w": 320.0,
+      "h": 76.0
+    },
+    "elements": [
+      {
+        "text": "Layout",
+        "rect": {
+          "l": 26.0,
+          "t": 26.0,
+          "w": 260.0,
+          "h": 24.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Layout",
+      "flags": [
+        "hasEnabledState",
+        "isEnabled",
+        "hasSelectedState"
+      ],
+      "actions": [],
+      "rect": {
+        "l": 10.0,
+        "t": 10.0,
+        "w": 300.0,
+        "h": 56.0
+      }
+    }
+  ],
+  "steps": []
+}

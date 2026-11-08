@@ -1,0 +1,216 @@
+{
+  "fixture": "defaults",
+  "design": "ios",
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 44.0
+    },
+    "elements": [
+      {
+        "text": "Tile",
+        "rect": {
+          "l": 20.0,
+          "t": 13.5,
+          "w": 66.4,
+          "h": 17.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Tile",
+      "flags": [
+        "isButton",
+        "hasEnabledState",
+        "isEnabled",
+        "hasSelectedState"
+      ],
+      "actions": [
+        "tap",
+        "longPress"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 800.0,
+        "h": 44.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap text \"Tile\"",
+      "sent": [
+        {
+          "id": 2201,
+          "event": "click",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Tile",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "hasSelectedState"
+          ],
+          "actions": [
+            "tap",
+            "longPress"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 44.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "long press \"Tile\"",
+      "sent": [
+        {
+          "id": 2201,
+          "event": "long_press",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Tile",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "hasSelectedState"
+          ],
+          "actions": [
+            "tap",
+            "longPress"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 44.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "semantics tap",
+      "sent": [
+        {
+          "id": 2201,
+          "event": "click",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Tile",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "hasSelectedState"
+          ],
+          "actions": [
+            "tap",
+            "longPress"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 44.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "tab",
+      "sent": [],
+      "semantics": [
+        {
+          "label": "Tile",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "hasSelectedState"
+          ],
+          "actions": [
+            "tap",
+            "longPress"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 44.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "invoke focus",
+      "sent": [],
+      "outcome": {
+        "error": "UnsupportedError",
+        "message": "ListTile(2201).focus is not supported on iOS: no handler for \"focus\" is registered for this control"
+      },
+      "semantics": [
+        {
+          "label": "Tile",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "hasSelectedState"
+          ],
+          "actions": [
+            "tap",
+            "longPress"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 44.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "unfocus",
+      "sent": [],
+      "semantics": [
+        {
+          "label": "Tile",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "hasSelectedState"
+          ],
+          "actions": [
+            "tap",
+            "longPress"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 44.0
+          }
+        }
+      ]
+    }
+  ]
+}

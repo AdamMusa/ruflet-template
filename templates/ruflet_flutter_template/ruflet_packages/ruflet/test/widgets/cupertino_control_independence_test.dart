@@ -1,12 +1,13 @@
 import 'package:ruflet/ruflet.dart';
+import 'package:ruflet/src/controls/adaptive_button.dart';
+import 'package:ruflet/src/controls/adaptive_checkbox.dart';
+import 'package:ruflet/src/controls/adaptive_radio.dart';
+import 'package:ruflet/src/controls/adaptive_switch.dart';
+import 'package:ruflet/src/controls/app_bar_core.dart';
 import 'package:ruflet/src/controls/cupertino_alert_dialog.dart';
 import 'package:ruflet/src/controls/cupertino_app_bar.dart';
-import 'package:ruflet/src/controls/cupertino_button.dart';
-import 'package:ruflet/src/controls/cupertino_checkbox.dart';
+import 'package:ruflet/src/controls/cupertino_button_skin.dart';
 import 'package:ruflet/src/controls/cupertino_container.dart';
-import 'package:ruflet/src/controls/cupertino_dialog_action.dart';
-import 'package:ruflet/src/controls/cupertino_radio.dart';
-import 'package:ruflet/src/controls/cupertino_switch.dart';
 import 'package:ruflet/src/controls/cupertino_textfield.dart';
 import 'package:ruflet/src/utils/cupertino_theme.dart';
 import 'package:ruflet/src/widgets/list_tile_clicks.dart';
@@ -81,12 +82,12 @@ void main() {
     });
     var changedRadio = false;
     await tester.pumpWidget(app(Column(children: [
-      CupertinoCheckboxControl(control: checkbox),
+      AdaptiveCheckboxControl(control: checkbox),
       RadioGroup<String>(
           groupValue: 'a',
           onChanged: (_) => changedRadio = true,
-          child: CupertinoRadioControl(control: radio)),
-      CupertinoSwitchControl(control: toggle),
+          child: AdaptiveRadioControl(control: radio)),
+      AdaptiveSwitchControl(control: toggle),
     ])));
     expect(
         tester
@@ -115,8 +116,8 @@ void main() {
     await tester.pumpWidget(app(ListTileClicks(
         notifier: clicks,
         child: Column(children: [
-          CupertinoCheckboxControl(control: checkbox),
-          CupertinoSwitchControl(control: toggle)
+          AdaptiveCheckboxControl(control: checkbox),
+          AdaptiveSwitchControl(control: toggle)
         ]))));
     clicks.onClick();
     expect(checkbox.get('value'), isFalse);
@@ -161,10 +162,17 @@ void main() {
         'colors': ['primary', '#ffffff']
       }
     });
-    final action = control('Button', {
-      'content': 'Continue',
-      'text_style': {'color': 'primary'}
-    });
+    // A Button inside an AlertDialog renders as the iOS dialog action.
+    final action = Control(
+        id: ++nextId,
+        type: 'Button',
+        properties: {
+          'content': 'Continue',
+          'text_style': {'color': 'primary'}
+        },
+        backend: backend,
+        parent: control('AlertDialog', {}));
+    backend.controlsIndex.set(action.id, action);
     final bar = control('AppBar', {
       'title': 'Native title',
       'border': {
@@ -174,9 +182,9 @@ void main() {
     await tester.pumpWidget(app(
         Column(children: [
           CupertinoContainerControl(control: box),
-          CupertinoDialogActionControl(control: action),
+          AdaptiveButtonControl(control: action),
         ]),
-        navigationBar: CupertinoAppBarControl(control: bar)));
+        navigationBar: CupertinoAppBarSkin(core: AppBarCore(bar))));
     final nativeBar = tester
         .widget<CupertinoNavigationBar>(find.byType(CupertinoNavigationBar));
     expect(nativeBar.border?.bottom.color, const Color(0xff13579b));
@@ -215,6 +223,7 @@ void main() {
       (tester) async {
     final button = control('Button', {
       'content': 'Styled button',
+      'on_click': true,
       'style': {
         'color': {'default': '#123456', 'pressed': '#654321'},
         'bgcolor': '#eeeeee',
@@ -224,14 +233,14 @@ void main() {
         'side': {'color': 'primary', 'width': 2},
       }
     });
-    await tester.pumpWidget(
-        app(Center(child: CupertinoButtonControl(control: button))));
+    await tester
+        .pumpWidget(app(Center(child: AdaptiveButtonControl(control: button))));
     final label = find.text('Styled button');
     expect(DefaultTextStyle.of(tester.element(label)).style.fontSize, 21);
     expect(DefaultTextStyle.of(tester.element(label)).style.color,
         const Color(0xff123456));
-    expect(tester.getSize(find.byType(CupertinoButtonControl)),
-        const Size(220, 60));
+    expect(
+        tester.getSize(find.byType(CupertinoButtonSkin)), const Size(220, 60));
     final press = await tester.startGesture(tester.getCenter(label));
     await tester.pump();
     expect(DefaultTextStyle.of(tester.element(label)).style.color,

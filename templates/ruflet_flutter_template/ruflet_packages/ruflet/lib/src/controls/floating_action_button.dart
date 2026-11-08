@@ -2,7 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import '../models/control.dart';
 import '../widgets/platform_control_renderer.dart';
-import 'cupertino_surface_controls.dart';
+import 'cupertino_floating_action_button.dart';
 import 'material_floating_action_button.dart';
 
 class FloatingActionButtonControl extends StatelessWidget {

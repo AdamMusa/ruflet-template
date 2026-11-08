@@ -4,6 +4,7 @@ import '../extensions/control.dart';
 import '../models/control.dart';
 import '../utils/numbers.dart';
 import '../widgets/error.dart';
+import '../widgets/platform_badge.dart';
 import 'draggable.dart';
 
 class DragTargetEvent {
@@ -43,7 +44,7 @@ class DragTargetControl extends StatelessWidget {
         List<dynamic> accepted,
         List<dynamic> rejected,
       ) {
-        return content;
+        return PlatformControlBadge(control: control, child: content);
       },
       onMove: (DragTargetDetails<DraggableData> details) {
         control.triggerEvent(

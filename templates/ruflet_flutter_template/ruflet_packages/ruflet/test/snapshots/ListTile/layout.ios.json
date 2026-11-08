@@ -1,0 +1,39 @@
+{
+  "fixture": "layout",
+  "design": "ios",
+  "geometry": {
+    "size": {
+      "w": 320.0,
+      "h": 64.0
+    },
+    "elements": [
+      {
+        "text": "Layout",
+        "rect": {
+          "l": 30.0,
+          "t": 23.5,
+          "w": 99.5,
+          "h": 17.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Layout",
+      "flags": [
+        "hasEnabledState",
+        "isEnabled",
+        "hasSelectedState"
+      ],
+      "actions": [],
+      "rect": {
+        "l": 10.0,
+        "t": 10.0,
+        "w": 300.0,
+        "h": 44.0
+      }
+    }
+  ],
+  "steps": []
+}

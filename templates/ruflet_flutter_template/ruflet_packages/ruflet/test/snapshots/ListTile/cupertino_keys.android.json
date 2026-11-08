@@ -1,0 +1,97 @@
+{
+  "fixture": "cupertino_keys",
+  "design": "android",
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 72.0
+    },
+    "elements": [
+      {
+        "icon": 984246,
+        "rect": {
+          "l": 16.0,
+          "t": 24.0,
+          "w": 24.0,
+          "h": 24.0
+        }
+      },
+      {
+        "text": "Cupertino",
+        "rect": {
+          "l": 56.0,
+          "t": 15.2,
+          "w": 720.0,
+          "h": 24.0
+        }
+      },
+      {
+        "text": "Keys",
+        "rect": {
+          "l": 56.0,
+          "t": 39.2,
+          "w": 720.0,
+          "h": 20.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Cupertino\nKeys",
+      "flags": [
+        "isButton",
+        "hasEnabledState",
+        "isEnabled",
+        "isFocusable",
+        "hasSelectedState"
+      ],
+      "actions": [
+        "tap",
+        "longPress",
+        "focus"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 800.0,
+        "h": 72.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap text \"Cupertino\"",
+      "sent": [
+        {
+          "id": 2201,
+          "event": "click",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Cupertino\nKeys",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable",
+            "hasSelectedState"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 72.0
+          }
+        }
+      ]
+    }
+  ]
+}

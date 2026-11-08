@@ -9,13 +9,14 @@ import '../models/control.dart';
 import 'alignment.dart';
 import 'box.dart';
 import 'edge_insets.dart';
+import 'enums.dart';
 import 'numbers.dart';
 import 'text.dart';
 
 md.ExtensionSet? parseMarkdownExtensionSet(String? value,
     [md.ExtensionSet? defaultValue]) {
   if (value == null) return defaultValue;
-  switch (value.toLowerCase()) {
+  switch (normalizeEnumName(value)) {
     case "commonmark":
       return md.ExtensionSet.commonMark;
     case "githubweb":

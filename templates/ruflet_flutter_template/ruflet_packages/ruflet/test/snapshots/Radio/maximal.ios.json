@@ -1,0 +1,123 @@
+{
+  "fixture": "maximal",
+  "design": "ios",
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 18.0
+    },
+    "elements": [
+      {
+        "text": "Maximal",
+        "rect": {
+          "l": 0.0,
+          "t": 0.0,
+          "w": 123.1,
+          "h": 18.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Maximal",
+      "flags": [
+        "hasCheckedState",
+        "hasEnabledState",
+        "isEnabled",
+        "isInMutuallyExclusiveGroup",
+        "isFocusable"
+      ],
+      "actions": [
+        "tap",
+        "focus"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 28.0,
+        "w": 800.0,
+        "h": 18.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap text \"Maximal\"",
+      "sent": [
+        {
+          "id": 1400,
+          "update": {
+            "value": "b"
+          }
+        },
+        {
+          "id": 1400,
+          "event": "change",
+          "data": "b"
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Maximal",
+          "flags": [
+            "hasCheckedState",
+            "isChecked",
+            "hasEnabledState",
+            "isEnabled",
+            "isInMutuallyExclusiveGroup",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 28.0,
+            "w": 800.0,
+            "h": 18.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "semantics tap",
+      "sent": [
+        {
+          "id": 1400,
+          "update": {
+            "value": "b"
+          }
+        },
+        {
+          "id": 1400,
+          "event": "change",
+          "data": "b"
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Maximal",
+          "flags": [
+            "hasCheckedState",
+            "isChecked",
+            "hasEnabledState",
+            "isEnabled",
+            "isInMutuallyExclusiveGroup",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 28.0,
+            "w": 800.0,
+            "h": 18.0
+          }
+        }
+      ]
+    }
+  ]
+}

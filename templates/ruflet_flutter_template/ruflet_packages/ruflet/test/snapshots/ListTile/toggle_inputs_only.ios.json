@@ -1,0 +1,118 @@
+{
+  "fixture": "toggle_inputs_only",
+  "design": "ios",
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 44.0
+    },
+    "elements": [
+      {
+        "text": "Agree",
+        "rect": {
+          "l": 64.0,
+          "t": 13.5,
+          "w": 82.9,
+          "h": 17.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Agree",
+      "flags": [
+        "isButton",
+        "hasEnabledState",
+        "isEnabled",
+        "hasSelectedState"
+      ],
+      "actions": [
+        "tap"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 800.0,
+        "h": 44.0
+      }
+    },
+    {
+      "label": "",
+      "flags": [
+        "hasCheckedState",
+        "hasEnabledState",
+        "isEnabled",
+        "isFocusable"
+      ],
+      "actions": [
+        "tap",
+        "focus"
+      ],
+      "rect": {
+        "l": 20.0,
+        "t": 8.0,
+        "w": 28.0,
+        "h": 28.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap text \"Agree\"",
+      "sent": [
+        {
+          "id": 2207,
+          "update": {
+            "value": true
+          }
+        },
+        {
+          "id": 2207,
+          "event": "change",
+          "data": true
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Agree",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "hasSelectedState"
+          ],
+          "actions": [
+            "tap"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 44.0
+          }
+        },
+        {
+          "label": "",
+          "flags": [
+            "hasCheckedState",
+            "isChecked",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "focus"
+          ],
+          "rect": {
+            "l": 20.0,
+            "t": 8.0,
+            "w": 28.0,
+            "h": 28.0
+          }
+        }
+      ]
+    }
+  ]
+}

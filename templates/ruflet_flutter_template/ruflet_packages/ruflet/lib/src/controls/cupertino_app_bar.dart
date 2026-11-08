@@ -1,90 +1,70 @@
 import 'package:flutter/cupertino.dart';
 
-import '../extensions/control.dart';
-import '../models/control.dart';
-import '../utils/borders.dart';
-import '../utils/colors.dart';
-import '../utils/cupertino_theme.dart';
-import '../utils/edge_insets.dart';
-import '../utils/numbers.dart';
-import '../utils/platform_theme.dart';
-import 'base_controls.dart';
+import '../core/control_core.dart';
+import '../utils/borders.dart' show parseBorder;
+import '../utils/cupertino_theme.dart' show cupertinoStyleTheme;
+import '../utils/edge_insets.dart' show parseEdgeInsetsDirectional;
+import '../utils/platform_theme.dart' show parseBrightness;
+import 'app_bar_core.dart';
 
-class CupertinoAppBarControl extends StatelessWidget
+/// Cupertino skin of [AppBarCore]: the scaffold's
+/// ObstructingPreferredSizeWidget, a CupertinoNavigationBar (large when
+/// `large`). It hosts the core its entry created.
+class CupertinoAppBarSkin extends AppBarSkin
     implements ObstructingPreferredSizeWidget {
-  final Control control;
-
-  const CupertinoAppBarControl({super.key, required this.control});
+  const CupertinoAppBarSkin({super.key, required super.core});
 
   @override
-  Widget build(BuildContext context) {
-    debugPrint("CupertinoAppBar build: ${control.id}");
+  Widget build(BuildContext context) => CoreHost<AppBarCore>.adopt(
+      core: core, builder: (context, core) => _bar(context, core));
 
-    var title = control.buildTextOrWidget("title");
-
-    var leading = control.buildWidget("leading");
-    var automaticallyImplyLeading =
-        control.getBool("automatically_imply_leading", true)!;
-    var automaticallyImplyTitle =
-        control.getBool("automatically_imply_title", true)!;
-    var transitionBetweenRoutes =
-        control.getBool("transition_between_routes", true)!;
-    var border = control.getBorder("border", cupertinoStyleTheme(context));
-    var previousPageTitle = control.getString("previous_page_title");
-    var padding = control.getEdgeInsetsDirectional("padding");
-    var backgroundColor = control.getColor("bgcolor", context);
-    var automaticBackgroundVisibility =
-        control.getBool("automatic_background_visibility", true)!;
-    var enableBackgroundFilterBlur =
-        control.getBool("background_filter_blur", true)!;
-    var brightness = control.getBrightness("brightness");
-
-    // "actions" if coming from material AppBar
-    var trailing =
-        control.buildWidget("trailing") ?? control.buildWidgets("actions");
-    var trailingWidget = trailing is Widget
-        ? trailing
-        : trailing is List<Widget>
-            ? Row(mainAxisSize: MainAxisSize.min, children: trailing)
-            : null;
-
-    var bar = control.getBool("large", false)!
+  static Widget _bar(BuildContext context, AppBarCore core) {
+    final p = core.props;
+    final title = p.title?.build();
+    final ends = core.endWidgets;
+    final end = ends.isEmpty
+        ? null
+        : ends.length == 1
+            ? ends.single
+            : Row(mainAxisSize: MainAxisSize.min, children: ends);
+    final border = parseBorder(p.border.value, cupertinoStyleTheme(context));
+    final padding = parseEdgeInsetsDirectional(p.padding.value);
+    final brightness = parseBrightness(p.barBrightness.string);
+    return p.large
         ? CupertinoNavigationBar.large(
-            leading: leading,
-            automaticallyImplyLeading: automaticallyImplyLeading,
-            automaticallyImplyTitle: automaticallyImplyTitle,
-            transitionBetweenRoutes: transitionBetweenRoutes,
+            leading: p.leading,
+            automaticallyImplyLeading: p.automaticallyImplyLeading,
+            automaticallyImplyTitle: p.automaticallyImplyTitle,
+            transitionBetweenRoutes: p.transitionBetweenRoutes,
             border: border,
-            previousPageTitle: previousPageTitle,
+            previousPageTitle: p.previousPageTitle,
             padding: padding,
-            backgroundColor: backgroundColor,
-            automaticBackgroundVisibility: automaticBackgroundVisibility,
-            enableBackgroundFilterBlur: enableBackgroundFilterBlur,
+            backgroundColor: p.bgcolor,
+            automaticBackgroundVisibility: p.automaticBackgroundVisibility,
+            enableBackgroundFilterBlur: p.enableBackgroundFilterBlur,
             brightness: brightness,
             largeTitle: title,
-            trailing: trailingWidget)
+            trailing: end)
         : CupertinoNavigationBar(
-            leading: leading,
-            automaticallyImplyLeading: automaticallyImplyLeading,
-            automaticallyImplyMiddle: automaticallyImplyTitle,
-            transitionBetweenRoutes: transitionBetweenRoutes,
+            leading: p.leading,
+            automaticallyImplyLeading: p.automaticallyImplyLeading,
+            automaticallyImplyMiddle: p.automaticallyImplyTitle,
+            transitionBetweenRoutes: p.transitionBetweenRoutes,
             border: border,
-            previousPageTitle: previousPageTitle,
+            previousPageTitle: p.previousPageTitle,
             padding: padding,
-            backgroundColor: backgroundColor,
-            automaticBackgroundVisibility: automaticBackgroundVisibility,
-            enableBackgroundFilterBlur: enableBackgroundFilterBlur,
+            backgroundColor: p.bgcolor,
+            automaticBackgroundVisibility: p.automaticBackgroundVisibility,
+            enableBackgroundFilterBlur: p.enableBackgroundFilterBlur,
             brightness: brightness,
             middle: title,
-            trailing: trailingWidget);
-
-    return BaseControl(control: control, child: bar);
+            trailing: end);
   }
 
   @override
   Size get preferredSize {
     // Ask the SDK rather than duplicating its large-title height constants.
-    return control.getBool("large", false)!
+    return core.sizing.large
         ? const CupertinoNavigationBar.large(largeTitle: SizedBox())
             .preferredSize
         : const CupertinoNavigationBar().preferredSize;
@@ -93,7 +73,7 @@ class CupertinoAppBarControl extends StatelessWidget
   @override
   bool shouldFullyObstruct(BuildContext context) {
     final Color backgroundColor = CupertinoDynamicColor.maybeResolve(
-            control.getColor("bgcolor", context), context) ??
+            core.backgroundIn(context), context) ??
         CupertinoTheme.of(context).barBackgroundColor;
     final alpha8 = (backgroundColor.a * 255.0).round().clamp(0, 255);
     return alpha8 == 0xFF;

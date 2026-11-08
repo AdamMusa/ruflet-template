@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import '../models/control.dart';
+import '../services/client_action.dart'
+    show controlHasClientActions, runControlClientActions;
 import '../utils/box.dart';
 import '../utils/drawing.dart';
 import '../utils/numbers.dart';
@@ -48,6 +50,7 @@ TextSpan? parseInlineSpan(Control span, RufletStyleTheme theme,
   span.notifyParent = true;
   var onClick = span.getBool("on_click", false)!;
   var url = span.getUrl("url");
+  var hasAction = controlHasClientActions(span);
 
   return TextSpan(
     text: span.getString("text"),
@@ -55,17 +58,21 @@ TextSpan? parseInlineSpan(Control span, RufletStyleTheme theme,
     spellOut: span.getBool("spell_out"),
     semanticsLabel: span.getString("semantics_label"),
     children: parseTextSpans(span.children("spans"), theme, sendControlEvent),
-    mouseCursor: onClick && !span.disabled && sendControlEvent != null
+    mouseCursor: (onClick || hasAction) &&
+            !span.disabled &&
+            sendControlEvent != null
         ? SystemMouseCursors.click
         : null,
-    recognizer:
-        (onClick || url != null) && !span.disabled && sendControlEvent != null
-            ? (TapGestureRecognizer()
-              ..onTap = () {
-                if (url != null) openWebBrowser(url);
-                if (onClick) sendControlEvent(span, "click");
-              })
-            : null,
+    recognizer: (onClick || url != null || hasAction) &&
+            !span.disabled &&
+            sendControlEvent != null
+        ? (TapGestureRecognizer()
+          ..onTap = () {
+            if (hasAction) runControlClientActions(span, sendControlEvent);
+            if (url != null) openWebBrowser(url);
+            if (onClick) sendControlEvent(span, "click");
+          })
+        : null,
     onEnter: span.getBool("on_enter", false)! &&
             !span.disabled &&
             sendControlEvent != null
@@ -130,6 +137,14 @@ List<TextDecoration> parseTextDecorations(dynamic decorationValue) {
   return decorations;
 }
 
+/// Ruby sends `font_family_fallback` as a list of family names; a single
+/// name is accepted too.
+List<String>? parseFontFamilyFallback(dynamic value) {
+  if (value is List) return value.map((family) => family.toString()).toList();
+  if (value is String) return [value];
+  return null;
+}
+
 TextStyle? parseTextStyle(dynamic value, RufletStyleTheme theme,
     [TextStyle? defaultValue]) {
   if (value == null) return defaultValue;
@@ -143,6 +158,7 @@ TextStyle? parseTextStyle(dynamic value, RufletStyleTheme theme,
     fontWeight: parseFontWeight(fontWeight),
     fontStyle: parseBool(value["italic"], false)! ? FontStyle.italic : null,
     fontFamily: value["font_family"],
+    fontFamilyFallback: parseFontFamilyFallback(value["font_family_fallback"]),
     fontVariations: variations,
     height: parseDouble(value["height"]),
     decoration:

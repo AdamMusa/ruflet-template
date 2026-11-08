@@ -4,6 +4,7 @@ import '../extensions/control.dart';
 import '../models/control.dart';
 import '../utils/icons.dart';
 import '../utils/numbers.dart';
+import 'cupertino_context_menu.dart';
 
 class CupertinoContextMenuActionControl extends StatelessWidget {
   final Control control;
@@ -25,6 +26,7 @@ class CupertinoContextMenuActionControl extends StatelessWidget {
         onPressed: () {
           if (!control.disabled) {
             control.triggerEvent("click");
+            CupertinoContextMenuSelection.maybeOf(context)?.onSelected(control);
             Navigator.of(context).pop(); // Close the context menu
           }
         },

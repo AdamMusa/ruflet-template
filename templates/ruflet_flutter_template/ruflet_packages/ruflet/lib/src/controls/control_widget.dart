@@ -40,4 +40,38 @@ class ControlWidget extends StatelessWidget {
       return ErrorControl("Unknown control: ${control.type}");
     });
   }
+
+  @override
+  StatelessElement createElement() => _ControlWidgetElement(this);
+}
+
+/// Keeps [Control.isAttached] true while this widget is mounted, so invokes
+/// of methods no renderer handles fail fast (see [Control.invokeMethod]).
+class _ControlWidgetElement extends StatelessElement {
+  _ControlWidgetElement(ControlWidget super.widget);
+
+  Control get _control => (widget as ControlWidget).control;
+
+  @override
+  void mount(Element? parent, Object? newSlot) {
+    _control.attach();
+    super.mount(parent, newSlot);
+  }
+
+  @override
+  void update(StatelessWidget newWidget) {
+    final previous = _control;
+    final next = (newWidget as ControlWidget).control;
+    if (!identical(previous, next)) {
+      next.attach();
+      previous.detach();
+    }
+    super.update(newWidget);
+  }
+
+  @override
+  void unmount() {
+    _control.detach();
+    super.unmount();
+  }
 }

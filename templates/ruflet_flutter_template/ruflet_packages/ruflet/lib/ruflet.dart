@@ -48,6 +48,7 @@ export 'src/utils/gesture_detector.dart';
 export 'src/utils/gradient.dart';
 export 'src/utils/icons.dart';
 export 'src/utils/images.dart';
+export 'src/utils/invoke.dart';
 export 'src/utils/launch_url.dart';
 export 'src/utils/layout.dart';
 export 'src/utils/locale.dart';

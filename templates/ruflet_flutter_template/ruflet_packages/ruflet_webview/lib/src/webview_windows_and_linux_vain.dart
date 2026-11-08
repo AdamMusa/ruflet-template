@@ -2,7 +2,7 @@ import 'package:ruflet/ruflet.dart';
 import 'package:flutter/widgets.dart';
 
 class WebviewDesktop extends StatefulWidget {
-  const WebviewDesktop({Key? key}) : super(key: key);
+  const WebviewDesktop({super.key});
 
   @override
   State<WebviewDesktop> createState() => _WebviewDesktopState();

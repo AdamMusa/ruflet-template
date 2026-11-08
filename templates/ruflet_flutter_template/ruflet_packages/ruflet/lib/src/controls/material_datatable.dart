@@ -28,7 +28,7 @@ class MaterialDataTableControl extends StatelessWidget {
     var border = control.getBorder("border", materialStyleTheme(theme));
     var borderRadius = control.getBorderRadius("border_radius");
     var gradient = control.getGradient("gradient", materialStyleTheme(theme));
-    var horizontalLines = control.getBorderSide("horizontal_lLines", materialStyleTheme(theme));
+    var horizontalLines = control.getBorderSide("horizontal_lines", materialStyleTheme(theme));
     var verticalLines = control.getBorderSide("vertical_lines", materialStyleTheme(theme));
     var defaultDecoration = theme.dataTableTheme.decoration as BoxDecoration? ??
         const BoxDecoration();

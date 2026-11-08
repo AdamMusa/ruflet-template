@@ -6,6 +6,7 @@ import '../utils/mouse.dart';
 import '../utils/numbers.dart';
 import '../widgets/error.dart';
 import '../widgets/reorderable_item_scope.dart';
+import 'base_controls.dart';
 
 class ReorderableDragHandleControl extends StatelessWidget {
   final Control control;
@@ -37,7 +38,9 @@ class ReorderableDragHandleControl extends StatelessWidget {
       );
     }
 
-    return ReorderableDragStartListener(
-        index: index, enabled: !control.disabled, child: content);
+    return LayoutControl(
+        control: control,
+        child: ReorderableDragStartListener(
+            index: index, enabled: !control.disabled, child: content));
   }
 }

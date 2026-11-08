@@ -1,0 +1,77 @@
+{
+  "fixture": "dialog_action",
+  "design": "android",
+  "geometry": {
+    "size": {
+      "w": 132.6,
+      "h": 48.0
+    },
+    "elements": [
+      {
+        "text": "Delete",
+        "rect": {
+          "l": 24.0,
+          "t": 14.0,
+          "w": 84.6,
+          "h": 20.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Delete",
+      "flags": [
+        "isButton",
+        "hasEnabledState",
+        "isEnabled",
+        "isFocusable"
+      ],
+      "actions": [
+        "tap",
+        "longPress",
+        "focus"
+      ],
+      "rect": {
+        "l": 383.4,
+        "t": 302.0,
+        "w": 132.6,
+        "h": 48.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap text \"Delete\"",
+      "sent": [
+        {
+          "id": 1601,
+          "event": "click",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Delete",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 383.4,
+            "t": 302.0,
+            "w": 132.6,
+            "h": 48.0
+          }
+        }
+      ]
+    }
+  ]
+}

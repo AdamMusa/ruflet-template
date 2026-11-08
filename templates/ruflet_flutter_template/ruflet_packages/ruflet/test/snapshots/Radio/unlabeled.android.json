@@ -1,0 +1,31 @@
+{
+  "fixture": "unlabeled",
+  "design": "android",
+  "geometry": {
+    "size": {
+      "w": 48.0,
+      "h": 48.0
+    },
+    "elements": []
+  },
+  "semantics": [],
+  "steps": [
+    {
+      "step": "tap at 0.5,0.5",
+      "sent": [
+        {
+          "id": 1400,
+          "update": {
+            "value": "b"
+          }
+        },
+        {
+          "id": 1400,
+          "event": "change",
+          "data": "b"
+        }
+      ],
+      "semantics": []
+    }
+  ]
+}

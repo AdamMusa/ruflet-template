@@ -53,10 +53,10 @@ class _MaterialColorPickerControlState
         widget.control.getColor("color", context) ?? Colors.black;
     if (pickerHsvColor != null) {
       final hsvColor = pickerHsvColor.toColor();
-      if (hsvColor.value != _pickerColor.value) {
+      if (hsvColor.toARGB32() != _pickerColor.toARGB32()) {
         _pickerColor = hsvColor;
       }
-    } else if (controlColor.value != _pickerColor.value) {
+    } else if (controlColor.toARGB32() != _pickerColor.toARGB32()) {
       _pickerColor = controlColor;
     }
 
@@ -96,6 +96,9 @@ class _MaterialColorPickerControlState
       displayThumbColor: widget.control.getBool("display_thumb_color", true)!,
       enableAlpha: widget.control.getBool("enable_alpha", true)!,
       hexInputBar: widget.control.getBool("hex_input_bar", true)!,
+      // The upstream replacement is a Theme text-role override, which cannot
+      // reproduce a per-control style without changing rendering.
+      // ignore: deprecated_member_use
       labelTextStyle: widget.control
           .getTextStyle("label_text_style", RufletStyleTheme.of(context)),
       labelTypes: labelTypesArg,

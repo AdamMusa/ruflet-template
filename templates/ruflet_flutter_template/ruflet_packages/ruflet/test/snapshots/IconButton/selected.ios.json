@@ -1,0 +1,77 @@
+{
+  "fixture": "selected",
+  "design": "ios",
+  "geometry": {
+    "size": {
+      "w": 60.4,
+      "h": 52.4
+    },
+    "elements": [
+      {
+        "icon": 984497,
+        "rect": {
+          "l": 20.0,
+          "t": 16.0,
+          "w": 20.4,
+          "h": 20.4
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "",
+      "flags": [
+        "isButton",
+        "hasEnabledState",
+        "isEnabled",
+        "isFocusable"
+      ],
+      "actions": [
+        "tap",
+        "longPress",
+        "focus"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 60.4,
+        "h": 52.4
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap at 0.5,0.5",
+      "sent": [
+        {
+          "id": 1801,
+          "event": "click",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 60.4,
+            "h": 52.4
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -12,7 +12,7 @@ const chartSeriesColors = <Color>[
   Color(0xFF3F51B5),
   Color(0xFF2196F3),
   Color(0xFF03A9F4),
-  const Color(0xFF00BCD4),
+  Color(0xFF00BCD4),
   Color(0xFF009688),
   Color(0xFF4CAF50),
   Color(0xFF8BC34A),
@@ -22,7 +22,7 @@ const chartSeriesColors = <Color>[
   Color(0xFFFF9800),
   Color(0xFFFF5722),
   Color(0xFF795548),
-  const Color(0xFF607D8B),
+  Color(0xFF607D8B),
 ];
 
 /// Supplying the painter prevents fl_chart's touch fallback from consulting a
@@ -205,9 +205,7 @@ AxisTitles parseAxisTitles(Control? control) {
 FLHorizontalAlignment? parseFLHorizontalAlignment(String? value,
     [FLHorizontalAlignment? defaultValue]) {
   if (value == null) return defaultValue;
-  return FLHorizontalAlignment.values.firstWhereOrNull(
-          (e) => e.name.toLowerCase() == value.toLowerCase()) ??
-      defaultValue;
+  return parseEnum(FLHorizontalAlignment.values, value, defaultValue);
 }
 
 String resolveFlTouchEventType(FlTouchEvent event) {

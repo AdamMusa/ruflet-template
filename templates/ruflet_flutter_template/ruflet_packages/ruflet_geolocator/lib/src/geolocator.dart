@@ -87,14 +87,14 @@ class GeolocatorService extends RufletService {
         }
       case "distance_between":
         var p = [
-          args["start_latitude"],
-          args["start_longitude"],
-          args["end_latitude"],
-          args["end_longitude"]
+          parseDouble(args["start_latitude"]),
+          parseDouble(args["start_longitude"]),
+          parseDouble(args["end_latitude"]),
+          parseDouble(args["end_longitude"])
         ];
 
         if (p.every((e) => e != null)) {
-          return Geolocator.distanceBetween(p[0], p[1], p[2], p[3]);
+          return Geolocator.distanceBetween(p[0]!, p[1]!, p[2]!, p[3]!);
         }
         break;
       default:

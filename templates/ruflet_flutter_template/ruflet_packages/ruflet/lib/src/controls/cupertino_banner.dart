@@ -120,7 +120,12 @@ class _CupertinoBannerControlState extends State<CupertinoBannerControl> {
       });
     } else if (!open && lastOpen) {
       control.updateProperties({"_open": false}, python: false);
-      WidgetsBinding.instance.addPostFrameCallback((_) => _removeEntry());
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Like the Material banner, closing a shown banner reports on_dismiss.
+        final shown = _entry != null;
+        _removeEntry();
+        if (shown) control.triggerEvent("dismiss");
+      });
     }
 
     return const SizedBox.shrink();

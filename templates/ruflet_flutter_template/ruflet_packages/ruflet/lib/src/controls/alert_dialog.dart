@@ -11,6 +11,7 @@ import '../utils/misc.dart';
 import '../utils/numbers.dart';
 import '../utils/text.dart';
 import '../widgets/control_inherited_notifier.dart';
+import '../widgets/control_route.dart';
 import '../widgets/material_dialog_route.dart';
 import '../widgets/error.dart';
 import 'base_controls.dart';
@@ -78,33 +79,16 @@ class AlertDialogControl extends StatelessWidget {
             "AlertDialog has nothing to display. Provide at minimum one of the following: title, content, actions.");
       }
 
-      control.updateProperties({"_open": open}, python: false);
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!context.mounted || !control.getBool("open", false)!) return;
-        Navigator.of(context)
-            .push(ControlMaterialDialogRoute<void>(
-                control: control,
-                barrierDismissible: !modal,
-                context: context,
-                builder: (context) => _createAlertDialog(context)))
-            .then((value) {
-          debugPrint("Dismissing AlertDialog(${control.id})");
-          control.updateProperties({"_open": false}, python: false);
-          control.updateProperties({"open": false});
-          control.triggerEvent("dismiss");
-        });
-      });
+      presentControlRoute(
+          context,
+          control,
+          () => ControlMaterialDialogRoute<void>(
+              control: control,
+              barrierDismissible: !modal,
+              context: context,
+              builder: (context) => _createAlertDialog(context)));
     } else if (!open && lastOpen) {
-      if (Navigator.of(context).canPop() == true) {
-        debugPrint(
-            "AlertDialog(${control.id}): Closing dialog managed by this widget.");
-        Navigator.of(context).pop();
-        control.updateProperties({"_open": false}, python: false);
-      } else {
-        debugPrint(
-            "AlertDialog(${control.id}): Dialog was not opened by this widget, skipping pop.");
-      }
+      closeControlRoute(control);
     }
     return const SizedBox.shrink();
   }

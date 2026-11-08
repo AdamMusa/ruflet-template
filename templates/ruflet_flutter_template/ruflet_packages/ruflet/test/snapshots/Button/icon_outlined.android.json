@@ -1,0 +1,123 @@
+{
+  "fixture": "icon_outlined",
+  "design": "android",
+  "geometry": {
+    "size": {
+      "w": 108.3,
+      "h": 48.0
+    },
+    "elements": [
+      {
+        "icon": 984246,
+        "rect": {
+          "l": 16.0,
+          "t": 15.0,
+          "w": 18.0,
+          "h": 18.0
+        }
+      },
+      {
+        "text": "Add",
+        "rect": {
+          "l": 42.0,
+          "t": 14.0,
+          "w": 42.3,
+          "h": 20.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Add",
+      "flags": [
+        "isButton",
+        "hasEnabledState",
+        "isEnabled",
+        "isFocusable"
+      ],
+      "actions": [
+        "tap",
+        "longPress",
+        "focus"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 108.3,
+        "h": 48.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap text \"Add\"",
+      "sent": [
+        {
+          "id": 1601,
+          "event": "click",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Add",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 108.3,
+            "h": 48.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "hover in and out",
+      "sent": [
+        {
+          "id": 1601,
+          "event": "hover",
+          "data": true
+        },
+        {
+          "id": 1601,
+          "event": "hover",
+          "data": false
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Add",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 108.3,
+            "h": 48.0
+          }
+        }
+      ]
+    }
+  ]
+}

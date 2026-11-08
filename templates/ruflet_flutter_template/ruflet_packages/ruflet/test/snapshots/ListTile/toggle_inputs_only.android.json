@@ -1,0 +1,122 @@
+{
+  "fixture": "toggle_inputs_only",
+  "design": "android",
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 56.0
+    },
+    "elements": [
+      {
+        "text": "Agree",
+        "rect": {
+          "l": 80.0,
+          "t": 16.0,
+          "w": 696.0,
+          "h": 24.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Agree",
+      "flags": [
+        "isButton",
+        "hasEnabledState",
+        "isEnabled",
+        "isFocusable",
+        "hasSelectedState"
+      ],
+      "actions": [
+        "tap",
+        "focus"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 800.0,
+        "h": 56.0
+      }
+    },
+    {
+      "label": "",
+      "flags": [
+        "hasCheckedState",
+        "hasEnabledState",
+        "isEnabled",
+        "isFocusable"
+      ],
+      "actions": [
+        "tap",
+        "focus"
+      ],
+      "rect": {
+        "l": 16.0,
+        "t": 4.0,
+        "w": 48.0,
+        "h": 48.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap text \"Agree\"",
+      "sent": [
+        {
+          "id": 2207,
+          "update": {
+            "value": true
+          }
+        },
+        {
+          "id": 2207,
+          "event": "change",
+          "data": true
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Agree",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable",
+            "hasSelectedState"
+          ],
+          "actions": [
+            "tap",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 56.0
+          }
+        },
+        {
+          "label": "",
+          "flags": [
+            "hasCheckedState",
+            "isChecked",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "focus"
+          ],
+          "rect": {
+            "l": 16.0,
+            "t": 4.0,
+            "w": 48.0,
+            "h": 48.0
+          }
+        }
+      ]
+    }
+  ]
+}

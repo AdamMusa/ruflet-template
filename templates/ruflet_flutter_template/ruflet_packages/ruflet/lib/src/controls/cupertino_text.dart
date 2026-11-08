@@ -45,6 +45,8 @@ class CupertinoTextControl extends StatelessWidget {
       fontWeight: parseFontWeight(fontWeight),
       fontStyle: control.getBool("italic", false)! ? FontStyle.italic : null,
       fontFamily: control.getString("font_family"),
+      fontFamilyFallback:
+          parseFontFamilyFallback(control.get("font_family_fallback")),
       fontVariations: variations,
       color: control.getColor("color", context) ??
           (spans.isNotEmpty ? DefaultTextStyle.of(context).style.color : null),

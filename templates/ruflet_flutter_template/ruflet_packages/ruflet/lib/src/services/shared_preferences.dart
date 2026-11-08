@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../ruflet_service.dart';
+import '../utils/invoke.dart';
 
 class SharedPreferencesService extends RufletService {
   SharedPreferencesService({required super.control});
@@ -21,21 +22,23 @@ class SharedPreferencesService extends RufletService {
   }
 
   Future<dynamic> _invokeMethod(String name, dynamic args) async {
+    final key = const {"set", "get", "contains_key", "remove"}.contains(name)
+        ? requireInvokeArg(args, "key", "SharedPreferences.$name").toString()
+        : null;
+    if (name == "set") requireInvokeArg(args, "value", "SharedPreferences.set");
     var prefs = await SharedPreferences.getInstance();
     switch (name) {
       case "set":
-        return prefs.setString(args["key"]!, args["value"]!);
+        return prefs.setString(key!, args["value"].toString());
       case "get":
-        return prefs.getString(args["key"]!);
+        return prefs.getString(key!);
       case "contains_key":
-        return prefs.containsKey(args["key"]!);
+        return prefs.containsKey(key!);
       case "get_keys":
-        return prefs
-            .getKeys()
-            .where((key) => key.startsWith(args["key_prefix"]!))
-            .toList();
+        final prefix = args["key_prefix"]?.toString() ?? "";
+        return prefs.getKeys().where((key) => key.startsWith(prefix)).toList();
       case "remove":
-        return prefs.remove(args["key"]!);
+        return prefs.remove(key!);
       case "clear":
         return prefs.clear();
       default:

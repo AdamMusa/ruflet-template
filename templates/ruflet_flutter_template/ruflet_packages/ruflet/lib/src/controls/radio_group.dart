@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import '../extensions/control.dart';
 import '../models/control.dart';
 import '../widgets/error.dart';
+import '../widgets/platform_badge.dart';
 
 class RadioGroupControl extends StatelessWidget {
   final Control control;
@@ -21,8 +22,11 @@ class RadioGroupControl extends StatelessWidget {
           control.triggerEvent("change", value);
         }
       },
-      child: control.buildWidget("content") ??
-          const ErrorControl("RadioGroup.content must be provided and visible"),
+      child: PlatformControlBadge(
+          control: control,
+          child: control.buildWidget("content") ??
+              const ErrorControl(
+                  "RadioGroup.content must be provided and visible")),
     );
   }
 }

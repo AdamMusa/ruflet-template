@@ -1,6 +1,6 @@
 # Updating the local Ruflet engine
 
-All 20 owned packages are copied exactly from `packages/` in a clean
+All 21 owned packages are copied exactly from `packages/` in a clean
 `ruflet-engine` Git commit. The engine owns its renderers and in-process
 transport together. No Flet namespace rewriting or template-only transport
 patching happens during synchronization. Preserve upstream copyright notices,

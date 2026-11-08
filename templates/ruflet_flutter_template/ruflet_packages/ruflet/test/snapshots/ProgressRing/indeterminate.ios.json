@@ -1,0 +1,16 @@
+{
+  "fixture": "indeterminate",
+  "design": "ios",
+  "size": {
+    "w": 20.0,
+    "h": 20.0
+  },
+  "ticking": true,
+  "native": {
+    "type": "CupertinoActivityIndicator",
+    "animating": true,
+    "progress": 1.0,
+    "radius": 10.0
+  },
+  "semantics": []
+}

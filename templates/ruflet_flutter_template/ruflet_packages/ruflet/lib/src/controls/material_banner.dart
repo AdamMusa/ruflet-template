@@ -26,6 +26,7 @@ class MaterialBannerControl extends StatelessWidget {
       contentTextStyle:
           control.getTextStyle("content_text_style", materialStyleTheme(Theme.of(context))),
       shadowColor: control.getColor("shadow_color", context),
+      surfaceTintColor: control.getColor("surface_tint_color", context),
       dividerColor: control.getColor("divider_color", context),
       elevation: control.getDouble("elevation"),
       minActionBarHeight: control.getDouble("min_action_bar_height", 52.0)!,

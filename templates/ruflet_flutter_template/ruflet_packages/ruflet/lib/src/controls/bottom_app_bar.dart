@@ -2,7 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import '../models/control.dart';
 import '../widgets/platform_control_renderer.dart';
-import 'cupertino_surface_controls.dart';
+import 'cupertino_bottom_app_bar.dart';
 import 'material_bottom_app_bar.dart';
 
 class BottomAppBarControl extends StatelessWidget {

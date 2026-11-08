@@ -1,5 +1,5 @@
 import 'package:ruflet/ruflet.dart';
-import 'package:ruflet/src/controls/cupertino_button.dart';
+import 'package:ruflet/src/controls/cupertino_button_skin.dart';
 import 'package:ruflet/src/widgets/constrained_default_padding.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/rendering.dart';
@@ -30,7 +30,7 @@ void main() {
         child:
             CupertinoApp(home: Center(child: ControlWidget(control: control))),
       ));
-      final button = find.byType(CupertinoButtonControl);
+      final button = find.byType(CupertinoButtonSkin);
       expect(tester.getSize(button), const Size(166, 48));
       final paragraph =
           tester.renderObject<RenderParagraph>(find.text('Scan QR'));

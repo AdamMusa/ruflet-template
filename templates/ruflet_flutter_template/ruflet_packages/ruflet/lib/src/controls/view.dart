@@ -14,6 +14,7 @@ import '../utils/alignment.dart';
 import '../utils/box.dart';
 import '../utils/colors.dart';
 import '../utils/edge_insets.dart';
+import '../utils/misc.dart';
 import '../utils/numbers.dart';
 import '../utils/overlay_style.dart';
 import '../utils/style_theme.dart';
@@ -22,6 +23,9 @@ import '../widgets/page_context.dart';
 import '../widgets/page_media.dart';
 import '../widgets/platform_page_scaffold.dart';
 import 'adaptive_app_bar.dart';
+import 'adaptive_refresh_scroll_view.dart';
+import 'box_sliver.dart';
+import 'end_reached_listener.dart';
 import 'scroll_notification_control.dart';
 import 'scrollable_control.dart';
 
@@ -41,6 +45,9 @@ class _ViewControlState extends State<ViewControl> {
   Control? _dialogs;
   Completer<bool>? _popCompleter;
   bool _allowPop = false;
+  // Created on first use: only a View with `on_refresh` scrolls a
+  // CustomScrollView that both the refresh view and ScrollableControl drive.
+  ScrollController? _refreshController;
 
   @override
   void initState() {
@@ -65,6 +72,7 @@ class _ViewControlState extends State<ViewControl> {
     _overlay?.removeListener(_overlayOrDialogsChanged);
     _dialogs?.removeListener(_overlayOrDialogsChanged);
     widget.control.removeInvokeMethodListener(_invokeMethod);
+    _refreshController?.dispose();
     super.dispose();
   }
 
@@ -85,7 +93,8 @@ class _ViewControlState extends State<ViewControl> {
         break;
       case "confirm_pop":
         if (_popCompleter != null && !_popCompleter!.isCompleted) {
-          _popCompleter?.complete(args["should_pop"]);
+          // A missing answer keeps the view rather than discarding it.
+          _popCompleter?.complete(parseBool(args["should_pop"], false)!);
         }
         break;
     }
@@ -128,15 +137,39 @@ class _ViewControlState extends State<ViewControl> {
                 ControlWidget(control: child, key: ValueKey(child.id)))
             .toList());
 
-    Widget child = ScrollableControl(
-      control: control,
-      scrollDirection: Axis.vertical,
-      wrapIntoScrollableView: true,
-      child: column,
-    );
+    Widget child;
+    if (control.getBool("on_refresh", false)!) {
+      // Page-level pull-to-refresh: the body always scrolls vertically, at
+      // least one viewport tall so the view alignment is unchanged.
+      final controller = _refreshController ??= ScrollController();
+      child = ScrollableControl(
+        key: ValueKey("refresh_${control.id}"),
+        control: control,
+        scrollDirection: Axis.vertical,
+        scrollController: controller,
+        child: AdaptiveRefreshScrollView(
+          control: control,
+          controller: controller,
+          keyboardDismissBehavior:
+              control.getKeyboardDismissBehavior("keyboard_dismiss_behavior"),
+          slivers: [boxSliver(column, fillViewport: hasExpandedChild(control))],
+        ),
+      );
+    } else {
+      child = ScrollableControl(
+        control: control,
+        scrollDirection: Axis.vertical,
+        wrapIntoScrollableView: true,
+        child: column,
+      );
+    }
 
     if (control.getBool("on_scroll", false)!) {
       child = ScrollNotificationControl(control: control, child: child);
+    }
+
+    if (control.getBool("on_end_reached", false)!) {
+      child = EndReachedListener(control: control, child: child);
     }
 
     var pageData = PageContext.of(context);

@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:ruflet/ruflet.dart';
@@ -8,9 +7,7 @@ import 'charts.dart';
 
 RadarShape? parseRadarShape(String? value, [RadarShape? defaultValue]) {
   if (value == null) return defaultValue;
-  return RadarShape.values.firstWhereOrNull(
-          (e) => e.name.toLowerCase() == value.toLowerCase()) ??
-      defaultValue;
+  return parseEnum(RadarShape.values, value, defaultValue);
 }
 
 class RadarChartEventData extends Equatable {

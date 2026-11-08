@@ -4,7 +4,7 @@ import '../models/control.dart';
 import '../widgets/platform_control_renderer.dart';
 import 'cupertino_action_sheet.dart';
 import 'cupertino_action_sheet_action.dart';
-import 'material_picker_controls.dart';
+import 'material_action_sheet.dart';
 
 class AdaptiveActionSheetControl extends StatelessWidget {
   final Control control;

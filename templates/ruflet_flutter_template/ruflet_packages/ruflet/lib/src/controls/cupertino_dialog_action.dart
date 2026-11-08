@@ -1,37 +1,29 @@
 import 'package:flutter/cupertino.dart';
 
-import '../extensions/control.dart';
-import '../models/control.dart';
-import '../utils/cupertino_theme.dart';
-import '../utils/numbers.dart';
-import '../utils/text.dart';
 import '../widgets/error.dart';
-import 'base_controls.dart';
+import 'button_core.dart';
 
-class CupertinoDialogActionControl extends StatelessWidget {
-  final Control control;
+/// Cupertino skin of [ButtonCore] for a button inside an AlertDialog:
+/// the native CupertinoDialogAction with its default/destructive roles.
+class CupertinoDialogActionSkin extends StatelessWidget {
+  const CupertinoDialogActionSkin({super.key, required this.core});
 
-  const CupertinoDialogActionControl({super.key, required this.control});
+  final ButtonCore core;
 
   @override
   Widget build(BuildContext context) {
-    debugPrint("CupertinoDialogAction build: ${control.id}");
-
-    var content = control.buildTextOrWidget("content");
+    final p = core.props;
+    final content = p.content?.build();
     if (content == null) {
       return const ErrorControl(
           "CupertinoDialogAction.content must be a string or visible Control");
     }
-
-    var cupertinoDialogAction = CupertinoDialogAction(
-      isDefaultAction: control.getBool("default", false)!,
-      isDestructiveAction: control.getBool("destructive", false)!,
-      textStyle:
-          control.getTextStyle("text_style", cupertinoStyleTheme(context)),
-      onPressed: !control.disabled ? () => control.triggerEvent("click") : null,
+    return CupertinoDialogAction(
+      isDefaultAction: p.isDefault,
+      isDestructiveAction: p.isDestructive,
+      textStyle: p.textStyle,
+      onPressed: core.onClick,
       child: content,
     );
-
-    return BaseControl(control: control, child: cupertinoDialogAction);
   }
 }

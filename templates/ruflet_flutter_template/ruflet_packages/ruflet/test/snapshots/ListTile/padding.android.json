@@ -1,0 +1,39 @@
+{
+  "fixture": "padding",
+  "design": "android",
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 116.0
+    },
+    "elements": [
+      {
+        "text": "Padded",
+        "rect": {
+          "l": 30.0,
+          "t": 46.0,
+          "w": 740.0,
+          "h": 24.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Padded",
+      "flags": [
+        "hasEnabledState",
+        "isEnabled",
+        "hasSelectedState"
+      ],
+      "actions": [],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 800.0,
+        "h": 116.0
+      }
+    }
+  ],
+  "steps": []
+}

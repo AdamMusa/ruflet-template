@@ -10,4 +10,5 @@ MaterialPicker wire control. It contains only painting data, adapted from
 Flutter's colors.dart under the BSD license in FLUTTER_LICENSE. Selecting that
 wire control still offers the same named swatch values in a Cupertino renderer.
 
-The extension's Material renderers continue to use the pinned upstream package.
+The extension's Material renderers continue to use the pinned upstream package,
+except `material_picker`, which uses the Material fork in `../material_swatch_picker`.

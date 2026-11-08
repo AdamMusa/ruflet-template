@@ -24,6 +24,7 @@ import '../routing/router_delegate.dart';
 import '../services/service_binding.dart';
 import '../services/service_registry.dart';
 import '../utils/device_info.dart';
+import '../utils/invoke.dart';
 import '../utils/locale.dart';
 import '../utils/numbers.dart';
 import '../utils/platform.dart';
@@ -276,19 +277,37 @@ class _PageControlState extends State<PageControl> with WidgetsBindingObserver {
         }
 
       case "push_route":
-        _routeState.route = args["route"];
+        _routeState.route =
+            requireInvokeArg(args, "route", "Page.push_route").toString();
         break;
       case "get_device_info":
         return await getDeviceInfo();
       case "set_allowed_device_orientations":
-        if (isMobilePlatform()) {
-          var orientations = args["orientations"]
-                  ?.map((o) => parseDeviceOrientation(o))
-                  .whereType<DeviceOrientation>()
-                  .toList() ??
-              List<DeviceOrientation>.from(DeviceOrientation.values);
-          await SystemChrome.setPreferredOrientations(orientations);
+        // Like Flet, only a native mobile app can constrain its orientation.
+        if (!isMobilePlatform()) {
+          throw UnsupportedError(
+              "set_allowed_device_orientations is only supported on mobile "
+              "platforms");
         }
+        var value = args["orientations"];
+        List<DeviceOrientation> orientations;
+        if (value is List) {
+          // An empty list restores the system default.
+          orientations = [];
+          for (final name in value) {
+            final orientation = parseDeviceOrientation(name?.toString());
+            if (orientation == null) {
+              throw ArgumentError.value(name, "orientations",
+                  "Page.set_allowed_device_orientations: unknown orientation");
+            }
+            if (!orientations.contains(orientation)) {
+              orientations.add(orientation);
+            }
+          }
+        } else {
+          orientations = List<DeviceOrientation>.from(DeviceOrientation.values);
+        }
+        await SystemChrome.setPreferredOrientations(orientations);
         break;
 
       default:

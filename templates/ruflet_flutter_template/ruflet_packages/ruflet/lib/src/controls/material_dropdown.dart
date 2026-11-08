@@ -177,6 +177,7 @@ class _DropdownControlState extends State<MaterialDropdownControl> {
       focusedBorder: focusedBorder,
       isDense: widget.control.getBool("dense", false)!,
       contentPadding: widget.control.getPadding("content_padding"),
+      hoverColor: widget.control.getColor("hover_color", context),
     );
 
     TextStyle? textStyle = widget.control.getTextStyle("text_style", materialStyleTheme(theme));
@@ -197,6 +198,18 @@ class _DropdownControlState extends State<MaterialDropdownControl> {
                   elevation: elevation,
                   fixedSize: WidgetStateProperty.all(
                       Size.fromWidth(menuWidth ?? double.infinity)));
+    }
+
+    // menu_border_radius (Flet's DropdownM2, which Ruby's dropdown_m2 sends
+    // on this wire) rounds the open menu; border_radius rounds the field.
+    final menuBorderRadius =
+        widget.control.getBorderRadius("menu_border_radius");
+    if (menuBorderRadius != null) {
+      menuStyle =
+          (menuStyle ?? theme.dropdownMenuTheme.menuStyle ?? const MenuStyle())
+              .copyWith(
+                  shape: WidgetStatePropertyAll(
+                      RoundedRectangleBorder(borderRadius: menuBorderRadius)));
     }
 
     if (textSize != null || color != null) {
@@ -280,7 +293,18 @@ class _DropdownControlState extends State<MaterialDropdownControl> {
     _focusNode.canRequestFocus = editable;
 
     int expand = widget.control.getExpand("expand", 0)!;
-    EdgeInsets? expandedInsets = expand > 0 ? EdgeInsets.zero : null;
+    EdgeInsets? expandedInsets = widget.control.getPadding("expanded_insets") ??
+        (expand > 0 ? EdgeInsets.zero : null);
+
+    // DropdownMenu has no suffix slot; a decoration builder adds one after
+    // the selected text and must then carry the label/hint/helper/error.
+    var label = widget.control.buildTextOrWidget("label",
+        textStyle: widget.control.getTextStyle("label_style", materialStyleTheme(theme)));
+    var hintText = widget.control.getString("hint_text");
+    var helperText = widget.control.getString("helper_text");
+    var errorText = widget.control.getString("error_text");
+    var leadingIcon = widget.control.buildIconOrWidget("leading_icon");
+    var selectedSuffix = widget.control.buildWidget("selected_suffix");
 
     Widget dropDown = DropdownMenu<String>(
       key: dropdownMenuKey,
@@ -291,18 +315,27 @@ class _DropdownControlState extends State<MaterialDropdownControl> {
       enableFilter: widget.control.getBool("enable_filter", false)!,
       enableSearch: widget.control.getBool("enable_search", true)!,
       menuHeight: widget.control.getDouble("menu_height"),
-      label: widget.control.buildTextOrWidget("label",
-          textStyle: widget.control.getTextStyle("label_style", materialStyleTheme(theme))),
-      leadingIcon: widget.control.buildIconOrWidget("leading_icon"),
+      label: selectedSuffix == null ? label : null,
+      leadingIcon: leadingIcon,
       trailingIcon: widget.control.buildIconOrWidget("trailing_icon"),
       selectedTrailingIcon:
           widget.control.buildIconOrWidget("selected_trailing_icon"),
       textStyle: textStyle,
       textAlign: textAlign,
       width: widget.control.getDouble("width"),
-      errorText: widget.control.getString("error_text"),
-      hintText: widget.control.getString("hint_text"),
-      helperText: widget.control.getString("helper_text"),
+      errorText: selectedSuffix == null ? errorText : null,
+      hintText: selectedSuffix == null ? hintText : null,
+      helperText: selectedSuffix == null ? helperText : null,
+      decorationBuilder: selectedSuffix == null
+          ? null
+          : (context, menuController) => InputDecoration(
+                label: label,
+                hintText: hintText,
+                helperText: helperText,
+                errorText: errorText,
+                prefixIcon: leadingIcon,
+                suffix: selectedSuffix,
+              ),
       menuStyle: menuStyle,
       expandedInsets: expandedInsets,
       inputDecorationTheme: inputDecorationTheme,

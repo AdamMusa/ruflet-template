@@ -1,0 +1,72 @@
+{
+  "fixture": "list_tile",
+  "design": "ios",
+  "geometry": {
+    "size": {
+      "w": 28.0,
+      "h": 28.0
+    },
+    "elements": []
+  },
+  "semantics": [
+    {
+      "label": "",
+      "flags": [
+        "hasCheckedState",
+        "hasEnabledState",
+        "isEnabled",
+        "isFocusable"
+      ],
+      "actions": [
+        "tap",
+        "focus"
+      ],
+      "rect": {
+        "l": 20.0,
+        "t": 8.0,
+        "w": 28.0,
+        "h": 28.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap text \"Tile\"",
+      "sent": [
+        {
+          "id": 1201,
+          "update": {
+            "value": true
+          }
+        },
+        {
+          "id": 1201,
+          "event": "change",
+          "data": true
+        }
+      ],
+      "semantics": [
+        {
+          "label": "",
+          "flags": [
+            "hasCheckedState",
+            "isChecked",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "focus"
+          ],
+          "rect": {
+            "l": 20.0,
+            "t": 8.0,
+            "w": 28.0,
+            "h": 28.0
+          }
+        }
+      ]
+    }
+  ]
+}

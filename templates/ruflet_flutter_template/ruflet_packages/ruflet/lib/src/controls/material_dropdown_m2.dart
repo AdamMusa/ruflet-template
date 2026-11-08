@@ -13,6 +13,13 @@ import '../utils/numbers.dart';
 import '../utils/text.dart';
 import 'base_controls.dart';
 
+/// Material 2 renderer for the legacy `DropdownM2` wire type.
+///
+/// Ruby keywords this renderer cannot honour: `text_vertical_align` and
+/// `fit_parent_size` (DropdownButtonFormField has no vertical text alignment
+/// and cannot expand like a multiline text field), and
+/// `suffix_icon_size_constraints` (DropdownButton replaces the suffix icon
+/// constraints to align its select icon).
 class MaterialDropdownM2Control extends StatefulWidget {
   final Control control;
 
@@ -100,8 +107,8 @@ class _DropdownM2ControlState extends State<MaterialDropdownM2Control> {
       }
       var value =
           item.getString("key") ?? item.getString("text") ?? item.id.toString();
-      var content =
-          item.buildWidget("content") ?? Text(value, style: textStyle);
+      var content = item.buildWidget("content") ??
+          Text(item.getString("text") ?? value, style: textStyle);
       var alignment = item.getAlignment("alignment");
       if (alignment != null) {
         content = Container(alignment: alignment, child: content);
@@ -139,13 +146,16 @@ class _DropdownM2ControlState extends State<MaterialDropdownM2Control> {
       iconDisabledColor:
           widget.control.getColor("select_icon_disabled_color", context),
       iconSize: widget.control.getDouble("select_icon_size", 24.0)!,
-      borderRadius: widget.control.getBorderRadius("border_radius"),
+      // The open menu's corners: Flet 1.0's menu_border_radius, or the
+      // deprecated border_radius it replaces.
+      borderRadius: widget.control.getBorderRadius("menu_border_radius") ??
+          widget.control.getBorderRadius("border_radius"),
       alignment: widget.control.getAlignment("alignment") ??
           AlignmentDirectional.centerStart,
       isExpanded: widget.control.getBool("options_fill_horizontally", true)!,
       icon: widget.control.buildIconOrWidget("select_icon"),
-      hint: widget.control.buildWidget("hint"),
-      disabledHint: widget.control.buildWidget("disabled_hint"),
+      hint: widget.control.buildWidget("hint_content"),
+      disabledHint: widget.control.buildWidget("disabled_hint_content"),
       decoration: buildInputDecoration(context, widget.control,
           customSuffix: null, focused: _focused),
       onTap: !widget.control.disabled

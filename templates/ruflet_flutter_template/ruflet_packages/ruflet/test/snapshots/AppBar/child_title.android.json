@@ -1,0 +1,41 @@
+{
+  "fixture": "child_title",
+  "design": "android",
+  "sizing": {
+    "preferred_height": 56.0
+  },
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 56.0
+    },
+    "elements": [
+      {
+        "text": "Child title",
+        "rect": {
+          "l": 16.0,
+          "t": 14.0,
+          "w": 242.0,
+          "h": 28.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Child title",
+      "flags": [
+        "isHeader",
+        "namesRoute"
+      ],
+      "actions": [],
+      "rect": {
+        "l": 16.0,
+        "t": 14.0,
+        "w": 242.0,
+        "h": 28.0
+      }
+    }
+  ],
+  "steps": []
+}
