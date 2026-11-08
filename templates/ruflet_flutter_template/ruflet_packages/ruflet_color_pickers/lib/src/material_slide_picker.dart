@@ -29,7 +29,7 @@ class _MaterialSlidePickerControlState
 
     final controlColor =
         widget.control.getColor("color", context) ?? Colors.black;
-    if (controlColor.value != _pickerColor.value) {
+    if (controlColor.toARGB32() != _pickerColor.toARGB32()) {
       _pickerColor = controlColor;
     }
 
@@ -63,14 +63,22 @@ class _MaterialSlidePickerControlState
               const BorderRadius.all(Radius.zero),
       indicatorSize:
           widget.control.getSize("indicator_size", const Size(280, 50))!,
+      // The upstream replacement for labelTextStyle/sliderTextStyle is a
+      // Theme text-role override, which cannot reproduce a per-control style
+      // without changing rendering, so these two stay on the deprecated API.
+      // ignore: deprecated_member_use
       labelTextStyle: widget.control
           .getTextStyle("label_text_style", RufletStyleTheme.of(context)),
-      labelTypes: labelTypesArg,
+      // `showLabel: false` is the same as no label types (the picker only
+      // draws the label when both are set).
+      labelTypes: widget.control.getBool("show_label", true)!
+          ? labelTypesArg
+          : const <ColorLabelType>[],
       showIndicator: widget.control.getBool("show_indicator", true)!,
-      showLabel: widget.control.getBool("show_label", true)!,
       showParams: widget.control.getBool("show_params", true)!,
       showSliderText: widget.control.getBool("show_slider_text", true)!,
       sliderSize: widget.control.getSize("slider_size", const Size(260, 40))!,
+      // ignore: deprecated_member_use
       sliderTextStyle: widget.control
           .getTextStyle("slider_text_style", RufletStyleTheme.of(context)),
     );

@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:ruflet/ruflet.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -86,30 +85,22 @@ WebOptions? parseWebOptions(dynamic value, [WebOptions? defaultValue]) {
 
 KeychainAccessibility? parseKeychainAccessibility(String? value, [KeychainAccessibility? defaultValue]) {
   if (value == null) return defaultValue;
-  return KeychainAccessibility.values.firstWhereOrNull(
-    (e) => e.name.toLowerCase() == value.toLowerCase()
-  ) ?? defaultValue;
+  return parseEnum(KeychainAccessibility.values, value, defaultValue);
 }
 
 KeyCipherAlgorithm? parseKeyCipherAlgorithm(String? value, [KeyCipherAlgorithm? defaultValue]) {
   if (value == null) return defaultValue;
-  return KeyCipherAlgorithm.values.firstWhereOrNull(
-    (e) => e.name.toLowerCase() == value.toLowerCase()
-  ) ?? defaultValue;
+  return parseEnum(KeyCipherAlgorithm.values, value, defaultValue);
 }
 
 StorageCipherAlgorithm? parseStorageCipherAlgorithm(String? value, [StorageCipherAlgorithm? defaultValue]) {
   if (value == null) return defaultValue;
-  return StorageCipherAlgorithm.values.firstWhereOrNull(
-    (e) => e.name.toLowerCase() == value.toLowerCase()
-  ) ?? defaultValue;
+  return parseEnum(StorageCipherAlgorithm.values, value, defaultValue);
 }
 
 AccessControlFlag? parseAccessControlFlag(String? value, [AccessControlFlag? defaultValue]) {
   if (value == null) return defaultValue;
-  return AccessControlFlag.values.firstWhereOrNull(
-    (e) => e.name.toLowerCase() == value.toLowerCase()
-  ) ?? defaultValue;
+  return parseEnum(AccessControlFlag.values, value, defaultValue);
 }
 
 List<AccessControlFlag>? parseAccessControlFlags(List<dynamic>? value, [List<AccessControlFlag>? defaultValue,]) {

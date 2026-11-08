@@ -1,0 +1,85 @@
+{
+  "fixture": "disabled",
+  "design": "ios",
+  "geometry": {
+    "size": {
+      "w": 89.8,
+      "h": 49.0
+    },
+    "elements": [
+      {
+        "text": "Off",
+        "rect": {
+          "l": 20.0,
+          "t": 16.0,
+          "w": 49.8,
+          "h": 17.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Off",
+      "flags": [
+        "isButton",
+        "hasEnabledState"
+      ],
+      "actions": [
+        "tap"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 89.8,
+        "h": 49.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap text \"Off\"",
+      "sent": [],
+      "semantics": [
+        {
+          "label": "Off",
+          "flags": [
+            "isButton",
+            "hasEnabledState"
+          ],
+          "actions": [
+            "tap"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 89.8,
+            "h": 49.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "hover in and out",
+      "sent": [],
+      "semantics": [
+        {
+          "label": "Off",
+          "flags": [
+            "isButton",
+            "hasEnabledState"
+          ],
+          "actions": [
+            "tap"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 89.8,
+            "h": 49.0
+          }
+        }
+      ]
+    }
+  ]
+}

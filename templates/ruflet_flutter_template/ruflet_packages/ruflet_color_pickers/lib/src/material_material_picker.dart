@@ -1,6 +1,6 @@
 import 'package:ruflet/ruflet.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'material_swatch_picker/material_swatch_picker.dart';
 
 class MaterialMaterialPickerControl extends StatefulWidget {
   final Control control;
@@ -36,11 +36,11 @@ class _MaterialMaterialPickerControlState
 
     final controlColor =
         widget.control.getColor("color", context) ?? Colors.black;
-    if (controlColor.value != _pickerColor.value) {
+    if (controlColor.toARGB32() != _pickerColor.toARGB32()) {
       _pickerColor = controlColor;
     }
 
-    final picker = MaterialPicker(
+    final picker = MaterialSwatchPicker(
       pickerColor: _pickerColor,
       onColorChanged: _onColorChanged,
       onPrimaryChanged: _onPrimaryChanged,

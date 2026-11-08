@@ -1,0 +1,120 @@
+{
+  "fixture": "maximal",
+  "design": "ios",
+  "geometry": {
+    "size": {
+      "w": 182.1,
+      "h": 39.0
+    },
+    "elements": [
+      {
+        "text": "Maximal",
+        "rect": {
+          "l": 0.0,
+          "t": 10.5,
+          "w": 123.1,
+          "h": 18.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Maximal",
+      "flags": [
+        "hasEnabledState",
+        "isEnabled",
+        "hasToggledState",
+        "isToggled",
+        "isFocusable"
+      ],
+      "actions": [
+        "tap",
+        "focus"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 182.1,
+        "h": 39.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "semantics tap",
+      "sent": [
+        {
+          "id": 1001,
+          "update": {
+            "value": false
+          }
+        },
+        {
+          "id": 1001,
+          "event": "change",
+          "data": false
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Maximal",
+          "flags": [
+            "hasEnabledState",
+            "isEnabled",
+            "hasToggledState",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 182.1,
+            "h": 39.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "tap text \"Maximal\"",
+      "sent": [
+        {
+          "id": 1001,
+          "update": {
+            "value": true
+          }
+        },
+        {
+          "id": 1001,
+          "event": "change",
+          "data": true
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Maximal",
+          "flags": [
+            "hasEnabledState",
+            "isEnabled",
+            "hasToggledState",
+            "isToggled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 182.1,
+            "h": 39.0
+          }
+        }
+      ]
+    }
+  ]
+}

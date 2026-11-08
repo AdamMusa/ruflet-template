@@ -29,7 +29,7 @@ class _CupertinoSlidePickerControlState
 
     final controlColor =
         widget.control.getColor("color", context) ?? PaletteColors.black;
-    if (controlColor.value != _pickerColor.value) {
+    if (controlColor.toARGB32() != _pickerColor.toARGB32()) {
       _pickerColor = controlColor;
     }
 

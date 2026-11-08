@@ -5,6 +5,7 @@ import '../extensions/control.dart';
 import '../models/control.dart';
 import '../widgets/error.dart';
 import 'base_controls.dart';
+import 'material_control_chrome.dart';
 
 class MaterialSelectionAreaControl extends StatelessWidget {
   final Control control;
@@ -24,7 +25,7 @@ class MaterialSelectionAreaControl extends StatelessWidget {
         onSelectionChanged: (SelectedContent? selection) {
           control.triggerEvent("change", selection?.plainText);
         },
-        child: content,
+        child: MaterialControlBadge(control: control, child: content),
       ),
     );
   }

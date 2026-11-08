@@ -21,9 +21,11 @@ class ImageControl extends StatelessWidget {
   Widget build(BuildContext context) {
     debugPrint("Image build: ${control.id}");
 
-    var rawSrc = control.get("src");
+    // `src_base64` is Ruby's base64/bytes source; `src` wins if both are set.
+    var rawSrc = control.get("src") ?? control.get("src_base64");
     if (rawSrc == null) {
-      return const ErrorControl("Image must have \"src\" specified.");
+      return const ErrorControl(
+          "Image must have \"src\" or \"src_base64\" specified.");
     }
 
     final width = control.getDouble("width");

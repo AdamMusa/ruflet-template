@@ -17,7 +17,8 @@ class RufletSourceIntegrityTest < Minitest::Test
     assert_equal "ruflet-engine", manifest.fetch("package_name")
     assert_match(/\A[0-9a-f]{40}\z/, manifest.fetch("source_ref"))
     assert_equal "packages", manifest.fetch("source_package")
-    assert_equal 20, manifest.fetch("packages").length
+    assert_equal 21, manifest.fetch("packages").length
+    assert_includes manifest.fetch("packages"), "ruflet_local_auth"
     %w[lib/ruflet.dart pubspec.yaml LICENSE
        vendor/flutter_markdown_plus/LICENSE vendor/flutter_math_fork/LICENSE].each do |path|
       assert manifest.fetch("files").key?("ruflet/#{path}"), "Missing distributable source/license: #{path}"

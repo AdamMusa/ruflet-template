@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:ruflet/ruflet.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
@@ -27,9 +26,7 @@ LatLngBounds? parseLatLngBounds(dynamic value, [LatLngBounds? defaultValue]) {
 
 PatternFit? parsePatternFit(String? value, [PatternFit? defaultValue]) {
   if (value == null) return defaultValue;
-  return PatternFit.values.firstWhereOrNull(
-          (e) => e.name.toLowerCase() == value.toLowerCase()) ??
-      defaultValue;
+  return parseEnum(PatternFit.values, value, defaultValue);
 }
 
 StrokePattern? parseStrokePattern(dynamic value,
@@ -168,9 +165,7 @@ KeyboardOptions? parseKeyboardOptions(dynamic value,
 CursorRotationBehaviour? parseCursorRotationBehaviour(String? value,
     [CursorRotationBehaviour? defValue]) {
   if (value == null) return defValue;
-  return CursorRotationBehaviour.values.firstWhereOrNull(
-          (e) => e.name.toLowerCase() == value.toLowerCase()) ??
-      defValue;
+  return parseEnum(CursorRotationBehaviour.values, value, defValue);
 }
 
 CursorKeyboardRotationOptions? parseCursorKeyboardRotationOptions(dynamic value,
@@ -206,9 +201,7 @@ CursorKeyboardRotationOptions? parseCursorKeyboardRotationOptions(dynamic value,
 EvictErrorTileStrategy? parseEvictErrorTileStrategy(String? value,
     [EvictErrorTileStrategy? defaultValue]) {
   if (value == null) return defaultValue;
-  return EvictErrorTileStrategy.values.firstWhereOrNull(
-          (e) => e.name.toLowerCase() == value.toLowerCase()) ??
-      defaultValue;
+  return parseEnum(EvictErrorTileStrategy.values, value, defaultValue);
 }
 
 extension TapPositionExtension on TapPosition {

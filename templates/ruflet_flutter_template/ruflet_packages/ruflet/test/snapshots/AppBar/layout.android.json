@@ -1,0 +1,50 @@
+{
+  "fixture": "layout",
+  "design": "android",
+  "sizing": {
+    "preferred_height": 56.0
+  },
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 56.0
+    },
+    "elements": [
+      {
+        "text": "Layout",
+        "rect": {
+          "l": 16.0,
+          "t": 14.0,
+          "w": 132.0,
+          "h": 28.0
+        }
+      },
+      {
+        "text": "New",
+        "rect": {
+          "l": 792.0,
+          "t": -4.0,
+          "w": 34.5,
+          "h": 16.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Layout",
+      "flags": [
+        "isHeader",
+        "namesRoute"
+      ],
+      "actions": [],
+      "rect": {
+        "l": 16.0,
+        "t": 14.0,
+        "w": 132.0,
+        "h": 28.0
+      }
+    }
+  ],
+  "steps": []
+}

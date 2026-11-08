@@ -73,7 +73,8 @@ void main() {
     expectNativeTree();
     List<Color>? colors;
     await tester.pumpWidget(host(native.MultipleChoiceBlockPicker(
-      pickerColors: [red],
+      // The picker edits the selection list it is given: keep it growable.
+      pickerColors: List.of([red]),
       availableColors: const [red, blue],
       onColorsChanged: (value) => colors = value,
     )));

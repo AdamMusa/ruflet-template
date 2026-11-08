@@ -1,0 +1,84 @@
+{
+  "fixture": "label_control",
+  "design": "ios",
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 18.0
+    },
+    "elements": [
+      {
+        "text": "Custom",
+        "rect": {
+          "l": 18.0,
+          "t": 0.5,
+          "w": 99.5,
+          "h": 17.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Custom",
+      "flags": [
+        "hasCheckedState",
+        "hasEnabledState",
+        "isEnabled",
+        "isInMutuallyExclusiveGroup",
+        "isFocusable"
+      ],
+      "actions": [
+        "tap",
+        "focus"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 28.0,
+        "w": 800.0,
+        "h": 18.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap text \"Custom\"",
+      "sent": [
+        {
+          "id": 1400,
+          "update": {
+            "value": "b"
+          }
+        },
+        {
+          "id": 1400,
+          "event": "change",
+          "data": "b"
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Custom",
+          "flags": [
+            "hasCheckedState",
+            "isChecked",
+            "hasEnabledState",
+            "isEnabled",
+            "isInMutuallyExclusiveGroup",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 28.0,
+            "w": 800.0,
+            "h": 18.0
+          }
+        }
+      ]
+    }
+  ]
+}

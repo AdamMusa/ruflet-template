@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import '../extensions/control.dart';
 import '../models/control.dart';
 import '../models/ruflet_time.dart';
+import '../utils/borders.dart';
 import '../utils/colors.dart';
 import '../utils/edge_insets.dart';
 import '../utils/numbers.dart';
@@ -66,7 +67,8 @@ class _CupertinoDropdownControlState extends State<CupertinoDropdownControl> {
     final selected = await showCupertinoModalPopup<int>(
       context: context,
       barrierDismissible: true,
-      builder: (context) => CupertinoPopupSurface(
+      builder: (context) => _DropdownMenuSurface(
+        borderRadius: control.getBorderRadius("menu_border_radius"),
         child: SafeArea(
           top: false,
           child: SizedBox(
@@ -116,7 +118,6 @@ class _CupertinoDropdownControlState extends State<CupertinoDropdownControl> {
     setState(() => _textController.text = label);
     control.updateProperties({"value": value, "text": label});
     control.triggerEvent("select", value);
-    if (control.type == "DropdownM2") control.triggerEvent("change", value);
     option.triggerEvent("click");
   }
 
@@ -140,16 +141,23 @@ class _CupertinoDropdownControlState extends State<CupertinoDropdownControl> {
       enabled: !control.disabled,
       readOnly: !editable,
       autofocus: control.getBool("autofocus", false)!,
+      // Cupertino placeholders are text only; hint_content and
+      // disabled_hint_content are rendered by the Material 2 renderer.
       placeholder: control.getString("hint_text"),
       padding: control.getPadding("content_padding", const EdgeInsets.all(10))!,
       prefix: control.buildIconOrWidget("leading_icon"),
-      suffix: CupertinoButton(
-        padding: const EdgeInsets.symmetric(horizontal: 10),
-        minimumSize: const Size.square(32),
-        onPressed: control.disabled ? null : _showOptions,
-        child: control.buildIconOrWidget("trailing_icon") ??
-            const Icon(CupertinoIcons.chevron_down, size: 18),
-      ),
+      suffix: Row(mainAxisSize: MainAxisSize.min, children: [
+        // Ruby selected_suffix: shown after the chosen option's text.
+        if (selected.isNotEmpty)
+          if (control.buildWidget("selected_suffix") case final suffix?) suffix,
+        CupertinoButton(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          minimumSize: const Size.square(32),
+          onPressed: control.disabled ? null : _showOptions,
+          child: control.buildIconOrWidget("trailing_icon") ??
+              const Icon(CupertinoIcons.chevron_down, size: 18),
+        ),
+      ]),
       onTap: editable ? null : _showOptions,
       onChanged: editable
           ? (value) {
@@ -160,6 +168,24 @@ class _CupertinoDropdownControlState extends State<CupertinoDropdownControl> {
       onSubmitted: (_) => _showOptions(),
     );
     return LayoutControl(control: control, child: field);
+  }
+}
+
+/// The Dropdown options sheet: a [CupertinoPopupSurface], rounded by Ruby's
+/// menu_border_radius (Flet's DropdownM2) like the Material menu.
+class _DropdownMenuSurface extends StatelessWidget {
+  final BorderRadius? borderRadius;
+  final Widget child;
+
+  const _DropdownMenuSurface({required this.borderRadius, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    final surface = CupertinoPopupSurface(child: child);
+    final radius = borderRadius;
+    return radius == null
+        ? surface
+        : ClipRRect(borderRadius: radius, child: surface);
   }
 }
 
@@ -177,6 +203,10 @@ class _CupertinoSearchBarControlState extends State<CupertinoSearchBarControl> {
   late final TextEditingController _controller;
   late final FocusNode _focusNode;
 
+  /// Set by open_view: the search is active and lists every suggestion, the
+  /// way an iOS search controller shows results before anything is typed.
+  bool _viewOpen = false;
+
   Control get control => widget.control;
 
   @override
@@ -185,7 +215,10 @@ class _CupertinoSearchBarControlState extends State<CupertinoSearchBarControl> {
     _controller = TextEditingController(text: control.getString("value", ""));
     _focusNode = FocusNode()
       ..addListener(() {
-        setState(() {});
+        setState(() {
+          // Leaving the field ends an opened search view.
+          if (!_focusNode.hasFocus) _viewOpen = false;
+        });
         control.triggerEvent(_focusNode.hasFocus ? "focus" : "blur");
       });
     control.addInvokeMethodListener(_invokeMethod);
@@ -202,6 +235,25 @@ class _CupertinoSearchBarControlState extends State<CupertinoSearchBarControl> {
       case "clear":
         _controller.clear();
         _changed("");
+        return null;
+      // iOS has no separate search view: opening the view activates the
+      // search field (first responder, suggestions listed) and closing it
+      // cancels the search, as UISearchController does.
+      case "open_view":
+        if (control.disabled || _viewOpen) return null;
+        setState(() => _viewOpen = true);
+        _focusNode.requestFocus();
+        return null;
+      case "close_view":
+        if (!_viewOpen && !_focusNode.hasFocus) return null;
+        final text = args is Map ? args["text"]?.toString() : null;
+        if (text != null) {
+          _controller.text = text;
+          // Like Material, closing writes the value without a change event.
+          control.updateProperties({"value": text});
+        }
+        setState(() => _viewOpen = false);
+        _focusNode.unfocus();
         return null;
       default:
         throw Exception("Unknown SearchBar method: $name");
@@ -230,7 +282,10 @@ class _CupertinoSearchBarControlState extends State<CupertinoSearchBarControl> {
     final suggestions = control.children("controls");
     final showSuggestions = _focusNode.hasFocus &&
         suggestions.isNotEmpty &&
-        _controller.text.isNotEmpty;
+        (_viewOpen || _controller.text.isNotEmpty);
+    // The inline counterpart of Material's search view: opened by
+    // open_view, or listing suggestions for the query.
+    final viewShown = _viewOpen || showSuggestions;
     final leading = control.buildWidget("bar_leading");
     final trailing = control.buildWidgets("bar_trailing");
 
@@ -241,16 +296,26 @@ class _CupertinoSearchBarControlState extends State<CupertinoSearchBarControl> {
           children: [
             if (leading != null) ...[leading, const SizedBox(width: 8)],
             Expanded(
-              child: CupertinoSearchTextField(
-                controller: _controller,
-                focusNode: _focusNode,
-                enabled: !control.disabled,
-                autofocus: control.getBool("autofocus", false)!,
-                placeholder: control.getString("bar_hint_text"),
-                backgroundColor: control.getColor("bar_bgcolor", context),
-                onTap: () => control.triggerEvent("tap"),
-                onChanged: _changed,
-                onSubmitted: (value) => control.triggerEvent("submit", value),
+              // CupertinoSearchTextField has no onTapOutside; like the
+              // Material SearchBar's text field, report outside taps while
+              // the bar has focus and the view is closed.
+              child: TextFieldTapRegion(
+                onTapOutside: _focusNode.hasFocus &&
+                        !viewShown &&
+                        control.getBool("on_tap_outside_bar", false)!
+                    ? (event) => control.triggerEvent("tap_outside_bar")
+                    : null,
+                child: CupertinoSearchTextField(
+                  controller: _controller,
+                  focusNode: _focusNode,
+                  enabled: !control.disabled,
+                  autofocus: control.getBool("autofocus", false)!,
+                  placeholder: control.getString("bar_hint_text"),
+                  backgroundColor: control.getColor("bar_bgcolor", context),
+                  onTap: () => control.triggerEvent("tap"),
+                  onChanged: _changed,
+                  onSubmitted: (value) => control.triggerEvent("submit", value),
+                ),
               ),
             ),
             if (trailing.isNotEmpty) ...[
@@ -277,7 +342,17 @@ class _CupertinoSearchBarControlState extends State<CupertinoSearchBarControl> {
           ),
       ],
     );
-    return LayoutControl(control: control, child: search);
+    // A tap outside the field and its suggestions while the view is shown
+    // is Ruby's tap_outside_view, as a tap on Material's view barrier.
+    return LayoutControl(
+        control: control,
+        child: TapRegion(
+          onTapOutside:
+              viewShown && control.getBool("on_tap_outside_view", false)!
+                  ? (event) => control.triggerEvent("tap_outside_view")
+                  : null,
+          child: search,
+        ));
   }
 }
 

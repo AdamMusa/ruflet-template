@@ -61,8 +61,31 @@ switch on from `ruflet.yaml`:
 `ruflet_permission_handler` · `ruflet_rive` · `ruflet_secure_storage` · `ruflet_spinkit` ·
 `ruflet_video` · `ruflet_webview` · `ruflet_qrcode_scanner`
 
-Listing an extension in `ruflet.yaml` adds its package and registration to the
-generated client. Leaving it out strips both, so an app only carries what it uses.
+`pubspec.yaml` lists each of them, and both entrypoints import and register
+them. With gems 0.0.22 and later, listing an extension in `ruflet.yaml` keeps
+its package and registration in the generated client, and leaving it out
+strips both, so an app only carries what it uses.
+
+Gems 0.0.15 to 0.0.21 strip only the package names in their own extension
+map: the older `flet_*` names, plus `ruflet_qrcode_scanner` from 0.0.20.
+Whatever `ruflet.yaml` lists, they keep every other `ruflet_*` package that
+`pubspec.yaml` lists as a dependency of the generated client, so its native
+plugins are linked into the app. Each of those gems builds from this
+repository's `main`. 0.0.19 and later refresh `~/.ruflet/templates` from it
+before every build. 0.0.15 to 0.0.18 clone it when that cache is missing
+(0.0.15 to 0.0.17 also when another gem version wrote it), and otherwise use
+the copy a newer gem last fetched.
+
+So a package added here must not be referenced. `ruflet_packages/` also
+carries `ruflet_local_auth`, but `pubspec.yaml`, the entrypoints and the
+committed plugin registrants do not mention it, so no released gem compiles
+or links it. A gem that supports it has to write its path dependency, import
+and registration into the generated client itself; no released gem does yet
+(0.0.23 is the latest). Released gems ignore `extensions: [local_auth]` and
+the `biometrics` service; ruflet main stops the build with `selected Flutter
+extensions are missing: ruflet_local_auth`. `test/ruflet_namespace_test.dart`
+enforces this: a new package directory fails it until it is added to
+`optInPackages`.
 
 ```yaml
 extensions:

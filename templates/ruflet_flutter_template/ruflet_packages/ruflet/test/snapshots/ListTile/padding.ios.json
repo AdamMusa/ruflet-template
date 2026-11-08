@@ -1,0 +1,39 @@
+{
+  "fixture": "padding",
+  "design": "ios",
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 88.0
+    },
+    "elements": [
+      {
+        "text": "Padded",
+        "rect": {
+          "l": 30.0,
+          "t": 35.5,
+          "w": 99.5,
+          "h": 17.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Padded",
+      "flags": [
+        "hasEnabledState",
+        "isEnabled",
+        "hasSelectedState"
+      ],
+      "actions": [],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 800.0,
+        "h": 88.0
+      }
+    }
+  ],
+  "steps": []
+}

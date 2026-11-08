@@ -1,0 +1,102 @@
+{
+  "fixture": "child_controls",
+  "design": "ios",
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 48.0
+    },
+    "elements": [
+      {
+        "icon": 984246,
+        "rect": {
+          "l": 22.0,
+          "t": 12.0,
+          "w": 24.0,
+          "h": 24.0
+        }
+      },
+      {
+        "text": "Child title",
+        "rect": {
+          "l": 64.0,
+          "t": 8.0,
+          "w": 182.5,
+          "h": 17.0
+        }
+      },
+      {
+        "text": "Child subtitle",
+        "rect": {
+          "l": 64.0,
+          "t": 28.0,
+          "w": 162.3,
+          "h": 12.0
+        }
+      },
+      {
+        "text": "Child trailing",
+        "rect": {
+          "l": 553.7,
+          "t": 15.5,
+          "w": 232.3,
+          "h": 17.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Child title\nChild subtitle\nChild trailing",
+      "flags": [
+        "isButton",
+        "hasEnabledState",
+        "isEnabled",
+        "hasSelectedState"
+      ],
+      "actions": [
+        "tap",
+        "longPress"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 800.0,
+        "h": 48.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap text \"Child title\"",
+      "sent": [
+        {
+          "id": 2201,
+          "event": "click",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Child title\nChild subtitle\nChild trailing",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "hasSelectedState"
+          ],
+          "actions": [
+            "tap",
+            "longPress"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 48.0
+          }
+        }
+      ]
+    }
+  ]
+}

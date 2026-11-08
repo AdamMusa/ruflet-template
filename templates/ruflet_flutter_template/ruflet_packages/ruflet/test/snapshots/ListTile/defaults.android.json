@@ -1,0 +1,232 @@
+{
+  "fixture": "defaults",
+  "design": "android",
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 56.0
+    },
+    "elements": [
+      {
+        "text": "Tile",
+        "rect": {
+          "l": 16.0,
+          "t": 16.0,
+          "w": 760.0,
+          "h": 24.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Tile",
+      "flags": [
+        "isButton",
+        "hasEnabledState",
+        "isEnabled",
+        "isFocusable",
+        "hasSelectedState"
+      ],
+      "actions": [
+        "tap",
+        "longPress",
+        "focus"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 800.0,
+        "h": 56.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap text \"Tile\"",
+      "sent": [
+        {
+          "id": 2201,
+          "event": "click",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Tile",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable",
+            "hasSelectedState"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 56.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "long press \"Tile\"",
+      "sent": [
+        {
+          "id": 2201,
+          "event": "long_press",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Tile",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable",
+            "hasSelectedState"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 56.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "semantics tap",
+      "sent": [
+        {
+          "id": 2201,
+          "event": "click",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Tile",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable",
+            "hasSelectedState"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 56.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "tab",
+      "sent": [],
+      "semantics": [
+        {
+          "label": "Tile",
+          "flags": [
+            "isButton",
+            "isFocused",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable",
+            "hasSelectedState"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 56.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "invoke focus",
+      "sent": [],
+      "outcome": {
+        "error": "UnsupportedError",
+        "message": "ListTile(2201).focus is not supported on android: no handler for \"focus\" is registered for this control"
+      },
+      "semantics": [
+        {
+          "label": "Tile",
+          "flags": [
+            "isButton",
+            "isFocused",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable",
+            "hasSelectedState"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 56.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "unfocus",
+      "sent": [],
+      "semantics": [
+        {
+          "label": "Tile",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable",
+            "hasSelectedState"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 56.0
+          }
+        }
+      ]
+    }
+  ]
+}

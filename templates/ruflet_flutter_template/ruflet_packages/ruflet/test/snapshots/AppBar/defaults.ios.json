@@ -1,0 +1,103 @@
+{
+  "fixture": "defaults",
+  "design": "ios",
+  "sizing": {
+    "preferred_height": 44.0,
+    "fully_obstructs": false
+  },
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 44.0
+    },
+    "elements": [
+      {
+        "text": "Title",
+        "rect": {
+          "l": 358.5,
+          "t": 13.5,
+          "w": 82.9,
+          "h": 17.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Title",
+      "flags": [
+        "isHeader"
+      ],
+      "actions": [],
+      "rect": {
+        "l": 358.5,
+        "t": 13.5,
+        "w": 82.9,
+        "h": 17.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap at 0.5,0.5",
+      "sent": [],
+      "semantics": [
+        {
+          "label": "Title",
+          "flags": [
+            "isHeader"
+          ],
+          "actions": [],
+          "rect": {
+            "l": 358.5,
+            "t": 13.5,
+            "w": 82.9,
+            "h": 17.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "invoke focus",
+      "sent": [],
+      "outcome": {
+        "error": "UnsupportedError",
+        "message": "AppBar(2301).focus is not supported on iOS: no handler for \"focus\" is registered for this control"
+      },
+      "semantics": [
+        {
+          "label": "Title",
+          "flags": [
+            "isHeader"
+          ],
+          "actions": [],
+          "rect": {
+            "l": 358.5,
+            "t": 13.5,
+            "w": 82.9,
+            "h": 17.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "unfocus",
+      "sent": [],
+      "semantics": [
+        {
+          "label": "Title",
+          "flags": [
+            "isHeader"
+          ],
+          "actions": [],
+          "rect": {
+            "l": 358.5,
+            "t": 13.5,
+            "w": 82.9,
+            "h": 17.0
+          }
+        }
+      ]
+    }
+  ]
+}

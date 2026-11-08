@@ -1,0 +1,120 @@
+{
+  "fixture": "maximal",
+  "design": "ios",
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 44.0
+    },
+    "elements": [
+      {
+        "text": "Maximal",
+        "rect": {
+          "l": 0.0,
+          "t": 13.0,
+          "w": 123.1,
+          "h": 18.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Maximal\nAgree",
+      "flags": [
+        "hasCheckedState",
+        "isChecked",
+        "hasEnabledState",
+        "isEnabled",
+        "isFocusable"
+      ],
+      "actions": [
+        "tap",
+        "focus"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 800.0,
+        "h": 44.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "semantics tap",
+      "sent": [
+        {
+          "id": 1201,
+          "update": {
+            "value": false
+          }
+        },
+        {
+          "id": 1201,
+          "event": "change",
+          "data": false
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Maximal\nAgree",
+          "flags": [
+            "hasCheckedState",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 44.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "tap text \"Maximal\"",
+      "sent": [
+        {
+          "id": 1201,
+          "update": {
+            "value": true
+          }
+        },
+        {
+          "id": 1201,
+          "event": "change",
+          "data": true
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Maximal\nAgree",
+          "flags": [
+            "hasCheckedState",
+            "isChecked",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 44.0
+          }
+        }
+      ]
+    }
+  ]
+}

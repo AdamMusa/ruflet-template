@@ -1,0 +1,148 @@
+{
+  "fixture": "full",
+  "design": "android",
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 72.0
+    },
+    "elements": [
+      {
+        "icon": 984246,
+        "rect": {
+          "l": 16.0,
+          "t": 24.0,
+          "w": 24.0,
+          "h": 24.0
+        }
+      },
+      {
+        "text": "Tile",
+        "rect": {
+          "l": 56.0,
+          "t": 15.2,
+          "w": 650.0,
+          "h": 24.0
+        }
+      },
+      {
+        "text": "Details",
+        "rect": {
+          "l": 56.0,
+          "t": 39.2,
+          "w": 650.0,
+          "h": 20.0
+        }
+      },
+      {
+        "icon": 984497,
+        "rect": {
+          "l": 722.0,
+          "t": 24.0,
+          "w": 24.0,
+          "h": 24.0
+        }
+      },
+      {
+        "icon": 57695,
+        "rect": {
+          "l": 752.0,
+          "t": 24.0,
+          "w": 24.0,
+          "h": 24.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Tile\nDetails",
+      "flags": [
+        "isButton",
+        "hasEnabledState",
+        "isEnabled",
+        "isFocusable",
+        "hasSelectedState"
+      ],
+      "actions": [
+        "tap",
+        "longPress",
+        "focus"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 800.0,
+        "h": 72.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap text \"Tile\"",
+      "sent": [
+        {
+          "id": 2201,
+          "event": "click",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Tile\nDetails",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable",
+            "hasSelectedState"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 72.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "long press \"Details\"",
+      "sent": [
+        {
+          "id": 2201,
+          "event": "long_press",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Tile\nDetails",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable",
+            "hasSelectedState"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 72.0
+          }
+        }
+      ]
+    }
+  ]
+}

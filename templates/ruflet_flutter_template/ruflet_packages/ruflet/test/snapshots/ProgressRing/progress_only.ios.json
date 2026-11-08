@@ -1,0 +1,29 @@
+{
+  "fixture": "progress_only",
+  "design": "ios",
+  "size": {
+    "w": 20.0,
+    "h": 20.0
+  },
+  "ticking": false,
+  "native": {
+    "type": "CupertinoActivityIndicator",
+    "animating": false,
+    "progress": 0.3,
+    "radius": 10.0
+  },
+  "semantics": [
+    {
+      "label": "",
+      "value": "30",
+      "flags": [],
+      "actions": [],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 20.0,
+        "h": 20.0
+      }
+    }
+  ]
+}

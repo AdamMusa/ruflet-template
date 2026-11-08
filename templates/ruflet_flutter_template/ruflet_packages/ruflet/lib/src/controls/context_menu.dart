@@ -151,7 +151,8 @@ class _ContextMenuControlState extends State<ContextMenuControl> {
   }
 
   /// Picks popup menu items configured for the provided button, falling back
-  /// to the shared `items` collection when a button-specific list is empty.
+  /// to the shared `items` collection when a button-specific list is empty,
+  /// then to `actions` (the Cupertino renderer uses the same order).
   List<Control> _getPopupItemsFromButton(_MouseButton? button) {
     var items = switch (button) {
       _MouseButton.primary => widget.control.children("primary_items"),
@@ -159,6 +160,7 @@ class _ContextMenuControlState extends State<ContextMenuControl> {
       _MouseButton.tertiary => widget.control.children("tertiary_items"),
       _ => widget.control.children("items"),
     };
+    if (items.isEmpty) items = widget.control.children("items");
     return items.isNotEmpty ? items : widget.control.children("actions");
   }
 

@@ -6,6 +6,7 @@ import '../extensions/control.dart';
 import '../models/control.dart';
 import '../widgets/error.dart';
 import 'base_controls.dart';
+import 'cupertino_control_chrome.dart';
 
 class CupertinoSelectionAreaControl extends StatefulWidget {
   final Control control;
@@ -32,7 +33,7 @@ class _CupertinoSelectionAreaControlState
         onSelectionChanged: (SelectedContent? selection) {
           widget.control.triggerEvent("change", selection?.plainText);
         },
-        child: content,
+        child: CupertinoControlBadge(control: widget.control, child: content),
       ),
     );
   }

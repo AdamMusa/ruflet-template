@@ -1,12 +1,9 @@
-import 'package:collection/collection.dart';
 import 'package:ruflet/ruflet.dart';
 import 'package:record/record.dart';
 
 AudioEncoder? parseAudioEncoder(String? value, [AudioEncoder? defaultValue]) {
   if (value == null) return defaultValue;
-  return AudioEncoder.values.firstWhereOrNull(
-          (e) => e.name.toLowerCase() == value.toLowerCase()) ??
-      defaultValue;
+  return parseEnum(AudioEncoder.values, value, defaultValue);
 }
 
 InputDevice? parseInputDevice(dynamic value, [InputDevice? defaultValue]) {
@@ -17,9 +14,7 @@ InputDevice? parseInputDevice(dynamic value, [InputDevice? defaultValue]) {
 AndroidAudioSource? parseAndroidAudioSource(String? value,
     [AndroidAudioSource? defaultValue]) {
   if (value == null) return defaultValue;
-  return AndroidAudioSource.values.firstWhereOrNull(
-          (e) => e.name.toLowerCase() == value.toLowerCase()) ??
-      defaultValue;
+  return parseEnum(AndroidAudioSource.values, value, defaultValue);
 }
 
 AndroidRecordConfig? parseAndroidRecordConfig(dynamic value,
@@ -36,9 +31,7 @@ AndroidRecordConfig? parseAndroidRecordConfig(dynamic value,
 IosAudioCategoryOption? parseIosAudioCategoryOption(String? value,
     [IosAudioCategoryOption? defaultValue]) {
   if (value == null) return defaultValue;
-  return IosAudioCategoryOption.values.firstWhereOrNull(
-          (e) => e.name.toLowerCase() == value.toLowerCase()) ??
-      defaultValue;
+  return parseEnum(IosAudioCategoryOption.values, value, defaultValue);
 }
 
 IosRecordConfig? parseIosRecordConfig(dynamic value,
@@ -49,6 +42,8 @@ IosRecordConfig? parseIosRecordConfig(dynamic value,
       .nonNulls
       .toList();
   return IosRecordConfig(
+    // Moving to AudioRecorder.ios.manageAudioSession changes behavior.
+    // ignore: deprecated_member_use
     manageAudioSession: parseBool(value["manage_audio_session"], true)!,
     categoryOptions: options,
   );

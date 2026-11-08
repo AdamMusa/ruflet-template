@@ -1,0 +1,41 @@
+{
+  "fixture": "cupertino_keys",
+  "design": "ios",
+  "sizing": {
+    "preferred_height": 44.0,
+    "fully_obstructs": true
+  },
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 44.0
+    },
+    "elements": [
+      {
+        "text": "Cupertino",
+        "rect": {
+          "l": 325.3,
+          "t": 13.5,
+          "w": 149.3,
+          "h": 17.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Cupertino",
+      "flags": [
+        "isHeader"
+      ],
+      "actions": [],
+      "rect": {
+        "l": 325.3,
+        "t": 13.5,
+        "w": 149.3,
+        "h": 17.0
+      }
+    }
+  ],
+  "steps": []
+}

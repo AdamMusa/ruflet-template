@@ -67,7 +67,7 @@ class _MenuItemButtonControlState extends State<MaterialMenuItemButtonControl> {
       style: style,
       closeOnActivate: widget.control.getBool("close_on_click", true)!,
       requestFocusOnHover: widget.control.getBool("focus_on_hover", true)!,
-      semanticsLabel: widget.control.getString("semantics_label"),
+      semanticsLabel: widget.control.getString("semantic_label"),
       autofocus: widget.control.getBool("autofocus", false)!,
       overflowAxis: widget.control.getAxis("overflow_axis", Axis.horizontal)!,
       onHover: onHover && !widget.control.disabled
@@ -77,7 +77,7 @@ class _MenuItemButtonControlState extends State<MaterialMenuItemButtonControl> {
           ? () => widget.control.triggerEvent("click")
           : null,
       leadingIcon: widget.control.buildWidget("leading"),
-      trailingIcon: widget.control.buildWidget("trailing_icon"),
+      trailingIcon: widget.control.buildWidget("trailing"),
       child: widget.control.buildTextOrWidget("content"),
     );
 

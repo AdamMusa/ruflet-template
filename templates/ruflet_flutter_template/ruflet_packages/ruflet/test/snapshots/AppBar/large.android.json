@@ -1,0 +1,38 @@
+{
+  "fixture": "large",
+  "design": "android",
+  "sizing": {
+    "preferred_height": 152.0
+  },
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 152.0
+    },
+    "elements": [
+      {
+        "text": "Large title",
+        "rect": {
+          "l": 16.0,
+          "t": 88.0,
+          "w": 308.0,
+          "h": 36.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Large title",
+      "flags": [],
+      "actions": [],
+      "rect": {
+        "l": 16.0,
+        "t": 88.0,
+        "w": 308.0,
+        "h": 36.0
+      }
+    }
+  ],
+  "steps": []
+}

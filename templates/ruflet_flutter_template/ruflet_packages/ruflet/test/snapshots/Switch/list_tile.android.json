@@ -1,0 +1,72 @@
+{
+  "fixture": "list_tile",
+  "design": "android",
+  "geometry": {
+    "size": {
+      "w": 60.0,
+      "h": 48.0
+    },
+    "elements": []
+  },
+  "semantics": [
+    {
+      "label": "",
+      "flags": [
+        "hasEnabledState",
+        "isEnabled",
+        "hasToggledState",
+        "isFocusable"
+      ],
+      "actions": [
+        "tap",
+        "focus"
+      ],
+      "rect": {
+        "l": 716.0,
+        "t": 4.0,
+        "w": 60.0,
+        "h": 48.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap text \"Tile\"",
+      "sent": [
+        {
+          "id": 1001,
+          "update": {
+            "value": true
+          }
+        },
+        {
+          "id": 1001,
+          "event": "change",
+          "data": true
+        }
+      ],
+      "semantics": [
+        {
+          "label": "",
+          "flags": [
+            "hasEnabledState",
+            "isEnabled",
+            "hasToggledState",
+            "isToggled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "focus"
+          ],
+          "rect": {
+            "l": 716.0,
+            "t": 4.0,
+            "w": 60.0,
+            "h": 48.0
+          }
+        }
+      ]
+    }
+  ]
+}

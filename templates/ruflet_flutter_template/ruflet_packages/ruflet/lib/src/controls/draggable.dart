@@ -5,6 +5,7 @@ import '../models/control.dart';
 import '../utils/misc.dart';
 import '../utils/numbers.dart';
 import '../widgets/error.dart';
+import '../widgets/platform_badge.dart';
 
 class DraggableData {
   final int id;
@@ -43,7 +44,7 @@ class DraggableControl extends StatelessWidget {
       ),
       child: MouseRegion(
         cursor: SystemMouseCursors.grab,
-        child: content,
+        child: PlatformControlBadge(control: control, child: content),
       ),
     );
   }

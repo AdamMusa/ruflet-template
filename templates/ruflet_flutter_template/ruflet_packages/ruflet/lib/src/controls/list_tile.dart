@@ -1,110 +1,57 @@
-import '../utils/material_enums.dart';
-import '../utils/material_style_theme.dart';
-import '../widgets/list_tile_clicks.dart';
 import 'package:flutter/material.dart';
 
-import '../extensions/control.dart';
-import '../models/control.dart';
-import '../utils/borders.dart';
-import '../utils/colors.dart';
-import '../utils/edge_insets.dart';
-import '../utils/launch_url.dart';
-import '../utils/mouse.dart';
-import '../utils/numbers.dart';
-import '../utils/text.dart';
-import '../utils/theme.dart';
-import '../widgets/ruflet_store_mixin.dart';
-import 'base_controls.dart';
+import '../utils/material_enums.dart'
+    show parseListTileStyle, parseListTileTitleAlignment;
+import '../utils/theme.dart' show parseVisualDensity;
+import 'list_tile_core.dart';
 
+/// Material skin of [ListTileCore]: a ListTile on a transparent Material.
+class MaterialListTileSkin extends StatelessWidget {
+  const MaterialListTileSkin({super.key, required this.core});
 
-class ListTileControl extends StatelessWidget with RufletStoreMixin {
-  final Control control;
-
-  final ListTileClickNotifier _clickNotifier = ListTileClickNotifier();
-
-  ListTileControl({super.key, required this.control});
+  final ListTileCore core;
 
   @override
   Widget build(BuildContext context) {
-    debugPrint("ListTile build: ${control.id}");
-    var leading = control.buildIconOrWidget("leading");
-    var title = control.buildTextOrWidget("title");
-    var subtitle = control.buildTextOrWidget("subtitle");
-    var trailing = control.buildIconOrWidget("trailing");
-    var onClick = control.getBool("on_click", false)!;
-    var toggleInputs = control.getBool("toggle_inputs", false)!;
-    var url = control.getUrl("url");
-
-    Function()? onPressed =
-        (onClick || toggleInputs || url != null) && !control.disabled
-            ? () {
-                if (toggleInputs) {
-                  _clickNotifier.onClick();
-                }
-                if (url != null) {
-                  openWebBrowser(url);
-                }
-                if (onClick) {
-                  control.triggerEvent("click");
-                }
-              }
-            : null;
-
-    Function()? onLongPress =
-        control.getBool("on_long_press", false)! && !control.disabled
-            ? () {
-                control.triggerEvent("long_press");
-              }
-            : null;
-
-    Widget tile = ListTile(
-      autofocus: control.getBool("autofocus", false)!,
-      contentPadding: control.getPadding("content_padding"),
-      isThreeLine: control.getBool("is_three_line"),
-      selected: control.getBool("selected", false)!,
-      dense: control.getBool("dense"),
-      onTap: onPressed,
-      onLongPress: onLongPress,
-      enabled: !control.disabled,
-      horizontalTitleGap: control.getDouble("horizontal_spacing"),
-      enableFeedback: control.getBool("enable_feedback"),
-      minLeadingWidth: control.getDouble("min_leading_width"),
-      minVerticalPadding: control.getDouble("min_vertical_padding"),
-      minTileHeight: control.getDouble("min_height"),
-      selectedTileColor: control.getColor("selected_tile_color", context),
-      selectedColor: control.getColor("selected_color", context),
-      focusColor: control.getColor("focus_color", context),
-      tileColor: control.getColor("bgcolor", context),
-      splashColor: control.getColor("splash_color", context),
-      hoverColor: control.getColor("hover_color", context),
-      iconColor: control.getColor("icon_color", context),
-      textColor: control.getColor("text_color", context),
-      mouseCursor: control.getMouseCursor("mouse_cursor"),
-      visualDensity: control.getVisualDensity("visual_density"),
-      shape: control.getShape("shape", materialStyleTheme(Theme.of(context))),
-      titleTextStyle:
-          control.getTextStyle("title_text_style", materialStyleTheme(Theme.of(context))),
-      leadingAndTrailingTextStyle: control.getTextStyle(
-          "leading_and_trailing_text_style", materialStyleTheme(Theme.of(context))),
-      subtitleTextStyle:
-          control.getTextStyle("subtitle_text_style", materialStyleTheme(Theme.of(context))),
-      titleAlignment: control.getListTileTitleAlignment("title_alignment"),
-      style: control.getListTileStyle("style"),
-      onFocusChange: (bool hasFocus) {
-        control.triggerEvent(hasFocus ? "focus" : "blur");
-      },
-      leading: leading,
-      title: title,
-      subtitle: subtitle,
-      trailing: trailing,
+    final p = core.props;
+    return Material(
+      type: MaterialType.transparency,
+      child: ListTile(
+        autofocus: p.autofocus,
+        contentPadding: core.tilePadding,
+        isThreeLine: p.isThreeLine,
+        selected: p.selected,
+        dense: p.dense,
+        onTap: core.onTap,
+        onLongPress: core.onLongPress,
+        enabled: core.enabled,
+        horizontalTitleGap: p.horizontalSpacing,
+        enableFeedback: p.enableFeedback,
+        minLeadingWidth: p.minLeadingWidth,
+        minVerticalPadding: p.minVerticalPadding,
+        minTileHeight: p.minHeight,
+        selectedTileColor: p.selectedTileColor,
+        selectedColor: p.selectedColor,
+        focusColor: p.focusColor,
+        tileColor: p.bgcolor,
+        splashColor: p.splashColor,
+        hoverColor: p.hoverColor,
+        iconColor: p.iconColor,
+        textColor: p.textColor,
+        mouseCursor: p.mouseCursor,
+        visualDensity: parseVisualDensity(p.visualDensity.string),
+        shape: p.shape,
+        titleTextStyle: p.titleTextStyle,
+        leadingAndTrailingTextStyle: p.leadingAndTrailingTextStyle,
+        subtitleTextStyle: p.subtitleTextStyle,
+        titleAlignment: parseListTileTitleAlignment(p.titleAlignment.string),
+        style: parseListTileStyle(p.style.string),
+        leading: p.leading,
+        title: p.title?.build(),
+        subtitle: p.subtitle?.build(),
+        // Uncolored, so the tile's icon color and states apply to it.
+        trailing: core.trailingWithChevron(const Icon(Icons.chevron_right)),
+      ),
     );
-
-    if (toggleInputs) {
-      tile = ListTileClicks(notifier: _clickNotifier, child: tile);
-    }
-
-    tile = Material(type: MaterialType.transparency, child: tile);
-
-    return LayoutControl(control: control, child: tile);
   }
 }

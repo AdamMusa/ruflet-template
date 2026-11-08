@@ -5,7 +5,6 @@ import '../models/control.dart';
 import '../models/page_design.dart';
 import '../utils/cupertino_theme.dart';
 import '../utils/platform_theme.dart';
-import '../utils/style_theme.dart';
 
 class CupertinoControlTheme extends StatelessWidget {
   final Control control;
@@ -39,9 +38,9 @@ class CupertinoControlTheme extends StatelessWidget {
               ?.theme
               .data),
       child: Builder(
-        builder: (context) => RufletStyleThemeScope(
-          data: cupertinoStyleTheme(context),
-          child: DefaultTextStyle(
+        builder: (context) => cupertinoStyleThemeScope(
+          context,
+          DefaultTextStyle(
             style: CupertinoTheme.of(context).textTheme.textStyle,
             child: child,
           ),

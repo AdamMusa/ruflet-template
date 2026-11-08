@@ -8,6 +8,7 @@ import '../widgets/error.dart';
 import '../widgets/ruflet_store_mixin.dart';
 import 'base_controls.dart';
 import 'control_widget.dart';
+import 'scrollable_control.dart';
 
 class ResponsiveRowControl extends StatelessWidget with RufletStoreMixin {
   final Control control;
@@ -89,7 +90,8 @@ class ResponsiveRowControl extends StatelessWidget with RufletStoreMixin {
         }
       });
 
-      return LayoutControl(control: control, child: result);
+      return LayoutControl(
+          control: control, child: wrapInScrollableControl(control, result));
     });
   }
 }

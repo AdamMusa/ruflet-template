@@ -5,6 +5,7 @@ library block_colorpicker;
 import 'package:flutter/cupertino.dart';
 import 'palette_colors.dart';
 import 'utils.dart';
+import '../utils/color_channels.dart';
 
 /// Child widget for layout builder.
 typedef PickerItem = Widget Function(Color color);
@@ -68,7 +69,7 @@ Widget _defaultItemBuilder(
       color: color,
       boxShadow: [
         BoxShadow(
-            color: color.withOpacity(0.8),
+            color: color.withOpacity8(0.8),
             offset: const Offset(1, 2),
             blurRadius: 5)
       ],
@@ -92,14 +93,14 @@ Widget _defaultItemBuilder(
 // The blocky color picker you can alter the layout and shape.
 class BlockPicker extends StatefulWidget {
   const BlockPicker({
-    Key? key,
+    super.key,
     required this.pickerColor,
     required this.onColorChanged,
     this.availableColors = _defaultColors,
     this.useInShowDialog = true,
     this.layoutBuilder = _defaultLayoutBuilder,
     this.itemBuilder = _defaultItemBuilder,
-  }) : super(key: key);
+  });
 
   final Color? pickerColor;
   final ValueChanged<Color> onColorChanged;
@@ -135,10 +136,10 @@ class _BlockPickerState extends State<BlockPicker> {
         color,
         (_currentColor != null &&
                 (widget.useInShowDialog ? true : widget.pickerColor != null))
-            ? (_currentColor?.value == color.value) &&
+            ? (_currentColor?.toARGB32() == color.toARGB32()) &&
                 (widget.useInShowDialog
                     ? true
-                    : widget.pickerColor?.value == color.value)
+                    : widget.pickerColor?.toARGB32() == color.toARGB32())
             : false,
         () => changeColor(color),
       ),
@@ -149,14 +150,14 @@ class _BlockPickerState extends State<BlockPicker> {
 // The blocky color picker you can alter the layout and shape with multiple choice.
 class MultipleChoiceBlockPicker extends StatefulWidget {
   const MultipleChoiceBlockPicker({
-    Key? key,
+    super.key,
     required this.pickerColors,
     required this.onColorsChanged,
     this.availableColors = _defaultColors,
     this.useInShowDialog = true,
     this.layoutBuilder = _defaultLayoutBuilder,
     this.itemBuilder = _defaultItemBuilder,
-  }) : super(key: key);
+  });
 
   final List<Color>? pickerColors;
   final ValueChanged<List<Color>> onColorsChanged;

@@ -1,0 +1,79 @@
+{
+  "fixture": "disabled",
+  "design": "android",
+  "geometry": {
+    "size": {
+      "w": 90.3,
+      "h": 48.0
+    },
+    "elements": [
+      {
+        "text": "Off",
+        "rect": {
+          "l": 24.0,
+          "t": 14.0,
+          "w": 42.3,
+          "h": 20.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Off",
+      "flags": [
+        "isButton",
+        "hasEnabledState"
+      ],
+      "actions": [],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 90.3,
+        "h": 48.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap text \"Off\"",
+      "sent": [],
+      "semantics": [
+        {
+          "label": "Off",
+          "flags": [
+            "isButton",
+            "hasEnabledState"
+          ],
+          "actions": [],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 90.3,
+            "h": 48.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "hover in and out",
+      "sent": [],
+      "semantics": [
+        {
+          "label": "Off",
+          "flags": [
+            "isButton",
+            "hasEnabledState"
+          ],
+          "actions": [],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 90.3,
+            "h": 48.0
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 # Updating the local Ruflet engine
 
-All 20 owned packages are copied exactly from `packages/` in a clean
+All 21 owned packages are copied exactly from `packages/` in a clean
 `ruflet-engine` Git commit. The engine owns its renderers and in-process
 transport together. No Flet namespace rewriting or template-only transport
 patching happens during synchronization. Preserve upstream copyright notices,
@@ -14,7 +14,16 @@ ruby tool/sync_ruflet_source.rb --source /path/to/ruflet-engine --ref COMMIT
 ruby tool/sync_ruflet_source.rb --source /path/to/ruflet-engine --ref COMMIT --check
 ruby tool/conformance/test_ruflet_source_integrity.rb
 ruby tool/test_sync_ruflet_source.rb
+flutter test
 ```
+
+`flutter test` runs `test/ruflet_namespace_test.dart`, which fails when the
+sync brings a package that is new to `ruflet_packages/`. Do not add such a
+package to `pubspec.yaml` or the entrypoints. Every published gem copies those
+files into the client it builds, and gems before 0.0.22 keep every `ruflet_*`
+dependency listed there, so the package's native plugins would be linked into
+every app those gems build. List it in that test's `optInPackages` instead; see
+"Bundled extensions" in the repository README.
 
 `RUFLET_ENGINE_ROOT` can replace `--source`. Without a source argument or that
 environment variable, `--check` verifies the vendored inventory offline.

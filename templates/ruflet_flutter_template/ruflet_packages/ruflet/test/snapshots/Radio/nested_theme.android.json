@@ -1,0 +1,84 @@
+{
+  "fixture": "nested_theme",
+  "design": "android",
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 48.0
+    },
+    "elements": [
+      {
+        "text": "Themed",
+        "rect": {
+          "l": 48.0,
+          "t": 14.0,
+          "w": 85.5,
+          "h": 20.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Themed",
+      "flags": [
+        "hasCheckedState",
+        "hasEnabledState",
+        "isEnabled",
+        "isInMutuallyExclusiveGroup",
+        "isFocusable"
+      ],
+      "actions": [
+        "tap",
+        "focus"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 58.0,
+        "w": 800.0,
+        "h": 48.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "semantics tap",
+      "sent": [
+        {
+          "id": 1400,
+          "update": {
+            "value": "b"
+          }
+        },
+        {
+          "id": 1400,
+          "event": "change",
+          "data": "b"
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Themed",
+          "flags": [
+            "hasCheckedState",
+            "isChecked",
+            "hasEnabledState",
+            "isEnabled",
+            "isInMutuallyExclusiveGroup",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 58.0,
+            "w": 800.0,
+            "h": 48.0
+          }
+        }
+      ]
+    }
+  ]
+}

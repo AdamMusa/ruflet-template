@@ -1,0 +1,299 @@
+{
+  "fixture": "actions",
+  "design": "ios",
+  "sizing": {
+    "preferred_height": 44.0,
+    "fully_obstructs": false
+  },
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 44.0
+    },
+    "elements": [
+      {
+        "icon": 984246,
+        "rect": {
+          "l": 36.0,
+          "t": 11.8,
+          "w": 20.4,
+          "h": 20.4
+        }
+      },
+      {
+        "text": "Title",
+        "rect": {
+          "l": 358.5,
+          "t": 13.5,
+          "w": 82.9,
+          "h": 17.0
+        }
+      },
+      {
+        "icon": 984246,
+        "rect": {
+          "l": 683.2,
+          "t": 11.8,
+          "w": 20.4,
+          "h": 20.4
+        }
+      },
+      {
+        "icon": 984497,
+        "rect": {
+          "l": 743.6,
+          "t": 11.8,
+          "w": 20.4,
+          "h": 20.4
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "",
+      "flags": [
+        "isButton",
+        "hasEnabledState",
+        "isEnabled",
+        "isFocusable"
+      ],
+      "actions": [
+        "tap",
+        "longPress",
+        "focus"
+      ],
+      "rect": {
+        "l": 16.0,
+        "t": 0.0,
+        "w": 60.4,
+        "h": 44.0
+      }
+    },
+    {
+      "label": "Title",
+      "flags": [
+        "isHeader"
+      ],
+      "actions": [],
+      "rect": {
+        "l": 358.5,
+        "t": 13.5,
+        "w": 82.9,
+        "h": 17.0
+      }
+    },
+    {
+      "label": "",
+      "flags": [
+        "isButton",
+        "hasEnabledState",
+        "isEnabled",
+        "isFocusable"
+      ],
+      "actions": [
+        "tap",
+        "longPress",
+        "focus"
+      ],
+      "rect": {
+        "l": 663.2,
+        "t": 0.0,
+        "w": 60.4,
+        "h": 44.0
+      }
+    },
+    {
+      "label": "",
+      "flags": [
+        "isButton",
+        "hasEnabledState",
+        "isEnabled",
+        "isFocusable"
+      ],
+      "actions": [
+        "tap",
+        "longPress",
+        "focus"
+      ],
+      "rect": {
+        "l": 723.6,
+        "t": 0.0,
+        "w": 60.4,
+        "h": 44.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap at 0.97,0.5",
+      "sent": [
+        {
+          "id": 2305,
+          "event": "click",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 16.0,
+            "t": 0.0,
+            "w": 60.4,
+            "h": 44.0
+          }
+        },
+        {
+          "label": "Title",
+          "flags": [
+            "isHeader"
+          ],
+          "actions": [],
+          "rect": {
+            "l": 358.5,
+            "t": 13.5,
+            "w": 82.9,
+            "h": 17.0
+          }
+        },
+        {
+          "label": "",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 663.2,
+            "t": 0.0,
+            "w": 60.4,
+            "h": 44.0
+          }
+        },
+        {
+          "label": "",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 723.6,
+            "t": 0.0,
+            "w": 60.4,
+            "h": 44.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "tap at 0.03,0.5",
+      "sent": [
+        {
+          "id": 2303,
+          "event": "click",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 16.0,
+            "t": 0.0,
+            "w": 60.4,
+            "h": 44.0
+          }
+        },
+        {
+          "label": "Title",
+          "flags": [
+            "isHeader"
+          ],
+          "actions": [],
+          "rect": {
+            "l": 358.5,
+            "t": 13.5,
+            "w": 82.9,
+            "h": 17.0
+          }
+        },
+        {
+          "label": "",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 663.2,
+            "t": 0.0,
+            "w": 60.4,
+            "h": 44.0
+          }
+        },
+        {
+          "label": "",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 723.6,
+            "t": 0.0,
+            "w": 60.4,
+            "h": 44.0
+          }
+        }
+      ]
+    }
+  ]
+}

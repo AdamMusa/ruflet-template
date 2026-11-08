@@ -1,0 +1,30 @@
+{
+  "fixture": "maximal",
+  "design": "android",
+  "geometry": {
+    "size": {
+      "w": 52.0,
+      "h": 52.0
+    },
+    "elements": []
+  },
+  "semantics": [
+    {
+      "label": "Uploading",
+      "value": "50",
+      "flags": [],
+      "actions": [],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 52.0,
+        "h": 52.0
+      }
+    }
+  ],
+  "steps": [],
+  "native": {
+    "type": "CircularProgressIndicator",
+    "value": 0.5
+  }
+}

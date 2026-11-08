@@ -1,0 +1,109 @@
+{
+  "fixture": "maximal",
+  "design": "ios",
+  "geometry": {
+    "size": {
+      "w": 44.0,
+      "h": 44.0
+    },
+    "elements": [
+      {
+        "icon": 984246,
+        "rect": {
+          "l": 7.0,
+          "t": 7.0,
+          "w": 30.0,
+          "h": 30.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "",
+      "flags": [
+        "isButton",
+        "hasEnabledState",
+        "isEnabled",
+        "isFocusable"
+      ],
+      "actions": [
+        "tap",
+        "longPress",
+        "focus"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 44.0,
+        "h": 44.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "semantics tap",
+      "sent": [
+        {
+          "id": 1801,
+          "event": "click",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 44.0,
+            "h": 44.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "long press",
+      "sent": [
+        {
+          "id": 1801,
+          "event": "long_press",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 44.0,
+            "h": 44.0
+          }
+        }
+      ]
+    }
+  ]
+}

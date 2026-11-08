@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:ruflet/ruflet.dart';
@@ -53,10 +52,7 @@ TooltipDirection? parseTooltipDirection(
   TooltipDirection? defaultValue,
 ]) {
   if (value == null) return defaultValue;
-  return TooltipDirection.values.firstWhereOrNull(
-        (e) => e.name.toLowerCase() == value.toLowerCase(),
-      ) ??
-      defaultValue;
+  return parseEnum(TooltipDirection.values, value, defaultValue);
 }
 
 BarTouchTooltipData? parseBarTouchTooltipData(
@@ -235,7 +231,5 @@ BarChartRodStackItem parseBarChartRodStackItem(
 BarChartAlignment? parseBarChartAlignment(String? value,
     [BarChartAlignment? defaultValue]) {
   if (value == null) return defaultValue;
-  return BarChartAlignment.values.firstWhereOrNull(
-          (e) => e.name.toLowerCase() == value.toLowerCase()) ??
-      defaultValue;
+  return parseEnum(BarChartAlignment.values, value, defaultValue);
 }

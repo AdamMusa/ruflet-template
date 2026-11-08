@@ -1,0 +1,64 @@
+{
+  "fixture": "layout",
+  "design": "ios",
+  "sizing": {
+    "preferred_height": 44.0,
+    "fully_obstructs": false
+  },
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 44.0
+    },
+    "elements": [
+      {
+        "text": "Layout",
+        "rect": {
+          "l": 350.2,
+          "t": 13.5,
+          "w": 99.5,
+          "h": 17.0
+        }
+      },
+      {
+        "text": "New",
+        "rect": {
+          "l": 765.7,
+          "t": 0.0,
+          "w": 29.3,
+          "h": 18.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Layout",
+      "flags": [
+        "isHeader"
+      ],
+      "actions": [
+        "tap",
+        "longPress"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 800.0,
+        "h": 44.0
+      }
+    },
+    {
+      "label": "New",
+      "flags": [],
+      "actions": [],
+      "rect": {
+        "l": 765.7,
+        "t": 0.0,
+        "w": 29.3,
+        "h": 18.0
+      }
+    }
+  ],
+  "steps": []
+}

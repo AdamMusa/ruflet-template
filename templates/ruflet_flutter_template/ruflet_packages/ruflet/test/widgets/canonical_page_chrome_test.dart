@@ -72,7 +72,8 @@ void main() {
           ? const CupertinoNavigationBar.large(largeTitle: Text('title'))
               .preferredSize
               .height
-          : 88;
+          // Material large: toolbar_height toolbar + 88 dp large-title area.
+          : 88 + 88;
       expect(tester.getTopLeft(find.text('First visible control')).dy,
           54 + expectedBarHeight);
       if (design == PageDesign.cupertino) {

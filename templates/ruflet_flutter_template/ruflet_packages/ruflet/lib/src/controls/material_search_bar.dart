@@ -1,5 +1,6 @@
 import '../utils/material_style_theme.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
@@ -46,8 +47,51 @@ class _SearchBarControlState extends State<MaterialSearchBarControl> {
     widget.control.triggerEvent(_focusNode.hasFocus ? "focus" : "blur");
   }
 
+  // The open search view is a route above the page: a tap outside it lands
+  // on the route's dismiss barrier, which reports nothing. While the view is
+  // open, a global pointer route checks each pointer-down against the view's
+  // content, and one that misses it is Ruby's tap_outside_view.
+
+  /// A context inside the open view (the one its suggestions are built in).
+  BuildContext? _viewContext;
+  bool _viewPointerRouteAdded = false;
+
+  void _onViewOpen() {
+    if (_viewPointerRouteAdded) return;
+    GestureBinding.instance.pointerRouter.addGlobalRoute(_handleViewPointer);
+    _viewPointerRouteAdded = true;
+  }
+
+  void _onViewClose() {
+    _viewContext = null;
+    if (!_viewPointerRouteAdded) return;
+    GestureBinding.instance.pointerRouter
+        .removeGlobalRoute(_handleViewPointer);
+    _viewPointerRouteAdded = false;
+  }
+
+  void _handleViewPointer(PointerEvent event) {
+    if (event is! PointerDownEvent ||
+        !widget.control.getBool("on_tap_outside_view", false)!) {
+      return;
+    }
+    final viewContext = _viewContext;
+    final content = viewContext != null && viewContext.mounted
+        ? viewContext.findRenderObject()
+        : null;
+    if (content == null) return;
+    // The view's root lies on the hit path of every point inside the view
+    // and of none outside it.
+    final result = HitTestResult();
+    WidgetsBinding.instance.hitTestInView(result, event.position, event.viewId);
+    if (!result.path.any((entry) => entry.target == content)) {
+      widget.control.triggerEvent("tap_outside_view");
+    }
+  }
+
   @override
   void dispose() {
+    _onViewClose();
     _controller.removeListener(_searchTextChanged);
     _controller.dispose();
     _focusNode.removeListener(_onFocusChange);
@@ -77,8 +121,8 @@ class _SearchBarControlState extends State<MaterialSearchBarControl> {
     switch (name) {
       case "close_view":
         if (_controller.isOpen) {
-          var text = args["text"];
-          _updateValue(text);
+          var text = args["text"]?.toString();
+          if (text != null) _updateValue(text);
           _controller.closeView(text);
         }
         break;
@@ -161,6 +205,8 @@ class _SearchBarControlState extends State<MaterialSearchBarControl> {
 
     Widget anchor = SearchAnchor(
         searchController: _controller,
+        viewOnOpen: _onViewOpen,
+        viewOnClose: _onViewClose,
         headerHintStyle:
             widget.control.getTextStyle("view_hint_text_style", materialStyleTheme(theme)),
         headerTextStyle:
@@ -245,6 +291,7 @@ class _SearchBarControlState extends State<MaterialSearchBarControl> {
         },
         suggestionsBuilder:
             (BuildContext context, SearchController controller) {
+          _viewContext = context;
           return [
             _SearchBarSuggestionsHost(control: widget.control),
           ];

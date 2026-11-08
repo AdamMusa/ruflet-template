@@ -53,10 +53,10 @@ class _CupertinoColorPickerControlState
         widget.control.getColor("color", context) ?? PaletteColors.black;
     if (pickerHsvColor != null) {
       final hsvColor = pickerHsvColor.toColor();
-      if (hsvColor.value != _pickerColor.value) {
+      if (hsvColor.toARGB32() != _pickerColor.toARGB32()) {
         _pickerColor = hsvColor;
       }
-    } else if (controlColor.value != _pickerColor.value) {
+    } else if (controlColor.toARGB32() != _pickerColor.toARGB32()) {
       _pickerColor = controlColor;
     }
 

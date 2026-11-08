@@ -11,6 +11,7 @@ import 'ruflet_core_extension.dart';
 import 'ruflet_extension.dart';
 import 'models/asset_source.dart';
 import 'models/control.dart';
+import 'models/control_type.dart';
 import 'models/window_state.dart';
 import 'protocol/control_event_body.dart';
 import 'protocol/invoke_method_request_body.dart';
@@ -300,6 +301,7 @@ class RufletBackend extends ChangeNotifier {
   /// - [eventData]: Optional data to pass along with the event.
   void triggerControlEvent(Control control, String eventName,
       [dynamic eventData]) {
+    eventName = controlTypeAliasEventName(control.type, eventName);
     if (control.get("on_$eventName") == true) {
       debugPrint("${control.type}(${control.id}).on_$eventName($eventData)");
       triggerControlEventById(control.id, eventName, eventData);

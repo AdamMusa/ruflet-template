@@ -1,0 +1,55 @@
+{
+  "fixture": "selected",
+  "design": "android",
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 56.0
+    },
+    "elements": [
+      {
+        "icon": 984246,
+        "rect": {
+          "l": 16.0,
+          "t": 16.0,
+          "w": 24.0,
+          "h": 24.0
+        }
+      },
+      {
+        "text": "Selected",
+        "rect": {
+          "l": 56.0,
+          "t": 16.0,
+          "w": 720.0,
+          "h": 24.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Selected",
+      "flags": [
+        "isSelected",
+        "isButton",
+        "hasEnabledState",
+        "isEnabled",
+        "isFocusable",
+        "hasSelectedState"
+      ],
+      "actions": [
+        "tap",
+        "longPress",
+        "focus"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 800.0,
+        "h": 56.0
+      }
+    }
+  ],
+  "steps": []
+}

@@ -66,11 +66,16 @@ class SecureStorageService extends RufletService {
     WindowsOptions wOptions = parseWindowsOptions(args?["windows"], storage.wOptions)!;
     WebOptions webOptions = parseWebOptions(args?["web"], storage.webOptions)!;
     MacOsOptions mOptions = parseMacOptions(args?["macos"], storage.mOptions as MacOsOptions)!;
+    final key = const {"set", "get", "contains_key", "remove"}.contains(name)
+        ? requireInvokeArg(args, "key", "SecureStorage.$name").toString()
+        : null;
+    // A null value would make flutter_secure_storage delete the key.
+    if (name == "set") requireInvokeArg(args, "value", "SecureStorage.set");
     switch (name) {
       case "set":
         return await storage.write(
-          key: args["key"]!,
-          value: args["value"]!,
+          key: key!,
+          value: args["value"].toString(),
           aOptions: aOptions,
           iOptions: iOptions,
           lOptions: lOptions,
@@ -80,7 +85,7 @@ class SecureStorageService extends RufletService {
         );
       case "get":
         return await storage.read(
-          key: args["key"]!,
+          key: key!,
           aOptions: aOptions,
           iOptions: iOptions,
           lOptions: lOptions,
@@ -99,7 +104,7 @@ class SecureStorageService extends RufletService {
         );
       case "contains_key":
         return await storage.containsKey(
-          key: args["key"]!,
+          key: key!,
           aOptions: aOptions,
           iOptions: iOptions,
           lOptions: lOptions,
@@ -109,7 +114,7 @@ class SecureStorageService extends RufletService {
         );
       case "remove":
         return await storage.delete(
-          key: args["key"]!,
+          key: key!,
           aOptions: aOptions,
           iOptions: iOptions,
           lOptions: lOptions,

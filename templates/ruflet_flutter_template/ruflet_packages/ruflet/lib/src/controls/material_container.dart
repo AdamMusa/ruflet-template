@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
 import '../models/control.dart';
+import '../services/client_action.dart'
+    show controlHasClientActions, runControlClientActions;
 import '../utils/alignment.dart';
 import '../utils/animations.dart';
 import '../utils/borders.dart';
@@ -33,6 +35,7 @@ class MaterialContainerControl extends StatelessWidget with RufletStoreMixin {
     var onClick = control.getBool("on_click", false)!;
     var onTapDown = control.getBool("on_tap_down", false)!;
     var url = control.getUrl("url");
+    var hasAction = controlHasClientActions(control);
     var onLongPress = control.getBool("on_long_press", false)!;
     var onHover = control.getBool("on_hover", false)!;
     var ignoreInteractions = control.getBool("ignore_interactions", false)!;
@@ -71,15 +74,21 @@ class MaterialContainerControl extends StatelessWidget with RufletStoreMixin {
     var onAnimationEnd = control.getBool("on_animation_end", false)!
         ? () => control.triggerEvent("animation_end", "container")
         : null;
-    if ((onClick || url != null || onLongPress || onHover || onTapDown) &&
+    if ((onClick ||
+            url != null ||
+            hasAction ||
+            onLongPress ||
+            onHover ||
+            onTapDown) &&
         ink &&
         !control.disabled) {
       var inkWidget = Material(
           color: Colors.transparent,
           borderRadius: boxDecoration!.borderRadius,
           child: InkWell(
-            onTap: onClick || url != null || onTapDown
+            onTap: onClick || url != null || hasAction || onTapDown
                 ? () {
+                    if (hasAction) runControlClientActions(control);
                     if (url != null) openWebBrowser(url);
                     if (onClick) control.triggerEvent("click");
                   }
@@ -153,17 +162,23 @@ class MaterialContainerControl extends StatelessWidget with RufletStoreMixin {
               onEnd: onAnimationEnd,
               child: content);
 
-      if ((onClick || onLongPress || onHover || onTapDown || url != null) &&
+      if ((onClick ||
+              onLongPress ||
+              onHover ||
+              onTapDown ||
+              url != null ||
+              hasAction) &&
           !control.disabled) {
         container = MouseRegion(
-          cursor: onClick || onTapDown || url != null
+          cursor: onClick || onTapDown || url != null || hasAction
               ? SystemMouseCursors.click
               : MouseCursor.defer,
           onEnter: onHover ? (_) => control.triggerEvent("hover", true) : null,
           onExit: onHover ? (_) => control.triggerEvent("hover", false) : null,
           child: GestureDetector(
-            onTap: onClick || url != null
+            onTap: onClick || url != null || hasAction
                 ? () {
+                    if (hasAction) runControlClientActions(control);
                     if (url != null) openWebBrowser(url);
                     if (onClick) control.triggerEvent("click");
                   }

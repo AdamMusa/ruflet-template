@@ -1,17 +1,24 @@
 import 'dart:ui';
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:ruflet/src/utils/locale.dart';
 import 'package:flutter/services.dart';
 
 import 'enums.dart';
-import 'platform.dart';
 
-/// Returns device information as a Map.
+/// Returns device information as a Map: the device_info_plus record of the
+/// running platform with Flet's snake_case field names (Page.get_device_info).
 Future<Map<String, dynamic>> getDeviceInfo() async {
-  BaseDeviceInfo deviceInfo = await DeviceInfoPlugin().deviceInfo;
+  final source = debugDeviceInfoSource;
+  final BaseDeviceInfo deviceInfo =
+      source != null ? await source() : await DeviceInfoPlugin().deviceInfo;
   return deviceInfo.asMap();
 }
+
+/// Replaces the device_info_plus lookup of [getDeviceInfo] in tests.
+@visibleForTesting
+Future<BaseDeviceInfo> Function()? debugDeviceInfoSource;
 
 List<Map<String, String?>> getDeviceLocales() =>
     PlatformDispatcher.instance.locales
@@ -19,11 +26,12 @@ List<Map<String, String?>> getDeviceLocales() =>
         .toList();
 
 extension DeviceInfoExtension on BaseDeviceInfo {
+  // The record type device_info_plus returned decides the fields, so a record
+  // always maps to its own platform's keys.
   Map<String, dynamic> asMap() {
-    var deviceInfo = this;
+    final deviceInfo = this;
     final deviceLocales = getDeviceLocales();
-    if (isWebPlatform()) {
-      deviceInfo = (deviceInfo as WebBrowserInfo);
+    if (deviceInfo is WebBrowserInfo) {
       return {
         "browser_name": deviceInfo.browserName.name,
         "app_code_name": deviceInfo.appCodeName,
@@ -43,8 +51,7 @@ extension DeviceInfoExtension on BaseDeviceInfo {
         "locales": deviceLocales,
       };
     } else {
-      if (isAndroidMobile()) {
-        deviceInfo = (deviceInfo as AndroidDeviceInfo);
+      if (deviceInfo is AndroidDeviceInfo) {
         return {
           "available_ram_size": deviceInfo.availableRamSize,
           "board": deviceInfo.board,
@@ -82,8 +89,7 @@ extension DeviceInfoExtension on BaseDeviceInfo {
           },
           "locales": deviceLocales,
         };
-      } else if (isIOSMobile()) {
-        deviceInfo = (deviceInfo as IosDeviceInfo);
+      } else if (deviceInfo is IosDeviceInfo) {
         return {
           "available_ram_size": deviceInfo.availableRamSize,
           "free_disk_size": deviceInfo.freeDiskSize,
@@ -107,8 +113,7 @@ extension DeviceInfoExtension on BaseDeviceInfo {
           "identifier_for_vendor": deviceInfo.identifierForVendor,
           "locales": deviceLocales,
         };
-      } else if (isLinuxDesktop()) {
-        deviceInfo = (deviceInfo as LinuxDeviceInfo);
+      } else if (deviceInfo is LinuxDeviceInfo) {
         return {
           "name": deviceInfo.name,
           "id": deviceInfo.id,
@@ -123,8 +128,7 @@ extension DeviceInfoExtension on BaseDeviceInfo {
           "machine_id": deviceInfo.machineId,
           "locales": deviceLocales,
         };
-      } else if (isMacOSDesktop()) {
-        deviceInfo = (deviceInfo as MacOsDeviceInfo);
+      } else if (deviceInfo is MacOsDeviceInfo) {
         return {
           "active_cpus": deviceInfo.activeCPUs,
           "arch": deviceInfo.arch,
@@ -142,8 +146,7 @@ extension DeviceInfoExtension on BaseDeviceInfo {
           "system_guid": deviceInfo.systemGUID,
           "locales": deviceLocales,
         };
-      } else if (isWindowsDesktop()) {
-        deviceInfo = (deviceInfo as WindowsDeviceInfo);
+      } else if (deviceInfo is WindowsDeviceInfo) {
         return {
           "computer_name": deviceInfo.computerName,
           "number_of_cores": deviceInfo.numberOfCores,
