@@ -57,8 +57,6 @@ dependencies:
     path: ruflet_packages/ruflet_flashlight
   ruflet_geolocator:
     path: ruflet_packages/ruflet_geolocator
-  ruflet_local_auth:
-    path: ruflet_packages/ruflet_local_auth
   ruflet_lottie:
     path: ruflet_packages/ruflet_lottie
   ruflet_map:
