@@ -71,6 +71,13 @@ stripping removes only that line, and the entrypoints they generate stay
 byte-identical. Register any package the released gems do not know in the
 same place.
 
+Gems 0.0.19 and 0.0.20 strip only the older `flet_*` package names. Whatever
+`ruflet.yaml` lists, they keep every bundled `ruflet_*` package as a dependency
+of the generated client, so its native plugins are linked into the app. The
+one exception is `ruflet_qrcode_scanner` on 0.0.20, which that gem knows by
+name. A package added here therefore reaches every app those two gems build,
+and `ruflet_local_auth` does too.
+
 ```yaml
 extensions:
   - charts
