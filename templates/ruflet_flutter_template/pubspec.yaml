@@ -34,7 +34,7 @@ dependencies:
     sdk: flutter
 
   # Exact Ruflet engine and extension packages from the pinned engine commit
-  # abd906b941660bd8ff3c4baa81792e1d75fd49dd. No git/Python dependency.
+  # a4632931a307761c5b8060e529307a4f0a5cb4ba. No git/Python dependency.
   ruflet:
     path: ruflet_packages/ruflet
   ruflet_ads:
