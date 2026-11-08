@@ -30,6 +30,13 @@ class BootstrapHooksContractTest < Minitest::Test
   DART
   POST_FIRST_FRAME_HOOKS = "  scheduleRufletBootstrapHooksAfterFirstFrame(rufletPostFirstFrameHooks);\n"
 
+  # An import, export or part directive up to its semicolon, which may be
+  # several lines on: a conditional import names its alternatives after `if`.
+  # `part of` is not a directive that names a file to load.
+  DIRECTIVE = /^[ \t]*(import|export|part)(?![A-Za-z0-9_$])(?![ \t]+of\b)([^;]*);/
+  # A URI in either quote style.
+  URI_LITERAL = /(['"])([^'"\n]*)\1/
+
   # A file the CLI writes must never ship here: the default build/client copy
   # would carry it, but a client dir an older gem refreshes would not, and the
   # two would start to differ.
@@ -39,14 +46,33 @@ class BootstrapHooksContractTest < Minitest::Test
   end
 
   # Released gems refresh lib/main*.dart without the rest of lib/, so an
-  # entrypoint may only import what the template itself ships.
+  # entrypoint may only import, export or include as a part what the template
+  # itself ships, whichever quotes the directive uses.
   def test_entrypoints_import_only_files_the_template_ships
     (ENTRYPOINTS + ["lib/main.dart"]).each do |relative_path|
-      read(relative_path).scan(/^import '([^':]+)'/).flatten.each do |import|
-        assert File.file?(File.join(TEMPLATE_ROOT, "lib", import)),
-               "#{relative_path} imports #{import}, which the template does not ship"
+      uris = directive_uris(relative_path)
+      refute_empty uris, "#{relative_path}: no directive found"
+
+      uris.each do |keyword, uri|
+        next if uri.start_with?("dart:", "package:")
+
+        assert File.file?(File.join(TEMPLATE_ROOT, "lib", uri)),
+               "#{relative_path}: #{keyword} '#{uri}' names a file the template does not ship"
       end
-      refute_includes read(relative_path), "ruflet_bootstrap.g.dart'", relative_path
+    end
+  end
+
+  # No released gem writes the generated file, so any reference to it, in any
+  # directive form or quote style, stops the client compiling with them.
+  def test_entrypoints_never_refer_to_the_generated_bootstrap
+    generated = File.basename(GENERATED_BOOTSTRAP)
+
+    (ENTRYPOINTS + ["lib/main.dart"]).each do |relative_path|
+      directive_uris(relative_path).each do |keyword, uri|
+        refute_equal generated, File.basename(uri), "#{relative_path}: #{keyword} '#{uri}'"
+      end
+      assert_empty code_lines(read(relative_path)).grep(/#{Regexp.escape(generated)}/),
+                   "#{relative_path}: only comments may name the generated file"
     end
   end
 
@@ -115,6 +141,14 @@ class BootstrapHooksContractTest < Minitest::Test
     start = source.index(/^Future<void> main\(/)
     refute_nil start, relative_path
     source[start...source.index("\n}\n", start) + 1]
+  end
+
+  # [keyword, uri] for every import, export and part directive, a conditional
+  # import's alternatives included.
+  def directive_uris(relative_path)
+    read(relative_path).scan(DIRECTIVE).flat_map do |keyword, rest|
+      rest.scan(URI_LITERAL).map { |_quote, uri| [keyword, uri] }
+    end
   end
 
   def code_lines(text)
