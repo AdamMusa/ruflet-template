@@ -37,6 +37,7 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:ruby_runtime/ruflet_runtime.dart';
 
+import 'ruflet_bootstrap.g.dart';
 import 'package:ruflet_webview/ruflet_webview.dart' as ruflet_webview;
 
 const bool isProduction = bool.fromEnvironment('dart.vm.product');
@@ -135,11 +136,55 @@ Future<void> main() async {
   // TemplateApp ask the platform for the embedded transport instead.
   final pageUrl = resolveBackendUrl();
 
+  // Hooks a build feature asked for (lib/ruflet_bootstrap.g.dart). Without
+  // any, startup is exactly what it was before the hooks existed.
+  if (rufletPreRunAppHooks.isNotEmpty) {
+    await runRufletBootstrapHooks(rufletPreRunAppHooks, 'pre-runApp');
+  }
+
   // The embedded runtime is deliberately not awaited here. Platforms that can
   // start the VM before the Flutter engine exists have already been booting it
   // while these extensions initialized. TemplateApp resolves its transport
   // endpoint from the widget tree and shows a splash until it arrives.
   runApp(TemplateApp(pageUrl: pageUrl, extensions: extensions));
+  scheduleRufletBootstrapHooksAfterFirstFrame(rufletPostFirstFrameHooks);
+}
+
+/// Runs build-written bootstrap hooks (lib/ruflet_bootstrap.g.dart) one at a
+/// time, in list order, awaiting each before the next starts.
+///
+/// A hook that throws is reported through [FlutterError.reportError] and does
+/// not stop the hooks after it, or the app.
+Future<void> runRufletBootstrapHooks(
+  List<RufletBootstrapHook> hooks,
+  String phase,
+) async {
+  for (final hook in hooks) {
+    try {
+      await hook();
+    } catch (error, stack) {
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stack,
+          library: 'ruflet bootstrap',
+          context: ErrorDescription('while running a $phase hook'),
+        ),
+      );
+    }
+  }
+}
+
+/// Runs [hooks] after the next frame. Called right after [runApp], that is the
+/// first frame: runApp only schedules the root widget and the frame that draws
+/// it.
+void scheduleRufletBootstrapHooksAfterFirstFrame(
+  List<RufletBootstrapHook> hooks,
+) {
+  if (hooks.isEmpty) return;
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    unawaited(runRufletBootstrapHooks(hooks, 'post-first-frame'));
+  }, debugLabel: 'Ruflet post-first-frame hooks');
 }
 
 class TemplateApp extends StatefulWidget {

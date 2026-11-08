@@ -38,6 +38,21 @@ not add a Swift rendering engine.
 Linux WebView builds require WebKitGTK 4.1 development files. On Debian or
 Ubuntu install them with `sudo apt install libwebkit2gtk-4.1-dev`.
 
+## Bootstrap hooks
+
+Both entrypoints run the ordered hook lists in `lib/ruflet_bootstrap.g.dart`:
+`rufletPreRunAppHooks` are awaited one at a time just before `runApp`, and
+`rufletPostFirstFrameHooks` run after the first frame. A hook that throws is
+reported through `FlutterError.reportError` and the app still starts.
+
+`ruflet build` rewrites that file on every build (`Ruflet::CLI::ClientBootstrap`
+in the ruflet gem); build features add their hooks there, never in
+`lib/main*.dart`. The copy in this template is exactly what the CLI writes when
+no feature adds a hook, and with both lists empty the entrypoints skip the hooks
+entirely. Keep the two in step:
+`tool/conformance/test_bootstrap_hooks_contract.rb` pins the shipped file and
+the hook points.
+
 ## Conditional extensions and services
 
 The Flutter packages under `ruflet_packages/` are the local source catalog for
