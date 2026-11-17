@@ -9,6 +9,8 @@ import 'package:ruflet/src/widgets/platform_scrollbar.dart';
 
 import '../support/control_harness.dart';
 
+// ruflet-coverage: NestedScrollView SliverAppBar SliverToBoxAdapter TabBarView
+
 int _ids = 7000;
 
 Map<String, dynamic> _node(String type,

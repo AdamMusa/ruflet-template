@@ -6,6 +6,8 @@ import 'package:ruflet/ruflet.dart';
 
 import '../support/control_harness.dart';
 
+// ruflet-coverage: ProgressRing
+
 Future<CircularProgressIndicator> _pumpRing(
   WidgetTester tester,
   Map<String, dynamic> props,

@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'ruby_layout_attributes_test.dart' show backendFor, host;
 
+// ruflet-coverage: ListTile
+
 void main() {
   for (final platform in [TargetPlatform.iOS, TargetPlatform.android]) {
     for (final subtitle in [false, true]) {

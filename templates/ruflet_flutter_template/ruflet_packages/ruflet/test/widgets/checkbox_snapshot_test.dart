@@ -7,6 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 import '../support/control_harness.dart';
 import '../support/control_snapshot.dart';
 
+// ruflet-coverage: Checkbox
+
 const _events = {'on_change': true, 'on_focus': true, 'on_blur': true};
 
 Map<String, dynamic> _column(List<Map<String, dynamic>> controls,

@@ -8,6 +8,8 @@ import 'package:provider/provider.dart';
 
 import 'control_renderer_matrix_test.dart' show materialOnly;
 
+// ruflet-coverage: SliverAppBar
+
 class _Backend extends RufletBackend {
   _Backend(TargetPlatform target)
       : super(

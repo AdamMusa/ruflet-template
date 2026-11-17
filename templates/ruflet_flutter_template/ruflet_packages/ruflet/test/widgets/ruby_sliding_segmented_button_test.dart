@@ -8,6 +8,8 @@ import 'package:provider/provider.dart';
 import 'package:ruflet/ruflet.dart';
 import 'package:ruflet/src/models/control_type.dart';
 
+// ruflet-coverage: SegmentedButton Segment
+
 class _Backend extends RufletBackend {
   _Backend(TargetPlatform target)
       : super(

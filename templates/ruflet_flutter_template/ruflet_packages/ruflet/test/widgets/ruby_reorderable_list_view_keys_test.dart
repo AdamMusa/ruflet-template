@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:ruflet/ruflet.dart';
 import 'package:ruflet/src/controls/container.dart';
 
+// ruflet-coverage: ReorderableListView
+
 Map<String, dynamic> _item(int id, String text) => {
       '_c': 'Container',
       '_i': id,

@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:ruflet/ruflet.dart';
 
+// ruflet-coverage: Chip
+
 RufletBackend _backend(TargetPlatform platform) => RufletBackend(
   pageUri: Uri.parse('inprocess://chip-keys-test'),
   assetsDir: '',

@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 
 import 'control_renderer_matrix_test.dart' show materialOnly;
 
+// ruflet-coverage: BottomSheet
+
 class _Backend extends RufletBackend {
   final events = <String>[];
   _Backend(TargetPlatform target)

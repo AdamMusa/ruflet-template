@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:ruflet/ruflet.dart';
 
+// ruflet-coverage: Screenshot
+
 void main() {
   for (final platform in [TargetPlatform.iOS, TargetPlatform.android]) {
     testWidgets('$platform Screenshot renders its Ruby badge', (tester) async {

@@ -7,6 +7,8 @@ import 'package:flutter/material.dart' as material;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+// ruflet-coverage: AppBar
+
 const _statusBar = 54.0;
 
 Future<void> _pumpPage(WidgetTester tester, PageDesign design,

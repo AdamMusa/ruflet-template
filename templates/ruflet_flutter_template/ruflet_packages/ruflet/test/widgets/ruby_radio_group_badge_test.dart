@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:ruflet/ruflet.dart';
 
+// ruflet-coverage: RadioGroup
+
 void main() {
   for (final platform in [TargetPlatform.iOS, TargetPlatform.android]) {
     testWidgets('$platform RadioGroup renders its Ruby badge', (tester) async {

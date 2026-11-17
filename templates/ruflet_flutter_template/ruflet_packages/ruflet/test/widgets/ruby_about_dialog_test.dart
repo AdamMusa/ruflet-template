@@ -9,6 +9,8 @@ import 'package:provider/provider.dart';
 
 import 'control_renderer_matrix_test.dart' show materialOnly;
 
+// ruflet-coverage: AboutDialog
+
 class _Backend extends RufletBackend {
   final events = <String>[];
 

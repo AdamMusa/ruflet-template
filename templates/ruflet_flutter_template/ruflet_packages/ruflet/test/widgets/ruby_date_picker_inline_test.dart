@@ -7,6 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:ruflet/ruflet.dart';
 
+// ruflet-coverage: DatePicker
+
 Future<Control> _pump(WidgetTester tester, TargetPlatform platform, String wire,
     Map<String, dynamic> props) async {
   final backend = RufletBackend(

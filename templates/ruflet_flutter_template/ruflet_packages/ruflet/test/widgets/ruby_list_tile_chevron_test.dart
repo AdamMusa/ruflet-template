@@ -9,6 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'control_renderer_matrix_test.dart' show materialOnly;
 import 'ruby_layout_attributes_test.dart' show backendFor, host;
 
+// ruflet-coverage: ListTile
+
 Map<String, dynamic> _tile({bool? chevron, bool trailing = false}) => {
       '_c': 'ListTile',
       '_i': 1,

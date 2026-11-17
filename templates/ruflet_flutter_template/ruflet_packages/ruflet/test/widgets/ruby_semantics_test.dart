@@ -6,6 +6,8 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+// ruflet-coverage: Semantics
+
 class _EventBackend extends RufletBackend {
   final events = <(String, dynamic)>[];
 

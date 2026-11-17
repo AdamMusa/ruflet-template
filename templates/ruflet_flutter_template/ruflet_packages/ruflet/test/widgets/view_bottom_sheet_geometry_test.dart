@@ -8,6 +8,8 @@ import 'package:provider/provider.dart';
 
 import 'control_renderer_matrix_test.dart' show materialOnly;
 
+// ruflet-coverage: View
+
 const _bottomInset = 34.0;
 
 Map<String, dynamic> _text(int id, String value) =>

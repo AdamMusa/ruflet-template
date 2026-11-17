@@ -15,6 +15,8 @@ import 'package:ruflet/src/widgets/ruflet_cupertino_list_tile.dart';
 
 import '../support/control_harness.dart';
 
+// ruflet-coverage: Clipboard UrlLauncher FilePicker Share ServiceRegistry TextSpan
+
 const _copy = {
   'service': 'Clipboard',
   'method': 'set',

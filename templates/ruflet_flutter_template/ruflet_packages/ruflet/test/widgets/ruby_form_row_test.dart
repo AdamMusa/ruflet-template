@@ -9,6 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'control_renderer_matrix_test.dart' show materialOnly;
 import 'ruby_layout_attributes_test.dart' show backendFor, host;
 
+// ruflet-coverage: FormRow
+
 Map<String, dynamic> _row(Map<String, dynamic> props) => {
       '_c': 'FormRow',
       '_i': 1,

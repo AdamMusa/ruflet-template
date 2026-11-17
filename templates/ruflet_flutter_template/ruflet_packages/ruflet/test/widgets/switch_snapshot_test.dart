@@ -7,6 +7,8 @@ import 'package:flutter_test/flutter_test.dart';
 import '../support/control_harness.dart';
 import '../support/control_snapshot.dart';
 
+// ruflet-coverage: Switch
+
 const _png =
     'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a6i8AAAAASUVORK5CYII=';
 

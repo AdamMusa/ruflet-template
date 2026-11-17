@@ -7,6 +7,8 @@ import 'package:ruflet/ruflet.dart';
 
 import '../support/control_harness.dart';
 
+// ruflet-coverage: FractionallySizedBox IntrinsicHeight IntrinsicWidth IgnorePointer AbsorbPointer SliverPadding
+
 Map<String, dynamic> _box(String key, double width, double height) => {
       '_c': 'Container',
       '_i': key.hashCode & 0xffff,

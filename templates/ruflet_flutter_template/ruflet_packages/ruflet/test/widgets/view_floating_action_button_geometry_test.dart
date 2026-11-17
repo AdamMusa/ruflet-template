@@ -10,6 +10,8 @@ import 'package:provider/provider.dart';
 
 import 'control_renderer_matrix_test.dart' show materialOnly;
 
+// ruflet-coverage: FloatingActionButton View
+
 const _topInset = 54.0;
 const _bottomInset = 34.0;
 

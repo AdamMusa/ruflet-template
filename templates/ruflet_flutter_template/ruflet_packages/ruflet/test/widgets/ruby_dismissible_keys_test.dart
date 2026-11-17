@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:ruflet/ruflet.dart';
 
+// ruflet-coverage: Dismissible
+
 RufletBackend _backend(TargetPlatform platform) => RufletBackend(
       pageUri: Uri.parse('inprocess://dismissible-keys-test'),
       assetsDir: '',

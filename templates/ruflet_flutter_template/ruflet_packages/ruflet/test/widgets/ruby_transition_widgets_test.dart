@@ -8,6 +8,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../support/control_harness.dart';
 
+// ruflet-coverage: ClipOval ClipRSuperellipse FadeTransition RotationTransition ScaleTransition SizeTransition SlideTransition
+
 const _box = {
   '_c': 'Container',
   '_i': 90,

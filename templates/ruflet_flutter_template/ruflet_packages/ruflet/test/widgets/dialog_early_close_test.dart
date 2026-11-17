@@ -5,6 +5,8 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+// ruflet-coverage: AlertDialog BottomSheet
+
 class _Backend extends RufletBackend {
   final events = <String>[];
   _Backend(TargetPlatform target)

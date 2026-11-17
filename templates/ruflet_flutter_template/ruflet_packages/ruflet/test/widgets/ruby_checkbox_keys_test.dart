@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../support/control_harness.dart';
 
+// ruflet-coverage: Checkbox
+
 Map<String, dynamic> _checkbox(Map<String, dynamic> props) => {
       '_c': 'Column',
       '_i': 1300,

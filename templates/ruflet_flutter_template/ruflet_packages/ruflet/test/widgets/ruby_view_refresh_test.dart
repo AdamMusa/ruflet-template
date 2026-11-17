@@ -7,6 +7,8 @@ import 'package:flutter/material.dart' as material;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+// ruflet-coverage: View
+
 /// Records the events the renderer would send to Ruby, honoring the same
 /// `on_<event>` subscription check as the real backend.
 class _Backend extends RufletBackend {

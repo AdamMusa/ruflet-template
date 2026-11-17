@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:ruflet/ruflet.dart';
 
+// ruflet-coverage: Dropdown DropdownOption
+
 /// Records the events the real backend would deliver to Ruby.
 ///
 /// [RufletBackend.triggerControlEvent] only forwards an event when the control

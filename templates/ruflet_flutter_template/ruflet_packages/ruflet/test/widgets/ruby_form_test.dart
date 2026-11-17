@@ -8,6 +8,8 @@ import 'package:ruflet/src/controls/form.dart';
 
 import '../support/control_harness.dart';
 
+// ruflet-coverage: Form
+
 Map<String, dynamic> _box(int id, String key, double height,
         [Map<String, dynamic> props = const {}]) =>
     {

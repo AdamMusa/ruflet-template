@@ -25,6 +25,8 @@ import 'package:ruflet/src/utils/material_style_theme.dart';
 import '../support/control_harness.dart';
 import '../support/control_snapshot.dart';
 
+// ruflet-coverage: AppBar
+
 const _target = 2301;
 
 // Material icon set indexes: 0x10000 | index.

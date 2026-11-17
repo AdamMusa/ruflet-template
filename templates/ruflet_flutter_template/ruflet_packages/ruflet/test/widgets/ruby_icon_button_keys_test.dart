@@ -6,6 +6,8 @@ import 'package:ruflet/src/utils/material_icons.dart';
 
 import '../support/control_harness.dart';
 
+// ruflet-coverage: IconButton FilledIconButton FilledTonalIconButton OutlinedIconButton
+
 Map<String, dynamic> _iconButton(Map<String, dynamic> props) => {
       '_c': 'Column',
       '_i': 1900,

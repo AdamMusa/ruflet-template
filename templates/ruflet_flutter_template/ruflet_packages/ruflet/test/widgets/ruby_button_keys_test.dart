@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../support/control_harness.dart';
 
+// ruflet-coverage: Button TextButton
+
 Map<String, dynamic> _dialog(Map<String, dynamic> action) => {
       '_c': 'AlertDialog',
       '_i': 1700,

@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import '../support/control_harness.dart';
 
+// ruflet-coverage: Radio RadioGroup
+
 Map<String, dynamic> _group(Map<String, dynamic> radio) => {
       '_c': 'RadioGroup',
       '_i': 1500,

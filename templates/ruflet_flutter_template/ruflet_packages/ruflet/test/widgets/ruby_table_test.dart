@@ -4,6 +4,8 @@ import 'package:flutter/material.dart' as material;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 
+// ruflet-coverage: Table TableRow
+
 RufletBackend _backend(TargetPlatform platform) => RufletBackend(
       pageUri: Uri.parse('inprocess://table-test'),
       assetsDir: '',

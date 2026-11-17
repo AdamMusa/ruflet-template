@@ -9,6 +9,8 @@ import 'package:ruflet/src/utils/pasted_file.dart';
 
 import '../support/control_harness.dart';
 
+// ruflet-coverage: TextField
+
 final _png = Uint8List.fromList(
     [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D]);
 

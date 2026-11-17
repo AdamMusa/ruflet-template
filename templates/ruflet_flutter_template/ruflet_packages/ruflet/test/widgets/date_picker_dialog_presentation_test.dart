@@ -17,6 +17,8 @@ import 'package:ruflet/src/models/page_design.dart';
 import 'package:ruflet/src/widgets/page_context.dart';
 import 'package:ruflet/src/widgets/platform_app.dart';
 
+// ruflet-coverage: DatePicker Dialogs Overlay
+
 class _Backend extends RufletBackend {
   final events = <String>[];
 

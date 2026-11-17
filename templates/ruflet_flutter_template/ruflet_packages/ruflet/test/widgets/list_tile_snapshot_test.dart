@@ -9,6 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 import '../support/control_harness.dart';
 import '../support/control_snapshot.dart';
 
+// ruflet-coverage: ListTile
+
 const _target = 2201;
 
 // Material icon set indexes: 0x10000 | index.

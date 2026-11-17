@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:ruflet/ruflet.dart';
 
+// ruflet-coverage: DataTable DataColumn DataRow DataCell
+
 RufletBackend _backend(TargetPlatform platform) => RufletBackend(
   pageUri: Uri.parse('inprocess://datatable-keys-test'),
   assetsDir: '',

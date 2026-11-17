@@ -13,6 +13,8 @@ import 'package:ruflet/ruflet.dart';
 import '../support/control_harness.dart';
 import '../support/control_snapshot.dart';
 
+// ruflet-coverage: ProgressRing
+
 const _target = 2001;
 
 Map<String, dynamic> _column(Map<String, dynamic> props) => {

@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:ruflet/ruflet.dart';
 
+// ruflet-coverage: ExpansionPanelList ExpansionPanel
+
 RufletBackend _backend(TargetPlatform platform) => RufletBackend(
       pageUri: Uri.parse('inprocess://expansion-panel-keys-test'),
       assetsDir: '',

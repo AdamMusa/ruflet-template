@@ -12,6 +12,8 @@ import 'package:flutter_test/flutter_test.dart';
 import '../support/control_harness.dart';
 import '../support/control_snapshot.dart';
 
+// ruflet-coverage: IconButton FilledIconButton FilledTonalIconButton OutlinedIconButton
+
 const _variants = [
   'IconButton',
   'FilledIconButton',
