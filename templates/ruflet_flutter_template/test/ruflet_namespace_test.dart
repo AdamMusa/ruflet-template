@@ -93,6 +93,18 @@ const committedRegistrants = [
 YamlMap _yaml(String path) =>
     loadYaml(File(path).readAsStringSync()) as YamlMap;
 
+/// The wiring tests below describe this template, not a client built from it.
+///
+/// Every published gem copies `test/` into the `build/client` it generates,
+/// renames the package there (this template is `ruflet_client`), and rewrites
+/// `pubspec.yaml`, the entrypoints and `ruflet_packages/` for the app's
+/// selection, so a client need not match the wiring pinned here. These tests
+/// are therefore skipped in such a client, and `flutter test` there reports
+/// what it did before they existed.
+final Object _templateOnly = _yaml('pubspec.yaml')['name'] == 'ruflet_client'
+    ? false
+    : 'checks the template wiring; this is a client generated from it';
+
 Map<String, dynamic> _section(YamlMap manifest, String key) {
   final value = manifest[key];
   return value is YamlMap ? Map<String, dynamic>.from(value) : {};
@@ -166,7 +178,7 @@ void main() {
           'optInPackages. Referencing it from pubspec.yaml or an entrypoint '
           'links its plugins into every app that gems before 0.0.22 build.',
     );
-  });
+  }, skip: _templateOnly);
 
   test('referenced packages are dependencies imported and registered by both '
       'entrypoints', () {
@@ -197,7 +209,7 @@ void main() {
         );
       }
     }
-  });
+  }, skip: _templateOnly);
 
   test('opt-in packages are vendored but never referenced', () {
     final root = _yaml('pubspec.yaml');
@@ -258,7 +270,7 @@ void main() {
         }
       }
     }
-  });
+  }, skip: _templateOnly);
 
   test('a package released gems do not know registers after the list\'s '
       'fat-client block', () {
@@ -296,5 +308,5 @@ void main() {
                 'know, above $fatClientEnd');
       }
     }
-  });
+  }, skip: _templateOnly);
 }
