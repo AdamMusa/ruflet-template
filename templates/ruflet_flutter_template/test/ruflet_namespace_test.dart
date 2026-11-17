@@ -93,17 +93,28 @@ const committedRegistrants = [
 YamlMap _yaml(String path) =>
     loadYaml(File(path).readAsStringSync()) as YamlMap;
 
-/// The wiring tests below describe this template, not a client built from it.
+/// Whether `pubspec.yaml` is this template's own rather than one a CLI wrote.
 ///
-/// Every published gem copies `test/` into the `build/client` it generates,
-/// renames the package there (this template is `ruflet_client`), and rewrites
-/// `pubspec.yaml`, the entrypoints and `ruflet_packages/` for the app's
-/// selection, so a client need not match the wiring pinned here. These tests
-/// are therefore skipped in such a client, and `flutter test` there reports
-/// what it did before they existed.
-final Object _templateOnly = _yaml('pubspec.yaml')['name'] == 'ruflet_client'
-    ? false
-    : 'checks the template wiring; this is a client generated from it';
+/// `tool/sync_ruflet_source.rb --check` fails unless the template's
+/// `pubspec.yaml` has exactly one source-ref comment, the line under
+/// `dependencies:` that names the pinned engine commit. Every Ruflet CLI
+/// (published gems 0.0.13 to 0.0.23 and ruflet main) rewrites `pubspec.yaml`
+/// with `YAML.dump` when it builds a client in `build/client`, which drops
+/// every comment. It does so whether or not it renames the package: a web or
+/// desktop build whose config names no app keeps `name: ruflet_client`, so the
+/// name cannot tell a client from the template. The line is therefore present
+/// here (and in a plain copy of this directory, which has this wiring too) and
+/// absent from every generated client.
+///
+/// Every CLI also copies `test/` into the client, and a developer may run
+/// `flutter test` there. A client keeps the packages and wiring its CLI chose
+/// for the app, not this template's, so the wiring tests below check this
+/// template's exact wiring only when this is true. In a client they check what
+/// holds in every generated client instead.
+final bool _templatePubspec = RegExp(
+  r'^  # [0-9a-f]{40}\. No git/Python dependency\.$',
+  multiLine: true,
+).hasMatch(File('pubspec.yaml').readAsStringSync());
 
 Map<String, dynamic> _section(YamlMap manifest, String key) {
   final value = manifest[key];
@@ -170,32 +181,59 @@ void main() {
 
   test('every vendored package is either referenced or opt-in', () {
     expect(referencedPackages.intersection(optInPackages), isEmpty);
+    final known = {...referencedPackages, ...optInPackages};
+    final vendored = _vendoredPackageNames();
+    expect(vendored, contains('ruflet'));
     expect(
-      _vendoredPackageNames(),
-      unorderedEquals({...referencedPackages, ...optInPackages}),
+      vendored.difference(known),
+      isEmpty,
       reason:
           'A package new to ruflet_packages/ must be added to '
           'optInPackages. Referencing it from pubspec.yaml or an entrypoint '
           'links its plugins into every app that gems before 0.0.22 build.',
     );
-  }, skip: _templateOnly);
+    // A client may vendor fewer: gems 0.0.22 and later and ruflet main delete
+    // the directory of every extension the app does not select.
+    if (_templatePubspec) {
+      expect(
+        known.difference(vendored),
+        isEmpty,
+        reason: 'ruflet_packages/ must vendor every referenced and opt-in '
+            'package',
+      );
+    }
+  });
 
   test('referenced packages are dependencies imported and registered by both '
       'entrypoints', () {
+    // Here every referenced package is wired. A client keeps only part of
+    // that: gems 0.0.19 to 0.0.21 keep the dependencies (all but
+    // ruflet_qrcode_scanner from 0.0.20) but drop the imports and
+    // registrations of the extensions the app does not select, and 0.0.22 and
+    // later and ruflet main also drop their dependencies and package
+    // directories. So in a client, each referenced package that is still a
+    // dependency must be a vendored path dependency, and each one an
+    // entrypoint imports must be a dependency that the entrypoint registers.
     final dependencies = _section(_yaml('pubspec.yaml'), 'dependencies');
+    final vendored = _vendoredPackageNames();
     for (final name in referencedPackages) {
-      expect(
-        (dependencies[name] as YamlMap?)?['path'],
-        'ruflet_packages/$name',
-        reason: '$name must be a path dependency',
-      );
+      final isDependency = dependencies.containsKey(name);
+      if (_templatePubspec || isDependency) {
+        expect(
+          (dependencies[name] as YamlMap?)?['path'],
+          'ruflet_packages/$name',
+          reason: '$name must be a path dependency',
+        );
+        expect(vendored, contains(name),
+            reason: 'ruflet_packages/ must vendor $name');
+      }
       for (final path in entrypoints) {
         final source = File(path).readAsStringSync();
-        expect(
-          source,
-          contains("import 'package:$name/$name.dart'"),
-          reason: '$path must import $name',
-        );
+        final imported = source.contains("import 'package:$name/$name.dart'");
+        if (!_templatePubspec && !imported) continue;
+        expect(imported, isTrue, reason: '$path must import $name');
+        expect(isDependency, isTrue,
+            reason: '$path imports $name, so pubspec.yaml must depend on it');
         if (name == 'ruflet') continue;
         final alias = _importAlias(source, name);
         expect(alias, isNotNull, reason: '$path must import $name as an alias');
@@ -209,12 +247,13 @@ void main() {
         );
       }
     }
-  }, skip: _templateOnly);
+  });
 
   test('opt-in packages are vendored but never referenced', () {
     final root = _yaml('pubspec.yaml');
+    final vendored = _vendoredPackageNames();
     final referencedDeps = <String>{};
-    for (final name in referencedPackages) {
+    for (final name in referencedPackages.intersection(vendored)) {
       referencedDeps.addAll(
         _section(
           _yaml('ruflet_packages/$name/pubspec.yaml'),
@@ -223,7 +262,16 @@ void main() {
       );
     }
     for (final name in optInPackages) {
-      expect(Directory('ruflet_packages/$name').existsSync(), isTrue);
+      // A client depends on an opt-in package only when its CLI selected it
+      // for the app (no released gem can) and wrote that wiring itself; the
+      // fat-client test below still checks where it registers.
+      if (!_templatePubspec &&
+          _section(root, 'dependencies').containsKey(name)) {
+        continue;
+      }
+      if (_templatePubspec) {
+        expect(Directory('ruflet_packages/$name').existsSync(), isTrue);
+      }
       for (final section in ['dependencies', 'dependency_overrides']) {
         expect(
           _section(root, section).containsKey(name),
@@ -244,6 +292,9 @@ void main() {
           reason: '$path must not register $name',
         );
       }
+      // Gems 0.0.22 and later and ruflet main delete it from a client that
+      // does not select it, and then nothing can bring its plugins.
+      if (!vendored.contains(name)) continue;
       // Nor may the plugins only this package brings be registered.
       // `flutter test` resolves packages first, which rewrites these files
       // from the resolved plugin set (as every build does), so this checks
@@ -260,7 +311,9 @@ void main() {
               .toList();
       expect(ownDeps, isNotEmpty);
       for (final path in committedRegistrants) {
-        final source = File(path).readAsStringSync();
+        final file = File(path);
+        if (!_templatePubspec && !file.existsSync()) continue;
+        final source = file.readAsStringSync();
         for (final dep in ownDeps) {
           expect(
             source,
@@ -270,10 +323,11 @@ void main() {
         }
       }
     }
-  }, skip: _templateOnly);
+  });
 
   test('a package released gems do not know registers after the list\'s '
       'fat-client block', () {
+    final known = {...referencedPackages, ...optInPackages};
     for (final path in entrypoints) {
       final lines = File(path).readAsLinesSync();
       final listStart = lines.indexWhere(
@@ -300,6 +354,11 @@ void main() {
         final match = registration.firstMatch(lines[i]);
         if (match == null) continue;
         final package = packages[match.group(1)];
+        // Gems 0.0.21 and later and ruflet main also register an app's own
+        // extension packages (`extensions:` entries with a path or git
+        // source), before the file's first FAT_CLIENT_START. Those belong to
+        // the app, not this template, so a client does not check them.
+        if (!_templatePubspec && !known.contains(package)) continue;
         expect(package, isNotNull,
             reason: '$path line ${i + 1} registers an alias it never imports');
         if (releasedGemPackages.contains(package)) continue;
@@ -308,5 +367,5 @@ void main() {
                 'know, above $fatClientEnd');
       }
     }
-  }, skip: _templateOnly);
+  });
 }
