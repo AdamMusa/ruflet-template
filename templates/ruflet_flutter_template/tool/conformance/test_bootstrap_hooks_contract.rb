@@ -23,6 +23,16 @@ class BootstrapHooksContractTest < Minitest::Test
   DART
   HOOK_LIST_NAMES = %w[rufletPreRunAppHooks rufletPostFirstFrameHooks].freeze
   GENERATED_BOOTSTRAP = "lib/ruflet_bootstrap.g.dart"
+  # The lib files released ruflet gems copy into an existing client dir on
+  # every build (refresh_managed_client_template_files in AdamMusa/ruflet).
+  # 0.0.10 to 0.0.16 and 0.0.18 to 0.0.23 copy at least these six; the rest
+  # of that client's lib/ stays as an older template left it. (0.0.17 copies
+  # only lib/main*.dart and removes the three connection_probe files, which
+  # lib/main.server.dart imported before this test existed.)
+  REFRESHED_LIB_FILES = %w[
+    lib/main.dart lib/main.self.dart lib/main.server.dart
+    lib/connection_probe.dart lib/connection_probe_io.dart lib/connection_probe_stub.dart
+  ].freeze
 
   PRE_RUN_APP_HOOKS = <<~DART.gsub(/^/, "  ")
     if (rufletPreRunAppHooks.isNotEmpty) {
@@ -46,29 +56,33 @@ class BootstrapHooksContractTest < Minitest::Test
            "#{GENERATED_BOOTSTRAP} is written by `ruflet build` only while a feature adds hooks"
   end
 
-  # Released gems refresh lib/main*.dart without the rest of lib/, so an
-  # entrypoint may only import, export or include as a part what the template
-  # itself ships, whichever quotes the directive uses.
-  def test_entrypoints_import_only_files_the_template_ships
+  # Released gems refresh only REFRESHED_LIB_FILES in an existing client dir,
+  # so the entrypoints, and every file they reach through a relative import,
+  # export or part (whichever quotes, a conditional import's alternatives
+  # included), must be among them and shipped here.
+  def test_entrypoints_reach_only_lib_files_every_released_gem_refreshes
     (ENTRYPOINTS + ["lib/main.dart"]).each do |relative_path|
-      uris = directive_uris(relative_path)
-      refute_empty uris, "#{relative_path}: no directive found"
+      refute_empty directive_uris(relative_path), "#{relative_path}: no directive found"
+    end
+    reached = reached_files
+    assert_includes reached.keys, "lib/connection_probe_io.dart", "a conditional alternative is followed"
 
-      uris.each do |keyword, uri|
-        next if uri.start_with?("dart:", "package:")
-
-        assert File.file?(File.join(TEMPLATE_ROOT, "lib", uri)),
-               "#{relative_path}: #{keyword} '#{uri}' names a file the template does not ship"
-      end
+    reached.each do |relative_path, via|
+      assert_includes REFRESHED_LIB_FILES, relative_path,
+                      "#{via}: names #{relative_path}, which released gems do not copy into an existing client"
+      assert File.file?(File.join(TEMPLATE_ROOT, relative_path)), "#{via}: names #{relative_path}, which the template does not ship"
     end
   end
 
   # No released gem writes the generated file, so any reference to it, in any
-  # directive form or quote style, stops the client compiling with them.
+  # directive form or quote style, in an entrypoint or in a file it reaches,
+  # stops the client compiling with them.
   def test_entrypoints_never_refer_to_the_generated_bootstrap
     generated = File.basename(GENERATED_BOOTSTRAP)
 
-    (ENTRYPOINTS + ["lib/main.dart"]).each do |relative_path|
+    reached_files.each_key do |relative_path|
+      next unless File.file?(File.join(TEMPLATE_ROOT, relative_path))
+
       directive_uris(relative_path).each do |keyword, uri|
         refute_equal generated, File.basename(uri), "#{relative_path}: #{keyword} '#{uri}'"
       end
@@ -185,6 +199,30 @@ class BootstrapHooksContractTest < Minitest::Test
     read(relative_path).scan(DIRECTIVE).flat_map do |keyword, rest|
       rest.scan(URI_LITERAL).map { |_quote, uri| [keyword, uri] }
     end
+  end
+
+  # Every file the entrypoints and lib/main.dart reach through relative
+  # directives, transitively, with the directive that first named it. A
+  # file the template does not ship is listed but not followed.
+  def reached_files
+    reached = (ENTRYPOINTS + ["lib/main.dart"]).to_h { |relative_path| [relative_path, "entrypoint"] }
+    queue = reached.keys
+    until queue.empty?
+      importer = queue.shift
+      next unless File.file?(File.join(TEMPLATE_ROOT, importer))
+
+      directive_uris(importer).each do |keyword, uri|
+        next if uri.start_with?("dart:", "package:")
+
+        target = File.expand_path(uri, File.join(TEMPLATE_ROOT, File.dirname(importer)))
+                     .delete_prefix("#{TEMPLATE_ROOT}/")
+        next if reached.key?(target)
+
+        reached[target] = "#{importer}: #{keyword} '#{uri}'"
+        queue << target
+      end
+    end
+    reached
   end
 
   def code_lines(text)

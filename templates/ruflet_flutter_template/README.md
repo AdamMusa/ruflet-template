@@ -47,9 +47,10 @@ reported through `FlutterError.reportError` and the app still starts.
 
 Both entrypoints declare the two lists empty, between the
 `// --RUFLET_BOOTSTRAP_HOOKS_START--` and `// --RUFLET_BOOTSTRAP_HOOKS_END--`
-markers, and import nothing the template does not ship. With empty lists they
-skip the hooks entirely, so they build with every ruflet gem, including the
-released ones that refresh `lib/main*.dart` in an existing client file by file.
+markers, and reach no lib file but `lib/main*.dart` and
+`lib/connection_probe*.dart`. With empty lists they skip the hooks entirely, so
+they build with every ruflet gem, including the released ones that refresh just
+those files in an existing client.
 
 Build features add hooks in the ruflet gem (`Ruflet::CLI::ClientBootstrap`),
 never in `lib/main*.dart`. Only while a feature adds hooks does `ruflet build`
