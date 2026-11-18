@@ -66,13 +66,13 @@ them. With gems 0.0.22 and later, listing an extension in `ruflet.yaml` keeps
 its package and registration in the generated client, and leaving it out
 strips both, so an app only carries what it uses.
 
-Gems 0.0.15 to 0.0.21 strip only the package names in their own extension
+Gems 0.0.13 to 0.0.21 strip only the package names in their own extension
 map: the older `flet_*` names, plus `ruflet_qrcode_scanner` from 0.0.20.
 Whatever `ruflet.yaml` lists, they keep every other `ruflet_*` package that
 `pubspec.yaml` lists as a dependency of the generated client, so its native
 plugins are linked into the app. Each of those gems builds from this
 repository's `main`. 0.0.19 and later refresh `~/.ruflet/templates` from it
-before every build. 0.0.15 to 0.0.18 clone it when that cache is missing
+before every build. 0.0.13 to 0.0.18 clone it when that cache is missing
 (0.0.15 to 0.0.17 also when another gem version wrote it), and otherwise use
 the copy a newer gem last fetched.
 
