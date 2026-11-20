@@ -43,8 +43,11 @@ class BootstrapHooksContractTest < Minitest::Test
 
   # An import, export or part directive up to its semicolon, which may be
   # several lines on: a conditional import names its alternatives after `if`.
-  # `part of` is not a directive that names a file to load.
-  DIRECTIVE = /^[ \t]*(import|export|part)(?![A-Za-z0-9_$])(?![ \t]+of\b)([^;]*);/
+  # `part of` is not a directive that names a file to load. A directive may
+  # start a line or follow another directive or a block comment on its line.
+  # The CLI keeps the generated file by the same pattern
+  # (CLIENT_BOOTSTRAP_DIRECTIVE in packages/ruflet/lib/ruflet/cli/client_bootstrap.rb).
+  DIRECTIVE = /(?:^|(?<=;)|(?<=\*\/))[ \t]*(import|export|part)(?![A-Za-z0-9_$])(?![ \t]+of\b)([^;]*);/
   # A URI in either quote style.
   URI_LITERAL = /(['"])([^'"\n]*)\1/
 
