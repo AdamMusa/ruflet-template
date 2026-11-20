@@ -1,3 +1,7 @@
+// Mounts every picker type on both designs; the block picker selection
+// is asserted end to end.
+//
+// ruflet-coverage: BlockPicker
 import 'package:ruflet/ruflet.dart';
 import 'package:ruflet_color_pickers/src/extension.dart';
 import 'package:ruflet_color_pickers/src/cupertino_picker/cupertino_picker.dart'

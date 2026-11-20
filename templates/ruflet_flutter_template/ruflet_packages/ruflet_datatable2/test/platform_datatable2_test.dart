@@ -1,3 +1,4 @@
+// ruflet-coverage: DataTable2 DataColumn2 DataRow2
 import 'package:data_table_2/data_table_2.dart';
 import 'package:ruflet/ruflet.dart';
 import 'package:ruflet_datatable2/src/datatable2.dart';

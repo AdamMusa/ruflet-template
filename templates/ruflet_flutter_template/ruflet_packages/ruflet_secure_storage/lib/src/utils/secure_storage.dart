@@ -13,8 +13,8 @@ IOSOptions? parseIosOptions(dynamic value, [IOSOptions? defaultValue]) {
     comment: value["comment"],
     isInvisible: parseBool(value["is_invisible"]),
     isNegative: parseBool(value["is_negative"]),
-    creationDate: value["creation_date"],
-    lastModifiedDate: value["last_modified_date"],
+    creationDate: parseKeychainDate(value["creation_date"]),
+    lastModifiedDate: parseKeychainDate(value["last_modified_date"]),
     resultLimit: parseInt(value["result_limit"]),
     shouldReturnPersistentReference: parseBool(value["is_persistent"], false)!,
     authenticationUIBehavior: value["auth_ui_behavior"],
@@ -34,8 +34,8 @@ MacOsOptions? parseMacOptions(dynamic value, [MacOsOptions? defaultValue]) {
     comment: value["comment"],
     isInvisible: parseBool(value["is_invisible"]),
     isNegative: parseBool(value["is_negative"]),
-    creationDate: value["creation_date"],
-    lastModifiedDate: value["last_modified_date"],
+    creationDate: parseKeychainDate(value["creation_date"]),
+    lastModifiedDate: parseKeychainDate(value["last_modified_date"]),
     resultLimit: parseInt(value["result_limit"]),
     shouldReturnPersistentReference: parseBool(value["is_persistent"]),
     authenticationUIBehavior: value["auth_ui_behavior"],
@@ -81,6 +81,19 @@ WebOptions? parseWebOptions(dynamic value, [WebOptions? defaultValue]) {
     wrapKeyIv: value["wrap_key_iv"] ?? "",
     useSessionStorage: parseBool(value["use_session_storage"], false)!,
   );
+}
+
+/// A keychain item date. Ruby sends a `Time` as its `to_s`
+/// (`2024-05-01 10:00:00 -0500`, or `2024-05-01 10:00:00 UTC` for a UTC
+/// Time) or an ISO-8601 string, and a `Ruflet::Protocol.date_time` value
+/// arrives already decoded.
+DateTime? parseKeychainDate(dynamic value) {
+  if (value is DateTime) return value;
+  if (value is! String) return null;
+  // DateTime.tryParse reads a "Z" or an offset, not Ruby's " UTC".
+  return DateTime.tryParse(value.endsWith(' UTC')
+      ? '${value.substring(0, value.length - 4)}Z'
+      : value);
 }
 
 KeychainAccessibility? parseKeychainAccessibility(String? value, [KeychainAccessibility? defaultValue]) {

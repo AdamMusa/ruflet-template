@@ -1,5 +1,7 @@
 // Modified from flutter_code_editor 0.3.5 for the Cupertino renderer.
 // Upstream license: cupertino_editor/LICENSE (Apache-2.0).
+// This renderer fork is coupled to the pinned flutter_code_editor 0.3.5 internals.
+// ignore_for_file: implementation_imports
 import 'package:flutter/cupertino.dart';
 
 import 'package:flutter_code_editor/src/search/settings_controller.dart';

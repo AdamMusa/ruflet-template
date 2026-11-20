@@ -40,6 +40,8 @@ class SecureStorageService extends RufletService {
   @override
   void update() {
     debugPrint("SecureStorageService(${control.id}).update: ${control.properties}");
+    // Rebuilt from the control's current options when next used.
+    _storage = null;
     _updateListeners();
   }
 

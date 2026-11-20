@@ -1,7 +1,7 @@
 // Modified from flutter_code_editor 0.3.5 for the Cupertino renderer.
 // Upstream license: cupertino_editor/LICENSE (Apache-2.0).
 // TODO(alexeyinkin): Remove when dropping support for Flutter < 3.10, https://github.com/akvelon/flutter-code-editor/issues/245
-// ignore_for_file: unnecessary_non_null_assertion
+// ignore_for_file: unnecessary_non_null_assertion, implementation_imports
 
 import 'package:flutter/cupertino.dart';
 
@@ -19,6 +19,7 @@ const _foldingColumn = 2;
 
 class GutterWidget extends StatelessWidget {
   const GutterWidget({
+    super.key,
     required this.codeController,
     required this.style,
     required this.scrollController,

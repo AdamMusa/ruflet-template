@@ -10,6 +10,7 @@ class FoldToggle extends StatelessWidget {
   final VoidCallback onTap;
 
   const FoldToggle({
+    super.key,
     required this.color,
     required this.isFolded,
     required this.onTap,

@@ -23,9 +23,11 @@ class LineChartEventData extends Equatable {
             : []);
   }
 
+  // Spots go to Ruby as plain maps: the wire encoder cannot serialize
+  // LineChartEventDataSpot objects.
   Map<String, dynamic> toMap() => <String, dynamic>{
         'type': eventType,
-        'spots': barSpots,
+        'spots': barSpots.map((spot) => spot.toMap()).toList(),
       };
 
   @override
@@ -48,15 +50,22 @@ class LineChartEventDataSpot extends Equatable {
   List<Object?> get props => [barIndex, spotIndex];
 }
 
+/// What [dataPoint] shows when touched. [fallback] is fl_chart's default item
+/// when the chart has no `tooltip` of its own: a point without a tooltip
+/// shows it, and a point with one keeps its label style. With a chart
+/// `tooltip`, a point without one shows its value.
 LineTooltipItem? parseLineTooltipItem(
-    Control dataPoint, LineBarSpot spot, BuildContext context) {
+    Control dataPoint, LineBarSpot spot, BuildContext context,
+    [LineTooltipItem? fallback]) {
   if (!dataPoint.getBool("show_tooltip", true)!) return null;
 
-  var tooltip = dataPoint.internals?["tooltip"];
-  if (tooltip == null) return null;
+  final own = chartItemTooltip(dataPoint);
+  if (own == null && fallback != null) return fallback;
+  var tooltip = own ?? const {};
 
   final theme = RufletStyleTheme.of(context);
-  var style = parseTextStyle(tooltip["text_style"], theme, const TextStyle())!;
+  var style = parseTextStyle(
+      tooltip["text_style"], theme, fallback?.textStyle ?? const TextStyle())!;
   if (style.color == null) {
     style = style.copyWith(
         color: spot.bar.gradient?.colors.first ??
@@ -77,11 +86,29 @@ LineTooltipItem? parseLineTooltipItem(
           : null);
 }
 
-LineTouchTooltipData? parseLineTouchTooltipData(
-    BuildContext context, Control control,
-    [LineTouchTooltipData? defaultValue]) {
-  final tooltip = control.get("tooltip");
-  if (tooltip == null) return defaultValue;
+/// The touch tooltip. Flet's Python always sends a chart `tooltip`; Ruby only
+/// when the app sets one. Without it the chart keeps fl_chart's own tooltip
+/// (color, label style, value text), as before, and only a point's own
+/// `tooltip` or `show_tooltip: false` changes what that point shows.
+LineTouchTooltipData parseLineTouchTooltipData(
+    BuildContext context, Control control) {
+  final tooltip = chartTooltipConfig(control);
+
+  // fl_chart needs one item per touched spot; a null item hides that spot's.
+  List<LineTooltipItem?> getTooltipItems(List<LineBarSpot> touchedSpots) => [
+        for (final spot in touchedSpots)
+          parseLineTooltipItem(
+              control
+                  .children("data_series")[spot.barIndex]
+                  .children("points")[spot.spotIndex],
+              spot,
+              context,
+              tooltip == null ? defaultLineTooltipItem([spot]).single : null),
+      ];
+
+  if (tooltip == null) {
+    return LineTouchTooltipData(getTooltipItems: getTooltipItems);
+  }
 
   final theme = RufletStyleTheme.of(context);
 
@@ -104,17 +131,7 @@ LineTouchTooltipData? parseLineTouchTooltipData(
         parseBool(tooltip["show_on_top_of_chart_box_area"], false)!,
     tooltipHorizontalAlignment: parseFLHorizontalAlignment(
         tooltip["horizontal_alignment"], FLHorizontalAlignment.center)!,
-    getTooltipItems: (List<LineBarSpot> touchedSpots) {
-      return touchedSpots
-          .map((LineBarSpot spot) => parseLineTooltipItem(
-              control
-                  .children("data_series")[spot.barIndex]
-                  .children("points")[spot.spotIndex],
-              spot,
-              context))
-          .nonNulls
-          .toList();
-    },
+    getTooltipItems: getTooltipItems,
   );
 }
 

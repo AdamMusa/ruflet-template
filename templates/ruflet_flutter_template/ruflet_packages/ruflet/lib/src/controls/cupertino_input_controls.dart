@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart' show listEquals;
 
 import '../extensions/control.dart';
 import '../models/control.dart';
@@ -58,60 +59,37 @@ class _CupertinoDropdownControlState extends State<CupertinoDropdownControl> {
     final options = control.children("options");
     if (options.isEmpty || control.disabled) return;
 
+    // Ruby's dropdown_option(disabled:) cannot be chosen, as in the Material
+    // renderers (DropdownMenuEntry/DropdownMenuItem enabled): the picker opens
+    // on the current value's option when it is enabled, else on the first
+    // enabled one, and the sheet turns Done off while a disabled row is
+    // centred.
     final currentValue = control.getString("value");
     var selectedIndex = options.indexWhere((option) =>
         (option.getString("key") ?? option.getString("text")) == currentValue);
-    if (selectedIndex < 0) selectedIndex = 0;
-    var pendingIndex = selectedIndex;
+    if (selectedIndex < 0 || options[selectedIndex].disabled) {
+      final firstEnabled = options.indexWhere((option) => !option.disabled);
+      if (firstEnabled >= 0) {
+        selectedIndex = firstEnabled;
+      } else if (selectedIndex < 0) {
+        selectedIndex = 0;
+      }
+    }
 
     final selected = await showCupertinoModalPopup<int>(
       context: context,
       barrierDismissible: true,
-      builder: (context) => _DropdownMenuSurface(
+      builder: (context) => _DropdownOptionsSheet(
+        dropdown: control,
+        options: options,
+        initialIndex: selectedIndex,
         borderRadius: control.getBorderRadius("menu_border_radius"),
-        child: SafeArea(
-          top: false,
-          child: SizedBox(
-            height: 280,
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    CupertinoButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text("Cancel"),
-                    ),
-                    CupertinoButton(
-                      onPressed: () => Navigator.pop(context, pendingIndex),
-                      child: const Text("Done"),
-                    ),
-                  ],
-                ),
-                Expanded(
-                  child: CupertinoPicker(
-                    scrollController:
-                        FixedExtentScrollController(initialItem: selectedIndex),
-                    itemExtent: 42,
-                    onSelectedItemChanged: (index) => pendingIndex = index,
-                    children: options
-                        .map((option) => Center(
-                              child: option.buildWidget("content") ??
-                                  Text(option.getString("text") ??
-                                      option.getString("key") ??
-                                      ""),
-                            ))
-                        .toList(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
 
-    if (!mounted || selected == null) return;
+    // An option Ruby disabled while the sheet was open is not chosen either,
+    // even when the change lands in the same frame as the tap on Done.
+    if (!mounted || selected == null || options[selected].disabled) return;
     final option = options[selected];
     final value = option.getString("key") ?? option.getString("text") ?? "";
     final label = option.getString("text") ?? value;
@@ -168,6 +146,119 @@ class _CupertinoDropdownControlState extends State<CupertinoDropdownControl> {
       onSubmitted: (_) => _showOptions(),
     );
     return LayoutControl(control: control, child: field);
+  }
+}
+
+/// The Dropdown options picker: Cancel/Done over a [CupertinoPicker] of
+/// [options]. It pops the chosen index on Done. Disabled options are drawn
+/// dimmed, and Done is off while one of them is centred.
+class _DropdownOptionsSheet extends StatefulWidget {
+  final Control dropdown;
+  final List<Control> options;
+  final int initialIndex;
+  final BorderRadius? borderRadius;
+
+  const _DropdownOptionsSheet({
+    required this.dropdown,
+    required this.options,
+    required this.initialIndex,
+    required this.borderRadius,
+  });
+
+  @override
+  State<_DropdownOptionsSheet> createState() => _DropdownOptionsSheetState();
+}
+
+class _DropdownOptionsSheetState extends State<_DropdownOptionsSheet> {
+  late final FixedExtentScrollController _scrollController =
+      FixedExtentScrollController(initialItem: widget.initialIndex);
+  late int _pendingIndex = widget.initialIndex;
+
+  /// An option's `disabled` is its own flag or any ancestor's
+  /// ([Control.disabled]). Ruby can change either while the sheet is open, so
+  /// the sheet watches the options, the Dropdown and its ancestors, and
+  /// redraws when the flags it last drew no longer hold.
+  late final List<Control> _watched = [
+    ...widget.options,
+    for (Control? c = widget.dropdown; c != null; c = c.parent) c,
+  ];
+  List<bool> _drawnDisabled = const [];
+
+  List<bool> _disabledFlags() => [for (final o in widget.options) o.disabled];
+
+  void _onControlChanged() {
+    if (!listEquals(_disabledFlags(), _drawnDisabled)) setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    for (final control in _watched) {
+      control.addListener(_onControlChanged);
+    }
+  }
+
+  @override
+  void dispose() {
+    for (final control in _watched) {
+      control.removeListener(_onControlChanged);
+    }
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Widget _row(Control option, bool disabled) {
+    final row = Center(
+      child: option.buildWidget("content") ??
+          Text(option.getString("text") ?? option.getString("key") ?? ""),
+    );
+    return disabled ? Opacity(opacity: 0.38, child: row) : row;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final disabled = _drawnDisabled = _disabledFlags();
+    final canPick = !disabled[_pendingIndex];
+    return _DropdownMenuSurface(
+      borderRadius: widget.borderRadius,
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 280,
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CupertinoButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("Cancel"),
+                  ),
+                  CupertinoButton(
+                    onPressed: canPick
+                        ? () => Navigator.pop(context, _pendingIndex)
+                        : null,
+                    child: const Text("Done"),
+                  ),
+                ],
+              ),
+              Expanded(
+                child: CupertinoPicker(
+                  scrollController: _scrollController,
+                  itemExtent: 42,
+                  onSelectedItemChanged: (index) =>
+                      setState(() => _pendingIndex = index),
+                  children: [
+                    for (var i = 0; i < widget.options.length; i++)
+                      _row(widget.options[i], disabled[i]),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

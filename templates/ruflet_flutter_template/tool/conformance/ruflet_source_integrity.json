@@ -25,10 +25,10 @@
     "ruflet_webview"
   ],
   "engine_version": "0.81.0",
-  "source_ref": "f44e7df7083596dc5bd7da7c1bf4a3f5a7ce5b66",
+  "source_ref": "98e418571d817fba1ffe2ab9f637e12ad8f066b6",
   "source_package": "packages",
   "summary": {
-    "exact_source": 1388
+    "exact_source": 1427
   },
   "files": {
     "ruflet/.gitignore": {
@@ -746,10 +746,10 @@
     "ruflet/lib/src/controls/cupertino_input_controls.dart": {
       "classification": "exact_source",
       "source_path": "ruflet/lib/src/controls/cupertino_input_controls.dart",
-      "source_git_blob": "c21c339174602e011073020afa6a9ef170e88b89",
+      "source_git_blob": "96cba70f8bd6dcd9c0ea2df6be96c55df9ba64e1",
       "source_mode": "100644",
-      "source_sha256": "35b588273222face041205d6c738dd8c6f6ea2bb0fe0656447e91b16210caa71",
-      "vendored_sha256": "35b588273222face041205d6c738dd8c6f6ea2bb0fe0656447e91b16210caa71"
+      "source_sha256": "d6dee651e2766d1ebb09fca613be5d7c13ff57aaf4219622bcae3ef76767e076",
+      "vendored_sha256": "d6dee651e2766d1ebb09fca613be5d7c13ff57aaf4219622bcae3ef76767e076"
     },
     "ruflet/lib/src/controls/cupertino_list_section.dart": {
       "classification": "exact_source",
@@ -778,10 +778,10 @@
     "ruflet/lib/src/controls/cupertino_navigation_bar.dart": {
       "classification": "exact_source",
       "source_path": "ruflet/lib/src/controls/cupertino_navigation_bar.dart",
-      "source_git_blob": "b5f7abd8357f04752c4b79eef54306a37335ee33",
+      "source_git_blob": "933dae9dafa5f645e0741e42b9be276b6db56b0f",
       "source_mode": "100644",
-      "source_sha256": "74514cf378dc9300162e445b2594d83dbf0a6c186208c6780061f4d9d74a6dcb",
-      "vendored_sha256": "74514cf378dc9300162e445b2594d83dbf0a6c186208c6780061f4d9d74a6dcb"
+      "source_sha256": "547e65260dafcf9dba0e7481fc11a2c06264f51a445021f761749bedc45b9654",
+      "vendored_sha256": "547e65260dafcf9dba0e7481fc11a2c06264f51a445021f761749bedc45b9654"
     },
     "ruflet/lib/src/controls/cupertino_navigation_controls.dart": {
       "classification": "exact_source",
@@ -1834,10 +1834,10 @@
     "ruflet/lib/src/controls/responsive_row.dart": {
       "classification": "exact_source",
       "source_path": "ruflet/lib/src/controls/responsive_row.dart",
-      "source_git_blob": "9331552fe39cd5383dc2ca468dde42de72e80738",
+      "source_git_blob": "3c41d8829d1af90d05128d7fa6cae83883c3b330",
       "source_mode": "100644",
-      "source_sha256": "f088d179d32fedfae00970c1ac27c7a31881dc318bdcf81e0c7657b6eeca454a",
-      "vendored_sha256": "f088d179d32fedfae00970c1ac27c7a31881dc318bdcf81e0c7657b6eeca454a"
+      "source_sha256": "2427ffeac0c78b957a8ea71ed0849f8ba4c7723894a48d2ea4641b93a23aef65",
+      "vendored_sha256": "2427ffeac0c78b957a8ea71ed0849f8ba4c7723894a48d2ea4641b93a23aef65"
     },
     "ruflet/lib/src/controls/rotated_box.dart": {
       "classification": "exact_source",
@@ -2802,10 +2802,10 @@
     "ruflet/lib/src/utils/alignment.dart": {
       "classification": "exact_source",
       "source_path": "ruflet/lib/src/utils/alignment.dart",
-      "source_git_blob": "cf5c21254ac6f7e490e1c4d1f2acc1d000c74331",
+      "source_git_blob": "d2d1dc2238f36a6c2e15c9c7e7cdcea67c299874",
       "source_mode": "100644",
-      "source_sha256": "3715a876089dd7ddda7b94916dbe3eb64491b6944c9986c0941c7cfdfff6452d",
-      "vendored_sha256": "3715a876089dd7ddda7b94916dbe3eb64491b6944c9986c0941c7cfdfff6452d"
+      "source_sha256": "ce495363e2d65605e353fb4f9fb3911bfbe84c53b2c54216e55f252428c3dedf",
+      "vendored_sha256": "ce495363e2d65605e353fb4f9fb3911bfbe84c53b2c54216e55f252428c3dedf"
     },
     "ruflet/lib/src/utils/animations.dart": {
       "classification": "exact_source",
@@ -2842,10 +2842,10 @@
     "ruflet/lib/src/utils/borders.dart": {
       "classification": "exact_source",
       "source_path": "ruflet/lib/src/utils/borders.dart",
-      "source_git_blob": "cd323d1c35f70229a5a4f907447ebbd2f81bd7e3",
+      "source_git_blob": "352935d1a46a004afa2536f3ce3f319b5f4e023c",
       "source_mode": "100644",
-      "source_sha256": "b512e3f23f16d6246afc0327bc9422a74312ba93f2ed8bfdfa0bbbec940d8702",
-      "vendored_sha256": "b512e3f23f16d6246afc0327bc9422a74312ba93f2ed8bfdfa0bbbec940d8702"
+      "source_sha256": "a4676d8e2b631ed6a323d290e374b3fce4bc74f4b2c6811854235925435d4415",
+      "vendored_sha256": "a4676d8e2b631ed6a323d290e374b3fce4bc74f4b2c6811854235925435d4415"
     },
     "ruflet/lib/src/utils/box.dart": {
       "classification": "exact_source",
@@ -2978,10 +2978,10 @@
     "ruflet/lib/src/utils/edge_insets.dart": {
       "classification": "exact_source",
       "source_path": "ruflet/lib/src/utils/edge_insets.dart",
-      "source_git_blob": "58b294b50652121b003faebe756b449aa214f764",
+      "source_git_blob": "f77e4fe83af079c78f609e0cda43b560d21cf487",
       "source_mode": "100644",
-      "source_sha256": "312d447aec5196f6573520a9e8de27744f5993c0f38f151b9790d912fd44f30e",
-      "vendored_sha256": "312d447aec5196f6573520a9e8de27744f5993c0f38f151b9790d912fd44f30e"
+      "source_sha256": "f148dda7e8e8f11355db9067c67a869335413f228c9b0b71556cdd2611faeeb7",
+      "vendored_sha256": "f148dda7e8e8f11355db9067c67a869335413f228c9b0b71556cdd2611faeeb7"
     },
     "ruflet/lib/src/utils/enums.dart": {
       "classification": "exact_source",
@@ -3882,10 +3882,10 @@
     "ruflet/test/contract/control_test_coverage_test.dart": {
       "classification": "exact_source",
       "source_path": "ruflet/test/contract/control_test_coverage_test.dart",
-      "source_git_blob": "eb6411a061479270c9073f09ef34b47401cdeeac",
+      "source_git_blob": "fe3b410752a9e80d905fe6d7644991e019ecb341",
       "source_mode": "100644",
-      "source_sha256": "bf4932fd2e5e12802faa09ee2f7a1484b3bdf2e4d4354aaec819132987635a89",
-      "vendored_sha256": "bf4932fd2e5e12802faa09ee2f7a1484b3bdf2e4d4354aaec819132987635a89"
+      "source_sha256": "0e1253c91507ca8f551cc90d84a0ab40e156de11d972569d1b5124a4a74052c9",
+      "vendored_sha256": "0e1253c91507ca8f551cc90d84a0ab40e156de11d972569d1b5124a4a74052c9"
     },
     "ruflet/test/contract/ruflet_control_surface.json": {
       "classification": "exact_source",
@@ -5463,6 +5463,14 @@
       "source_sha256": "24210298f8da4461209f80f5cbcfcf86f917fd4cc084d31f6edaaf15fc266335",
       "vendored_sha256": "24210298f8da4461209f80f5cbcfcf86f917fd4cc084d31f6edaaf15fc266335"
     },
+    "ruflet/test/widgets/cupertino_disabled_items_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet/test/widgets/cupertino_disabled_items_test.dart",
+      "source_git_blob": "38c6c19a50afd3b8df345823a2819c381c1c41f1",
+      "source_mode": "100644",
+      "source_sha256": "016a8e12d4c4be51b227c502752d82d5e628448ddad9863cd5c7d452a39bb144",
+      "vendored_sha256": "016a8e12d4c4be51b227c502752d82d5e628448ddad9863cd5c7d452a39bb144"
+    },
     "ruflet/test/widgets/date_picker_dialog_presentation_test.dart": {
       "classification": "exact_source",
       "source_path": "ruflet/test/widgets/date_picker_dialog_presentation_test.dart",
@@ -5735,6 +5743,14 @@
       "source_sha256": "07d8d3e1c004e2e5306b043efbc5466e7ac36010ce696309a4efa909e261817e",
       "vendored_sha256": "07d8d3e1c004e2e5306b043efbc5466e7ac36010ce696309a4efa909e261817e"
     },
+    "ruflet/test/widgets/ruby_container_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet/test/widgets/ruby_container_test.dart",
+      "source_git_blob": "390f15768c52a2c0459ffab949c9dd38c499302a",
+      "source_mode": "100644",
+      "source_sha256": "29f075543fef7f833c96b3b8dc5141d421baec92f23003858e75d1014e7b9db2",
+      "vendored_sha256": "29f075543fef7f833c96b3b8dc5141d421baec92f23003858e75d1014e7b9db2"
+    },
     "ruflet/test/widgets/ruby_context_menu_events_test.dart": {
       "classification": "exact_source",
       "source_path": "ruflet/test/widgets/ruby_context_menu_events_test.dart",
@@ -5831,6 +5847,14 @@
       "source_sha256": "ef293b4a7b5f415996be6c3834a424f7ed0b448d7e2e9c317d95df013c769835",
       "vendored_sha256": "ef293b4a7b5f415996be6c3834a424f7ed0b448d7e2e9c317d95df013c769835"
     },
+    "ruflet/test/widgets/ruby_default_shapes_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet/test/widgets/ruby_default_shapes_test.dart",
+      "source_git_blob": "ebdf22a7e132c067a5be64e555717eb8f1eec328",
+      "source_mode": "100644",
+      "source_sha256": "ca5fdbfaf9979e1469c2d0d0443288115a437e05eb14eff2fd47db5c2c7edf72",
+      "vendored_sha256": "ca5fdbfaf9979e1469c2d0d0443288115a437e05eb14eff2fd47db5c2c7edf72"
+    },
     "ruflet/test/widgets/ruby_dismissible_keys_test.dart": {
       "classification": "exact_source",
       "source_path": "ruflet/test/widgets/ruby_dismissible_keys_test.dart",
@@ -5910,6 +5934,14 @@
       "source_mode": "100644",
       "source_sha256": "dd19f1b72b8af302106a1ead5f56a6159ec24d33f19f7e06e08aacf8a288df3a",
       "vendored_sha256": "dd19f1b72b8af302106a1ead5f56a6159ec24d33f19f7e06e08aacf8a288df3a"
+    },
+    "ruflet/test/widgets/ruby_flex_layout_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet/test/widgets/ruby_flex_layout_test.dart",
+      "source_git_blob": "ce9823e5ad5c972029158c6b19995355bc65b0ec",
+      "source_mode": "100644",
+      "source_sha256": "98a95f5cd171e5310c0dfa75f330d7ed121816946382f327ac3bdbf0ecec9e0b",
+      "vendored_sha256": "98a95f5cd171e5310c0dfa75f330d7ed121816946382f327ac3bdbf0ecec9e0b"
     },
     "ruflet/test/widgets/ruby_form_row_test.dart": {
       "classification": "exact_source",
@@ -6358,6 +6390,14 @@
       "source_mode": "100644",
       "source_sha256": "e7da0446e4afbf8616a01e8e1b1ea9fc50ba3d7cb9bc670cb52f9a947022df3c",
       "vendored_sha256": "e7da0446e4afbf8616a01e8e1b1ea9fc50ba3d7cb9bc670cb52f9a947022df3c"
+    },
+    "ruflet/test/widgets/window_named_alignment_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet/test/widgets/window_named_alignment_test.dart",
+      "source_git_blob": "137889dd771e9ad8b3021f2dbd1a3882d57e20a3",
+      "source_mode": "100644",
+      "source_sha256": "74ab72d842a9fcb9c917bcbe23ff3ec2c5d7b53e30759daa8e14db70bfb4103a",
+      "vendored_sha256": "74ab72d842a9fcb9c917bcbe23ff3ec2c5d7b53e30759daa8e14db70bfb4103a"
     },
     "ruflet/third_party/shimmer/LICENSE": {
       "classification": "exact_source",
@@ -8194,10 +8234,10 @@
     "ruflet_audio_recorder/lib/src/audio_recorder.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_audio_recorder/lib/src/audio_recorder.dart",
-      "source_git_blob": "750e30eb471e6c7f00f3f2098468ec6568cad383",
+      "source_git_blob": "4b5a486fe524de8501bf7181ebeb7e10583f29cf",
       "source_mode": "100644",
-      "source_sha256": "3f5f3c85c05f8dfca0c5d0b88e29f2062ed2b568336519e4094eb536c2c524ae",
-      "vendored_sha256": "3f5f3c85c05f8dfca0c5d0b88e29f2062ed2b568336519e4094eb536c2c524ae"
+      "source_sha256": "24649c493a70aebe247305f3a563e47ae5b990b837d1758b4f41b6b7eb9c23df",
+      "vendored_sha256": "24649c493a70aebe247305f3a563e47ae5b990b837d1758b4f41b6b7eb9c23df"
     },
     "ruflet_audio_recorder/lib/src/extension.dart": {
       "classification": "exact_source",
@@ -8210,10 +8250,10 @@
     "ruflet_audio_recorder/lib/src/utils/audio_recorder.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_audio_recorder/lib/src/utils/audio_recorder.dart",
-      "source_git_blob": "598a849755db506b3784caad3aab4a92dd6d49ba",
+      "source_git_blob": "4551f0b2d4df33ddbe00912ad954997129c43357",
       "source_mode": "100644",
-      "source_sha256": "6e8bea8eb4c08dd1b04bac91e1784fd1e74778f7cc613ebdcb9e2c9edf189df4",
-      "vendored_sha256": "6e8bea8eb4c08dd1b04bac91e1784fd1e74778f7cc613ebdcb9e2c9edf189df4"
+      "source_sha256": "045cc0d54f516798d2bcf5d552d370d58bc1b318b1bebc5db0218c36bd3418f7",
+      "vendored_sha256": "045cc0d54f516798d2bcf5d552d370d58bc1b318b1bebc5db0218c36bd3418f7"
     },
     "ruflet_audio_recorder/pubspec.yaml": {
       "classification": "exact_source",
@@ -8222,6 +8262,22 @@
       "source_mode": "100644",
       "source_sha256": "cf9ad64e0691b2531273b69d57b944670302696045e0984a87f349077edc881d",
       "vendored_sha256": "cf9ad64e0691b2531273b69d57b944670302696045e0984a87f349077edc881d"
+    },
+    "ruflet_audio_recorder/test/audio_recorder_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_audio_recorder/test/audio_recorder_test.dart",
+      "source_git_blob": "bffa835689dd1880e0a6d1aab5c92c10d5fb1bca",
+      "source_mode": "100644",
+      "source_sha256": "4af35d6634b449a54aaefbe1b4a472f229a92f8241981ee315620db88705c74c",
+      "vendored_sha256": "4af35d6634b449a54aaefbe1b4a472f229a92f8241981ee315620db88705c74c"
+    },
+    "ruflet_audio_recorder/test/support/service_harness.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_audio_recorder/test/support/service_harness.dart",
+      "source_git_blob": "fca21f2fbb62a9539c339c8baa6c36fe097c2f54",
+      "source_mode": "100644",
+      "source_sha256": "7be02006dc4e7440282638df0b00a1625e4a05695bdec2e28661f001ea23d7c0",
+      "vendored_sha256": "7be02006dc4e7440282638df0b00a1625e4a05695bdec2e28661f001ea23d7c0"
     },
     "ruflet_camera/.gitignore": {
       "classification": "exact_source",
@@ -8330,18 +8386,18 @@
     "ruflet_charts/lib/src/bar_chart.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_charts/lib/src/bar_chart.dart",
-      "source_git_blob": "a25a6c8a326f22dc2227c8a329ca08ccef06a6ce",
+      "source_git_blob": "c5f4ee3ea759da721acba341c7b2b0067128b5d7",
       "source_mode": "100644",
-      "source_sha256": "613c49d5eff7a06304103b3f231a8977be384891dfb223820a530ff14cfd3997",
-      "vendored_sha256": "613c49d5eff7a06304103b3f231a8977be384891dfb223820a530ff14cfd3997"
+      "source_sha256": "1c1a7a29178ae87a112ff2f408370577639f29a7601a0eb87180b991088521b7",
+      "vendored_sha256": "1c1a7a29178ae87a112ff2f408370577639f29a7601a0eb87180b991088521b7"
     },
     "ruflet_charts/lib/src/candlestick_chart.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_charts/lib/src/candlestick_chart.dart",
-      "source_git_blob": "dc72c4be65a54525458ce1689750965c094db879",
+      "source_git_blob": "9ef0f600eb4547844846e93b16068cc1b8a30179",
       "source_mode": "100644",
-      "source_sha256": "f0bf74787dceb95b770a364e5ff078bf9f03b0326d39d4cc9dfd9a84a09ec7b8",
-      "vendored_sha256": "f0bf74787dceb95b770a364e5ff078bf9f03b0326d39d4cc9dfd9a84a09ec7b8"
+      "source_sha256": "5876f305e43d66793d3c9cfa20913f69f86b836d4ae5a0890ff3a99afb2cbc60",
+      "vendored_sha256": "5876f305e43d66793d3c9cfa20913f69f86b836d4ae5a0890ff3a99afb2cbc60"
     },
     "ruflet_charts/lib/src/extension.dart": {
       "classification": "exact_source",
@@ -8354,10 +8410,10 @@
     "ruflet_charts/lib/src/line_chart.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_charts/lib/src/line_chart.dart",
-      "source_git_blob": "803f8896c727d2918e63375b8c98b37570d1bc18",
+      "source_git_blob": "33f29cf4363b3a61ac80831b91f0ae85a8a64df7",
       "source_mode": "100644",
-      "source_sha256": "f17ae1d80f825ecc4d163e24b4c8a33e9011c5199cad3323323b5d12360a26f0",
-      "vendored_sha256": "f17ae1d80f825ecc4d163e24b4c8a33e9011c5199cad3323323b5d12360a26f0"
+      "source_sha256": "3368b156ba655efac5b14d0e07171537e9870095707759ffe502a7f4354ff594",
+      "vendored_sha256": "3368b156ba655efac5b14d0e07171537e9870095707759ffe502a7f4354ff594"
     },
     "ruflet_charts/lib/src/pie_chart.dart": {
       "classification": "exact_source",
@@ -8378,42 +8434,42 @@
     "ruflet_charts/lib/src/scatter_chart.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_charts/lib/src/scatter_chart.dart",
-      "source_git_blob": "b99c1b43d508312efcc3a46c164ddc4510262aed",
+      "source_git_blob": "3e2ea86fd3112350bb43806ce26930260fd9ddfe",
       "source_mode": "100644",
-      "source_sha256": "525a53a87546b33c26f39725dabe398f0c6dc282b24dcaf32301b5353bb1ab38",
-      "vendored_sha256": "525a53a87546b33c26f39725dabe398f0c6dc282b24dcaf32301b5353bb1ab38"
+      "source_sha256": "3aea63fc1cb5cd07d7471ec6073a91707b8be224eef0cbc980da7dd2655b8957",
+      "vendored_sha256": "3aea63fc1cb5cd07d7471ec6073a91707b8be224eef0cbc980da7dd2655b8957"
     },
     "ruflet_charts/lib/src/utils/bar_chart.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_charts/lib/src/utils/bar_chart.dart",
-      "source_git_blob": "f96969f08cbf0effe13be2a3b5d1697f7a8e3aa1",
+      "source_git_blob": "c4f9972ecac8f7fdf2eaef2bb34818684701a727",
       "source_mode": "100644",
-      "source_sha256": "289fc6ff163fd3e811109f9c0fc1df7701e484309237ba36852e8140d39f02e5",
-      "vendored_sha256": "289fc6ff163fd3e811109f9c0fc1df7701e484309237ba36852e8140d39f02e5"
+      "source_sha256": "3707e2fc0ba6d89f9ec06a8fd8572b1fb6d71946c6bf5fae87327ea35cc0d9b6",
+      "vendored_sha256": "3707e2fc0ba6d89f9ec06a8fd8572b1fb6d71946c6bf5fae87327ea35cc0d9b6"
     },
     "ruflet_charts/lib/src/utils/candlestick_chart.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_charts/lib/src/utils/candlestick_chart.dart",
-      "source_git_blob": "222c50442f7bb9bdcdbe54e65dd7c28b3ade9cbf",
+      "source_git_blob": "85a6031476acce5533109b098aef2b01be8bd2d4",
       "source_mode": "100644",
-      "source_sha256": "88207da2340513ec36ab6d87eff6a07f2c69fa22876884b95060981a6ef35914",
-      "vendored_sha256": "88207da2340513ec36ab6d87eff6a07f2c69fa22876884b95060981a6ef35914"
+      "source_sha256": "ad4d2cfe7b9e00ac99b2c67d75360a5b2bb11e34baff20d841450c7eb588a750",
+      "vendored_sha256": "ad4d2cfe7b9e00ac99b2c67d75360a5b2bb11e34baff20d841450c7eb588a750"
     },
     "ruflet_charts/lib/src/utils/charts.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_charts/lib/src/utils/charts.dart",
-      "source_git_blob": "4179589bdde1c36c675311d6a333fbac130771c1",
+      "source_git_blob": "58b3eedcbd37b78037abfc040263603fbd4486b0",
       "source_mode": "100644",
-      "source_sha256": "3d38555a213e69a31150375bc82537ff1c6ad878584a8faf9ab515a087f0ce27",
-      "vendored_sha256": "3d38555a213e69a31150375bc82537ff1c6ad878584a8faf9ab515a087f0ce27"
+      "source_sha256": "6b3a5f85eb51212bc4232d04183a664dd97561c0c87e65ee9fb37840321b08ec",
+      "vendored_sha256": "6b3a5f85eb51212bc4232d04183a664dd97561c0c87e65ee9fb37840321b08ec"
     },
     "ruflet_charts/lib/src/utils/line_chart.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_charts/lib/src/utils/line_chart.dart",
-      "source_git_blob": "259595ea67bae1274c22e034816d8bf93ec90c07",
+      "source_git_blob": "564aaad4e08d64a571910bf1e026eac4acda312e",
       "source_mode": "100644",
-      "source_sha256": "cf4206a7566e8527bba7e42f6088ca323221db7ddb8f76d8a8e372e31b9f6252",
-      "vendored_sha256": "cf4206a7566e8527bba7e42f6088ca323221db7ddb8f76d8a8e372e31b9f6252"
+      "source_sha256": "687ff5fdbe02d1258839bb553af40ed7be8b6704df1856e2c463b4121ea04527",
+      "vendored_sha256": "687ff5fdbe02d1258839bb553af40ed7be8b6704df1856e2c463b4121ea04527"
     },
     "ruflet_charts/lib/src/utils/pie_chart.dart": {
       "classification": "exact_source",
@@ -8434,10 +8490,10 @@
     "ruflet_charts/lib/src/utils/scatter_chart.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_charts/lib/src/utils/scatter_chart.dart",
-      "source_git_blob": "24f97216473bf0f945549f6666de6fa9a5f1a9e6",
+      "source_git_blob": "8158a568744c71ba864c9c06da43ed2a6c3b29f6",
       "source_mode": "100644",
-      "source_sha256": "6426961c598bf98035b7374280eca39e4f7da7a5160ab32e3704279d01d66825",
-      "vendored_sha256": "6426961c598bf98035b7374280eca39e4f7da7a5160ab32e3704279d01d66825"
+      "source_sha256": "0367740df51502b743a6f67a0b3ac9e559aac30c532d55fce89b162b4cec8712",
+      "vendored_sha256": "0367740df51502b743a6f67a0b3ac9e559aac30c532d55fce89b162b4cec8712"
     },
     "ruflet_charts/pubspec.yaml": {
       "classification": "exact_source",
@@ -8446,6 +8502,38 @@
       "source_mode": "100644",
       "source_sha256": "b63fdcf9c9c4e79d00ff3ceaf246281142e0af17c6ce30d0cfc76336766aad1e",
       "vendored_sha256": "b63fdcf9c9c4e79d00ff3ceaf246281142e0af17c6ce30d0cfc76336766aad1e"
+    },
+    "ruflet_charts/test/bar_chart_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_charts/test/bar_chart_test.dart",
+      "source_git_blob": "e5773ef408da3c5ef49544e377b15f8f2b0c77ce",
+      "source_mode": "100644",
+      "source_sha256": "03a9ef731a6429a369b781d5544c094b86f18b72d1a3bdae8ea33d8f8c56b273",
+      "vendored_sha256": "03a9ef731a6429a369b781d5544c094b86f18b72d1a3bdae8ea33d8f8c56b273"
+    },
+    "ruflet_charts/test/candlestick_chart_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_charts/test/candlestick_chart_test.dart",
+      "source_git_blob": "72fb69a31ae3c7dd36ada2feddc02b6bb48e05d9",
+      "source_mode": "100644",
+      "source_sha256": "ccdd9702cba50598cfe1cb735eeaf3a7979ed3e7af8dda00ec486ad9c644c6e1",
+      "vendored_sha256": "ccdd9702cba50598cfe1cb735eeaf3a7979ed3e7af8dda00ec486ad9c644c6e1"
+    },
+    "ruflet_charts/test/chart_item_tooltip_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_charts/test/chart_item_tooltip_test.dart",
+      "source_git_blob": "a09519d6abf3a539ce11da5ea26b20a06e4108e6",
+      "source_mode": "100644",
+      "source_sha256": "b3e2a18d4faf0d9b68a4c1ad47a7b90facfe1a7c6125168175aad739be18dc8e",
+      "vendored_sha256": "b3e2a18d4faf0d9b68a4c1ad47a7b90facfe1a7c6125168175aad739be18dc8e"
+    },
+    "ruflet_charts/test/chart_tooltip_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_charts/test/chart_tooltip_test.dart",
+      "source_git_blob": "69de7c4f4e9bf5e51a6057980911894a9eca5eee",
+      "source_mode": "100644",
+      "source_sha256": "151aa01332c0a710bdb8a35cae28e82e18629de8380932999624aa8b91cee25f",
+      "vendored_sha256": "151aa01332c0a710bdb8a35cae28e82e18629de8380932999624aa8b91cee25f"
     },
     "ruflet_charts/test/cupertino_charts_test.dart": {
       "classification": "exact_source",
@@ -8462,6 +8550,46 @@
       "source_mode": "100644",
       "source_sha256": "ab86e8699167cb1c1be0d0c25355549d709ba26b183a87a75d112f7f318a2714",
       "vendored_sha256": "ab86e8699167cb1c1be0d0c25355549d709ba26b183a87a75d112f7f318a2714"
+    },
+    "ruflet_charts/test/line_chart_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_charts/test/line_chart_test.dart",
+      "source_git_blob": "5b97f8a888de3caadaec19fdf7f6e06a82537276",
+      "source_mode": "100644",
+      "source_sha256": "a3940ab4e8d5908e95e9f1fba81d0e985e2eaead95e5c2243d2bc0552d06dcfd",
+      "vendored_sha256": "a3940ab4e8d5908e95e9f1fba81d0e985e2eaead95e5c2243d2bc0552d06dcfd"
+    },
+    "ruflet_charts/test/pie_chart_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_charts/test/pie_chart_test.dart",
+      "source_git_blob": "22b685c2b1f0217551815bdc3d6859c222067851",
+      "source_mode": "100644",
+      "source_sha256": "f5f25a45fc40f9382e3df34b7ccf103b3556c1f86d73890c24eccf70b7733f8a",
+      "vendored_sha256": "f5f25a45fc40f9382e3df34b7ccf103b3556c1f86d73890c24eccf70b7733f8a"
+    },
+    "ruflet_charts/test/radar_chart_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_charts/test/radar_chart_test.dart",
+      "source_git_blob": "a7fbd0fff1dec086f66b55f314b1fa7ea5427450",
+      "source_mode": "100644",
+      "source_sha256": "e856ad0081fdbc83861033d7d959b41b490d0624e95e869f0e2457fbd4295d62",
+      "vendored_sha256": "e856ad0081fdbc83861033d7d959b41b490d0624e95e869f0e2457fbd4295d62"
+    },
+    "ruflet_charts/test/scatter_chart_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_charts/test/scatter_chart_test.dart",
+      "source_git_blob": "b5fe584501ed5c2d2eb3b19a1af00d6b1120d0fa",
+      "source_mode": "100644",
+      "source_sha256": "e947b27b1e35cc369ef716e57126d300468c334aac8f76e5384724d59ac7f67b",
+      "vendored_sha256": "e947b27b1e35cc369ef716e57126d300468c334aac8f76e5384724d59ac7f67b"
+    },
+    "ruflet_charts/test/support/harness.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_charts/test/support/harness.dart",
+      "source_git_blob": "2d1a2abfb1d4c233b9534246a5efbdc3525eefb7",
+      "source_mode": "100644",
+      "source_sha256": "36ccdd418442e42dbba42e644e92c485c6b6aaa46d0728cb630554bfbbd03be8",
+      "vendored_sha256": "36ccdd418442e42dbba42e644e92c485c6b6aaa46d0728cb630554bfbbd03be8"
     },
     "ruflet_code_editor/.gitignore": {
       "classification": "exact_source",
@@ -8498,10 +8626,10 @@
     "ruflet_code_editor/lib/src/code_editor.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_code_editor/lib/src/code_editor.dart",
-      "source_git_blob": "12a4f8fc697b62a1976fb99d871242132b729818",
+      "source_git_blob": "5ed5e7eafbb912863fb6615905c2cb1f33562325",
       "source_mode": "100644",
-      "source_sha256": "d276b3c1a7e900ff2a86701b0142ecf12b603cef6bf6ae95349a80831c858ad9",
-      "vendored_sha256": "d276b3c1a7e900ff2a86701b0142ecf12b603cef6bf6ae95349a80831c858ad9"
+      "source_sha256": "4afee264d895497da4e7c45512b89c377283f907d3df40537c2539fc7c119908",
+      "vendored_sha256": "4afee264d895497da4e7c45512b89c377283f907d3df40537c2539fc7c119908"
     },
     "ruflet_code_editor/lib/src/cupertino_code_editor.dart": {
       "classification": "exact_source",
@@ -8530,42 +8658,42 @@
     "ruflet_code_editor/lib/src/cupertino_editor/src/code_field/code_field.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_code_editor/lib/src/cupertino_editor/src/code_field/code_field.dart",
-      "source_git_blob": "eaf19bbd5075748497e3531ee14ba20d2ce57ed8",
+      "source_git_blob": "89235cd64a56d05a61e9d1288544e19c37533383",
       "source_mode": "100644",
-      "source_sha256": "df7f76c03ff3b2d8710298c02a0ab44de348a8766c7da610f036fa7dd40f07c8",
-      "vendored_sha256": "df7f76c03ff3b2d8710298c02a0ab44de348a8766c7da610f036fa7dd40f07c8"
+      "source_sha256": "f10ed436b5080e1dc3e69febbbc36a1a2c37f944be91e2407411ec24dd1a8db7",
+      "vendored_sha256": "f10ed436b5080e1dc3e69febbbc36a1a2c37f944be91e2407411ec24dd1a8db7"
     },
     "ruflet_code_editor/lib/src/cupertino_editor/src/gutter/clickable.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_code_editor/lib/src/cupertino_editor/src/gutter/clickable.dart",
-      "source_git_blob": "310a4a9bb5327a4a269880d6222f5c71802ec35c",
+      "source_git_blob": "ecce5d7242c5826cd8aedca220c4133300b85003",
       "source_mode": "100644",
-      "source_sha256": "60c4ce448deca7193423cd519ee6cec4791ee46239e52e030722433f5c4c419a",
-      "vendored_sha256": "60c4ce448deca7193423cd519ee6cec4791ee46239e52e030722433f5c4c419a"
+      "source_sha256": "d85534a4e12d4bef15d1e579d931a186ed2623b2328d3469277a998cac84c77d",
+      "vendored_sha256": "d85534a4e12d4bef15d1e579d931a186ed2623b2328d3469277a998cac84c77d"
     },
     "ruflet_code_editor/lib/src/cupertino_editor/src/gutter/error.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_code_editor/lib/src/cupertino_editor/src/gutter/error.dart",
-      "source_git_blob": "b2bf02570ac502bee9ba35649a533a4ffb0a1065",
+      "source_git_blob": "6718039921442db9b826697cecfc1942d4b1ace8",
       "source_mode": "100644",
-      "source_sha256": "5e73517050155dad8c92abee4ab2939c9ac1f364b5fd3f46540a3e18e7a69cf9",
-      "vendored_sha256": "5e73517050155dad8c92abee4ab2939c9ac1f364b5fd3f46540a3e18e7a69cf9"
+      "source_sha256": "6d0c27838e9266d1cf8cd09c705e650482df746af7a1509d4f2e86309d54b039",
+      "vendored_sha256": "6d0c27838e9266d1cf8cd09c705e650482df746af7a1509d4f2e86309d54b039"
     },
     "ruflet_code_editor/lib/src/cupertino_editor/src/gutter/fold_toggle.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_code_editor/lib/src/cupertino_editor/src/gutter/fold_toggle.dart",
-      "source_git_blob": "eeeef2d59c5cf572ae2994ef82d2657d845dbde0",
+      "source_git_blob": "7b0aa5be408fd23949c3d9ea7db851ff0b52c50e",
       "source_mode": "100644",
-      "source_sha256": "9731301474c375e7cc8ef7b6a71ffb7c85c478c96bd5cd10084ce5904d1c698a",
-      "vendored_sha256": "9731301474c375e7cc8ef7b6a71ffb7c85c478c96bd5cd10084ce5904d1c698a"
+      "source_sha256": "853c82709e0c2e40d27a3b566394866901dae7541bdcf182aeb40a1ba608c07a",
+      "vendored_sha256": "853c82709e0c2e40d27a3b566394866901dae7541bdcf182aeb40a1ba608c07a"
     },
     "ruflet_code_editor/lib/src/cupertino_editor/src/gutter/gutter.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_code_editor/lib/src/cupertino_editor/src/gutter/gutter.dart",
-      "source_git_blob": "c775677fe70f2ce000ff6a32c8461502f14a75ad",
+      "source_git_blob": "bf85f9eae7cfbeb3f22660222f61c90fb8828962",
       "source_mode": "100644",
-      "source_sha256": "1adaf1ee913acca9ef5328332b1b4ea61ff960ad0ebc160f98f39e9f52f43a0a",
-      "vendored_sha256": "1adaf1ee913acca9ef5328332b1b4ea61ff960ad0ebc160f98f39e9f52f43a0a"
+      "source_sha256": "612d5b8331c790074ee13a3df1638e10664a4f035dedf40959793e725a595867",
+      "vendored_sha256": "612d5b8331c790074ee13a3df1638e10664a4f035dedf40959793e725a595867"
     },
     "ruflet_code_editor/lib/src/cupertino_editor/src/search/widget/focus_rediretor.dart": {
       "classification": "exact_source",
@@ -8578,34 +8706,34 @@
     "ruflet_code_editor/lib/src/cupertino_editor/src/search/widget/search_navigation_widget.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_code_editor/lib/src/cupertino_editor/src/search/widget/search_navigation_widget.dart",
-      "source_git_blob": "e0c2eea289b3776a2027ae640d74665885c0f44a",
+      "source_git_blob": "8b458759c9ba00b80d578eb657e8d679296ac552",
       "source_mode": "100644",
-      "source_sha256": "2f176d277848b42bd7dc1a7b866534af50a0b87249980087413ea5f8f81b6e70",
-      "vendored_sha256": "2f176d277848b42bd7dc1a7b866534af50a0b87249980087413ea5f8f81b6e70"
+      "source_sha256": "63976bf33e5d6818b1160ec9bf49c8bea6ca6cfc7c32b7cb74cffb8417f56d3e",
+      "vendored_sha256": "63976bf33e5d6818b1160ec9bf49c8bea6ca6cfc7c32b7cb74cffb8417f56d3e"
     },
     "ruflet_code_editor/lib/src/cupertino_editor/src/search/widget/search_settings_widget.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_code_editor/lib/src/cupertino_editor/src/search/widget/search_settings_widget.dart",
-      "source_git_blob": "52ad2d31d685b3511d292778b32f733ac236728f",
+      "source_git_blob": "91e682dd27d003617ff089f25186f34c4a7dc888",
       "source_mode": "100644",
-      "source_sha256": "f3817ecc75b494b65bf864927bfcf80a61cbfbea80d439e7bb878aa1f2807cdf",
-      "vendored_sha256": "f3817ecc75b494b65bf864927bfcf80a61cbfbea80d439e7bb878aa1f2807cdf"
+      "source_sha256": "6dc7486a024800d576798350585d92056d551a2caff3896da33a76a9bd622d14",
+      "vendored_sha256": "6dc7486a024800d576798350585d92056d551a2caff3896da33a76a9bd622d14"
     },
     "ruflet_code_editor/lib/src/cupertino_editor/src/search/widget/search_widget.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_code_editor/lib/src/cupertino_editor/src/search/widget/search_widget.dart",
-      "source_git_blob": "4a67866e39cde8e2731458745a69ae4cd7ddf965",
+      "source_git_blob": "1ea0c547a03eda1f87299cf7d00fd398c894124c",
       "source_mode": "100644",
-      "source_sha256": "22192472eb7ff3b99e5b136ec3ac1dc5fead0bbbba87c19efac19f0dc96e9402",
-      "vendored_sha256": "22192472eb7ff3b99e5b136ec3ac1dc5fead0bbbba87c19efac19f0dc96e9402"
+      "source_sha256": "36fcc995bcd9b0f3e047666d93410d6e506b9373bb02640ea9dd0fb921dd9a35",
+      "vendored_sha256": "36fcc995bcd9b0f3e047666d93410d6e506b9373bb02640ea9dd0fb921dd9a35"
     },
     "ruflet_code_editor/lib/src/cupertino_editor/src/wip/autocomplete/popup.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_code_editor/lib/src/cupertino_editor/src/wip/autocomplete/popup.dart",
-      "source_git_blob": "f1abc9b1448490102c04763446d695147f91827d",
+      "source_git_blob": "4583a2cb8cbd8a78cbef915e87d3e2178a9f54d1",
       "source_mode": "100644",
-      "source_sha256": "ca2af200d65c6f9540ca5b624819ebe2e960dc8da55c29ec4696e1b72ae1297f",
-      "vendored_sha256": "ca2af200d65c6f9540ca5b624819ebe2e960dc8da55c29ec4696e1b72ae1297f"
+      "source_sha256": "49733fd66218f4d93699484f3eb9799432ce6875f210bdcb7907130ddfb7b38c",
+      "vendored_sha256": "49733fd66218f4d93699484f3eb9799432ce6875f210bdcb7907130ddfb7b38c"
     },
     "ruflet_code_editor/lib/src/extension.dart": {
       "classification": "exact_source",
@@ -8626,10 +8754,10 @@
     "ruflet_code_editor/lib/src/utils/code_editor.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_code_editor/lib/src/utils/code_editor.dart",
-      "source_git_blob": "7ad1743d9f9e32f2b0429d870d5b029cdc9a1e6e",
+      "source_git_blob": "c468f7ae26f3230c7f5247644eafe82c6136deaa",
       "source_mode": "100644",
-      "source_sha256": "cb3c57d20393e929e6e8ec6516ca673b874b4140eb3f0bb2b231e71c130c20f3",
-      "vendored_sha256": "cb3c57d20393e929e6e8ec6516ca673b874b4140eb3f0bb2b231e71c130c20f3"
+      "source_sha256": "2587cd118199d00f03c7f9a07d12a6ae21048da414c2612f530ee6e4a673eea8",
+      "vendored_sha256": "2587cd118199d00f03c7f9a07d12a6ae21048da414c2612f530ee6e4a673eea8"
     },
     "ruflet_code_editor/lib/src/utils/ruflet_code_controller.dart": {
       "classification": "exact_source",
@@ -8647,6 +8775,30 @@
       "source_sha256": "4663b11cfd7fb0941bf970bf6ca8ec31e9998f2ea043d5293f33c6ac5fdeadd5",
       "vendored_sha256": "4663b11cfd7fb0941bf970bf6ca8ec31e9998f2ea043d5293f33c6ac5fdeadd5"
     },
+    "ruflet_code_editor/test/code_editor_ruby_names_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_code_editor/test/code_editor_ruby_names_test.dart",
+      "source_git_blob": "fe47d2ce8e263dbb37561e4cbd71a76c9c4bf192",
+      "source_mode": "100644",
+      "source_sha256": "e3a540a06b97e45a01a71d5152cc6985cc3617ee7ddd3573021daa691e23baf9",
+      "vendored_sha256": "e3a540a06b97e45a01a71d5152cc6985cc3617ee7ddd3573021daa691e23baf9"
+    },
+    "ruflet_code_editor/test/code_editor_ruby_updates_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_code_editor/test/code_editor_ruby_updates_test.dart",
+      "source_git_blob": "2683b434dd5078975e20e09ff6a31fd984994076",
+      "source_mode": "100644",
+      "source_sha256": "ad84a60016686d4edf279650fa7b45b0b9ebf26ae56a58a0820d4a85c876f147",
+      "vendored_sha256": "ad84a60016686d4edf279650fa7b45b0b9ebf26ae56a58a0820d4a85c876f147"
+    },
+    "ruflet_code_editor/test/code_editor_wire_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_code_editor/test/code_editor_wire_test.dart",
+      "source_git_blob": "080045b46a89c20ddf6277375c4d73bc7312db93",
+      "source_mode": "100644",
+      "source_sha256": "e69747cb9b0dd6b8407b9bfc62e67f28df2dbfa5acc76bf64a61a1562afe9266",
+      "vendored_sha256": "e69747cb9b0dd6b8407b9bfc62e67f28df2dbfa5acc76bf64a61a1562afe9266"
+    },
     "ruflet_code_editor/test/cupertino_code_field_test.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_code_editor/test/cupertino_code_field_test.dart",
@@ -8658,10 +8810,18 @@
     "ruflet_code_editor/test/platform_code_editor_test.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_code_editor/test/platform_code_editor_test.dart",
-      "source_git_blob": "474d44ed216ac5e559730a2e7768780ebd09ab79",
+      "source_git_blob": "33df2583c9fdbd60080c6855b53d6f629b58b78b",
       "source_mode": "100644",
-      "source_sha256": "2abff0f684470c03592208ab9c0f4307c0ab953f316721b464449591d2bd89a5",
-      "vendored_sha256": "2abff0f684470c03592208ab9c0f4307c0ab953f316721b464449591d2bd89a5"
+      "source_sha256": "02e26b628f8369150101858423e87d29cbfcd60827ed2ddedf603e00302e6cd2",
+      "vendored_sha256": "02e26b628f8369150101858423e87d29cbfcd60827ed2ddedf603e00302e6cd2"
+    },
+    "ruflet_code_editor/test/support/harness.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_code_editor/test/support/harness.dart",
+      "source_git_blob": "98fe05fb5c22b5c189a81672cf3a193770fe02f4",
+      "source_mode": "100644",
+      "source_sha256": "73a6c5eb8b4ddedc9b622f090e209e0f292ac2bf42bce187a7e7c8cc078578c0",
+      "vendored_sha256": "73a6c5eb8b4ddedc9b622f090e209e0f292ac2bf42bce187a7e7c8cc078578c0"
     },
     "ruflet_color_pickers/.gitignore": {
       "classification": "exact_source",
@@ -8706,18 +8866,18 @@
     "ruflet_color_pickers/lib/src/cupertino_block_picker.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_color_pickers/lib/src/cupertino_block_picker.dart",
-      "source_git_blob": "c00d491c22a25b45cc8d6339bc52491faa9d79e4",
+      "source_git_blob": "51146399cfd7d0c9f26d414ea119c2966f81e69c",
       "source_mode": "100644",
-      "source_sha256": "881501c75504cc53cbd949cd48a88aa60537fa4aa2f01a6fd572a9d42427df4e",
-      "vendored_sha256": "881501c75504cc53cbd949cd48a88aa60537fa4aa2f01a6fd572a9d42427df4e"
+      "source_sha256": "7ab80136b5e31e03cf18685b83a77579aae9767cf6ca5b989f0aec28c72f805b",
+      "vendored_sha256": "7ab80136b5e31e03cf18685b83a77579aae9767cf6ca5b989f0aec28c72f805b"
     },
     "ruflet_color_pickers/lib/src/cupertino_color_picker.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_color_pickers/lib/src/cupertino_color_picker.dart",
-      "source_git_blob": "2d1eab06455ea46a3948b0d3e0890405969c2bfd",
+      "source_git_blob": "53a399816a12dbb40fec915ec280cbff5048df99",
       "source_mode": "100644",
-      "source_sha256": "61c7c6ec51374e19fae5c15a5a409d53ff710bf07c7f6757949b7409b01a8c90",
-      "vendored_sha256": "61c7c6ec51374e19fae5c15a5a409d53ff710bf07c7f6757949b7409b01a8c90"
+      "source_sha256": "d67262cd493b500716067105ca00d983bd2d22487b70144cb0665eaf32684dbe",
+      "vendored_sha256": "d67262cd493b500716067105ca00d983bd2d22487b70144cb0665eaf32684dbe"
     },
     "ruflet_color_pickers/lib/src/cupertino_hue_ring_picker.dart": {
       "classification": "exact_source",
@@ -8730,18 +8890,18 @@
     "ruflet_color_pickers/lib/src/cupertino_material_picker.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_color_pickers/lib/src/cupertino_material_picker.dart",
-      "source_git_blob": "6cf8dccbd9d316661adbeff895dfd248e07edf73",
+      "source_git_blob": "504566dee4ff8f2d9d70faff848818b7c53286d5",
       "source_mode": "100644",
-      "source_sha256": "5158bc0487b7a9dbeea9d2e7c07ba4caa9499a6145054cf5050b33c1c2db8d5b",
-      "vendored_sha256": "5158bc0487b7a9dbeea9d2e7c07ba4caa9499a6145054cf5050b33c1c2db8d5b"
+      "source_sha256": "8ac3affaf180291c9f99cfcdab288e93cb94a617fb2e93641311964aabe3c397",
+      "vendored_sha256": "8ac3affaf180291c9f99cfcdab288e93cb94a617fb2e93641311964aabe3c397"
     },
     "ruflet_color_pickers/lib/src/cupertino_multiple_choice_block_picker.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_color_pickers/lib/src/cupertino_multiple_choice_block_picker.dart",
-      "source_git_blob": "5517db9be03ded322e8d9d5471fe2cb3c88c73eb",
+      "source_git_blob": "e3032c2108c0f873a64ef199ab57c6c6d842711d",
       "source_mode": "100644",
-      "source_sha256": "f38d1e02bc9d8929eafa0d72f703f90eef380b234356608e0b5f1ecc6f7cb129",
-      "vendored_sha256": "f38d1e02bc9d8929eafa0d72f703f90eef380b234356608e0b5f1ecc6f7cb129"
+      "source_sha256": "48efe034fe75e26e04dcb3ad5a8309894f3a4d2c40b2e92ce1fe7318d7d05c4a",
+      "vendored_sha256": "48efe034fe75e26e04dcb3ad5a8309894f3a4d2c40b2e92ce1fe7318d7d05c4a"
     },
     "ruflet_color_pickers/lib/src/cupertino_picker/FLUTTER_LICENSE": {
       "classification": "exact_source",
@@ -8834,10 +8994,10 @@
     "ruflet_color_pickers/lib/src/cupertino_slide_picker.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_color_pickers/lib/src/cupertino_slide_picker.dart",
-      "source_git_blob": "225eb2f702868b7d30101a494b9b218b733b6ec8",
+      "source_git_blob": "a119cb2245965651dc6d294300b6e88ba850638d",
       "source_mode": "100644",
-      "source_sha256": "6db6c72481ac4bd18be14b805b3b13011c5d59dd2891e0d711a56027a4e13476",
-      "vendored_sha256": "6db6c72481ac4bd18be14b805b3b13011c5d59dd2891e0d711a56027a4e13476"
+      "source_sha256": "c18b2c37e5d499b42e98053669b438d5ecdc6e9744adacbde6f2913430d96c4a",
+      "vendored_sha256": "c18b2c37e5d499b42e98053669b438d5ecdc6e9744adacbde6f2913430d96c4a"
     },
     "ruflet_color_pickers/lib/src/extension.dart": {
       "classification": "exact_source",
@@ -8858,18 +9018,18 @@
     "ruflet_color_pickers/lib/src/material_block_picker.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_color_pickers/lib/src/material_block_picker.dart",
-      "source_git_blob": "acf6f99b4914862347c6c8204767108b9d8ba0cb",
+      "source_git_blob": "9bcd742f22f9c3ba7c7f0272af1c96913b79a9a1",
       "source_mode": "100644",
-      "source_sha256": "c812eb705bd2867b13ffb3d59f50f0c57abc026fc6ffe84b01abdab7bf1d6c45",
-      "vendored_sha256": "c812eb705bd2867b13ffb3d59f50f0c57abc026fc6ffe84b01abdab7bf1d6c45"
+      "source_sha256": "838f0de484a355781a0c8a629beaf53c7347d0dd2b80d20e019ca9ccfc6e5191",
+      "vendored_sha256": "838f0de484a355781a0c8a629beaf53c7347d0dd2b80d20e019ca9ccfc6e5191"
     },
     "ruflet_color_pickers/lib/src/material_color_picker.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_color_pickers/lib/src/material_color_picker.dart",
-      "source_git_blob": "45c31d72f3802ad8c808169c815f79803c48980f",
+      "source_git_blob": "62e9a1bb56a117915c130b00961c40f613b0d056",
       "source_mode": "100644",
-      "source_sha256": "f8a08f62f1907f3517457020baeebe9ac7948ffb7ba8e71babad58ffbd39bd20",
-      "vendored_sha256": "f8a08f62f1907f3517457020baeebe9ac7948ffb7ba8e71babad58ffbd39bd20"
+      "source_sha256": "c780d48f2437066fdb104990dcbadf282586b93b6f69e0feeea5dae9d088030f",
+      "vendored_sha256": "c780d48f2437066fdb104990dcbadf282586b93b6f69e0feeea5dae9d088030f"
     },
     "ruflet_color_pickers/lib/src/material_hue_ring_picker.dart": {
       "classification": "exact_source",
@@ -8882,18 +9042,18 @@
     "ruflet_color_pickers/lib/src/material_material_picker.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_color_pickers/lib/src/material_material_picker.dart",
-      "source_git_blob": "cb053c934ab541f3be6aff5d665d8bed88c9a8b1",
+      "source_git_blob": "0e8ab33750f993d7e873c4878ea7869a9a1380e1",
       "source_mode": "100644",
-      "source_sha256": "de5611678a60442b5702f5fcdcea7c70e1bba130b7026028989f0801b4412a27",
-      "vendored_sha256": "de5611678a60442b5702f5fcdcea7c70e1bba130b7026028989f0801b4412a27"
+      "source_sha256": "3cf343b12f567897ef7ecd1b9eb3af534bea6cb1863b64d98c1afa0412376d40",
+      "vendored_sha256": "3cf343b12f567897ef7ecd1b9eb3af534bea6cb1863b64d98c1afa0412376d40"
     },
     "ruflet_color_pickers/lib/src/material_multiple_choice_block_picker.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_color_pickers/lib/src/material_multiple_choice_block_picker.dart",
-      "source_git_blob": "1e1e095713a68c5b7016a482f1a9f7bfc06a38fb",
+      "source_git_blob": "13dd6edcfc5f4ba5e6e76e701702a3618b76e9eb",
       "source_mode": "100644",
-      "source_sha256": "f8964fff5432385399c715a472a9458b748eb4cc184c47e9d84a6dcefa353859",
-      "vendored_sha256": "f8964fff5432385399c715a472a9458b748eb4cc184c47e9d84a6dcefa353859"
+      "source_sha256": "77cbfc78080ef2a2a61e1431d6762514e8b949041861655bec5e56a407d8a43c",
+      "vendored_sha256": "77cbfc78080ef2a2a61e1431d6762514e8b949041861655bec5e56a407d8a43c"
     },
     "ruflet_color_pickers/lib/src/material_picker.dart": {
       "classification": "exact_source",
@@ -8906,10 +9066,10 @@
     "ruflet_color_pickers/lib/src/material_slide_picker.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_color_pickers/lib/src/material_slide_picker.dart",
-      "source_git_blob": "41df7a35161a9ee2fe397ab5cd674eeac58508c6",
+      "source_git_blob": "44a09cd7b06dce8c48347d7667adca26cf3082bd",
       "source_mode": "100644",
-      "source_sha256": "c3ff641d8401a64c93f85d3055948a6304b0b69e04c3b1ee73141c1df46cffb5",
-      "vendored_sha256": "c3ff641d8401a64c93f85d3055948a6304b0b69e04c3b1ee73141c1df46cffb5"
+      "source_sha256": "9d3a435e9aa2969887a80652fbcedc65672e1bd1c00753bbd32190569a25f271",
+      "vendored_sha256": "9d3a435e9aa2969887a80652fbcedc65672e1bd1c00753bbd32190569a25f271"
     },
     "ruflet_color_pickers/lib/src/material_swatch_picker/LICENSE": {
       "classification": "exact_source",
@@ -8983,6 +9143,14 @@
       "source_sha256": "42ddb6751067902d5e28b292d63fbfc4d77e6ab9f8b115973a99deece9435f29",
       "vendored_sha256": "42ddb6751067902d5e28b292d63fbfc4d77e6ab9f8b115973a99deece9435f29"
     },
+    "ruflet_color_pickers/test/block_picker_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_color_pickers/test/block_picker_test.dart",
+      "source_git_blob": "0309af795614cb69f7e8fe40fc3bcc36448ff8d2",
+      "source_mode": "100644",
+      "source_sha256": "b2f568ea31c78a16069b70cab71e7388cdf63fec319274308483da53f55c50bf",
+      "vendored_sha256": "b2f568ea31c78a16069b70cab71e7388cdf63fec319274308483da53f55c50bf"
+    },
     "ruflet_color_pickers/test/color_channels_test.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_color_pickers/test/color_channels_test.dart",
@@ -8991,6 +9159,14 @@
       "source_sha256": "73f7d43c832280b6f8364246080d1d803723a8e55d0647bdd11815944c85ef6d",
       "vendored_sha256": "73f7d43c832280b6f8364246080d1d803723a8e55d0647bdd11815944c85ef6d"
     },
+    "ruflet_color_pickers/test/color_picker_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_color_pickers/test/color_picker_test.dart",
+      "source_git_blob": "e3fb9b1cf7b5850bfc42d22384a9ee416393d20f",
+      "source_mode": "100644",
+      "source_sha256": "a7b24782897f4bde6d68070f810bfa5cc0ef9e497ce64e26861b1323a9fa9a97",
+      "vendored_sha256": "a7b24782897f4bde6d68070f810bfa5cc0ef9e497ce64e26861b1323a9fa9a97"
+    },
     "ruflet_color_pickers/test/cupertino_picker_test.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_color_pickers/test/cupertino_picker_test.dart",
@@ -8998,6 +9174,22 @@
       "source_mode": "100644",
       "source_sha256": "590785356cef1fbecdc0e7c6b4ca1fc5251e9018ac8acca5c0022ceebc7ca92b",
       "vendored_sha256": "590785356cef1fbecdc0e7c6b4ca1fc5251e9018ac8acca5c0022ceebc7ca92b"
+    },
+    "ruflet_color_pickers/test/hue_ring_slide_picker_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_color_pickers/test/hue_ring_slide_picker_test.dart",
+      "source_git_blob": "c12ff685aee6e164fed65cf18ea9cf95741a01e1",
+      "source_mode": "100644",
+      "source_sha256": "6d31857272053f7efc60714cf48dd1808544b7a71fbd6832f47fb9f942ecc1ff",
+      "vendored_sha256": "6d31857272053f7efc60714cf48dd1808544b7a71fbd6832f47fb9f942ecc1ff"
+    },
+    "ruflet_color_pickers/test/material_picker_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_color_pickers/test/material_picker_test.dart",
+      "source_git_blob": "ddb3ce1f1cbf785ebff9639390fdf1c886286b40",
+      "source_mode": "100644",
+      "source_sha256": "00493a0dcb9eec31909bab846425a4980eb494d00f3d4f9f11b461450869834e",
+      "vendored_sha256": "00493a0dcb9eec31909bab846425a4980eb494d00f3d4f9f11b461450869834e"
     },
     "ruflet_color_pickers/test/material_swatch_picker_label_test.dart": {
       "classification": "exact_source",
@@ -9010,10 +9202,18 @@
     "ruflet_color_pickers/test/platform_picker_test.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_color_pickers/test/platform_picker_test.dart",
-      "source_git_blob": "b4c595d6bd45881f0655b35eddb977223aa14c44",
+      "source_git_blob": "1229a6df24538d1e18a3f99f095dec7a8b7b566f",
       "source_mode": "100644",
-      "source_sha256": "2f648f8574653c55f49746926aff15e2a80bb95ef378b24caa351020cc2d1840",
-      "vendored_sha256": "2f648f8574653c55f49746926aff15e2a80bb95ef378b24caa351020cc2d1840"
+      "source_sha256": "25e5fc972b01748ad230c7cb7a91db46c464bc3ad91d2fa6e131aed360677f28",
+      "vendored_sha256": "25e5fc972b01748ad230c7cb7a91db46c464bc3ad91d2fa6e131aed360677f28"
+    },
+    "ruflet_color_pickers/test/support/harness.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_color_pickers/test/support/harness.dart",
+      "source_git_blob": "3802adb01894f71e4325e50715501dc35fb63451",
+      "source_mode": "100644",
+      "source_sha256": "f7b1692e5b0fa82f5bbbe35489a22746cac89eabadbb53cd60b3ad663e5e395a",
+      "vendored_sha256": "f7b1692e5b0fa82f5bbbe35489a22746cac89eabadbb53cd60b3ad663e5e395a"
     },
     "ruflet_color_pickers/test/swatch_picker_label_test.dart": {
       "classification": "exact_source",
@@ -9050,10 +9250,10 @@
     "ruflet_datatable2/lib/src/cupertino_datatable2.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_datatable2/lib/src/cupertino_datatable2.dart",
-      "source_git_blob": "e0ece8abd5fb8cae72a6fa72366a444b48d4bb82",
+      "source_git_blob": "1c4563695b2c902e2490f7fc6a7d03add9489142",
       "source_mode": "100644",
-      "source_sha256": "1112096b20848b1a6c792430dd227d10a0e11d1d7d58f91c05c2befdf8bc25d1",
-      "vendored_sha256": "1112096b20848b1a6c792430dd227d10a0e11d1d7d58f91c05c2befdf8bc25d1"
+      "source_sha256": "dda705d7b36b93d8e9a7425c179f7d5913b931e1d8bc08e2a0f395de27b66919",
+      "vendored_sha256": "dda705d7b36b93d8e9a7425c179f7d5913b931e1d8bc08e2a0f395de27b66919"
     },
     "ruflet_datatable2/lib/src/data_sources.dart": {
       "classification": "exact_source",
@@ -9082,18 +9282,18 @@
     "ruflet_datatable2/lib/src/material_datatable2.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_datatable2/lib/src/material_datatable2.dart",
-      "source_git_blob": "ad2cd990338469676cf092965fc2454c0d2c15d2",
+      "source_git_blob": "974462ad7278a24ed661ecd6a239cb325255a1bd",
       "source_mode": "100644",
-      "source_sha256": "bb6fd2263cbe9119684cadba9c3b5490ed2b3c9761e7f466612722f86bb17198",
-      "vendored_sha256": "bb6fd2263cbe9119684cadba9c3b5490ed2b3c9761e7f466612722f86bb17198"
+      "source_sha256": "9c2abcec77773317fad90abe90423e3f02fc7e67a6ed6c87f233fd21c0f7c14e",
+      "vendored_sha256": "9c2abcec77773317fad90abe90423e3f02fc7e67a6ed6c87f233fd21c0f7c14e"
     },
     "ruflet_datatable2/lib/src/utils/datatable.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_datatable2/lib/src/utils/datatable.dart",
-      "source_git_blob": "760689d860fd321e3d6bda0e48e5ee57913a4164",
+      "source_git_blob": "69e3833fe8787126d7bba3ed3f8a592dc3717221",
       "source_mode": "100644",
-      "source_sha256": "2f554998e2ad9554b1562cc7b218ffc4e390900f1820ae68aece0212f2e9d186",
-      "vendored_sha256": "2f554998e2ad9554b1562cc7b218ffc4e390900f1820ae68aece0212f2e9d186"
+      "source_sha256": "37b7f1480908b12454d8b9aab4bc47f12480ecb9db5a0d6ee0dd84d1275a0c95",
+      "vendored_sha256": "37b7f1480908b12454d8b9aab4bc47f12480ecb9db5a0d6ee0dd84d1275a0c95"
     },
     "ruflet_datatable2/pubspec.yaml": {
       "classification": "exact_source",
@@ -9103,21 +9303,37 @@
       "source_sha256": "ac37fe77e138d7edd2cee13f1da274bb2149e236cf6b7e73b4ee450bcbdd14a9",
       "vendored_sha256": "ac37fe77e138d7edd2cee13f1da274bb2149e236cf6b7e73b4ee450bcbdd14a9"
     },
+    "ruflet_datatable2/test/datatable2_wire_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_datatable2/test/datatable2_wire_test.dart",
+      "source_git_blob": "5125bc56f308a0ac94ed58d18dbd1fde814d1bb3",
+      "source_mode": "100644",
+      "source_sha256": "f5175d43e0b741c24b68ebf4aa46d42b8ba98c9d9d5cf94d0ec8d107f9e02f10",
+      "vendored_sha256": "f5175d43e0b741c24b68ebf4aa46d42b8ba98c9d9d5cf94d0ec8d107f9e02f10"
+    },
     "ruflet_datatable2/test/enum_name_parsing_test.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_datatable2/test/enum_name_parsing_test.dart",
-      "source_git_blob": "de4cb1408e0e6fcdda1203209a8401290ccdf23d",
+      "source_git_blob": "c6014316999d6cc7ad3cf2f1b71e86d83d6d8663",
       "source_mode": "100644",
-      "source_sha256": "86b6c3f4a44e4756ac81933f692aedd90ddcc3706eefd33e19ed4fff45b7a572",
-      "vendored_sha256": "86b6c3f4a44e4756ac81933f692aedd90ddcc3706eefd33e19ed4fff45b7a572"
+      "source_sha256": "0f1fbadc58437d6a4218821c59b88cbd72536d50dc87284cc2d97a66a741e369",
+      "vendored_sha256": "0f1fbadc58437d6a4218821c59b88cbd72536d50dc87284cc2d97a66a741e369"
     },
     "ruflet_datatable2/test/platform_datatable2_test.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_datatable2/test/platform_datatable2_test.dart",
-      "source_git_blob": "77dcc684982b2cdd55555e91ba1f31c1ef00efd7",
+      "source_git_blob": "cabc0eaf681accb461fd9653fcea6dbc7bc8c5dd",
       "source_mode": "100644",
-      "source_sha256": "4973a2b6eef6018982a8135b51085fa182ede0479e21b2995d18681c30ba3c32",
-      "vendored_sha256": "4973a2b6eef6018982a8135b51085fa182ede0479e21b2995d18681c30ba3c32"
+      "source_sha256": "d1e66659b99640f06081eafdec1b5994e499671412b95bc9af3c2b7f8c133a48",
+      "vendored_sha256": "d1e66659b99640f06081eafdec1b5994e499671412b95bc9af3c2b7f8c133a48"
+    },
+    "ruflet_datatable2/test/support/harness.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_datatable2/test/support/harness.dart",
+      "source_git_blob": "d44148cb73bd61848f6135b2c2bc9dd90ceda9ac",
+      "source_mode": "100644",
+      "source_sha256": "ed0ebfd0bffc49d51a2a1e06851d899c784e78251c7260c9d9e1cb8eeb246a19",
+      "vendored_sha256": "ed0ebfd0bffc49d51a2a1e06851d899c784e78251c7260c9d9e1cb8eeb246a19"
     },
     "ruflet_flashlight/.gitignore": {
       "classification": "exact_source",
@@ -9202,10 +9418,10 @@
     "ruflet_geolocator/lib/src/geolocator.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_geolocator/lib/src/geolocator.dart",
-      "source_git_blob": "7d0629eacad4533efb6153e0dfb6bd01ee09ca13",
+      "source_git_blob": "fb77dd1443cfcb25732731869020b25a80414422",
       "source_mode": "100644",
-      "source_sha256": "8c47963e533ed03ed2cccee20a63ad6901b0cf112430143d0d3477a3af4b9404",
-      "vendored_sha256": "8c47963e533ed03ed2cccee20a63ad6901b0cf112430143d0d3477a3af4b9404"
+      "source_sha256": "54eb31bef717b5ad0b719ecdf3187ff2cc85d9bcbd66a2e01d1782af73aaa02a",
+      "vendored_sha256": "54eb31bef717b5ad0b719ecdf3187ff2cc85d9bcbd66a2e01d1782af73aaa02a"
     },
     "ruflet_geolocator/lib/src/utils/geolocator.dart": {
       "classification": "exact_source",
@@ -9218,10 +9434,26 @@
     "ruflet_geolocator/pubspec.yaml": {
       "classification": "exact_source",
       "source_path": "ruflet_geolocator/pubspec.yaml",
-      "source_git_blob": "28ffb5b83b2bb63ab3c3b20d2b9adaa4807b6fa3",
+      "source_git_blob": "c8142ddd2345e2de0085cfe40fb888a2d842e525",
       "source_mode": "100644",
-      "source_sha256": "ef90e2183c9a6b9da1f114edeca0f065d50f58944f2a7db410ca86936578c2be",
-      "vendored_sha256": "ef90e2183c9a6b9da1f114edeca0f065d50f58944f2a7db410ca86936578c2be"
+      "source_sha256": "5262bd72bddebcaa3421e7040f0e94f53963fcf0cef3073dfb4daf082ad8784f",
+      "vendored_sha256": "5262bd72bddebcaa3421e7040f0e94f53963fcf0cef3073dfb4daf082ad8784f"
+    },
+    "ruflet_geolocator/test/geolocator_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_geolocator/test/geolocator_test.dart",
+      "source_git_blob": "5bbaa5616d7378ac1db0bef26d150394282882ef",
+      "source_mode": "100644",
+      "source_sha256": "563a1347018a2ab632616cd2521162f07b9b7239858ed3b2f742529163fb2713",
+      "vendored_sha256": "563a1347018a2ab632616cd2521162f07b9b7239858ed3b2f742529163fb2713"
+    },
+    "ruflet_geolocator/test/support/service_harness.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_geolocator/test/support/service_harness.dart",
+      "source_git_blob": "5b9c9c9d46e5241011d5da80504e09d326a14077",
+      "source_mode": "100644",
+      "source_sha256": "5ac3830abc41dec514f1f3ca883a9a6b5d65be57ba7476c20ec821581c00f84e",
+      "vendored_sha256": "5ac3830abc41dec514f1f3ca883a9a6b5d65be57ba7476c20ec821581c00f84e"
     },
     "ruflet_local_auth/.gitignore": {
       "classification": "exact_source",
@@ -9298,10 +9530,10 @@
     "ruflet_local_auth/test/local_auth_test.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_local_auth/test/local_auth_test.dart",
-      "source_git_blob": "64b43bad52eb804371f5e6efdd39d54599483d67",
+      "source_git_blob": "cca1f4a773ff24b2d53acf5f80637f098b9980c4",
       "source_mode": "100644",
-      "source_sha256": "084084cd51dedf9bbff72747b798c6ba1e70b2da8b9dbbc8ccf5e5ded18b2e54",
-      "vendored_sha256": "084084cd51dedf9bbff72747b798c6ba1e70b2da8b9dbbc8ccf5e5ded18b2e54"
+      "source_sha256": "26c051accd3cb7ea8b98b1683af87b8bdfe5e1a4b0ce2b96e0e7ee90e0168fc2",
+      "vendored_sha256": "26c051accd3cb7ea8b98b1683af87b8bdfe5e1a4b0ce2b96e0e7ee90e0168fc2"
     },
     "ruflet_lottie/.gitignore": {
       "classification": "exact_source",
@@ -9346,18 +9578,34 @@
     "ruflet_lottie/lib/src/lottie.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_lottie/lib/src/lottie.dart",
-      "source_git_blob": "b61ba58714892b1c0bdaa2fedf338bc33c62b6c4",
+      "source_git_blob": "9c9623608c5d4520cda774f1bc9a98453319940f",
       "source_mode": "100644",
-      "source_sha256": "eb41213fc7f3335c14416b287e9bdb31dacd3b96c8d008f5ab0a57797121005e",
-      "vendored_sha256": "eb41213fc7f3335c14416b287e9bdb31dacd3b96c8d008f5ab0a57797121005e"
+      "source_sha256": "2f303e3d53314f629e77e38f3ea9ab7779f33cfaf0c8fc4d87289b42dd2441bd",
+      "vendored_sha256": "2f303e3d53314f629e77e38f3ea9ab7779f33cfaf0c8fc4d87289b42dd2441bd"
     },
     "ruflet_lottie/pubspec.yaml": {
       "classification": "exact_source",
       "source_path": "ruflet_lottie/pubspec.yaml",
-      "source_git_blob": "cc2448a4e4d55dee5c284a2f3a801a14e840f640",
+      "source_git_blob": "43f234ad7083bdf2248938e971bc99b8171f6135",
       "source_mode": "100644",
-      "source_sha256": "67cac5354bf7f5cec64bc6453ba2b6a6315553bbb0c88ec7564a7e15dff70c0c",
-      "vendored_sha256": "67cac5354bf7f5cec64bc6453ba2b6a6315553bbb0c88ec7564a7e15dff70c0c"
+      "source_sha256": "9dc480ecd2d1b49302f8821f3562cf6f4cec8d581f37b969d492ed50feaf0e28",
+      "vendored_sha256": "9dc480ecd2d1b49302f8821f3562cf6f4cec8d581f37b969d492ed50feaf0e28"
+    },
+    "ruflet_lottie/test/lottie_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_lottie/test/lottie_test.dart",
+      "source_git_blob": "ebaf538e7a5965acc3df1516cc9da6e4376fca9a",
+      "source_mode": "100644",
+      "source_sha256": "aae37c37f6163c1ae9fa93fdd0b956dbf704115236afe6b6c65ecc9b3f1e3648",
+      "vendored_sha256": "aae37c37f6163c1ae9fa93fdd0b956dbf704115236afe6b6c65ecc9b3f1e3648"
+    },
+    "ruflet_lottie/test/support/harness.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_lottie/test/support/harness.dart",
+      "source_git_blob": "0e166f194dc2548729209c7aef9554259ac8c158",
+      "source_mode": "100644",
+      "source_sha256": "3c0b36eeaa1d7a9099f477b1bdccbd24b2cea43db96f8354cb4d588c593ef8b9",
+      "vendored_sha256": "3c0b36eeaa1d7a9099f477b1bdccbd24b2cea43db96f8354cb4d588c593ef8b9"
     },
     "ruflet_map/.gitignore": {
       "classification": "exact_source",
@@ -9402,10 +9650,10 @@
     "ruflet_map/lib/src/cupertino_attribution.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_map/lib/src/cupertino_attribution.dart",
-      "source_git_blob": "42729a1f1b6eb9c74316f4cf91248f4c7f205109",
+      "source_git_blob": "c8238f35cd50340f29935713aa2cd52268070e38",
       "source_mode": "100644",
-      "source_sha256": "d3c4df6048bde0ceeb92348c418c8524d64ae8afd9d3ae9a56a39d0abf83ac1d",
-      "vendored_sha256": "d3c4df6048bde0ceeb92348c418c8524d64ae8afd9d3ae9a56a39d0abf83ac1d"
+      "source_sha256": "0af6e747469d5408f4bfadc543050d8229cef3389040cbde575e33450d167e50",
+      "vendored_sha256": "0af6e747469d5408f4bfadc543050d8229cef3389040cbde575e33450d167e50"
     },
     "ruflet_map/lib/src/extension.dart": {
       "classification": "exact_source",
@@ -9498,26 +9746,34 @@
     "ruflet_map/lib/src/utils/map.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_map/lib/src/utils/map.dart",
-      "source_git_blob": "826d6eb4bd994d403a16f2c005f21e162caad19b",
+      "source_git_blob": "5dcdc526c087c1619e34790ed11720fb648871ce",
       "source_mode": "100644",
-      "source_sha256": "08a12de5f378ecb679f94c151f3e38d85873d55c9a4dfa8dc707cd98814695d2",
-      "vendored_sha256": "08a12de5f378ecb679f94c151f3e38d85873d55c9a4dfa8dc707cd98814695d2"
+      "source_sha256": "2f47d55a155dfc0a1c1573a90b0b1a064bfd9365eaca7fb78069e72b7f6a06b5",
+      "vendored_sha256": "2f47d55a155dfc0a1c1573a90b0b1a064bfd9365eaca7fb78069e72b7f6a06b5"
     },
     "ruflet_map/pubspec.yaml": {
       "classification": "exact_source",
       "source_path": "ruflet_map/pubspec.yaml",
-      "source_git_blob": "3ff3ea9893b748c7a45e42fbc622090eed17dd83",
+      "source_git_blob": "ce8cf27376810366d3d7c33fe7f2e965cbe65773",
       "source_mode": "100644",
-      "source_sha256": "6740208aa7c6696ac0f3137816eb9ae9c95fbdb6d4d5df9aaa6f660fecb63208",
-      "vendored_sha256": "6740208aa7c6696ac0f3137816eb9ae9c95fbdb6d4d5df9aaa6f660fecb63208"
+      "source_sha256": "1e6970e2980b4ee7d18c0a7fa82d3c37f3732fe216b343d843bf0f9ed35340e6",
+      "vendored_sha256": "1e6970e2980b4ee7d18c0a7fa82d3c37f3732fe216b343d843bf0f9ed35340e6"
+    },
+    "ruflet_map/test/attribution_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_map/test/attribution_test.dart",
+      "source_git_blob": "6e9ee83e97371c70c307e9382dd28e1956cd9560",
+      "source_mode": "100644",
+      "source_sha256": "7fa85e453d34dd364511be596d0c3c49d66bd2fdab8756374ec7e3a2c9590cb7",
+      "vendored_sha256": "7fa85e453d34dd364511be596d0c3c49d66bd2fdab8756374ec7e3a2c9590cb7"
     },
     "ruflet_map/test/cupertino_attribution_test.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_map/test/cupertino_attribution_test.dart",
-      "source_git_blob": "9018b340202171ac72004755ca945ead5ac70e1c",
+      "source_git_blob": "d41cb02a6e13ac4bc76df15f8b0193db61fe5e0c",
       "source_mode": "100644",
-      "source_sha256": "ede9b43d331d557700d4fd9e8ae006480e950b1c962d9ba83d0eed08a137e9ea",
-      "vendored_sha256": "ede9b43d331d557700d4fd9e8ae006480e950b1c962d9ba83d0eed08a137e9ea"
+      "source_sha256": "7d1c0364cc6f5e023f84127e62ee319090a43e431b6e140217fe4c0395cb7172",
+      "vendored_sha256": "7d1c0364cc6f5e023f84127e62ee319090a43e431b6e140217fe4c0395cb7172"
     },
     "ruflet_map/test/enum_name_parsing_test.dart": {
       "classification": "exact_source",
@@ -9526,6 +9782,30 @@
       "source_mode": "100644",
       "source_sha256": "e29f14cf65aec254671ef0810d1158d655126884b5f3391a952b67d0ae8f71d7",
       "vendored_sha256": "e29f14cf65aec254671ef0810d1158d655126884b5f3391a952b67d0ae8f71d7"
+    },
+    "ruflet_map/test/layers_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_map/test/layers_test.dart",
+      "source_git_blob": "b4811ec20e5f097444cffce25a8d21cd09d2f70f",
+      "source_mode": "100644",
+      "source_sha256": "1ebd68b5a56ca7a64d8c9f41590a968d785a9c60d553431731be332b0dd6eae9",
+      "vendored_sha256": "1ebd68b5a56ca7a64d8c9f41590a968d785a9c60d553431731be332b0dd6eae9"
+    },
+    "ruflet_map/test/map_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_map/test/map_test.dart",
+      "source_git_blob": "8cbfa1c32b22ddc6ba7f44556b19a4abf1026580",
+      "source_mode": "100644",
+      "source_sha256": "80faad636db3c0ce500403dce62f3d65b2b143e799a2ba20c91cdea6a5272a1f",
+      "vendored_sha256": "80faad636db3c0ce500403dce62f3d65b2b143e799a2ba20c91cdea6a5272a1f"
+    },
+    "ruflet_map/test/support/harness.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_map/test/support/harness.dart",
+      "source_git_blob": "98fe05fb5c22b5c189a81672cf3a193770fe02f4",
+      "source_mode": "100644",
+      "source_sha256": "73a6c5eb8b4ddedc9b622f090e209e0f292ac2bf42bce187a7e7c8cc078578c0",
+      "vendored_sha256": "73a6c5eb8b4ddedc9b622f090e209e0f292ac2bf42bce187a7e7c8cc078578c0"
     },
     "ruflet_permission_handler/.gitignore": {
       "classification": "exact_source",
@@ -9746,18 +10026,18 @@
     "ruflet_secure_storage/lib/src/secure_storage.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_secure_storage/lib/src/secure_storage.dart",
-      "source_git_blob": "c62cb539cc51cfe94c221bc62e4b3c63053e67a0",
+      "source_git_blob": "2c7729caffadfb20593cf4dd03f36d471620358c",
       "source_mode": "100644",
-      "source_sha256": "02cd9b9bbfd8e4f1d61662f029d8cc61df2d1254ece578130ff68ba85ec08750",
-      "vendored_sha256": "02cd9b9bbfd8e4f1d61662f029d8cc61df2d1254ece578130ff68ba85ec08750"
+      "source_sha256": "292f391e0b7907bc1cfd364e213d5a486fc76f797bf3d72e01e99826f6d8bb49",
+      "vendored_sha256": "292f391e0b7907bc1cfd364e213d5a486fc76f797bf3d72e01e99826f6d8bb49"
     },
     "ruflet_secure_storage/lib/src/utils/secure_storage.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_secure_storage/lib/src/utils/secure_storage.dart",
-      "source_git_blob": "c6df9b168ad38049ad533c65a3047ff4121539da",
+      "source_git_blob": "2917626033b84ebafcb4c630ece55eff23100439",
       "source_mode": "100644",
-      "source_sha256": "666f86f1b7d8fa67c78b8c8f61828922b0551140eb021afd90084c418c22c657",
-      "vendored_sha256": "666f86f1b7d8fa67c78b8c8f61828922b0551140eb021afd90084c418c22c657"
+      "source_sha256": "16e4cdcc80f9061de693c517b4abd9a543e2ce60c6578c29993dccac5724bf1d",
+      "vendored_sha256": "16e4cdcc80f9061de693c517b4abd9a543e2ce60c6578c29993dccac5724bf1d"
     },
     "ruflet_secure_storage/pubspec.yaml": {
       "classification": "exact_source",
@@ -9770,10 +10050,10 @@
     "ruflet_secure_storage/test/secure_storage_test.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_secure_storage/test/secure_storage_test.dart",
-      "source_git_blob": "4da82d3cec73f7d2ce99633ed4e113042457b0e0",
+      "source_git_blob": "71c78043fef8e03ce17bee04333f6e5cc25a7016",
       "source_mode": "100644",
-      "source_sha256": "badf9a9e3034cd5ec002aebce71694067ca1da3ae78d90fa3761a936ede59866",
-      "vendored_sha256": "badf9a9e3034cd5ec002aebce71694067ca1da3ae78d90fa3761a936ede59866"
+      "source_sha256": "85a84330c2eb16014c8e890a4b97ecfb6727f9b1520fa66dc7ef40ea8cd18d78",
+      "vendored_sha256": "85a84330c2eb16014c8e890a4b97ecfb6727f9b1520fa66dc7ef40ea8cd18d78"
     },
     "ruflet_spinkit/.gitignore": {
       "classification": "exact_source",
@@ -11074,10 +11354,10 @@
     "ruflet_webview/lib/src/utils/webview.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_webview/lib/src/utils/webview.dart",
-      "source_git_blob": "c88fe0baf1d1921b2aa4cc52e9fa5c593680d7ce",
+      "source_git_blob": "5751dbbfd976703c2b7b659c55c10477f9e66cfe",
       "source_mode": "100644",
-      "source_sha256": "371f40752887a8476feda051aa4e0bed3905f551275065bbf0d636cb83592e7e",
-      "vendored_sha256": "371f40752887a8476feda051aa4e0bed3905f551275065bbf0d636cb83592e7e"
+      "source_sha256": "fda993275c1ade56b155d6eec7ad33dea8ed762c095a1a87612b2fbe53d88e16",
+      "vendored_sha256": "fda993275c1ade56b155d6eec7ad33dea8ed762c095a1a87612b2fbe53d88e16"
     },
     "ruflet_webview/lib/src/webview.dart": {
       "classification": "exact_source",
@@ -11090,10 +11370,10 @@
     "ruflet_webview/lib/src/webview_mobile_and_mac.dart": {
       "classification": "exact_source",
       "source_path": "ruflet_webview/lib/src/webview_mobile_and_mac.dart",
-      "source_git_blob": "d864979c12d83239ab8ab1949e836b7fb09ccec3",
+      "source_git_blob": "ab4aa2e22d6aaf7321a985c584ffdba5368a6d2c",
       "source_mode": "100644",
-      "source_sha256": "170b1ce269afea6e47ff174d0b17d41c4dc97e5a57e71738b4d9797d0b747e06",
-      "vendored_sha256": "170b1ce269afea6e47ff174d0b17d41c4dc97e5a57e71738b4d9797d0b747e06"
+      "source_sha256": "e1ed9e9f6d5ba1a7b6b825211df550642e822cd76807a1304eb4ccae85c8f6df",
+      "vendored_sha256": "e1ed9e9f6d5ba1a7b6b825211df550642e822cd76807a1304eb4ccae85c8f6df"
     },
     "ruflet_webview/lib/src/webview_web.dart": {
       "classification": "exact_source",
@@ -11130,10 +11410,42 @@
     "ruflet_webview/pubspec.yaml": {
       "classification": "exact_source",
       "source_path": "ruflet_webview/pubspec.yaml",
-      "source_git_blob": "4e0494b17b83ea2b4dda58daa2ce62098b892de5",
+      "source_git_blob": "c18473358772719c3ea1e713c84e39f4ccd2fb75",
       "source_mode": "100644",
-      "source_sha256": "75fe5f1489ef3971b94bbc1f38734b945450a0dd7b2945291870f38ae39c54b3",
-      "vendored_sha256": "75fe5f1489ef3971b94bbc1f38734b945450a0dd7b2945291870f38ae39c54b3"
+      "source_sha256": "458f3876f61396cd10828009795f048f211a4d19449bf574d514f100cd5b16eb",
+      "vendored_sha256": "458f3876f61396cd10828009795f048f211a4d19449bf574d514f100cd5b16eb"
+    },
+    "ruflet_webview/test/support/fake_webview_platform.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_webview/test/support/fake_webview_platform.dart",
+      "source_git_blob": "22e45f76b163ba23581a6439ed11c5e98336cb4d",
+      "source_mode": "100644",
+      "source_sha256": "68a422227f47f81f74ccd64d0a41bbab3284349fe96d137cfef2b86fbdffce76",
+      "vendored_sha256": "68a422227f47f81f74ccd64d0a41bbab3284349fe96d137cfef2b86fbdffce76"
+    },
+    "ruflet_webview/test/support/harness.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_webview/test/support/harness.dart",
+      "source_git_blob": "4549b684a65cf49888362b003a26d4faf6d7f67e",
+      "source_mode": "100644",
+      "source_sha256": "ce75caa1e318600c4ecc78b7a9154be5594ee632115476e2230566b64a6d60c3",
+      "vendored_sha256": "ce75caa1e318600c4ecc78b7a9154be5594ee632115476e2230566b64a6d60c3"
+    },
+    "ruflet_webview/test/webview_in_view_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_webview/test/webview_in_view_test.dart",
+      "source_git_blob": "a9dfbaeaf2d6809338d95c2cff42d39ccae27d10",
+      "source_mode": "100644",
+      "source_sha256": "e37680fe24ba30cd8596e0d3813bb5237166906fc83896fd931994f61a68e402",
+      "vendored_sha256": "e37680fe24ba30cd8596e0d3813bb5237166906fc83896fd931994f61a68e402"
+    },
+    "ruflet_webview/test/webview_test.dart": {
+      "classification": "exact_source",
+      "source_path": "ruflet_webview/test/webview_test.dart",
+      "source_git_blob": "5c32de294d96017ec686caf19512efe0dc23d2bf",
+      "source_mode": "100644",
+      "source_sha256": "1e81f18c31b572ad20888e3a67cf69cc489ded30f925a81785b258019ef74b93",
+      "vendored_sha256": "1e81f18c31b572ad20888e3a67cf69cc489ded30f925a81785b258019ef74b93"
     }
   }
 }

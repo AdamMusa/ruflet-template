@@ -472,8 +472,8 @@ class _CupertinoCodeFieldState extends State<CupertinoCodeField> {
 
   Widget _buildGutter() {
     final lineNumberSize = textStyle.fontSize;
-    final lineNumberColor =
-        widget.gutterStyle.textStyle?.color ?? textStyle.color?.withOpacity(.5);
+    final lineNumberColor = widget.gutterStyle.textStyle?.color ??
+        textStyle.color?.withValues(alpha: .5);
 
     final lineNumberTextStyle =
         (widget.gutterStyle.textStyle ?? textStyle).copyWith(
@@ -531,11 +531,10 @@ class _CupertinoCodeFieldState extends State<CupertinoCodeField> {
   }
 
   double _getCaretHeight(TextPainter textPainter) {
-    final double? caretFullHeight = textPainter.getFullHeightForCaret(
+    return textPainter.getFullHeightForCaret(
       widget.controller.selection.base,
       Rect.zero,
     );
-    return caretFullHeight ?? 0;
   }
 
   double _getPopupLeftOffset(TextPainter textPainter) {

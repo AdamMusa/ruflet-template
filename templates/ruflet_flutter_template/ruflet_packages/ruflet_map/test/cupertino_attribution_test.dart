@@ -53,4 +53,54 @@ void main() {
     expect(find.text('© Source'), findsNothing);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+      'a new map event stream dismisses the popup only once the user opened it',
+      (tester) async {
+    final first = StreamController<void>.broadcast();
+    final second = StreamController<void>.broadcast();
+    final events = ValueNotifier<Stream<void>>(first.stream);
+    await tester.pumpWidget(CupertinoApp(
+        home: ValueListenableBuilder<Stream<void>>(
+      valueListenable: events,
+      builder: (context, stream, _) => CupertinoMapAttribution(
+        attributions: const [Text('© Source')],
+        logos: const [],
+        backgroundColor: CupertinoColors.white,
+        initialDisplayDuration: const Duration(seconds: 1),
+        mapEvents: stream,
+      ),
+    )));
+
+    // During the initial display a rebuild with another stream does not
+    // start listening, so its events leave the popup open.
+    events.value = second.stream;
+    await tester.pump();
+    second.add(null);
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('© Source'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 1));
+    expect(find.text('© Source'), findsNothing);
+
+    // Once the user opened it, the popup follows the new stream only.
+    await tester.tap(find.byIcon(CupertinoIcons.info));
+    await tester.pump();
+    events.value = first.stream;
+    await tester.pump();
+    second.add(null);
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('© Source'), findsOneWidget);
+    first.add(null);
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('© Source'), findsNothing);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    events.dispose();
+    await first.close();
+    await second.close();
+    expect(tester.takeException(), isNull);
+  });
 }

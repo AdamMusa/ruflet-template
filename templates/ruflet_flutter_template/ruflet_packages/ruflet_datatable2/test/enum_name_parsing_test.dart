@@ -9,6 +9,12 @@ void main() {
     expect(parseColumnSize('l'), ColumnSize.L);
   });
 
+  test('column sizes accept the names Ruby sends', () {
+    expect(parseColumnSize('small'), ColumnSize.S);
+    expect(parseColumnSize('medium'), ColumnSize.M);
+    expect(parseColumnSize('Large'), ColumnSize.L);
+  });
+
   test('unknown or missing column sizes keep the default', () {
     expect(parseColumnSize('xl', ColumnSize.M), ColumnSize.M);
     expect(parseColumnSize(null, ColumnSize.S), ColumnSize.S);

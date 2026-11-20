@@ -76,9 +76,7 @@ InteractionOptions? parseInteractionOptions(dynamic value,
   return InteractionOptions(
     enableMultiFingerGestureRace:
         parseBool(value["enable_multi_finger_gesture_race"], false)!,
-    pinchMoveThreshold: parseDouble(
-      value["pinch_move_threshold"],
-    )!,
+    pinchMoveThreshold: parseDouble(value["pinch_move_threshold"], 40.0)!,
     scrollWheelVelocity: parseDouble(value["scroll_wheel_velocity"], 0.005)!,
     pinchZoomThreshold: parseDouble(value["pinch_zoom_threshold"], 0.5)!,
     rotationThreshold: parseDouble(value["rotation_threshold"], 20.0)!,
@@ -171,14 +169,30 @@ CursorRotationBehaviour? parseCursorRotationBehaviour(String? value,
 CursorKeyboardRotationOptions? parseCursorKeyboardRotationOptions(dynamic value,
     [CursorKeyboardRotationOptions? defaultValue]) {
   if (value == null) return defaultValue;
+  // The wire names keys by label ("Control Left", as Flet's KeyboardKey and
+  // LogicalKeyboardKey.keyLabel do), never as Dart key objects. One key name
+  // (Ruby's `trigger_keys: :control_left`) is a list of one; a value that is
+  // neither is ignored, as if Ruby sent no trigger keys.
+  final keys = value["trigger_keys"];
+  final triggerKeys = switch (keys) {
+    List() => keys.map((key) => _keyName(key.toString())).toSet(),
+    String() => {_keyName(keys)},
+    _ => null,
+  };
   return CursorKeyboardRotationOptions(
       setNorthOnClick: parseBool(value["set_north_on_click"], true)!,
       behaviour: parseCursorRotationBehaviour(
           value["behaviour"], CursorRotationBehaviour.offset)!,
-      isKeyTrigger: (LogicalKeyboardKey key) {
-        return (value["trigger_keys"] as List).contains(key);
-      });
+      // Without trigger keys, flutter_map triggers on the Control keys.
+      isKeyTrigger: triggerKeys == null
+          ? null
+          : (LogicalKeyboardKey key) =>
+              triggerKeys.contains(_keyName(key.keyLabel)));
 }
+
+/// "Control Left", "control_left" and "CONTROL_LEFT" name the same key.
+String _keyName(String name) =>
+    name.trim().toLowerCase().replaceAll(RegExp(r'[\s_]+'), ' ');
 
 // Crs? parseCrs(dynamic value, [Crs? defaultValue]) {
 //   if (value == null) return defaultValue;

@@ -1,3 +1,4 @@
+// ruflet-coverage: LocalAuthentication
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -102,6 +103,52 @@ void main() {
     expect(
         Extension().createService(control('LocalAuthentication')), isNotNull);
     expect(Extension().createService(control('SecureStorage')), isNull);
+  });
+
+  test('a service mounted from its wire map answers, and stops on dispose',
+      () async {
+    final backend = RufletBackend(
+        pageUri: Uri.parse('ruflet://local-auth-test'),
+        assetsDir: '',
+        extensions: [Extension()],
+        multiView: false);
+    // Ruby's LocalAuthentication KEYWORDS are only data and key.
+    final control = Control.fromMap(
+        {'_c': 'LocalAuthentication', '_i': 7, 'data': 'vault', 'key': 'auth'},
+        backend);
+    final service = Extension().createService(control)!..init();
+    control.attach();
+    addTearDown(control.detach);
+
+    // Exactly what Ruby's authenticate(localized_reason:) sends by default.
+    expect(
+        await control.invokeMethod(
+            'authenticate',
+            {
+              'localized_reason': 'Unlock',
+              'biometric_only': false,
+              'sensitive_transaction': true,
+              'persist_across_backgrounding': false,
+            },
+            _timeout),
+        isTrue);
+    expect(platform.calls, ['authenticate']);
+
+    service.dispose();
+    for (final method in [
+      'authenticate',
+      'can_check_biometrics',
+      'is_device_supported',
+      'get_available_biometrics',
+      'stop_authentication',
+    ]) {
+      expect(
+          await error(control, method, {'localized_reason': 'Unlock'}),
+          isA<UnsupportedError>().having((e) => e.message, 'message',
+              contains('LocalAuthentication(7).$method is not supported')),
+          reason: method);
+    }
+    expect(platform.calls, ['authenticate']);
   });
 
   test('authenticate passes the reason and options to local_auth', () async {

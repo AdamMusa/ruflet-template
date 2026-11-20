@@ -4,16 +4,24 @@ import '../models/control.dart';
 import 'numbers.dart';
 import 'widget_state.dart';
 
+/// The width a side gets when the map does not name it: the map's `all`
+/// value (Ruby's `{"all" => 8}` shorthand), else 0.
+double _unnamedSide(dynamic value) =>
+    value is Map ? parseDouble(value['all'], 0)! : 0;
+
+/// Edge insets are a number (all sides), a `left/top/right/bottom` map, or
+/// an `{all: n}` map; in a map, `all` fills the sides it does not name.
 EdgeInsets? parseEdgeInsets(dynamic value, [EdgeInsets? defaultValue]) {
   if (value == null) return defaultValue;
   if (value is int || value is double) {
     return EdgeInsets.all(parseDouble(value, 0)!);
   }
+  final all = _unnamedSide(value);
   return EdgeInsets.fromLTRB(
-      parseDouble(value['left'], 0)!,
-      parseDouble(value['top'], 0)!,
-      parseDouble(value['right'], 0)!,
-      parseDouble(value['bottom'], 0)!);
+      parseDouble(value['left'], all)!,
+      parseDouble(value['top'], all)!,
+      parseDouble(value['right'], all)!,
+      parseDouble(value['bottom'], all)!);
 }
 
 EdgeInsets? parseMargin(dynamic value, [EdgeInsets? defaultValue]) {
@@ -30,11 +38,12 @@ EdgeInsetsDirectional? parseEdgeInsetsDirectional(dynamic value,
   if (value is int || value is double) {
     return EdgeInsetsDirectional.all(parseDouble(value, 0)!);
   }
+  final all = _unnamedSide(value);
   return EdgeInsetsDirectional.fromSTEB(
-      parseDouble(value['left'], 0)!,
-      parseDouble(value['top'], 0)!,
-      parseDouble(value['right'], 0)!,
-      parseDouble(value['bottom'], 0)!);
+      parseDouble(value['left'], all)!,
+      parseDouble(value['top'], all)!,
+      parseDouble(value['right'], all)!,
+      parseDouble(value['bottom'], all)!);
 }
 
 WidgetStateProperty<EdgeInsets?>? parseWidgetStateEdgeInsets(dynamic value,

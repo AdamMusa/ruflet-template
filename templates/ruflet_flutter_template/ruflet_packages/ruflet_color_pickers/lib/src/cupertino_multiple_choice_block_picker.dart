@@ -1,5 +1,6 @@
 import 'package:ruflet/ruflet.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart' show listEquals;
 import 'cupertino_picker/cupertino_picker.dart';
 
 class CupertinoMultipleChoiceBlockPickerControl extends StatefulWidget {
@@ -17,9 +18,15 @@ class _CupertinoMultipleChoiceBlockPickerControlState
     extends State<CupertinoMultipleChoiceBlockPickerControl> {
   List<Color> _pickerColors = [PaletteColors.black];
 
+  // The picker keeps the selection of its first build; rebuild it when Ruby
+  // changes `colors`, not when the control echoes the user's own toggles.
+  List<int>? _selection;
+  int _rubyColorsVersion = 0;
+
   void _onColorsChanged(List<Color> colors) {
     setState(() {
       _pickerColors = colors;
+      _selection = [for (final color in colors) color.toARGB32()];
     });
     final colorsHex = colors.map((color) => color.toHex()).toList();
     widget.control.updateProperties({"colors": colorsHex}, notify: true);
@@ -43,6 +50,11 @@ class _CupertinoMultipleChoiceBlockPickerControlState
       }
     }
     if (parsedColors.isNotEmpty) {
+      final selection = [for (final color in parsedColors) color.toARGB32()];
+      if (!listEquals(selection, _selection)) {
+        _selection = selection;
+        _rubyColorsVersion++;
+      }
       _pickerColors = parsedColors;
     } else if (_pickerColors.isEmpty) {
       _pickerColors = [PaletteColors.black];
@@ -61,11 +73,13 @@ class _CupertinoMultipleChoiceBlockPickerControlState
 
     final picker = availableColors.isNotEmpty
         ? MultipleChoiceBlockPicker(
+            key: ValueKey(_rubyColorsVersion),
             pickerColors: _pickerColors,
             onColorsChanged: _onColorsChanged,
             availableColors: availableColors,
           )
         : MultipleChoiceBlockPicker(
+            key: ValueKey(_rubyColorsVersion),
             pickerColors: _pickerColors,
             onColorsChanged: _onColorsChanged,
           );

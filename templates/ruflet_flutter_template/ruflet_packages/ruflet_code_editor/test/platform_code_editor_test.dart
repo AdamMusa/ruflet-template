@@ -1,3 +1,4 @@
+// ruflet-coverage: CodeEditor
 import 'package:ruflet/ruflet.dart';
 import 'package:ruflet_code_editor/src/code_editor.dart';
 import 'package:flutter/cupertino.dart';
