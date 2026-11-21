@@ -5,6 +5,7 @@ import '../models/control.dart';
 import '../utils/alignment.dart';
 import '../utils/numbers.dart';
 import 'base_controls.dart';
+import 'end_reached_listener.dart';
 import 'scroll_notification_control.dart';
 import 'scrollable_control.dart';
 
@@ -58,6 +59,10 @@ class RowControl extends StatelessWidget {
 
     if (control.getBool("on_scroll", false)!) {
       child = ScrollNotificationControl(control: control, child: child);
+    }
+
+    if (control.getBool("on_end_reached", false)!) {
+      child = EndReachedListener(control: control, child: child);
     }
 
     return LayoutControl(control: control, child: child);

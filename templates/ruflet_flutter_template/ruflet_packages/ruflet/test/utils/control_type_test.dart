@@ -29,7 +29,16 @@ void main() {
     expect(canonicalControlType('CupertinoDialogAction'), 'Button');
     expect(canonicalControlType('CupertinoPicker'), 'Picker');
     expect(canonicalControlType('CupertinoTimerPicker'), 'TimerPicker');
+    expect(canonicalControlType('CupertinoSliverNavigationBar'),
+        'SliverAppBar');
     expect(canonicalControlType('DropdownM2'), 'Dropdown');
+  });
+
+  test('a legacy alias receives the canonical event under its own name', () {
+    expect(controlTypeAliasEventName('DropdownM2', 'select'), 'change');
+    expect(controlTypeAliasEventName('DropdownM2', 'focus'), 'focus');
+    expect(controlTypeAliasEventName('Dropdown', 'select'), 'select');
+    expect(controlTypeAliasEventName('Container', 'click'), 'click');
   });
 
   test('unrelated control names are unchanged', () {

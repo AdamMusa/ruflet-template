@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../extensions/control.dart';
 import '../models/control.dart';
+import '../services/client_action.dart' show runControlClientActions;
 import '../utils/borders.dart';
 import '../utils/colors.dart';
 import '../utils/launch_url.dart';
@@ -48,6 +49,7 @@ class MaterialFloatingActionButtonControl extends StatelessWidget {
     Function()? onPressed = control.disabled
         ? null
         : () {
+            runControlClientActions(control);
             if (url != null) {
               openWebBrowser(url);
             }

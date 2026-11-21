@@ -16,6 +16,10 @@ class _MaterialBlockPickerControlState
     extends State<MaterialBlockPickerControl> {
   Color _pickerColor = Colors.black;
 
+  // The picker keeps the selection of its first build; rebuild it when Ruby
+  // changes `color`, not when the control echoes the user's own pick.
+  int _rubyColorVersion = 0;
+
   void _onColorChanged(Color color) {
     setState(() {
       _pickerColor = color;
@@ -31,8 +35,9 @@ class _MaterialBlockPickerControlState
 
     final controlColor =
         widget.control.getColor("color", context) ?? Colors.black;
-    if (controlColor.value != _pickerColor.value) {
+    if (controlColor.toARGB32() != _pickerColor.toARGB32()) {
       _pickerColor = controlColor;
+      _rubyColorVersion++;
     }
 
     final rawColors = widget.control.get("available_colors");
@@ -48,11 +53,13 @@ class _MaterialBlockPickerControlState
     }
     final picker = availableColors.isNotEmpty
         ? BlockPicker(
+            key: ValueKey(_rubyColorVersion),
             pickerColor: _pickerColor,
             onColorChanged: _onColorChanged,
             availableColors: availableColors,
           )
         : BlockPicker(
+            key: ValueKey(_rubyColorVersion),
             pickerColor: _pickerColor,
             onColorChanged: _onColorChanged,
           );

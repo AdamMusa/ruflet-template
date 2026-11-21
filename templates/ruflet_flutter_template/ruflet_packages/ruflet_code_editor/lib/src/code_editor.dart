@@ -24,6 +24,7 @@ class _CodeEditorControlState extends State<CodeEditorControl> {
   TextSelection? _selection;
   String _value = "";
   String? _languageName;
+  bool _applyingRubyChange = false;
 
   @override
   void initState() {
@@ -78,7 +79,7 @@ class _CodeEditorControlState extends State<CodeEditorControl> {
     _languageName = widget.control.get("language", "")!;
     return RufletCodeController(
       text: _initialValueFromControl(),
-      language: allLanguages[_languageName!.toLowerCase()],
+      language: highlightEntry(allLanguages, _languageName),
     );
   }
 
@@ -99,7 +100,34 @@ class _CodeEditorControlState extends State<CodeEditorControl> {
     _controller.fullText = value;
   }
 
+  /// Applies a value, selection or language Ruby set. It is Ruby's own
+  /// change, not the user's, so it is not reported as on_change or
+  /// on_selection_change and the value is not written back. (The core
+  /// TextField also does not report a Ruby value as on_change, but it does
+  /// report a selection Ruby sets as on_selection_change.)
+  void _applyRubyChange(VoidCallback change) {
+    _applyingRubyChange = true;
+    try {
+      change();
+    } finally {
+      _applyingRubyChange = false;
+      _value = _readValue();
+      _selection = _controller.selection;
+    }
+  }
+
+  /// Writes back the selection the editor uses when Ruby's copy no longer
+  /// matches it, so Ruby does not keep offsets past the end of its own value.
+  void _writeBackSelection() {
+    final selection =
+        _controller.selection.isValid ? _controller.selection : null;
+    if (widget.control.getTextSelection("selection") != selection) {
+      widget.control.updateProperties({"selection": selection?.toMap()});
+    }
+  }
+
   void _handleControllerChange() {
+    if (_applyingRubyChange) return;
     final value = _readValue();
     final selection = _controller.selection;
     final selectionChanged = selection != _selection;
@@ -153,18 +181,19 @@ class _CodeEditorControlState extends State<CodeEditorControl> {
       _controller.removeListener(_handleControllerChange);
       _controller.dispose();
       _controller = _createController();
-      _value = _readValue();
       _controller.addListener(_handleControllerChange);
-      if (previousSelection.isValid) {
-        _controller.selection = previousSelection;
-      }
+      _applyRubyChange(() {
+        if (previousSelection.isValid) {
+          _controller.selection = previousSelection;
+        }
+      });
     }
 
     final value = widget.control.getString("value");
     final controllerValue = _readValue();
-    if (value != null && value != controllerValue) {
-      _setValue(value);
-      _value = value;
+    final valueChanged = value != null && value != controllerValue;
+    if (valueChanged) {
+      _applyRubyChange(() => _setValue(value));
     }
 
     final explicitSelection = widget.control.getTextSelection(
@@ -174,7 +203,14 @@ class _CodeEditorControlState extends State<CodeEditorControl> {
     );
     if (explicitSelection != null &&
         explicitSelection != _controller.selection) {
-      _controller.selection = explicitSelection;
+      _applyRubyChange(() => _controller.selection = explicitSelection);
+    }
+    // Ruby's selection had to be clamped to the text: Ruby set a shorter
+    // value or a selection past the end. (Setting a value clears the
+    // controller's selection, so the cursor after a Ruby value is always
+    // Ruby's selection, clamped.)
+    if (explicitSelection != widget.control.getTextSelection("selection")) {
+      _writeBackSelection();
     }
 
     final autofocus = widget.control.getBool("autofocus", false)!;

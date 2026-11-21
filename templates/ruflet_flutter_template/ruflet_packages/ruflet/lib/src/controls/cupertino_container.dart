@@ -2,6 +2,8 @@ import 'package:flutter/cupertino.dart';
 
 import '../extensions/control.dart';
 import '../models/control.dart';
+import '../services/client_action.dart'
+    show controlHasClientActions, runControlClientActions;
 import '../utils/alignment.dart';
 import '../utils/animations.dart';
 import '../utils/borders.dart';
@@ -32,8 +34,13 @@ class CupertinoContainerControl extends StatelessWidget {
     final onLongPress = control.getBool("on_long_press", false)!;
     final onHover = control.getBool("on_hover", false)!;
     final url = control.getUrl("url");
-    final interactive =
-        onClick || onTapDown || onLongPress || onHover || url != null;
+    final hasAction = controlHasClientActions(control);
+    final interactive = onClick ||
+        onTapDown ||
+        onLongPress ||
+        onHover ||
+        url != null ||
+        hasAction;
     final animation = control.getAnimation("animate");
     final ownsSize = control.getAnimation("animate_size") == null;
     final ownsMargin = control.getAnimation("animate_margin") == null;
@@ -94,7 +101,7 @@ class CupertinoContainerControl extends StatelessWidget {
         pressedOpacity: control.getBool("ink", false)!
             ? control.getDouble("opacity_on_click", 0.4)!
             : 1,
-        cursor: onClick || onTapDown || url != null
+        cursor: onClick || onTapDown || url != null || hasAction
             ? SystemMouseCursors.click
             : MouseCursor.defer,
         onHover:
@@ -104,8 +111,9 @@ class CupertinoContainerControl extends StatelessWidget {
             : null,
         onLongPress:
             onLongPress ? () => control.triggerEvent("long_press") : null,
-        onTap: onClick || url != null
+        onTap: onClick || url != null || hasAction
             ? () {
+                if (hasAction) runControlClientActions(control);
                 if (url != null) openWebBrowser(url);
                 if (onClick) control.triggerEvent("click");
               }

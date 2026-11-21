@@ -17,6 +17,12 @@ class _WebviewMobileAndMacState extends State<WebviewMobileAndMac> {
   bool _scrollHandlerRegistered = false;
   bool _consoleHandlerRegistered = false;
   bool _alertHandlerRegistered = false;
+  String? _loadedUrl;
+  String? _loadedMethod;
+
+  /// The urls this view reported to Ruby (`page_started`, `page_ended`,
+  /// `url_change`) since it last loaded the control's `url`.
+  final Set<String> _reportedUrls = {};
 
   bool _shouldPreventNavigation(String url) {
     final links = widget.control.get<List>("prevent_links");
@@ -88,13 +94,13 @@ class _WebviewMobileAndMacState extends State<WebviewMobileAndMac> {
           widget.control.triggerEvent("progress", progress);
         },
         onUrlChange: (UrlChange url) {
-          widget.control.triggerEvent("url_change", url.url);
+          _reportUrl("url_change", url.url);
         },
         onPageStarted: (String url) {
-          widget.control.triggerEvent("page_started", url);
+          _reportUrl("page_started", url);
         },
         onPageFinished: (String url) {
-          widget.control.triggerEvent("page_ended", url);
+          _reportUrl("page_ended", url);
         },
         onWebResourceError: (WebResourceError error) {
           widget.control.triggerEvent("web_resource_error", error.description);
@@ -107,13 +113,54 @@ class _WebviewMobileAndMacState extends State<WebviewMobileAndMac> {
       ),
     );
 
-    // request
-    controller.loadRequest(
-        Uri.parse(widget.control.getString("url", "https://flet.dev")!),
-        method: parseLoadRequestMethod(
-            widget.control.getString("method"), LoadRequestMethod.get)!);
-
+    _loadUrlIfChanged();
     _setOptionalEventHandlers();
+  }
+
+  @override
+  void didUpdateWidget(covariant WebviewMobileAndMac oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.control, widget.control)) {
+      // A parent that does not key its children by id (Stack, Column, Row,
+      // Container content) keeps this state for a new WebView control Ruby
+      // puts in the same slot, so Ruby's invokes on it must reach this view.
+      // Its url follows the same rule as a url update: the page the user is
+      // on is kept unless the url or method is one this view has not had.
+      oldWidget.control.removeInvokeMethodListener(_invokeMethod);
+      widget.control.addInvokeMethodListener(_invokeMethod);
+    }
+    _loadUrlIfChanged();
+  }
+
+  /// Sends [eventName] with [url] to Ruby and, when Ruby subscribed to it,
+  /// remembers that Ruby has been told about [url].
+  void _reportUrl(String eventName, String? url) {
+    widget.control.triggerEvent(eventName, url);
+    if (url != null && widget.control.hasEventHandler(eventName)) {
+      _reportedUrls.add(url);
+    }
+  }
+
+  /// Loads the control's `url` with its `method` when either differs from
+  /// the last request made for them, so a `url` Ruby changes after mounting
+  /// is navigated to, while other updates keep the page the user is on.
+  ///
+  /// A `url` this view itself reported to Ruby since its last load is not
+  /// loaded again: that is Ruby writing back a page the user navigated to
+  /// (the ruflet_rails shell stores every reported url in `url`, and its next
+  /// update sends it), and reloading it would drop the user's form input and
+  /// scroll position, or replace a page a POST rendered with a GET.
+  void _loadUrlIfChanged() {
+    final url = widget.control.getString("url", "https://flet.dev")!;
+    final method = widget.control.getString("method");
+    if (url == _loadedUrl && method == _loadedMethod) return;
+    final echoed = method == _loadedMethod && _reportedUrls.contains(url);
+    _loadedUrl = url;
+    _loadedMethod = method;
+    if (echoed) return;
+    _reportedUrls.clear();
+    controller.loadRequest(Uri.parse(url),
+        method: parseLoadRequestMethod(method, LoadRequestMethod.get)!);
   }
 
   Future<dynamic> _invokeMethod(String name, dynamic args) async {
@@ -155,16 +202,18 @@ class _WebviewMobileAndMacState extends State<WebviewMobileAndMac> {
       case "get_user_agent":
         return await controller.getUserAgent();
       case "load_file":
-        await controller.loadFile(args["path"]);
+        await controller.loadFile(
+            requireInvokeArg(args, "path", "WebView.$name").toString());
         break;
       case "load_html":
-        await controller.loadHtmlString(args["value"],
-            baseUrl: args["base_url"]);
+        await controller.loadHtmlString(
+            requireInvokeArg(args, "value", "WebView.$name").toString(),
+            baseUrl: args["base_url"]?.toString());
         break;
       case "load_request":
         var url = args["url"];
         if (url != null) {
-          await controller.loadRequest(Uri.parse(url),
+          await controller.loadRequest(Uri.parse(url.toString()),
               method: parseLoadRequestMethod(
                   args["method"], LoadRequestMethod.get)!);
         }
@@ -172,7 +221,7 @@ class _WebviewMobileAndMacState extends State<WebviewMobileAndMac> {
       case "run_javascript":
         var javascript = args["value"];
         if (javascript != null) {
-          await controller.runJavaScript(javascript);
+          await controller.runJavaScript(javascript.toString());
         }
         break;
       case "scroll_to":

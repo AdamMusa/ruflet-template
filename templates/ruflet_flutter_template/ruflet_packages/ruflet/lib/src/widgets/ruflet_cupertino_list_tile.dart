@@ -140,6 +140,7 @@ class RufletCupertinoListTile extends StatefulWidget {
     this.leading,
     this.trailing,
     this.onTap,
+    this.onLongPress,
     this.backgroundColor,
     this.backgroundColorActivated,
     this.padding,
@@ -203,6 +204,7 @@ class RufletCupertinoListTile extends StatefulWidget {
     this.leading,
     this.trailing,
     this.onTap,
+    this.onLongPress,
     this.backgroundColor,
     this.backgroundColorActivated,
     this.padding,
@@ -239,6 +241,10 @@ class RufletCupertinoListTile extends StatefulWidget {
   /// However, if this function is a `void Function()`, then the tile is active
   /// only for the duration of invocation.
   final FutureOr<void> Function()? onTap;
+
+  /// Called when the user long-presses the tile. If both [onTap] and
+  /// [onLongPress] are `null`, the tile does not react to gestures.
+  final VoidCallback? onLongPress;
 
   /// The [backgroundColor] of the tile in normal state. Once the tile is
   /// tapped, the background color switches to [backgroundColorActivated]. It is
@@ -377,25 +383,33 @@ class _RufletCupertinoListTileState extends State<RufletCupertinoListTile> {
       ),
     );
 
-    if (widget.onTap == null) {
+    final onTap = widget.onTap;
+    if (onTap == null && widget.onLongPress == null) {
       return child;
     }
 
     return GestureDetector(
-      onTapDown: (_) => setState(() {
-        _tapped = true;
-      }),
-      onTapCancel: () => setState(() {
-        _tapped = false;
-      }),
-      onTap: () async {
-        await widget.onTap!();
-        if (mounted) {
-          setState(() {
-            _tapped = false;
-          });
-        }
-      },
+      onTapDown: onTap == null
+          ? null
+          : (_) => setState(() {
+                _tapped = true;
+              }),
+      onTapCancel: onTap == null
+          ? null
+          : () => setState(() {
+                _tapped = false;
+              }),
+      onTap: onTap == null
+          ? null
+          : () async {
+              await onTap();
+              if (mounted) {
+                setState(() {
+                  _tapped = false;
+                });
+              }
+            },
+      onLongPress: widget.onLongPress,
       behavior: HitTestBehavior.opaque,
       child: child,
     );

@@ -1,0 +1,14 @@
+{
+  "fixture": "radius",
+  "design": "android",
+  "size": {
+    "w": 36.0,
+    "h": 36.0
+  },
+  "ticking": true,
+  "native": {
+    "type": "CircularProgressIndicator",
+    "value": null
+  },
+  "semantics": []
+}

@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:equatable/equatable.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:ruflet/ruflet.dart';
@@ -53,19 +52,34 @@ TooltipDirection? parseTooltipDirection(
   TooltipDirection? defaultValue,
 ]) {
   if (value == null) return defaultValue;
-  return TooltipDirection.values.firstWhereOrNull(
-        (e) => e.name.toLowerCase() == value.toLowerCase(),
-      ) ??
-      defaultValue;
+  return parseEnum(TooltipDirection.values, value, defaultValue);
 }
 
-BarTouchTooltipData? parseBarTouchTooltipData(
+/// The touch tooltip. Flet's Python always sends a chart `tooltip`; Ruby only
+/// when the app sets one. Without it the chart keeps fl_chart's own tooltip
+/// (color, label style, value text), as before, and only a rod's own
+/// `tooltip` or `show_tooltip: false` changes what that rod shows.
+BarTouchTooltipData parseBarTouchTooltipData(
   BuildContext context,
-  Control control, [
-  BarTouchTooltipData? defaultValue,
-]) {
-  var tooltip = control.get("tooltip");
-  if (tooltip == null) return defaultValue;
+  Control control,
+) {
+  final tooltip = chartTooltipConfig(control);
+
+  BarTooltipItem? getTooltipItem(BarChartGroupData group, int groupIndex,
+      BarChartRodData rodData, int rodIndex) {
+    final rod =
+        control.children("groups")[groupIndex].children("rods")[rodIndex];
+    return parseBarTooltipItem(
+        rod,
+        context,
+        tooltip == null
+            ? defaultBarTooltipItem(group, groupIndex, rodData, rodIndex)
+            : null);
+  }
+
+  if (tooltip == null) {
+    return BarTouchTooltipData(getTooltipItem: getTooltipItem);
+  }
 
   final theme = RufletStyleTheme.of(context);
 
@@ -95,25 +109,27 @@ BarTouchTooltipData? parseBarTouchTooltipData(
       tooltip["horizontal_alignment"],
       FLHorizontalAlignment.center,
     )!,
-    getTooltipItem: (group, groupIndex, rod, rodIndex) {
-      var rod =
-          control.children("groups")[groupIndex].children("rods")[rodIndex];
-      return parseBarTooltipItem(rod, context);
-    },
+    getTooltipItem: getTooltipItem,
   );
 }
 
-BarTooltipItem? parseBarTooltipItem(Control rod, BuildContext context) {
+/// What [rod] shows when touched. [fallback] is fl_chart's default item when
+/// the chart has no `tooltip` of its own: a rod without a tooltip shows it,
+/// and a rod with one keeps its label style. With a chart `tooltip`, a rod
+/// without one shows its value.
+BarTooltipItem? parseBarTooltipItem(Control rod, BuildContext context,
+    [BarTooltipItem? fallback]) {
   if (!rod.getBool("show_tooltip", true)!) return null;
 
-  var tooltip = rod.internals?["tooltip"];
-  if (tooltip == null) return null;
+  final own = chartItemTooltip(rod);
+  if (own == null && fallback != null) return fallback;
+  var tooltip = own ?? const {};
 
   final theme = RufletStyleTheme.of(context);
   var tooltipTextStyle = parseTextStyle(
     tooltip["text_style"],
     theme,
-    const TextStyle(),
+    fallback?.textStyle ?? const TextStyle(),
   )!;
   if (tooltipTextStyle.color == null) {
     tooltipTextStyle = tooltipTextStyle.copyWith(
@@ -201,8 +217,11 @@ BarChartRodData parseBarChartRodData(
       color: bgcolor,
       gradient: backgroundGradient,
     ),
+    // Ruby's markup (<bar-chart-rod-stack-item>) and older Flet send the
+    // items as `rod_stack_items`; current Flet as `stack_items`.
     rodStackItems: rod
-        .children("stack_items")
+        .children(
+            rod.get("stack_items") != null ? "stack_items" : "rod_stack_items")
         .map(
           (rodStackItem) => parseBarChartRodStackItem(
             rodStackItem,
@@ -235,7 +254,5 @@ BarChartRodStackItem parseBarChartRodStackItem(
 BarChartAlignment? parseBarChartAlignment(String? value,
     [BarChartAlignment? defaultValue]) {
   if (value == null) return defaultValue;
-  return BarChartAlignment.values.firstWhereOrNull(
-          (e) => e.name.toLowerCase() == value.toLowerCase()) ??
-      defaultValue;
+  return parseEnum(BarChartAlignment.values, value, defaultValue);
 }

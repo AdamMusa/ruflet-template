@@ -18,12 +18,32 @@ class _CupertinoColorPickerControlState
     extends State<CupertinoColorPickerControl> {
   Color _pickerColor = PaletteColors.black;
 
+  // Ruby's `color` and `hsv_color` both set the picker; the one Ruby changed
+  // last wins. A pick writes both back, so the HSV value must not mask a
+  // later Ruby `color`.
+  int? _lastRubyColor;
+  HSVColor? _lastRubyHsvColor;
+  bool _hsvColorWins = true;
+
+  HSVColor? _rubyHsvColor(Color? color, HSVColor? hsvColor) {
+    final argb = color?.toARGB32();
+    if (hsvColor != null && hsvColor != _lastRubyHsvColor) {
+      _hsvColorWins = true;
+    } else if (argb != _lastRubyColor) {
+      _hsvColorWins = false;
+    }
+    _lastRubyColor = argb;
+    _lastRubyHsvColor = hsvColor;
+    return _hsvColorWins ? hsvColor : null;
+  }
+
   void _onColorChanged(Color color) {
     setState(() {
       _pickerColor = color;
     });
     final colorHex = color.toHex();
-    widget.control.updateProperties({"picker_color": colorHex}, notify: true);
+    // `color` is the property Ruby sends and this control reads.
+    widget.control.updateProperties({"color": colorHex}, notify: true);
     widget.control.triggerEvent("color_change", colorHex);
   }
 
@@ -48,15 +68,16 @@ class _CupertinoColorPickerControlState
   Widget build(BuildContext context) {
     debugPrint("CupertinoColorPickerControl build: ${widget.control.id}");
 
-    final pickerHsvColor = parseHsvColor(widget.control.get("hsv_color"));
-    final controlColor =
-        widget.control.getColor("color", context) ?? PaletteColors.black;
+    final rubyColor = widget.control.getColor("color", context);
+    final pickerHsvColor = _rubyHsvColor(
+        rubyColor, parseHsvColor(widget.control.get("hsv_color")));
+    final controlColor = rubyColor ?? PaletteColors.black;
     if (pickerHsvColor != null) {
       final hsvColor = pickerHsvColor.toColor();
-      if (hsvColor.value != _pickerColor.value) {
+      if (hsvColor.toARGB32() != _pickerColor.toARGB32()) {
         _pickerColor = hsvColor;
       }
-    } else if (controlColor.value != _pickerColor.value) {
+    } else if (controlColor.toARGB32() != _pickerColor.toARGB32()) {
       _pickerColor = controlColor;
     }
 

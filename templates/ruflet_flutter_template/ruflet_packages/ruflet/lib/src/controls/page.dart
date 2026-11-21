@@ -24,6 +24,7 @@ import '../routing/router_delegate.dart';
 import '../services/service_binding.dart';
 import '../services/service_registry.dart';
 import '../utils/device_info.dart';
+import '../utils/invoke.dart';
 import '../utils/locale.dart';
 import '../utils/numbers.dart';
 import '../utils/platform.dart';
@@ -52,6 +53,10 @@ class PageControl extends StatefulWidget {
   @override
   State<PageControl> createState() => _PageControlState();
 }
+
+/// Answers one Page method Ruby invoked: receives the invoke's args, and its
+/// result (or error) is the reply.
+typedef _PageMethodHandler = Future<dynamic> Function(dynamic args);
 
 class _PageControlState extends State<PageControl> with WidgetsBindingObserver {
   final _navigatorKey = GlobalKey<NavigatorState>();
@@ -244,56 +249,92 @@ class _PageControlState extends State<PageControl> with WidgetsBindingObserver {
     }
   }
 
+  /// The methods Ruby can invoke on the Page control (wire id 1), by name.
+  /// Add a Page method by adding its entry here and its handler below; a
+  /// handler receives the invoke's args (always a map, see [invokeArgs]) and
+  /// its result or error is the reply Ruby gets.
+  late final Map<String, _PageMethodHandler> _invokeHandlers = {
+    "take_screenshot": _takeScreenshot,
+    "push_route": _pushRoute,
+    "get_device_info": _getDeviceInfo,
+    "set_allowed_device_orientations": _setAllowedDeviceOrientations,
+  };
+
   Future<dynamic> _invokeMethod(String name, dynamic args) async {
     debugPrint("Page.$name($args)");
 
-    switch (name) {
-      case "take_screenshot":
-        {
-          // Capture context up front
-          final ctx = _rootKey.currentContext;
-          if (ctx == null) return null;
-
-          // Read everything you can before awaiting
-          final delay =
-              parseDuration(args["delay"], const Duration(milliseconds: 20))!;
-          final pixelRatio = parseDouble(
-              args["pixel_ratio"], MediaQuery.of(ctx).devicePixelRatio)!;
-
-          // Wait, then ensure the widget is still mounted
-          await Future.delayed(delay);
-          if (!ctx.mounted) {
-            return null;
-          }
-
-          // Use the same (still-mounted) context
-          final boundary = ctx.findRenderObject() as RenderRepaintBoundary?;
-          if (boundary == null) return null;
-
-          final image = await boundary.toImage(pixelRatio: pixelRatio);
-          final data = await image.toByteData(format: ui.ImageByteFormat.png);
-          return data?.buffer.asUint8List();
-        }
-
-      case "push_route":
-        _routeState.route = args["route"];
-        break;
-      case "get_device_info":
-        return await getDeviceInfo();
-      case "set_allowed_device_orientations":
-        if (isMobilePlatform()) {
-          var orientations = args["orientations"]
-                  ?.map((o) => parseDeviceOrientation(o))
-                  .whereType<DeviceOrientation>()
-                  .toList() ??
-              List<DeviceOrientation>.from(DeviceOrientation.values);
-          await SystemChrome.setPreferredOrientations(orientations);
-        }
-        break;
-
-      default:
-        throw Exception("Unknown Page method: $name");
+    final handler = _invokeHandlers[name];
+    // The Page always has this listener, so a name with no handler is
+    // answered at once instead of waiting out the Ruby timeout.
+    if (handler == null) {
+      throw Exception("Unknown Page method: $name");
     }
+    return handler(args);
+  }
+
+  Future<dynamic> _takeScreenshot(dynamic args) async {
+    // Capture context up front
+    final ctx = _rootKey.currentContext;
+    if (ctx == null) return null;
+
+    // Read everything you can before awaiting
+    final delay =
+        parseDuration(args["delay"], const Duration(milliseconds: 20))!;
+    final pixelRatio =
+        parseDouble(args["pixel_ratio"], MediaQuery.of(ctx).devicePixelRatio)!;
+
+    // Wait, then ensure the widget is still mounted
+    await Future.delayed(delay);
+    if (!ctx.mounted) {
+      return null;
+    }
+
+    // Use the same (still-mounted) context
+    final boundary = ctx.findRenderObject() as RenderRepaintBoundary?;
+    if (boundary == null) return null;
+
+    final image = await boundary.toImage(pixelRatio: pixelRatio);
+    final data = await image.toByteData(format: ui.ImageByteFormat.png);
+    return data?.buffer.asUint8List();
+  }
+
+  Future<dynamic> _pushRoute(dynamic args) async {
+    _routeState.route =
+        requireInvokeArg(args, "route", "Page.push_route").toString();
+    return null;
+  }
+
+  Future<dynamic> _getDeviceInfo(dynamic args) async {
+    return await getDeviceInfo();
+  }
+
+  Future<dynamic> _setAllowedDeviceOrientations(dynamic args) async {
+    // Like Flet, only a native mobile app can constrain its orientation.
+    if (!isMobilePlatform()) {
+      throw UnsupportedError(
+          "set_allowed_device_orientations is only supported on mobile "
+          "platforms");
+    }
+    var value = args["orientations"];
+    List<DeviceOrientation> orientations;
+    if (value is List) {
+      // An empty list restores the system default.
+      orientations = [];
+      for (final name in value) {
+        final orientation = parseDeviceOrientation(name?.toString());
+        if (orientation == null) {
+          throw ArgumentError.value(name, "orientations",
+              "Page.set_allowed_device_orientations: unknown orientation");
+        }
+        if (!orientations.contains(orientation)) {
+          orientations.add(orientation);
+        }
+      }
+    } else {
+      orientations = List<DeviceOrientation>.from(DeviceOrientation.values);
+    }
+    await SystemChrome.setPreferredOrientations(orientations);
+    return null;
   }
 
   void _updateMultiViews() {

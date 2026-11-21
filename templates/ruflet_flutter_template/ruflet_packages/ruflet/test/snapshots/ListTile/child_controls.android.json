@@ -1,0 +1,106 @@
+{
+  "fixture": "child_controls",
+  "design": "android",
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 72.0
+    },
+    "elements": [
+      {
+        "icon": 984246,
+        "rect": {
+          "l": 16.0,
+          "t": 24.0,
+          "w": 24.0,
+          "h": 24.0
+        }
+      },
+      {
+        "text": "Child title",
+        "rect": {
+          "l": 56.0,
+          "t": 15.2,
+          "w": 543.0,
+          "h": 24.0
+        }
+      },
+      {
+        "text": "Child subtitle",
+        "rect": {
+          "l": 56.0,
+          "t": 39.2,
+          "w": 543.0,
+          "h": 20.0
+        }
+      },
+      {
+        "text": "Child trailing",
+        "rect": {
+          "l": 615.0,
+          "t": 28.0,
+          "w": 161.0,
+          "h": 16.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Child title\nChild subtitle\nChild trailing",
+      "flags": [
+        "isButton",
+        "hasEnabledState",
+        "isEnabled",
+        "isFocusable",
+        "hasSelectedState"
+      ],
+      "actions": [
+        "tap",
+        "longPress",
+        "focus"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 800.0,
+        "h": 72.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap text \"Child title\"",
+      "sent": [
+        {
+          "id": 2201,
+          "event": "click",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Child title\nChild subtitle\nChild trailing",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable",
+            "hasSelectedState"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 72.0
+          }
+        }
+      ]
+    }
+  ]
+}

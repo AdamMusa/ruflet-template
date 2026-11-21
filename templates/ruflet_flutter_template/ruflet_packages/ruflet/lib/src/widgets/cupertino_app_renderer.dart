@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 
 import '../models/page_design.dart';
 import '../utils/cupertino_theme.dart';
-import '../utils/style_theme.dart';
 import 'platform_app_config.dart';
 
 class CupertinoAppRenderer extends StatelessWidget {
@@ -22,10 +21,7 @@ class CupertinoAppRenderer extends StatelessWidget {
         context,
         brightness);
     Widget withStyleTheme(BuildContext context, Widget? child) =>
-        RufletStyleThemeScope(
-          data: cupertinoStyleTheme(context),
-          child: child ?? const SizedBox.shrink(),
-        );
+        cupertinoStyleThemeScope(context, child ?? const SizedBox.shrink());
     return config.home != null
         ? CupertinoApp(
             debugShowCheckedModeBanner: false,

@@ -180,31 +180,50 @@ class CupertinoMenuItemButtonControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final leading = control.buildWidget("leading");
-    final trailing = control.buildWidget("trailing_icon");
+    final trailing = control.buildWidget("trailing");
     final content = control.buildTextOrWidget("content");
+    final semanticLabel = control.getString("semantic_label");
+    Widget label = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (leading != null) ...[leading, const SizedBox(width: 8)],
+        if (content != null) Flexible(child: content),
+        if (trailing != null) ...[const SizedBox(width: 8), trailing],
+      ],
+    );
+    if (semanticLabel != null) {
+      // Same as Material MenuItemButton: the label replaces the child's text.
+      label =
+          Semantics(label: semanticLabel, excludeSemantics: true, child: label);
+    }
     final button = CupertinoButton(
       alignment: AlignmentDirectional.centerStart,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      autofocus: control.getBool("autofocus", false)!,
+      onFocusChange: (focused) =>
+          control.triggerEvent(focused ? "focus" : "blur"),
       onPressed: control.disabled || !control.getBool("on_click", false)!
           ? null
           : () => control.triggerEvent("click"),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (leading != null) ...[leading, const SizedBox(width: 8)],
-          if (content != null) Flexible(child: content),
-          if (trailing != null) ...[const SizedBox(width: 8), trailing],
-        ],
-      ),
+      child: label,
     );
-    return LayoutControl(control: control, child: button);
+    // Pointer hover (macOS, iPadOS with a pointer), as Material's onHover.
+    final onHover = control.getBool("on_hover", false)! && !control.disabled;
+    return LayoutControl(
+        control: control,
+        child: !onHover
+            ? button
+            : MouseRegion(
+                onEnter: (_) => control.triggerEvent("hover", true),
+                onExit: (_) => control.triggerEvent("hover", false),
+                child: button));
   }
 }
 
 Future<void> _showCupertinoMenu(
     BuildContext context, Control control, List<Control> entries) async {
   control.triggerEvent("open");
-  await showCupertinoModalPopup<void>(
+  final chosen = await showCupertinoModalPopup<bool>(
     context: context,
     builder: (context) => CupertinoPopupSurface(
       child: SafeArea(
@@ -216,18 +235,29 @@ Future<void> _showCupertinoMenu(
             children: entries
                 .map((entry) => GestureDetector(
                       behavior: HitTestBehavior.opaque,
-                      onTap: () {
-                        final value = entry.getString("value") ??
-                            entry.getString("text") ??
-                            entry.id.toString();
-                        entry.triggerEvent("click");
-                        control.triggerEvent("select", value);
-                        Navigator.pop(context);
-                      },
+                      onTap: entry.disabled
+                          ? null
+                          : () {
+                              // Same payloads as Material's popup menu
+                              // (buildPopupMenuEntries): a checked item
+                              // reports its toggled state, and `select`
+                              // carries the item id.
+                              final checked = entry.getBool("checked");
+                              entry.triggerEvent(
+                                  "click", checked == null ? null : !checked);
+                              control.triggerEvent(
+                                  "select", entry.id.toString());
+                              Navigator.pop(context, true);
+                            },
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 12),
-                        child: ControlWidget(control: entry),
+                        // The row is the menu choice. Entries such as
+                        // PopupMenuItem render as tappable actions of their
+                        // own, which would otherwise win the tap, close the
+                        // sheet without a selection and skip on_select.
+                        child:
+                            IgnorePointer(child: ControlWidget(control: entry)),
                       ),
                     ))
                 .toList(),
@@ -236,6 +266,8 @@ Future<void> _showCupertinoMenu(
       ),
     ),
   );
+  // Closed without choosing an entry (barrier tap, swipe, back).
+  if (chosen != true) control.triggerEvent("cancel");
   control.triggerEvent("close");
 }
 
@@ -249,6 +281,8 @@ class CupertinoSubmenuButtonControl extends StatelessWidget {
     final content = control.buildTextOrWidget("content") ??
         const ErrorControl("SubmenuButton.content must be provided");
     final button = CupertinoButton(
+      onFocusChange: (focused) =>
+          control.triggerEvent(focused ? "focus" : "blur"),
       onPressed: control.disabled
           ? null
           : () => _showCupertinoMenu(

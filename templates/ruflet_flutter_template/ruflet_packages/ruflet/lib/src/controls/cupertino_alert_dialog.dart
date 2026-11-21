@@ -6,6 +6,7 @@ import '../utils/animations.dart';
 import '../utils/numbers.dart';
 import '../widgets/cupertino_dialog_route.dart';
 import '../widgets/control_inherited_notifier.dart';
+import '../widgets/control_route.dart';
 import '../widgets/error.dart';
 import 'base_controls.dart';
 
@@ -53,33 +54,16 @@ class CupertinoAlertDialogControl extends StatelessWidget {
             "CupertinoAlertDialog has nothing to display. Provide at minimum one of the following: title, content, actions.");
       }
 
-      control.updateProperties({"_open": open}, python: false);
-
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!context.mounted || !control.getBool("open", false)!) return;
-        Navigator.of(context)
-            .push(ControlCupertinoDialogRoute<void>(
-                control: control,
-                barrierDismissible: !modal,
-                context: context,
-                builder: (context) => _createCupertinoAlertDialog()))
-            .then((value) {
-          debugPrint("Dismissing CupertinoAlertDialog(${control.id})");
-          control.updateProperties({"_open": false}, python: false);
-          control.updateProperties({"open": false});
-          control.triggerEvent("dismiss");
-        });
-      });
+      presentControlRoute(
+          context,
+          control,
+          () => ControlCupertinoDialogRoute<void>(
+              control: control,
+              barrierDismissible: !modal,
+              context: context,
+              builder: (context) => _createCupertinoAlertDialog()));
     } else if (!open && lastOpen) {
-      if (Navigator.of(context).canPop() == true) {
-        debugPrint(
-            "CupertinoAlertDialog(${control.id}): Closing dialog managed by this widget.");
-        Navigator.of(context).pop();
-        control.updateProperties({"_open": false}, python: false);
-      } else {
-        debugPrint(
-            "CupertinoAlertDialog(${control.id}): Dialog was not opened by this widget, skipping pop.");
-      }
+      closeControlRoute(control);
     }
     return const SizedBox.shrink();
   }

@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:ruflet/ruflet.dart';
 import 'package:flutter/widgets.dart';
 import 'package:media_kit/media_kit.dart';
@@ -129,7 +128,5 @@ VideoControllerConfiguration? parseControllerConfiguration(dynamic value,
 
 PlaylistMode? parsePlaylistMode(String? value, [PlaylistMode? defaultValue]) {
   if (value == null) return defaultValue;
-  return PlaylistMode.values.firstWhereOrNull(
-          (e) => e.name.toLowerCase() == value.toLowerCase()) ??
-      defaultValue;
+  return parseEnum(PlaylistMode.values, value, defaultValue);
 }

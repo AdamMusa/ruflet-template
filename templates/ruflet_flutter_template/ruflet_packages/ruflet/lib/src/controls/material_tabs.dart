@@ -119,11 +119,18 @@ class _TabsControlState extends State<MaterialTabsControl>
     debugPrint("TabsControl.$name($args)");
     switch (name) {
       case "move_to":
+        final a = args is Map ? args : const {};
+        final index = parseInt(a["index"]);
+        final length = _tabController.length;
+        if (index == null || length <= 0) return null;
+        // Negative indexes count from the end, like selected_index.
+        final resolved =
+            (index < 0 ? length + index : index).clamp(0, length - 1);
         return _tabController.animateTo(
-          args["index"],
-          curve: parseCurve(args["curve"], Curves.ease)!,
+          resolved,
+          curve: parseCurve(a["curve"], Curves.ease)!,
           duration:
-              parseDuration(args["duration"], kDefaultTabAnimationDuration)!,
+              parseDuration(a["duration"], kDefaultTabAnimationDuration)!,
         );
       default:
         throw Exception("Unknown Tabs method: $name");

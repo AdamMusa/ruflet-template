@@ -2,7 +2,7 @@ import 'package:flutter/widgets.dart';
 
 import '../models/control.dart';
 import '../widgets/platform_control_renderer.dart';
-import 'cupertino_surface_controls.dart';
+import 'cupertino_vertical_divider.dart';
 import 'material_vertical_divider.dart';
 
 class VerticalDividerControl extends StatelessWidget {

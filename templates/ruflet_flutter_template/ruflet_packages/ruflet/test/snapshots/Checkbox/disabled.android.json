@@ -1,0 +1,80 @@
+{
+  "fixture": "disabled",
+  "design": "android",
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 48.0
+    },
+    "elements": [
+      {
+        "text": "Off",
+        "rect": {
+          "l": 48.0,
+          "t": 14.0,
+          "w": 42.8,
+          "h": 20.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Off",
+      "flags": [
+        "hasCheckedState",
+        "hasEnabledState"
+      ],
+      "actions": [],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 800.0,
+        "h": 48.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "semantics tap",
+      "note": "no tappable semantics node",
+      "sent": [],
+      "semantics": [
+        {
+          "label": "Off",
+          "flags": [
+            "hasCheckedState",
+            "hasEnabledState"
+          ],
+          "actions": [],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 48.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "tap text \"Off\"",
+      "sent": [],
+      "semantics": [
+        {
+          "label": "Off",
+          "flags": [
+            "hasCheckedState",
+            "hasEnabledState"
+          ],
+          "actions": [],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 48.0
+          }
+        }
+      ]
+    }
+  ]
+}

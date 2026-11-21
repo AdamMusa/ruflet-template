@@ -414,7 +414,7 @@ TabBarThemeData? parseTabBarTheme(Map<dynamic, dynamic>? value, ThemeData theme,
 
 VisualDensity? parseVisualDensity(String? density,
     [VisualDensity? defaultValue]) {
-  switch (density?.toLowerCase()) {
+  switch (density == null ? null : normalizeEnumName(density)) {
     case "adaptiveplatformdensity":
       return VisualDensity.adaptivePlatformDensity;
     case "comfortable":
@@ -1231,7 +1231,8 @@ PageTransitionsBuilder? parseTransitionsBuilder(String? value,
     "predictive": const PredictiveBackPageTransitionsBuilder(),
     "fadeforwards": const FadeForwardsPageTransitionsBuilder(),
   };
-  return buildersMap[value?.toLowerCase()] ?? defaultValue;
+  return buildersMap[value == null ? null : normalizeEnumName(value)] ??
+      defaultValue;
 }
 
 class NoPageTransitionsBuilder extends PageTransitionsBuilder {

@@ -2,7 +2,9 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter/semantics.dart';
 
 import '../ruflet_service.dart';
+import '../utils/invoke.dart';
 import '../utils/misc.dart';
+import '../utils/numbers.dart';
 
 class SemanticsServiceControl extends RufletService {
   SemanticsServiceControl({required super.control});
@@ -25,17 +27,25 @@ class SemanticsServiceControl extends RufletService {
     debugPrint("SemanticsService.$name($args)");
     switch (name) {
       case "announce_message":
-        var message = args["message"].toString();
+        var message =
+            requireInvokeArg(args, "message", "SemanticsService.$name")
+                .toString();
         final view = WidgetsBinding.instance.platformDispatcher.implicitView;
         if (view == null) {
           return;
         }
         return SemanticsService.sendAnnouncement(
-            view, message, args["rtl"] ? TextDirection.rtl : TextDirection.ltr,
+            view,
+            message,
+            parseBool(args["rtl"], false)!
+                ? TextDirection.rtl
+                : TextDirection.ltr,
             assertiveness: control.getAssertiveness(
                 args["assertiveness"], Assertiveness.polite)!);
       case "announce_tooltip":
-        var message = args["message"].toString();
+        var message =
+            requireInvokeArg(args, "message", "SemanticsService.$name")
+                .toString();
         return SemanticsService.tooltip(message);
       case "get_accessibility_features":
         var features = SemanticsBinding.instance.accessibilityFeatures;

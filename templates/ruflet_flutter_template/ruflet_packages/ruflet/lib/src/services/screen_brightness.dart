@@ -40,7 +40,8 @@ class ScreenBrightnessService extends RufletService {
       case "set_system_screen_brightness":
         final brightness = parseDouble(args["value"]);
         if (brightness == null) {
-          throw ArgumentError.notNull("value");
+          throw ArgumentError(
+              'ScreenBrightness.$name requires a "value" argument');
         }
         return _screenBrightness.setSystemScreenBrightness(brightness);
       case "get_application_screen_brightness":
@@ -48,7 +49,8 @@ class ScreenBrightnessService extends RufletService {
       case "set_application_screen_brightness":
         final brightness = parseDouble(args["value"]);
         if (brightness == null) {
-          throw ArgumentError.notNull("value");
+          throw ArgumentError(
+              'ScreenBrightness.$name requires a "value" argument');
         }
         return _screenBrightness.setApplicationScreenBrightness(brightness);
       case "reset_application_screen_brightness":
@@ -58,7 +60,8 @@ class ScreenBrightnessService extends RufletService {
       case "set_animate":
         final isAnimate = parseBool(args["value"]);
         if (isAnimate == null) {
-          throw ArgumentError.notNull("value");
+          throw ArgumentError(
+              'ScreenBrightness.$name requires a "value" argument');
         }
         return _screenBrightness.setAnimate(isAnimate);
       case "is_auto_reset":
@@ -66,7 +69,8 @@ class ScreenBrightnessService extends RufletService {
       case "set_auto_reset":
         final isAutoReset = parseBool(args["value"]);
         if (isAutoReset == null) {
-          throw ArgumentError.notNull("value");
+          throw ArgumentError(
+              'ScreenBrightness.$name requires a "value" argument');
         }
         return _screenBrightness.setAutoReset(isAutoReset);
       default:

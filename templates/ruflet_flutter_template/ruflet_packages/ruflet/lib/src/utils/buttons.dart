@@ -6,6 +6,7 @@ import 'alignment.dart';
 import 'borders.dart';
 import 'colors.dart';
 import 'edge_insets.dart';
+import 'enums.dart';
 import 'geometry.dart';
 import 'mouse.dart';
 import 'numbers.dart';
@@ -117,7 +118,7 @@ FloatingActionButtonLocation? parseFloatingActionButtonLocation(dynamic value,
             dx: fabLocationOffset.dx, dy: fabLocationOffset.dy)
         : defaultValue;
   } catch (e) {
-    var key = value.toLowerCase();
+    var key = normalizeEnumName(value);
     return fabLocations.containsKey(key) ? fabLocations[key]! : defaultValue;
   }
 }

@@ -1,0 +1,70 @@
+{
+  "fixture": "material_keys",
+  "design": "ios",
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 48.0
+    },
+    "elements": [
+      {
+        "icon": 984246,
+        "rect": {
+          "l": 22.0,
+          "t": 12.0,
+          "w": 24.0,
+          "h": 24.0
+        }
+      },
+      {
+        "text": "Material",
+        "rect": {
+          "l": 64.0,
+          "t": 8.0,
+          "w": 132.7,
+          "h": 17.0
+        }
+      },
+      {
+        "text": "Keys",
+        "rect": {
+          "l": 64.0,
+          "t": 28.0,
+          "w": 46.4,
+          "h": 12.0
+        }
+      },
+      {
+        "icon": 984497,
+        "rect": {
+          "l": 762.0,
+          "t": 12.0,
+          "w": 24.0,
+          "h": 24.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Material\nKeys",
+      "flags": [
+        "isButton",
+        "hasEnabledState",
+        "isEnabled",
+        "hasSelectedState"
+      ],
+      "actions": [
+        "tap",
+        "longPress"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 800.0,
+        "h": 48.0
+      }
+    }
+  ],
+  "steps": []
+}

@@ -12,7 +12,7 @@ const chartSeriesColors = <Color>[
   Color(0xFF3F51B5),
   Color(0xFF2196F3),
   Color(0xFF03A9F4),
-  const Color(0xFF00BCD4),
+  Color(0xFF00BCD4),
   Color(0xFF009688),
   Color(0xFF4CAF50),
   Color(0xFF8BC34A),
@@ -22,7 +22,7 @@ const chartSeriesColors = <Color>[
   Color(0xFFFF9800),
   Color(0xFFFF5722),
   Color(0xFF795548),
-  const Color(0xFF607D8B),
+  Color(0xFF607D8B),
 ];
 
 /// Supplying the painter prevents fl_chart's touch fallback from consulting a
@@ -38,6 +38,58 @@ AxisSpotIndicator chartTouchIndicator(RufletStyleTheme theme) {
           VerticalLine(x: x, color: color, strokeWidth: 1),
     ),
   );
+}
+
+/// A chart's `tooltip` map configures fl_chart's touch tooltip, not the
+/// generic control tooltip LayoutControl adds. Flet's Python says so with
+/// `_internals.skip_properties: ["tooltip"]`; Ruby sends no `_internals`, so
+/// the chart marks its own configuration before LayoutControl reads it.
+/// Without this, Material wraps the chart in a Tooltip with no message,
+/// which fails to build. A map with a `message` already made a working
+/// control tooltip and still does, and a text tooltip stays the generic
+/// control tooltip, also when Ruby later replaces a map with one of those.
+void skipControlTooltipForChartConfig(Control control) {
+  final internals = control.internals;
+  final skip = internals?["skip_properties"];
+  final skipping = skip is List && skip.contains("tooltip");
+  final tooltip = control.get("tooltip");
+  if (tooltip is Map && tooltip["message"] == null) {
+    if (skipping) return;
+    control.properties["_internals"] = <dynamic, dynamic>{
+      ...?internals,
+      "skip_properties": [if (skip is List) ...skip, "tooltip"],
+    };
+    _chartSkippedTooltip[control] = true;
+  } else if (skipping && _chartSkippedTooltip[control] == true) {
+    // Only undo the skip this chart added, never one Flet sent.
+    control.properties["_internals"] = <dynamic, dynamic>{
+      ...internals!,
+      "skip_properties": [
+        for (final name in skip)
+          if (name != "tooltip") name
+      ],
+    };
+    _chartSkippedTooltip[control] = null;
+  }
+}
+
+/// The charts whose `tooltip` skip [skipControlTooltipForChartConfig] added.
+final _chartSkippedTooltip = Expando<bool>('chartSkippedTooltip');
+
+/// The chart-level touch tooltip configuration Ruby sent, if any.
+Map<dynamic, dynamic>? chartTooltipConfig(Control control) {
+  final tooltip = control.get("tooltip");
+  return tooltip is Map ? tooltip : null;
+}
+
+/// The tooltip of one data item (bar rod, line point, scatter or candlestick
+/// spot). Ruby sends it as the item's own `tooltip`: a text, or a map of
+/// tooltip options (`text`, `text_style`, ...). Flet's Python sent it as
+/// `_internals.tooltip`, still read when present.
+Map<dynamic, dynamic>? chartItemTooltip(Control item) {
+  final value = item.get("tooltip") ?? item.internals?["tooltip"];
+  if (value is String) return {"text": value};
+  return value is Map ? value : null;
 }
 
 FlDotPainter invisibleDotPainter =
@@ -205,9 +257,7 @@ AxisTitles parseAxisTitles(Control? control) {
 FLHorizontalAlignment? parseFLHorizontalAlignment(String? value,
     [FLHorizontalAlignment? defaultValue]) {
   if (value == null) return defaultValue;
-  return FLHorizontalAlignment.values.firstWhereOrNull(
-          (e) => e.name.toLowerCase() == value.toLowerCase()) ??
-      defaultValue;
+  return parseEnum(FLHorizontalAlignment.values, value, defaultValue);
 }
 
 String resolveFlTouchEventType(FlTouchEvent event) {

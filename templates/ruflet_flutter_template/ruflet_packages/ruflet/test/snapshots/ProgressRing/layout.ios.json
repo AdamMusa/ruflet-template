@@ -1,0 +1,32 @@
+{
+  "fixture": "layout",
+  "design": "ios",
+  "geometry": {
+    "size": {
+      "w": 68.0,
+      "h": 68.0
+    },
+    "elements": []
+  },
+  "semantics": [
+    {
+      "label": "",
+      "value": "50",
+      "flags": [],
+      "actions": [],
+      "rect": {
+        "l": 4.0,
+        "t": 4.0,
+        "w": 60.0,
+        "h": 60.0
+      }
+    }
+  ],
+  "steps": [],
+  "native": {
+    "type": "CupertinoActivityIndicator",
+    "animating": false,
+    "progress": 0.5,
+    "radius": 10.0
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "fixture": "translucent",
+  "design": "ios",
+  "sizing": {
+    "preferred_height": 44.0,
+    "fully_obstructs": false
+  },
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 44.0
+    },
+    "elements": [
+      {
+        "text": "Translucent",
+        "rect": {
+          "l": 308.8,
+          "t": 13.5,
+          "w": 182.5,
+          "h": 17.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Translucent",
+      "flags": [
+        "isHeader"
+      ],
+      "actions": [],
+      "rect": {
+        "l": 308.8,
+        "t": 13.5,
+        "w": 182.5,
+        "h": 17.0
+      }
+    }
+  ],
+  "steps": []
+}

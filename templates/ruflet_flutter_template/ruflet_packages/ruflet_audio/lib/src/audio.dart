@@ -16,6 +16,7 @@ class AudioService extends RufletService {
   StreamSubscription? _onStateChangedSubscription;
   StreamSubscription? _onPositionChangedSubscription;
   StreamSubscription? _onSeekCompleteSubscription;
+  Object? _lastError;
 
   String? _src;
   Uint8List? _srcBytes;
@@ -34,7 +35,7 @@ class AudioService extends RufletService {
         player.onDurationChanged.listen((duration) {
       control.triggerEvent("duration_change", {"duration": duration});
       _duration = duration;
-    });
+    }, onError: _onPlayerError);
 
     _onStateChangedSubscription =
         player.onPlayerStateChanged.listen((PlayerState state) {
@@ -56,7 +57,7 @@ class AudioService extends RufletService {
 
     _onSeekCompleteSubscription = player.onSeekComplete.listen((event) {
       control.triggerEvent("seek_complete");
-    });
+    }, onError: _onPlayerError);
 
     update();
   }
@@ -65,12 +66,18 @@ class AudioService extends RufletService {
   void update() {
     debugPrint("Audio(${control.id}).update: ${control.properties}");
 
-    final resolvedSrc = control.getSrc("src");
-    if (resolvedSrc.error != null) {
-      throw Exception("Audio src decode error: ${resolvedSrc.error}");
+    // Ruby sends base64 audio as `src_base64`; `src` wins if both are set.
+    final srcProp = control.get("src") != null ? "src" : "src_base64";
+    final resolvedSrc = control.getSrc(srcProp);
+    if (resolvedSrc.error != null && control.get(srcProp) != null) {
+      control.triggerEvent(
+          "error", "Audio $srcProp decode error: ${resolvedSrc.error}");
+      return;
     }
     if (resolvedSrc.isEmpty) {
-      throw Exception("Audio must have \"src\" specified.");
+      control.triggerEvent(
+          "error", "Audio must have \"src\" or \"src_base64\" specified.");
+      return;
     }
     var autoplay = control.getBool("autoplay", false)!;
     var volume = control.getDouble("volume", 1.0)!;
@@ -78,7 +85,7 @@ class AudioService extends RufletService {
     var playbackRate = control.getDouble("playback_rate", 1)!;
     var releaseMode = parseReleaseMode(control.getString("release_mode"));
 
-    () async {
+    Future<void> apply() async {
       bool srcChanged = false;
       // URL or file
       if (resolvedSrc.uri != null && resolvedSrc.uri != _src) {
@@ -136,7 +143,18 @@ class AudioService extends RufletService {
       if (srcChanged && autoplay) {
         await player.resume();
       }
-    }();
+    }
+
+    apply().catchError(_onPlayerError);
+  }
+
+  /// Reports a player failure (e.g. a source that cannot load) as Ruby's
+  /// `on_error` instead of an uncaught exception. A platform error reaches
+  /// several player streams and the pending load, so it is reported once.
+  void _onPlayerError(Object error) {
+    if (identical(error, _lastError)) return;
+    _lastError = error;
+    control.triggerEvent("error", error.toString());
   }
 
   Future<dynamic> _invokeMethod(String name, dynamic args) async {

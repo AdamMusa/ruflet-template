@@ -21,6 +21,7 @@ class _BarChartControlState extends State<BarChartControl> {
   @override
   Widget build(BuildContext context) {
     debugPrint("BarChart build: ${widget.control.id}");
+    skipControlTooltipForChartConfig(widget.control);
     final theme = RufletStyleTheme.of(context);
 
     var animation = widget.control.getAnimation(
@@ -63,7 +64,9 @@ class _BarChartControlState extends State<BarChartControl> {
             widget.control.get("horizontal_grid_lines"),
             widget.control.get("vertical_grid_lines"),
             theme),
-        groupsSpace: widget.control.getDouble("spacing"),
+        // Ruby (like current Flet) sends `group_spacing`.
+        groupsSpace: widget.control.getDouble("group_spacing") ??
+            widget.control.getDouble("spacing"),
         barGroups: barGroups,
         barTouchData: BarTouchData(
           enabled: interactive,

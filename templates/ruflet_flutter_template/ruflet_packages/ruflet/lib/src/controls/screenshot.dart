@@ -3,7 +3,9 @@ import 'package:screenshot/screenshot.dart';
 
 import '../extensions/control.dart';
 import '../models/control.dart';
+import '../utils/numbers.dart';
 import '../utils/time.dart';
+import '../widgets/platform_badge.dart';
 import 'base_controls.dart';
 
 class ScreenshotControl extends StatefulWidget {
@@ -30,7 +32,7 @@ class _InteractiveViewerControlState extends State<ScreenshotControl> {
     switch (name) {
       case "capture":
         return await _screenshotController.capture(
-            pixelRatio: args["pixel_ratio"],
+            pixelRatio: parseDouble(args["pixel_ratio"]),
             delay: parseDuration(
                 args["delay"], const Duration(milliseconds: 20))!);
       default:
@@ -52,6 +54,10 @@ class _InteractiveViewerControlState extends State<ScreenshotControl> {
         controller: _screenshotController,
         child: widget.control.buildWidget("content"));
 
-    return BaseControl(control: widget.control, child: screenshot);
+    // The badge is chrome around the captured content, not part of it.
+    return BaseControl(
+        control: widget.control,
+        child:
+            PlatformControlBadge(control: widget.control, child: screenshot));
   }
 }

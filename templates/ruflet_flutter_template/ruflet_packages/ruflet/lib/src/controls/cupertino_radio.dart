@@ -1,95 +1,38 @@
 import 'package:flutter/cupertino.dart';
 
-import '../models/control.dart';
-import '../utils/colors.dart';
-import '../utils/cupertino_theme.dart';
-import '../utils/misc.dart';
-import '../utils/mouse.dart';
-import '../utils/numbers.dart';
-import '../widgets/error.dart';
-import '../widgets/ruflet_store_mixin.dart';
-import 'base_controls.dart';
+import '../utils/cupertino_theme.dart' show cupertinoStyleTheme;
+import 'radio_core.dart';
 
-class CupertinoRadioControl extends StatefulWidget {
-  final Control control;
+/// Cupertino skin of [RadioCore]: maps the core's values onto
+/// [CupertinoRadio].
+class CupertinoRadioSkin extends StatelessWidget {
+  const CupertinoRadioSkin({super.key, required this.core});
 
-  CupertinoRadioControl({Key? key, required this.control})
-      : super(key: key ?? ValueKey("control_${control.id}"));
-
-  @override
-  State<CupertinoRadioControl> createState() => _CupertinoRadioControlState();
-}
-
-class _CupertinoRadioControlState extends State<CupertinoRadioControl>
-    with RufletStoreMixin {
-  late final FocusNode _focusNode;
-
-  @override
-  void initState() {
-    super.initState();
-    _focusNode = FocusNode();
-    _focusNode.addListener(_onFocusChange);
-  }
-
-  void _onFocusChange() {
-    widget.control.triggerEvent(_focusNode.hasFocus ? "focus" : "blur");
-  }
-
-  @override
-  void dispose() {
-    _focusNode.removeListener(_onFocusChange);
-    _focusNode.dispose();
-    super.dispose();
-  }
+  final RadioCore core;
 
   @override
   Widget build(BuildContext context) {
-    debugPrint("CupertinoRadio build: ${widget.control.id}");
-
-    final radioGroup = RadioGroup.maybeOf<String>(context);
-    if (radioGroup == null) {
-      return const ErrorControl(
-          "CupertinoRadio must be enclosed within RadioGroup");
+    final p = core.props;
+    var labelStyle = p.labelStyle;
+    if (core.disabled) {
+      labelStyle = (labelStyle ?? const TextStyle())
+          .copyWith(color: cupertinoStyleTheme(context).color('disabled'));
     }
-
-    var value = widget.control.getString("value", "")!;
-
-    var cupertinoRadio = CupertinoRadio<String>(
-      autofocus: widget.control.getBool("autofocus", false)!,
-      focusNode: _focusNode,
-      value: value,
-      enabled: !widget.control.disabled,
-      useCheckmarkStyle: widget.control.getBool("use_checkmark_style", false)!,
-      fillColor: widget.control.getColor("fill_color", context),
-      focusColor: widget.control.getColor("focus_color", context),
-      toggleable: widget.control.getBool("toggleable", false)!,
-      mouseCursor: widget.control.getMouseCursor("mouse_cursor"),
-      activeColor: widget.control.getColor(
-          "active_color", context, CupertinoTheme.of(context).primaryColor)!,
-      inactiveColor: widget.control.getColor("inactive_color", context),
+    return core.labelled(
+      CupertinoRadio<String>(
+        value: p.value,
+        enabled: core.enabled,
+        toggleable: p.toggleable,
+        focusNode: core.focusNode,
+        autofocus: p.autofocus,
+        mouseCursor: p.mouseCursor,
+        activeColor: p.activeColor ?? CupertinoTheme.of(context).primaryColor,
+        inactiveColor: p.inactiveColor,
+        fillColor: p.fillColor?.resolve(core.states),
+        focusColor: p.focusColor,
+        useCheckmarkStyle: p.useCheckmarkStyle,
+      ),
+      labelStyle: labelStyle,
     );
-
-    Widget result = cupertinoRadio;
-
-    var label = widget.control.getString("label", "")!;
-    if (label != "") {
-      var labelPosition = widget.control
-          .getLabelPosition("label_position", LabelPosition.right)!;
-      var labelWidget = widget.control.disabled
-          ? Text(label,
-              style: TextStyle(
-                  color: cupertinoStyleTheme(context).color('disabled')))
-          : MouseRegion(cursor: SystemMouseCursors.click, child: Text(label));
-      result = MergeSemantics(
-          child: GestureDetector(
-              onTap: !widget.control.disabled
-                  ? () => radioGroup.onChanged(value)
-                  : null,
-              child: labelPosition == LabelPosition.right
-                  ? Row(children: [cupertinoRadio, labelWidget])
-                  : Row(children: [labelWidget, cupertinoRadio])));
-    }
-
-    return LayoutControl(control: widget.control, child: result);
   }
 }

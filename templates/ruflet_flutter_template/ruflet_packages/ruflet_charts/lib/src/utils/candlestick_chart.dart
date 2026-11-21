@@ -35,7 +35,7 @@ class CandlestickChartEventData extends Equatable {
 
 CandlestickTouchTooltipData parseCandlestickTouchTooltipData(
     BuildContext context, Control control, List<Control> spotControls) {
-  final tooltip = control.get("tooltip") ?? {};
+  final tooltip = chartTooltipConfig(control) ?? {};
   final theme = RufletStyleTheme.of(context);
 
   return CandlestickTouchTooltipData(
@@ -83,7 +83,7 @@ CandlestickTooltipItem? parseCandlestickTooltipItem(
     return null;
   }
 
-  final tooltip = spotControl.internals?["tooltip"];
+  final tooltip = chartItemTooltip(spotControl);
   if (tooltip == null) {
     return null;
   }

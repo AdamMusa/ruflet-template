@@ -1,0 +1,29 @@
+name: ruflet_local_auth
+repository: https://github.com/AdamMusa/ruflet-engine
+description: Ruflet Local Authentication service
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: '>=3.3.0 <4.0.0'
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  local_auth: 3.0.2
+  # The platform packages local_auth federates to, imported for their
+  # AuthMessages types. local_auth_android 2.0.9+ needs Flutter 3.44.
+  local_auth_android: ^2.0.8
+  local_auth_darwin: ^2.0.5
+  local_auth_windows: ^2.0.2
+
+  ruflet:
+    path: ../ruflet
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+  local_auth_platform_interface: ^1.1.0

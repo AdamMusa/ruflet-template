@@ -4,6 +4,7 @@ import '../extensions/control.dart';
 import '../models/control.dart';
 import '../utils/autofill.dart';
 import '../widgets/error.dart';
+import '../widgets/platform_badge.dart';
 
 class AutofillGroupControl extends StatelessWidget {
   final Control control;
@@ -23,6 +24,6 @@ class AutofillGroupControl extends StatelessWidget {
     return AutofillGroup(
         onDisposeAction: control.getAutofillContextAction(
             "dispose_action", AutofillContextAction.commit)!,
-        child: content);
+        child: PlatformControlBadge(control: control, child: content));
   }
 }

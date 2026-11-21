@@ -1,0 +1,83 @@
+{
+  "fixture": "disabled",
+  "design": "ios",
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 18.0
+    },
+    "elements": [
+      {
+        "text": "Off",
+        "rect": {
+          "l": 18.0,
+          "t": 0.5,
+          "w": 49.8,
+          "h": 17.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Off",
+      "flags": [
+        "hasCheckedState",
+        "hasEnabledState",
+        "isInMutuallyExclusiveGroup"
+      ],
+      "actions": [],
+      "rect": {
+        "l": 0.0,
+        "t": 28.0,
+        "w": 800.0,
+        "h": 18.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "semantics tap",
+      "note": "no tappable semantics node",
+      "sent": [],
+      "semantics": [
+        {
+          "label": "Off",
+          "flags": [
+            "hasCheckedState",
+            "hasEnabledState",
+            "isInMutuallyExclusiveGroup"
+          ],
+          "actions": [],
+          "rect": {
+            "l": 0.0,
+            "t": 28.0,
+            "w": 800.0,
+            "h": 18.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "tap text \"Off\"",
+      "sent": [],
+      "semantics": [
+        {
+          "label": "Off",
+          "flags": [
+            "hasCheckedState",
+            "hasEnabledState",
+            "isInMutuallyExclusiveGroup"
+          ],
+          "actions": [],
+          "rect": {
+            "l": 0.0,
+            "t": 28.0,
+            "w": 800.0,
+            "h": 18.0
+          }
+        }
+      ]
+    }
+  ]
+}

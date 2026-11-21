@@ -1,0 +1,82 @@
+{
+  "fixture": "sized",
+  "design": "ios",
+  "geometry": {
+    "size": {
+      "w": 160.0,
+      "h": 60.0
+    },
+    "elements": [
+      {
+        "text": "Big",
+        "rect": {
+          "l": 86.8,
+          "t": 16.9,
+          "w": 49.8,
+          "h": 17.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Big",
+      "flags": [
+        "hasEnabledState",
+        "isEnabled",
+        "hasToggledState",
+        "isFocusable"
+      ],
+      "actions": [
+        "tap",
+        "focus"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 160.0,
+        "h": 60.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap at 0.5,0.5",
+      "sent": [
+        {
+          "id": 1001,
+          "update": {
+            "value": true
+          }
+        },
+        {
+          "id": 1001,
+          "event": "change",
+          "data": true
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Big",
+          "flags": [
+            "hasEnabledState",
+            "isEnabled",
+            "hasToggledState",
+            "isToggled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 160.0,
+            "h": 60.0
+          }
+        }
+      ]
+    }
+  ]
+}

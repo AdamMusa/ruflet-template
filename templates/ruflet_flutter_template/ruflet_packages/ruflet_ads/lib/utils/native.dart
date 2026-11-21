@@ -1,20 +1,15 @@
-import 'package:collection/collection.dart';
 import 'package:ruflet/ruflet.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 TemplateType? parseTemplateType(String? value, [TemplateType? defaultValue]) {
   if (value == null) return defaultValue;
-  return TemplateType.values.firstWhereOrNull(
-          (e) => e.toString().toLowerCase() == value.toLowerCase()) ??
-      defaultValue;
+  return parseEnum(TemplateType.values, value, defaultValue);
 }
 
 NativeTemplateFontStyle? parseNativeTemplateFontStyle(String? value,
     [NativeTemplateFontStyle? defaultValue]) {
   if (value == null) return defaultValue;
-  return NativeTemplateFontStyle.values.firstWhereOrNull(
-          (e) => e.toString().toLowerCase() == value.toLowerCase()) ??
-      defaultValue;
+  return parseEnum(NativeTemplateFontStyle.values, value, defaultValue);
 }
 
 NativeTemplateTextStyle? parseNativeTemplateTextStyle(

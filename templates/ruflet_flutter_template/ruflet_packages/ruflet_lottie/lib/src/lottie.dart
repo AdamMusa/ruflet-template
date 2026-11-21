@@ -13,6 +13,25 @@ class LottieControl extends StatefulWidget {
 }
 
 class _LottieControlState extends State<LottieControl> {
+  Object? _srcValue;
+  ResolvedAssetSource? _resolvedSrc;
+
+  /// The control's `src`, resolved once per value Ruby sends. Decoding a
+  /// base64 (or list) src on every build yields new bytes, which lottie
+  /// treats as a new animation: any Ruby update (`animate = false` to pause)
+  /// would parse it again and send `on_load` again.
+  ResolvedAssetSource _resolveSrc() {
+    final value = widget.control.get("src");
+    final resolved = _resolvedSrc;
+    if (resolved != null &&
+        (identical(value, _srcValue) ||
+            (value is String && value == _srcValue))) {
+      return resolved;
+    }
+    _srcValue = value;
+    return _resolvedSrc = widget.control.getSrc("src");
+  }
+
   @override
   Widget build(BuildContext context) {
     debugPrint(
@@ -27,7 +46,7 @@ class _LottieControlState extends State<LottieControl> {
     var alignment = widget.control.getAlignment("alignment");
     var filterQuality = widget.control.getFilterQuality("filter_quality");
     var errorContent = widget.control.buildWidget("error_content");
-    final resolvedSrc = widget.control.getSrc("src");
+    final resolvedSrc = _resolveSrc();
 
     if (resolvedSrc.error != null) {
       return errorContent ??

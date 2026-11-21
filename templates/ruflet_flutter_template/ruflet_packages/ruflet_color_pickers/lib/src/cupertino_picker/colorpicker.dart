@@ -7,11 +7,12 @@ library hsv_picker;
 import 'package:flutter/cupertino.dart';
 import 'palette.dart';
 import 'utils.dart';
+import '../utils/color_channels.dart';
 
 /// The default layout of Color Picker.
 class ColorPicker extends StatefulWidget {
   const ColorPicker({
-    Key? key,
+    super.key,
     required this.pickerColor,
     required this.onColorChanged,
     this.pickerHsvColor,
@@ -36,7 +37,7 @@ class ColorPicker extends StatefulWidget {
     this.hexInputController,
     this.colorHistory,
     this.onHistoryChanged,
-  }) : super(key: key);
+  });
 
   final Color pickerColor;
   final ValueChanged<Color> onColorChanged;
@@ -213,8 +214,9 @@ class _ColorPickerState extends State<ColorPicker> {
       setState(() => currentHsvColor = HSVColor.fromColor(color));
       // notify with a callback.
       widget.onColorChanged(color);
-      if (widget.onHsvColorChanged != null)
+      if (widget.onHsvColorChanged != null) {
         widget.onHsvColorChanged!(currentHsvColor);
+      }
     }
   }
 
@@ -234,8 +236,9 @@ class _ColorPickerState extends State<ColorPicker> {
             colorToHex(color.toColor(), enableAlpha: widget.enableAlpha);
         setState(() => currentHsvColor = color);
         widget.onColorChanged(currentHsvColor.toColor());
-        if (widget.onHsvColorChanged != null)
+        if (widget.onHsvColorChanged != null) {
           widget.onHsvColorChanged!(currentHsvColor);
+        }
       },
       displayThumbColor: widget.displayThumbColor,
     );
@@ -247,8 +250,9 @@ class _ColorPickerState extends State<ColorPicker> {
         colorToHex(color.toColor(), enableAlpha: widget.enableAlpha);
     setState(() => currentHsvColor = color);
     widget.onColorChanged(currentHsvColor.toColor());
-    if (widget.onHsvColorChanged != null)
+    if (widget.onHsvColorChanged != null) {
       widget.onHsvColorChanged!(currentHsvColor);
+    }
   }
 
   Widget colorPicker() {
@@ -369,8 +373,9 @@ class _ColorPickerState extends State<ColorPicker> {
               (Color color) {
                 setState(() => currentHsvColor = HSVColor.fromColor(color));
                 widget.onColorChanged(currentHsvColor.toColor());
-                if (widget.onHsvColorChanged != null)
+                if (widget.onHsvColorChanged != null) {
                   widget.onHsvColorChanged!(currentHsvColor);
+                }
               },
               enableAlpha: widget.enableAlpha,
               embeddedText: false,
@@ -461,8 +466,9 @@ class _ColorPickerState extends State<ColorPicker> {
                   (Color color) {
                     setState(() => currentHsvColor = HSVColor.fromColor(color));
                     widget.onColorChanged(currentHsvColor.toColor());
-                    if (widget.onHsvColorChanged != null)
+                    if (widget.onHsvColorChanged != null) {
                       widget.onHsvColorChanged!(currentHsvColor);
+                    }
                   },
                   enableAlpha: widget.enableAlpha,
                   embeddedText: false,
@@ -479,7 +485,7 @@ class _ColorPickerState extends State<ColorPicker> {
 /// The Color Picker with sliders only. Support HSV, HSL and RGB color model.
 class SlidePicker extends StatefulWidget {
   const SlidePicker({
-    Key? key,
+    super.key,
     required this.pickerColor,
     required this.onColorChanged,
     this.colorModel = ColorModel.rgb,
@@ -500,7 +506,7 @@ class SlidePicker extends StatefulWidget {
     this.indicatorAlignmentEnd = const Alignment(1.0, 3.0),
     this.displayThumbColor = true,
     this.indicatorBorderRadius = const BorderRadius.all(Radius.zero),
-  }) : super(key: key);
+  });
 
   final Color pickerColor;
   final ValueChanged<Color> onColorChanged;
@@ -590,10 +596,10 @@ class _SlidePickerState extends State<SlidePicker> {
     if (widget.colorModel == ColorModel.rgb) {
       final Color color = currentHsvColor.toColor();
       return [
-        color.red.toString(),
-        color.green.toString(),
-        color.blue.toString(),
-        '${(color.opacity * 100).round()}',
+        color.red8.toString(),
+        color.green8.toString(),
+        color.blue8.toString(),
+        '${(color.opacity8 * 100).round()}',
       ][pos];
     } else if (widget.colorModel == ColorModel.hsv) {
       return [
@@ -698,7 +704,7 @@ class _SlidePickerState extends State<SlidePicker> {
 /// The Color Picker with HUE Ring & HSV model.
 class HueRingPicker extends StatefulWidget {
   const HueRingPicker({
-    Key? key,
+    super.key,
     required this.pickerColor,
     required this.onColorChanged,
     this.portraitOnly = false,
@@ -707,7 +713,7 @@ class HueRingPicker extends StatefulWidget {
     this.enableAlpha = false,
     this.displayThumbColor = true,
     this.pickerAreaBorderRadius = const BorderRadius.all(Radius.zero),
-  }) : super(key: key);
+  });
 
   final Color pickerColor;
   final ValueChanged<Color> onColorChanged;

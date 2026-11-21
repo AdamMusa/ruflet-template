@@ -66,6 +66,7 @@ class _LineChartControlState extends State<LineChartControl> {
   @override
   Widget build(BuildContext context) {
     debugPrint("LineChart build: ${widget.control.id}");
+    skipControlTooltipForChartConfig(widget.control);
     final theme = RufletStyleTheme.of(context);
     var animation = widget.control.getAnimation(
         "animation",
@@ -205,8 +206,8 @@ class _LineChartControlState extends State<LineChartControl> {
                 );
               }).toList();
             },
-            touchTooltipData: parseLineTouchTooltipData(
-                context, widget.control, const LineTouchTooltipData())!,
+            touchTooltipData:
+                parseLineTouchTooltipData(context, widget.control),
             touchCallback: widget.control.getBool("on_event", false)!
                 ? (evt, resp) {
                     var eventData = LineChartEventData.fromDetails(evt, resp);

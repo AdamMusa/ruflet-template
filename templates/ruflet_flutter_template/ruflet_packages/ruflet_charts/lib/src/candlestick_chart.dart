@@ -22,6 +22,7 @@ class _CandlestickChartControlState extends State<CandlestickChartControl> {
   @override
   Widget build(BuildContext context) {
     debugPrint("CandlestickChart build: ${widget.control.id}");
+    skipControlTooltipForChartConfig(widget.control);
 
     final theme = RufletStyleTheme.of(context);
     final animation = widget.control.getAnimation(

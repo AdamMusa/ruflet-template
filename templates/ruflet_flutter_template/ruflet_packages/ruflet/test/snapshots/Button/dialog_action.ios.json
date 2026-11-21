@@ -1,0 +1,93 @@
+{
+  "fixture": "dialog_action",
+  "design": "ios",
+  "geometry": {
+    "size": {
+      "w": 270.0,
+      "h": 45.0
+    },
+    "elements": [
+      {
+        "text": "Delete",
+        "rect": {
+          "l": 78.0,
+          "t": 13.0,
+          "w": 114.0,
+          "h": 19.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "",
+      "flags": [
+        "hasImplicitScrolling"
+      ],
+      "actions": [],
+      "rect": {
+        "l": 265.0,
+        "t": 308.7,
+        "w": 270.0,
+        "h": 45.0
+      }
+    },
+    {
+      "label": "Delete",
+      "flags": [
+        "isButton"
+      ],
+      "actions": [
+        "tap"
+      ],
+      "rect": {
+        "l": 265.0,
+        "t": 308.7,
+        "w": 270.0,
+        "h": 45.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap text \"Delete\"",
+      "sent": [
+        {
+          "id": 1601,
+          "event": "click",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "",
+          "flags": [
+            "hasImplicitScrolling"
+          ],
+          "actions": [],
+          "rect": {
+            "l": 265.0,
+            "t": 308.7,
+            "w": 270.0,
+            "h": 45.0
+          }
+        },
+        {
+          "label": "Delete",
+          "flags": [
+            "isButton"
+          ],
+          "actions": [
+            "tap"
+          ],
+          "rect": {
+            "l": 265.0,
+            "t": 308.7,
+            "w": 270.0,
+            "h": 45.0
+          }
+        }
+      ]
+    }
+  ]
+}

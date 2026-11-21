@@ -1,0 +1,79 @@
+{
+  "fixture": "disabled",
+  "design": "ios",
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 44.0
+    },
+    "elements": [
+      {
+        "text": "Tile",
+        "rect": {
+          "l": 20.0,
+          "t": 13.5,
+          "w": 66.4,
+          "h": 17.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Tile",
+      "flags": [
+        "hasEnabledState",
+        "hasSelectedState"
+      ],
+      "actions": [],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 800.0,
+        "h": 44.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap text \"Tile\"",
+      "sent": [],
+      "semantics": [
+        {
+          "label": "Tile",
+          "flags": [
+            "hasEnabledState",
+            "hasSelectedState"
+          ],
+          "actions": [],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 44.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "long press \"Tile\"",
+      "sent": [],
+      "semantics": [
+        {
+          "label": "Tile",
+          "flags": [
+            "hasEnabledState",
+            "hasSelectedState"
+          ],
+          "actions": [],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 44.0
+          }
+        }
+      ]
+    }
+  ]
+}

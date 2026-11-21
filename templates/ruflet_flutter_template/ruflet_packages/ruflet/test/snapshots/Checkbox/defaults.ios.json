@@ -1,0 +1,181 @@
+{
+  "fixture": "defaults",
+  "design": "ios",
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 44.0
+    },
+    "elements": [
+      {
+        "text": "Accept",
+        "rect": {
+          "l": 54.0,
+          "t": 13.5,
+          "w": 99.5,
+          "h": 17.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Accept",
+      "flags": [
+        "hasCheckedState",
+        "hasEnabledState",
+        "isEnabled",
+        "isFocusable"
+      ],
+      "actions": [
+        "tap",
+        "focus"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 800.0,
+        "h": 44.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "semantics tap",
+      "sent": [
+        {
+          "id": 1201,
+          "update": {
+            "value": true
+          }
+        },
+        {
+          "id": 1201,
+          "event": "change",
+          "data": true
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Accept",
+          "flags": [
+            "hasCheckedState",
+            "isChecked",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 44.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "tap text \"Accept\"",
+      "sent": [
+        {
+          "id": 1201,
+          "update": {
+            "value": false
+          }
+        },
+        {
+          "id": 1201,
+          "event": "change",
+          "data": false
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Accept",
+          "flags": [
+            "hasCheckedState",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 44.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "tab",
+      "sent": [
+        {
+          "id": 1201,
+          "event": "focus",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Accept",
+          "flags": [
+            "hasCheckedState",
+            "isFocused",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 44.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "invoke focus",
+      "sent": [],
+      "outcome": {
+        "error": "UnsupportedError",
+        "message": "Checkbox(1201).focus is not supported on iOS: no handler for \"focus\" is registered for this control"
+      },
+      "semantics": [
+        {
+          "label": "Accept",
+          "flags": [
+            "hasCheckedState",
+            "isFocused",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 44.0
+          }
+        }
+      ]
+    }
+  ]
+}

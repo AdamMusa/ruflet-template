@@ -1,0 +1,192 @@
+{
+  "fixture": "toggle_inputs",
+  "design": "android",
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 56.0
+    },
+    "elements": [
+      {
+        "text": "Wi-Fi",
+        "rect": {
+          "l": 16.0,
+          "t": 16.0,
+          "w": 684.0,
+          "h": 24.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Wi-Fi",
+      "flags": [
+        "isButton",
+        "hasEnabledState",
+        "isEnabled",
+        "isFocusable",
+        "hasSelectedState"
+      ],
+      "actions": [
+        "tap",
+        "longPress",
+        "focus"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 800.0,
+        "h": 56.0
+      }
+    },
+    {
+      "label": "",
+      "flags": [
+        "hasEnabledState",
+        "isEnabled",
+        "hasToggledState",
+        "isFocusable"
+      ],
+      "actions": [
+        "tap",
+        "focus"
+      ],
+      "rect": {
+        "l": 716.0,
+        "t": 4.0,
+        "w": 60.0,
+        "h": 48.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap text \"Wi-Fi\"",
+      "sent": [
+        {
+          "id": 2206,
+          "update": {
+            "value": true
+          }
+        },
+        {
+          "id": 2206,
+          "event": "change",
+          "data": true
+        },
+        {
+          "id": 2201,
+          "event": "click",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Wi-Fi",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable",
+            "hasSelectedState"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 56.0
+          }
+        },
+        {
+          "label": "",
+          "flags": [
+            "hasEnabledState",
+            "isEnabled",
+            "hasToggledState",
+            "isToggled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "focus"
+          ],
+          "rect": {
+            "l": 716.0,
+            "t": 4.0,
+            "w": 60.0,
+            "h": 48.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "tap text \"Wi-Fi\"",
+      "sent": [
+        {
+          "id": 2206,
+          "update": {
+            "value": false
+          }
+        },
+        {
+          "id": 2206,
+          "event": "change",
+          "data": false
+        },
+        {
+          "id": 2201,
+          "event": "click",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Wi-Fi",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable",
+            "hasSelectedState"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 56.0
+          }
+        },
+        {
+          "label": "",
+          "flags": [
+            "hasEnabledState",
+            "isEnabled",
+            "hasToggledState",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "focus"
+          ],
+          "rect": {
+            "l": 716.0,
+            "t": 4.0,
+            "w": 60.0,
+            "h": 48.0
+          }
+        }
+      ]
+    }
+  ]
+}

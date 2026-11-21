@@ -17,9 +17,12 @@ import '../utils/layout.dart';
 import '../utils/misc.dart';
 import '../utils/numbers.dart';
 import '../utils/platform.dart';
+import '../utils/style_theme.dart';
 import '../utils/text.dart';
+import '../utils/pasted_file.dart';
 import '../utils/textfield.dart';
 import '../utils/platform_theme.dart';
+import '../widgets/paste_files_scope.dart';
 import 'base_controls.dart';
 
 class CupertinoTextFieldControl extends StatefulWidget {
@@ -117,11 +120,20 @@ class _CupertinoTextFieldControlState extends State<CupertinoTextFieldControl> {
     debugPrint("CupertinoTextField.$name($args)");
     switch (name) {
       case "focus":
-        _focusNode.requestFocus();
+        _activeFocusNode.requestFocus();
+      case "blur":
+        _focusNode.unfocus();
+        _shiftEnterfocusNode.unfocus();
       default:
         throw Exception("Unknown CupertinoTextField method: $name");
     }
   }
+
+  // shift_enter fields render with their own focus node.
+  FocusNode get _activeFocusNode =>
+      widget.control.getBool("shift_enter", false)!
+          ? _shiftEnterfocusNode
+          : _focusNode;
 
   void _onShiftEnterFocusChange() {
     setState(() {
@@ -129,6 +141,12 @@ class _CupertinoTextFieldControlState extends State<CupertinoTextFieldControl> {
     });
     widget.control
         .triggerEvent(_shiftEnterfocusNode.hasFocus ? "focus" : "blur");
+  }
+
+  // Ruby's on_paste_files (Flet's TextFieldPasteFilesEvent data).
+  void _onPasteFiles(List<PastedFile> files) {
+    widget.control.triggerEvent(
+        "paste_files", {"files": files.map((file) => file.toMap()).toList()});
   }
 
   void _onFocusChange() {
@@ -155,6 +173,115 @@ class _CupertinoTextFieldControlState extends State<CupertinoTextFieldControl> {
           _controller.text.substring(selection.start, selection.end),
       "selection": selection.toMap()
     });
+  }
+
+  /// Maps the Ruby `border` keyword onto the iOS field.
+  ///
+  /// Absent, or a Border map, keeps the native rounded field. "outline" and
+  /// "underline" draw the native hairline (or `border_color`/`border_width`;
+  /// width 0 removes it). "underline" has square corners and no fill.
+  /// "none" draws nothing, so the field blends into a form row or container.
+  /// `bgcolor`, `filled`/`fill_color`, `gradient`, `image` and `shadows`
+  /// still paint on any style. Returns null when there is nothing to paint,
+  /// which also keeps disabled "none" fields free of a gray box.
+  ///
+  /// While focused, `focused_border_color`/`focused_border_width` restyle the
+  /// drawn border (like Material's focusedBorder, "none" stays borderless) and
+  /// `focused_bgcolor` replaces the background. Border styling without a
+  /// `border` keyword implies "outline", as on Material.
+  BoxDecoration? _decoration(BuildContext context, RufletStyleTheme theme) {
+    final native = const CupertinoTextField().decoration!;
+    final nativeSide = (native.border! as Border).top;
+    final rawBorder = widget.control.get("border");
+    var style = rawBorder is String
+        ? parseFormFieldInputBorder(rawBorder.replaceAll("_", ""))
+        : null;
+    if (rawBorder is String && style == null) {
+      debugPrint("CupertinoTextField: unknown border \"$rawBorder\"");
+    }
+
+    final borderColor = widget.control.getColor("border_color", context);
+    final borderWidth = widget.control.getDouble("border_width");
+    final focusedBorderColor =
+        widget.control.getColor("focused_border_color", context);
+    final focusedBorderWidth = widget.control.getDouble("focused_border_width");
+    if (rawBorder == null &&
+        (borderColor != null ||
+            borderWidth != null ||
+            focusedBorderColor != null ||
+            focusedBorderWidth != null)) {
+      style = FormFieldInputBorder.outline;
+    }
+    final focusColor = _focused ? focusedBorderColor : null;
+    final focusWidth = _focused ? focusedBorderWidth : null;
+    final side = borderWidth == 0
+        ? BorderSide.none
+        : nativeSide.copyWith(
+            color: focusColor ?? borderColor, width: focusWidth ?? borderWidth);
+    final bgcolor = widget.control.getColor("bgcolor", context);
+    var color = widget.control.getBool("filled", false)!
+        ? widget.control.getColor("fill_color", context) ??
+            bgcolor ??
+            CupertinoColors.tertiarySystemFill
+        : bgcolor;
+    if (_focused) {
+      color = widget.control.getColor("focused_bgcolor", context) ?? color;
+    }
+    final gradient = widget.control.getGradient("gradient", theme);
+    final image = widget.control.getDecorationImage("image", context);
+    final shadows = widget.control.getBoxShadows("shadows", theme);
+    final borderRadius = widget.control.getBorderRadius("border_radius");
+    BorderRadiusGeometry? radius = borderRadius ?? native.borderRadius;
+
+    BoxBorder? border;
+    switch (style) {
+      case FormFieldInputBorder.outline:
+        border = side == BorderSide.none ? null : Border.fromBorderSide(side);
+        color ??= native.color;
+      case FormFieldInputBorder.underline:
+        border = side == BorderSide.none ? null : Border(bottom: side);
+        radius = borderRadius ?? BorderRadius.zero;
+      case FormFieldInputBorder.none:
+        border = null;
+      case null:
+        border = rawBorder is Map
+            ? _restyleSides(widget.control.getBorder("border", theme),
+                focusColor, focusWidth)
+            : native.border;
+        color ??= native.color;
+    }
+
+    if (color == null &&
+        border == null &&
+        gradient == null &&
+        image == null &&
+        (shadows == null || shadows.isEmpty)) {
+      return null;
+    }
+    return BoxDecoration(
+      color: color,
+      gradient: gradient,
+      image: image,
+      backgroundBlendMode: color != null || gradient != null
+          ? widget.control.getBlendMode("blend_mode")
+          : null,
+      border: border,
+      borderRadius: radius,
+      boxShadow: shadows,
+    );
+  }
+
+  /// Applies the focused color/width to every side a Border map draws.
+  Border? _restyleSides(Border? border, Color? color, double? width) {
+    if (border == null || (color == null && width == null)) return border;
+    BorderSide restyle(BorderSide side) => side == BorderSide.none
+        ? side
+        : side.copyWith(color: color, width: width);
+    return Border(
+        top: restyle(border.top),
+        right: restyle(border.right),
+        bottom: restyle(border.bottom),
+        left: restyle(border.left));
   }
 
   @override
@@ -213,6 +340,8 @@ class _CupertinoTextFieldControlState extends State<CupertinoTextFieldControl> {
     var textVerticalAlign = widget.control.getDouble("text_vertical_align");
     var rtl = widget.control.getBool("rtl", false)!;
     var autocorrect = widget.control.getBool("autocorrect", true)!;
+    var textInputAction =
+        widget.control.getTextInputAction("text_input_action");
     FocusNode focusNode = shiftEnter ? _shiftEnterfocusNode : _focusNode;
 
     var focusValue = widget.control.getString("focus");
@@ -231,31 +360,6 @@ class _CupertinoTextFieldControlState extends State<CupertinoTextFieldControl> {
     if (selection != null && selection != _controller.selection) {
       _controller.selection = selection;
       _selection = selection;
-    }
-
-    var borderRadius = widget.control.getBorderRadius("border_radius");
-
-    BoxBorder? border;
-    var borderWidth = widget.control.getDouble("border_width", 1.0)!;
-    var borderColor = widget.control.getColor("border_color", context) ??
-        const Color(0xFF000000);
-
-    try {
-      border = widget.control.getBorder("border", theme);
-      // adaptive TextField is being created
-    } catch (e) {
-      FormFieldInputBorder inputBorder = parseFormFieldInputBorder(
-        widget.control.getString("border"),
-        FormFieldInputBorder.outline,
-      )!;
-
-      if (inputBorder == FormFieldInputBorder.outline) {
-        border = Border.all(color: borderColor, width: borderWidth);
-      } else if (inputBorder == FormFieldInputBorder.underline) {
-        border =
-            Border(bottom: BorderSide(color: borderColor, width: borderWidth));
-        borderRadius = BorderRadius.zero;
-      }
     }
 
     var canRevealPassword =
@@ -277,10 +381,6 @@ class _CupertinoTextFieldControlState extends State<CupertinoTextFieldControl> {
       );
     }
     var fitParentSize = widget.control.getBool("fit_parent_size", false)!;
-    var defaultDecoration = const CupertinoTextField().decoration;
-    var gradient = widget.control.getGradient("gradient", theme);
-    var blendMode = widget.control.getBlendMode("blend_mode");
-    var bgcolor = widget.control.getColor("bgcolor", context);
     var label = widget.control.get("label");
     String? labelStr;
     if (label is String) {
@@ -301,20 +401,14 @@ class _CupertinoTextFieldControlState extends State<CupertinoTextFieldControl> {
         // label_style for adaptive TextField
         autofocus: autofocus,
         enabled: !widget.control.disabled,
-        onSubmitted: !multiline
+        textInputAction: textInputAction,
+        onSubmitted: !multiline ||
+                textInputActionEndsMultilineEditing(textInputAction)
             ? (String value) {
                 widget.control.triggerEvent("submit", value);
               }
             : null,
-        decoration: defaultDecoration?.copyWith(
-            color: bgcolor,
-            gradient: gradient,
-            image: widget.control.getDecorationImage("image", context),
-            backgroundBlendMode:
-                bgcolor != null || gradient != null ? blendMode : null,
-            border: border,
-            borderRadius: borderRadius,
-            boxShadow: widget.control.getBoxShadows("shadows", theme)),
+        decoration: _decoration(context, theme),
         cursorHeight: widget.control.getDouble("cursor_height"),
         showCursor: widget.control.getBool("show_cursor"),
         cursorWidth: widget.control.getDouble("cursor_width", 2.0)!,
@@ -387,12 +481,46 @@ class _CupertinoTextFieldControlState extends State<CupertinoTextFieldControl> {
           }
         });
 
+    textField = PasteFilesScope(
+        enabled: widget.control.getBool("on_paste_files", false)!,
+        focusNode: focusNode,
+        onPaste: _onPasteFiles,
+        child: textField);
+
     if (cursorColor != null || selectionColor != null) {
       textField = DefaultSelectionStyle.merge(
           cursorColor: cursorColor,
           selectionColor: selectionColor,
           child: textField);
     }
+
+    final error = widget.control.get("error");
+    final errorStyle = TextStyle(
+      fontSize: 12,
+      color: CupertinoColors.systemRed.resolveFrom(context),
+    ).merge(widget.control.getTextStyle("error_style", theme));
+    final errorWidget = error is Control
+        ? widget.control.buildWidget("error")
+        : error == null
+            ? null
+            : Text(
+                error.toString(),
+                style: errorStyle,
+                maxLines: widget.control.getInt("error_max_lines"),
+              );
+    textField = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      textDirection: rtl ? TextDirection.rtl : null,
+      children: [
+        if (fitParentSize) Expanded(child: textField) else textField,
+        if (errorWidget != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Semantics(liveRegion: true, child: errorWidget),
+          ),
+      ],
+    );
 
     if (widget.control.getExpand("expand", 0)! > 0) {
       return LayoutControl(control: widget.control, child: textField);

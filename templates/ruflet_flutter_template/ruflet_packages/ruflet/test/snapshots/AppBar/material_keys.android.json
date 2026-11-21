@@ -1,0 +1,96 @@
+{
+  "fixture": "material_keys",
+  "design": "android",
+  "sizing": {
+    "preferred_height": 70.0
+  },
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 70.0
+    },
+    "elements": [
+      {
+        "icon": 984246,
+        "rect": {
+          "l": 24.0,
+          "t": 23.0,
+          "w": 24.0,
+          "h": 24.0
+        }
+      },
+      {
+        "text": "Material",
+        "rect": {
+          "l": 328.0,
+          "t": 26.0,
+          "w": 144.0,
+          "h": 18.0
+        }
+      },
+      {
+        "icon": 984497,
+        "rect": {
+          "l": 760.0,
+          "t": 23.0,
+          "w": 24.0,
+          "h": 24.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "",
+      "flags": [
+        "isButton",
+        "hasEnabledState",
+        "isEnabled",
+        "isFocusable"
+      ],
+      "actions": [
+        "tap",
+        "longPress",
+        "focus"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 72.0,
+        "h": 70.0
+      }
+    },
+    {
+      "label": "Material",
+      "flags": [],
+      "actions": [],
+      "rect": {
+        "l": 328.0,
+        "t": 26.0,
+        "w": 144.0,
+        "h": 18.0
+      }
+    },
+    {
+      "label": "",
+      "flags": [
+        "isButton",
+        "hasEnabledState",
+        "isEnabled",
+        "isFocusable"
+      ],
+      "actions": [
+        "tap",
+        "longPress",
+        "focus"
+      ],
+      "rect": {
+        "l": 748.0,
+        "t": 11.0,
+        "w": 48.0,
+        "h": 48.0
+      }
+    }
+  ],
+  "steps": []
+}

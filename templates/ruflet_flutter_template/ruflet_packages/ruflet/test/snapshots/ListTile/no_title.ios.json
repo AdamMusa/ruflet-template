@@ -1,0 +1,84 @@
+{
+  "fixture": "no_title",
+  "design": "ios",
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 48.0
+    },
+    "elements": [
+      {
+        "icon": 984246,
+        "rect": {
+          "l": 22.0,
+          "t": 12.0,
+          "w": 24.0,
+          "h": 24.0
+        }
+      },
+      {
+        "text": "Only a subtitle",
+        "rect": {
+          "l": 64.0,
+          "t": 19.5,
+          "w": 173.9,
+          "h": 12.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Only a subtitle",
+      "flags": [
+        "isButton",
+        "hasEnabledState",
+        "isEnabled",
+        "hasSelectedState"
+      ],
+      "actions": [
+        "tap",
+        "longPress"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 800.0,
+        "h": 48.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap text \"Only a subtitle\"",
+      "sent": [
+        {
+          "id": 2201,
+          "event": "click",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Only a subtitle",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "hasSelectedState"
+          ],
+          "actions": [
+            "tap",
+            "longPress"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 48.0
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -10,13 +10,13 @@ import 'utils.dart';
 // The Color Picker which contains Material Design Color Palette.
 class CupertinoSwatchPicker extends StatefulWidget {
   const CupertinoSwatchPicker({
-    Key? key,
+    super.key,
     required this.pickerColor,
     required this.onColorChanged,
     this.onPrimaryChanged,
     this.enableLabel = false,
     this.portraitOnly = false,
-  }) : super(key: key);
+  });
 
   final Color pickerColor;
   final ValueChanged<Color> onColorChanged;
@@ -100,11 +100,11 @@ class _CupertinoSwatchPickerState extends State<CupertinoSwatchPicker> {
 
   @override
   void initState() {
-    for (List<Color> _colors in _colorTypes) {
-      _shadingTypes(_colors).forEach((Map<Color, String> color) {
-        if (widget.pickerColor.value == color.keys.first.value) {
+    for (List<Color> colors in _colorTypes) {
+      _shadingTypes(colors).forEach((Map<Color, String> color) {
+        if (widget.pickerColor.toARGB32() == color.keys.first.toARGB32()) {
           return setState(() {
-            _currentColorType = _colors;
+            _currentColorType = colors;
             _currentShading = color.keys.first;
           });
         }
@@ -115,20 +115,20 @@ class _CupertinoSwatchPickerState extends State<CupertinoSwatchPicker> {
 
   @override
   Widget build(BuildContext context) {
-    bool _isPortrait =
+    bool isPortrait =
         MediaQuery.of(context).orientation == Orientation.portrait ||
             widget.portraitOnly;
 
-    Widget _colorList() {
+    Widget colorList() {
       return Container(
         clipBehavior: Clip.hardEdge,
         decoration: const BoxDecoration(),
         child: Container(
-          margin: _isPortrait
+          margin: isPortrait
               ? const EdgeInsets.only(right: 10)
               : const EdgeInsets.only(bottom: 10),
-          width: _isPortrait ? 60 : null,
-          height: _isPortrait ? null : 60,
+          width: isPortrait ? 60 : null,
+          height: isPortrait ? null : 60,
           decoration: BoxDecoration(
             color:
                 CupertinoColors.secondarySystemBackground.resolveFrom(context),
@@ -145,7 +145,7 @@ class _CupertinoSwatchPickerState extends State<CupertinoSwatchPicker> {
                       : PaletteColors.black38,
                   blurRadius: 10)
             ],
-            border: _isPortrait
+            border: isPortrait
                 ? Border(
                     right: BorderSide(
                         color: ((CupertinoTheme.of(context).brightness ??
@@ -167,22 +167,23 @@ class _CupertinoSwatchPickerState extends State<CupertinoSwatchPicker> {
             behavior: ScrollConfiguration.of(context)
                 .copyWith(dragDevices: PointerDeviceKind.values.toSet()),
             child: ListView(
-              scrollDirection: _isPortrait ? Axis.vertical : Axis.horizontal,
+              scrollDirection: isPortrait ? Axis.vertical : Axis.horizontal,
               children: [
-                _isPortrait
+                isPortrait
                     ? const Padding(padding: EdgeInsets.only(top: 7))
                     : const Padding(padding: EdgeInsets.only(left: 7)),
-                ..._colorTypes.map((List<Color> _colors) {
-                  Color _colorType = _colors[0];
+                ..._colorTypes.map((List<Color> colors) {
+                  Color colorType = colors[0];
                   return GestureDetector(
                     onTap: () {
-                      if (widget.onPrimaryChanged != null)
-                        widget.onPrimaryChanged!(_colorType);
-                      setState(() => _currentColorType = _colors);
+                      if (widget.onPrimaryChanged != null) {
+                        widget.onPrimaryChanged!(colorType);
+                      }
+                      setState(() => _currentColorType = colors);
                     },
                     child: Container(
                       color: const Color(0x00000000),
-                      padding: _isPortrait
+                      padding: isPortrait
                           ? const EdgeInsets.fromLTRB(0, 7, 0, 7)
                           : const EdgeInsets.fromLTRB(7, 0, 7, 0),
                       child: Align(
@@ -191,11 +192,11 @@ class _CupertinoSwatchPickerState extends State<CupertinoSwatchPicker> {
                           width: 25,
                           height: 25,
                           decoration: BoxDecoration(
-                            color: _colorType,
+                            color: colorType,
                             shape: BoxShape.circle,
-                            boxShadow: _currentColorType == _colors
+                            boxShadow: _currentColorType == colors
                                 ? [
-                                    _colorType ==
+                                    colorType ==
                                             CupertinoColors
                                                 .secondarySystemBackground
                                                 .resolveFrom(context)
@@ -209,12 +210,12 @@ class _CupertinoSwatchPickerState extends State<CupertinoSwatchPicker> {
                                             blurRadius: 10,
                                           )
                                         : BoxShadow(
-                                            color: _colorType,
+                                            color: colorType,
                                             blurRadius: 10,
                                           ),
                                   ]
                                 : null,
-                            border: _colorType ==
+                            border: colorType ==
                                     CupertinoColors.secondarySystemBackground
                                         .resolveFrom(context)
                                 ? Border.all(
@@ -232,7 +233,7 @@ class _CupertinoSwatchPickerState extends State<CupertinoSwatchPicker> {
                     ),
                   );
                 }),
-                _isPortrait
+                isPortrait
                     ? const Padding(padding: EdgeInsets.only(top: 5))
                     : const Padding(padding: EdgeInsets.only(left: 5)),
               ],
@@ -242,45 +243,45 @@ class _CupertinoSwatchPickerState extends State<CupertinoSwatchPicker> {
       );
     }
 
-    Widget _shadingList() {
+    Widget shadingList() {
       return ScrollConfiguration(
         behavior: ScrollConfiguration.of(context)
             .copyWith(dragDevices: PointerDeviceKind.values.toSet()),
         child: ListView(
-          scrollDirection: _isPortrait ? Axis.vertical : Axis.horizontal,
+          scrollDirection: isPortrait ? Axis.vertical : Axis.horizontal,
           children: [
-            _isPortrait
+            isPortrait
                 ? const Padding(padding: EdgeInsets.only(top: 15))
                 : const Padding(padding: EdgeInsets.only(left: 15)),
             ..._shadingTypes(_currentColorType).map((Map<Color, String> color) {
-              final Color _color = color.keys.first;
+              final Color shade = color.keys.first;
               return GestureDetector(
                 onTap: () {
-                  setState(() => _currentShading = _color);
-                  widget.onColorChanged(_color);
+                  setState(() => _currentShading = shade);
+                  widget.onColorChanged(shade);
                 },
                 child: Container(
                   color: const Color(0x00000000),
-                  margin: _isPortrait
+                  margin: isPortrait
                       ? const EdgeInsets.only(right: 10)
                       : const EdgeInsets.only(bottom: 10),
-                  padding: _isPortrait
+                  padding: isPortrait
                       ? const EdgeInsets.fromLTRB(0, 7, 0, 7)
                       : const EdgeInsets.fromLTRB(7, 0, 7, 0),
                   child: Align(
                     child: AnimatedContainer(
                       curve: Curves.fastOutSlowIn,
                       duration: const Duration(milliseconds: 500),
-                      width: _isPortrait
-                          ? (_currentShading == _color ? 250 : 230)
-                          : (_currentShading == _color ? 50 : 30),
-                      height: _isPortrait ? 50 : 220,
+                      width: isPortrait
+                          ? (_currentShading == shade ? 250 : 230)
+                          : (_currentShading == shade ? 50 : 30),
+                      height: isPortrait ? 50 : 220,
                       decoration: BoxDecoration(
-                        color: _color,
-                        boxShadow: _currentShading == _color
+                        color: shade,
+                        boxShadow: _currentShading == shade
                             ? [
-                                (_color == PaletteColors.white) ||
-                                        (_color == PaletteColors.black)
+                                (shade == PaletteColors.white) ||
+                                        (shade == PaletteColors.black)
                                     ? BoxShadow(
                                         color: ((CupertinoTheme.of(context)
                                                         .brightness ??
@@ -291,13 +292,13 @@ class _CupertinoSwatchPickerState extends State<CupertinoSwatchPicker> {
                                         blurRadius: 10,
                                       )
                                     : BoxShadow(
-                                        color: _color,
+                                        color: shade,
                                         blurRadius: 10,
                                       ),
                               ]
                             : null,
-                        border: (_color == PaletteColors.white) ||
-                                (_color == PaletteColors.black)
+                        border: (shade == PaletteColors.white) ||
+                                (shade == PaletteColors.black)
                             ? Border.all(
                                 color:
                                     ((CupertinoTheme.of(context).brightness ??
@@ -309,13 +310,13 @@ class _CupertinoSwatchPickerState extends State<CupertinoSwatchPicker> {
                             : null,
                       ),
                       child: widget.enableLabel
-                          ? _isPortrait
+                          ? isPortrait
                               ? Row(
                                   children: [
                                     Text(
                                       '  ${color.values.first}',
                                       style: TextStyle(
-                                          color: useWhiteForeground(_color)
+                                          color: useWhiteForeground(shade)
                                               ? PaletteColors.white
                                               : PaletteColors.black),
                                     ),
@@ -323,9 +324,11 @@ class _CupertinoSwatchPickerState extends State<CupertinoSwatchPicker> {
                                       child: Align(
                                         alignment: Alignment.centerRight,
                                         child: Text(
-                                          '#${(_color.toString().replaceFirst('Color(0xff', '').replaceFirst(')', '')).toUpperCase()}  ',
+                                          // From the ARGB channels: Color.toString()
+                                          // changed format in Flutter 3.27.
+                                          '${colorToHex(shade, includeHashSign: true, enableAlpha: false)}  ',
                                           style: TextStyle(
-                                            color: useWhiteForeground(_color)
+                                            color: useWhiteForeground(shade)
                                                 ? PaletteColors.white
                                                 : PaletteColors.black,
                                             fontWeight: FontWeight.bold,
@@ -337,14 +340,14 @@ class _CupertinoSwatchPickerState extends State<CupertinoSwatchPicker> {
                                 )
                               : AnimatedOpacity(
                                   duration: const Duration(milliseconds: 300),
-                                  opacity: _currentShading == _color ? 1 : 0,
+                                  opacity: _currentShading == shade ? 1 : 0,
                                   child: Container(
                                     padding: const EdgeInsets.only(top: 16),
                                     alignment: Alignment.topCenter,
                                     child: Text(
                                       color.values.first,
                                       style: TextStyle(
-                                        color: useWhiteForeground(_color)
+                                        color: useWhiteForeground(shade)
                                             ? PaletteColors.white
                                             : PaletteColors.black,
                                         fontWeight: FontWeight.bold,
@@ -360,7 +363,7 @@ class _CupertinoSwatchPickerState extends State<CupertinoSwatchPicker> {
                 ),
               );
             }),
-            _isPortrait
+            isPortrait
                 ? const Padding(padding: EdgeInsets.only(top: 15))
                 : const Padding(padding: EdgeInsets.only(left: 15)),
           ],
@@ -368,17 +371,17 @@ class _CupertinoSwatchPickerState extends State<CupertinoSwatchPicker> {
       );
     }
 
-    if (_isPortrait) {
+    if (isPortrait) {
       return SizedBox(
         width: 350,
         height: 500,
         child: Row(
           children: <Widget>[
-            _colorList(),
+            colorList(),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: _shadingList(),
+                child: shadingList(),
               ),
             ),
           ],
@@ -390,11 +393,11 @@ class _CupertinoSwatchPickerState extends State<CupertinoSwatchPicker> {
         height: 300,
         child: Column(
           children: <Widget>[
-            _colorList(),
+            colorList(),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                child: _shadingList(),
+                child: shadingList(),
               ),
             ),
           ],

@@ -89,9 +89,23 @@ BlurStyle? parseBlurStyle(String? value, [BlurStyle? defaultValue]) {
   return parseEnum(BlurStyle.values, value, defaultValue);
 }
 
+/// Ruby `keyboard_dismiss_behavior`: `"manual"` or `"onDrag"` (`"on_drag"`
+/// also accepted). `null` keeps the inherited ScrollBehavior default.
+ScrollViewKeyboardDismissBehavior? parseKeyboardDismissBehavior(String? value,
+    [ScrollViewKeyboardDismissBehavior? defaultValue]) {
+  return parseEnum(ScrollViewKeyboardDismissBehavior.values,
+      value?.replaceAll("_", ""), defaultValue);
+}
+
 extension MiscParsers on Control {
   Clip? getClipBehavior(String propertyName, [Clip? defaultValue]) {
     return parseClip(get(propertyName), defaultValue);
+  }
+
+  ScrollViewKeyboardDismissBehavior? getKeyboardDismissBehavior(
+      String propertyName,
+      [ScrollViewKeyboardDismissBehavior? defaultValue]) {
+    return parseKeyboardDismissBehavior(get(propertyName), defaultValue);
   }
 
   Orientation? getOrientation(String propertyName,

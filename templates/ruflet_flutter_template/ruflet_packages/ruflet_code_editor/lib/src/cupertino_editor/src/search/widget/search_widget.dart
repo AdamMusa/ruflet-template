@@ -1,4 +1,4 @@
-// ignore_for_file: invalid_use_of_internal_member
+// ignore_for_file: invalid_use_of_internal_member, implementation_imports
 // Modified from flutter_code_editor 0.3.5 for the Cupertino renderer.
 // Upstream license: cupertino_editor/LICENSE (Apache-2.0).
 import 'package:flutter/cupertino.dart';

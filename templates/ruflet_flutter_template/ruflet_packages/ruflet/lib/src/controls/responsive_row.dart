@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/widgets.dart';
 
 import '../models/control.dart';
@@ -8,6 +10,7 @@ import '../widgets/error.dart';
 import '../widgets/ruflet_store_mixin.dart';
 import 'base_controls.dart';
 import 'control_widget.dart';
+import 'scrollable_control.dart';
 
 class ResponsiveRowControl extends StatelessWidget with RufletStoreMixin {
   final Control control;
@@ -60,14 +63,20 @@ class ResponsiveRowControl extends StatelessWidget with RufletStoreMixin {
         }
 
         var wrap = (totalCols > bpColumns);
+        // A hair less than the spacing keeps rounding from pushing the last
+        // child to a new run. A spacing from 0 up to 0.1 must not turn into a
+        // negative gap; a negative spacing is an overlap Ruby asked for, and
+        // keeps Flet's `spacing - 0.1` (the child widths are sized for it).
+        final gap =
+            bpSpacing < 0 ? bpSpacing - 0.1 : math.max(0.0, bpSpacing - 0.1);
 
         try {
           return wrap
               ? Wrap(
                   direction: Axis.horizontal,
-                  spacing: bpSpacing - 0.1,
+                  spacing: gap,
                   runSpacing: getBreakpointNumber(
-                      runSpacing, view.size.width, view.breakpoints),
+                      runSpacing, view.size.width, breakpoints),
                   alignment: control.getWrapAlignment(
                       "alignment", WrapAlignment.start)!,
                   crossAxisAlignment: control.getWrapCrossAlignment(
@@ -75,7 +84,7 @@ class ResponsiveRowControl extends StatelessWidget with RufletStoreMixin {
                   children: controls,
                 )
               : Row(
-                  spacing: bpSpacing - 0.1,
+                  spacing: gap,
                   mainAxisAlignment: control.getMainAxisAlignment(
                       "alignment", MainAxisAlignment.start)!,
                   mainAxisSize: MainAxisSize.max,
@@ -89,7 +98,8 @@ class ResponsiveRowControl extends StatelessWidget with RufletStoreMixin {
         }
       });
 
-      return LayoutControl(control: control, child: result);
+      return LayoutControl(
+          control: control, child: wrapInScrollableControl(control, result));
     });
   }
 }

@@ -1,0 +1,118 @@
+{
+  "fixture": "maximal",
+  "design": "android",
+  "geometry": {
+    "size": {
+      "w": 195.0,
+      "h": 48.0
+    },
+    "elements": [
+      {
+        "icon": 984246,
+        "rect": {
+          "l": 12.0,
+          "t": 15.0,
+          "w": 18.0,
+          "h": 18.0
+        }
+      },
+      {
+        "text": "Maximal",
+        "rect": {
+          "l": 36.0,
+          "t": 13.5,
+          "w": 147.0,
+          "h": 21.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Maximal",
+      "flags": [
+        "isButton",
+        "hasEnabledState",
+        "isEnabled",
+        "isFocusable"
+      ],
+      "actions": [
+        "tap",
+        "longPress",
+        "focus"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 195.0,
+        "h": 48.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "semantics tap",
+      "sent": [
+        {
+          "id": 1601,
+          "event": "click",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Maximal",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 195.0,
+            "h": 48.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "long press \"Maximal\"",
+      "sent": [
+        {
+          "id": 1601,
+          "event": "long_press",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Maximal",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 195.0,
+            "h": 48.0
+          }
+        }
+      ]
+    }
+  ]
+}

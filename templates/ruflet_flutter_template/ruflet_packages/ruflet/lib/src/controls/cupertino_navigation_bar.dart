@@ -22,6 +22,11 @@ class _CupertinoNavigationBarControlState
   int _selectedIndex = 0;
 
   void _onTap(int index) {
+    // Ruby's navigation_bar_destination(disabled:) cannot be selected, as in
+    // the Material renderer (NavigationDestination.enabled). CupertinoTabBar
+    // has no per-item flag, so the tap on a disabled destination is dropped.
+    final destinations = widget.control.children("destinations");
+    if (index < destinations.length && destinations[index].disabled) return;
     _selectedIndex = index;
     widget.control
         .updateProperties({"selected_index": _selectedIndex}, notify: true);

@@ -1,0 +1,19 @@
+{
+  "fixture": "list_tile_disabled",
+  "design": "ios",
+  "geometry": {
+    "size": {
+      "w": 18.0,
+      "h": 18.0
+    },
+    "elements": []
+  },
+  "semantics": [],
+  "steps": [
+    {
+      "step": "tap text \"Tile\"",
+      "sent": [],
+      "semantics": []
+    }
+  ]
+}

@@ -16,6 +16,10 @@ class _CupertinoMaterialPickerControlState
     extends State<CupertinoMaterialPickerControl> {
   Color _pickerColor = PaletteColors.black;
 
+  // The picker keeps the selection of its first build; rebuild it when Ruby
+  // changes `color`, not when the control echoes the user's own pick.
+  int _rubyColorVersion = 0;
+
   void _onColorChanged(Color color) {
     setState(() {
       _pickerColor = color;
@@ -36,11 +40,13 @@ class _CupertinoMaterialPickerControlState
 
     final controlColor =
         widget.control.getColor("color", context) ?? PaletteColors.black;
-    if (controlColor.value != _pickerColor.value) {
+    if (controlColor.toARGB32() != _pickerColor.toARGB32()) {
       _pickerColor = controlColor;
+      _rubyColorVersion++;
     }
 
     final picker = CupertinoSwatchPicker(
+      key: ValueKey(_rubyColorVersion),
       pickerColor: _pickerColor,
       onColorChanged: _onColorChanged,
       onPrimaryChanged: _onPrimaryChanged,

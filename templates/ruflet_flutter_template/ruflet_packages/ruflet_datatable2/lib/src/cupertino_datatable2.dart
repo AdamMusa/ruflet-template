@@ -1,9 +1,12 @@
 import 'dart:math' as math;
 
+import 'package:data_table_2/data_table_2.dart' show ColumnSize;
 import 'package:ruflet/ruflet.dart';
 import 'package:ruflet/src/controls/cupertino_control_chrome.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
+
+import 'utils/datatable.dart';
 
 /// Cupertino's table renderer owns its cells, selection controls and scrolling.
 /// No Material DataTable, theme, ink response or checkbox is mounted here.
@@ -294,10 +297,10 @@ class _CupertinoDataTable2ControlState
       final explicitWidths = columns.fold(
           0.0, (sum, c) => sum + (c.getDouble('fixed_width') ?? 0));
       double weight(Control column) =>
-          switch (column.getString('size', 's')!.toLowerCase()) {
-            'm' => 1,
-            'l' => control.getDouble('lm_ratio', 1.2)!,
-            _ => control.getDouble('sm_ratio', .67)!,
+          switch (parseColumnSize(column.getString('size'), ColumnSize.S)!) {
+            ColumnSize.M => 1,
+            ColumnSize.L => control.getDouble('lm_ratio', 1.2)!,
+            ColumnSize.S => control.getDouble('sm_ratio', .67)!,
           };
       final flexibleColumns =
           columns.where((c) => c.getDouble('fixed_width') == null);
@@ -425,6 +428,14 @@ class _CupertinoDataTable2ControlState
                   : rowHeights.fold(0.0, (a, b) => a + b) +
                       control.getDouble('bottom_margin', 0)!) -
               headerHeight);
+      // As in data_table_2, a bounded table without rows gives `empty` the
+      // whole height under the heading (and no bottom margin), so an `empty`
+      // that centers itself sits in the same place on both designs.
+      final emptyFillsBody = rows.isEmpty && constraints.hasBoundedHeight;
+      // With `fixed_top_rows: 0` the heading scrolls in the body above
+      // `empty`, so `empty` gets only what is left under it.
+      final emptyHeight = math.max(0.0,
+          bodyHeight - rowHeights.skip(fixedRows).fold(0.0, (a, b) => a + b));
       Widget body = SingleChildScrollView(
         controller: _horizontal,
         scrollDirection: Axis.horizontal,
@@ -434,9 +445,15 @@ class _CupertinoDataTable2ControlState
               controller: _vertical,
               child: Column(mainAxisSize: MainAxisSize.min, children: [
                 pane(fixedRows, rowHeights.length, fixedColumns, widths.length),
-                if (rows.isEmpty)
-                  control.buildWidget('empty') ?? const SizedBox(),
-                SizedBox(height: control.getDouble('bottom_margin', 0)!),
+                if (emptyFillsBody)
+                  SizedBox(
+                      height: emptyHeight,
+                      child: control.buildWidget('empty') ?? const SizedBox())
+                else ...[
+                  if (rows.isEmpty)
+                    control.buildWidget('empty') ?? const SizedBox(),
+                  SizedBox(height: control.getDouble('bottom_margin', 0)!),
+                ],
               ]),
             )),
       );
@@ -476,21 +493,28 @@ class _CupertinoDataTable2ControlState
                   ])),
             SizedBox(
                 height: bodyHeight,
-                child: Row(children: [
-                  if (fixedColumns > 0)
-                    SizedBox(
-                        width: fixedWidth,
-                        child: SingleChildScrollView(
-                          controller: _fixedVertical,
-                          child:
-                              Column(mainAxisSize: MainAxisSize.min, children: [
-                            pane(fixedRows, rowHeights.length, 0, fixedColumns),
-                            SizedBox(
-                                height: control.getDouble('bottom_margin', 0)!),
-                          ]),
-                        )),
-                  Expanded(child: body),
-                ])),
+                // The body panes fill the height below the heading so rows
+                // start right under it instead of floating mid-table.
+                child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      if (fixedColumns > 0)
+                        SizedBox(
+                            width: fixedWidth,
+                            child: SingleChildScrollView(
+                              controller: _fixedVertical,
+                              child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    pane(fixedRows, rowHeights.length, 0,
+                                        fixedColumns),
+                                    SizedBox(
+                                        height: control.getDouble(
+                                            'bottom_margin', 0)!),
+                                  ]),
+                            )),
+                      Expanded(child: body),
+                    ])),
           ]));
     });
     table = Container(

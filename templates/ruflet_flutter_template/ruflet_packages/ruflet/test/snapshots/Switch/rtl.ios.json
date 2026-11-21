@@ -1,0 +1,82 @@
+{
+  "fixture": "rtl",
+  "design": "ios",
+  "geometry": {
+    "size": {
+      "w": 108.8,
+      "h": 39.0
+    },
+    "elements": [
+      {
+        "text": "RTL",
+        "rect": {
+          "l": 0.0,
+          "t": 11.0,
+          "w": 49.8,
+          "h": 17.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "RTL",
+      "flags": [
+        "hasEnabledState",
+        "isEnabled",
+        "hasToggledState",
+        "isFocusable"
+      ],
+      "actions": [
+        "tap",
+        "focus"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 108.8,
+        "h": 39.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap text \"RTL\"",
+      "sent": [
+        {
+          "id": 1001,
+          "update": {
+            "value": true
+          }
+        },
+        {
+          "id": 1001,
+          "event": "change",
+          "data": true
+        }
+      ],
+      "semantics": [
+        {
+          "label": "RTL",
+          "flags": [
+            "hasEnabledState",
+            "isEnabled",
+            "hasToggledState",
+            "isToggled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 108.8,
+            "h": 39.0
+          }
+        }
+      ]
+    }
+  ]
+}

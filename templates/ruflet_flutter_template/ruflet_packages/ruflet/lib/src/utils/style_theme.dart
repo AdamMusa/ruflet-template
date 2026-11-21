@@ -24,7 +24,7 @@ class RufletStyleTheme {
   static RufletStyleTheme of(BuildContext context) {
     final scope =
         context.dependOnInheritedWidgetOfExactType<RufletStyleThemeScope>();
-    if (scope != null) return scope.data;
+    if (scope != null) return scope.localTheme?.call(context) ?? scope.data;
     // Also supports design-neutral controls embedded in a plain WidgetsApp.
     return RufletStyleTheme(
       brightness:
@@ -37,9 +37,16 @@ class RufletStyleTheme {
 class RufletStyleThemeScope extends InheritedWidget {
   final RufletStyleTheme data;
 
+  /// The theme for a descendant [BuildContext] on a surface the design
+  /// resolves its colours differently on (Cupertino dialogs, sheets and
+  /// popups are elevated), or null where [data] applies. Only the design
+  /// that installs the scope knows what such a surface is.
+  final RufletStyleTheme? Function(BuildContext context)? localTheme;
+
   const RufletStyleThemeScope({
     super.key,
     required this.data,
+    this.localTheme,
     required super.child,
   });
 

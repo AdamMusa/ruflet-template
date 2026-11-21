@@ -3,11 +3,21 @@ import 'package:flutter/widgets.dart';
 import 'package:flutter_code_editor/flutter_code_editor.dart' as fce;
 import 'package:flutter_highlight/theme_map.dart';
 
+/// The highlight.js entry [name] selects in [names]. highlight.js names
+/// use hyphens (`atom-one-dark`, `clojure-repl`) while Ruby symbols arrive
+/// in snake_case (`:atom_one_dark`), so an unmatched name is retried with
+/// hyphens; an exact match (e.g. `qtcreator_dark`) wins.
+T? highlightEntry<T>(Map<String, T> names, String? name) {
+  if (name == null) return null;
+  final lower = name.toLowerCase();
+  return names[lower] ?? names[lower.replaceAll('_', '-')];
+}
+
 fce.CodeThemeData? parseCodeThemeData(Control control, BuildContext context) {
   final codeTheme = control.get("code_theme");
   if (codeTheme is! Map) {
     if (codeTheme is String) {
-      final named = themeMap[codeTheme.toLowerCase()];
+      final named = highlightEntry(themeMap, codeTheme);
       return named == null ? null : fce.CodeThemeData(styles: named);
     }
     return null;
@@ -15,7 +25,7 @@ fce.CodeThemeData? parseCodeThemeData(Control control, BuildContext context) {
 
   final themeName = codeTheme["name"];
   if (themeName is String) {
-    final named = themeMap[themeName.toLowerCase()];
+    final named = highlightEntry(themeMap, themeName);
     if (named != null) {
       return fce.CodeThemeData(styles: named);
     }

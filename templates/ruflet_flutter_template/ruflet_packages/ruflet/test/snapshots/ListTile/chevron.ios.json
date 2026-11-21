@@ -1,0 +1,48 @@
+{
+  "fixture": "chevron",
+  "design": "ios",
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 44.0
+    },
+    "elements": [
+      {
+        "text": "Tile",
+        "rect": {
+          "l": 20.0,
+          "t": 13.5,
+          "w": 66.4,
+          "h": 17.0
+        }
+      },
+      {
+        "icon": 62419,
+        "rect": {
+          "l": 769.0,
+          "t": 13.5,
+          "w": 17.0,
+          "h": 17.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Tile",
+      "flags": [
+        "hasEnabledState",
+        "isEnabled",
+        "hasSelectedState"
+      ],
+      "actions": [],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 800.0,
+        "h": 44.0
+      }
+    }
+  ],
+  "steps": []
+}

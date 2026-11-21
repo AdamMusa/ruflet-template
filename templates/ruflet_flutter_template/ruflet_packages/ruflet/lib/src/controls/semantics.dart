@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import '../extensions/control.dart';
 import '../models/control.dart';
 import '../utils/numbers.dart';
 import 'base_controls.dart';
@@ -12,7 +13,17 @@ class SemanticsControl extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     debugPrint("Semantics build: ${control.id}");
+    Widget? content = control.buildWidget("content");
+    if (content != null && control.getBool("on_double_tap", false)!) {
+      // Flutter has no double-tap semantics action, so detect the gesture.
+      content = GestureDetector(
+          onDoubleTap: () => control.triggerEvent("double_tap"),
+          child: content);
+    }
     Semantics semantics = Semantics(
+      // A stable ID for accessibility tools and widget tests (Android
+      // resource-id, iOS accessibilityIdentifier, web flt-semantics-identifier).
+      identifier: control.getString("identifier"),
       label: control.getString("label"),
       enabled: !control.disabled,
       expanded: control.getBool("expanded"),
@@ -22,20 +33,20 @@ class SemanticsControl extends StatelessWidget {
       button: control.getBool("button"),
       slider: control.getBool("slider"),
       value: control.getString("value"),
-      textField: control.getBool("text_field"),
+      textField: control.getBool("textfield"),
       image: control.getBool("image"),
       link: control.getBool("link"),
       header: control.getBool("header"),
       increasedValue: control.getString("increased_value"),
       decreasedValue: control.getString("decreased_value"),
-      hint: control.getString("hint"),
-      onTapHint: control.getString("on_tap_hint"),
-      onLongPressHint: control.getString("on_long_press_hint"),
+      hint: control.getString("hint_text"),
+      onTapHint: control.getString("on_tap_hint_text"),
+      onLongPressHint: control.getString("on_long_press_hint_text"),
       container: control.getBool("container", false)!,
       liveRegion: control.getBool("live_region"),
       obscured: control.getBool("obscured"),
       multiline: control.getBool("multiline"),
-      focused: control.getBool("focused"),
+      focused: control.getBool("focus"),
       readOnly: control.getBool("read_only"),
       focusable: control.getBool("focusable"),
       tooltip: control.getString("tooltip"),
@@ -45,8 +56,8 @@ class SemanticsControl extends StatelessWidget {
       headingLevel: control.getInt("heading_level"),
       excludeSemantics: control.getBool("exclude_semantics", false)!,
       mixed: control.getBool("mixed"),
-      onTap: control.getBool("on_click", false)!
-          ? () => control.triggerEvent("click")
+      onTap: control.getBool("on_tap", false)!
+          ? () => control.triggerEvent("tap")
           : null,
       onIncrease: control.getBool("on_increase", false)!
           ? () => control.triggerEvent("increase")
@@ -78,8 +89,8 @@ class SemanticsControl extends StatelessWidget {
       onPaste: control.getBool("on_paste", false)!
           ? () => control.triggerEvent("paste")
           : null,
-      onLongPress: control.getBool("on_dismiss", false)!
-          ? () => control.triggerEvent("dismiss")
+      onLongPress: control.getBool("on_long_press", false)!
+          ? () => control.triggerEvent("long_press")
           : null,
       onMoveCursorForwardByCharacter: control.getBool(
               "on_move_cursor_forward_by_character", false)!
@@ -102,6 +113,7 @@ class SemanticsControl extends StatelessWidget {
       onSetText: control.getBool("on_set_text", false)!
           ? (String text) => control.triggerEvent("set_text", text)
           : null,
+      child: content,
     );
 
     return LayoutControl(control: control, child: semantics);

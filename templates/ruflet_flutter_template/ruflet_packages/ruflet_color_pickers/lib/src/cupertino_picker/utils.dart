@@ -3,6 +3,7 @@
 import 'dart:math';
 import 'package:flutter/painting.dart';
 import 'colors.dart';
+import '../utils/color_channels.dart';
 
 /// Check if is good condition to use white foreground color by passing
 /// the background color, and optional bias.
@@ -17,9 +18,9 @@ bool useWhiteForeground(Color backgroundColor, {double bias = 0.0}) {
   // return 1.05 / (color.computeLuminance() + 0.05) > 4.5;
 
   // New:
-  int v = sqrt(pow(backgroundColor.red, 2) * 0.299 +
-          pow(backgroundColor.green, 2) * 0.587 +
-          pow(backgroundColor.blue, 2) * 0.114)
+  int v = sqrt(pow(backgroundColor.red8, 2) * 0.299 +
+          pow(backgroundColor.green8, 2) * 0.587 +
+          pow(backgroundColor.blue8, 2) * 0.114)
       .round();
   return v < 130 + bias ? true : false;
 }
@@ -192,10 +193,10 @@ String colorToHex(
   bool toUpperCase = true,
 }) {
   final String hex = (includeHashSign ? '#' : '') +
-      (enableAlpha ? _padRadix(color.alpha) : '') +
-      _padRadix(color.red) +
-      _padRadix(color.green) +
-      _padRadix(color.blue);
+      (enableAlpha ? _padRadix(color.alpha8) : '') +
+      _padRadix(color.red8) +
+      _padRadix(color.green8) +
+      _padRadix(color.blue8);
   return toUpperCase ? hex.toUpperCase() : hex;
 }
 

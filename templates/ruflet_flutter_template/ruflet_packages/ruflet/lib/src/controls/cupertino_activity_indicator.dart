@@ -1,39 +1,36 @@
+import 'dart:ui' show SemanticsRole;
+
 import 'package:flutter/cupertino.dart';
 
-import '../models/control.dart';
-import '../utils/colors.dart';
-import '../utils/numbers.dart';
-import 'base_controls.dart';
+import 'progress_ring_core.dart';
 
-class CupertinoActivityIndicatorControl extends StatelessWidget {
-  final Control control;
+/// Cupertino skin of [ProgressRingCore]: a CupertinoActivityIndicator,
+/// partially revealed while determinate. It announces the same label and
+/// value as the Material ring, which CupertinoActivityIndicator does not do
+/// by itself.
+class CupertinoProgressRingSkin extends StatelessWidget {
+  const CupertinoProgressRingSkin({super.key, required this.core});
 
-  const CupertinoActivityIndicatorControl({
-    super.key,
-    required this.control,
-  });
+  final ProgressRingCore core;
 
   @override
   Widget build(BuildContext context) {
-    debugPrint("CupertinoActivityIndicatorControl build: ${control.id}");
-    final radius = control.getDouble("radius", 10)!;
-    final color = control.getColor("color", context);
-    final progress =
-        control.getDouble("progress") ?? control.getDouble("value");
-    final bool animating =
-        progress == null ? control.getBool("animating", true)! : false;
-
-    final activityIndicator = progress != null
-        ? CupertinoActivityIndicator.partiallyRevealed(
-            radius: radius,
-            color: color,
-            progress: progress,
-          )
-        : CupertinoActivityIndicator(
-            radius: radius,
-            animating: animating,
-            color: color,
-          );
-    return LayoutControl(control: control, child: activityIndicator);
+    final p = core.props;
+    final fraction = core.fraction;
+    final radius = p.radius ?? 10.0;
+    return Semantics(
+      label: p.semanticsLabel,
+      value: core.accessibilityValue,
+      role: fraction == null
+          ? SemanticsRole.loadingSpinner
+          : SemanticsRole.progressBar,
+      minValue: fraction == null ? null : '0',
+      maxValue: fraction == null ? null : '100',
+      child: fraction != null
+          ? CupertinoActivityIndicator.partiallyRevealed(
+              radius: radius, color: p.color, progress: fraction)
+          : CupertinoActivityIndicator(
+              radius: radius, animating: p.animating, color: p.color),
+    );
   }
 }

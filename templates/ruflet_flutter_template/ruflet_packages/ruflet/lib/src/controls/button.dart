@@ -1,236 +1,142 @@
 import 'package:flutter/material.dart';
 
-import '../extensions/control.dart';
-import '../models/control.dart';
-import '../models/control_type.dart';
-import '../utils/buttons.dart';
-import '../utils/colors.dart';
-import '../utils/launch_url.dart';
-import '../utils/misc.dart';
-import '../utils/numbers.dart';
+import '../utils/buttons.dart' show parseButtonStyle;
 import '../widgets/error.dart';
-import '../widgets/ruflet_store_mixin.dart';
-import 'base_controls.dart';
+import 'button_core.dart';
 
-class ButtonControl extends StatefulWidget {
-  final Control control;
+/// Material skin of [ButtonCore]: maps the core's values onto
+/// ElevatedButton, FilledButton (+ tonal), OutlinedButton or TextButton.
+class MaterialButtonSkin extends StatelessWidget {
+  const MaterialButtonSkin({super.key, required this.core});
 
-  ButtonControl({Key? key, required this.control})
-      : super(key: key ?? ValueKey("control_${control.id}"));
-
-  @override
-  State<ButtonControl> createState() => _ButtonControlState();
-}
-
-class _ButtonControlState extends State<ButtonControl> with RufletStoreMixin {
-  late final FocusNode _focusNode;
-
-  @override
-  void initState() {
-    super.initState();
-    _focusNode = FocusNode();
-    _focusNode.addListener(_onFocusChange);
-    widget.control.addInvokeMethodListener(_invokeMethod);
-  }
-
-  @override
-  void dispose() {
-    _focusNode.removeListener(_onFocusChange);
-    _focusNode.dispose();
-    widget.control.removeInvokeMethodListener(_invokeMethod);
-    super.dispose();
-  }
-
-  void _onFocusChange() {
-    widget.control.triggerEvent(_focusNode.hasFocus ? "focus" : "blur");
-  }
-
-  Future<dynamic> _invokeMethod(String name, dynamic args) async {
-    debugPrint("Button.$name($args)");
-    switch (name) {
-      case "focus":
-        _focusNode.requestFocus();
-      default:
-        throw Exception("Unknown Button method: $name");
-    }
-  }
+  final ButtonCore core;
 
   @override
   Widget build(BuildContext context) {
-    debugPrint("Button build: ${widget.control.id}");
-
-    var variant = widget.control.canonicalType;
-    bool isFilledButton = variant == "FilledButton";
-    bool isFilledTonalButton = variant == "FilledTonalButton";
-    bool isTextButton = variant == "TextButton";
-    bool isOutlinedButton = variant == "OutlinedButton";
-
-    var url = widget.control.getUrl("url");
-    var iconColor = widget.control.getColor("icon_color", context);
-    var clipBehavior =
-        widget.control.getClipBehavior("clip_behavior", Clip.none)!;
-    var autofocus = widget.control.getBool("autofocus", false)!;
-
-    var icon = widget.control.buildIconOrWidget("icon", color: iconColor);
-    var content = widget.control.buildTextOrWidget("content");
-
-    Function()? onPressed = !widget.control.disabled
-        ? () {
-            if (url != null) {
-              openWebBrowser(url);
-            }
-            widget.control.triggerEvent("click");
-          }
-        : null;
-
-    Function()? onLongPressHandler = !widget.control.disabled
-        ? () {
-            widget.control.triggerEvent("long_press");
-          }
-        : null;
-
-    Function(bool)? onHoverHandler = !widget.control.disabled
-        ? (state) {
-            widget.control.triggerEvent("hover", state);
-          }
-        : null;
-
-    Widget? button;
-
-    var theme = Theme.of(context);
-
-    var style = parseButtonStyle(
-      widget.control.internals?["style"] ?? widget.control.get("style"),
+    final p = core.props;
+    final theme = Theme.of(context);
+    final style = parseButtonStyle(
+      p.style.value,
       theme,
-      defaultForegroundColor:
-          widget.control.getColor("color", context, theme.colorScheme.primary)!,
-      defaultBackgroundColor: widget.control
-          .getColor("bgcolor", context, theme.colorScheme.surface)!,
+      defaultForegroundColor: p.color ?? theme.colorScheme.primary,
+      defaultBackgroundColor: p.bgcolor ?? theme.colorScheme.surface,
       defaultOverlayColor: theme.colorScheme.primary.withValues(alpha: 0.08),
       defaultShadowColor: theme.colorScheme.shadow,
       defaultSurfaceTintColor: theme.colorScheme.surfaceTint,
-      defaultElevation: widget.control.getDouble("elevation", 1)!,
+      defaultElevation: p.elevation ?? 1,
       defaultPadding: const EdgeInsets.symmetric(horizontal: 8),
       defaultBorderSide: BorderSide.none,
       defaultShape: theme.useMaterial3
           ? const StadiumBorder()
           : RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
     );
-
-    Widget error = const ErrorControl("Error displaying Button",
-        description: "\"icon\" must be specified together with \"content\"");
+    var icon = p.icon;
+    final iconColor = p.iconColor;
+    if (icon != null && iconColor != null) {
+      icon =
+          IconTheme.merge(data: IconThemeData(color: iconColor), child: icon);
+    }
+    final content = p.content?.build();
+    final onPressed = core.onClick;
+    final onLongPress = core.onLongPress;
+    final focusNode = core.focusNode;
+    final autofocus = p.autofocus;
+    final clipBehavior = p.clipBehavior;
 
     if (icon != null) {
-      if (isFilledButton) {
-        button = FilledButton.icon(
+      final label = content ??
+          const ErrorControl("Error displaying Button",
+              description:
+                  "\"icon\" must be specified together with \"content\"");
+      return switch (core.variant) {
+        ButtonVariant.filled => FilledButton.icon(
             style: style,
             autofocus: autofocus,
-            focusNode: _focusNode,
+            focusNode: focusNode,
             onPressed: onPressed,
-            onLongPress: onLongPressHandler,
-            onHover: onHoverHandler,
+            onLongPress: onLongPress,
             clipBehavior: clipBehavior,
             icon: icon,
-            label: content ?? error);
-      } else if (isFilledTonalButton) {
-        button = FilledButton.tonalIcon(
+            label: label),
+        ButtonVariant.tonal => FilledButton.tonalIcon(
             style: style,
             autofocus: autofocus,
-            focusNode: _focusNode,
+            focusNode: focusNode,
             onPressed: onPressed,
-            onLongPress: onLongPressHandler,
-            onHover: onHoverHandler,
+            onLongPress: onLongPress,
             clipBehavior: clipBehavior,
             icon: icon,
-            label: content ?? error);
-      } else if (isTextButton) {
-        button = TextButton.icon(
-          autofocus: autofocus,
-          focusNode: _focusNode,
-          onPressed: onPressed,
-          onLongPress: onLongPressHandler,
-          onHover: onHoverHandler,
-          style: style,
-          clipBehavior: clipBehavior,
-          icon: icon,
-          label: content ?? error,
-        );
-      } else if (isOutlinedButton) {
-        button = OutlinedButton.icon(
-            autofocus: autofocus,
-            focusNode: _focusNode,
-            onPressed: onPressed,
-            onLongPress: onLongPressHandler,
-            clipBehavior: clipBehavior,
-            style: style,
-            icon: icon,
-            label: content ?? error);
-      } else {
-        button = ElevatedButton.icon(
+            label: label),
+        ButtonVariant.text => TextButton.icon(
             style: style,
             autofocus: autofocus,
-            focusNode: _focusNode,
+            focusNode: focusNode,
             onPressed: onPressed,
-            onLongPress: onLongPressHandler,
-            onHover: onHoverHandler,
+            onLongPress: onLongPress,
             clipBehavior: clipBehavior,
             icon: icon,
-            label: content ?? error);
-      }
-    } else {
-      if (isFilledButton) {
-        button = FilledButton(
+            label: label),
+        ButtonVariant.outlined => OutlinedButton.icon(
             style: style,
             autofocus: autofocus,
-            focusNode: _focusNode,
+            focusNode: focusNode,
             onPressed: onPressed,
-            onLongPress: onLongPressHandler,
-            onHover: onHoverHandler,
+            onLongPress: onLongPress,
             clipBehavior: clipBehavior,
-            child: content);
-      } else if (isFilledTonalButton) {
-        button = FilledButton.tonal(
+            icon: icon,
+            label: label),
+        ButtonVariant.elevated => ElevatedButton.icon(
             style: style,
             autofocus: autofocus,
-            focusNode: _focusNode,
+            focusNode: focusNode,
             onPressed: onPressed,
-            onLongPress: onLongPressHandler,
-            onHover: onHoverHandler,
+            onLongPress: onLongPress,
             clipBehavior: clipBehavior,
-            child: content);
-      } else if (isTextButton) {
-        button = TextButton(
-            autofocus: autofocus,
-            focusNode: _focusNode,
-            style: style,
-            onPressed: onPressed,
-            onLongPress: onLongPressHandler,
-            onHover: onHoverHandler,
-            clipBehavior: clipBehavior,
-            child: content ?? const Text(""));
-      } else if (isOutlinedButton) {
-        button = OutlinedButton(
-            autofocus: autofocus,
-            focusNode: _focusNode,
-            onPressed: onPressed,
-            onLongPress: onLongPressHandler,
-            clipBehavior: clipBehavior,
-            onHover: onHoverHandler,
-            style: style,
-            child: content);
-      } else {
-        button = ElevatedButton(
-            style: style,
-            autofocus: autofocus,
-            focusNode: _focusNode,
-            onPressed: onPressed,
-            onLongPress: onLongPressHandler,
-            onHover: onHoverHandler,
-            clipBehavior: clipBehavior,
-            child: content);
-      }
+            icon: icon,
+            label: label),
+      };
     }
-
-    return LayoutControl(control: widget.control, child: button);
+    return switch (core.variant) {
+      ButtonVariant.filled => FilledButton(
+          style: style,
+          autofocus: autofocus,
+          focusNode: focusNode,
+          onPressed: onPressed,
+          onLongPress: onLongPress,
+          clipBehavior: clipBehavior,
+          child: content),
+      ButtonVariant.tonal => FilledButton.tonal(
+          style: style,
+          autofocus: autofocus,
+          focusNode: focusNode,
+          onPressed: onPressed,
+          onLongPress: onLongPress,
+          clipBehavior: clipBehavior,
+          child: content),
+      ButtonVariant.text => TextButton(
+          style: style,
+          autofocus: autofocus,
+          focusNode: focusNode,
+          onPressed: onPressed,
+          onLongPress: onLongPress,
+          clipBehavior: clipBehavior,
+          child: content ?? const Text("")),
+      ButtonVariant.outlined => OutlinedButton(
+          style: style,
+          autofocus: autofocus,
+          focusNode: focusNode,
+          onPressed: onPressed,
+          onLongPress: onLongPress,
+          clipBehavior: clipBehavior,
+          child: content),
+      ButtonVariant.elevated => ElevatedButton(
+          style: style,
+          autofocus: autofocus,
+          focusNode: focusNode,
+          onPressed: onPressed,
+          onLongPress: onLongPress,
+          clipBehavior: clipBehavior,
+          child: content),
+    };
   }
 }

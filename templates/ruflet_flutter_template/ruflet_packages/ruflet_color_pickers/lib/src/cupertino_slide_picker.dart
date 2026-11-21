@@ -19,7 +19,12 @@ class _CupertinoSlidePickerControlState
   Color _pickerColor = PaletteColors.black;
 
   void _onColorChanged(Color color) {
+    // Write the pick back to `color`, as the other pickers do: the sliders
+    // follow `color` on every rebuild, so without it any update snapped them
+    // back to Ruby's last color.
+    _pickerColor = color;
     final colorHex = color.toHex();
+    widget.control.updateProperties({"color": colorHex});
     widget.control.triggerEvent("color_change", colorHex);
   }
 
@@ -29,7 +34,7 @@ class _CupertinoSlidePickerControlState
 
     final controlColor =
         widget.control.getColor("color", context) ?? PaletteColors.black;
-    if (controlColor.value != _pickerColor.value) {
+    if (controlColor.toARGB32() != _pickerColor.toARGB32()) {
       _pickerColor = controlColor;
     }
 

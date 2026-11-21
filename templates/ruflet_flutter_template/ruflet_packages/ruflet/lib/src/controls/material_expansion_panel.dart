@@ -6,6 +6,7 @@ import '../utils/colors.dart';
 import '../utils/edge_insets.dart';
 import '../utils/numbers.dart';
 import 'base_controls.dart';
+import 'scrollable_control.dart';
 
 class MaterialExpansionPanelListControl extends StatelessWidget {
   final Control control;
@@ -30,7 +31,7 @@ class MaterialExpansionPanelListControl extends StatelessWidget {
         elevation: control.getDouble("elevation", 2)!,
         materialGapSize: control.getDouble("spacing", 16)!,
         dividerColor: control.getColor("divider_color", context),
-        expandIconColor: control.getColor("expanded_icon_color", context),
+        expandIconColor: control.getColor("expand_icon_color", context),
         expandedHeaderPadding: control.getEdgeInsets("expanded_header_padding",
             const EdgeInsets.symmetric(vertical: 16))!,
         expansionCallback: !control.disabled
@@ -55,6 +56,7 @@ class MaterialExpansionPanelListControl extends StatelessWidget {
           );
         }).toList());
 
-    return LayoutControl(control: control, child: panelList);
+    return LayoutControl(
+        control: control, child: wrapInScrollableControl(control, panelList));
   }
 }

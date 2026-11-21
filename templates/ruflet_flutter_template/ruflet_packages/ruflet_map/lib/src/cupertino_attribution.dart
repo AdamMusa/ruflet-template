@@ -50,7 +50,8 @@ class CupertinoRichAttribution extends StatelessWidget {
           child: Text(
             '${item.getBool('prepend_copyright', true)! ? '© ' : ''}'
             '${item.getString('text', 'Placeholder Text')!}',
-            style: item.getTextStyle('text_style', RufletStyleTheme.of(context)),
+            style:
+                item.getTextStyle('text_style', RufletStyleTheme.of(context)),
           ),
         ));
       } else if (item.type == 'ImageSourceAttribution') {
@@ -135,23 +136,35 @@ class _CupertinoMapAttributionState extends State<CupertinoMapAttribution> {
   @override
   void initState() {
     super.initState();
-    _listen();
+    // As in flutter_map's RichAttributionWidget, only the timer ends the
+    // initial display: the events a map emits while it lays out must not
+    // dismiss it before anyone saw it.
     if (_expanded) _timer = Timer(widget.initialDisplayDuration, _close);
   }
 
+  /// Opens the popup on request; moving the map then dismisses it.
+  void _open() {
+    _timer?.cancel();
+    setState(() => _expanded = true);
+    _listen();
+  }
+
   void _listen() {
+    unawaited(_mapEvents?.cancel());
     _mapEvents = widget.mapEvents?.listen((_) => _close());
   }
 
   void _close() {
+    _timer?.cancel();
+    unawaited(_mapEvents?.cancel());
+    _mapEvents = null;
     if (mounted && _expanded) setState(() => _expanded = false);
   }
 
   @override
   void didUpdateWidget(CupertinoMapAttribution oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.mapEvents != oldWidget.mapEvents) {
-      unawaited(_mapEvents?.cancel());
+    if (_mapEvents != null && widget.mapEvents != oldWidget.mapEvents) {
       _listen();
     }
   }
@@ -197,10 +210,7 @@ class _CupertinoMapAttributionState extends State<CupertinoMapAttribution> {
                     label: _expanded ? 'Close attributions' : 'Attributions',
                     child: CupertinoButton(
                       padding: const EdgeInsets.all(4),
-                      onPressed: () {
-                        _timer?.cancel();
-                        setState(() => _expanded = !_expanded);
-                      },
+                      onPressed: _expanded ? _close : _open,
                       child: Icon(
                           _expanded
                               ? CupertinoIcons.xmark_circle

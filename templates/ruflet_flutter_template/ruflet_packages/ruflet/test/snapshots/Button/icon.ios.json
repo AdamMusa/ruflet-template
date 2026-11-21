@@ -1,0 +1,86 @@
+{
+  "fixture": "icon",
+  "design": "ios",
+  "geometry": {
+    "size": {
+      "w": 118.2,
+      "h": 52.4
+    },
+    "elements": [
+      {
+        "icon": 984246,
+        "rect": {
+          "l": 20.0,
+          "t": 16.0,
+          "w": 20.4,
+          "h": 20.4
+        }
+      },
+      {
+        "text": "Add",
+        "rect": {
+          "l": 48.4,
+          "t": 17.7,
+          "w": 49.8,
+          "h": 17.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Add",
+      "flags": [
+        "isButton",
+        "hasEnabledState",
+        "isEnabled",
+        "isFocusable"
+      ],
+      "actions": [
+        "tap",
+        "longPress",
+        "focus"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 118.2,
+        "h": 52.4
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap text \"Add\"",
+      "sent": [
+        {
+          "id": 1601,
+          "event": "click",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Add",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 118.2,
+            "h": 52.4
+          }
+        }
+      ]
+    }
+  ]
+}

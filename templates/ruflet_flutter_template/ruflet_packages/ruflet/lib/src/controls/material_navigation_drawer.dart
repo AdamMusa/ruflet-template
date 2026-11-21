@@ -51,6 +51,7 @@ class _NavigationDrawerControlState
       backgroundColor: widget.control.getColor("bgcolor", context),
       selectedIndex: _selectedIndex,
       shadowColor: widget.control.getColor("shadow_color", context),
+      surfaceTintColor: widget.control.getColor("surface_tint_color", context),
       tilePadding: parseEdgeInsets(widget.control.get("tile_padding"),
           const EdgeInsets.symmetric(horizontal: 12.0))!,
       onDestinationSelected: _destinationChanged,

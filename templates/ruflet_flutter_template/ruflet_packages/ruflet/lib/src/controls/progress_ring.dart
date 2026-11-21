@@ -1,40 +1,33 @@
 import 'package:flutter/material.dart';
 
-import '../models/control.dart';
-import '../utils/box.dart';
-import '../utils/colors.dart';
-import '../utils/edge_insets.dart';
-import '../utils/misc.dart';
-import '../utils/numbers.dart';
-import 'base_controls.dart';
+import '../utils/box.dart' show parseBoxConstraints;
+import '../utils/misc.dart' show parseStrokeCap;
+import 'progress_ring_core.dart';
 
-class ProgressRingControl extends StatelessWidget {
-  final Control control;
+/// Material skin of [ProgressRingCore]: a CircularProgressIndicator.
+class MaterialProgressRingSkin extends StatelessWidget {
+  const MaterialProgressRingSkin({super.key, required this.core});
 
-  const ProgressRingControl({
-    super.key,
-    required this.control,
-  });
+  final ProgressRingCore core;
 
   @override
   Widget build(BuildContext context) {
-    debugPrint("ProgressRing build: ${control.id}");
-    final indicator = CircularProgressIndicator(
-      value: control.getDouble("value"),
-      strokeWidth: control.getDouble("stroke_width"),
-      color: control.getColor("color", context),
-      backgroundColor: control.getColor("bgcolor", context),
-      semanticsLabel: control.getString("semantics_label"),
-      strokeCap: control.getStrokeCap("stroke_cap"),
-      semanticsValue: control.getDouble("semantics_value")?.toString(),
-      strokeAlign: control.getDouble("stroke_align"),
-      trackGap: control.getDouble("track_gap"),
-      constraints: control.getBoxConstraints("size_constraints"),
-      padding: control.getPadding("padding"),
+    final p = core.props;
+    return CircularProgressIndicator(
+      value: core.fraction,
+      strokeWidth: p.strokeWidth,
+      color: p.color,
+      backgroundColor: p.bgcolor,
+      semanticsLabel: p.semanticsLabel,
+      semanticsValue: core.accessibilityValue,
+      strokeCap: parseStrokeCap(p.strokeCap.string),
+      strokeAlign: p.strokeAlign,
+      trackGap: p.trackGap,
+      constraints: parseBoxConstraints(p.sizeConstraints.value),
+      padding: p.padding,
+      // todo: deprecated and to be removed in future versions
       // ignore: deprecated_member_use
-      year2023: control.getBool(
-          "year2023"), // todo: deprecated and to be removed in future versions
+      year2023: p.year2023,
     );
-    return LayoutControl(control: control, child: indicator);
   }
 }

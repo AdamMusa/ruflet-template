@@ -1,0 +1,48 @@
+{
+  "fixture": "chevron",
+  "design": "android",
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 56.0
+    },
+    "elements": [
+      {
+        "text": "Tile",
+        "rect": {
+          "l": 16.0,
+          "t": 16.0,
+          "w": 720.0,
+          "h": 24.0
+        }
+      },
+      {
+        "icon": 57695,
+        "rect": {
+          "l": 752.0,
+          "t": 16.0,
+          "w": 24.0,
+          "h": 24.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Tile",
+      "flags": [
+        "hasEnabledState",
+        "isEnabled",
+        "hasSelectedState"
+      ],
+      "actions": [],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 800.0,
+        "h": 56.0
+      }
+    }
+  ],
+  "steps": []
+}

@@ -1,6 +1,6 @@
 import 'package:ruflet/ruflet.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'material_swatch_picker/material_swatch_picker.dart';
 
 class MaterialMaterialPickerControl extends StatefulWidget {
   final Control control;
@@ -15,6 +15,10 @@ class MaterialMaterialPickerControl extends StatefulWidget {
 class _MaterialMaterialPickerControlState
     extends State<MaterialMaterialPickerControl> {
   Color _pickerColor = Colors.black;
+
+  // The picker keeps the selection of its first build; rebuild it when Ruby
+  // changes `color`, not when the control echoes the user's own pick.
+  int _rubyColorVersion = 0;
 
   void _onColorChanged(Color color) {
     setState(() {
@@ -36,11 +40,13 @@ class _MaterialMaterialPickerControlState
 
     final controlColor =
         widget.control.getColor("color", context) ?? Colors.black;
-    if (controlColor.value != _pickerColor.value) {
+    if (controlColor.toARGB32() != _pickerColor.toARGB32()) {
       _pickerColor = controlColor;
+      _rubyColorVersion++;
     }
 
-    final picker = MaterialPicker(
+    final picker = MaterialSwatchPicker(
+      key: ValueKey(_rubyColorVersion),
       pickerColor: _pickerColor,
       onColorChanged: _onColorChanged,
       onPrimaryChanged: _onPrimaryChanged,

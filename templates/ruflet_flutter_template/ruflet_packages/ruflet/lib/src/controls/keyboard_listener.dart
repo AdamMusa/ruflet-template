@@ -5,6 +5,7 @@ import '../extensions/control.dart';
 import '../models/control.dart';
 import '../utils/numbers.dart';
 import '../widgets/error.dart';
+import '../widgets/platform_badge.dart';
 
 class KeyboardListenerControl extends StatefulWidget {
   final Control control;
@@ -69,7 +70,7 @@ class _KeyboardListenerControlState extends State<KeyboardListenerControl> {
               "key_repeat", {"key": keyEvent.logicalKey.keyLabel});
         }
       },
-      child: content,
+      child: PlatformControlBadge(control: widget.control, child: content),
     );
   }
 }

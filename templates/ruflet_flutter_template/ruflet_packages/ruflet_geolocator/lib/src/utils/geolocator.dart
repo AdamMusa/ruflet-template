@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:ruflet/ruflet.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
@@ -6,9 +5,7 @@ import 'package:geolocator/geolocator.dart';
 LocationAccuracy? parseLocationAccuracy(String? value,
     [LocationAccuracy? defaultValue]) {
   if (value == null) return defaultValue;
-  return LocationAccuracy.values.firstWhereOrNull(
-          (e) => e.name.toLowerCase() == value.toLowerCase()) ??
-      defaultValue;
+  return parseEnum(LocationAccuracy.values, value, defaultValue);
 }
 
 extension PositionExtension on Position {
@@ -30,9 +27,7 @@ extension PositionExtension on Position {
 
 ActivityType? parseActivityType(String? value, [ActivityType? defaultValue]) {
   if (value == null) return defaultValue;
-  return ActivityType.values.firstWhereOrNull(
-          (e) => e.name.toLowerCase() == value.toLowerCase()) ??
-      defaultValue;
+  return parseEnum(ActivityType.values, value, defaultValue);
 }
 
 LocationSettings? parseLocationSettings(dynamic value,

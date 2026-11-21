@@ -19,6 +19,7 @@ class _ScatterChartControlState extends State<ScatterChartControl> {
   @override
   Widget build(BuildContext context) {
     debugPrint("ScatterChart build: ${widget.control.id}");
+    skipControlTooltipForChartConfig(widget.control);
 
     final theme = RufletStyleTheme.of(context);
     var animation = widget.control.getAnimation(

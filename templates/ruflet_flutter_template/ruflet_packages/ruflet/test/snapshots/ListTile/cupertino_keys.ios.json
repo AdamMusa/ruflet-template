@@ -1,0 +1,93 @@
+{
+  "fixture": "cupertino_keys",
+  "design": "ios",
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 54.0
+    },
+    "elements": [
+      {
+        "icon": 984246,
+        "rect": {
+          "l": 22.0,
+          "t": 15.0,
+          "w": 24.0,
+          "h": 24.0
+        }
+      },
+      {
+        "text": "Cupertino",
+        "rect": {
+          "l": 62.0,
+          "t": 10.0,
+          "w": 149.3,
+          "h": 17.0
+        }
+      },
+      {
+        "text": "Keys",
+        "rect": {
+          "l": 62.0,
+          "t": 30.0,
+          "w": 54.4,
+          "h": 14.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Cupertino\nKeys",
+      "flags": [
+        "isButton",
+        "hasEnabledState",
+        "isEnabled",
+        "hasSelectedState"
+      ],
+      "actions": [
+        "tap",
+        "longPress"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 800.0,
+        "h": 54.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap text \"Cupertino\"",
+      "sent": [
+        {
+          "id": 2201,
+          "event": "click",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Cupertino\nKeys",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "hasSelectedState"
+          ],
+          "actions": [
+            "tap",
+            "longPress"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 800.0,
+            "h": 54.0
+          }
+        }
+      ]
+    }
+  ]
+}

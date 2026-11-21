@@ -1,0 +1,117 @@
+{
+  "fixture": "trailing_and_actions",
+  "design": "android",
+  "sizing": {
+    "preferred_height": 56.0
+  },
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 56.0
+    },
+    "elements": [
+      {
+        "text": "Title",
+        "rect": {
+          "l": 16.0,
+          "t": 14.0,
+          "w": 110.0,
+          "h": 28.0
+        }
+      },
+      {
+        "icon": 984246,
+        "rect": {
+          "l": 764.0,
+          "t": 16.0,
+          "w": 24.0,
+          "h": 24.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Title",
+      "flags": [
+        "isHeader",
+        "namesRoute"
+      ],
+      "actions": [],
+      "rect": {
+        "l": 16.0,
+        "t": 14.0,
+        "w": 110.0,
+        "h": 28.0
+      }
+    },
+    {
+      "label": "",
+      "flags": [
+        "isButton",
+        "hasEnabledState",
+        "isEnabled",
+        "isFocusable"
+      ],
+      "actions": [
+        "tap",
+        "longPress",
+        "focus"
+      ],
+      "rect": {
+        "l": 752.0,
+        "t": 4.0,
+        "w": 48.0,
+        "h": 48.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap at 0.97,0.5",
+      "sent": [
+        {
+          "id": 2307,
+          "event": "click",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "Title",
+          "flags": [
+            "isHeader",
+            "namesRoute"
+          ],
+          "actions": [],
+          "rect": {
+            "l": 16.0,
+            "t": 14.0,
+            "w": 110.0,
+            "h": 28.0
+          }
+        },
+        {
+          "label": "",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 752.0,
+            "t": 4.0,
+            "w": 48.0,
+            "h": 48.0
+          }
+        }
+      ]
+    }
+  ]
+}

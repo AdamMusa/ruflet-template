@@ -1,0 +1,117 @@
+{
+  "fixture": "leading_back",
+  "design": "android",
+  "sizing": {
+    "preferred_height": 56.0
+  },
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 56.0
+    },
+    "elements": [
+      {
+        "icon": 57490,
+        "rect": {
+          "l": 16.0,
+          "t": 16.0,
+          "w": 24.0,
+          "h": 24.0
+        }
+      },
+      {
+        "text": "Title",
+        "rect": {
+          "l": 72.0,
+          "t": 14.0,
+          "w": 110.0,
+          "h": 28.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "",
+      "flags": [
+        "isButton",
+        "hasEnabledState",
+        "isEnabled",
+        "isFocusable"
+      ],
+      "actions": [
+        "tap",
+        "longPress",
+        "focus"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 56.0,
+        "h": 56.0
+      }
+    },
+    {
+      "label": "Title",
+      "flags": [
+        "isHeader",
+        "namesRoute"
+      ],
+      "actions": [],
+      "rect": {
+        "l": 72.0,
+        "t": 14.0,
+        "w": 110.0,
+        "h": 28.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap at 0.03,0.5",
+      "sent": [
+        {
+          "id": 2309,
+          "event": "click",
+          "data": null
+        }
+      ],
+      "semantics": [
+        {
+          "label": "",
+          "flags": [
+            "isButton",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "longPress",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 56.0,
+            "h": 56.0
+          }
+        },
+        {
+          "label": "Title",
+          "flags": [
+            "isHeader",
+            "namesRoute"
+          ],
+          "actions": [],
+          "rect": {
+            "l": 72.0,
+            "t": 14.0,
+            "w": 110.0,
+            "h": 28.0
+          }
+        }
+      ]
+    }
+  ]
+}

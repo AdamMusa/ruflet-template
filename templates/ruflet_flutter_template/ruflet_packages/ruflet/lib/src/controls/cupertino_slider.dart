@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart';
 
 import '../ruflet_backend.dart';
 import '../models/control.dart';
@@ -19,9 +20,13 @@ class CupertinoSliderControl extends StatefulWidget {
 class _CupertinoSliderControlState extends State<CupertinoSliderControl> {
   double _value = 0;
   late RufletBackend backend;
+  // CupertinoSlider has no focus support of its own; this makes it a focus
+  // target (iOS Full Keyboard Access, macOS) like the Material slider.
+  final FocusNode _focusNode = FocusNode();
 
   @override
   void dispose() {
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -30,6 +35,40 @@ class _CupertinoSliderControlState extends State<CupertinoSliderControl> {
     var props = {"value": value};
     widget.control.updateProperties(props, notify: true);
     widget.control.triggerEvent("change");
+  }
+
+  /// Arrow keys step a focused slider by one division, or a tenth of the
+  /// range, as Flutter's Material slider does on Apple platforms.
+  KeyEventResult _onKeyEvent(
+      FocusNode node, KeyEvent event, double min, double max) {
+    if (widget.control.disabled || event is KeyUpEvent) {
+      return KeyEventResult.ignored;
+    }
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    final key = event.logicalKey;
+    final double direction;
+    if (key == LogicalKeyboardKey.arrowUp ||
+        key ==
+            (rtl
+                ? LogicalKeyboardKey.arrowLeft
+                : LogicalKeyboardKey.arrowRight)) {
+      direction = 1;
+    } else if (key == LogicalKeyboardKey.arrowDown ||
+        key ==
+            (rtl
+                ? LogicalKeyboardKey.arrowRight
+                : LogicalKeyboardKey.arrowLeft)) {
+      direction = -1;
+    } else {
+      return KeyEventResult.ignored;
+    }
+    final divisions = widget.control.getInt("divisions");
+    final step = (max - min) * (divisions != null ? 1 / divisions : 0.1);
+    final value = (_value + direction * step).clamp(min, max).toDouble();
+    widget.control.triggerEvent("change_start", _value);
+    setState(() => onChange(value));
+    widget.control.triggerEvent("change_end", value);
+    return KeyEventResult.handled;
   }
 
   @override
@@ -72,6 +111,15 @@ class _CupertinoSliderControlState extends State<CupertinoSliderControl> {
               }
             : null);
 
-    return LayoutControl(control: widget.control, child: cupertinoSlider);
+    return LayoutControl(
+        control: widget.control,
+        child: Focus(
+            focusNode: _focusNode,
+            autofocus: widget.control.getBool("autofocus", false)!,
+            canRequestFocus: !widget.control.disabled,
+            onFocusChange: (focused) =>
+                widget.control.triggerEvent(focused ? "focus" : "blur"),
+            onKeyEvent: (node, event) => _onKeyEvent(node, event, min, max),
+            child: cupertinoSlider));
   }
 }

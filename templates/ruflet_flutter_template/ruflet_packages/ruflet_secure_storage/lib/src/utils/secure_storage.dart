@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:ruflet/ruflet.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -14,8 +13,8 @@ IOSOptions? parseIosOptions(dynamic value, [IOSOptions? defaultValue]) {
     comment: value["comment"],
     isInvisible: parseBool(value["is_invisible"]),
     isNegative: parseBool(value["is_negative"]),
-    creationDate: value["creation_date"],
-    lastModifiedDate: value["last_modified_date"],
+    creationDate: parseKeychainDate(value["creation_date"]),
+    lastModifiedDate: parseKeychainDate(value["last_modified_date"]),
     resultLimit: parseInt(value["result_limit"]),
     shouldReturnPersistentReference: parseBool(value["is_persistent"], false)!,
     authenticationUIBehavior: value["auth_ui_behavior"],
@@ -35,8 +34,8 @@ MacOsOptions? parseMacOptions(dynamic value, [MacOsOptions? defaultValue]) {
     comment: value["comment"],
     isInvisible: parseBool(value["is_invisible"]),
     isNegative: parseBool(value["is_negative"]),
-    creationDate: value["creation_date"],
-    lastModifiedDate: value["last_modified_date"],
+    creationDate: parseKeychainDate(value["creation_date"]),
+    lastModifiedDate: parseKeychainDate(value["last_modified_date"]),
     resultLimit: parseInt(value["result_limit"]),
     shouldReturnPersistentReference: parseBool(value["is_persistent"]),
     authenticationUIBehavior: value["auth_ui_behavior"],
@@ -84,32 +83,37 @@ WebOptions? parseWebOptions(dynamic value, [WebOptions? defaultValue]) {
   );
 }
 
+/// A keychain item date. Ruby sends a `Time` as its `to_s`
+/// (`2024-05-01 10:00:00 -0500`, or `2024-05-01 10:00:00 UTC` for a UTC
+/// Time) or an ISO-8601 string, and a `Ruflet::Protocol.date_time` value
+/// arrives already decoded.
+DateTime? parseKeychainDate(dynamic value) {
+  if (value is DateTime) return value;
+  if (value is! String) return null;
+  // DateTime.tryParse reads a "Z" or an offset, not Ruby's " UTC".
+  return DateTime.tryParse(value.endsWith(' UTC')
+      ? '${value.substring(0, value.length - 4)}Z'
+      : value);
+}
+
 KeychainAccessibility? parseKeychainAccessibility(String? value, [KeychainAccessibility? defaultValue]) {
   if (value == null) return defaultValue;
-  return KeychainAccessibility.values.firstWhereOrNull(
-    (e) => e.name.toLowerCase() == value.toLowerCase()
-  ) ?? defaultValue;
+  return parseEnum(KeychainAccessibility.values, value, defaultValue);
 }
 
 KeyCipherAlgorithm? parseKeyCipherAlgorithm(String? value, [KeyCipherAlgorithm? defaultValue]) {
   if (value == null) return defaultValue;
-  return KeyCipherAlgorithm.values.firstWhereOrNull(
-    (e) => e.name.toLowerCase() == value.toLowerCase()
-  ) ?? defaultValue;
+  return parseEnum(KeyCipherAlgorithm.values, value, defaultValue);
 }
 
 StorageCipherAlgorithm? parseStorageCipherAlgorithm(String? value, [StorageCipherAlgorithm? defaultValue]) {
   if (value == null) return defaultValue;
-  return StorageCipherAlgorithm.values.firstWhereOrNull(
-    (e) => e.name.toLowerCase() == value.toLowerCase()
-  ) ?? defaultValue;
+  return parseEnum(StorageCipherAlgorithm.values, value, defaultValue);
 }
 
 AccessControlFlag? parseAccessControlFlag(String? value, [AccessControlFlag? defaultValue]) {
   if (value == null) return defaultValue;
-  return AccessControlFlag.values.firstWhereOrNull(
-    (e) => e.name.toLowerCase() == value.toLowerCase()
-  ) ?? defaultValue;
+  return parseEnum(AccessControlFlag.values, value, defaultValue);
 }
 
 List<AccessControlFlag>? parseAccessControlFlags(List<dynamic>? value, [List<AccessControlFlag>? defaultValue,]) {

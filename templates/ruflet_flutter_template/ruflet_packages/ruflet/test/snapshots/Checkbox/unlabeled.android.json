@@ -1,0 +1,72 @@
+{
+  "fixture": "unlabeled",
+  "design": "android",
+  "geometry": {
+    "size": {
+      "w": 48.0,
+      "h": 48.0
+    },
+    "elements": []
+  },
+  "semantics": [
+    {
+      "label": "",
+      "flags": [
+        "hasCheckedState",
+        "isChecked",
+        "hasEnabledState",
+        "isEnabled",
+        "isFocusable"
+      ],
+      "actions": [
+        "tap",
+        "focus"
+      ],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 48.0,
+        "h": 48.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "semantics tap",
+      "sent": [
+        {
+          "id": 1201,
+          "update": {
+            "value": false
+          }
+        },
+        {
+          "id": 1201,
+          "event": "change",
+          "data": false
+        }
+      ],
+      "semantics": [
+        {
+          "label": "",
+          "flags": [
+            "hasCheckedState",
+            "hasEnabledState",
+            "isEnabled",
+            "isFocusable"
+          ],
+          "actions": [
+            "tap",
+            "focus"
+          ],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 48.0,
+            "h": 48.0
+          }
+        }
+      ]
+    }
+  ]
+}

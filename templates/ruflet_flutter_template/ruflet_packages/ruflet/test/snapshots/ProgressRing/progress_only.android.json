@@ -1,0 +1,27 @@
+{
+  "fixture": "progress_only",
+  "design": "android",
+  "size": {
+    "w": 36.0,
+    "h": 36.0
+  },
+  "ticking": false,
+  "native": {
+    "type": "CircularProgressIndicator",
+    "value": 0.3
+  },
+  "semantics": [
+    {
+      "label": "",
+      "value": "30",
+      "flags": [],
+      "actions": [],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 36.0,
+        "h": 36.0
+      }
+    }
+  ]
+}

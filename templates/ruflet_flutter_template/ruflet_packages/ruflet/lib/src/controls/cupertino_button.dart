@@ -1,150 +1,75 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 
-import '../extensions/control.dart';
-import '../models/control.dart';
-import '../models/control_type.dart';
-import '../utils/alignment.dart';
-import '../utils/borders.dart';
-import '../utils/cupertino_enums.dart';
-import '../utils/cupertino_theme.dart';
-import '../utils/colors.dart';
-import '../utils/edge_insets.dart';
-import '../utils/geometry.dart';
-import '../utils/launch_url.dart';
-import '../utils/mouse.dart';
-import '../utils/misc.dart';
-import '../utils/numbers.dart';
-import '../utils/text.dart';
-import '../utils/time.dart';
-import '../utils/widget_state.dart';
+import '../utils/alignment.dart' show parseAlignment;
+import '../utils/borders.dart'
+    show parseBorderSide, parseWidgetStateOutlinedBorder;
+import '../utils/colors.dart' show parseWidgetStateColor;
+import '../utils/cupertino_theme.dart' show cupertinoStyleTheme;
+import '../utils/edge_insets.dart' show parseWidgetStatePadding;
+import '../utils/geometry.dart' show parseWidgetStateSize;
+import '../utils/mouse.dart' show parseWidgetStateMouseCursor;
+import '../utils/numbers.dart' show parseBool, parseWidgetStateDouble;
+import '../utils/text.dart' show parseWidgetStateTextStyle;
+import '../utils/time.dart' show parseDuration;
+import '../utils/widget_state.dart' show getWidgetStateProperty;
 import '../widgets/constrained_default_padding.dart';
-import 'base_controls.dart';
+import 'icon_button_core.dart';
 
-class CupertinoButtonControl extends StatefulWidget {
-  final Control control;
+/// Cupertino skin of [IconButtonCore]: a CupertinoButton around the icon,
+/// with the Ruby `style` map resolved against the core's states.
+class CupertinoIconButtonSkin extends StatelessWidget {
+  const CupertinoIconButtonSkin({super.key, required this.core});
 
-  CupertinoButtonControl({Key? key, required this.control})
-      : super(key: key ?? ValueKey("control_${control.id}"));
-
-  @override
-  State<CupertinoButtonControl> createState() => _CupertinoButtonControlState();
-}
-
-class _CupertinoButtonControlState extends State<CupertinoButtonControl> {
-  late final FocusNode _focusNode;
-  bool _hovered = false;
-  bool _pressed = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _focusNode = FocusNode();
-    _focusNode.addListener(_onFocusChange);
-    widget.control.addInvokeMethodListener(_invokeMethod);
-  }
-
-  @override
-  void dispose() {
-    _focusNode.removeListener(_onFocusChange);
-    _focusNode.dispose();
-    widget.control.removeInvokeMethodListener(_invokeMethod);
-    super.dispose();
-  }
-
-  void _onFocusChange() {
-    setState(() {});
-    widget.control.triggerEvent(_focusNode.hasFocus ? "focus" : "blur");
-  }
-
-  Future<dynamic> _invokeMethod(String name, dynamic args) async {
-    debugPrint("CupertinoButton.$name($args)");
-    switch (name) {
-      case "focus":
-        _focusNode.requestFocus();
-      default:
-        throw Exception("Unknown CupertinoButton method: $name");
-    }
-  }
+  final IconButtonCore core;
 
   @override
   Widget build(BuildContext context) {
-    debugPrint("CupertinoButton build: ${widget.control.id}");
+    final p = core.props;
     final theme = cupertinoStyleTheme(context);
-    final style =
-        widget.control.internals?["style"] ?? widget.control.get("style");
-    final states = <WidgetState>{
-      if (widget.control.disabled) WidgetState.disabled,
-      if (widget.control.getBool("selected", false)!) WidgetState.selected,
-      if (_focusNode.hasFocus) WidgetState.focused,
-      if (_hovered) WidgetState.hovered,
-      if (_pressed) WidgetState.pressed,
-    };
+    final rawStyle = p.style.value;
+    final Map<Object?, Object?>? style =
+        rawStyle is Map ? rawStyle.cast<Object?, Object?>() : null;
+    final states = core.states;
     Color? styleColor(String key) =>
         parseWidgetStateColor(style?[key], theme)?.resolve(states);
-    Color? iconColor = styleColor("icon_color") ??
-        widget.control.getColor("icon_color", context);
+    final iconColor = styleColor("icon_color") ??
+        (core.disabled ? p.disabledColor : null) ??
+        (core.selected ? p.selectedIconColor : null) ??
+        p.iconColor;
 
-    Widget? icon = widget.control.buildIconOrWidget("icon", color: iconColor);
+    var icon =
+        core.selected && p.selectedIcon != null ? p.selectedIcon : p.icon;
+    // A Ruby icon gets the colour on the Icon itself (as before).
+    if (icon is Icon && iconColor != null) {
+      icon = Icon(icon.icon, color: iconColor);
+    }
     // A canonical back action in navigation chrome uses the platform glyph.
     // Do not reinterpret custom icon controls or icons elsewhere in the app.
-    if (widget.control.canonicalType == "IconButton" &&
-        widget.control.parent?.canonicalType == "AppBar" &&
-        widget.control.parent?.child("leading") == widget.control &&
+    if (core.isAppBarLeading &&
         icon is Icon &&
         icon.icon?.fontFamily == "MaterialIcons" &&
         const {0xe092, 0xe093, 0xe094}.contains(icon.icon?.codePoint)) {
       icon = Icon(CupertinoIcons.back, color: iconColor);
     }
-    Widget? content = widget.control.buildTextOrWidget("content");
+    Widget child = icon ?? const Text("");
 
-    Widget child;
-    if (icon != null) {
-      if (content != null) {
-        child = Row(mainAxisSize: MainAxisSize.min, children: [
-          icon,
-          const SizedBox(width: 8),
-          Flexible(child: content)
-        ]);
-      } else {
-        child = icon;
-      }
-    } else {
-      child = content ?? const Text("");
-    }
-
-    var pressedOpacity = widget.control.getDouble("opacity_on_click", 0.4)!;
-    var minSize =
-        parseWidgetStateSize(style?["minimum_size"])?.resolve(states) ??
-            widget.control.getSize("min_size");
-    var mouseCursor =
+    const pressedOpacity = 0.4;
+    final minSize =
+        parseWidgetStateSize(style?["minimum_size"])?.resolve(states);
+    final mouseCursor =
         parseWidgetStateMouseCursor(style?["mouse_cursor"])?.resolve(states) ??
-            widget.control.getMouseCursor("mouse_cursor");
-    var autofocus = widget.control.getBool("autofocus", false)!;
-    var bgColor =
-        styleColor("bgcolor") ?? widget.control.getColor("bgcolor", context);
-    var focusColor = widget.control.getColor("focus_color", context);
-    var size = widget.control
-        .getCupertinoButtonSize("size", CupertinoButtonSize.large)!;
-
-    var alignment = parseAlignment(style?["alignment"]) ??
-        widget.control.getAlignment("alignment", Alignment.center)!;
-    var borderRadius = widget.control.getBorderRadius(
-        "border_radius", const BorderRadius.all(Radius.circular(8.0)))!;
-
+            p.mouseCursor;
+    var bgColor = styleColor("bgcolor") ?? p.bgcolor;
+    const sizeStyle = CupertinoButtonSize.large;
+    final alignment =
+        parseAlignment(style?["alignment"]) ?? p.alignment ?? Alignment.center;
+    const borderRadius = BorderRadius.all(Radius.circular(8.0));
     var padding = parseWidgetStatePadding(style?["padding"])?.resolve(states) ??
-        widget.control.getPadding("padding");
-    var variant = widget.control.canonicalType;
-    bool isFilledButton = variant == "FilledButton";
-    bool isTintedButton = variant == "FilledTonalButton";
-
-    var color =
-        styleColor("color") ?? widget.control.getColor("color", context);
-    var disabledColor = (widget.control.disabled
-            ? styleColor("bgcolor")
-            : null) ??
-        widget.control.getColor(
-            "disabled_bgcolor", context, CupertinoColors.tertiarySystemFill)!;
+        p.padding;
+    final color = styleColor("color");
+    var disabledColor = (core.disabled ? styleColor("bgcolor") : null) ??
+        CupertinoColors.tertiarySystemFill;
     final textStyle =
         parseWidgetStateTextStyle(style?["text_style"], theme)?.resolve(states);
     if (color != null || textStyle != null) {
@@ -154,28 +79,27 @@ class _CupertinoButtonControlState extends State<CupertinoButtonControl> {
     }
     final iconSize =
         parseWidgetStateDouble(style?["icon_size"])?.resolve(states) ??
-            widget.control.getDouble("icon_size");
+            p.iconSize;
     if (iconColor != null || iconSize != null) {
       child = IconTheme.merge(
           data: IconThemeData(color: iconColor, size: iconSize), child: child);
     }
-    final enableFeedback = parseBool(style?["enable_feedback"], false)!;
-    var url = widget.control.getUrl("url");
-    Function()? onPressed = !widget.control.disabled
-        ? () {
+    final enableFeedback =
+        parseBool(style?["enable_feedback"]) ?? p.enableFeedback ?? false;
+    final click = core.onClick;
+    final longPress = core.onLongPress;
+    final onPressed = click == null
+        ? null
+        : () {
             if (enableFeedback) HapticFeedback.selectionClick();
-            if (url != null) {
-              openWebBrowser(url);
-            }
-            widget.control.triggerEvent("click");
-          }
-        : null;
-    Function()? onLongPressed = !widget.control.disabled
-        ? () {
+            click();
+          };
+    final onLongPressed = longPress == null
+        ? null
+        : () {
             if (enableFeedback) HapticFeedback.selectionClick();
-            widget.control.triggerEvent("long_press");
-          }
-        : null;
+            longPress();
+          };
 
     final side = getWidgetStateProperty<BorderSide?>(
             style?["side"], (value) => parseBorderSide(value, theme))
@@ -183,11 +107,8 @@ class _CupertinoButtonControlState extends State<CupertinoButtonControl> {
     var shape =
         parseWidgetStateOutlinedBorder(style?["shape"], theme)?.resolve(states);
     if (shape != null && side != null) shape = shape.copyWith(side: side);
-    if (shape == null && (side != null || variant == "OutlinedButton")) {
-      shape = RoundedRectangleBorder(
-        borderRadius: borderRadius,
-        side: side ?? BorderSide(color: theme.color("outline")!),
-      );
+    if (shape == null && side != null) {
+      shape = RoundedRectangleBorder(borderRadius: borderRadius, side: side);
     }
     final nativeBackground = bgColor;
     final nativeDisabledBackground = disabledColor;
@@ -197,90 +118,41 @@ class _CupertinoButtonControlState extends State<CupertinoButtonControl> {
     }
     if (padding == null) {
       // Keep the native size-style padding when it fits. A Ruby height/width
-      // constraint must not make that implicit padding clip the label/icon.
+      // constraint must not make that implicit padding clip the icon.
       child = ConstrainedDefaultPadding(
-        padding:
-            kCupertinoButtonPadding[size]!.resolve(Directionality.of(context)),
+        padding: kCupertinoButtonPadding[sizeStyle]!
+            .resolve(Directionality.of(context)),
         child: child,
       );
       padding = EdgeInsets.zero;
     }
-    Widget button;
-    if (isFilledButton) {
-      button = CupertinoButton.filled(
-        onPressed: onPressed,
-        disabledColor: disabledColor,
-        color: bgColor,
-        padding: padding,
-        borderRadius: borderRadius,
-        pressedOpacity: pressedOpacity,
-        alignment: alignment,
-        minimumSize: minSize,
-        sizeStyle: size,
-        autofocus: autofocus,
-        focusColor: focusColor,
-        onLongPress: onLongPressed,
-        focusNode: _focusNode,
-        mouseCursor: mouseCursor,
-        child: child,
-      );
-    } else if (isTintedButton) {
-      button = CupertinoButton.tinted(
-        onPressed: onPressed,
-        disabledColor: disabledColor,
-        color: bgColor,
-        padding: padding,
-        borderRadius: borderRadius,
-        pressedOpacity: pressedOpacity,
-        alignment: alignment,
-        minimumSize: minSize,
-        sizeStyle: size,
-        autofocus: autofocus,
-        focusColor: focusColor,
-        onLongPress: onLongPressed,
-        focusNode: _focusNode,
-        mouseCursor: mouseCursor,
-        child: child,
-      );
-    } else {
-      button = CupertinoButton(
-        onPressed: onPressed,
-        disabledColor: disabledColor,
-        color: bgColor,
-        padding: padding,
-        borderRadius: borderRadius,
-        pressedOpacity: pressedOpacity,
-        alignment: alignment,
-        minimumSize: minSize,
-        sizeStyle: size,
-        autofocus: autofocus,
-        focusColor: focusColor,
-        onLongPress: onLongPressed,
-        focusNode: _focusNode,
-        mouseCursor: mouseCursor,
-        child: child,
-      );
-    }
+    Widget button = CupertinoButton(
+      onPressed: onPressed,
+      disabledColor: disabledColor,
+      color: bgColor,
+      padding: padding,
+      borderRadius: borderRadius,
+      pressedOpacity: pressedOpacity,
+      alignment: alignment,
+      minimumSize: minSize,
+      sizeStyle: sizeStyle,
+      autofocus: p.autofocus,
+      focusColor: p.focusColor,
+      onLongPress: onLongPressed,
+      focusNode: core.focusNode,
+      mouseCursor: mouseCursor,
+      child: child,
+    );
 
     final elevation =
-        parseWidgetStateDouble(style?["elevation"])?.resolve(states) ??
-            widget.control.getDouble("elevation", 0)!;
+        parseWidgetStateDouble(style?["elevation"])?.resolve(states) ?? 0;
     final shadowColor = styleColor("shadow_color") ?? const Color(0x33000000);
     final overlayColor = styleColor("overlay_color");
     if (shape != null || elevation > 0 || overlayColor != null) {
       final effectiveShape =
-          shape ?? RoundedRectangleBorder(borderRadius: borderRadius);
-      final shapeBackground = widget.control.disabled
-          ? nativeDisabledBackground
-          : nativeBackground ??
-              (isFilledButton
-                  ? CupertinoTheme.of(context).primaryColor
-                  : null) ??
-              (isTintedButton
-                  ? CupertinoTheme.of(context)
-                      .primaryColor
-                      .withValues(alpha: 0.15)
-                  : null);
+          shape ?? const RoundedRectangleBorder(borderRadius: borderRadius);
+      final shapeBackground =
+          core.disabled ? nativeDisabledBackground : nativeBackground;
       button = AnimatedContainer(
         duration: parseDuration(
             style?["animation_duration"], const Duration(milliseconds: 100))!,
@@ -301,8 +173,7 @@ class _CupertinoButtonControlState extends State<CupertinoButtonControl> {
             : ShapeDecoration(color: overlayColor, shape: effectiveShape),
         child: ClipPath(
             clipper: ShapeBorderClipper(shape: effectiveShape),
-            clipBehavior:
-                widget.control.getClipBehavior("clip_behavior", Clip.none)!,
+            clipBehavior: Clip.none,
             child: button),
       );
     }
@@ -322,28 +193,8 @@ class _CupertinoButtonControlState extends State<CupertinoButtonControl> {
         child: button,
       );
     }
-    button = MouseRegion(
-      onEnter: widget.control.disabled
-          ? null
-          : (_) {
-              setState(() => _hovered = true);
-              widget.control.triggerEvent("hover", true);
-            },
-      onExit: widget.control.disabled
-          ? null
-          : (_) {
-              setState(() => _hovered = false);
-              widget.control.triggerEvent("hover", false);
-            },
-      child: Listener(
-        onPointerDown: widget.control.disabled
-            ? null
-            : (_) => setState(() => _pressed = true),
-        onPointerUp: (_) => setState(() => _pressed = false),
-        onPointerCancel: (_) => setState(() => _pressed = false),
-        child: button,
-      ),
-    );
-    return LayoutControl(control: widget.control, child: button);
+    // CupertinoButton reports no enabled state; assistive technology gets
+    // the same enabled/disabled flag as on Material.
+    return Semantics(enabled: core.enabled, child: button);
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../models/control.dart';
+import 'enums.dart';
 import 'widget_state.dart';
 
 MouseCursor? parseMouseCursor(String? cursor, [MouseCursor? defaultValue]) {
@@ -43,7 +44,7 @@ MouseCursor? parseMouseCursor(String? cursor, [MouseCursor? defaultValue]) {
     "zoomout": SystemMouseCursors.zoomOut,
   };
 
-  return cursorMap[cursor?.toLowerCase() ?? ""] ?? defaultValue;
+  return cursorMap[normalizeEnumName(cursor ?? "")] ?? defaultValue;
 }
 
 WidgetStateProperty<MouseCursor?>? parseWidgetStateMouseCursor(dynamic value,

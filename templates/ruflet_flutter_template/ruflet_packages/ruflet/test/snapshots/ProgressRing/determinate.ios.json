@@ -1,0 +1,91 @@
+{
+  "fixture": "determinate",
+  "design": "ios",
+  "geometry": {
+    "size": {
+      "w": 20.0,
+      "h": 20.0
+    },
+    "elements": []
+  },
+  "semantics": [
+    {
+      "label": "",
+      "value": "50",
+      "flags": [],
+      "actions": [],
+      "rect": {
+        "l": 0.0,
+        "t": 0.0,
+        "w": 20.0,
+        "h": 20.0
+      }
+    }
+  ],
+  "steps": [
+    {
+      "step": "tap at 0.5,0.5",
+      "sent": [],
+      "semantics": [
+        {
+          "label": "",
+          "value": "50",
+          "flags": [],
+          "actions": [],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 20.0,
+            "h": 20.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "invoke focus",
+      "sent": [],
+      "outcome": {
+        "error": "UnsupportedError",
+        "message": "ProgressRing(2001).focus is not supported on iOS: no handler for \"focus\" is registered for this control"
+      },
+      "semantics": [
+        {
+          "label": "",
+          "value": "50",
+          "flags": [],
+          "actions": [],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 20.0,
+            "h": 20.0
+          }
+        }
+      ]
+    },
+    {
+      "step": "unfocus",
+      "sent": [],
+      "semantics": [
+        {
+          "label": "",
+          "value": "50",
+          "flags": [],
+          "actions": [],
+          "rect": {
+            "l": 0.0,
+            "t": 0.0,
+            "w": 20.0,
+            "h": 20.0
+          }
+        }
+      ]
+    }
+  ],
+  "native": {
+    "type": "CupertinoActivityIndicator",
+    "animating": false,
+    "progress": 0.5,
+    "radius": 10.0
+  }
+}

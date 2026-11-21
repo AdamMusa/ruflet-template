@@ -1,0 +1,41 @@
+{
+  "fixture": "large",
+  "design": "ios",
+  "sizing": {
+    "preferred_height": 96.0,
+    "fully_obstructs": false
+  },
+  "geometry": {
+    "size": {
+      "w": 800.0,
+      "h": 96.0
+    },
+    "elements": [
+      {
+        "text": "Large title",
+        "rect": {
+          "l": 16.0,
+          "t": 54.0,
+          "w": 378.2,
+          "h": 34.0
+        }
+      }
+    ]
+  },
+  "semantics": [
+    {
+      "label": "Large title",
+      "flags": [
+        "isHeader"
+      ],
+      "actions": [],
+      "rect": {
+        "l": 16.0,
+        "t": 44.0,
+        "w": 784.0,
+        "h": 44.0
+      }
+    }
+  ],
+  "steps": []
+}
